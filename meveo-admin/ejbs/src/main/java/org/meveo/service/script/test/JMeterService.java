@@ -105,6 +105,10 @@ public class JMeterService {
 
         // Retrieve and create test file
         final Function function = functionService.findByCode(functionCode);
+        if(function == null) {
+        	throw new IllegalArgumentException("Function with code " + functionCode + " does not exist");
+        }
+        
         functionService.detach(function);
 
         File jmxFile = File.createTempFile(functionCode, ".jmx");

@@ -126,7 +126,13 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
     @Override
     public CustomEntityCategoryDto findIgnoreNotFound(String code) {
-        return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
+        CustomEntityCategory category = customEntityCategoryService.findByCode(code);
+        
+        if(category == null) {
+        	return null;
+        }
+        
+		return CustomEntityCategoryDto.toDTO(category);
     }
 
     @Override

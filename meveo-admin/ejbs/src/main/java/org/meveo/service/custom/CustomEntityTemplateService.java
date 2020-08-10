@@ -20,6 +20,8 @@
 package org.meveo.service.custom;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,12 +41,15 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.JsonUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
@@ -55,6 +60,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
@@ -62,9 +68,12 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -106,6 +115,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private EntityCustomActionService entityCustomActionService;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
 
     private static boolean useCETCache = true;
 
@@ -269,6 +282,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         return cetUpdated;
+    }
+    
+    @Transactional(TxType.REQUIRES_NEW)
+    public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
     }
 
     @Override
@@ -604,4 +622,39 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		cet.setCustomEntityCategory(customEntityCategory);
 		return update(cet);
 	}
+
+    public String getJsonSchemaContent(String cetCode) throws IOException {
+
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
+        File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
+        byte[] mapData = Files.readAllBytes(file.toPath());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
+
+        Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
+        if (items != null) {
+            for (Map.Entry<String, Object> item : items.entrySet()) {
+                Map<String, Object> values = (Map<String, Object>) item.getValue();
+                if (values.containsKey("$ref")) {
+                    String ref = (String) values.get("$ref");
+                    if (ref != null) {
+                        values.put("$ref", ref.replace("./", ""));
+                    }
+                } else {
+                    if (values.get("type") != null && values.get("type").equals("array")) {
+                        Map<String, Object> value = (Map<String, Object>) values.get("items");
+                        if (value.containsKey("$ref")) {
+                            String ref = (String) value.get("$ref");
+                            if (ref != null) {
+                                value.put("$ref", ref.replace("./", ""));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        String json = JsonUtils.toJson(jsonMap, true);
+        return json;
+    }
 }

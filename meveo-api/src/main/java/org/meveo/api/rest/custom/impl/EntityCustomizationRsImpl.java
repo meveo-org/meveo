@@ -3,6 +3,7 @@ package org.meveo.api.rest.custom.impl;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
+import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.CustomEntityTemplateApi;
@@ -334,7 +335,13 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 		return result;
 	}
 
-	/**
+    @Override
+    public Response responseJsonSchema(String cetCode) {
+        Response response = customEntityTemplateApi.responseJsonSchema(cetCode);
+        return response;
+    }
+
+    /**
 	 * Used for create or update template.
 	 * @see org.meveo.api.rest.custom.EntityCustomizationRs#createOrUpdateCustumizedEntityTemplate(org.meveo.api.dto.CustomEntityTemplateDto)
 	 */

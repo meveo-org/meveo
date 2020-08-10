@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.TransactionRequiredException;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -173,9 +176,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
                 throw new IllegalArgumentException(e.getMessage());
             } else {
-                // Delete CET if error occurs
-                log.error("Creation of cet={} failed with error={}", cet, e);
-                customEntityTemplateService.remove(cet);
+            	try {
+	                // Delete CET if error occurs
+	                log.error("Creation of {} failed: {}", cet, e.getMessage());
+	        		customEntityTemplateService.removeInNewTx(cet);
+                } catch(Exception ex) {
+                	log.warn("Failed to remove {}: {}", cet, ex.getMessage());
+                }
+                
                 throw e;
             }
 		}
@@ -555,6 +563,28 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 		return result;
 	}
+
+    /**
+     * Generates the response schema of the custom entity template.
+     *
+     * @param cetCode code of the custom entity template
+     * @return response schema of the custom entity template
+     */
+    public Response responseJsonSchema(@NotNull String cetCode) {
+
+        CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+        if (customEntityTemplate == null) {
+            return Response.status(404).entity("Custom entity template " + cetCode + " was not found").build();
+        } else {
+            try {
+                String jsonSchema = customEntityTemplateService.getJsonSchemaContent(cetCode);
+                return Response.ok(jsonSchema).build();
+            } catch (Exception e) {
+                return Response.status(404).entity(e.getMessage()).build();
+            }
+        }
+
+    }
 	
     /**
      * Convert CustomEntityTemplateDto to a CustomEntityTemplate instance. Note: does not convert custom fields that are part of DTO
