@@ -927,14 +927,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public List<MeveoModule> list(PaginationConfiguration config) {
-	    List<MeveoModule> list = new ArrayList<>();
-        List<MeveoModule> meveoModules = super.list(config);
-        if (CollectionUtils.isNotEmpty(meveoModules)) {
-            for (MeveoModule meveoModule : meveoModules) {
-                meveoModule = findById(meveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-                list.add(meveoModule);
-            }
-        }
-        return list;
+    	return super.list(config);
     }
 }
