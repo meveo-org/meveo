@@ -335,4 +335,9 @@ public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	@Override
+	public void remove(ChartDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCode());
+	}
 }

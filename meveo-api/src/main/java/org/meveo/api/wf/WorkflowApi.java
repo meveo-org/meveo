@@ -335,25 +335,17 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
 
 	@Override
 	public WorkflowDto toDto(Workflow entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new WorkflowDto(entity);
 	}
 
 	@Override
 	public Workflow fromDto(WorkflowDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+		return fromDTO(dto, new Workflow());
 	}
 
 	@Override
 	public IPersistenceService<Workflow> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return workflowService;
 	}
 
-	@Override
-	public boolean exists(WorkflowDto dto) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 }

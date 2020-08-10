@@ -1203,4 +1203,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 	}
+
+	@Override
+	public void remove(MeveoModuleDto dto) throws MeveoApiException, BusinessException {
+		uninstall(dto.getCode(), MeveoModule.class, true);
+	}
 }

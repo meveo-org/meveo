@@ -232,4 +232,9 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         entity.setDescription(dto.getDescription());
         entity.setMeveoRepository(dto.isMeveoRepository());
     }
+
+	@Override
+	public void remove(GitRepositoryDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCode());
+	}
 }

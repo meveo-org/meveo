@@ -284,4 +284,9 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 			return false;
 		}
 	}
+
+	@Override
+	public void remove(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCetCode(), dto.getCode());
+	}
 }

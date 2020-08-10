@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.dwh.MeasurableQuantityDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
@@ -224,5 +225,13 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		}
 
 		repositoryService.removeHierarchy(entity);
+	}
+	
+	@Override
+	public void remove(RepositoryDto dto) throws MeveoApiException, BusinessException {
+		var entity = repositoryService.findByCode(dto.getCode());
+		if(entity != null) {
+			repositoryService.remove(entity);
+		}
 	}
 }
