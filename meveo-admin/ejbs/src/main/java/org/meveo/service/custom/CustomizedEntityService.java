@@ -24,6 +24,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.primefaces.component.log.Log;
 import org.reflections.Reflections;
 
 /**
@@ -33,6 +34,8 @@ import org.reflections.Reflections;
 public class CustomizedEntityService implements Serializable {
 
     private static final long serialVersionUID = 4108034108745598588L;
+    
+    private static Set<Class<? extends ICustomFieldEntity>> cfClasses;
 
     @Inject
     private JobInstanceService jobInstanceService;
@@ -178,10 +181,11 @@ public class CustomizedEntityService implements Serializable {
 	 * @return A list of customized/customizable entities.
 	 */
     private List<CustomizedEntity> searchAllCustomFieldEntities(final String entityName, final boolean includeNonManagedEntities, boolean includeParentClassesOnly) {
-        List<CustomizedEntity> entities = new ArrayList<>();
-        Reflections reflections = new Reflections("org.meveo.model");
-        Set<Class<? extends ICustomFieldEntity>> cfClasses = reflections.getSubTypesOf(ICustomFieldEntity.class);
-
+    	
+    	List<CustomizedEntity> entities = new ArrayList<>();
+        
+        initCfClasses();
+        
         // Find standard entities that implement ICustomFieldEntity interface except JobInstance
         CustomFieldEntity annotation = null;
         for (Class<? extends ICustomFieldEntity> cfClass : cfClasses) {
@@ -219,7 +223,6 @@ public class CustomizedEntityService implements Serializable {
 	 * @return A list of custom entity templates.
 	 */
 	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, String primitiveEntity) {
-
 		List<CustomizedEntity> entities = new ArrayList<>();
 		List<CustomEntityTemplate> customEntityTemplates;
 
@@ -367,9 +370,8 @@ public class CustomizedEntityService implements Serializable {
      */
     public CustomizedEntity getCustomizedEntity(String appliesTo) {
 
-        // Find standard entities that implement ICustomFieldEntity interface except JobInstance
-        Reflections reflections = new Reflections("org.meveo.model");
-        Set<Class<? extends ICustomFieldEntity>> cfClasses = reflections.getSubTypesOf(ICustomFieldEntity.class);
+    	System.out.println("getCustomizedEntity: " + appliesTo);
+        initCfClasses();
 
         for (Class<? extends ICustomFieldEntity> cfClass : cfClasses) {
 
@@ -394,6 +396,15 @@ public class CustomizedEntityService implements Serializable {
                 return new CustomizedEntity(cet.getCode(), CustomEntityTemplate.class, cet.getId(), cet.getDescription());
             }
         }
+        
         return null;
     }
+
+	private void initCfClasses() {
+		if(cfClasses == null) {
+            // Find standard entities that implement ICustomFieldEntity interface except JobInstance
+            Reflections reflections = new Reflections("org.meveo.model");
+        	cfClasses = reflections.getSubTypesOf(ICustomFieldEntity.class);
+        }
+	}
 }
