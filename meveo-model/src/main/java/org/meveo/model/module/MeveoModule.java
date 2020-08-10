@@ -49,7 +49,6 @@ import org.meveo.model.scripts.ScriptInstance;
  */
 @Entity
 @ObservableEntity
-@Cacheable
 @ModuleItem("Module")
 @ModuleItemOrder(300)
 @ExportIdentifier({ "code"})
