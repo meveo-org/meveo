@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJBException;
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
@@ -50,7 +52,6 @@ import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.module.MeveoModuleApi;
-import org.meveo.api.module.ModuleInstallResult;
 import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
@@ -611,10 +612,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     @SuppressWarnings("unchecked")
     public void install() {
-        entity = (T) install(entity, onDuplicate);
-        // fix lazy load issue
-        init();
-        entity = initEntity();
+        install(entity, onDuplicate);
     }
 
     public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) {
@@ -645,7 +643,17 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             
         } catch (Exception e) {
             log.error("Failed to install meveo module {} ", module.getCode(), e);
-            messages.error(new BundleKey("messages", "meveoModule.installFailed"), module.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
+            
+            Throwable rootCause = e;
+            while(rootCause.getCause() != null || rootCause instanceof EJBException) {
+            	if(rootCause instanceof EJBException) {
+            		rootCause = ((EJBException) rootCause).getCausedByException();
+            	} else {
+            		rootCause = rootCause.getCause();
+            	}
+            }
+            
+            messages.error(new BundleKey("messages", "meveoModule.installFailed"), module.getCode(), (rootCause.getMessage() == null ? rootCause.getClass().getSimpleName() : rootCause.getMessage()));
         }
 
         return module;
