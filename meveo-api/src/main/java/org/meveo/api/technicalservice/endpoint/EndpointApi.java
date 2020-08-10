@@ -686,4 +686,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointRequestSchemaService.generateResponseSchema(endpoint);
 	}
 
+	@Override
+	public void remove(EndpointDto dto) throws MeveoApiException, BusinessException {
+		this.delete(dto.getCode());
+	}
+
 }

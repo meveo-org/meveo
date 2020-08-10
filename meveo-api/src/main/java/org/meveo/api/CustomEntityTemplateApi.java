@@ -786,8 +786,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 	@Override
 	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
-		// TODO Auto-generated method stub
-		return null;
+		var cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
+		var actions = entityCustomActionService.findByAppliesTo(entity.getAppliesTo());
+		return toDTO(entity, cfts.values(), actions.values());
 	}
 
 	@Override
@@ -803,5 +804,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	@Override
 	public boolean exists(CustomEntityTemplateDto dto) {
 		return customEntityTemplateService.findByCode(dto.getCode()) != null;
+	}
+
+	@Override
+	public void remove(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+		this.removeEntityTemplate(dto.getCode());
 	}
 }

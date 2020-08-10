@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.notification.ScriptNotificationDto;
 import org.meveo.api.dto.sql.SqlConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -150,6 +151,14 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 		}
 		
 		sqlConfigurationService.initializeCet(conf);		
+	}
+	
+	@Override
+	public void remove(SqlConfigurationDto dto) throws MeveoApiException, BusinessException {
+		var entity = sqlConfigurationService.findByCode(dto.getCode());
+		if(entity != null) {
+			sqlConfigurationService.remove(entity);
+		}
 	}
 
 }

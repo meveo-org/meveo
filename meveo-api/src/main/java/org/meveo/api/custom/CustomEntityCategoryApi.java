@@ -186,4 +186,10 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
 		return result;
 	}
+
+	@Override
+	public void remove(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
+		this.removeCustomEntityCategory(dto.getCode(), false);
+	}
+	
 }

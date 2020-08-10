@@ -38,6 +38,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.dwh.MeasurableQuantityDto;
+import org.meveo.api.dto.payment.WorkflowDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
@@ -150,7 +152,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param dto DTO representation to use
 	 * @return <code>true</code> if the JPA version of the entity exists
 	 */
-	public abstract boolean exists(T dto);
+	public boolean exists(T dto) {
+		try {
+			return findIgnoreNotFound(dto.getCode()) != null;
+		} catch (MeveoApiException e) {
+			return false;
+		}
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -163,6 +171,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			return find(code);
 		} catch (EntityDoesNotExistsException | org.meveo.exceptions.EntityDoesNotExistsException e) {
 			return null;
+		}
+	}
+	
+	public void remove(T dto) throws MeveoApiException, BusinessException {
+		E entity = getPersistenceService().findByCode(dto.getCode());
+		if (entity != null) {
+			getPersistenceService().remove(entity);
 		}
 	}
 
@@ -424,4 +439,5 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	public Set<File> getFileImport() {
 		return fileImport;
 	}
+	
 }
