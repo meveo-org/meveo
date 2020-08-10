@@ -243,8 +243,34 @@
                     useCustomIdParam="true" ajaxSubmit="">
 
                     <p:commandButton value="#{messages['meveoModule.install']}"
-                    	onclick="PF('cd').show()"
+                    	onclick="PF('installDialog').show()"
                         rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}"/>
+                        
+                        <p:confirmDialog id="installDialog" widgetVar="installDialog" message="On duplicate resource : " header="#{messages['meveoModule.install']}">
+		                  	<h:form id="installForm">
+			                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+										<p:selectOneMenu value="#{meveoModuleBean.onDuplicate}">
+											<f:selectItems value="#{OnDuplicate.values()}"/>
+										</p:selectOneMenu>	                       
+									</h:form >
+			                       
+			                       <h:form >
+				                       <p:commandButton process="@(#installForm) @this"
+				                         id="install_btn"
+				                         update="@form"
+				                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
+				                         value="#{messages['meveoModule.install']}" 
+				                         onclick="doInstall()"/>
+				                         
+									   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+			                  	   </h:form >
+		                  	   </h:form>
+		                   </p:confirmDialog>
+                   
+		                   <p:remoteCommand id="doInstall"
+											action="#{meveoModuleBean.install}"
+											resetValues="installForm"
+											name="doInstall" update="@form" />
 
 <!--                 	<p:commandButton value="#{messages['action.fork']}" action="#{meveoModuleBean.fork}" update="@form" rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}"> -->
 <!--                 		 <p:confirm header="#{messages['action.confirm']}" message="#{messages['commons.confirmForkModule']}" icon="pi pi-exclamation-triangle" /> -->
@@ -291,7 +317,7 @@
 						action="#{meveoModuleBean.uninstall}"
 						resetValues="uninstallForm"
 						name="doUninstall" update="@form" />
-                   
+						
                     <p:commandButton value="#{messages['commons.disable']}"
                         rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed and meveoModuleBean.entity.active}" action="#{meveoModuleBean.disable}"
                         update="@form">
@@ -420,33 +446,6 @@
 				</h:panelGroup>
 			</h:form>
 		</p:dialog>
-		
-		<p:dialog responsive="true" 
-			header="Choose action on duplicated resource" 
-			id="cd" resizable="false"
-			widgetVar="cd">
-	                 
-            <hftl:decorateFormPanel formId="selectOnDuplicate">
-            
-         		<ui:define name="fields">
-					<hftl:decorateFormField fieldId="onDuplicate" label="Action">
-						<p:selectOneMenu id="onDuplicate" value="#{meveoModuleBean.onDuplicate}">
-							<f:selectItems value="#{OnDuplicate.values()}"/>
-						</p:selectOneMenu>
-					</hftl:decorateFormField>
-				</ui:define>
-            
-         		<ui:param name="buttons" value="true" />
-				<ui:define name="buttons">
-					<p:commandButton value="Install" ajax="true"
-										action="#{meveoModuleBean.install}"
-										update="@form"
-										oncomplete="PF('cd').hide()"/>
-					<p:commandButton value="#{messages['commons.close']}" oncomplete="PF('cd').hide()"/>
-		        </ui:define>
-			        
-	        </hftl:decorateFormPanel>
-	    </p:dialog> 
     </ui:define>
 
 </ui:composition>
