@@ -1,4 +1,4 @@
-package org.meveo.service.custom.observer;
+package org.meveo.service.custom.event;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
