@@ -35,7 +35,6 @@ import javax.persistence.EntityNotFoundException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.wf.IWorkflowType;
 import org.meveo.admin.wf.WorkflowTypeClass;
@@ -52,7 +51,6 @@ import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.script.ScriptInterfaceSupplier;
 
 @Stateless
@@ -115,7 +113,7 @@ public class WorkflowService extends BusinessService<Workflow> {
             for (ScriptInterfaceSupplier si : mmap) {
                 try {
 					if (si.getScriptInterface().getClass().isAnnotationPresent(WorkflowTypeClass.class)) {
-					    result.add(si.getClass());
+					    result.add(si.getScriptInterface().getClass());
 					}
 				} catch (Exception e) {
 					throw new RuntimeException(e);

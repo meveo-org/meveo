@@ -41,6 +41,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.model.wf.Workflow;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.admin.impl.UserService;
@@ -49,6 +50,7 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.wf.WorkflowService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +79,9 @@ public class CustomFieldInstanceService extends BaseService {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private WorkflowService workflowService;
 
     @Inject
     @MeveoJpa
@@ -157,22 +162,41 @@ public class CustomFieldInstanceService extends BaseService {
                 return cei;
             }
         } else {
+            BusinessEntity businessEntity = new BusinessEntity();
             if (classNameAndCode.equals(User.class.getName())) {
                 User user = userService.findByUsername(value);
-                BusinessEntity businessEntity = new BusinessEntity();
-                businessEntity.setCode(value);
-                businessEntity.setId(user.getId());
-                return businessEntity;
+                if (user != null) {
+                    businessEntity.setCode(value);
+                    businessEntity.setId(user.getId());
+                    return businessEntity;
+                } else {
+                    return null;
+                }
             } else if (classNameAndCode.equals(Provider.class.getName())) {
                 Provider provider = providerService.findByCode(value);
                 if (provider == null) {
                   provider = providerService.findById(Long.valueOf(value));
                 }
-                BusinessEntity businessEntity = new BusinessEntity();
-                businessEntity.setCode(provider.getCode());
-                businessEntity.setId(provider.getId());
-                return businessEntity;
-            } else {
+                if (provider != null) {
+                    businessEntity.setCode(provider.getCode());
+                    businessEntity.setId(provider.getId());
+                    return businessEntity;
+                } else {
+                    return null;
+                }
+            } else if (classNameAndCode.equals(Workflow.class.getName())) {
+                Workflow workflow = workflowService.findByCode(value);
+                if (workflow == null) {
+                    workflow = workflowService.findById(Long.valueOf(value));
+                }
+                if (workflow != null) {
+                    businessEntity.setCode(workflow.getCode());
+                    businessEntity.setId(workflow.getId());
+                    return businessEntity;
+                } else {
+                    return null;
+                }
+            }else {
                 query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
                 query.setParameter("code", value.toLowerCase());
             }
@@ -572,8 +596,26 @@ public class CustomFieldInstanceService extends BaseService {
 					} else if (StringUtils.isNumeric(String.valueOf(value))) {
 						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
 					}
-					
-					cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+
+					if (entityReferenceWrapper.getId() != null || entityReferenceWrapper.getUuid() != null) {
+                        cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+                    } else if (value instanceof Collection && entityReferenceWrapper.getClassnameCode().equals(Workflow.class.getName())) {
+                        List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
+                        for (Object item : (Collection<?>) value) {
+                            EntityReferenceWrapper itemWrapper = new EntityReferenceWrapper();
+                            itemWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+                            if (item instanceof EntityReferenceWrapper) {
+                                itemWrapper = (EntityReferenceWrapper) item;
+                            } else if (item instanceof String) {
+                                itemWrapper.setUuid((String) item);
+                            }
+                            entityReferences.add(itemWrapper);
+                        }
+
+                        if(!entityReferences.isEmpty()) {
+                            cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
+                        }
+                    }
 					
 				} else {
 
@@ -2549,7 +2591,7 @@ public class CustomFieldInstanceService extends BaseService {
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
 		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
 
-		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
+		for (Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
 			if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {
 			    if ((Integer) value == 1) {
@@ -2566,6 +2608,9 @@ public class CustomFieldInstanceService extends BaseService {
                 } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
                     Provider provider = providerService.findById(((BigInteger) value).longValue());
                     entityReferenceWrapper.setCode(provider.getCode());
+                } else if (cetField.getValue().getEntityClazz().equals(Workflow.class.getName())) {
+                    Workflow workflow = workflowService.findById(((BigInteger) value).longValue());
+                    entityReferenceWrapper.setCode(workflow.getCode());
                 }
                 entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
                 entityReferenceWrapper.setId(((BigInteger) value).longValue());

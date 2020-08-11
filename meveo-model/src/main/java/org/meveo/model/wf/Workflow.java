@@ -20,26 +20,18 @@ package org.meveo.model.wf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ModuleItem;
-import org.meveo.model.ModuleItemOrder;
+import org.meveo.model.*;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.persistence.CustomFieldValuesConverter;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -50,9 +42,10 @@ import org.meveo.model.ModuleItemOrder;
 @ModuleItemOrder(207)
 @Cacheable
 @ExportIdentifier({ "code"})
+@CustomFieldEntity(cftCodePrefix = "WORKFLOW")
 @Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "wf_workflow_seq"), })
-public class Workflow extends BusinessEntity {
+public class Workflow extends BusinessEntity implements ICustomFieldEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -64,11 +57,20 @@ public class Workflow extends BusinessEntity {
 	@OneToMany(mappedBy = "workflow", fetch = FetchType.LAZY, cascade = { CascadeType.REMOVE })
     @OrderBy("priority ASC")
 	private List<WFTransition> transitions = new ArrayList<WFTransition>();
-	
-	
+
 	@Type(type="numeric_boolean")
     @Column(name = "enable_hostory")
 	private boolean enableHistory;
+
+	@Column(name = "uuid", nullable = false, updatable = false, length = 60)
+	@Size(max = 60)
+	@NotNull
+	private String uuid = UUID.randomUUID().toString();
+
+	// @Type(type = "json")
+	@Convert(converter = CustomFieldValuesConverter.class)
+	@Column(name = "cf_values", columnDefinition = "text")
+	private CustomFieldValues cfValues;
 
 	/**
 	 * @return the wfType
@@ -117,4 +119,46 @@ public class Workflow extends BusinessEntity {
 		return "Workflow [code=" + code + ", description=" + description + "]";
 	}
 
+	@Override
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	@Override
+	public String clearUuid() {
+		String oldUuid = uuid;
+		uuid = UUID.randomUUID().toString();
+		return oldUuid;
+	}
+
+	@Override
+	public ICustomFieldEntity[] getParentCFEntities() {
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValues() {
+		return cfValues;
+	}
+
+	public void setCfValues(CustomFieldValues cfValues) {
+		this.cfValues = cfValues;
+	}
+
+	@Override
+	public CustomFieldValues getCfValuesNullSafe() {
+		if (cfValues == null) {
+			cfValues = new CustomFieldValues();
+		}
+		return cfValues;
+	}
+
+	@Override
+	public void clearCfValues() {
+		cfValues = null;
+	}
 }

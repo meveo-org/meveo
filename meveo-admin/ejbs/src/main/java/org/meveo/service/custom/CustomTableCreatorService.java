@@ -39,6 +39,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.wf.Workflow;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -847,7 +848,7 @@ public class CustomTableCreatorService implements Serializable {
 				
 				// check the storage as well referenceJPA must be stored in SINGLE storage
 				// TODO: Must support different storage types
-				if (!cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+				if (!cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && !cft.getEntityClazz().equals(Workflow.class.getName())) {
 					throw new UnsupportedOperationException("JPA reference CFT must be stored in a SINGLE field storage type.");
 				}
 			}

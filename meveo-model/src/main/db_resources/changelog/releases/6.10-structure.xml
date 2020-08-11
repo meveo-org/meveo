@@ -104,5 +104,14 @@
 	<changeSet id="Add code UK on crt table" author="Clément Bareth">
 		<addUniqueConstraint columnNames="code" tableName="cust_crt"/>
 	</changeSet>
+
+	<changeSet id="Add uuid and cfValues on workflow table" author="Phu Bach">
+		<addColumn tableName="wf_workflow">
+			<column name="uuid" type="varchar(60)">
+				<constraints nullable="false" />
+			</column>
+			<column name="cf_values" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
 	
 </databaseChangeLog>

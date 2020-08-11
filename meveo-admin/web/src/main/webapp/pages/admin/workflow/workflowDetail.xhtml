@@ -37,8 +37,9 @@
                 <p:tab title="#{messages['dunningPlan.transitions']}" id="tab2" rendered="#{!workflowBean.entity.isTransient()}">
                     <p:outputPanel id="dunningPlanTransition_panel">
                         <p:messages id="messages" rendered="#{!workflowBean.showDetailPage}" />
-                        <hftl:dataList backingBean="#{wfTransitionBean}" dataModel="#{workflowBean.entity.transitions}" sortBy="fromStatus"
-                            resultsId="dunningPlanTransitions_results" exportXlsxButton="false">
+                        <p:dataTable id="dunningPlanTransitions_results" value="#{workflowBean.entity.transitions}" var="entity" sortBy="#{entity.fromStatus}" paginator="true" rows="10"
+                                     resizableColumns="true" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+                                     rowsPerPageTemplate="10" lazy="false" styleClass="custom-grid" reflow="true">
                             <hftl:column label="#{messages['dunningPlanTransition.fromStatus']}" field="fromStatus" />
                             <hftl:column label="#{messages['dunningPlanTransition.toStatus']}" field="toStatus" />
                             <hftl:column label="#{messages['businessEntity.description']}" field="description" />
@@ -65,7 +66,7 @@
                                     update=":tabView:dunningPlanTransition_panel" />
                             </p:column>
 
-                        </hftl:dataList>
+                        </p:dataTable>
                         <p:panel styleClass="clearLeft">
                             <hftl:decorateFormField fieldId="addTransition">
                                 <p:commandButton id="addTransition" rendered="#{!workflowBean.showDetailPage}" action="#{workflowBean.newTransition}"
