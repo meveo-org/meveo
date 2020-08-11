@@ -686,10 +686,13 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 		}
 		
-		if(created) {
-			customEntityInstanceCreate.fire(cei);
-		} else {
-			customEntityInstanceUpdate.fire(cei);
+		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			if (created) {
+				customEntityInstanceCreate.fire(cei);
+				
+			} else {
+				customEntityInstanceUpdate.fire(cei);
+			}
 		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
@@ -1144,7 +1147,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCetCode(cet.getCode());
 		cei.setUuid(uuid);
 		
-		customEntityInstanceDelete.fire(cei);
+		if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
+			customEntityInstanceDelete.fire(cei);
+		}
 	}
 
 	/**
