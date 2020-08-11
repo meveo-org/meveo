@@ -57,27 +57,27 @@ public class CustomEntityTemplateObserver {
 
 		// user
 		cft = createCft("user", CustomFieldTypeEnum.STRING, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 
 		// date
 		cft = createCft("date", CustomFieldTypeEnum.DATE, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 
 		// action
 		cft = createCft("action", CustomFieldTypeEnum.STRING, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 		
 		// field
 		cft = createCft("field", CustomFieldTypeEnum.STRING, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 		
 		// oldValue
 		cft = createCft("old_value", CustomFieldTypeEnum.STRING, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 		
 		// newValue
 		cft = createCft("new_value", CustomFieldTypeEnum.STRING, false, false);
-		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft, false);
+		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 	}
 
 	public CustomFieldTemplate createCft(String code, CustomFieldTypeEnum fieldType, boolean unique, boolean identifier) {

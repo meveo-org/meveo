@@ -1404,4 +1404,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	protected List<String> getListFieldsToFetch() {
 		return Arrays.asList("customEntityCategory");
 	}
+	
+	public boolean showAuditedField() {
+		return getAvailableStoragesDM().getTarget().contains(DBStorageType.SQL);
+	}
 }
