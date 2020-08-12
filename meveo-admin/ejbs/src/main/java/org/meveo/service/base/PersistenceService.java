@@ -316,6 +316,17 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 		return entity;
 	}
+	
+	public E disableNoMerge(E entity) throws BusinessException {
+
+		if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
+			log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			preDisable(entity);
+			postDisable(entity);
+			log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		}
+		return entity;
+	}
 
 	/**
 	 * Executes after disabling the entity
