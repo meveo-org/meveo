@@ -10,12 +10,12 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
@@ -31,7 +31,10 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
-import org.meveo.service.custom.*;
+import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomizedEntity;
+import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.service.storage.RepositoryService;
 import org.omnifaces.cdi.Cookie;
 import org.slf4j.Logger;
@@ -45,13 +48,13 @@ import org.slf4j.Logger;
 public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstance> {
 
 	private static final long serialVersionUID = -459772193950603406L;
-	
+
 	@Inject
 	private Logger log;
 
 	@Inject
 	private CustomizedEntityService customizedEntityService;
-	
+
 	@Inject
 	protected CrossStorageService crossStorageService;
 
@@ -69,19 +72,20 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cacheContainerProvider;
-	
+
 	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
 
 	protected CustomEntityTemplate customEntityTemplate;
-	
+
 	private Repository repository;
-	
+
 	protected String customEntityTemplateCode;
 	protected String customTableName;
 	private String uuid;
-	
-	@Inject @Cookie(name = "repository")
+
+	@Inject
+	@Cookie(name = "repository")
 	private String repositoryCode;
 
 	private Map<String, CustomFieldTemplate> customFieldTemplates;
@@ -118,10 +122,10 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-					
+					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
 				}
 
-			} catch (EntityDoesNotExistsException | BusinessException e) {
+			} catch (Exception e) {
 				log.error(e.getMessage());
 			}
 		}
@@ -153,11 +157,11 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		boolean isNew = StringUtils.isBlank(uuid) || "null".equals(uuid);
 
 		try {
-			
+
 			customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew);
 
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
-			
+
 			crossStorageService.createOrUpdate(repository, entity);
 
 			if (killConversation) {
@@ -233,30 +237,30 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	}
 
 	public String getCustomEntityTemplateCode() {
-		if(customEntityTemplateCode == null && getCustomEntityTemplate() != null) {
+		if (customEntityTemplateCode == null && getCustomEntityTemplate() != null) {
 			customEntityTemplateCode = getCustomEntityTemplate().getCode();
 		}
-		
+
 		return customEntityTemplateCode;
 	}
 
 	public Repository getRepository() {
-		if(repository == null && repositoryCode != null) {
+		if (repository == null && repositoryCode != null) {
 			repository = this.repositoryService.findByCode(repositoryCode);
 			repositoryProvider.setRepository(repository);
 		}
-		
+
 		return repository;
 	}
 
 	public String getCeiCode(CustomFieldTemplate cft, Map<String, Object> getMapValues) {
 		if (getMapValues != null) {
 			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
-				if(ceiMap.getValue() instanceof EntityReferenceWrapper) {
+				if (ceiMap.getValue() instanceof EntityReferenceWrapper) {
 					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
 					return wrapper.getCode();
 				}
-				
+
 				BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
 				return cei.getCode();
 			}
@@ -265,34 +269,33 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		return null;
 	}
 
-	
 	public String getCeiUuid(CustomFieldTemplate customFieldTemplate, Map<String, Object> getMapValues) {
 		if (getMapValues != null) {
 			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
-				if(ceiMap.getValue() instanceof CustomEntityInstance) {
+				if (ceiMap.getValue() instanceof CustomEntityInstance) {
 					CustomEntityInstance cei = (CustomEntityInstance) ceiMap.getValue();
 					return cei.getUuid();
-					
-				} else if(ceiMap.getValue() instanceof BusinessEntity){
+
+				} else if (ceiMap.getValue() instanceof BusinessEntity) {
 					BusinessEntity be = (BusinessEntity) ceiMap.getValue();
-					if(be.getCode() != null) {
+					if (be.getCode() != null) {
 						CustomEntityInstance cei = new CustomEntityInstance();
 						cei.setCode(be.getCode());
 						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
 						cei.setCet(customEntityTemplateService.findByCode(cei.getCetCode()));
-						
+
 						CustomFieldValues values = new CustomFieldValues();
 						values.setValue("code", be.getCode());
 						cei.setCfValues(values);
-						
+
 						return crossStorageService.findEntityId(repository, cei);
 					}
-					
-				} else if(ceiMap.getValue() instanceof EntityReferenceWrapper) {
+
+				} else if (ceiMap.getValue() instanceof EntityReferenceWrapper) {
 					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
 					return wrapper.getUuid();
 				}
-				
+
 			}
 		}
 

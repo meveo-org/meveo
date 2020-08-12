@@ -603,6 +603,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCode(ceiToSave.getCode());
 		cei.setDescription(ceiToSave.getDescription());
 		cei.setUuid(ceiToSave.getUuid());
+		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cei.getCetCode());
@@ -652,6 +653,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					sqlCei.setCode(cei.getCode());
 					sqlCei.setCetCode(cei.getCetCode());
 					sqlCei.setDescription(cei.getDescription());
+					sqlCei.setCfValuesOld(cei.getCfValuesOld());
 					customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
 
 					// Update binaries stored in SQL
@@ -702,7 +704,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityTemplate cet = ceiToSave.getCet();
 		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
 
-		CustomEntityInstance cei = getCustomEntityInstance(ceiToSave.getCetCode(), ceiToSave.getCode(), values);
+		CustomEntityInstance cei = getCustomEntityInstance(ceiToSave.getCetCode(), ceiToSave.getCode(), values);		
 
 		Map<CustomFieldTemplate, Object> persistedBinaries = new HashMap<>();
 
@@ -727,6 +729,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 			cei.setCfValues(ceiToSave.getCfValues());
+			cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 			cei.setDescription(ceiToSave.getDescription());
 			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
 				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
