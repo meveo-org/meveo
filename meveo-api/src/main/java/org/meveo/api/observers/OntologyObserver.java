@@ -195,8 +195,9 @@ public class OntologyObserver {
         FileUtils.write(schemaFile, templateSchema);
         commitFiles.add(schemaFile);
 
-        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
-
+        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
+        
+        
         File javaFile = new File(cetDir, cet.getCode() + ".java");
         if (javaFile.exists()) {
             throw new BusinessException("Java class file from CET " + cet.getCode() + " already exists");
@@ -243,7 +244,7 @@ public class OntologyObserver {
 
         FileUtils.write(schemaFile, templateSchema);
 
-        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
         File javaFile = new File(cetDir, cet.getCode() + ".java");
         if (javaFile.exists()) {
             javaFile.delete();
@@ -410,7 +411,7 @@ public class OntologyObserver {
                 if (javaFile.exists()) {
                     javaFile.delete();
                     fileList.add(javaFile);
-                    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+                    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
                     FileUtils.write(javaFile, compilationUnit.toString());
 
                     File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
@@ -835,7 +836,7 @@ public class OntologyObserver {
 
 		if (javaFile.exists()) {
 		    javaFile.delete();
-		    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema);
+		    CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
 		    FileUtils.write(javaFile, compilationUnit.toString());
 		    listFile.add(javaFile);
 
