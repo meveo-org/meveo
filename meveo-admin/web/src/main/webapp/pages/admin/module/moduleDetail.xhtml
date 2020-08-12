@@ -244,7 +244,7 @@
 
                     <p:commandButton value="#{messages['meveoModule.install']}"
                     	onclick="PF('installDialog').show()"
-                        rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed and !meveoModuleBean.installed}"/>
+                        rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed and meveoModuleBean.showInstallBtn}"/>
                         
                         <p:confirmDialog id="installDialog" widgetVar="installDialog" message="On duplicate resource : " header="#{messages['meveoModule.install']}">
 		                  	<h:form id="installForm">
@@ -284,7 +284,7 @@
 					<p:commandButton immediate="true" value="#{messages['meveoModule.patch.apply']}"
 						onclick="PF('dlg_applyPatchPopup').show()" type="button" rendered="#{!meveoModuleBean.entity.transient and meveoModuleBean.entity.isInDraft}" />
 
-					<p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed}">
+					<p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed and meveoModuleBean.showUninstallBtn}">
                     </p:commandButton>
                     
                     <p:confirmDialog id="uninstallDialog" 

@@ -35,6 +35,8 @@ import javax.ejb.EJBException;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -117,8 +119,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     private boolean deleteFiles;
     private OnDuplicate onDuplicate = OnDuplicate.SKIP;
     
-    /* Property used to force user to reload page between installation and uninstallation */
-    private boolean isInstalled;
+    // Properties used to force user to reload page between installation and uninstallation
+    private boolean showInstallBtn;
+	private boolean showUninstallBtn;
 
     public GenericModuleBean() {
 
@@ -219,12 +222,17 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
         }
 
-        this.isInstalled = module.isInstalled();
+        this.showInstallBtn = !module.isInstalled();
+        this.showUninstallBtn = module.isInstalled();
         return module;
     }
     
-	public boolean isInstalled() {
-		return isInstalled;
+	public boolean isShowInstallBtn() {
+		return showInstallBtn;
+	}
+
+	public boolean isShowUninstallBtn() {
+		return showUninstallBtn;
 	}
 
 	/**
@@ -627,6 +635,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     }
 
     @SuppressWarnings("unchecked")
+    @Transactional(TxType.REQUIRES_NEW)
     public void install() {
     	
     	try {
@@ -688,7 +697,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 		return module;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")	
+    @Transactional(TxType.REQUIRES_NEW)
     public void uninstall() {
         try {
 
