@@ -721,20 +721,26 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     @SuppressWarnings("unchecked")
 	public void removeFileFromModule(String item) {
-        entity.removeModuleFile(item);
-        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+        try {
+            entity.removeModuleFile(item);
+            entity = (T) meveoModuleService.update(entity);
+        } catch (BusinessException e) {
+            log.error("Failed to remove module file {}", item, e);
+        }
     }
     
     @SuppressWarnings("unchecked")
 	public void removeModuleDependency(MeveoModuleDependency dependency) {
-        entity.removeModuleDependency(dependency);
-        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+        try {
+            entity.removeModuleDependency(dependency);
+            entity = (T) meveoModuleService.update(entity);
+        } catch (BusinessException e) {
+            log.error("Failed to remove module dependency {}", dependency, e);
+        }
     }
 
- 
-
 	public void setMeveoModule(MeveoModule meveoModule) {
-	
+
 	}
  
 	public MeveoModule getModuleDependencyEntity() {

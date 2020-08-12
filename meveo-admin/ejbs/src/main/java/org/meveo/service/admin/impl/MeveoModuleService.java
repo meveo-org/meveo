@@ -496,7 +496,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
-        entity = findById(entity.getId());
+        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
         ModuleRelease moduleRelease = new ModuleRelease();
         moduleRelease.setCode(entity.getCode());
         moduleRelease.setDescription(entity.getDescription());
@@ -558,7 +558,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
             moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
         }
-        entity.setInstalled(false);
         entity.setCurrentVersion(nextVersion);
         moduleRelease.setMeveoModule(entity);
         entity.getReleases().add(moduleRelease);
