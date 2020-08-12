@@ -31,9 +31,11 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.primefaces.model.DefaultTreeNode;
@@ -65,7 +67,11 @@ public class MeveoModuleListBean extends MeveoModuleBean {
 	@Override
 	public void delete() throws BusinessException {
 		if(entity.isInstalled()) {
-			meveoModuleService.uninstall(entity, true);
+			try {
+				moduleApi.uninstall(entity.getCode(), MeveoModule.class, true);
+			} catch (MeveoApiException e) {
+				throw new BusinessException(e);
+			}
 		}
 		meveoModuleService.remove(entity);
 	}

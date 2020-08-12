@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.persistence.TransactionRequiredException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
@@ -43,12 +43,14 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -86,6 +88,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
+    
+    @Inject
+    private Instance<CustomTableCreatorService> customTableCreatorService;
    
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -286,12 +291,24 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(code);
         if (cet != null) {
             // Related custom field templates will be removed along with CET
-            customEntityTemplateService.remove(cet.getId());
+            customEntityTemplateService.remove(cet);
 
         } else {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);
         }
     }
+    
+	@Override
+	public void remove(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+		try { 
+			this.removeEntityTemplate(dto.getCode());
+		} catch (EntityDoesNotExistsException e) {
+			// Make sure custom table is removed if cet was not created correctly
+	        if (dto.getSqlStorageConfiguration() != null && dto.getSqlStorageConfiguration().isStoreAsTable()) {
+	            customTableCreatorService.get().removeTable(SQLStorageConfiguration.getCetDbTablename(dto.getCode()));
+	        }			
+		}
+	}
 
     /* (non-Javadoc)
      * @see org.meveo.api.ApiService#find(java.lang.String)
@@ -806,8 +823,4 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		return customEntityTemplateService.findByCode(dto.getCode()) != null;
 	}
 
-	@Override
-	public void remove(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
-		this.removeEntityTemplate(dto.getCode());
-	}
 }

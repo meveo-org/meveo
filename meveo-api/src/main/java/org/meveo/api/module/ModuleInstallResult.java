@@ -3,6 +3,12 @@
  */
 package org.meveo.api.module;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.meveo.api.dto.module.MeveoModuleItemDto;
+import org.meveo.model.module.MeveoModule;
+
 /**
  * 
  * @author clement.bareth
@@ -14,6 +20,16 @@ public class ModuleInstallResult {
 	private int nbSkipped;
 	private int nbOverwritten;
 	private int nbAdded;
+	private List<MeveoModuleItemDto> installedItems = new ArrayList<>();
+	private MeveoModule installedModule;
+	
+	public MeveoModule getInstalledModule() {
+		return installedModule;
+	}
+
+	public void setInstalledModule(MeveoModule installedModule) {
+		this.installedModule = installedModule;
+	}
 
 	public int getNbSkipped() {
 		return nbSkipped;
@@ -51,6 +67,15 @@ public class ModuleInstallResult {
 		this.nbAdded += result.nbAdded;
 		this.nbOverwritten += result.nbOverwritten;
 		this.nbSkipped += result.nbSkipped;
+		this.installedItems.addAll(result.installedItems);
+	}
+	
+	public void addItem(MeveoModuleItemDto item) {
+		this.installedItems.add(item);
+	}
+	
+	public List<MeveoModuleItemDto> getInstalledItems() {
+		return installedItems;
 	}
 
 	@Override
