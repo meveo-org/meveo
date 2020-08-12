@@ -185,15 +185,14 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         clusterEventPublisher.publishEvent(executable, CrudActionEnum.enable);
         return executable;
     }
-
+    
     @Override
-    public T disable(T executable) throws BusinessException {
-        executable = super.disable(executable);
-        clusterEventPublisher.publishEvent(executable, CrudActionEnum.disable);
-        return executable;
-    }
+	public void postDisable(T entity) {
+		super.postDisable(entity);
+        clusterEventPublisher.publishEvent(entity, CrudActionEnum.disable);
+	}
 
-    /**
+	/**
      * Retrieve the execution engine corresponding to the given code
      *
      * @param executableCode Code of the execution engine to retrieve
