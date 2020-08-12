@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -114,6 +115,18 @@ public class WorkflowBean extends BaseBean<Workflow> {
      */
     public WorkflowBean() {
         super(Workflow.class);
+    }
+
+    @PostConstruct
+    public void init() {
+        List<Workflow> workflows = workflowService.list();
+        if (CollectionUtils.isNotEmpty(workflows)) {
+            for (Workflow workflow: workflows) {
+                if (workflow.getUuid() == null) {
+                    workflow.setUuid(workflow.getCode());
+                }
+            }
+        }
     }
 
     @Override

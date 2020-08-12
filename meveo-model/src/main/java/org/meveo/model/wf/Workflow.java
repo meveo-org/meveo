@@ -45,6 +45,7 @@ import org.meveo.model.persistence.CustomFieldValuesConverter;
 @CustomFieldEntity(cftCodePrefix = "WORKFLOW")
 @Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "wf_workflow_seq"), })
+@NamedQueries({ @NamedQuery(name = "Workflow.findByUUID", query = "select w from Workflow w where w.uuid = :uuid") })
 public class Workflow extends BusinessEntity implements ICustomFieldEntity {
 
 	private static final long serialVersionUID = 1L;

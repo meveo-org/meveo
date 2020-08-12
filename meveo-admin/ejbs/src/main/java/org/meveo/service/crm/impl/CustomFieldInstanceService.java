@@ -597,7 +597,7 @@ public class CustomFieldInstanceService extends BaseService {
 						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
 					}
 
-					if (entityReferenceWrapper.getId() != null || entityReferenceWrapper.getUuid() != null) {
+                    if (entityReferenceWrapper.getId() != null || entityReferenceWrapper.getUuid() != null) {
                         cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
                     } else if (value instanceof Collection && entityReferenceWrapper.getClassnameCode().equals(Workflow.class.getName())) {
                         List<EntityReferenceWrapper> entityReferences = new ArrayList<>();
@@ -608,11 +608,16 @@ public class CustomFieldInstanceService extends BaseService {
                                 itemWrapper = (EntityReferenceWrapper) item;
                             } else if (item instanceof String) {
                                 itemWrapper.setUuid((String) item);
+                                Workflow workflow = (Workflow) getEntityManager().createNamedQuery("Workflow.findByUUID").setParameter("uuid", item).getSingleResult();
+                                if (workflow != null) {
+                                    itemWrapper.setId(workflow.getId());
+                                    itemWrapper.setCode(workflow.getCode());
+                                }
                             }
                             entityReferences.add(itemWrapper);
                         }
 
-                        if(!entityReferences.isEmpty()) {
+                        if (!entityReferences.isEmpty()) {
                             cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferences);
                         }
                     }

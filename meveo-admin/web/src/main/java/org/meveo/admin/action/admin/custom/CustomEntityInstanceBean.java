@@ -10,7 +10,6 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
@@ -35,7 +34,6 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.*;
 import org.meveo.service.storage.RepositoryService;
-import org.meveo.service.wf.WorkflowService;
 import org.omnifaces.cdi.Cookie;
 import org.slf4j.Logger;
 
@@ -75,9 +73,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	
 	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
-
-	@Inject
-	private WorkflowService workflowService;
 
 	protected CustomEntityTemplate customEntityTemplate;
 	
@@ -260,17 +255,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			for (Map.Entry<String, Object> ceiMap : getMapValues.entrySet()) {
 				if(ceiMap.getValue() instanceof EntityReferenceWrapper) {
 					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
-					if (wrapper.getCode() != null) {
-						return wrapper.getCode();
-					} else if (wrapper.getClassnameCode().equals(Workflow.class.getName())) {
-						if (CollectionUtils.isNotEmpty(workflowService.list())) {
-							for (Workflow workflow: workflowService.list()) {
-								if (workflow.getUuid().equalsIgnoreCase(wrapper.getUuid())) {
-									return workflow.getCode();
-								}
-							}
-						}
-					}
+					return wrapper.getCode();
 				}
 				
 				BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
