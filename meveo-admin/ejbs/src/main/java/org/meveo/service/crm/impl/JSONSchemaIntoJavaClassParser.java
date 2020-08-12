@@ -65,7 +65,10 @@ public class JSONSchemaIntoJavaClassParser {
             	var parentTemplate = cetService.findById(template.getSuperTemplate().getId());
             	var parentClass = JavaParser.parseClassOrInterfaceType(parentTemplate.getCode());
             	compilationUnit.getClassByName((String) jsonMap.get("id"))
-            		.ifPresent(cl -> cl.addExtendedType(parentClass));
+            		.ifPresent(cl -> {
+            			compilationUnit.addImport("org.meveo.model.customEntities." + parentTemplate.getCode());
+            			cl.addExtendedType(parentClass);
+            		});
             }
             
         } catch (IOException e) {
