@@ -120,9 +120,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     @Inject
     private JobExecutionService jobExecutionService;
 
-    @Inject
-    private ConcreteFunctionService concreteFunctionService;
-    
     /**
      * Add missing dependencies of each module item
      * 
@@ -310,142 +307,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             return (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
             return null;
-        }
-    }
-
-    /**
-     * Uninstall the module and disables it items
-     * 
-     * @param module the module to uninstall
-     * @return the uninstalled module
-     * @throws BusinessException if an error occurs
-     */
-    public MeveoModule uninstall(MeveoModule module) throws BusinessException {
-        return uninstall(module, false, false);
-    }
-
-	/**
-	 * Uninstall the module and disables it items
-	 * 
-	 * @param module      the module to uninstall
-	 * @param removeItems if true, module items will be deleted and not disabled
-	 * @return the uninstalled module
-	 * @throws BusinessException if an error occurs
-	 */
-    public MeveoModule uninstall(MeveoModule module, boolean removeItems) throws BusinessException {
-        return uninstall(module, false, removeItems);
-    }
-
-	/**
-	 * Uninstall the module and disables it items
-	 * 
-	 * @param module      the module to uninstall
-	 * @param childModule whether the module is a child module
-	 * @param removeItems if true, module items will be deleted and not disabled
-	 * @return the uninstalled module
-	 * @throws BusinessException if an error occurs
-	 */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean removeItems) throws BusinessException {
-
-        ModuleScriptInterface moduleScript = null;
-        if (module.getScript() != null) {
-            moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
-        }
-        
-        List<MeveoModuleItem> moduleItems = getSortedModuleItems(module.getModuleItems());
-
-        for (MeveoModuleItem item : moduleItems) {
-            
-            // check if moduleItem is linked to other active module
-            if (isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
-                continue;
-            }
-            
-            loadModuleItem(item);
-            BusinessEntity itemEntity = item.getItemEntity();
-            if (itemEntity == null) {
-                continue;
-            }
-
-            try {
-                if (itemEntity instanceof MeveoModule) {
-                    uninstall((MeveoModule) itemEntity, true, removeItems);
-                } else {
-
-                    // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
-                    // superclasses)
-                    Class clazz = Class.forName(item.getItemClass());
-                    PersistenceService persistenceServiceForItem = (PersistenceService) EjbUtils.getServiceInterface(clazz.getSimpleName() + "Service");
-                    if (persistenceServiceForItem == null) {
-                        persistenceServiceForItem = (PersistenceService) EjbUtils.getServiceInterface(clazz.getSuperclass().getSimpleName() + "Service");
-                    }
-
-                    if (persistenceServiceForItem == null) {
-                        log.error("Failed to find implementation of persistence service for class {}", item.getItemClass());
-                        continue;
-                    }
-
-                    if(removeItems) {
-                        if (itemEntity instanceof Endpoint) {
-                            Endpoint endpoint = (Endpoint) itemEntity;
-                            if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
-                                getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
-                                        .setParameter("endpointId", endpoint.getId())
-                                        .executeUpdate();
-                            }
-                            if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
-                                getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
-                                        .setParameter("endpointId", endpoint.getId())
-                                        .executeUpdate();
-                            }
-                            Function service = concreteFunctionService.findById(endpoint.getService().getId());
-                            getEntityManager().createNamedQuery("Endpoint.deleteByService")
-                                    .setParameter("serviceId", service.getId())
-                                    .executeUpdate();
-                            
-                        } else {
-                            persistenceServiceForItem.remove(itemEntity);
-                        }
-                        
-					} else {
-						persistenceServiceForItem.preDisable(itemEntity);
-						itemEntity = getEntityManager().merge(itemEntity);
-					}
-
-                }
-                
-            } catch (Exception e) {
-                log.error("Failed to uninstall/disable module item. Module item {}", item, e);
-            }
-        }
-
-        if (moduleScript != null) {
-            moduleScriptService.postUninstallModule(moduleScript, module);
-        }
-
-        // Remove if it is a child module
-        if (childModule) {
-            remove(module);
-            return null;
-
-        // Otherwise mark it uninstalled and clear module items
-        } else {
-            MeveoModule moduleUpdated = module;
-            module.setInstalled(false);
-            
-            /* In case the module is uninstalled because of installation failure
-               and that the module is not inserted in db we should not update its persistent state */
-            module = reattach(module);
-            if(getEntityManager().contains(module)) {
-            	moduleUpdated = update(module);
-            }
-            
-            getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
-            	.setParameter("meveoModule", moduleUpdated)
-            	.executeUpdate();
-            
-			return moduleUpdated;
         }
     }
 
@@ -926,14 +787,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public List<MeveoModule> list(PaginationConfiguration config) {
-	    List<MeveoModule> list = new ArrayList<>();
-        List<MeveoModule> meveoModules = super.list(config);
-        if (CollectionUtils.isNotEmpty(meveoModules)) {
-            for (MeveoModule meveoModule : meveoModules) {
-                meveoModule = findById(meveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-                list.add(meveoModule);
-            }
-        }
-        return list;
+    	return super.list(config);
     }
 }

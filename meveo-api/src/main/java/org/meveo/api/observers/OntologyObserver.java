@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +41,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -63,6 +66,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
@@ -677,6 +681,8 @@ public class OntologyObserver {
     private void compileClassJava(File classDir, String compilationUnit, File classFile) {
 
         try {
+        	LOGGER.info("Start compilation of {}", classFile.getName());
+        	
             List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
             String classPackage = classDir.getAbsolutePath();
             if (!StringUtils.isBlank(classPackage) && !CustomScriptService.CLASSPATH_REFERENCE.get().contains(classPackage)) {
@@ -685,7 +691,9 @@ public class OntologyObserver {
             String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
 
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            var diagnostics = new DiagnosticCollector<JavaFileObject>();
+
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
             if (!classDir.exists()) {
                 classDir.mkdirs();
             }
@@ -700,7 +708,8 @@ public class OntologyObserver {
             files.add(classFile);
 
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(files);
-            Boolean isOK = compiler.getTask(null, fileManager, null, Arrays.asList("-cp", classPath), null, compilationUnits).call();
+            
+            Boolean isOK = compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits).call();
             if (isOK) {
                 for (File file : files) {
                     if (file != null) {
@@ -708,6 +717,18 @@ public class OntologyObserver {
                     }
                 }
             }
+            for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+                if ("ERROR".equals(diagnostic.getKind().name())) {
+                    LOGGER.warn("{} class on {} location {}:{}: {}", 
+                    		diagnostic.getKind().name(), 
+                    		classFile.getName(), 
+                    		diagnostic.getLineNumber(), 
+                    		diagnostic.getColumnNumber(), 
+                    		diagnostic.getMessage(Locale.getDefault()));
+                }
+            }
+            
+        	LOGGER.info("End compilation of {}", classFile.getName());
 
         } catch (IOException e) {
             LOGGER.error("Error compiling java class", e);

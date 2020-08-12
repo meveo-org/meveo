@@ -127,7 +127,7 @@ public class JSONSchemaIntoTemplateParser {
                         customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
                     }
                 }
-            } else {
+            } else if (values.get("type") != null){
                 if (values.get("type").equals("array")) {
                     customFieldTemplateDto.setUnique((Boolean) values.get("uniqueItems"));
                     Map<String, Object> value = (Map<String, Object>) values.get("items");
@@ -297,7 +297,7 @@ public class JSONSchemaIntoTemplateParser {
                         customFieldTemplateDto.setEntityClazz(data[data.length - 1]);
                     }
                 }
-            } else {
+            } else if (values.get("type") != null){
                 if (values.get("type").equals("array")) {
                     customFieldTemplateDto.setUnique((Boolean) values.get("uniqueItems"));
                     Map<String, Object> value = (Map<String, Object>) values.get("items");

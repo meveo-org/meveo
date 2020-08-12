@@ -126,7 +126,13 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
     @Override
     public CustomEntityCategoryDto findIgnoreNotFound(String code) {
-        return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
+        CustomEntityCategory category = customEntityCategoryService.findByCode(code);
+        
+        if(category == null) {
+        	return null;
+        }
+        
+		return CustomEntityCategoryDto.toDTO(category);
     }
 
     @Override
@@ -180,4 +186,14 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
 		return result;
 	}
+
+	@Override
+	public void remove(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
+		try {
+			this.removeCustomEntityCategory(dto.getCode(), false);
+		} catch (EntityDoesNotExistsException e) {
+			// Do nothing
+		}
+	}
+	
 }

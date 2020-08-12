@@ -117,6 +117,26 @@ public class EjbUtils {
         properties.put(Context.PROVIDER_URL, serverName);
         return new InitialContext(properties);
     }
+    
+    /**
+     * Return a service by a service interface name.
+     * 
+     * @param serviceInterfaceName 	A simple name of a service class (NOT a full classname). E.g. WorkflowService
+     * @param failSilently			Whether to log an error if implementation is not found
+     * @return Service instance
+     */
+    public static Object getServiceInterface(String serviceInterfaceName, boolean failSilently) {
+        try {
+            InitialContext ic = new InitialContext();
+            return ic.lookup("java:global/" + ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + "/" + serviceInterfaceName);
+        } catch (Exception e) {
+        	if(!failSilently) {
+	            Logger log = LoggerFactory.getLogger(EjbUtils.class);
+	            log.error("Failed to obtain service interface for {} {}", serviceInterfaceName, e.getMessage());
+        	}
+        }
+        return null;
+    }
 
     /**
      * Return a service by a service interface name.
@@ -125,14 +145,7 @@ public class EjbUtils {
      * @return Service instance
      */
     public static Object getServiceInterface(String serviceInterfaceName) {
-        try {
-            InitialContext ic = new InitialContext();
-            return ic.lookup("java:global/" + ParamBean.getInstance().getProperty("meveo.moduleName", "meveo") + "/" + serviceInterfaceName);
-        } catch (Exception e) {
-            Logger log = LoggerFactory.getLogger(EjbUtils.class);
-            log.error("Failed to obtain service interface for {} {}", serviceInterfaceName, e.getMessage());
-        }
-        return null;
+        return getServiceInterface(serviceInterfaceName, false);
     }
 
     /**

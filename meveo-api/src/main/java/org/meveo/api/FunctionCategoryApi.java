@@ -74,4 +74,12 @@ public class FunctionCategoryApi extends BaseCrudApi<FunctionCategory, BusinessE
 		return fcService.findByCodeLazy(dto.getCode()) != null;
 	}
 
+	@Override
+	public void remove(BusinessEntityDto dto) throws MeveoApiException, BusinessException {
+		var cat = fcService.findByCode(dto.getCode());
+		if(cat != null) {
+			fcService.remove(cat);
+		}
+	}
+
 }

@@ -305,13 +305,36 @@ public class CustomTableCreatorService implements Serializable {
 		dbLog.addChangeSet(mysqlChangeSet);
 
 		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
-
+		
 		hibernateSession.doWork(connection -> {
-
+			var meta = connection.getMetaData();
+			
 			Database database;
 			try {
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 				setSchemaName(database);
+
+			} catch (DatabaseException e1) {
+				log.error("Failed to retrieve database for connection {}", connection);
+				throw new SQLException(e1);
+			}
+			
+			// Check table does not exists
+			try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName, new String[] {"TABLE"})) {
+				if(res.next()) {
+					throw new IllegalArgumentException("Table with name " + dbTableName + " in schema " + database.getDefaultSchemaName() + " already exists !");
+				}
+			}
+			
+			// Check sequence does not exists
+			try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName + "_seq", new String[] {"SEQUENCE"})) {
+				if(res.next()) {
+					throw new IllegalArgumentException("Sequence with name " + dbTableName + "_seq in schema " + database.getDefaultSchemaName() + " already exists !");
+				}
+			}
+			
+			try {
+
 				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 				liquibase.update(new Contexts(), new LabelExpression());
 

@@ -124,4 +124,9 @@ public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConf
 		}
 	}
 
+	@Override
+	public void remove(BinaryStorageConfigurationDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCode());
+	}
+
 }
