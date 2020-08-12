@@ -66,6 +66,7 @@ import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.exception.ActionForbiddenException;
@@ -73,6 +74,7 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -164,7 +166,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
-		return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
+		try {
+			return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
+		} catch (ModuleInstallFail e) {
+    		log.warn("Failed to install module {}, uninstalling items", meveoModule);
+    		
+    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
+    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
+    		}
+    		
+    		throw e.getException();
+		}
 	}
 
 	public void registerModulePackage(String packageName) {
@@ -428,7 +440,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public void uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
+	public MeveoModule uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
 
 		if (StringUtils.isBlank(code)) {
 			missingParameters.add("code");
@@ -447,7 +459,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (!meveoModule.isInstalled()) {
 			throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
 		}
-		meveoModuleService.uninstall(meveoModule, remove);
+		
+		return meveoModuleItemInstaller.uninstall(meveoModule, remove);
 	}
 
 	

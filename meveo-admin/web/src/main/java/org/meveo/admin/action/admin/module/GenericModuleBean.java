@@ -113,9 +113,12 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     protected MeveoInstance meveoInstance;
     private CroppedImage croppedImage;
     private String tmpPicture;
-    private boolean remove = false;
+    private boolean remove = true;
     private boolean deleteFiles;
     private OnDuplicate onDuplicate = OnDuplicate.SKIP;
+    
+    /* Property used to force user to reload page between installation and uninstallation */
+    private boolean isInstalled;
 
     public GenericModuleBean() {
 
@@ -160,31 +163,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
             List<MeveoModuleItem> itemsToRemove = new ArrayList<>();
 
-            for (MeveoModuleItem item : module.getModuleItems()) {
-
-                // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
-                try {
-					 meveoModuleService.loadModuleItem(item);
-					 
-	                if (item.getItemEntity() == null) {
-	                    itemsToRemove.add(item);
-	                    continue;
-	                }
-	                
-	                if (item.getItemEntity() instanceof CustomFieldTemplate) {
-	                    TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
-	                    new DefaultTreeNode("item", item, classNode);
-	                    
-	                } else {
-	                    TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
-	                    new DefaultTreeNode("item", item, classNode);
-	                }
-	                
-				} catch (BusinessException e) {
-	                log.error("Failed to load module source {}", module.getCode(), e);
-				}
-
-            }
+            createTree(module, itemsToRemove);
             
             if(!itemsToRemove.isEmpty()) {
             	itemsToRemove.forEach(module::removeItem);
@@ -240,8 +219,45 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
         }
 
+        this.isInstalled = module.isInstalled();
         return module;
     }
+    
+	public boolean isInstalled() {
+		return isInstalled;
+	}
+
+	/**
+	 * @param module
+	 * @param notLoadedItems
+	 */
+	private void createTree(T module, List<MeveoModuleItem> notLoadedItems) {
+		for (MeveoModuleItem item : module.getModuleItems()) {
+
+		    // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
+		    try {
+				 meveoModuleService.loadModuleItem(item);
+				 
+		        if (item.getItemEntity() == null) {
+		            notLoadedItems.add(item);
+		            continue;
+		        }
+		        
+		        if (item.getItemEntity() instanceof CustomFieldTemplate) {
+		            TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
+		            new DefaultTreeNode("item", item, classNode);
+		            
+		        } else {
+		            TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
+		            new DefaultTreeNode("item", item, classNode);
+		        }
+		        
+			} catch (BusinessException e) {
+		        log.error("Failed to load module source {}", module.getCode(), e);
+			}
+
+		}
+	}
 
     public BusinessEntity getModuleItemEntity() {
         return moduleItemEntity;
@@ -612,51 +628,64 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     @SuppressWarnings("unchecked")
     public void install() {
-        install(entity, onDuplicate);
-    }
-
-    public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) {
     	
-        try {
-
-            if (!module.isDownloaded()) {
-                return module;
-
-            } else if (module.isInstalled()) {
-                messages.warn(new BundleKey("messages", "meveoModule.installedAlready"));
-                return module;
-            }
-
-            MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
-            if (module.getScript() != null) {
-                boolean checkTestSuits = meveoModuleService.checkTestSuites(module.getScript().getCode());
-                if (!checkTestSuits && module.getIsInDraft()) { 
-                    messages.error(new BundleKey("messages", "meveoModule.warningWhenInstallingModule"));  
-                }
-                if (!checkTestSuits && !module.getIsInDraft()) { 
-                    return null;  
-                }
-            }
-            var result = moduleApi.install(moduleDto, onDuplicate);
-            messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
-            messages.info(result.toString());
-            
-        } catch (Exception e) {
-            log.error("Failed to install meveo module {} ", module.getCode(), e);
+    	try {
+	        entity = (T) install(entity, onDuplicate);
+	        init();
+	        createTree(entity, new ArrayList<>());
+        
+    	} catch (Exception e) {
+            log.error("Failed to install meveo module {} ", entity.getCode(), e);
             
             Throwable rootCause = e;
             while(rootCause.getCause() != null || rootCause instanceof EJBException) {
             	if(rootCause instanceof EJBException) {
-            		rootCause = ((EJBException) rootCause).getCausedByException();
-            	} else {
-            		rootCause = rootCause.getCause();
+            		var ejbException = (EJBException) rootCause;
+            		if(ejbException.getCausedByException() != null) {
+						rootCause = ejbException.getCausedByException();
+	            		continue;
+            		}
             	}
+            	
+            	if(rootCause.getCause() == null) {
+            		break;
+            	}
+            	
+            	rootCause = rootCause.getCause();
             }
             
-            messages.error(new BundleKey("messages", "meveoModule.installFailed"), module.getCode(), (rootCause.getMessage() == null ? rootCause.getClass().getSimpleName() : rootCause.getMessage()));
+            messages.error(new BundleKey("messages", "meveoModule.installFailed"), entity.getCode(), (rootCause.getMessage() == null ? rootCause.getClass().getSimpleName() : rootCause.getMessage()));
         }
+    }
 
-        return module;
+	public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) throws Exception {
+
+		if (!module.isDownloaded()) {
+			return module;
+
+		} else if (module.isInstalled()) {
+			messages.warn(new BundleKey("messages", "meveoModule.installedAlready"));
+			return module;
+		}
+
+		MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
+		if (module.getScript() != null) {
+			boolean checkTestSuits = meveoModuleService.checkTestSuites(module.getScript().getCode());
+			if (!checkTestSuits && module.getIsInDraft()) {
+				messages.error(new BundleKey("messages", "meveoModule.warningWhenInstallingModule"));
+			}
+			if (!checkTestSuits && !module.getIsInDraft()) {
+				return null;
+			}
+		}
+
+		var result = moduleApi.install(moduleDto, onDuplicate);
+		messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
+		messages.info(result.toString());
+
+		module = result.getInstalledModule();
+
+		return module;
     }
 
     @SuppressWarnings("unchecked")
@@ -671,7 +700,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return;
             }
 
-            entity = (T) meveoModuleService.uninstall(entity, remove);
+            entity = (T) moduleApi.uninstall(entity.getCode(), MeveoModule.class, remove);
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {
