@@ -54,14 +54,14 @@ public class ApiUtils {
     @SuppressWarnings("rawtypes")
 	public static ApiService getApiService(Class<?> entityClass, boolean throwException) {
 
-        ApiService apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api");
+        ApiService apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api", true);
         if(apiService == null){
         	Entity entityAnnot = entityClass.getAnnotation(Entity.class);
-            apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api");
+            apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api", true);
         }
 
         if (apiService == null) {
-            apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api");
+            apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSuperclass().getSimpleName() + "Api", true);
         }
         
         if(apiService == null) {
