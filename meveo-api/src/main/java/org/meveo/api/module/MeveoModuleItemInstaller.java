@@ -44,6 +44,7 @@ import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -134,28 +135,32 @@ public class MeveoModuleItemInstaller {
 
         // Load items
         for (MeveoModuleItem item : List.copyOf(moduleItems)) {
+        	if (
+    			item.getAppliesTo() != null && (
+	        		item.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX) ||
+	        		item.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)
+        		)
+			) {
+        		moduleItems.remove(item); // Will be removed along with CET / CRT
+        		continue;
+        	}
+        	
             // check if moduleItem is linked to other active module
             if (meveoModuleService.isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
             	moduleItems.remove(item);
-            } else {
-                meveoModuleService.loadModuleItem(item);
-            }
-        }
-        
-        for (MeveoModuleItem item : moduleItems) {
-            
-            // check if moduleItem is linked to other active module
-            if (meveoModuleService.isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
-                continue;
+            	continue;
             }
             
             meveoModuleService.loadModuleItem(item);
+        }
+        
+        for (MeveoModuleItem item : moduleItems) {
             BusinessEntity itemEntity = item.getItemEntity();
             if (itemEntity == null) {
             	log.error("Failed to load item {}, it won't be uninstalled");
                 continue;
             }
-
+            
             try {
                 if (itemEntity instanceof MeveoModule) {
                     uninstall((MeveoModule) itemEntity, true, removeItems);
@@ -190,7 +195,8 @@ public class MeveoModuleItemInstaller {
                                     .executeUpdate();
                             
                         } else {
-                            api.getPersistenceService().remove(itemEntity);
+                        	log.info("Uninstalling module item {}", item);
+                        	api.getPersistenceService().remove(itemEntity);
                         }
                         
 					} else {
@@ -206,7 +212,7 @@ public class MeveoModuleItemInstaller {
                 }
                 
             } catch (Exception e) {
-                log.error("Failed to uninstall/disable module item. Module item {}", item, e);
+                throw new BusinessException("Failed to uninstall/disable module item " + item ,e);
             }
         }
 
@@ -539,13 +545,17 @@ public class MeveoModuleItemInstaller {
 
 		Comparator<MeveoModuleItemDto> comparator = new Comparator<MeveoModuleItemDto>() {
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public int compare(MeveoModuleItemDto o1, MeveoModuleItemDto o2) {
 				String m1;
 				String m2;
 				try {
-					m1 = ModuleUtil.getModuleItemName(Class.forName(o1.getDtoClassName()));
-					m2 = ModuleUtil.getModuleItemName(Class.forName(o2.getDtoClassName()));
+					var dtoClass1 = Class.forName(o1.getDtoClassName());
+					var dtoClass2 = Class.forName(o2.getDtoClassName());
+
+					m1 = ModuleUtil.getModuleItemName(dtoClass1);
+					m2 = ModuleUtil.getModuleItemName(dtoClass2);
 
 					Class<?> entityClass1 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
 					if(entityClass1 == null) {
@@ -556,6 +566,14 @@ public class MeveoModuleItemInstaller {
 					Class<?> entityClass2 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
 					if(entityClass2 == null) {
 						log.error("Can't get module item type for {}", m2);
+					}
+					
+					// Both items are same type and we know how to compare them
+					if(dtoClass1.equals(dtoClass2) && Comparable.class.isAssignableFrom(dtoClass1)) {
+						Comparable<Object> dto1 = (Comparable<Object>) JacksonUtil.convert(o1.getDtoData(), dtoClass1);
+						Comparable<Object> dto2 = (Comparable<Object>) JacksonUtil.convert(o2.getDtoData(), dtoClass2);
+
+						return dto1.compareTo(dto2);
 					}
 					
 					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);

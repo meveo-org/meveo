@@ -734,6 +734,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setAvailableStorages(cet.getAvailableStorages());
+        
+        if(cet.getSuperTemplate() != null) {
+        	dto.setSuperTemplate(cet.getSuperTemplate().getCode());
+        }
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());

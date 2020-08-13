@@ -57,7 +57,9 @@ public class ApiUtils {
         ApiService apiService = (ApiService) EjbUtils.getServiceInterface(entityClass.getSimpleName() + "Api", true);
         if(apiService == null){
         	Entity entityAnnot = entityClass.getAnnotation(Entity.class);
-            apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api", true);
+        	if(entityAnnot != null) {
+        		apiService = (ApiService) EjbUtils.getServiceInterface(entityAnnot.name() + "Api", true);
+        	}
         }
 
         if (apiService == null) {

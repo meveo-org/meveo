@@ -109,7 +109,7 @@ import org.meveo.model.shared.DateUtils;
 	                }
 	        ),
         @NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
-                @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
+                @QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
 
     private static final long serialVersionUID = -1403961759495272885L;
