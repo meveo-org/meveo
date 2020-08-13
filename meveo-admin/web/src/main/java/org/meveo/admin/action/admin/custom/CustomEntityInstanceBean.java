@@ -122,7 +122,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
+//					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
 				}
 
 			} catch (Exception e) {

@@ -653,7 +653,6 @@ public class CrossStorageService implements CustomPersistenceService {
 					sqlCei.setCode(cei.getCode());
 					sqlCei.setCetCode(cei.getCetCode());
 					sqlCei.setDescription(cei.getDescription());
-					sqlCei.setCfValuesOld(cei.getCfValuesOld());
 					customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
 
 					// Update binaries stored in SQL
@@ -687,15 +686,6 @@ public class CrossStorageService implements CustomPersistenceService {
 				throw new RuntimeException(e);
 			}
 		}
-		
-		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			if (created) {
-				customEntityInstanceCreate.fire(cei);
-				
-			} else {
-				customEntityInstanceUpdate.fire(cei);
-			}
-		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
 	}
@@ -705,7 +695,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
 
 		CustomEntityInstance cei = getCustomEntityInstance(ceiToSave.getCetCode(), ceiToSave.getCode(), values);		
-
+		
 		Map<CustomFieldTemplate, Object> persistedBinaries = new HashMap<>();
 
 		if (cei == null) {
@@ -722,14 +712,13 @@ public class CrossStorageService implements CustomPersistenceService {
 			customEntityInstanceService.create(cei);
 
 		} else {
-
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
 				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
 			}
 
+			cei.setCfValuesOld(cei.getCfValues());
 			cei.setCfValues(ceiToSave.getCfValues());
-			cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 			cei.setDescription(ceiToSave.getDescription());
 			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
 				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
@@ -841,12 +830,15 @@ public class CrossStorageService implements CustomPersistenceService {
 		String tableName = cei.getTableName();
 		String sqlUUID = null;
 		
+		Map<String, Object> oldCfValues = new HashMap<>();
+		
 		if(cei.getUuid() != null) {
 			try {
-				Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
-				if(values != null) {
+				oldCfValues = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
+				if(oldCfValues != null) {
 					sqlUUID = cei.getUuid();
 				}
+				oldCfValues.remove("uuid");
 			} catch (EntityDoesNotExistsException e) {
 				log.debug("Entity with id={} does not exists", cei.getUuid());
 			}
@@ -861,7 +853,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (sqlUUID != null) {
 			
 			cei.setUuid(sqlUUID);
-
+			
+			CustomEntityInstance tempCei = new CustomEntityInstance();
+			tempCei.setCetCode(cei.getCetCode());
+			customFieldInstanceService.setCfValues(tempCei, cei.getCetCode(), oldCfValues);
+			cei.setCfValuesOld(tempCei.getCfValues());
+			
 			// Update binaries
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
@@ -877,6 +874,8 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
+			
+			customEntityInstanceUpdate.fire(cei);
 
 		} else {
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
@@ -892,6 +891,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 
+			customEntityInstanceCreate.fire(cei);
 		}
 
 		return cei.getUuid();

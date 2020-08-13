@@ -49,11 +49,11 @@ public class CustomEntityInstanceObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 
-		log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOld(), cei.getCfValues());
+		log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOld().getValues(), cei.getCfValues().getValues());
 		CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
 		param.setCode(cei.getCode());
 		param.setDescription(cei.getDescription());
-		param.setCetCode(cei.getCet().getCode());
+		param.setCetCode(cei.getCetCode());
 		param.setOldValues(cei.getCfValuesOld());
 		param.setNewValues(cei.getCfValues());
 		param.setCeiUuid(cei.getUuid());
