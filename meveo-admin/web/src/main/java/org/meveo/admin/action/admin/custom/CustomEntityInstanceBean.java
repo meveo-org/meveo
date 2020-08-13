@@ -157,6 +157,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			
 			customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew);
 
+			boolean checkBeforeUpdate = customEntityInstanceService.checkBeforeUpdate(repository, entity);
+			if (!checkBeforeUpdate) {
+				messages.error(new BundleKey("messages", "customEntityInstance.update.error"));
+				return null;
+			}
+
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
 			
 			crossStorageService.createOrUpdate(repository, entity);

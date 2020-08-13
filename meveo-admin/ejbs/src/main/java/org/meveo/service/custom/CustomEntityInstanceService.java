@@ -17,6 +17,7 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -30,10 +31,12 @@ import org.meveo.model.storage.Repository;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 
 import com.ibm.icu.math.BigDecimal;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.wf.WorkflowService;
 
 /**
  * CustomEntityInstance persistence service implementation.
@@ -46,7 +49,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
-	
+
 	@Inject
 	private CustomFieldInstanceService customFieldInstanceService;
 
@@ -55,6 +58,12 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private CustomTableService customTableService;
+
+	@Inject
+	private WorkflowService workflowService;
+
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
 	@Override
 	public void create(CustomEntityInstance entity) throws BusinessException {
@@ -73,7 +82,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 		return entity;
 	}
-	
+
 	public CustomEntityInstance fromMap(CustomEntityTemplate cet, Map<String, Object> values) {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCode((String) values.get("code"));
@@ -86,7 +95,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		} catch (BusinessException e) {
 			log.error("Error setting cf values", e);
 		}
-		
+
 		return cei;
 	}
 
@@ -171,7 +180,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	public List<CustomEntityInstance> list(String cetCode, Map<String, Object> values, PaginationConfiguration paginationConfiguration) {
 		return list(cetCode, false, values, paginationConfiguration);
 	}
-	
+
 	public List<CustomEntityInstance> list(String cetCode, boolean isStoreAsTable, Map<String, Object> values, PaginationConfiguration paginationConfiguration) {
 
 		QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
@@ -200,7 +209,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	private boolean filterOnValues(Map<String, Object> filterValues, CustomEntityInstance customEntityInstance) {
 		return filterOnValues(filterValues, customEntityInstance, false);
 	}
-	
+
 	private boolean filterOnValues(Map<String, Object> filterValues, CustomEntityInstance customEntityInstance, boolean isStoreAsTable) {
 		final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
 		for (Map.Entry<String, Object> filterValue : filterValues.entrySet()) {
@@ -216,7 +225,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			if (filterValue.getValue() instanceof Date) {
 				filterValue.setValue(((Date) filterValue.getValue()).getTime());
 			}
-			
+
 			String strPattern = filterValue.getValue().toString().replace("*", ".*");
 			Pattern pattern = Pattern.compile(strPattern, Pattern.CASE_INSENSITIVE);
 
@@ -290,12 +299,12 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		if (entity.getCet().isStoreAsTable()) {
 			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), entity.getCet(), entity.getUuid());
 			if (values != null) {
-				for (String key: values.keySet()) {
-					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(key);
-					if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals("org.meveo.model.wf.Workflow")) {
+				for (String key : values.keySet()) {
+					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(key, "CE_" + entity.getCetCode());
+					if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals(Workflow.class.getName())) {
 						List<String> valueWF = (List<String>) values.get(key);
 						if (CollectionUtils.isNotEmpty(valueWF)) {
-							return transitionsFromPreviousState(entity);
+							return transitionsFromPreviousState(customFieldTemplate, entity);
 						} else {
 							return true;
 						}
@@ -304,63 +313,143 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			}
 		} else {
 			CustomEntityInstance customEntityInstance = findByUuid(entity.getCetCode(), entity.getUuid());
-			if (customEntityInstance.getCfValues() != null) {
+			if (customEntityInstance != null && customEntityInstance.getCfValues() != null) {
 				for (String key : customEntityInstance.getCfValues().getValuesByCode().keySet()) {
-					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(key);
-					if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals("org.meveo.model.wf.Workflow")) {
+					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(key, "CE_" + entity.getCetCode());
+					if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals(Workflow.class.getName())) {
 						List<CustomFieldValue> customFieldValues = customEntityInstance.getCfValues().getValuesByCode().get(key);
 						if (CollectionUtils.isNotEmpty(customFieldValues)) {
-							return transitionsFromPreviousState(entity);
+							return transitionsFromPreviousState(customFieldTemplate, entity);
 						} else {
 							return true;
-						}
 						}
 					}
 				}
 			}
+		}
 		return true;
 	}
 
-	private boolean transitionsFromPreviousState(CustomEntityInstance instance) {
+	private boolean transitionsFromPreviousState(CustomFieldTemplate customFieldTemplate, CustomEntityInstance instance) {
 		if (instance.getCfValues() != null && instance.getCfValues().getValuesByCode() != null) {
-			for (String key : instance.getCfValues().getValuesByCode().keySet()) {
-				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(key);
-				if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals("org.meveo.model.wf.Workflow")) {
-					List<CustomFieldValue> customFieldValues = instance.getCfValues().getValuesByCode().get(key);
-					if (CollectionUtils.isNotEmpty(customFieldValues)) {
-						for (CustomFieldValue customFieldValue : customFieldValues) {
-							if (CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
-								List<Workflow> workflows = new ArrayList<>();
-								for (Object object : customFieldValue.getListValue()) {
-									if (object instanceof EntityReferenceWrapper) {
-										Workflow workflow = (Workflow) getEntityManager().createNamedQuery("Workflow.findByUUID").setParameter("uuid", ((EntityReferenceWrapper) object).getUuid()).getSingleResult();
-										workflows.add(workflow);
+			List<CustomFieldValue> customFieldValues = instance.getCfValues().getValuesByCode().get(customFieldTemplate.getCode());
+			if (CollectionUtils.isNotEmpty(customFieldValues)) {
+				for (CustomFieldValue customFieldValue : customFieldValues) {
+					if (CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
+						List<Workflow> workflows = new ArrayList<>();
+						for (Object object : customFieldValue.getListValue()) {
+							if (object instanceof EntityReferenceWrapper) {
+								Workflow workflow = workflowService.findByCode(((EntityReferenceWrapper) object).getCode());
+								workflows.add(workflow);
+							}
+						}
+						if (CollectionUtils.isNotEmpty(workflows)) {
+							List<String> conditionEls = new ArrayList<>();
+							for (int i = 0; i < workflows.size(); i++) {
+								List<WFTransition> wfTransitions = workflows.get(i).getTransitions();
+								List<String> statusWF = new ArrayList<>();
+								if (CollectionUtils.isNotEmpty(wfTransitions)) {
+									for (WFTransition wfTransition : wfTransitions) {
+										statusWF.add(wfTransition.getToStatus());
+										if (wfTransition.getConditionEl() != null) {
+											conditionEls.add(wfTransition.getConditionEl());
+										}
+									}
+									if (CollectionUtils.isNotEmpty(statusWF) && i + 1 < workflows.size()) {
+										if (!statusWF.contains(workflows.get(i + 1).getCode())) {
+											return false;
+										}
 									}
 								}
-								if (CollectionUtils.isNotEmpty(workflows)) {
-									for (int i = 0; i < workflows.size(); i++) {
-										List<WFTransition> wfTransitions = workflows.get(i).getTransitions();
-										List<String> statusWF = new ArrayList<>();
-										if (CollectionUtils.isNotEmpty(wfTransitions)) {
-											for (WFTransition wfTransition : wfTransitions) {
-												statusWF.add(wfTransition.getFromStatus());
-											}
-											if (CollectionUtils.isNotEmpty(statusWF) && i + 1 < workflows.size()) {
-												if (!statusWF.contains(workflows.get(i + 1).getCode())) {
-													return false;
+							}
+							if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(conditionEls)) {
+								if (!conditionEls.contains(customFieldTemplate.getApplicableOnEl())) {
+									return false;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	public List<Workflow> statesOfCET(Repository repository, String cetCode) {
+		List<Workflow> states = new ArrayList<>();
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
+		if (customFieldTemplates != null) {
+			for (CustomFieldTemplate cft : customFieldTemplates.values()) {
+				if (cft != null && cft.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && cft.getEntityClazz().equals(Workflow.class.getName())) {
+					if (cet.isStoreAsTable()) {
+						List<Map<String, Object>> values = customTableService.list(repository.getSqlConfigurationCode(), cet);
+						if (CollectionUtils.isNotEmpty(values)) {
+							for (Map<String, Object> value: values) {
+								if (value != null) {
+									List<String> valueWF = (List<String>) value.get(cft.getCode());
+									if (CollectionUtils.isNotEmpty(valueWF)) {
+										for (String uuid: valueWF) {
+											Workflow workflow = (Workflow) getEntityManager().createNamedQuery("Workflow.findByUUID").setParameter("uuid", uuid).getSingleResult();
+											states.add(workflow);
+										}
+									}
+								}
+							}
+						}
+					} else {
+						List<CustomEntityInstance> customEntityInstances = findByCode(cetCode, "");
+						if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(customEntityInstances)) {
+							for (CustomEntityInstance customEntityInstance : customEntityInstances) {
+								if (customEntityInstance.getCfValues() != null && customEntityInstance.getCfValues().getValuesByCode() != null) {
+									List<CustomFieldValue> customFieldValues = customEntityInstance.getCfValues().getValuesByCode().get(cft.getCode());
+									for (CustomFieldValue customFieldValue : customFieldValues) {
+										if (org.apache.commons.collections.CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
+											for (Object object : customFieldValue.getListValue()) {
+												if (object instanceof EntityReferenceWrapper) {
+													Workflow workflow = workflowService.findByCode(((EntityReferenceWrapper) object).getCode());
+													states.add(workflow);
 												}
 											}
 										}
 									}
 								}
 							}
-							}
 						}
-					} else {
-						return true;
 					}
 				}
 			}
-		return true;
+		}
+		return states;
+	}
+
+	public List<String> targetStates(CustomEntityInstance cei) throws ELException {
+		List<String> targetStates = new ArrayList<>();
+		if (cei.getCfValues() != null && cei.getCfValues().getValuesByCode() != null) {
+			for (String key : cei.getCfValues().getValuesByCode().keySet()) {
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(key, "CE_" + cei.getCetCode());
+				if (customFieldTemplate != null && customFieldTemplate.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplate.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && customFieldTemplate.getEntityClazz().equals(Workflow.class.getName())
+						&& MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(customFieldTemplate.getApplicableOnEl(), "entity", cei)) {
+					List<CustomFieldValue> customFieldValues = cei.getCfValues().getValuesByCode().get(customFieldTemplate.getCode());
+					if (CollectionUtils.isNotEmpty(customFieldValues)) {
+						for (CustomFieldValue customFieldValue : customFieldValues) {
+							if (CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
+								for (Object object : customFieldValue.getListValue()) {
+									if (object instanceof EntityReferenceWrapper) {
+										Workflow workflow = workflowService.findByCode(((EntityReferenceWrapper) object).getCode());
+										if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+											for (WFTransition wfTransition : workflow.getTransitions()) {
+												targetStates.add(wfTransition.getToStatus());
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return targetStates;
 	}
 }
