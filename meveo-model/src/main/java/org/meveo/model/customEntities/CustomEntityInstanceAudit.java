@@ -1,7 +1,8 @@
 package org.meveo.model.customEntities;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -21,6 +22,20 @@ public class CustomEntityInstanceAudit {
 	private String field;
 	private Object oldValue;
 	private Object newValue;
+
+	public Map<String, Object> toMap() {
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("cei_uuid", getCeiUuid());
+		result.put("user", getUser());
+		result.put("event_date", java.sql.Timestamp.valueOf(getEventDate()));
+		result.put("action", getAction().name());
+		result.put("field", getField());
+		result.put("old_value", getOldValue());
+		result.put("new_value", getNewValue());
+
+		return result;
+	}
 
 	public String getUuid() {
 		return uuid;

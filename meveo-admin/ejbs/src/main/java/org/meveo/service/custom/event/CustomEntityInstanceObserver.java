@@ -1,6 +1,6 @@
 package org.meveo.service.custom.event;
 
-import java.util.List;
+import java.io.IOException;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -12,12 +12,15 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityInstanceAudit;
+import org.meveo.model.customEntities.CustomEntityInstanceAuditParameter;
 import org.meveo.service.custom.CustomEntityInstanceAuditService;
 import org.slf4j.Logger;
 
@@ -44,11 +47,18 @@ public class CustomEntityInstanceObserver {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei) {
+	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 
 		log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOld(), cei.getCfValues());
-		List<CustomEntityInstanceAudit> x = customEntityInstanceAuditService.computeDifference(cei.getUuid(), cei.getCfValuesOld(), cei.getCfValues());
-		log.debug("{}", x);
+		CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
+		param.setCode(cei.getCode());
+		param.setDescription(cei.getDescription());
+		param.setCetCode(cei.getCet().getCode());
+		param.setOldValues(cei.getCfValuesOld());
+		param.setNewValues(cei.getCfValues());
+		param.setCeiUuid(cei.getUuid());
+		
+		customEntityInstanceAuditService.auditChanges(param);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

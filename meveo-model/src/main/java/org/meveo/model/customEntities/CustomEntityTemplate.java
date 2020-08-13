@@ -78,6 +78,8 @@ import org.meveo.model.scripts.ScriptInstance;
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate>, CustomModelObject {
 
 	private static final long serialVersionUID = 8281478284763353310L;
+	
+	public static final String AUDIT_PREFIX = "audit_";
 
 	/**
 	 * Prefix for CustomEntityTemplate. If this prefix is changed, the hard-coded

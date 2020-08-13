@@ -599,6 +599,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
+        cet.setAudited(dto.isAudited());
 
         // sql configuration
 		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {

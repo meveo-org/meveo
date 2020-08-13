@@ -1,18 +1,23 @@
 package org.meveo.service.custom;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Map.Entry;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstanceAudit;
 import org.meveo.model.customEntities.CustomEntityInstanceAudit.CustomEntityInstanceAuditType;
+import org.meveo.model.customEntities.CustomEntityInstanceAuditParameter;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 
@@ -27,7 +32,16 @@ public class CustomEntityInstanceAuditService {
 	@CurrentUser
 	protected MeveoUser currentUser;
 
-	public List<CustomEntityInstanceAudit> computeDifference(String ceiUuid, CustomFieldValues oldValues, CustomFieldValues newValues) {
+	@Inject
+	private CustomEntityInstanceAuditWriterService customEntityInstanceAuditWriterService;
+
+	public void auditChanges(CustomEntityInstanceAuditParameter param) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
+
+		List<CustomEntityInstanceAudit> result = computeDifference(param.getCeiUuid(), param.getOldValues(), param.getNewValues());
+		customEntityInstanceAuditWriterService.writeChanges(param, result);
+	}
+
+	private List<CustomEntityInstanceAudit> computeDifference(String ceiUuid, CustomFieldValues oldValues, CustomFieldValues newValues) {
 
 		List<CustomEntityInstanceAudit> result = new ArrayList<>();
 
