@@ -99,7 +99,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     private ParamBean paramBean = ParamBean.getInstance();
-
+    
     /**
      * Groups custom field templates applicable to the same entity type. Key format: &lt;custom field template appliesTo code&gt;. Value is a map of custom field templates
      * identified by a template code
@@ -130,7 +130,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 			InitialContext initialContext = new InitialContext();
 			cacheContainer = (EmbeddedCacheManager) initialContext.lookup("java:jboss/infinispan/container/meveo");
 		} catch (Exception e) {
-			log.error("Cannot instantiate cache container", e);
+			throw new RuntimeException("Cannot instantiate cache container", e);
 		}
     	
         Lock lock = cacheLock.writeLock();
@@ -143,11 +143,25 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
             try {
                 populateCache(null, true);
+                
+                // Check caches integrity
+                cftsByAppliesTo.values();
+                cetsByCode.values();
+                crtsByCode.values();
             } catch (Exception e) {
-                log.error("Failed to populate CET / CRT / CFT caches", e);
+        		log.warn("Failed to populate CET / CRT / CFT caches. They will be cleaned and repopulated");
+                
+                cftsByAppliesTo.clear();
+                cetsByCode.clear();
+                crtsByCode.clear();
+                
+        		populateCache(null, true);
             }
 
-        } finally {
+        } catch(Exception e1) {
+    		log.error("Failed to populate CET / CRT / CFT caches.", e1);
+    		
+    	} finally {
             lock.unlock();
         }
     }
