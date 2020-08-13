@@ -18,7 +18,7 @@ import org.meveo.api.dto.response.CustomEntityCategoriesResponseDto;
 import org.meveo.api.dto.response.CustomEntityCategoryResponseDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.rest.IBaseRs;
-import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.custom.entities.CustomEntityCategory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -83,6 +83,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;

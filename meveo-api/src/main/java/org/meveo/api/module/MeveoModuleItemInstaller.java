@@ -43,8 +43,8 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -620,7 +620,7 @@ public class MeveoModuleItemInstaller {
 					result.merge(subResult);
 				} catch (Exception e) {
 					if (e instanceof EJBException) {
-						throw new BusinessException(((EJBException) e).getCausedByException());
+						throw new BusinessException(e.getCause());
 					}
 
 					throw new BusinessException(e);

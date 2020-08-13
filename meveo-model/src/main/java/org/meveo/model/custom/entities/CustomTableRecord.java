@@ -1,4 +1,4 @@
-package org.meveo.model.customEntities;
+package org.meveo.model.custom.entities;
 
 import java.io.Serializable;
 import java.util.Map;

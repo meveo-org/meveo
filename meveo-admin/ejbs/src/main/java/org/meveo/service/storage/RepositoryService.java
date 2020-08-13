@@ -10,7 +10,7 @@ import org.elasticsearch.repositories.RepositoryException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.BusinessService;

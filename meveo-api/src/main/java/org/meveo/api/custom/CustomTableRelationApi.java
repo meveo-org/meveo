@@ -40,7 +40,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;

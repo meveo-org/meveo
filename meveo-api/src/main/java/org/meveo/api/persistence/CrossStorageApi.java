@@ -15,8 +15,8 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
@@ -58,10 +58,10 @@ public class CrossStorageApi{
 	 * 
 	 * @param repository the repository where to save data
 	 * @param value      the data to save
-	 * @throws BusinessApiException         See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
-	 * @throws EntityDoesNotExistsException See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
-	 * @throws BusinessException            See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
-	 * @throws IOException                  See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
+	 * @throws BusinessApiException         See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.custom.entities.CustomEntityInstance)}
+	 * @throws EntityDoesNotExistsException See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.custom.entities.CustomEntityInstance)}
+	 * @throws BusinessException            See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.custom.entities.CustomEntityInstance)}
+	 * @throws IOException                  See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.custom.entities.CustomEntityInstance)}
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createOrUpdate(Repository repository, Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {

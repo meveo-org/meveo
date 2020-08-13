@@ -40,8 +40,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
 /**

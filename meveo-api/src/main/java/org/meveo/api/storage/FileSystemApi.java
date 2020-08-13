@@ -5,7 +5,7 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.storage.BinaryStorageUtils;

@@ -3,7 +3,7 @@ package org.meveo.service.index;
 import java.io.Serializable;
 
 import org.meveo.model.BaseEntity;
-import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.custom.entities.CustomTableRecord;
 
 /**
  * A mapping between providerCode, classname, custom entity code (if applicable) and index name and type (if applicable)

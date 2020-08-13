@@ -27,7 +27,7 @@ import org.meveo.model.crm.custom.CustomFieldInheritanceEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
-import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityInstance;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;

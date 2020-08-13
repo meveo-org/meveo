@@ -13,7 +13,7 @@ import javax.inject.Inject;
 
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 

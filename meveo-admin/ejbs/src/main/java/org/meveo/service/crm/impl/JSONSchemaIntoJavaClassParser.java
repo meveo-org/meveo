@@ -10,7 +10,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.service.custom.CustomEntityTemplateService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

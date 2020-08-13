@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.customEntities.GraphQLQueryField;
-import org.meveo.model.customEntities.Mutation;
+import org.meveo.model.custom.entities.GraphQLQueryField;
+import org.meveo.model.custom.entities.Mutation;
 
 public class Neo4JStorageConfigurationDto {
 

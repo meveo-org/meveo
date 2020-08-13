@@ -1,4 +1,4 @@
-package org.meveo.model.customEntities;
+package org.meveo.model.custom.entities;
 
 import org.hibernate.annotations.*;
 import org.meveo.model.AuditableEntity;
