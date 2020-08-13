@@ -12,7 +12,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.Lock;
@@ -29,6 +28,7 @@ import javax.persistence.Query;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -111,6 +111,9 @@ public class CustomTableCreatorService implements Serializable {
 	
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
+	
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
 
 	private EntityManager getEntityManager(String sqlConfigurationCode) {
 
@@ -366,7 +369,6 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param cft         Field definition
 	 */
 	@AccessTimeout(value = 1L, unit = TimeUnit.MINUTES)
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void addField(String sqlConnectionCode, String dbTableName, CustomFieldTemplate cft) {
 
 		// Don't add field if not stored in sql
@@ -623,7 +625,11 @@ public class CustomTableCreatorService implements Serializable {
 		String referenceColumnNames = UUID;
 
 		// Only add foreign key constraint if referenced entity is stored as table
-		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+		CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+		if(referenceCet == null) {
+			referenceCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+		}
+		
 		String referenceTableName = null;
 		if (referenceCet == null) {
 			try {
@@ -840,7 +846,10 @@ public class CustomTableCreatorService implements Serializable {
 
 		CustomFieldTypeEnum fieldType = cft.getFieldType();
 		if (fieldType == CustomFieldTypeEnum.ENTITY) {
-			final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+			CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
+			if(referenceCet == null) {
+				referenceCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+			}
 			if (referenceCet == null && !cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
 				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
 				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));

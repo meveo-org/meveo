@@ -894,9 +894,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         if (entityClazz == null) {
             return null;
         }
-        if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
-            return entityClazz.substring(0, entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length() - 3);
-        }
+        if (entityClazz.startsWith(CustomEntityTemplate.class.getName()) || 
+        		entityClazz.startsWith("org.meveo.model.customEntities.CustomEntityTemplate")
+    		) {
+            return CustomEntityTemplate.class.getName();
+		}
         return entityClazz;
     }
 
@@ -910,9 +912,16 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         if (entityClazz == null) {
             return null;
         }
+        
         if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
             return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
         }
+        
+        // Suport for old api
+        if (entityClazz.startsWith("org.meveo.model.customEntities.CustomEntityTemplate")) {
+            return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
+        }
+        
         return entityClazz;
     }
 

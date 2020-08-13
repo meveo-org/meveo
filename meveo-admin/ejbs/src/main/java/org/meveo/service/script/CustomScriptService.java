@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -83,7 +84,6 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -150,6 +150,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
+    
+    private Map<String, List<File>> compiledCustomEntities = new HashMap<>();
 
     @PostConstruct
     private void init() {
@@ -874,6 +876,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private List<File> parseImportCustomEntity(Pattern pattern, String className) {
     	
     	List<File> files = new ArrayList<>();
+    	
     	try {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
@@ -882,8 +885,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 Matcher matcher2 = pattern.matcher(content);
                 while (matcher2.find()) {
                     String name = matcher2.group(1);
-                    if (name.startsWith("org.meveo.model.customEntities")) {
-                    	files.addAll(parseImportCustomEntity(pattern, name));
+            		/* /!\ If the package name is a package name used in Meveo app, 
+            		 * we will have a stack overflow error */
+                    if (name.startsWith("org.meveo.model.customEntities") && !name.equals(className)) {
+                    	log.info("parseImportCustomEntity - {} : {}", pattern, name);
+                    	var parsedImport = compiledCustomEntities.computeIfAbsent(name, k -> parseImportCustomEntity(pattern, name));
+						files.addAll(parsedImport);
                     }
                 }
                 
