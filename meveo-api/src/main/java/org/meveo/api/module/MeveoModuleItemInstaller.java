@@ -135,16 +135,6 @@ public class MeveoModuleItemInstaller {
 
         // Load items
         for (MeveoModuleItem item : List.copyOf(moduleItems)) {
-        	if (
-    			item.getAppliesTo() != null && (
-	        		item.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX) ||
-	        		item.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)
-        		)
-			) {
-        		moduleItems.remove(item); // Will be removed along with CET / CRT
-        		continue;
-        	}
-        	
             // check if moduleItem is linked to other active module
             if (meveoModuleService.isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
             	moduleItems.remove(item);
