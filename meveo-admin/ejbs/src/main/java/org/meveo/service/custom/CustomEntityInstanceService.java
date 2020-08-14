@@ -345,8 +345,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 						}
 						if (CollectionUtils.isNotEmpty(workflows)) {
 							List<String> conditionEls = new ArrayList<>();
+							List<WFTransition> transitions = new ArrayList<>();
 							for (int i = 0; i < workflows.size(); i++) {
 								List<WFTransition> wfTransitions = workflows.get(i).getTransitions();
+								transitions.addAll(wfTransitions);
 								List<String> statusWF = new ArrayList<>();
 								if (CollectionUtils.isNotEmpty(wfTransitions)) {
 									for (WFTransition wfTransition : wfTransitions) {
@@ -362,10 +364,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 									}
 								}
 							}
-							if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(conditionEls)) {
-								if (!conditionEls.contains(customFieldTemplate.getApplicableOnEl())) {
-									return false;
-								}
+							if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(transitions)
+									&& (!CollectionUtils.isNotEmpty(conditionEls) || !conditionEls.contains(customFieldTemplate.getApplicableOnEl()))) {
+								return false;
 							}
 						}
 					}
@@ -375,6 +376,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return true;
 	}
 
+    /**
+     *  Returns a list of states for a given CET.
+     */
 	public List<Workflow> statesOfCET(Repository repository, String cetCode) {
 		List<Workflow> states = new ArrayList<>();
 		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
@@ -399,20 +403,22 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 						}
 					} else {
 						List<CustomEntityInstance> customEntityInstances = findByCode(cetCode, "");
-						if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(customEntityInstances)) {
+						if (CollectionUtils.isNotEmpty(customEntityInstances)) {
 							for (CustomEntityInstance customEntityInstance : customEntityInstances) {
 								if (customEntityInstance.getCfValues() != null && customEntityInstance.getCfValues().getValuesByCode() != null) {
 									List<CustomFieldValue> customFieldValues = customEntityInstance.getCfValues().getValuesByCode().get(cft.getCode());
-									for (CustomFieldValue customFieldValue : customFieldValues) {
-										if (org.apache.commons.collections.CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
-											for (Object object : customFieldValue.getListValue()) {
-												if (object instanceof EntityReferenceWrapper) {
-													Workflow workflow = workflowService.findByCode(((EntityReferenceWrapper) object).getCode());
-													states.add(workflow);
-												}
-											}
-										}
-									}
+									if (CollectionUtils.isNotEmpty(customFieldValues)) {
+                                        for (CustomFieldValue customFieldValue : customFieldValues) {
+                                            if (CollectionUtils.isNotEmpty(customFieldValue.getListValue())) {
+                                                for (Object object : customFieldValue.getListValue()) {
+                                                    if (object instanceof EntityReferenceWrapper) {
+                                                        Workflow workflow = workflowService.findByCode(((EntityReferenceWrapper) object).getCode());
+                                                        states.add(workflow);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
 								}
 							}
 						}
@@ -423,6 +429,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return states;
 	}
 
+    /**
+     *  Returns the target states from a origin state of a given CEI where applicationEL evaluates to true.
+     */
 	public List<String> targetStates(CustomEntityInstance cei) throws ELException {
 		List<String> targetStates = new ArrayList<>();
 		if (cei.getCfValues() != null && cei.getCfValues().getValuesByCode() != null) {
