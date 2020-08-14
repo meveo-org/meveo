@@ -837,8 +837,8 @@ public class CrossStorageService implements CustomPersistenceService {
 				oldCfValues = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), cei.getUuid());
 				if(oldCfValues != null) {
 					sqlUUID = cei.getUuid();
+					oldCfValues.remove("uuid");
 				}
-				oldCfValues.remove("uuid");
 			} catch (EntityDoesNotExistsException e) {
 				log.debug("Entity with id={} does not exists", cei.getUuid());
 			}
