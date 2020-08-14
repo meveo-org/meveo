@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.naming.NamingException;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
@@ -27,6 +27,7 @@ import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -36,7 +37,9 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.service.storage.RepositoryService;
+import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.cdi.Cookie;
+import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
 
 /**
@@ -76,8 +79,8 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
 
+	private LazyDataModel<Map<String, Object>> nativeDataModel;
 	protected CustomEntityTemplate customEntityTemplate;
-
 	private Repository repository;
 
 	protected String customEntityTemplateCode;
@@ -336,5 +339,50 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	public void setCustomEntityTemplate(CustomEntityTemplate customEntityTemplate) {
 		this.customEntityTemplate = customEntityTemplate;
+	}
+
+	public Repository getDefaultRepository() {
+		return repositoryService.findDefaultRepository();
+	}
+
+	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
+		return getNativeDataModel(filters);
+	}
+
+	public LazyDataModel<Map<String, Object>> getNativeDataModel(Map<String, Object> inputFilters) throws NamingException {
+
+		if (nativeDataModel == null) {
+
+			final Map<String, Object> filters = inputFilters;
+
+			nativeDataModel = new CrossStorageDataModel() {
+
+				private static final long serialVersionUID = 6682319740448829853L;
+
+				@Override
+				protected Map<String, Object> getSearchCriteria() {
+					return filters;
+				}
+
+				@Override
+				protected Repository getRepository() {
+					return CustomEntityInstanceBean.this.getDefaultRepository();
+				}
+
+				@Override
+				protected CustomEntityTemplate getCustomEntityTemplate() {
+					CustomEntityTemplate cet = new CustomEntityTemplate();
+					cet.getSqlStorageConfigurationNullSafe().setStoreAsTable(true);
+					cet.setCode(CustomEntityTemplate.AUDIT_PREFIX + CustomEntityInstanceBean.this.getCustomEntityTemplateCode());
+					cet.getAvailableStorages().add(DBStorageType.SQL);
+					return cet;
+				}
+
+			};
+		}
+		
+		log.debug("{}", nativeDataModel);
+
+		return nativeDataModel;
 	}
 }
