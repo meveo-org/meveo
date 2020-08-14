@@ -50,6 +50,7 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
     @Inject
     private JobExecutionService jobExecutionService;
 
+    @Override
     public JobInstance create(JobInstanceDto postData) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(postData.getJobTemplate()) || StringUtils.isBlank(postData.getCode())) {
 
@@ -120,6 +121,11 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
             throw new EntityDoesNotExistsException(JobInstance.class, jobInstanceCode);
         }
 
+		return update(postData, jobInstance);
+    }
+
+    @Override
+	public JobInstance update(JobInstanceDto postData, JobInstance jobInstance) throws MeveoApiException, BusinessException {
 		// need to cancel existing attached timer
 		if ((jobInstance.getTimerEntity() != null && !jobInstance.getTimerEntity().getCode().equals(postData.getTimerCode()))) {
 			jobInstanceService.scheduleUnscheduleJob(jobInstance.getId());
@@ -178,7 +184,7 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
         jobInstance = jobInstanceService.update(jobInstance);
 
         return jobInstance;
-    }
+	}
 
     /**
      * Create or update Job Instance based on code.

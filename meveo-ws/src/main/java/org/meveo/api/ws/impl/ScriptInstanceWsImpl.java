@@ -24,7 +24,7 @@ public class ScriptInstanceWsImpl extends BaseWs implements ScriptInstanceWs {
     public ScriptInstanceReponseDto create(ScriptInstanceDto postData) {
         ScriptInstanceReponseDto result = new ScriptInstanceReponseDto();
         try {
-            result.setCompilationErrors(scriptInstanceApi.create(postData));
+            result.setCompilationErrors(scriptInstanceApi.createAndGetErrors(postData));
             result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
 
         } catch (Exception e) {
@@ -38,7 +38,7 @@ public class ScriptInstanceWsImpl extends BaseWs implements ScriptInstanceWs {
     public ScriptInstanceReponseDto update(ScriptInstanceDto postData) {
         ScriptInstanceReponseDto result = new ScriptInstanceReponseDto();
         try {
-            result.setCompilationErrors(scriptInstanceApi.update(postData));
+            result.setCompilationErrors(scriptInstanceApi.updateAndGetErrors(postData));
             result.getActionStatus().setStatus(ActionStatusEnum.SUCCESS);
 
         } catch (Exception e) {

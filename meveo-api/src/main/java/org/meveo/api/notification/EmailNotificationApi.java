@@ -43,6 +43,7 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
     @Inject
     private ScriptInstanceService scriptInstanceService;
 
+    @Override
     public EmailNotification create(EmailNotificationDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -123,7 +124,12 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
         if (notif == null) {
             throw new EntityDoesNotExistsException(EmailNotification.class, postData.getCode());
         }
-        ScriptInstance scriptInstance = null;
+        return update(postData, notif);
+    }
+
+	@Override
+	public EmailNotification update(EmailNotificationDto postData, EmailNotification notif) throws EntityDoesNotExistsException, InvalidParameterException, BusinessException {
+		ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
             if (scriptInstance == null) {
@@ -166,7 +172,7 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
         notif = emailNotificationService.update(notif);
 
         return notif;
-    }
+	}
 
     public void remove(String notificationCode) throws MeveoApiException, BusinessException {
         if (!StringUtils.isBlank(notificationCode)) {

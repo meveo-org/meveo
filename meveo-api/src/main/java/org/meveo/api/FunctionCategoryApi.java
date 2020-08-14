@@ -44,11 +44,24 @@ public class FunctionCategoryApi extends BaseCrudApi<FunctionCategory, BusinessE
 	public FunctionCategory createOrUpdate(BusinessEntityDto dtoData) throws MeveoApiException, BusinessException {
 		FunctionCategory c = fcService.findByCode(dtoData.getCode());
 		if(c == null) {
-			fcService.create(fromDto(dtoData));
+			create(dtoData);
 		} else {
-			c.setDescription(dtoData.getDescription());
+			update(dtoData, c);
 		}
 		return c;
+	}
+
+	@Override
+	public FunctionCategory update(BusinessEntityDto dtoData, FunctionCategory c) {
+		c.setDescription(dtoData.getDescription());
+		return c;
+	}
+
+	@Override
+	public FunctionCategory create(BusinessEntityDto dtoData) throws BusinessException, MeveoApiException {
+		var fromDto = fromDto(dtoData);
+		fcService.create(fromDto);
+		return fromDto;
 	}
 
 	@Override
@@ -60,7 +73,7 @@ public class FunctionCategoryApi extends BaseCrudApi<FunctionCategory, BusinessE
 	public FunctionCategory fromDto(BusinessEntityDto dto) throws MeveoApiException {
 		FunctionCategory fc = new FunctionCategory();
 		fc.setCode(dto.getCode());
-		fc.setDescription(dto.getDescription());
+		update(dto, fc);
 		return fc;
 	}
 

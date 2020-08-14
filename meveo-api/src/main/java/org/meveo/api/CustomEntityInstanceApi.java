@@ -48,7 +48,7 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		super(CustomEntityInstance.class, CustomEntityInstanceDto.class);
 	}
 
-	public void create(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
+	public CustomEntityInstance create(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 
 		if (StringUtils.isBlank(dto.getCode())) {
 			missingParameters.add("code");
@@ -88,10 +88,11 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		}
 
 		customEntityInstanceService.create(cei);
+		
+		return cei;
 	}
-
+	
 	public void update(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
-
 		if (StringUtils.isBlank(dto.getCode())) {
 			missingParameters.add("code");
 		}
@@ -105,16 +106,21 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		if (cet == null) {
 			throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCetCode());
 		}
+		
+		CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(dto.getCetCode(), dto.getCode());
+		if (cei == null) {
+			throw new EntityDoesNotExistsException(CustomEntityInstance.class, dto.getCode());
+		}
+		
+		update(dto, cei);
+	}
+
+	public CustomEntityInstance update(CustomEntityInstanceDto dto, CustomEntityInstance cei) throws MeveoApiException, BusinessException {
 
 		if (!currentUser.hasRole(CustomEntityTemplate.getModifyPermission(dto.getCetCode()))
 				&& !currentUser.hasRole("ModifyAllCE")) {
 			throw new ActionForbiddenException("User does not have permission '"
 					+ CustomEntityTemplate.getModifyPermission(dto.getCetCode()) + "'");
-		}
-
-		CustomEntityInstance cei = customEntityInstanceService.findByCodeByCet(dto.getCetCode(), dto.getCode());
-		if (cei == null) {
-			throw new EntityDoesNotExistsException(CustomEntityInstance.class, dto.getCode());
 		}
 
 		cei = CustomEntityInstanceDto.fromDTO(dto, cei);
@@ -131,6 +137,8 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		}
 
 		cei = customEntityInstanceService.update(cei);
+		
+		return cei;
 	}
 
 	public void remove(String cetCode, String code) throws MeveoApiException, BusinessException {
@@ -289,4 +297,5 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 	public void remove(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 		this.remove(dto.getCetCode(), dto.getCode());
 	}
+
 }

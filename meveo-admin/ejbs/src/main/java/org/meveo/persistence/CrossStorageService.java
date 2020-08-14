@@ -915,7 +915,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			Map<String, Object> neo4jValues = filterValues(values, cet, DBStorageType.NEO4J);
 
-			final List<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
+			final Collection<String> cetLabels = cet.getNeo4JStorageConfiguration().getLabels() != null ? cet.getNeo4JStorageConfiguration().getLabels() : new ArrayList<>();
 			List<String> labels = new ArrayList<>(cetLabels);
 			labels.add(cet.getCode());
 

@@ -203,8 +203,13 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     public GitRepository createOrUpdate(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {
         return exists(dtoData) ? update(dtoData) : create(dtoData, true, null, null);
     }
+    
+    @Override
+	public GitRepository create(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {
+    	return create(dtoData, true, null, null);
+	}
 
-    public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws MeveoApiException, BusinessException {
+	public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws MeveoApiException, BusinessException {
         final GitRepository repository = fromDto(dtoData);
         gitRepositoryService.create(repository, failIfExist, username, password);
         return repository;
@@ -212,8 +217,12 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     public GitRepository update(GitRepositoryDto dto) throws BusinessException {
         final GitRepository entity = gitRepositoryService.findByCode(dto.getCode());
+        return update(dto, entity);
+    }
 
-        if(dto.getRemoteOrigin() != null && entity.getRemoteOrigin() != null && !dto.getRemoteOrigin().equals(entity.getRemoteOrigin())) {
+	@Override
+	public GitRepository update(GitRepositoryDto dto, final GitRepository entity) throws IllegalArgumentException, BusinessException {
+		if(dto.getRemoteOrigin() != null && entity.getRemoteOrigin() != null && !dto.getRemoteOrigin().equals(entity.getRemoteOrigin())) {
             throw new IllegalArgumentException("Cannot update remote origin of GitRepository " + dto.getCode());
         }
 
@@ -222,7 +231,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         gitRepositoryService.update(entity);
 
         return entity;
-    }
+	}
 
     private void updateEntity(GitRepositoryDto dto, GitRepository entity) {
         entity.setReadingRoles(dto.getReadingRoles());

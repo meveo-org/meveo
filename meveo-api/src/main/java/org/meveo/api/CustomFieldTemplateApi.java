@@ -130,10 +130,6 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
         }
 
-        if (!checkAppliesToExisted(appliesTo)) {
-            throw new InvalidParameterException("appliesTo", appliesTo);
-        }
-
         if (customFieldTemplateService.exists(postData.getCode(), appliesTo)) {
             throw new EntityAlreadyExistsException(CustomFieldTemplate.class, postData.getCode());
         }
@@ -279,9 +275,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 
         handleMissingParameters();
 
-        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
-            throw new InvalidParameterException("appliesTo", appliesTo);
-        }
+//        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
+//            throw new InvalidParameterException("appliesTo", appliesTo);
+//        }
 
         CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesToNoCache(code, appliesTo);
 

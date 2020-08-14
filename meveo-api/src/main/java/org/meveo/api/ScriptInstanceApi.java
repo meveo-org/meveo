@@ -82,8 +82,16 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		return jpaQuery.getResultList();
 	}
-
-	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
+	
+	@Override
+	public ScriptInstance create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
+		ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
+		scriptInstanceService.create(scriptInstance);
+		scriptInstanceService.flush();
+		return scriptInstance;
+	}
+	
+	public List<ScriptInstanceErrorDto> createAndGetErrors(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
 
 		List<ScriptInstanceErrorDto> result = new ArrayList<>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
@@ -92,10 +100,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			throw new EntityAlreadyExistsException(ScriptInstance.class, scriptInstanceDto.getCode());
 		}
 
-		ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
-
-		scriptInstanceService.create(scriptInstance);
-		scriptInstanceService.flush();
+		ScriptInstance scriptInstance = create(scriptInstanceDto);
 
 		if (scriptInstance != null && scriptInstance.isError() != null && scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
@@ -106,8 +111,15 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		return result;
 	}
+	
+	@Override
+	public ScriptInstance update(ScriptInstanceDto scriptInstanceDto, ScriptInstance scriptInstance) throws MeveoApiException, BusinessException {
+		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
+		scriptInstanceService.update(scriptInstance);
+		return scriptInstance;
+	}
 
-	public List<ScriptInstanceErrorDto> update(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
+	public List<ScriptInstanceErrorDto> updateAndGetErrors(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
 
 		List<ScriptInstanceErrorDto> result = new ArrayList<>();
 		checkDtoAndUpdateCode(scriptInstanceDto);
@@ -121,9 +133,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			throw new MeveoApiException("User does not have a permission to update a given script");
 		}
 
-		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
-
-		scriptInstanceService.update(scriptInstance);
+		update(scriptInstanceDto, scriptInstance);
 
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
@@ -186,10 +196,10 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		ScriptInstance scriptInstance = scriptInstanceService.findByCode(postData.getCode());
 
 		if (scriptInstance == null) {
-			result = create(postData);
+			result = createAndGetErrors(postData);
 
 		} else {
-			result = update(postData);
+			result = updateAndGetErrors(postData);
 		}
 
 		return result;

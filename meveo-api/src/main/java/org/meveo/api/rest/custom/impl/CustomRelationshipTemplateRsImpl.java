@@ -35,7 +35,7 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
     	 ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
          try {
-             customRelationshipTemplateApi.createCustomRelationshipTemplate(dto);
+             customRelationshipTemplateApi.create(dto);
 
          } catch (MeveoApiException e) {
              result.setErrorCode(e.getErrorCode());

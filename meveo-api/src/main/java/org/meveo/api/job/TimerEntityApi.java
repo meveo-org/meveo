@@ -93,12 +93,14 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
             throw new EntityDoesNotExistsException(TimerEntity.class, timerEntityCode);
         }
 
-        timerEntity = TimerEntityDto.fromDTO(timerEntityDto, timerEntity);
-
-        timerEntity = timerEntityService.update(timerEntity);
-
-        return timerEntity;
+        return update(timerEntityDto, timerEntity);
     }
+
+	public TimerEntity update(TimerEntityDto timerEntityDto, TimerEntity timerEntity) throws BusinessException {
+		timerEntity = TimerEntityDto.fromDTO(timerEntityDto, timerEntity);
+        timerEntity = timerEntityService.update(timerEntity);
+        return timerEntity;
+	}
 
     @Override
     public TimerEntity createOrUpdate(TimerEntityDto timerEntityDto) throws MeveoApiException, BusinessException {

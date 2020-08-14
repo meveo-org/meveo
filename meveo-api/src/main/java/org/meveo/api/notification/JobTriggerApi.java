@@ -111,7 +111,11 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         if (notif == null) {
             throw new EntityDoesNotExistsException(JobTrigger.class, postData.getCode());
         }
-        ScriptInstance scriptInstance = null;
+        return update(postData, notif);
+    }
+
+	public JobTrigger update(JobTriggerDto postData, JobTrigger notif) throws EntityDoesNotExistsException, InvalidParameterException, BusinessException {
+		ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
             if (scriptInstance == null) {
@@ -154,7 +158,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         notif = jobTriggerService.update(notif);
 
         return notif;
-    }
+	}
 
     public void remove(String notificationCode) throws MeveoApiException, BusinessException {
         if (!StringUtils.isBlank(notificationCode)) {

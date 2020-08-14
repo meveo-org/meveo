@@ -194,10 +194,14 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 			throw new EntityDoesNotExistsException(entityClass.getSimpleName(), postData.getCode());
 		}
 
+		update(postData, entity);
+
+		return entity;
+	}
+
+	public E update(D postData, E entity) throws MeveoApiException, BusinessException {
 		fromDto(postData, entity);
-
 		getPersistenceService().update(entity);
-
 		return entity;
 	}
 

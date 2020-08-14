@@ -151,7 +151,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         
 		ParamBean paramBean = paramBeanFactory.getInstance();
 		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
+			CustomEntityCategory cec = customEntityCategoryService.findById(cet.getCustomEntityCategory().getId());
 			cet.setCustomEntityCategory(cec);
 		}
                 
@@ -193,9 +193,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    @Asynchronous
     protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
+    	//FIXME: this is never called
         /* Primitive entity and type management */
         if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity() && cet.getNeo4JStorageConfiguration().getPrimitiveType() != null) {
             final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
@@ -207,9 +206,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
                 boolean maxValueChanged = !valueCft.getMaxValue().equals(cet.getNeo4JStorageConfiguration().getMaxValue());
                 boolean shouldUpdate = typeChanged || maxValueChanged;
-                if (shouldUpdate) {
-                    flush();
-                }
+//                if (shouldUpdate) {
+//                    flush();
+//                }
 
                 if (typeChanged) {
                     valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
@@ -243,7 +242,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         /* Update */
 
         if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
+			CustomEntityCategory cec = customEntityCategoryService.findById(cet.getCustomEntityCategory().getId());
 			cet.setCustomEntityCategory(cec);
 		}
         

@@ -1,11 +1,14 @@
 package org.meveo.api;
 
 import java.util.ArrayList;
+
+import static java.util.function.Predicate.not;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -92,6 +95,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     @Inject
     private Instance<CustomTableCreatorService> customTableCreatorService;
    
+    @Override
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
@@ -153,16 +157,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 					customEntityCategory = new CustomEntityCategory();
 					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-					customEntityTemplateService.createWithNewCategory(cet, customEntityCategory);
-				
+					cet.setCustomEntityCategory(customEntityCategory);
+					
 				} else {
 					cet.setCustomEntityCategory(customEntityCategory);
 				}
 			}
 
-			if (!withNewCategory) {
-				customEntityTemplateService.create(cet);
-			}
+			customEntityTemplateService.create(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -220,7 +222,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet == null) {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getCode());
         }
-        boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
+        
+        return update(dto, cet);
+    }
+
+	@Override
+	public CustomEntityTemplate update(CustomEntityTemplateDto dto, CustomEntityTemplate cet) throws InvalidParameterException, BusinessException, MeveoApiException {
+		boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
         cet.setHasReferenceJpaEntity(hasReferenceJpaEntity);
         
         // Validate field types for custom table
@@ -264,7 +272,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 					customEntityCategory = new CustomEntityCategory();
 					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-					cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
+					customEntityCategoryService.create(customEntityCategory);
+					cet.setCustomEntityCategory(customEntityCategory);
 
 				} else {
 					cet.setCustomEntityCategory(customEntityCategory);
@@ -272,14 +281,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			}
 		}
 
-		if (!withNewCategory) {
-			cet = customEntityTemplateService.update(cet);
-		}
-
         synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
 
         return cet;
-    }
+	}
 
     public void removeEntityTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
@@ -625,11 +630,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         // Neo4J configuration if defined
         if(dto.getNeo4jStorageConfiguration() != null && dto.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
-            if (cetToUpdate != null && cet.getNeo4JStorageConfiguration() != null) {
-            	cet.getNeo4JStorageConfiguration().getUniqueConstraints().clear();
-            	cet.getNeo4JStorageConfiguration().getLabels().clear();
-                customEntityTemplateService.flush();
-            } else if(cet.getNeo4JStorageConfiguration() == null) {
+            if(cet.getNeo4JStorageConfiguration() == null) {
                 cet.setNeo4JStorageConfiguration(new Neo4JStorageConfiguration());
             }
 
@@ -639,16 +640,50 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	configuration.setGraphqlQueryFields(dto.getNeo4jStorageConfiguration().getGraphqlQueryFields());
         	configuration.setMutations(dto.getNeo4jStorageConfiguration().getMutations());
 
+        	// Update unique constraints
             if(dto.getNeo4jStorageConfiguration().getUniqueConstraints() != null){
-                final List<CustomEntityTemplateUniqueConstraint> constraintList = dto.getNeo4jStorageConfiguration().getUniqueConstraints().stream()
-                        .map((CustomEntityTemplateUniqueConstraintDto dto1) -> fromConstraintDto(dto1, cet))
-                        .collect(Collectors.toList());
+            	
+				// Create or update constraints from dto
+				for(var constraint : dto.getNeo4jStorageConfiguration().getUniqueConstraints()) {
+					configuration.getUniqueConstraints()
+						.stream()
+						.filter(c -> c.getCode().equals(constraint.getCode()))
+						.findFirst()
+						.ifPresentOrElse(
+							c -> {
+								c.setApplicableOnEl(constraint.getApplicableOnEl());
+								c.setCypherQuery(constraint.getCypherQuery());
+								c.setDescription(constraint.getDescription());
+								c.setTrustScore(constraint.getTrustScore());
+								c.setPosition(constraint.getOrder());
+							}, () -> cet.getNeo4JStorageConfiguration()
+								.getUniqueConstraints()
+								.add(fromConstraintDto(constraint, cet))
+						);
+				}
+				
+				// Delete constraints not in dto
+				configuration.getUniqueConstraints()
+					.removeIf(
+							cetConstraint -> dto.getNeo4jStorageConfiguration()
+								.getUniqueConstraints()
+								.stream()
+								.map(CustomEntityTemplateUniqueConstraintDto::getCode)
+								.noneMatch(cetConstraint.getCode()::equals)
+					);
 
-                configuration.getUniqueConstraints().addAll(constraintList);
+            } else {
+            	configuration.getUniqueConstraints().clear();
             }
 
+            // Update labels
             if(dto.getNeo4jStorageConfiguration().getLabels() != null){
                 configuration.getLabels().addAll(dto.getNeo4jStorageConfiguration().getLabels());
+                configuration.getLabels().removeIf(
+            		not(dto.getNeo4jStorageConfiguration().getLabels()::contains)
+        		);
+            } else {
+            	configuration.getLabels().clear();
             }
         }
 

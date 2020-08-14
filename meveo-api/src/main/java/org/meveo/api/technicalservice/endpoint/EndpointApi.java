@@ -308,6 +308,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @param endpointDto Configuration of the endpoint
 	 * @return the created Endpoint
 	 */
+	@Override
 	public Endpoint create(EndpointDto endpointDto) throws BusinessException {
 		Endpoint endpoint = fromDto(endpointDto);
 		endpointService.create(endpoint);
@@ -323,7 +324,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public Endpoint createOrReplace(EndpointDto endpointDto) throws BusinessException {
 		Endpoint endpoint = endpointService.findByCode(endpointDto.getCode());
 		if (endpoint != null) {
-			update(endpoint, endpointDto);
+			update(endpointDto, endpoint);
 			return endpoint;
 		} else {
 			return create(endpointDto);
@@ -382,7 +383,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		return endpointService.list().stream().map(this::toDto).collect(Collectors.toList());
 	}
 
-	private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
+	public Endpoint update(EndpointDto endpointDto, Endpoint endpoint) throws BusinessException {
 
 		endpoint = fromDto(endpointDto, endpoint);
 
@@ -447,6 +448,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 
 		endpointService.update(endpoint);
+		
+		return endpoint;
 	}
 
 	@Override

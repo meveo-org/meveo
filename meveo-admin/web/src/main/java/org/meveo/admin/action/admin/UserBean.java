@@ -808,14 +808,14 @@ public class UserBean extends CustomFieldBean<User> {
 			String fileName = folder + File.separator + selectedFileName;
 			if (!module.getModuleFiles().contains(fileName)) {
 				module.addModuleFile(fileName);
-				meveoModuleService.update(module);
+				meveoModuleService.updateNoMerge(module);
 				messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFileName, module.getCode());
 			}
 
 		} else if (!StringUtils.isBlank(selectedFolder)) {
 			if (!module.getModuleFiles().contains(selectedFolder)) {
 				module.addModuleFile(selectedFolder);
-				meveoModuleService.update(module);
+				meveoModuleService.updateNoMerge(module);
 				messages.info(new BundleKey("messages", "user.addToModule.successful"), selectedFolder, module.getCode());
 			}
 		}

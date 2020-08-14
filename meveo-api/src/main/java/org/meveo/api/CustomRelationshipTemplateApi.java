@@ -89,7 +89,8 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         
     }
 
-    public void createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
+    @Override
+    public CustomRelationshipTemplate create(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
@@ -108,7 +109,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         completeCrtData(crt, dto);
         
         customRelationshipTemplateService.create(crt);
-
+        return crt;
 
     }
 
@@ -129,7 +130,12 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
-        crt = CustomRelationshipTemplateDto.fromDTO(dto, crt);
+        update(dto, crt);
+    }
+
+	@Override
+	public CustomRelationshipTemplate update(CustomRelationshipTemplateDto dto, CustomRelationshipTemplate crt) throws EntityDoesNotExistsException, BusinessException, MeveoApiException {
+		crt = CustomRelationshipTemplateDto.fromDTO(dto, crt);
         
         completeCrtData(crt, dto);
         
@@ -138,7 +144,9 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         customRelationshipTemplateService.synchronizeStorages(crt);
 
         synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
-    }
+        
+        return crt;
+	}
 
     public void removeCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
@@ -177,7 +185,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData) throws MeveoApiException, BusinessException {
         CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(postData.getCode());
         if (crt == null) {
-            createCustomRelationshipTemplate(postData);
+            create(postData);
         } else {
             updateCustomRelationshipTemplate(postData);
         }

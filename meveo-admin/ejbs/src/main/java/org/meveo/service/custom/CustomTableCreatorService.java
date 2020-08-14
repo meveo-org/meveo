@@ -257,7 +257,7 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTableName DB table name
 	 */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	// @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void createTable(String sqlConnectionCode, String dbTableName) {
 
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");

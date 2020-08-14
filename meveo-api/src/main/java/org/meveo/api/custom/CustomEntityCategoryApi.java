@@ -41,6 +41,7 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
+    @Override
     public CustomEntityCategory create(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(dto.getCode())) {
@@ -74,10 +75,15 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
             throw new EntityDoesNotExistsException(CustomEntityCategory.class, dto.getCode());
         }
 
-        cec = CustomEntityCategoryDto.fromDTO(dto, cec);
+        return update(dto, cec);
+    }
+
+	@Override
+	public CustomEntityCategory update(CustomEntityCategoryDto dto, CustomEntityCategory cec) throws BusinessException {
+		cec = CustomEntityCategoryDto.fromDTO(dto, cec);
         customEntityCategoryService.update(cec);
         return cec;
-    }
+	}
 
     public void removeCustomEntityCategory(String code, boolean deleteRelatedTemplates) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {

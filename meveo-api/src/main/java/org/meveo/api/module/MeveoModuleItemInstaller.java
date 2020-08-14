@@ -39,12 +39,12 @@ import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
+import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -334,7 +334,7 @@ public class MeveoModuleItemInstaller {
     	}
     }
 	
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Transactional(TxType.MANDATORY)
 	public ModuleInstallResult unpackAndInstallModuleItem(MeveoModule meveoModule, MeveoModuleItemDto moduleItemDto, OnDuplicate onDuplicate) throws IllegalArgumentException, MeveoApiException, Exception, BusinessException {
 		ModuleInstallResult result = new ModuleInstallResult();
@@ -365,10 +365,11 @@ public class MeveoModuleItemInstaller {
 						switch (onDuplicate) {
 						case OVERWRITE:
 			            	result.incrNbOverwritten();
+			            	customFieldTemplateApi.update(cftDto, cftDto.getAppliesTo());
+				            result.addItem(moduleItemDto);
 			            	break;
 						case SKIP:
 							result.setNbSkipped(1);
-							skipped = true;
 							break;
 						case FAIL:
 							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getCode());
@@ -377,12 +378,9 @@ public class MeveoModuleItemInstaller {
 						}
 					} else {
 		            	result.incrNbAdded();
-					}
-	        		
-		            if(!skipped) {
-			            customFieldTemplateApi.createOrUpdate((CustomFieldTemplateDto) dto, null);
 			            result.addItem(moduleItemDto);
-		            }
+			            customFieldTemplateApi.create(((CustomFieldTemplateDto) dto), ((CustomFieldTemplateDto) dto).getAppliesTo());
+					}
 		            
 		            moduleItem = new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
 			                ((CustomFieldTemplateDto) dto).getAppliesTo(), null);
@@ -395,10 +393,11 @@ public class MeveoModuleItemInstaller {
 						switch (onDuplicate) {
 						case OVERWRITE:
 							result.incrNbOverwritten();
+							entityCustomActionApi.update(ecaDto, ecaDto.getAppliesTo());
+							result.addItem(moduleItemDto);
 							break;
 						case SKIP:
 							result.setNbSkipped(1);
-							skipped = true;
 							break;
 						case FAIL:
 							throw new EntityAlreadyExistsException(EntityCustomAction.class, eca.getCode());
@@ -407,13 +406,9 @@ public class MeveoModuleItemInstaller {
 						}
 					} else {
 						result.incrNbAdded();
+						result.addItem(moduleItemDto);
+						entityCustomActionApi.update(ecaDto, ecaDto.getAppliesTo());
 					}
-		        	
-		            
-		            if(!skipped) {
-			            result.addItem(moduleItemDto);
-			            entityCustomActionApi.createOrUpdate((EntityCustomActionDto) dto, null);
-		            }
 		            
 		            moduleItem = new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null);
 		        	meveoModule.addModuleItem(moduleItem);
@@ -429,15 +424,20 @@ public class MeveoModuleItemInstaller {
 		            
 		            log.info("Installing item {} of module {}", dto, meveoModule);
 		            	
-					Object item = findItem(dto, entityClass);
+	            	BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(entityClass, true);
+
+					// Object item = findItem(dto, entityClass);
+					IEntity<?> item = api.getPersistenceService().findByCode(dto.getCode());
 					if (item != null) {
 						switch (onDuplicate) {
 						case OVERWRITE:
 							result.incrNbOverwritten();
+							result.addItem(moduleItemDto);
+							api.update(dto, item);
 							break;
 						case SKIP:
 							result.setNbSkipped(1);
-							skipped = true;
+			            	api.getPersistenceService().enable(item);
 							break;
 						case FAIL: {
 							throw new EntityAlreadyExistsException(String.valueOf(item));
@@ -447,13 +447,10 @@ public class MeveoModuleItemInstaller {
 						}
 					} else {
 						result.incrNbAdded();
+						result.addItem(moduleItemDto);
+						api.create(dto);
 					}
 					
-					if(!skipped) {
-						createOrUpdateItem(dto, entityClass);
-			            result.addItem(moduleItemDto);
-					}
-		            
 		            DatePeriod validity = null;
 		            if (ReflectionUtils.hasField(dto, "validFrom")) {
 		                validity = new DatePeriod((Date) FieldUtils.readField(dto, "validFrom", true), (Date) FieldUtils.readField(dto, "validTo", true));
@@ -474,11 +471,6 @@ public class MeveoModuleItemInstaller {
 					}
 					
 		        	meveoModule.addModuleItem(moduleItem);
-		            if(skipped) {
-		            	meveoModuleService.loadModuleItem(moduleItem);
-		            	BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(entityClass, true);
-		            	api.getPersistenceService().enable(moduleItem.getItemEntity());
-		            }
 		        }
 		        
 

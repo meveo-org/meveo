@@ -63,5 +63,25 @@ public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
      * @throws BusinessException business exception.
      */
     E createOrUpdate(T dtoData) throws MeveoApiException, BusinessException;
+    
+    /**
+     * Create or update an entity from DTO.
+     * 
+     * @param dtoData DTO data
+     * @return created or updated entity.
+     * @throws MeveoApiException meveo api exception
+     * @throws BusinessException business exception.
+     */
+    E create(T dtoData) throws MeveoApiException, BusinessException;
+    
+    /**
+     * Update an entity from DTO.
+     * 
+     * @param dtoData DTO data
+     * @return created or updated entity.
+     * @throws MeveoApiException meveo api exception
+     * @throws BusinessException business exception.
+     */
+    E update(T dtoData, E entity) throws MeveoApiException, BusinessException;
 
 }

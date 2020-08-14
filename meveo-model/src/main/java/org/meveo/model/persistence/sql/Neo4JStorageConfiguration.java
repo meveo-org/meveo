@@ -2,7 +2,9 @@ package org.meveo.model.persistence.sql;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -31,7 +33,7 @@ public class Neo4JStorageConfiguration implements Serializable {
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
-	private List<String> labels = new ArrayList<>();
+	private Set<String> labels = new HashSet<>();
 	
 	/**
 	 * Whether the CET is primitive. A primitive entity is an entity containing only
@@ -81,7 +83,7 @@ public class Neo4JStorageConfiguration implements Serializable {
 		}
 	}
 	
-	public List<String> getLabels() {
+	public Set<String> getLabels() {
 		return labels;
 	}
 
@@ -101,7 +103,7 @@ public class Neo4JStorageConfiguration implements Serializable {
 		this.primitiveType = primitiveType;
 	}
 
-	public void setLabels(List<String> labels) {
+	public void setLabels(Set<String> labels) {
 		this.labels = labels;
 	}
 	

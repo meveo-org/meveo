@@ -66,8 +66,11 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 			throw new EntityDoesNotExistsException(SqlConfiguration.class, postData.getCode());
 		}
 
-		toSqlConfiguration(postData, entity);
+		return update(postData, entity);
+	}
 
+	public SqlConfiguration update(SqlConfigurationDto postData, SqlConfiguration entity) throws BusinessException {
+		toSqlConfiguration(postData, entity);
 		return sqlConfigurationService.update(entity);
 	}
 

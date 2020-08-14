@@ -86,16 +86,6 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
         return workflow;
     }
 
-    /**
-     * 
-     * @param workflowDto
-     * 
-     * @throws EntityDoesNotExistsException
-     * @throws MeveoApiException
-     * @throws BusinessException
-     * @throws MissingParameterException
-     * @throws EntityAlreadyExistsException
-     */
     public Workflow update(WorkflowDto workflowDto) throws MeveoApiException, BusinessException {
 
         validateDto(workflowDto, true);
@@ -105,7 +95,11 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
             throw new EntityDoesNotExistsException(Workflow.class, workflowDto.getCode());
         }
 
-        if (workflowDto.getWfType() != null && !workflow.getWfType().equals(workflowDto.getWfType())) {
+        return update(workflowDto, workflow);
+    }
+
+	public Workflow update(WorkflowDto workflowDto, Workflow workflow) throws BusinessApiException, BusinessException, MissingParameterException, EntityDoesNotExistsException, EntityAlreadyExistsException {
+		if (workflowDto.getWfType() != null && !workflow.getWfType().equals(workflowDto.getWfType())) {
             throw new BusinessApiException("Workflow type does not match");
         }
 
@@ -144,7 +138,7 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
         }
 
         return workflow;
-    }
+	}
 
     /*
      * (non-Javadoc)

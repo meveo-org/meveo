@@ -170,8 +170,11 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 			throw new EntityDoesNotExistsException(Repository.class, postData.getCode());
 		}
 
-		entity = toRepository(postData, entity);
+		return update(postData, entity);
+	}
 
+	public Repository update(RepositoryDto postData, Repository entity) throws EntityDoesNotExistsException, BusinessException {
+		entity = toRepository(postData, entity);
 		return repositoryService.update(entity);
 	}
 

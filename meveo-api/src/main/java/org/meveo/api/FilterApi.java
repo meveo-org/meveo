@@ -30,7 +30,7 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 	@Inject
     private FilterService filterService;
 
-    private Filter create(FilterDto postData) throws MeveoApiException, BusinessException {
+    public Filter create(FilterDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -48,7 +48,7 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
         return filter;
     }
 
-    private Filter update(FilterDto postData) throws MeveoApiException, BusinessException {
+    public Filter update(FilterDto postData, Filter filter) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -58,9 +58,6 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
         }
 
         handleMissingParametersAndValidate(postData);
-
-        
-        Filter filter = filterService.findByCode(postData.getCode());
 
         if (filter == null) {
             throw new EntityDoesNotExistsException(Filter.class, postData.getCode());
@@ -93,7 +90,7 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
         
         Filter existed = filterService.findByCode(dto.getCode());
         if (existed != null) {
-            return update(dto);
+            return update(dto, existed);
         } else {
             return create(dto);
         }

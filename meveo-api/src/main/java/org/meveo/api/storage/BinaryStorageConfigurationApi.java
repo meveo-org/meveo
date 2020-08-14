@@ -30,6 +30,7 @@ public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConf
 	@Inject
 	private BinaryStorageConfigurationService binaryStorageConfigurationService;
 
+	@Override
 	public BinaryStorageConfiguration create(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
 		validate(postData);
 
@@ -43,6 +44,13 @@ public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConf
 		
 		return entity;
 	}
+	
+	@Override
+	public BinaryStorageConfiguration update(BinaryStorageConfigurationDto postData, BinaryStorageConfiguration entity) throws BusinessException, MeveoApiException {
+		entity.setRootPath(postData.getRootPath());
+		binaryStorageConfigurationService.update(entity);
+		return entity;
+	}
 
 	public void update(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {
 		validate(postData);
@@ -52,9 +60,7 @@ public class BinaryStorageConfigurationApi extends BaseCrudApi<BinaryStorageConf
 			throw new EntityDoesNotExistsException(BinaryStorageConfiguration.class, postData.getCode());
 		}
 
-		entity.setRootPath(postData.getRootPath());
-
-		binaryStorageConfigurationService.update(entity);
+		update(postData, entity);
 	}
 
 	public BinaryStorageConfiguration createOrUpdate(BinaryStorageConfigurationDto postData) throws BusinessException, MeveoApiException {

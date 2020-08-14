@@ -787,8 +787,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 *
 	 * @param entity The entity to create or update
 	 */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	@Asynchronous
 	protected void afterUpdate(E entity) throws BusinessException {
 	}
 

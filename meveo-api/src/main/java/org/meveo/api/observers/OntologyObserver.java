@@ -170,7 +170,7 @@ public class OntologyObserver {
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if the json schema file already exists
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -218,7 +218,7 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws
             IOException, BusinessException {
         hasChange.set(true);
@@ -301,7 +301,7 @@ public class OntologyObserver {
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if the json schema file already exists
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -334,7 +334,7 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -362,7 +362,7 @@ public class OntologyObserver {
      * @param crt The removed {@link CustomRelationshipTemplate}
      * @throws BusinessException if we failed to commit the deletion
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
         final File cetDir = getCrtDir();
         final File schemaFile = new File(cetDir, crt.getCode() + ".json");
@@ -383,7 +383,7 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomFieldTemplate cft) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -459,7 +459,7 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomFieldTemplate cft) throws IOException, BusinessException {
         hasChange.set(true);
 
@@ -525,7 +525,7 @@ public class OntologyObserver {
      * @throws IOException if we can't create or delete related files
      * @throws BusinessException if we can't create or update related file contents
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    // @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomFieldTemplate cft) throws BusinessException, IOException {
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
@@ -666,7 +666,7 @@ public class OntologyObserver {
                         String absolutePath = crtFile.getAbsolutePath();
                         CustomRelationshipTemplateDto customRelationshipTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFileIntoCRT(absolutePath);
                         if (customRelationshipTemplateDto.getStartNodeCode() != null) {    // Make sure we parsed a valid CRT and not a CET
-                            customRelationshipTemplateApi.createCustomRelationshipTemplate(customRelationshipTemplateDto);
+                            customRelationshipTemplateApi.create(customRelationshipTemplateDto);
                         }
                     } else if (customRelationshipTemplate != null && !crtFile.exists()) {
                         customRelationshipTemplateApi.removeCustomRelationshipTemplate(code);

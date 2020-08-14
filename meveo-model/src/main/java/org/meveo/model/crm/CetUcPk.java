@@ -64,4 +64,10 @@ public class CetUcPk implements Serializable {
     public int hashCode() {
         return Objects.hash(getCode(), getCustomEntityTemplate());
     }
+
+	@Override
+	public String toString() {
+		return "CetUcPk [code=" + code + ", customEntityTemplate=" + customEntityTemplate + "]";
+	}
+    
 }

@@ -191,7 +191,8 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
      * @throws BusinessException If technical service already exists for specified name and version
      * @throws EntityDoesNotExistsException If elements referenced in the dto does not exists
      */
-    public T create(@Valid @NotNull D postData) throws BusinessException, EntityDoesNotExistsException {
+    @Override
+    public T create(D postData) throws BusinessException, EntityDoesNotExistsException {
         final T technicalService = fromDto(postData);
         if (postData.getVersion() == null) {
             int versionNumber = 1;
@@ -223,12 +224,13 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public T update(@Valid @NotNull D postData) throws EntityDoesNotExistsException, BusinessException {
         final T technicalService = getTechnicalService(postData.getName(), postData.getVersion());
-        final T updatedService = updateService(technicalService, postData);
+        final T updatedService = update(postData, technicalService);
         persistenceService.update(updatedService);
         return updatedService;
     }
 
-    protected T updateService(T service, D data) throws EntityDoesNotExistsException, BusinessException {
+    @Override
+    public T update(D data, T service) throws EntityDoesNotExistsException, BusinessException {
         final Map<String, Description> descriptions = descriptionApi.fromDescriptionsDto(service, data);
         checkEndpoints(service, descriptions.values());
         service.setDescriptions(descriptions);

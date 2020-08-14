@@ -119,7 +119,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
@@ -456,6 +456,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		}
 
 		return getSqlStorageConfiguration().isStoreAsTable();
+	}
+
+	@Override
+	public String toString() {
+		return "CustomEntityTemplate [name=" + name + ", code=" + code + ", description=" + description + ", id=" + id + "]";
 	}
 
 }

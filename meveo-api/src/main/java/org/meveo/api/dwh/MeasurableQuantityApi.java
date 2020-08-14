@@ -72,12 +72,17 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
             throw new EntityDoesNotExistsException(MeasurableQuantity.class, postData.getCode());
         }
 
-        measurableQuantity = fromDTO(postData, measurableQuantity);
-        measurableQuantity = measurableQuantityService.update(measurableQuantity);
+        measurableQuantity = update(postData, measurableQuantity);
 
         return measurableQuantity;
 
     }
+
+	public MeasurableQuantity update(MeasurableQuantityDto postData, MeasurableQuantity measurableQuantity) throws BusinessException {
+		measurableQuantity = fromDTO(postData, measurableQuantity);
+        measurableQuantity = measurableQuantityService.update(measurableQuantity);
+		return measurableQuantity;
+	}
 
     /* (non-Javadoc)
      * @see org.meveo.api.ApiService#find(java.lang.String)

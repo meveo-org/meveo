@@ -128,7 +128,11 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
             throw new EntityDoesNotExistsException(WebHook.class, postData.getCode());
         }
 
-        ScriptInstance scriptInstance = null;
+        return update(postData, webHook);
+    }
+
+	public WebHook update(WebHookDto postData, WebHook webHook) throws EntityDoesNotExistsException, InvalidParameterException, BusinessException {
+		ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
             if (scriptInstance == null) {
@@ -178,7 +182,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         webHook = webHookService.update(webHook);
 
         return webHook;
-    }
+	}
 
     public void remove(String notificationCode) throws MeveoApiException, BusinessException {
         if (!StringUtils.isBlank(notificationCode)) {

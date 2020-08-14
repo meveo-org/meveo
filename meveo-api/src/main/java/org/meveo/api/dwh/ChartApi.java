@@ -340,4 +340,10 @@ public class ChartApi extends BaseCrudApi<Chart, ChartDto> {
 	public void remove(ChartDto dto) throws MeveoApiException, BusinessException {
 		this.remove(dto.getCode());
 	}
+
+	@Override
+	public Chart update(ChartDto dtoData, Chart entity) throws MeveoApiException, BusinessException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

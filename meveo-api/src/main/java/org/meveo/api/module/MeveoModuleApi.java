@@ -74,6 +74,7 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
@@ -194,8 +195,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return create(moduleDto, development);
 	}
 	
-	public MeveoModule create(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {
+	public MeveoModule create(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
+		return create(moduleDto, false);
+	}
 
+	public MeveoModule create(MeveoModuleDto moduleDto, boolean development) throws BusinessApiException, MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
 		if (StringUtils.isBlank(moduleDto.getCode())) {
 			missingParameters.add("code");
 		}
@@ -248,12 +252,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (StringUtils.isBlank(moduleDto.getCode())) {
 			missingParameters.add("module code is null");
 		}
-		if (StringUtils.isBlank(moduleDto.getDescription())) {
-			missingParameters.add("description");
-		}
-		if (StringUtils.isBlank(moduleDto.getLicense())) {
-			missingParameters.add("module license is null");
-		}
+		
+		handleMissingParameters();
+
 
 		if (moduleDto.getScript() != null) {
 			// If script was passed code is needed if script source was not passed.
@@ -270,12 +271,26 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 
-		handleMissingParameters();
-		MeveoModule meveoModuleBackup = meveoModuleService.findByCode(moduleDto.getCode());
+		
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleDto.getCode());
 		}
+		
+		return update(moduleDto, meveoModule);
+	}
+
+	public MeveoModule update(MeveoModuleDto moduleDto, MeveoModule meveoModule) throws MissingParameterException, ActionForbiddenException, MeveoApiException, BusinessException {
+		if (StringUtils.isBlank(moduleDto.getDescription())) {
+			missingParameters.add("description");
+		}
+		if (StringUtils.isBlank(moduleDto.getLicense())) {
+			missingParameters.add("module license is null");
+		}
+		
+		handleMissingParameters();
+
+		MeveoModule meveoModuleBackup = meveoModuleService.findByCode(moduleDto.getCode());
 
 		if (!meveoModule.isDownloaded()) {
 			throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");

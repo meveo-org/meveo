@@ -1,7 +1,9 @@
 package org.meveo.api.dto.persistence;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
@@ -13,7 +15,7 @@ public class Neo4JStorageConfigurationDto {
 	/**
 	 * Labels to apply to the template.
 	 */
-	private List<String> labels = new ArrayList<>();
+	private Set<String> labels = new HashSet<>();
 
 	/**
 	 * Whether the CET is primitive. A primitive entity is an entity containing only
@@ -50,7 +52,7 @@ public class Neo4JStorageConfigurationDto {
 		}
 	}
 
-	public List<String> getLabels() {
+	public Set<String> getLabels() {
 		return labels;
 	}
 
@@ -70,7 +72,7 @@ public class Neo4JStorageConfigurationDto {
 		this.primitiveType = primitiveType;
 	}
 
-	public void setLabels(List<String> labels) {
+	public void setLabels(Set<String> labels) {
 		this.labels = labels;
 	}
 

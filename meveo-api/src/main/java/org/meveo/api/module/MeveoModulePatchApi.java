@@ -283,7 +283,7 @@ public class MeveoModulePatchApi extends BaseApi {
 			if (moduleRelease.getPatches() != null && !moduleRelease.getPatches().isEmpty()) {
 				for (MeveoModulePatchDto patch : moduleRelease.getPatches()) {
 					if (scriptInstanceService.findByCode(patch.getScriptInstance().getCode()) == null) {
-						scriptInstanceApi.create(patch.getScriptInstance());
+						scriptInstanceApi.createAndGetErrors(patch.getScriptInstance());
 						scriptInstanceService.flush();
 					}
 
