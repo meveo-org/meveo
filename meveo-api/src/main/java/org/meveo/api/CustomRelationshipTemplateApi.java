@@ -19,8 +19,8 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -276,6 +276,11 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 	@Override
 	public boolean exists(CustomRelationshipTemplateDto dto) {
 		return customRelationshipTemplateService.findByCode(dto.getCode()) != null;
+	}
+
+	@Override
+	public void remove(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
+		this.removeCustomRelationshipTemplate(dto.getCode());
 	}
 
    

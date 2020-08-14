@@ -66,48 +66,9 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
         if (emailNotificationService.findByCode(postData.getCode()) != null) {
             throw new EntityAlreadyExistsException(EmailNotification.class, postData.getCode());
         }
-        ScriptInstance scriptInstance = null;
-        if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
-            scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
-            if (scriptInstance == null) {
-                throw new EntityDoesNotExistsException(ScriptInstance.class, postData.getScriptInstanceCode());
-            }
-        }
-        // check class
-        try {
-            Class.forName(postData.getClassNameFilter());
-        } catch (Exception e) {
-            throw new InvalidParameterException("classNameFilter", postData.getClassNameFilter());
-        }
 
-        CounterTemplate counterTemplate = null;
-        if (!StringUtils.isBlank(postData.getCounterTemplate())) {
-            counterTemplate = counterTemplateService.findByCode(postData.getCounterTemplate());
-            if (counterTemplate == null) {
-                throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
-            }
-        }
 
-        EmailNotification notif = new EmailNotification();
-        notif.setCode(postData.getCode());
-        notif.setClassNameFilter(postData.getClassNameFilter());
-        notif.setEventTypeFilter(postData.getEventTypeFilter());
-        notif.setFunction(scriptInstance);
-        notif.setParams(postData.getScriptParams());
-        notif.setElFilter(postData.getElFilter());
-        notif.setCounterTemplate(counterTemplate);
-
-        notif.setEmailFrom(postData.getEmailFrom());
-        notif.setEmailToEl(postData.getEmailToEl());
-        notif.setSubject(postData.getSubject());
-        notif.setBody(postData.getBody());
-        notif.setHtmlBody(postData.getHtmlBody());
-
-        Set<String> emails = new HashSet<String>();
-        for (String email : postData.getSendToMail()) {
-            emails.add(email);
-        }
-        notif.setEmails(emails);
+        EmailNotification notif = fromDto(postData);
 
         emailNotificationService.create(notif);
 
@@ -234,25 +195,73 @@ public class EmailNotificationApi extends BaseCrudApi<EmailNotification, EmailNo
 
 	@Override
 	public EmailNotificationDto toDto(EmailNotification entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new EmailNotificationDto(entity);
 	}
 
 	@Override
-	public EmailNotification fromDto(EmailNotificationDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+	public EmailNotification fromDto(EmailNotificationDto postData) throws MeveoApiException {
+        ScriptInstance scriptInstance = null;
+        if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
+            scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
+            if (scriptInstance == null) {
+                throw new EntityDoesNotExistsException(ScriptInstance.class, postData.getScriptInstanceCode());
+            }
+        }
+        // check class
+        try {
+            Class.forName(postData.getClassNameFilter());
+        } catch (Exception e) {
+            throw new InvalidParameterException("classNameFilter", postData.getClassNameFilter());
+        }
+
+        CounterTemplate counterTemplate = null;
+        if (!StringUtils.isBlank(postData.getCounterTemplate())) {
+            counterTemplate = counterTemplateService.findByCode(postData.getCounterTemplate());
+            if (counterTemplate == null) {
+                throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
+            }
+        }
+        
+		EmailNotification notif = new EmailNotification();
+        notif.setCode(postData.getCode());
+        notif.setClassNameFilter(postData.getClassNameFilter());
+        notif.setEventTypeFilter(postData.getEventTypeFilter());
+        notif.setFunction(scriptInstance);
+        notif.setParams(postData.getScriptParams());
+        notif.setElFilter(postData.getElFilter());
+        notif.setCounterTemplate(counterTemplate);
+
+        notif.setEmailFrom(postData.getEmailFrom());
+        notif.setEmailToEl(postData.getEmailToEl());
+        notif.setSubject(postData.getSubject());
+        notif.setBody(postData.getBody());
+        notif.setHtmlBody(postData.getHtmlBody());
+
+        Set<String> emails = new HashSet<String>();
+        for (String email : postData.getSendToMail()) {
+            emails.add(email);
+        }
+        notif.setEmails(emails);
+        
+        return notif;
 	}
 
 	@Override
 	public IPersistenceService<EmailNotification> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return emailNotificationService;
 	}
 
 	@Override
 	public boolean exists(EmailNotificationDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		var entity = emailNotificationService.findByCode(dto.getCode());
+		return entity != null;
+	}
+
+	@Override
+	public void remove(EmailNotificationDto dto) throws MeveoApiException, BusinessException {
+		var entity = emailNotificationService.findByCode(dto.getCode());
+		if(entity != null) {
+			emailNotificationService.remove(entity);
+		}
 	}
 }

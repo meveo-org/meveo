@@ -18,7 +18,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
-import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.custom.entities.CustomEntityCategory;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -186,4 +186,14 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
 		return result;
 	}
+
+	@Override
+	public void remove(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
+		try {
+			this.removeCustomEntityCategory(dto.getCode(), false);
+		} catch (EntityDoesNotExistsException e) {
+			// Do nothing
+		}
+	}
+	
 }

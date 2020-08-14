@@ -19,8 +19,8 @@ import javax.persistence.OrderColumn;
 import org.hibernate.annotations.Type;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.customEntities.GraphQLQueryField;
-import org.meveo.model.customEntities.Mutation;
+import org.meveo.model.custom.entities.GraphQLQueryField;
+import org.meveo.model.custom.entities.Mutation;
 
 @Embeddable
 public class Neo4JStorageConfiguration implements Serializable {

@@ -2,7 +2,7 @@ package org.meveo.service.custom;
 
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.custom.entities.CustomEntityCategory;
 
 public class CustomizedEntity {
 

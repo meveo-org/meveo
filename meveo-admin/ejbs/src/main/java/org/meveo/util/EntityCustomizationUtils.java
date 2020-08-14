@@ -4,8 +4,8 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.CustomFieldEntity;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.service.job.Job;
 
 /**

@@ -30,7 +30,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.ISearchable;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.slf4j.Logger;
 

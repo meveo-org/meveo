@@ -58,10 +58,10 @@ import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomModelObject;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomModelObject;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -686,10 +686,13 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 		}
 		
-		if(created) {
-			customEntityInstanceCreate.fire(cei);
-		} else {
-			customEntityInstanceUpdate.fire(cei);
+		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			if (created) {
+				customEntityInstanceCreate.fire(cei);
+				
+			} else {
+				customEntityInstanceUpdate.fire(cei);
+			}
 		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
@@ -1144,7 +1147,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCetCode(cet.getCode());
 		cei.setUuid(uuid);
 		
-		customEntityInstanceDelete.fire(cei);
+		if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
+			customEntityInstanceDelete.fire(cei);
+		}
 	}
 
 	/**

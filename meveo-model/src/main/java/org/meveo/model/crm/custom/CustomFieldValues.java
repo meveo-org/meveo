@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityInstance;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

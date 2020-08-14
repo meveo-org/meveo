@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.BusinessEntity;
-import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityInstance;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

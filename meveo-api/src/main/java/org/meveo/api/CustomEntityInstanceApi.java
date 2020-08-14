@@ -20,8 +20,8 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -283,5 +283,10 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	@Override
+	public void remove(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCetCode(), dto.getCode());
 	}
 }

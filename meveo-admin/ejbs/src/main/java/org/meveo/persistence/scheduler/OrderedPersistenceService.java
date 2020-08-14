@@ -30,7 +30,7 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityInstance;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;

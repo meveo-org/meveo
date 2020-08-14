@@ -18,7 +18,7 @@
 package org.meveo.model.technicalservice;
 
 import org.meveo.interfaces.technicalservice.description.RelationshipDescription;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 
 import javax.persistence.*;
 

@@ -1,6 +1,6 @@
 package org.meveo.service.technicalservice.endpoint.schema;
 
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.util.ClassUtils;
 
 /**

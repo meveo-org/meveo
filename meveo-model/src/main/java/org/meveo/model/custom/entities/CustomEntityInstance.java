@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.customEntities;
+package org.meveo.model.custom.entities;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;

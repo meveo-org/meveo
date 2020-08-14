@@ -320,7 +320,7 @@ export default class EndpointInterface {
 	constructor(name, method = "GET") {
 		const eventName = normalize(name);
 		this.name = name;
-		this.endpointUrl = `#{API_BASE_URL}/api/rest/${name}`;
+		this.endpointUrl = `#{API_BASE_URL}/rest/${name}`;
 		this.successEvent = `${eventName}_SUCCESS`;
 		this.errorEvent = `${eventName}_ERROR`;
 		this.method = method;

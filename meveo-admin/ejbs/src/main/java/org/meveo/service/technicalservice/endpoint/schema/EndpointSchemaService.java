@@ -9,7 +9,7 @@ import javax.inject.Inject;
 
 import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;

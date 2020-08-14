@@ -14,7 +14,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.service.custom.CustomEntityTemplateService;

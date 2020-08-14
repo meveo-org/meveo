@@ -18,7 +18,7 @@ package org.meveo.service.technicalservice;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.InputMeveoProperty;

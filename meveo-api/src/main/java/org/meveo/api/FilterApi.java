@@ -120,25 +120,36 @@ public class FilterApi extends BaseCrudApi<Filter, FilterDto> {
 
 	@Override
 	public FilterDto toDto(Filter entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return FilterDto.toDto(entity);
 	}
 
 	@Override
 	public Filter fromDto(FilterDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+		var filter = new Filter();
+		mapDtoToFilter(dto, filter);
+		return filter;
 	}
 
 	@Override
 	public IPersistenceService<Filter> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return filterService;
 	}
 
 	@Override
 	public boolean exists(FilterDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			return findIgnoreNotFound(dto.getCode()) != null;
+		} catch (MeveoApiException e) {
+			return false;
+		}
+	}
+
+	@Override
+	public void remove(FilterDto dto) throws MeveoApiException, BusinessException {
+		var filter = filterService.findByCode(dto.getCode());
+		if(filter != null) {
+			this.filterService.remove(filter);
+		}
+		
 	}
 }

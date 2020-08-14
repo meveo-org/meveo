@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.custom.entities.CustomEntityCategory;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

@@ -14,7 +14,8 @@ import javax.faces.convert.FacesConverter;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 
-import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.custom.entities.CustomRelationshipTemplate;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -38,6 +39,7 @@ public class CustomFieldAppliesToConverter implements Converter, Serializable {
     @Override
     public Object getAsObject(FacesContext context, UIComponent component, String value) {
 
+    	
         if (!appliesToMap.containsValue(value)) {
             loadAppliesToDefinitions();
         }
@@ -53,6 +55,11 @@ public class CustomFieldAppliesToConverter implements Converter, Serializable {
 
     @Override
     public String getAsString(FacesContext context, UIComponent component, Object obj) {
+    	if(obj.toString().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+    		return CustomEntityTemplate.getCodeFromAppliesTo(obj.toString());
+    	} else if(obj.toString().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+    		return CustomRelationshipTemplate.getCodeFromAppliesTo(obj.toString());
+    	}
 
         if (obj == null || obj.toString().length() == 0) {
             return "";
@@ -63,13 +70,14 @@ public class CustomFieldAppliesToConverter implements Converter, Serializable {
         }
 
         if (!appliesToMap.containsKey(obj.toString())) {
+        	System.out.println("CustomFieldAppliesToConverter#getAsString : " + obj.toString());
+        	System.out.println(appliesToMap.toString());
             loadAppliesToDefinitions();
         }
 
         String stringValue = appliesToMap.get(obj.toString());
-        // if (stringValue == null) {
-        // } else {
-        // }
+    	System.out.println("CustomFieldAppliesToConverter#getAsString : (result) " + stringValue);
+
         return stringValue;
     }
 

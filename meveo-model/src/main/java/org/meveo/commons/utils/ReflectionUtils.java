@@ -73,9 +73,18 @@ public class ReflectionUtils {
      * @return the matched setter if found
      */
     public static Optional<Method> getSetterByNameAndSimpleClassName(Class<?> clazz, String methodName, String simpleClassName) {
+    	final String finalClassName;
+    	
+    	// Handle case where the type is generic (i.e: Map<String, Object>)
+    	if(simpleClassName.contains("<")) {
+    		finalClassName = simpleClassName.replaceFirst("(.*)<.*>", "$1");
+    	} else {
+    		finalClassName = simpleClassName;
+    	}
+    	
     	return Arrays.stream(clazz.getMethods())
         		.filter(m -> m.getName().equals(methodName))
-        		.filter(m -> m.getParameters()[0].getType().getSimpleName().equals(simpleClassName))
+        		.filter(m -> m.getParameters()[0].getType().getSimpleName().equals(finalClassName))
         		.findFirst();
     }
 

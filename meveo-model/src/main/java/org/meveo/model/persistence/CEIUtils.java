@@ -6,7 +6,7 @@ package org.meveo.model.persistence;
 import java.util.Map;
 
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.custom.entities.CustomEntityInstance;
 import org.meveo.model.typereferences.GenericTypeReferences;
 
 /**

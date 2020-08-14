@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.customEntities;
+package org.meveo.model.custom.entities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -480,5 +480,21 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 		return "CustomRelationshipTemplate [code=" + code + "]";
 	}
     
+	/**
+	 * Gets the code from applies to.
+	 *
+	 * @param appliesTo the applies to
+	 * @return the code from applies to
+	 */
+	public static String getCodeFromAppliesTo(String appliesTo) {
+		if (appliesTo == null)
+			return null;
+
+		if (!appliesTo.startsWith("CRT_")) {
+			return null;
+		}
+
+		return appliesTo.substring(4);
+	}
 
 }
