@@ -584,7 +584,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 	 */
 	public CustomRelationshipTemplate findOrCreateRelationship(String relationshipName, String sourceCet, String targetCet) throws BusinessException {
 		CustomRelationshipTemplate crt;
-		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(relationshipName, sourceCet, targetCet);
+		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(sourceCet, targetCet, relationshipName);
 		if(!availableCrts.isEmpty()) {
 			crt = availableCrts.get(0);
 		} else {
