@@ -330,7 +330,7 @@ public class WorkflowService extends BusinessService<Workflow> {
 
     }
 
-    private Object executeExpression(String expression, Object object) throws ELException {
+    public Object executeExpression(String expression, Object object) throws ELException {
 
         Map<Object, Object> userMap = new HashMap<Object, Object>();
         userMap.put("entity", object);

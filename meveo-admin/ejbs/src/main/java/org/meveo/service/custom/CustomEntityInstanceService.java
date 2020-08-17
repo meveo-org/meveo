@@ -28,6 +28,7 @@ import org.meveo.model.custom.entities.CustomEntityInstance;
 import org.meveo.model.custom.entities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
+import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.BusinessService;
@@ -295,7 +296,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		}
 	}
 
-	public boolean checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException {
+	public boolean checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException {
 		if (entity.getCet().isStoreAsTable()) {
 			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), entity.getCet(), entity.getUuid());
 			if (values != null) {
@@ -330,7 +331,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return true;
 	}
 
-	private boolean transitionsFromPreviousState(CustomFieldTemplate customFieldTemplate, CustomEntityInstance instance) {
+	private boolean transitionsFromPreviousState(CustomFieldTemplate customFieldTemplate, CustomEntityInstance instance) throws ELException {
 		if (instance.getCfValues() != null && instance.getCfValues().getValuesByCode() != null) {
 			List<CustomFieldValue> customFieldValues = instance.getCfValues().getValuesByCode().get(customFieldTemplate.getCode());
 			if (CollectionUtils.isNotEmpty(customFieldValues)) {
@@ -364,9 +365,24 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 									}
 								}
 							}
-							if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(transitions)
-									&& (!CollectionUtils.isNotEmpty(conditionEls) || !conditionEls.contains(customFieldTemplate.getApplicableOnEl()))) {
-								return false;
+							if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(transitions)) {
+								if (!CollectionUtils.isNotEmpty(conditionEls) || !conditionEls.contains(customFieldTemplate.getApplicableOnEl())) {
+									return false;
+								} else {
+									for (Workflow workflow: workflows) {
+										if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+											for (WFTransition wfTransition: workflow.getTransitions()) {
+												if (wfTransition != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", wfTransition) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+													for (WFAction action: wfTransition.getWfActions()) {
+														if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", action)) {
+															workflowService.executeExpression(action.getActionEl(), instance);
+														}
+													}
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 					}
