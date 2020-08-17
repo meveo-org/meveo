@@ -71,9 +71,9 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityInstance;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomTableRecord;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
@@ -191,7 +191,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param uuid         Identifier
 	 * @param selectFields Fields to return
 	 * @deprecated Use
-	 *             {@link CustomTableService#findById(org.meveo.model.custom.entities.CustomEntityTemplate, String, List)}
+	 *             {@link CustomTableService#findById(org.meveo.model.customEntities.CustomEntityTemplate, String, List)}
 	 *             instead
 	 * @return A map of values with field name as a map key and field value as a map
 	 *         value

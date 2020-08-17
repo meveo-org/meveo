@@ -19,7 +19,7 @@ package org.meveo.model.crm;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 
 public class CetUcPk implements Serializable {
 

@@ -5,7 +5,7 @@ import java.util.List;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Named;
 
-import org.meveo.model.custom.entities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityCategory;
 
 /**
  * List bean controller for {@linkplain CustomEntityCategory}.

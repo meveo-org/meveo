@@ -8,7 +8,7 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
-import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
 /**

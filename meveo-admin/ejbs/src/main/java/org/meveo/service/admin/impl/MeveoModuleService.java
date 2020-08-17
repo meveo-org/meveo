@@ -75,7 +75,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.module.MeveoModule;
@@ -788,5 +788,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     @Override
     public List<MeveoModule> list(PaginationConfiguration config) {
     	return super.list(config);
+    }
+    
+    public List<String> getLazyLoadedProperties() {
+    	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
     }
 }

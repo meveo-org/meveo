@@ -11,7 +11,7 @@ import javax.inject.Named;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ConstraintViolationException;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.custom.entities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.service.base.MeveoExceptionMapper;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;

@@ -18,7 +18,7 @@ package org.meveo.comparators;
 
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.qualifiers.Comparator;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 

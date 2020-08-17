@@ -13,7 +13,7 @@ import javax.inject.Inject;
 
 import org.apache.http.HttpStatus;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;

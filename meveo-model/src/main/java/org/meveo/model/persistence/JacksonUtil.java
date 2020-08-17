@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ser.std.FileSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.meveo.commons.utils.FileDeserializer;
-import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityInstance;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;

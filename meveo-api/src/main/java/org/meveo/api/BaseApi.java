@@ -56,7 +56,7 @@ import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
-import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.security.CurrentUser;

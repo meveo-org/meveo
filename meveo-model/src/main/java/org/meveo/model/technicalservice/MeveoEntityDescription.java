@@ -18,7 +18,7 @@
 package org.meveo.model.technicalservice;
 
 import org.meveo.interfaces.technicalservice.description.EntityDescription;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 
 import javax.persistence.*;
 

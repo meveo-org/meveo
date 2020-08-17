@@ -1,8 +1,8 @@
 package org.meveo.service.custom;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.meveo.model.custom.entities.CustomEntityReference;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityReference;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.base.PersistenceService;
 
 import javax.ejb.Stateless;

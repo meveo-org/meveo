@@ -3,7 +3,7 @@ package json.meveo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.meveo.api.dto.CustomEntityTemplateDto;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
 import java.util.Map;
 

@@ -16,7 +16,7 @@ import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.dto.response.CustomRelationshipTemplateResponseDto;
 import org.meveo.api.dto.response.CustomRelationshipTemplatesResponseDto;
 import org.meveo.api.rest.IBaseRs;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

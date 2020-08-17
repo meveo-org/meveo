@@ -389,12 +389,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Override
 	public List<String> getFormFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@ActionMethod
