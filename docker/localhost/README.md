@@ -21,7 +21,7 @@ The default credentials are: `meveo.admin / meveo`
 
 ### How to access the local keycloak server
 
-Local keycloak server is addressed at `http://localhost:8081/meveo` or `http://kc-server:8081/meveo`
+Local keycloak server is addressed at `http://localhost:8081/auth` or `http://kc-server:8081/auth`
 
 The default keycloak credentials are: `admin / admin`
 
