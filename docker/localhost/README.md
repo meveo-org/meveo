@@ -9,7 +9,7 @@ Just there is a manual action on host system side. Add an host entry for local k
 
 ### Start Meveo
 
-Then, just copy the `docker-compose.yml` file in a directory and run:
+Then, just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory and run:
 
 ```sh
   docker-compose up -d
