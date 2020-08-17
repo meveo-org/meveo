@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +73,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
@@ -132,6 +134,9 @@ public class OntologyObserver {
 
     @Inject
     private CustomRelationshipTemplateApi customRelationshipTemplateApi;
+    
+    @Inject
+    private CustomEntityTemplateCompiler cetCompiler;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
 
@@ -178,7 +183,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(cet);
 
-        final File cetDir = getCetDir();
+        final File cetDir = cetCompiler.getCetDir();
 
         final File classDir = getClassDir();
 
@@ -225,7 +230,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(cet);
 
-        final File cetDir = getCetDir();
+        final File cetDir = cetCompiler.getCetDir();
 
         final File classDir = getClassDir();
 
@@ -241,23 +246,19 @@ public class OntologyObserver {
             schemaFile.delete();
             fileList.add(schemaFile);
         }
+        FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
 
-        FileUtils.write(schemaFile, templateSchema);
-
-        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
-        File javaFile = new File(cetDir, cet.getCode() + ".java");
-        if (javaFile.exists()) {
-            javaFile.delete();
-            fileList.add(javaFile);
-        }
-
-        FileUtils.write(javaFile, compilationUnit.toString());
-
-        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
-        FileUtils.write(classFile, compilationUnit.toString());
-        compileClassJava(classDir, compilationUnit.toString(), classFile);
-
+        // Update java source file in git repository
+        File javaFile = cetCompiler.generateCETSourceFile(templateSchema, cet);
+        fileList.add(javaFile);
+        
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
+
+        String sourceCode = Files.readString(javaFile.toPath());
+        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
+        compileClassJava(classDir, sourceCode, classFile);
+
     }
 
     /**
@@ -268,7 +269,7 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
-        final File cetDir = getCetDir();
+        final File cetDir = cetCompiler.getCetDir();
         final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
@@ -389,7 +390,7 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = getCetDir();
+            final File cetDir = cetCompiler.getCetDir();
 
             final File classDir = getClassDir();
 
@@ -465,7 +466,7 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = getCetDir();
+            final File cetDir = cetCompiler.getCetDir();
 
             final File classDir = getClassDir();
 
@@ -534,7 +535,7 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = getCetDir();
+            final File cetDir = cetCompiler.getCetDir();
 
             final File classDir = getClassDir();
 
@@ -684,7 +685,7 @@ public class OntologyObserver {
         try {
         	LOGGER.info("Start compilation of {}", classFile.getName());
         	
-            List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, getCetDir().getAbsolutePath());
+            List<File> fileList = supplementClassPathWithMissingImports(compilationUnit, cetCompiler.getCetDir().getAbsolutePath());
             String classPackage = classDir.getAbsolutePath();
             if (!StringUtils.isBlank(classPackage) && !CustomScriptService.CLASSPATH_REFERENCE.get().contains(classPackage)) {
                 CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + classPackage);
@@ -798,11 +799,6 @@ public class OntologyObserver {
         }
         
         return files;
-    }
-
-    private File getCetDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
-        return new File(repositoryDir, "custom/entities");
     }
 
     private File getCrtDir() {

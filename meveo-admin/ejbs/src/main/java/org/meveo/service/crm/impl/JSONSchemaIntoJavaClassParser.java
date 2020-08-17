@@ -10,8 +10,10 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
@@ -20,7 +22,6 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * Parse a cet map into a java source code.
@@ -37,6 +38,9 @@ public class JSONSchemaIntoJavaClassParser {
 	
 	@Inject
 	private CustomEntityTemplateService cetService;
+	
+	@Inject
+	private Logger log;
 
     private Map<String, Object> jsonMap;
 
@@ -195,10 +199,18 @@ public class JSONSchemaIntoJavaClassParser {
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
+                            // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
+                            name = CustomFieldTemplate.retrieveCetCode(name);
+                            
                             if (!name.startsWith("org.meveo")) {
                                 compilationUnit.addImport("org.meveo.model.customEntities." + name);
                             } else {
-                                compilationUnit.addImport(name);
+                            	try {
+                            		compilationUnit.addImport(name);
+                            	} catch (Exception e) {
+                            		log.error("Can't add import " + name, e);
+                            	}
+                            	
                                 String[] className = name.split("\\.");
                                 name = className[className.length -1];
                             }

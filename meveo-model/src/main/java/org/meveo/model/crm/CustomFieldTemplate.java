@@ -922,6 +922,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
         }
         
+        // Suport for old api
+        if (entityClazz.startsWith("org.meveo.model.custom.entities.CustomEntityTemplate")) {
+            return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
+        }
+        
         return entityClazz;
     }
 

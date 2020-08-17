@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +83,15 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.customEntities.CETConstants;
+import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -97,6 +105,7 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -146,12 +155,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private MavenConfigurationService mavenConfigurationService;
     
+    @Inject
+    private CustomEntityTemplateCompiler cetCompiler;
 
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
     
-    private Map<String, List<File>> compiledCustomEntities = new HashMap<>();
+    private Map<String, List<File>> compiledCustomEntities = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
@@ -813,15 +824,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @SuppressWarnings("rawtypes")
     private List<File> supplementClassPathWithMissingImports(String javaSrc) {
-
-        List<File> files = new ArrayList<>();
+        Set<File> files = new HashSet<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
-            files.addAll(parseImportCustomEntity(pattern, className));
+            try {
+				files.addAll(parseImportCustomEntity(pattern, className));
+			} catch (BusinessException e1) {
+				log.error("Failed to parse custom entities references", e1);
+			}
             
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
@@ -863,7 +877,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             }
         }
         
-        return files;
+        return new ArrayList<>(files);
     }
     
     /**
@@ -872,25 +886,51 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param pattern import patter
      * @param className class name of the cet
      * @return a list of CET java class file names.
+     * @throws BusinessException if a dependency file can't be retrieved
      */
-    private List<File> parseImportCustomEntity(Pattern pattern, String className) {
+    private List<File> parseImportCustomEntity(Pattern pattern, String className) throws BusinessException {
+    	// Skip if class is a meveo-model class
+    	// We must do that because generated entities have the same package than these classes
+    	List<Class<?>> modelClasses = List.of(
+			CustomEntityTemplate.class,
+			CustomEntityInstance.class,
+			CustomEntityCategory.class,
+			CETConstants.class,
+			CustomModelObject.class,
+			CustomRelationshipTemplate.class,
+			CustomTableRecord.class,
+			GraphQLQueryField.class,
+			Mutation.class
+		);
+    	
+    	boolean isModelClass = modelClasses.stream()
+    			.map(Class::getName)
+    			.anyMatch(className::equals);
+    	
+    	if(isModelClass) {
+    		return new ArrayList<>();
+    	}
     	
     	List<File> files = new ArrayList<>();
-    	
+
     	try {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + fileName + ".java");
+                File file = cetCompiler.getCETSourceFile(fileName);
                 String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 Matcher matcher2 = pattern.matcher(content);
                 while (matcher2.find()) {
                     String name = matcher2.group(1);
-            		/* /!\ If the package name is a package name used in Meveo app, 
-            		 * we will have a stack overflow error */
                     if (name.startsWith("org.meveo.model.customEntities") && !name.equals(className)) {
-                    	log.info("parseImportCustomEntity - {} : {}", pattern, name);
-                    	var parsedImport = compiledCustomEntities.computeIfAbsent(name, k -> parseImportCustomEntity(pattern, name));
-						files.addAll(parsedImport);
+                    	var depFiles = compiledCustomEntities.computeIfAbsent(name, k -> {
+							try {
+								return parseImportCustomEntity(pattern, name);
+							} catch (Exception e) {
+								log.error("Failed to recursively parse dependencies for class {}", name, e);
+								return List.of();
+							}
+						});
+						files.addAll(depFiles);
                     }
                 }
                 
@@ -1197,7 +1237,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             String name = matcher.group(1);
                             if (name.startsWith("org.meveo.model.customEntities")) {
                                 String cetName = name.split("\\.")[4];
-                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + cetName + ".java");
+                                File cetFile = cetCompiler.getCETSourceFile(cetName);
                                 files.add(cetFile);
                                 continue;
                             }
