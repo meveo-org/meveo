@@ -81,6 +81,11 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         customRelationshipTemplateService.synchronizeStorages(getEntity());
         return returnView;
     }
+    
+    @Override
+    public List<String> getFormFieldsToFetch() {
+    	return List.of("startNode", "endNode");
+    }
 
     public void onChangeAvailableStorages() {
         displayNeo4j = false;
