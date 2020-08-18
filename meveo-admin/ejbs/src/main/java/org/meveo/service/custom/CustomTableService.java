@@ -947,30 +947,31 @@ public class CustomTableService extends NativePersistenceService {
         return list(sqlConnectionCode, cet, null);
     }
 
-    @Override
-    public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
-        PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
+	@Override
+	public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
+		PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
-        // Only use SQL filters
-        if (config != null && config.getFilters() != null) {
-            final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream()
-                    .filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
-                    .filter(e -> Objects.nonNull(e.getValue()))
-                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-            paginationConfiguration.setFilters(sqlFilters);
-        }
+		// Only use SQL filters
+		if (config.getFilters() != null) {
+			final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream().filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
+					.filter(e -> Objects.nonNull(e.getValue())).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+			paginationConfiguration.setFilters(sqlFilters);
+		}
 
-        // Only fetch SQL fields
-        if (config != null && config.getFetchFields() != null) {
-            List<String> sqlFetchFields = config.getFetchFields().stream()
-                    .filter(s -> sqlCftFilter(cet, s))
-                    .collect(Collectors.toList());
-            paginationConfiguration.setFetchFields(sqlFetchFields);
-        }
+		// Only fetch SQL fields
+		if (config.getFetchFields() != null) {
+			List<String> sqlFetchFields = config.getFetchFields().stream().filter(s -> sqlCftFilter(cet, s)).collect(Collectors.toList());
+			paginationConfiguration.setFetchFields(sqlFetchFields);
+		}
 
-        final List<Map<String, Object>> data = super.list(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
-        return convertData(data, cet);
-    }
+		final List<Map<String, Object>> data = super.list(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
+		if (cet.getCode().startsWith(CustomEntityTemplate.AUDIT_PREFIX)) {
+			return data;
+
+		} else {
+			return convertData(data, cet);
+		}
+	}
 
     public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid) throws EntityDoesNotExistsException {
         return findById(sqlConnectionCode, cet, uuid, null);
@@ -1061,7 +1062,7 @@ public class CustomTableService extends NativePersistenceService {
     public boolean sqlCftFilter(CustomEntityTemplate cet, String key) {
         final CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(key, cet.getAppliesTo());
         if (cft != null) {
-            return cft.getStorages().contains(DBStorageType.SQL);
+            return cft.getStoragesNullSafe().contains(DBStorageType.SQL);
         }
 
         return true;

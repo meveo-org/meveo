@@ -93,7 +93,7 @@ public interface ICustomFieldEntity {
 			Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
 
 			if(filterType != null){
-				return customFieldTemplateOpt.map(customFieldTemplate -> customFieldTemplate.getStorages().contains(filterType))
+				return customFieldTemplateOpt.map(customFieldTemplate -> customFieldTemplate.getStoragesNullSafe().contains(filterType))
 						.orElse(false);
 			} else {
 				return true;

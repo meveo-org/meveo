@@ -18,6 +18,8 @@ A CET person P is auditable, with CFT field "name".
 - User U remove the CEI with name = newName : a row is inserted in the table "audit_person" with same info as create, but action = "DELETE"
 - User U updated both the name and age field, 2 new entries will be created similar with the create info. But with different oldValue and newValue respectively.
 
+*The audit table should be kept even when the CET table is deleted.
+
 A GUI and API is available to view the audit trail for a particular CEI sorted by new to old.
 
 ## CEI Workflow

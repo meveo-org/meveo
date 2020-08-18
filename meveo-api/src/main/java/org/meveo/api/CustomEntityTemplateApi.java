@@ -39,8 +39,8 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.custom.entities.CustomEntityCategory;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -616,6 +616,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
+        cet.setAudited(dto.isAudited());
 
         // sql configuration
 		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {

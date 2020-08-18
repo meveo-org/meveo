@@ -17,10 +17,18 @@ public class CombinedObjectSchema extends ObjectSchema {
 	public CombinedObjectSchema(Builder builder) {
 		super(builder);
 	}
+	
+	public CombinedSchema getCombinedSchema() {
+		return combinedSchema;
+	}
+
+	public void setCombinedSchema(CombinedSchema combinedSchema) {
+		this.combinedSchema = combinedSchema;
+	}
 
 	@Override
 	protected void describePropertiesTo(JSONPrinter writer) {
-		combinedSchema.describePropertiesTo(writer);
+		if(combinedSchema != null) combinedSchema.describePropertiesTo(writer);
 		super.describePropertiesTo(writer);
 	}
 

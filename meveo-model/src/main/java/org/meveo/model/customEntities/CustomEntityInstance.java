@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.meveo.model.custom.entities;
+package org.meveo.model.customEntities;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -35,6 +35,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 /**
@@ -70,6 +71,9 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private String tableName;
+
+	@Transient
+	private CustomFieldValues cfValuesOld = new CustomFieldValues();
 
 	@Override
 	public boolean equals(Object obj) {
@@ -142,5 +146,21 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
+	}
+
+	public CustomFieldValues getCfValuesOld() {
+		return cfValuesOld;
+	}
+
+	public CustomFieldValues getCfValuesOldNullSafe() {
+		if (cfValuesOld == null) {
+			cfValuesOld = new CustomFieldValues();
+		}
+
+		return cfValuesOld;
+	}
+
+	public void setCfValuesOld(CustomFieldValues cfValuesOld) {
+		this.cfValuesOld = cfValuesOld;
 	}
 }

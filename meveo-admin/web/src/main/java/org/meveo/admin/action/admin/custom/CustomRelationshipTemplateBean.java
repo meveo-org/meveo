@@ -20,8 +20,8 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -80,6 +80,11 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         String returnView =  super.saveOrUpdate(killConversation);
         customRelationshipTemplateService.synchronizeStorages(getEntity());
         return returnView;
+    }
+    
+    @Override
+    public List<String> getFormFieldsToFetch() {
+    	return List.of("startNode", "endNode");
     }
 
     public void onChangeAvailableStorages() {

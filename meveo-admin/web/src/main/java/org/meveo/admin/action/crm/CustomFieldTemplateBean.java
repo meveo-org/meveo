@@ -26,8 +26,8 @@ import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
@@ -280,9 +280,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             entity.setCalendar(calendarService.retrieveIfNotManaged(entity.getCalendar()));
         }
 
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }
@@ -577,9 +577,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         		perksTarget.addAll(cetStorageDM.getTarget());
         	} else {
         		perksSource.addAll(cetStorageDM.getTarget());
-	            if (getEntity().getStorages() != null) {
-	                perksTarget.addAll(getEntity().getStorages());		// Persistent data
-	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
+	            if (getEntity().getStoragesNullSafe() != null) {
+	                perksTarget.addAll(getEntity().getStoragesNullSafe());		// Persistent data
+	                perksSource.removeAll(getEntity().getStoragesNullSafe());	// Display remaining available storages
 	            }
         	}
 
@@ -667,9 +667,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 * On change available storages.
 	 */
     public void onChangeAvailableStorages() {
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }

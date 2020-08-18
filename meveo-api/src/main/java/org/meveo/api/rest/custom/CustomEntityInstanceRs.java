@@ -15,7 +15,7 @@ import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.response.CustomEntityInstanceResponseDto;
 import org.meveo.api.dto.response.CustomEntityInstancesResponseDto;
 import org.meveo.api.rest.IBaseRs;
-import org.meveo.model.custom.entities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityInstance;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

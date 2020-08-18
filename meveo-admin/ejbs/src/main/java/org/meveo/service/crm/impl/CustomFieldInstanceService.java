@@ -35,8 +35,8 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.custom.entities.CustomEntityInstance;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
@@ -571,7 +571,7 @@ public class CustomFieldInstanceService extends BaseService {
         	
         	if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
         		/* Don't wrap primitive entity references */
-        		if(cft.getStorages().contains(DBStorageType.NEO4J)) {
+        		if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J)) {
         			String cetCode = cft.getEntityClazzCetCode();
         			CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cetCode);
         			if(refCet == null) {

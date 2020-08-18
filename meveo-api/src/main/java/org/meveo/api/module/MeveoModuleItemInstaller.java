@@ -43,8 +43,8 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -154,6 +154,10 @@ public class MeveoModuleItemInstaller {
             try {
                 if (itemEntity instanceof MeveoModule) {
                     uninstall((MeveoModule) itemEntity, true, removeItems);
+                } else if(itemEntity instanceof CustomFieldTemplate) {
+                	customFieldTemplateApi.remove(itemEntity.getCode(), ((CustomFieldTemplate) itemEntity).getAppliesTo());
+                } else if(itemEntity instanceof EntityCustomAction) {
+                	entityCustomActionApi.remove(itemEntity.getCode(), ((EntityCustomAction) itemEntity).getAppliesTo());
                 } else {
 
                     // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class

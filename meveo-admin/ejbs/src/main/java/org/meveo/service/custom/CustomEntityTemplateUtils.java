@@ -2,7 +2,7 @@ package org.meveo.service.custom;
 
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
 import java.util.Arrays;

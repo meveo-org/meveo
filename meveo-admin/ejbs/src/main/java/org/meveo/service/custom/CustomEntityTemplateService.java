@@ -58,8 +58,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityCategory;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -263,11 +263,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         // Synchronize custom fields storages with CET available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
         	cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
-            if (cft.getStorages() != null) {
-                for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+            if (cft.getStoragesNullSafe() != null) {
+                for (DBStorageType storage : new ArrayList<>(cft.getStoragesNullSafe())) {
                     if (!cet.getAvailableStorages().contains(storage)) {
                         log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
-                        cft.getStorages().remove(storage);
+                        cft.getStoragesNullSafe().remove(storage);
                         customFieldTemplateService.update(cft);
                     }
                 }
@@ -623,13 +623,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return update(cet);
 	}
 
-    public String getJsonSchemaContent(String cetCode) throws IOException {
+    @SuppressWarnings("unchecked")
+	public String getJsonSchemaContent(String cetCode) throws IOException {
 
         final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
+        
+        // Replace references in allOf
+        List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
+        allOf.forEach(item -> {
+    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
+        });
 
         Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
         if (items != null) {

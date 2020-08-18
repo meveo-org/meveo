@@ -40,8 +40,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
 /**
@@ -308,7 +308,7 @@ public class JSONSchemaGenerator {
 
 		;
 		result = result.id(field.getAppliesTo() + '_' + field.getCode()).title(template.code() + "." + field.getCode()).description(field.getDescription())
-				.storages(buildDBStorageType(field.getStorages())).schemaLocation(schemaLocation);
+				.storages(buildDBStorageType(field.getStoragesNullSafe())).schemaLocation(schemaLocation);
 
 		if (field.getIndexType() != null) {
 			result = result.indexType(field.getIndexType().name());

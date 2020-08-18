@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.meveo.model.custom.entities;
+package org.meveo.model.customEntities;
 
 import java.io.Serializable;
 

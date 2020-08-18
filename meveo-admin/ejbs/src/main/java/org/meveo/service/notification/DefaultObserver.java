@@ -29,7 +29,6 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.InboundRequestReceived;
-import org.meveo.event.qualifier.LoggedIn;
 import org.meveo.event.qualifier.Processed;
 import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
@@ -289,7 +288,7 @@ public class DefaultObserver {
         checkEvent(NotificationEventTypeEnum.REJECTED, e);
     }
 
-    public void loggedIn(@Observes @LoggedIn User e) throws BusinessException {
+    public void loggedIn(@Observes User e) throws BusinessException {
         log.debug("Defaut observer : logged in class={} ", e.getClass().getName());
         checkEvent(NotificationEventTypeEnum.LOGGED_IN, e);
     }

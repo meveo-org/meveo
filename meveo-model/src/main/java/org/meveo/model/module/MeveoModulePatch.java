@@ -7,8 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.meveo.model.custom.entities.CustomEntityInstance;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**

@@ -2,7 +2,7 @@ package org.meveo.service.custom;
 
 import javax.ejb.Stateless;
 
-import org.meveo.model.custom.entities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.service.base.BusinessService;
 
 @Stateless

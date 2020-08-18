@@ -24,8 +24,8 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Type;
 import org.meveo.model.BaseEntity;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 /**
  * @author Clément Bareth

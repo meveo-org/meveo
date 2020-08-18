@@ -72,8 +72,8 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
@@ -420,8 +420,12 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 *
 	 * @return the storage where the cft value will be stored
 	 */
-    public List<DBStorageType> getStorages() {
+    public List<DBStorageType> getStoragesNullSafe() {
         return storages == null ? new ArrayList<>() : storages;
+    }
+    
+    public List<DBStorageType> getStorages() {
+        return storages;
     }
 
     /**
@@ -919,6 +923,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         
         // Suport for old api
         if (entityClazz.startsWith("org.meveo.model.customEntities.CustomEntityTemplate")) {
+            return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
+        }
+        
+        // Suport for old api
+        if (entityClazz.startsWith("org.meveo.model.custom.entities.CustomEntityTemplate")) {
             return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
         }
         

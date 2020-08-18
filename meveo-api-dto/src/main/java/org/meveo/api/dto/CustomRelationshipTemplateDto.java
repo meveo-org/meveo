@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

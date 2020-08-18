@@ -1,7 +1,11 @@
 package org.meveo.service.custom;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,8 +28,8 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.custom.entities.CustomEntityInstance;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.wf.WFAction;
@@ -215,13 +219,13 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
 		for (Map.Entry<String, Object> filterValue : filterValues.entrySet()) {
 
-			String[] fieldInfo = filterValue.getKey().split(" ");
-			String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
-			String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
-
 			if (filterValue.getValue() == null) {
 				continue;
 			}
+
+			String[] fieldInfo = filterValue.getKey().split(" ");
+			String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
+			String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
 
 			if (filterValue.getValue() instanceof Date) {
 				filterValue.setValue(((Date) filterValue.getValue()).getTime());
@@ -255,6 +259,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			} else if (referenceValue instanceof Date) {
 				referenceValue = ((Date) referenceValue).getTime();
 			}
+
 			if ("fromRange".equals(condition)) {
 				if (new BigDecimal(referenceValue.toString()).compareTo(new BigDecimal(filterValue.getValue().toString())) < 0) {
 					return false;
@@ -266,15 +271,17 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 				}
 
 			} else {
-				if (strPattern instanceof String) {
-					Matcher matcher = pattern.matcher(referenceValue.toString());
-					if (!matcher.matches()) {
-						return false;
-					}
+				if (filterValue.getValue().toString().contains("*")) {
+					if (strPattern instanceof String) {
+						Matcher matcher = pattern.matcher(referenceValue.toString());
+						if (!matcher.matches()) {
+							return false;
+						}
 
-				} else {
-					if (!referenceValue.equals(pattern)) {
-						return false;
+					} else {
+						if (!referenceValue.equals(pattern)) {
+							return false;
+						}
 					}
 				}
 			}
@@ -289,7 +296,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		if (cfValues != null && cfValues.getValuesByCode() != null) {
 			for (String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())) {
 				CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
-				if (cft != null && (cft.getStorages() == null || !cft.getStorages().contains(DBStorageType.SQL))) {
+				if (cft != null && (cft.getStoragesNullSafe() == null || !cft.getStoragesNullSafe().contains(DBStorageType.SQL))) {
 					cfValues.removeValue(valueCode);
 				}
 			}

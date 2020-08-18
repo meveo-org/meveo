@@ -26,7 +26,7 @@ import org.meveo.elresolver.ValueExpressionWrapper;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;

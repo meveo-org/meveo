@@ -1,28 +1,33 @@
 ## Local installation
 
-### Keycloak setup
+### Preparation
 
-This configuration deploys `meveo` locally in order to use or develop modules. Make sure the latest version of `docker` and `docker-compose` are installed on your system.
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory.
 
-1) In order to use the local keycloak server, please add a hostname `kc-server` to the local hosts file.
-How to do is [here](https://github.com/meveo-org/keycloak/tree/master/docker#how-to-use-with-meveo-container-on-localhost)
+Edit `docker-compose.yml` file to replace `kc-server` by the localhost IP address. Localhost IP address can be found using the command `ifconfig` for Linux system or `ipconfig` for Windows system.
 
-2) In order to use the remote keycloak server, remove the service `keycloak` in docker-compose.yml file. And then, under the service `meveo`, change the environment variable `KEYCLOAK_URL` by the remote keycloak url.
+For example:
+
+    KEYCLOAK_URL: http://192.168.0.10:8081/auth
 
 
 ### Start Meveo
 
-Then, just copy the `docker-compose.yml` file in a directory and run:
+And then run:
 
 ```sh
   docker-compose up -d
 ```
 
-Then access meveo admin console at:
-`http://localhost:8080/meveo`
+Then access meveo admin console at: `http://localhost:8080/meveo`
 
-The default credentials are:
-`meveo.admin / meveo`
+The default credentials are: `meveo.admin / meveo`
+
+### How to access the local keycloak server
+
+Local keycloak server is addressed at `http://localhost:8081/auth`
+
+The default keycloak credentials are: `admin / admin`
 
 ### Externalize all meveo files
 

@@ -47,10 +47,10 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomRelationshipTemplate;
-import org.meveo.model.custom.entities.GraphQLQueryField;
-import org.meveo.model.custom.entities.Mutation;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.neo4j.GraphQLRequest;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
@@ -415,7 +415,7 @@ public class GraphQLService {
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
             // Skip the field if it is not configured to be stored in neo4j
-            if (customFieldTemplate.getStorages() == null || !customFieldTemplate.getStorages().contains(DBStorageType.NEO4J)) {
+            if (customFieldTemplate.getStoragesNullSafe() == null || !customFieldTemplate.getStoragesNullSafe().contains(DBStorageType.NEO4J)) {
                 continue;
             }
 

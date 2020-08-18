@@ -1,4 +1,4 @@
-package org.meveo.model.custom.entities;
+package org.meveo.model.customEntities;
 
 /**
  * @author Rachid
