@@ -355,7 +355,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return DTO of the endpoint corresponding to the given code
 	 */
 	public EndpointDto findByCode(String code) {
-		return toDto(endpointService.findByCode(code));
+		var endpoint = endpointService.findByCode(code);
+		if(endpoint == null) {
+			return null;
+		}
+		return toDto(endpoint);
 	}
 
 	/**
@@ -684,6 +688,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Endpoint endpoint = endpointService.findByCode(code);
 
 		return endpointRequestSchemaService.generateResponseSchema(endpoint);
+	}
+
+	@Override
+	public void remove(EndpointDto dto) throws MeveoApiException, BusinessException {
+		this.delete(dto.getCode());
 	}
 
 }

@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.api.dto.notification.WebHookDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -67,55 +68,8 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         if (webHookService.findByCode(postData.getCode()) != null) {
             throw new EntityAlreadyExistsException(WebHook.class, postData.getCode());
         }
-        ScriptInstance scriptInstance = null;
-        if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
-            scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
-            if (scriptInstance == null) {
-                throw new EntityDoesNotExistsException(ScriptInstance.class, postData.getScriptInstanceCode());
-            }
-        }
-        // check class
-        try {
-            Class.forName(postData.getClassNameFilter());
-        } catch (Exception e) {
-            throw new InvalidParameterException("classNameFilter", postData.getClassNameFilter());
-        }
-
-        CounterTemplate counterTemplate = null;
-        if (!StringUtils.isBlank(postData.getCounterTemplate())) {
-            counterTemplate = counterTemplateService.findByCode(postData.getCounterTemplate());
-            if (counterTemplate == null) {
-                throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
-            }
-        }
-
-        WebHook webHook = new WebHook();
-        webHook.setCode(postData.getCode());
-        webHook.setClassNameFilter(postData.getClassNameFilter());
-        webHook.setEventTypeFilter(postData.getEventTypeFilter());
-        webHook.setFunction(scriptInstance);
-        webHook.setParams(postData.getScriptParams());
-        webHook.setElFilter(postData.getElFilter());
-        webHook.setCounterTemplate(counterTemplate);
         
-        if (!StringUtils.isBlank(postData.getHttpProtocol())) {
-            webHook.setHttpProtocol(postData.getHttpProtocol());
-        } else {
-            webHook.setHttpProtocol(HttpProtocol.HTTP);
-        }
-        
-        webHook.setHost(postData.getHost());
-        webHook.setPort(postData.getPort());
-        webHook.setPage(postData.getPage());
-        webHook.setHttpMethod(postData.getHttpMethod());
-        webHook.setUsername(postData.getUsername());
-        webHook.setPassword(postData.getPassword());
-        if (postData.getHeaders() != null) {
-            webHook.getHeaders().putAll(postData.getHeaders());
-        }
-        if (postData.getParams() != null) {
-            webHook.getWebhookParams().putAll(postData.getParams());
-        }
+        var webHook = fromDto(postData);
 
         webHookService.create(webHook);
 
@@ -253,25 +207,80 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 
 	@Override
 	public WebHookDto toDto(WebHook entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new WebHookDto(entity);
 	}
 
 	@Override
 	public WebHook fromDto(WebHookDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+        ScriptInstance scriptInstance = null;
+        if (!StringUtils.isBlank(dto.getScriptInstanceCode())) {
+            scriptInstance = scriptInstanceService.findByCode(dto.getScriptInstanceCode());
+            if (scriptInstance == null) {
+                throw new EntityDoesNotExistsException(ScriptInstance.class, dto.getScriptInstanceCode());
+            }
+        }
+        // check class
+        try {
+            Class.forName(dto.getClassNameFilter());
+        } catch (Exception e) {
+            throw new InvalidParameterException("classNameFilter", dto.getClassNameFilter());
+        }
+
+        CounterTemplate counterTemplate = null;
+        if (!StringUtils.isBlank(dto.getCounterTemplate())) {
+            counterTemplate = counterTemplateService.findByCode(dto.getCounterTemplate());
+            if (counterTemplate == null) {
+                throw new EntityDoesNotExistsException(CounterTemplate.class, dto.getCounterTemplate());
+            }
+        }
+
+        WebHook webHook = new WebHook();
+        webHook.setCode(dto.getCode());
+        webHook.setClassNameFilter(dto.getClassNameFilter());
+        webHook.setEventTypeFilter(dto.getEventTypeFilter());
+        webHook.setFunction(scriptInstance);
+        webHook.setParams(dto.getScriptParams());
+        webHook.setElFilter(dto.getElFilter());
+        webHook.setCounterTemplate(counterTemplate);
+        
+        if (!StringUtils.isBlank(dto.getHttpProtocol())) {
+            webHook.setHttpProtocol(dto.getHttpProtocol());
+        } else {
+            webHook.setHttpProtocol(HttpProtocol.HTTP);
+        }
+        
+        webHook.setHost(dto.getHost());
+        webHook.setPort(dto.getPort());
+        webHook.setPage(dto.getPage());
+        webHook.setHttpMethod(dto.getHttpMethod());
+        webHook.setUsername(dto.getUsername());
+        webHook.setPassword(dto.getPassword());
+        if (dto.getHeaders() != null) {
+            webHook.getHeaders().putAll(dto.getHeaders());
+        }
+        if (dto.getParams() != null) {
+            webHook.getWebhookParams().putAll(dto.getParams());
+        }
+        
+		return webHook;
 	}
 
 	@Override
 	public IPersistenceService<WebHook> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return webHookService;
 	}
 
 	@Override
 	public boolean exists(WebHookDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		var entity = webHookService.findByCode(dto.getCode());
+		return entity != null;
+	}
+	
+	@Override
+	public void remove(WebHookDto dto) throws MeveoApiException, BusinessException {
+		var entity = webHookService.findByCode(dto.getCode());
+		if(entity != null) {
+			webHookService.remove(entity);
+		}
 	}
 }

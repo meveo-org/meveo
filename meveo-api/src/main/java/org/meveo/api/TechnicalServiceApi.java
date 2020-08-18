@@ -612,4 +612,9 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     private String buildCode(String name, Integer version) {
         return name + "." + version;
     }
+    
+	@Override
+	public void remove(TechnicalServiceDto dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getName(), dto.getVersion());
+	}
 }

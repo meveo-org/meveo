@@ -72,12 +72,12 @@ import org.meveo.model.crm.custom.CustomFieldIndexTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.shared.DateUtils;
 
@@ -109,7 +109,7 @@ import org.meveo.model.shared.DateUtils;
 	                }
 	        ),
         @NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
-                @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
+                @QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
 
     private static final long serialVersionUID = -1403961759495272885L;
@@ -898,9 +898,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         if (entityClazz == null) {
             return null;
         }
-        if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
-            return entityClazz.substring(0, entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length() - 3);
-        }
+        if (entityClazz.startsWith(CustomEntityTemplate.class.getName()) || 
+        		entityClazz.startsWith("org.meveo.model.customEntities.CustomEntityTemplate")
+    		) {
+            return CustomEntityTemplate.class.getName();
+		}
         return entityClazz;
     }
 
@@ -914,9 +916,16 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         if (entityClazz == null) {
             return null;
         }
+        
         if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
             return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
         }
+        
+        // Suport for old api
+        if (entityClazz.startsWith("org.meveo.model.customEntities.CustomEntityTemplate")) {
+            return entityClazz.substring(entityClazz.indexOf(ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR) + ENTITY_REFERENCE_CLASSNAME_CETCODE_SEPARATOR.length());
+        }
+        
         return entityClazz;
     }
 

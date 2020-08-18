@@ -278,5 +278,10 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 		return customRelationshipTemplateService.findByCode(dto.getCode()) != null;
 	}
 
+	@Override
+	public void remove(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
+		this.removeCustomRelationshipTemplate(dto.getCode());
+	}
+
    
 }

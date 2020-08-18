@@ -19,6 +19,8 @@
  */
 package org.meveo.service.base;
 
+import org.hibernate.LockOptions;
+import org.hibernate.NaturalIdLoadAccess;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
@@ -170,28 +172,14 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
         if (StringUtils.isBlank(code)) {
             return null;
         }
-
-        String query = "SELECT be.id FROM " + getEntityClass().getSimpleName() + " be WHERE be.code = :code";
-
-        Long id = null;
         
-        try {
-            id = (Long) getEntityManager().createQuery(query, Long.class)
-                    .setParameter("code", code)
-                    .getSingleResult();
-
-        } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
-            return null;
-        } catch (NonUniqueResultException e) {
-            log.error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
-            id = (Long) getEntityManager().createQuery(query, Long.class)
-                    .setParameter("code", code)
-                    .getResultList()
-                    .get(0);
-        }
-        
-        return getEntityManager().getReference(entityClass, id);
+		NaturalIdLoadAccess<P> query = getEntityManager().
+				unwrap(org.hibernate.Session.class)
+				.byNaturalId(getEntityClass())
+				.with(LockOptions.READ)
+				.using("code", code);
+		
+		return query.getReference();
     }
 
 }

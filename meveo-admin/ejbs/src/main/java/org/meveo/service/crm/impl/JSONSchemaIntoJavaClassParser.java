@@ -8,22 +8,35 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.service.custom.CustomEntityTemplateService;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * Parse a cet map into a java source code.
  *
  * @author Edward P. Legaspi
+ * @author Clément Bareth
  * @since 6.8.0
- * @version 6.8.0
- *
+ * @version 6.10.0
  */
 public class JSONSchemaIntoJavaClassParser {
+	
+	@Inject
+	private JSONSchemaGenerator schemaGenerator;
+	
+	@Inject
+	private CustomEntityTemplateService cetService;
 
     private Map<String, Object> jsonMap;
 
@@ -41,14 +54,27 @@ public class JSONSchemaIntoJavaClassParser {
         return compilationUnit;
     }
 
-    public CompilationUnit parseJsonContentIntoJavaFile(String content) {
+    public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
             parseFields(jsonMap, compilationUnit);
+            
+            if(template.getSuperTemplate() != null) {
+            	var parentTemplate = cetService.findById(template.getSuperTemplate().getId());
+            	var parentClass = JavaParser.parseClassOrInterfaceType(parentTemplate.getCode());
+            	compilationUnit.getClassByName((String) jsonMap.get("id"))
+            		.ifPresent(cl -> {
+            			compilationUnit.addImport("org.meveo.model.customEntities." + parentTemplate.getCode());
+            			cl.addExtendedType(parentClass);
+            		});
+            }
+            
         } catch (IOException e) {
+        	
         }
+        
         return compilationUnit;
     }
 

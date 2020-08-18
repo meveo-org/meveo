@@ -389,12 +389,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Override
 	public List<String> getFormFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@ActionMethod
@@ -599,8 +599,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		int nbItemsAdded = meveoModuleService.synchronizeLinkedItems(entity.getCode());
 		log.info("synchronizeLinkedItems : {} items added to module {}", nbItemsAdded, entity.getCode());
 	
-        FacesContext.getCurrentInstance()
-        	.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Synchronization", nbItemsAdded + " items added. Reload to see changes."));
+        messages.info("Synchronization", nbItemsAdded + " items added. Reload to see changes.");
 
 	}
 }

@@ -17,7 +17,16 @@ import org.meveo.model.IEntity;
  * @param <T> Dto class
  */
 public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
-
+	
+	/**
+	 * Remove the entity corresponding to the DTO if it exists
+	 * 
+	 * @param dto The entity to remove
+	 * @throws MeveoApiException if an exception occurs
+	 * @throws BusinessException if an exception occurs
+	 */
+	void remove(T dto) throws MeveoApiException, BusinessException;
+	
     /**
      * Find entity identified by code.
      * 

@@ -9,19 +9,11 @@ import org.meveo.model.persistence.JacksonUtil;
 
 public class MeveoModuleUtils {
 
-	@SuppressWarnings("unchecked")
 	public static MeveoModuleDto moduleSourceToDto(MeveoModule module) {
-	    Class<? extends MeveoModuleDto> dtoClass = (Class<? extends MeveoModuleDto>) ReflectionUtils.getClassBySimpleNameAndParentClass(module.getClass().getSimpleName() + "Dto",
-	        MeveoModuleDto.class);
-
-		return JacksonUtil.fromString(module.getModuleSource(), dtoClass);
+		return JacksonUtil.fromString(module.getModuleSource(), MeveoModuleDto.class);
 	}
 
-	@SuppressWarnings("unchecked")
 	public static ModuleReleaseDto moduleSourceToDto(ModuleRelease moduleRelease) {
-		Class<? extends ModuleReleaseDto> dtoClass = (Class<? extends ModuleReleaseDto>) ReflectionUtils.getClassBySimpleNameAndParentClass( moduleRelease.getClass().getSimpleName() + "Dto",
-                ModuleReleaseDto.class);
-
-		return JacksonUtil.fromString(moduleRelease.getModuleSource(), dtoClass);
+		return JacksonUtil.fromString(moduleRelease.getModuleSource(), ModuleReleaseDto.class);
 	}
 }
