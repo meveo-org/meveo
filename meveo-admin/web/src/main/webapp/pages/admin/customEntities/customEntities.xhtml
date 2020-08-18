@@ -203,8 +203,6 @@
 
 							<h:outputText id="field_#{entity[field.dbFieldname]}_out"
 										  value="#{!(field.code eq fn:toLowerCase(field.code))?entity[field.code]:''}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG and entity[field.dbFieldname] == null}" />
-										  value="#{field.code ne 'code' and field.code ne 'description'?entity[field.code]:''}" styleClass="field-value"
 										  rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] == null}" />
 
 							<!--  Double -->

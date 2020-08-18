@@ -62,10 +62,10 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.custom.entities.CustomEntityInstance;
-import org.meveo.model.custom.entities.CustomEntityTemplate;
-import org.meveo.model.custom.entities.CustomModelObject;
-import org.meveo.model.custom.entities.CustomTableRecord;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -952,14 +952,14 @@ public class CustomTableService extends NativePersistenceService {
 		PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
 		// Only use SQL filters
-		if (config.getFilters() != null) {
+		if (config != null && config.getFilters() != null) {
 			final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream().filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
 					.filter(e -> Objects.nonNull(e.getValue())).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 			paginationConfiguration.setFilters(sqlFilters);
 		}
 
 		// Only fetch SQL fields
-		if (config.getFetchFields() != null) {
+		if (config != null && config.getFetchFields() != null) {
 			List<String> sqlFetchFields = config.getFetchFields().stream().filter(s -> sqlCftFilter(cet, s)).collect(Collectors.toList());
 			paginationConfiguration.setFetchFields(sqlFetchFields);
 		}
