@@ -372,9 +372,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 									for (Workflow workflow: workflows) {
 										if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
 											for (WFTransition wfTransition: workflow.getTransitions()) {
-												if (wfTransition != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", wfTransition) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+												if (wfTransition.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
 													for (WFAction action: wfTransition.getWfActions()) {
-														if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", action)) {
+														if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
 															workflowService.executeExpression(action.getActionEl(), instance);
 														}
 													}

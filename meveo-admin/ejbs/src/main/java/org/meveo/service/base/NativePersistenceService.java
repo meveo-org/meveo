@@ -707,7 +707,13 @@ public class NativePersistenceService extends BaseService {
 				convertValue(sqlValues, cftsMap, removeNullValues, null), 
 				cftsMap
 				);
-		
+
+		for (String key: cftsMap.keySet()) {
+			if (key != null && !values.keySet().contains(key) && cftsMap.get(key).getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+				values.put(key, new ArrayList<>());
+			}
+		}
+
 		if (sqlValues.get(FIELD_ID) == null) {
 			throw new BusinessException("'uuid' field value not provided to update values in native table");
 		}
