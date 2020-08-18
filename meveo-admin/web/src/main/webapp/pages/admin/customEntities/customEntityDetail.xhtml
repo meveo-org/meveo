@@ -32,78 +32,86 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<p:tabView id="tabView"
-			activeIndex="#{customEntityInstanceBean.activeTab}">
-			<p:tab title="#{messages['customer.tab.information']}">
-				<p:outputPanel autoUpdate="false">
-					<hftl:formPanel ajaxSubmit="true" formId="informationForm"
-						submitPartialProcess=":tabView"
-						label="#{customEntityInstanceBean.customEntityTemplate.name}"
-						backingBean="#{customEntityInstanceBean}"
-						showAddModuleButton="true"
-						showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
-						showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}">
-						<hftl:formField label="#{messages['BusinessEntity.code']}"
-							field="code" required="false" validateCode="false" />
-						<hftl:formField label="#{messages['BusinessEntity.description']}"
-							field="description" useConverter="false" id="description" />
-						<hftl:formField label="#{messages['enableEntity.disabled']}"
-							doNotShowOnNew="true" allowEdit="false" field="disabled"
-							isMessage="true" />
-					</hftl:formPanel>
-				</p:outputPanel>
-			</p:tab>
+		<p:panel id="panelContent"
+			header="#{customEntityInstanceBean.customEntityTemplate.name}">
+			<p:tabView id="tabView"
+				activeIndex="#{customEntityInstanceBean.activeTab}">
+				<p:tab title="#{messages['customer.tab.information']}"
+					rendered="#{!customEntityInstanceBean.entity.cet.storeAsTable}">
+					<p:outputPanel autoUpdate="false">
+						<hftl:formPanel ajaxSubmit="true" formId="informationForm"
+							submitPartialProcess=":tabView"
+							backingBean="#{customEntityInstanceBean}" showFormButtons="false">
+							<hftl:formField label="#{messages['BusinessEntity.code']}"
+								field="code" required="false" validateCode="false" />
+							<hftl:formField label="#{messages['BusinessEntity.description']}"
+								field="description" useConverter="false" id="description" />
+							<hftl:formField label="#{messages['enableEntity.disabled']}"
+								doNotShowOnNew="true" allowEdit="false" field="disabled"
+								isMessage="true" />
+						</hftl:formPanel>
+					</p:outputPanel>
+				</p:tab>
 
-			<p:tab title="#{messages['menu.auditLogs']}"
-				rendered="#{customEntityInstanceBean.entity.cet.audited}">
+				<p:tab title="#{messages['menu.auditLogs']}"
+					rendered="#{customEntityInstanceBean.entity.cet.audited}">
 
-				<p:dataTable id="results_panel"
-					value="#{customEntityInstanceBean.nativeDataModel}" var="entity"
-					lazy="true" widgetVar="ctTable"
-					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-					currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
-					paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
-					resizableColumns="true" styleClass="custom-grid" reflow="true"
-					liveResize="true" editable="false" rowIndexVar="rowIdx">
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.ceiUuid']}">
-						<h:outputText value="#{entity['cei_uuid']}" />
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.user']}">
-						<h:outputText value="#{entity['user']}" />
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.eventDate']}">
-						<h:outputText value="#{entity['event_date']}">
-							<f:convertDateTime pattern="#{paramBean.dateFormat}" />
-						</h:outputText>
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.action']}">
-						<h:outputText value="#{entity['action']}" />
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.field']}">
-						<h:outputText value="#{entity['field']}" />
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.oldValue']}">
-						<h:outputText value="#{entity['old_value']}" />
-					</p:column>
-					<p:column
-						headerText="#{messages['customEntityInstance.audited.newValue']}">
-						<h:outputText value="#{entity['new_value']}" />
-					</p:column>
-				</p:dataTable>
+					<p:dataTable id="results_panel"
+						value="#{customEntityInstanceBean.nativeDataModel}" var="entity"
+						lazy="true" widgetVar="ctTable"
+						paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						currentPageReportTemplate="{startRecord} - {endRecord} of {totalRecords}"
+						paginator="true" rows="10" rowsPerPageTemplate="10,15,20,50"
+						resizableColumns="true" styleClass="custom-grid" reflow="true"
+						liveResize="true" editable="false" rowIndexVar="rowIdx">
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.ceiUuid']}">
+							<h:outputText value="#{entity['cei_uuid']}" />
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.user']}">
+							<h:outputText value="#{entity['user']}" />
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.eventDate']}">
+							<h:outputText value="#{entity['event_date']}">
+								<f:convertDateTime pattern="#{paramBean.dateFormat}" />
+							</h:outputText>
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.action']}">
+							<h:outputText value="#{entity['action']}" />
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.field']}">
+							<h:outputText value="#{entity['field']}" />
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.oldValue']}">
+							<h:outputText value="#{entity['old_value']}" />
+						</p:column>
+						<p:column
+							headerText="#{messages['customEntityInstance.audited.newValue']}">
+							<h:outputText value="#{entity['new_value']}" />
+						</p:column>
+					</p:dataTable>
 
-			</p:tab>
+				</p:tab>
 
-			<hftl:customFields backingBean="#{customEntityInstanceBean}"
-				messagesId=":tabView:informationForm:messages" renderForm="true"
-				enctype="multipart/form-data" />
+				<hftl:customFields backingBean="#{customEntityInstanceBean}"
+					messagesId=":tabView:informationForm:messages" renderForm="true"
+					enctype="multipart/form-data" />
 
-		</p:tabView>
+			</p:tabView>
 
+			<h:form id="formId">
+				<hf:formButtons backingBean="#{customEntityInstanceBean}"
+					edit="#{customEntityInstanceBean.edit}" ajaxSubmit="true"
+					submitUpdate=":panelContent" showAddModuleButton="false"
+					showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
+					showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
+					submitPartialProcess="tabView" killConversationOnSave="false" />
+			</h:form>
+		</p:panel>
 	</ui:define>
 </ui:composition>

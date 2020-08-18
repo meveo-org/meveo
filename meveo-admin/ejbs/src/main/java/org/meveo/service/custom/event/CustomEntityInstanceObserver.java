@@ -43,22 +43,26 @@ public class CustomEntityInstanceObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityInstance cei) {
 
-		log.debug("onCreated={}, cfValuesOld={}, cfValues={}", cei.getCfValuesOld(), cei.getCfValues());
+		// log.debug("onCreated={}, cfValuesOld={}, cfValues={}",
+		// cei.getCfValuesOldNullSafe(), cei.getCfValues());
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
+	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei)
+			throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 
-		log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOld().getValues(), cei.getCfValues().getValues());
-		CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
-		param.setCode(cei.getCode());
-		param.setDescription(cei.getDescription());
-		param.setCetCode(cei.getCetCode());
-		param.setOldValues(cei.getCfValuesOld());
-		param.setNewValues(cei.getCfValues());
-		param.setCeiUuid(cei.getUuid());
-		
-		customEntityInstanceAuditService.auditChanges(param);
+		if (cei.getCet().isAudited()) {
+			log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOldNullSafe().getValues(), cei.getCfValues().getValues());
+			CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
+			param.setCode(cei.getCode());
+			param.setDescription(cei.getDescription());
+			param.setCetCode(cei.getCetCode());
+			param.setOldValues(cei.getCfValuesOldNullSafe());
+			param.setNewValues(cei.getCfValues());
+			param.setCeiUuid(cei.getUuid());
+
+			customEntityInstanceAuditService.auditChanges(param);
+		}
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

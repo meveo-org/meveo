@@ -71,7 +71,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private String tableName;
-	
+
 	@Transient
 	private CustomFieldValues cfValuesOld = new CustomFieldValues();
 
@@ -149,6 +149,14 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	}
 
 	public CustomFieldValues getCfValuesOld() {
+		return cfValuesOld;
+	}
+
+	public CustomFieldValues getCfValuesOldNullSafe() {
+		if (cfValuesOld == null) {
+			cfValuesOld = new CustomFieldValues();
+		}
+
 		return cfValuesOld;
 	}
 
