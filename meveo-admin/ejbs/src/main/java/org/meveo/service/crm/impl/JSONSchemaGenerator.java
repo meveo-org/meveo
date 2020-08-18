@@ -308,7 +308,7 @@ public class JSONSchemaGenerator {
 
 		;
 		result = result.id(field.getAppliesTo() + '_' + field.getCode()).title(template.code() + "." + field.getCode()).description(field.getDescription())
-				.storages(buildDBStorageType(field.getStorages())).schemaLocation(schemaLocation);
+				.storages(buildDBStorageType(field.getStoragesNullSafe())).schemaLocation(schemaLocation);
 
 		if (field.getIndexType() != null) {
 			result = result.indexType(field.getIndexType().name());

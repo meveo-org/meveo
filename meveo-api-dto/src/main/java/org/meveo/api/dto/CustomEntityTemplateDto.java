@@ -100,6 +100,10 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
     @ApiModelProperty("List of samples")
     private List<String> samples = new ArrayList<>();
     
+    @XmlAttribute()
+    @ApiModelProperty("Whether a table that will audit the changes will be created.")
+	private boolean audited = false;
+    
     /**
      * Instantiates a new custom entity template dto.
      */
@@ -259,6 +263,14 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
 
 	public void setSamples(List<String> samples) {
 		this.samples = samples;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 
 	@Override

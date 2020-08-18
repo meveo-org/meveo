@@ -1,7 +1,11 @@
 package org.meveo.service.custom;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,7 +40,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
-	
+
 	@Inject
 	private CustomFieldInstanceService customFieldInstanceService;
 
@@ -57,7 +61,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 		return entity;
 	}
-	
+
 	public CustomEntityInstance fromMap(CustomEntityTemplate cet, Map<String, Object> values) {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCode((String) values.get("code"));
@@ -70,7 +74,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		} catch (BusinessException e) {
 			log.error("Error setting cf values", e);
 		}
-		
+
 		return cei;
 	}
 
@@ -155,7 +159,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	public List<CustomEntityInstance> list(String cetCode, Map<String, Object> values, PaginationConfiguration paginationConfiguration) {
 		return list(cetCode, false, values, paginationConfiguration);
 	}
-	
+
 	public List<CustomEntityInstance> list(String cetCode, boolean isStoreAsTable, Map<String, Object> values, PaginationConfiguration paginationConfiguration) {
 
 		QueryBuilder qb = new QueryBuilder(getEntityClass(), "cei", null);
@@ -184,23 +188,23 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	private boolean filterOnValues(Map<String, Object> filterValues, CustomEntityInstance customEntityInstance) {
 		return filterOnValues(filterValues, customEntityInstance, false);
 	}
-	
+
 	private boolean filterOnValues(Map<String, Object> filterValues, CustomEntityInstance customEntityInstance, boolean isStoreAsTable) {
 		final Map<String, Object> cfValuesAsValues = customEntityInstance.getCfValuesAsValues();
 		for (Map.Entry<String, Object> filterValue : filterValues.entrySet()) {
-
-			String[] fieldInfo = filterValue.getKey().split(" ");
-			String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
-			String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
 
 			if (filterValue.getValue() == null) {
 				continue;
 			}
 
+			String[] fieldInfo = filterValue.getKey().split(" ");
+			String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
+			String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
+
 			if (filterValue.getValue() instanceof Date) {
 				filterValue.setValue(((Date) filterValue.getValue()).getTime());
 			}
-			
+
 			String strPattern = filterValue.getValue().toString().replace("*", ".*");
 			Pattern pattern = Pattern.compile(strPattern, Pattern.CASE_INSENSITIVE);
 
@@ -229,6 +233,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			} else if (referenceValue instanceof Date) {
 				referenceValue = ((Date) referenceValue).getTime();
 			}
+
 			if ("fromRange".equals(condition)) {
 				if (new BigDecimal(referenceValue.toString()).compareTo(new BigDecimal(filterValue.getValue().toString())) < 0) {
 					return false;
@@ -240,15 +245,17 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 				}
 
 			} else {
-				if (strPattern instanceof String) {
-					Matcher matcher = pattern.matcher(referenceValue.toString());
-					if (!matcher.matches()) {
-						return false;
-					}
+				if (filterValue.getValue().toString().contains("*")) {
+					if (strPattern instanceof String) {
+						Matcher matcher = pattern.matcher(referenceValue.toString());
+						if (!matcher.matches()) {
+							return false;
+						}
 
-				} else {
-					if (!referenceValue.equals(pattern)) {
-						return false;
+					} else {
+						if (!referenceValue.equals(pattern)) {
+							return false;
+						}
 					}
 				}
 			}
@@ -263,7 +270,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		if (cfValues != null && cfValues.getValuesByCode() != null) {
 			for (String valueCode : new HashSet<>(cfValues.getValuesByCode().keySet())) {
 				CustomFieldTemplate cft = cetCache.getCustomFieldTemplate(valueCode, cet.getAppliesTo());
-				if (cft != null && (cft.getStorages() == null || !cft.getStorages().contains(DBStorageType.SQL))) {
+				if (cft != null && (cft.getStoragesNullSafe() == null || !cft.getStoragesNullSafe().contains(DBStorageType.SQL))) {
 					cfValues.removeValue(valueCode);
 				}
 			}

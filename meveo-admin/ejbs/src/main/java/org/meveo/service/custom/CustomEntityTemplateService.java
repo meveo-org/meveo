@@ -263,11 +263,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         // Synchronize custom fields storages with CET available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
         	cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
-            if (cft.getStorages() != null) {
-                for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+            if (cft.getStoragesNullSafe() != null) {
+                for (DBStorageType storage : new ArrayList<>(cft.getStoragesNullSafe())) {
                     if (!cet.getAvailableStorages().contains(storage)) {
                         log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
-                        cft.getStorages().remove(storage);
+                        cft.getStoragesNullSafe().remove(storage);
                         customFieldTemplateService.update(cft);
                     }
                 }

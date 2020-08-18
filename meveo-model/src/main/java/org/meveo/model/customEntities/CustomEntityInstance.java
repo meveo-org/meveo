@@ -35,6 +35,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 /**
@@ -70,6 +71,9 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private String tableName;
+	
+	@Transient
+	private CustomFieldValues cfValuesOld = new CustomFieldValues();
 
 	@Override
 	public boolean equals(Object obj) {
@@ -142,5 +146,13 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
+	}
+
+	public CustomFieldValues getCfValuesOld() {
+		return cfValuesOld;
+	}
+
+	public void setCfValuesOld(CustomFieldValues cfValuesOld) {
+		this.cfValuesOld = cfValuesOld;
 	}
 }
