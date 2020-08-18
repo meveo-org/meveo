@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -299,7 +300,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @SuppressWarnings("unchecked")
     @Override
-    public void remove(MeveoModule module) throws BusinessException {
+    public void remove(T module) throws BusinessException {
         // If module was downloaded, remove all submodules as well
         if (module.isDownloaded() && module.getModuleItems() != null) {
 
@@ -319,10 +320,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         }
 
         if (module != null) {
-            getEntityManager().createNamedQuery("MeveoModule.deleteModule")
-                    .setParameter("id", module.getId())
-                    .setParameter("version", module.getVersion())
-                    .executeUpdate();
+        	super.remove(module);
 
             if (module instanceof BaseEntity && (module.getClass().isAnnotationPresent(ObservableEntity.class) || module.getClass().isAnnotationPresent(ModuleItem.class))) {
                 entityRemovedEventProducer.fire((BaseEntity) module);
