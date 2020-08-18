@@ -1,8 +1,9 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
                 xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
-                xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+                xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags" xmlns:o="http://omnifaces.org/ui"
                 xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:p="http://primefaces.org/ui"
+                
                 template="/layout/template.xhtml">
 
     <ui:define name="metadata">
@@ -12,6 +13,8 @@
     </ui:define>
 
     <ui:define name="body">
+    
+    	<o:importConstants type="org.meveo.api.module.OnDuplicate" />
 
 		<p:dialog id="addPatchPopup"
 			header="#{messages['meveoModule.patch.add']}"
@@ -239,51 +242,82 @@
                     showEnableDisableButton="#{!meveoModuleBean.entity.downloaded}" showDeleteButton="false" formId="moduleId"
                     useCustomIdParam="true" ajaxSubmit="">
 
-                    <p:commandButton value="#{messages['meveoModule.install']}" action="#{meveoModuleBean.install}" update="@form"
-                        rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}" />
-                       
-<!--                 	<p:commandButton value="#{messages['action.fork']}" action="#{meveoModuleBean.fork}" update="@form" rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed}"> -->
-<!--                 		 <p:confirm header="#{messages['action.confirm']}" message="#{messages['commons.confirmForkModule']}" icon="pi pi-exclamation-triangle" /> -->
-<!--                		</p:commandButton> -->
+                    <p:commandButton value="#{messages['meveoModule.install']}"
+                    	onclick="PF('installDialog').show()"
+                        rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed and meveoModuleBean.showInstallBtn}"/>
+                        
+                        <p:confirmDialog id="installDialog" widgetVar="installDialog" message="On duplicate resource : " header="#{messages['meveoModule.install']}">
+		                  	<h:form id="installForm">
+			                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+										<p:selectOneMenu value="#{meveoModuleBean.onDuplicate}">
+											<f:selectItems value="#{OnDuplicate.values()}"/>
+										</p:selectOneMenu>	                       
+									</h:form >
+			                       
+			                       <h:form >
+				                       <p:commandButton process="@(#installForm) @this"
+				                         id="install_btn"
+				                         update="@form"
+				                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
+				                         value="#{messages['meveoModule.install']}" 
+				                         onclick="doInstall()"/>
+				                         
+									   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+			                  	   </h:form >
+		                  	   </h:form>
+		                   </p:confirmDialog>
+                   
+		                   <p:remoteCommand id="doInstall"
+											action="#{meveoModuleBean.install}"
+											resetValues="installForm"
+											name="doInstall" update="@form" />
 
 					<p:commandButton id="deleteModule" icon="ui-icon-trash" value="#{messages['commons.delete']}" oncomplete="PF('deleteDialog').show();" immediate="true"
 									 rendered="#{meveoModuleBean.entity.id!=null and meveoModuleBean.canUserUpdateEntity() and !meveoModuleBean.entity.downloaded}" update=":deleteDialog">
 						<f:setPropertyActionListener target="#{meveoModuleBean.deleteFiles}" value="#{!meveoModuleBean.entity.isInDraft}" />
 					</p:commandButton>
+					
+					<p:commandButton rendered="#{meveoModuleBean.entity.active}" id="sync" value="Synchronize module items dependencies" actionListener="#{meveoModuleBean.synchronizeLinkedItems}">
+						
+					</p:commandButton>
 
 					<p:commandButton immediate="true" value="#{messages['meveoModule.patch.apply']}"
 						onclick="PF('dlg_applyPatchPopup').show()" type="button" rendered="#{!meveoModuleBean.entity.transient and meveoModuleBean.entity.isInDraft}" />
 
-					<p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed}">
-<!--                        <p:confirm update="@form"  header="#{messages['meveoModule.uninstall']}" message="#{messages['meveoModule.confirmUninstall']}" /> -->
+					<p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed and meveoModuleBean.showUninstallBtn}">
                     </p:commandButton>
                     
-                    <p:confirmDialog id="uninstallDialog" widgetVar="uninstallDialog" message="#{messages['meveoModule.confirmUninstall']}" header="#{messages['meveoModule.uninstall']}">
-                       <h:form id="uninstallForm">
-	                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
-	                       		<p:selectBooleanCheckbox id="remove" value="#{meveoModuleBean.remove}" itemLabel="#{messages['meveoModule.remove']}"/>
-	                       </h:form >
-	                       
-	                       <h:form >
-		                       <p:commandButton process="@this"
-		                         id="uninstall_btn"
-		                         type="submit"
-		                         update="@form"
-		                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
-		                         value="#{messages['meveoModule.uninstall']}" 
-		                         immediate="true"
-		                         onclick="doUninstall()"/>
-		                         
-							   <p:commandButton onclick="PF('uninstallDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
-	                  	   </h:form >
-                  	   </h:form>
+                    <p:confirmDialog id="uninstallDialog" 
+                    	widgetVar="uninstallDialog" 
+                    	message="#{messages['meveoModule.confirmUninstall']}" 
+                    	header="#{messages['meveoModule.uninstall']}">
+                       		<h:panelGrid columns="1" cellpadding="5">
+                    			<h:outputLabel for="remove" value="Remove items : " />
+                       			<p:selectBooleanButton value="#{meveoModuleBean.remove}" id="remove" 
+                       				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                       				offLabel="Disable items" onLabel="Remove items"/>
+                       		</h:panelGrid>
+
+ 	                       <h:form style="float: right">
+								<h:panelGrid columns="2" cellpadding="5">
+				                       <p:commandButton 
+				                         id="uninstall_btn"
+				                         update="@form"
+				                         icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+				                         value="#{messages['meveoModule.uninstall']}" 
+				                         onclick="doUninstall()"/>
+				                         
+									   <p:commandButton onclick="PF('uninstallDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+								</h:panelGrid>
+							</h:form >
+							
                    </p:confirmDialog>
                    
                  	<p:remoteCommand id="doUninstall"
 						action="#{meveoModuleBean.uninstall}"
-						resetValues="uninstallForm"
+						resetValues="uninstallDialog :remove"
 						name="doUninstall" update="@form" />
-                   
+						
                     <p:commandButton value="#{messages['commons.disable']}"
                         rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed and meveoModuleBean.entity.active}" action="#{meveoModuleBean.disable}"
                         update="@form">

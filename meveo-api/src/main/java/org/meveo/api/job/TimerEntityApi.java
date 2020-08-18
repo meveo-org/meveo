@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.job.TimerEntityDto;
+import org.meveo.api.dto.sql.SqlConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
@@ -143,26 +144,31 @@ public class TimerEntityApi extends BaseCrudApi<TimerEntity, TimerEntityDto> {
 
 	@Override
 	public TimerEntityDto toDto(TimerEntity entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new TimerEntityDto(entity);
 	}
 
 	@Override
 	public TimerEntity fromDto(TimerEntityDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+		return TimerEntityDto.fromDTO(dto, null);
 	}
 
 	@Override
 	public IPersistenceService<TimerEntity> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return timerEntityService;
 	}
 
 	@Override
 	public boolean exists(TimerEntityDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		var entity = timerEntityService.findByCode(dto.getCode());
+		return entity != null;
+	}
+	
+	@Override
+	public void remove(TimerEntityDto dto) throws MeveoApiException, BusinessException {
+		var entity = timerEntityService.findByCode(dto.getCode());
+		if(entity != null) {
+			timerEntityService.remove(entity);
+		}
 	}
 
 	public List<TimerEntityDto> list(){

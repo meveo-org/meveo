@@ -48,8 +48,8 @@ public class ModuleRelease extends BaseEntity implements Serializable {
     private List<ModuleReleaseItem> moduleItems = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "module_files", joinColumns = { @JoinColumn(name = "module_id") })
-    @Column(name = "module_file")
+    @CollectionTable(name = "module_release_files", joinColumns = { @JoinColumn(name = "module_release_id") })
+    @Column(name = "module_release_file")
     private Set<String> moduleFiles = new HashSet<>();
 
     @Enumerated(EnumType.STRING)

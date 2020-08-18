@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author clement.bareth
- * @version 6.9.0
+ * @version 6.11.0
  * @since 6.0.0
  */
 @Named
@@ -125,10 +125,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
 	}
-	
+
 	@Override
 	public CustomEntityTemplate initEntity() {
-		
+
 		CustomEntityTemplate entity = super.initEntity();
 		entity.getCustomEntityCategory();
 		return entity;
@@ -310,14 +310,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				endConversation();
 			}
 		} catch (Exception e) {
-		    if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
-                messages.error(new BundleKey("messages", "error.createCetWithKeyWord"), entity.getCode());
-            } else {
-                messages.error("Entity can't be saved. Please retry.");
-                log.error("Can't update entity", e);
-            }
+			if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+				messages.error(new BundleKey("messages", "error.createCetWithKeyWord"), entity.getCode());
+			} else {
+				messages.error("Entity can't be saved. Please retry.");
+				log.error("Can't update entity", e);
+			}
 		}
-        return getEditViewName();
+		return getEditViewName();
 	}
 
 	/**
@@ -1394,14 +1394,18 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public void setParameters(List<Map<String, String>> parameters) {
 		this.parameters = parameters;
 	}
-	
+
 	@Override
 	protected List<String> getFormFieldsToFetch() {
 		return Arrays.asList("customEntityCategory");
 	}
-	
+
 	@Override
 	protected List<String> getListFieldsToFetch() {
 		return Arrays.asList("customEntityCategory");
+	}
+
+	public boolean showAuditedField() {
+		return getAvailableStoragesDM().getTarget().contains(DBStorageType.SQL);
 	}
 }

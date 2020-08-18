@@ -67,35 +67,8 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
         }
 
         Job job = jobInstanceService.getJobByName(postData.getJobTemplate());
-        JobCategoryEnum jobCategory = job.getJobCategory();
 
-        JobInstance jobInstance = new JobInstance();
-        jobInstance.setActive(postData.isActive());
-        jobInstance.setParametres(postData.getParameter());
-        jobInstance.setJobCategoryEnum(jobCategory);
-        jobInstance.setJobTemplate(postData.getJobTemplate());
-        jobInstance.setCode(postData.getCode());
-        jobInstance.setDescription(postData.getDescription());
-        jobInstance.setRunOnNodes(postData.getRunOnNodes());
-        if (postData.getLimitToSingleNode() != null) {
-            jobInstance.setLimitToSingleNode(postData.getLimitToSingleNode());
-        }
-
-        if (!StringUtils.isBlank(postData.getTimerCode())) {
-            TimerEntity timerEntity = timerEntityService.findByCode(postData.getTimerCode());
-            jobInstance.setTimerEntity(timerEntity);
-            if (timerEntity == null) {
-                throw new MeveoApiException(MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION, "Invalid timer entity=" + postData.getTimerCode());
-            }
-        }
-
-        if (!StringUtils.isBlank(postData.getFollowingJob())) {
-            JobInstance nextJob = jobInstanceService.findByCode(postData.getFollowingJob());
-            jobInstance.setFollowingJob(nextJob);
-            if (nextJob == null) {
-                throw new MeveoApiException(MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION, "Invalid next job=" + postData.getFollowingJob());
-            }
-        }
+        JobInstance jobInstance = fromDto(postData);
 
         // Create any missing CFT for a given provider and job
         Map<String, CustomFieldTemplate> jobCustomFields = job.getCustomFields();
@@ -297,25 +270,59 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
 	@Override
 	public JobInstanceDto toDto(JobInstance entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return jobInstanceToDto(entity);
 	}
 
 	@Override
 	public JobInstance fromDto(JobInstanceDto dto) throws MeveoApiException {
-		// TODO Auto-generated method stub
-		return null;
+        Job job = jobInstanceService.getJobByName(dto.getJobTemplate());
+        JobCategoryEnum jobCategory = job.getJobCategory();
+        
+		JobInstance jobInstance = new JobInstance();
+        jobInstance.setActive(dto.isActive());
+        jobInstance.setParametres(dto.getParameter());
+        jobInstance.setJobCategoryEnum(jobCategory);
+        jobInstance.setJobTemplate(dto.getJobTemplate());
+        jobInstance.setCode(dto.getCode());
+        jobInstance.setDescription(dto.getDescription());
+        jobInstance.setRunOnNodes(dto.getRunOnNodes());
+        if (dto.getLimitToSingleNode() != null) {
+            jobInstance.setLimitToSingleNode(dto.getLimitToSingleNode());
+        }
+
+        if (!StringUtils.isBlank(dto.getTimerCode())) {
+            TimerEntity timerEntity = timerEntityService.findByCode(dto.getTimerCode());
+            jobInstance.setTimerEntity(timerEntity);
+            if (timerEntity == null) {
+                throw new MeveoApiException(MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION, "Invalid timer entity=" + dto.getTimerCode());
+            }
+        }
+
+        if (!StringUtils.isBlank(dto.getFollowingJob())) {
+            JobInstance nextJob = jobInstanceService.findByCode(dto.getFollowingJob());
+            jobInstance.setFollowingJob(nextJob);
+            if (nextJob == null) {
+                throw new MeveoApiException(MeveoApiErrorCodeEnum.BUSINESS_API_EXCEPTION, "Invalid next job=" + dto.getFollowingJob());
+            }
+        }
+        
+		return jobInstance;
 	}
 
 	@Override
 	public IPersistenceService<JobInstance> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return jobInstanceService;
 	}
 
 	@Override
 	public boolean exists(JobInstanceDto dto) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public void remove(JobInstanceDto dto) throws MeveoApiException, BusinessException {
+		// TODO Auto-generated method stub
+		
 	}
 }

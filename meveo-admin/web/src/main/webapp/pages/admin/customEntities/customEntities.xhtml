@@ -199,11 +199,11 @@
 							<!--  String, Enum or Long  -->
 							<h:outputText id="#{entity[field.dbFieldname]}_out"
 								value="#{entity[field.dbFieldname]}" styleClass="field-value"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG and entity[field.dbFieldname] != null}" />
+								rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] != null}" />
 
 							<h:outputText id="field_#{entity[field.dbFieldname]}_out"
 										  value="#{field.code ne 'code' and field.code ne 'description'?entity[field.code]:''}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG and entity[field.dbFieldname] == null}" />
+										  rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] == null}" />
 
 							<!--  Double -->
 							<h:outputText id="#{entity[field.dbFieldname]}_out_double"

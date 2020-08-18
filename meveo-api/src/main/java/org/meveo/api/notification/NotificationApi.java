@@ -18,6 +18,7 @@ import org.meveo.api.dto.notification.InboundRequestsDto;
 import org.meveo.api.dto.notification.NotificationDto;
 import org.meveo.api.dto.notification.NotificationHistoriesDto;
 import org.meveo.api.dto.notification.NotificationHistoryDto;
+import org.meveo.api.dto.notification.WebHookDto;
 import org.meveo.api.dto.notification.WebNotificationDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.notification.NotificationResponsesDto;
@@ -226,14 +227,17 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 	public boolean exists(D dto) {
 		return !Objects.isNull(notificationService.findByCode(dto.getCode()));
 	}
+	
+	@Override
+	public void remove(D dto) throws MeveoApiException, BusinessException {
+		this.remove(dto.getCode());
+	}
 
 	public void remove(String notificationCode) throws BusinessException, EntityDoesNotExistsException {
-
 		E entity = getPersistenceService().findByCode(notificationCode);
-		if (entity == null) {
-			throw new EntityDoesNotExistsException(entityClass, notificationCode);
+		if (entity != null) {
+			getPersistenceService().remove(entity);
 		}
-		getPersistenceService().remove(entity);
 	}
 
 	public List<D> listByPage(NotificationResponsesDto<D> result, PagingAndFiltering pagingAndFiltering)

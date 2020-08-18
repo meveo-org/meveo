@@ -32,62 +32,68 @@ import org.meveo.model.persistence.CustomFieldValuesConverter;
 @MappedSuperclass
 public abstract class BusinessCFEntity extends BusinessEntity implements ICustomFieldEntity {
 
-    private static final long serialVersionUID = -6054446440106807337L;
+	private static final long serialVersionUID = -6054446440106807337L;
 
-    @Column(name = "uuid", nullable = false, updatable = false, length = 60)
-    @Size(max = 60)
-    @NotNull
-    private String uuid = UUID.randomUUID().toString();
+	@Column(name = "uuid", nullable = false, updatable = false, length = 60)
+	@Size(max = 60)
+	@NotNull
+	private String uuid = UUID.randomUUID().toString();
 
-    @Convert(converter = CustomFieldValuesConverter.class)
-    @Column(name = "cf_values", columnDefinition = "text")
-    private CustomFieldValues cfValues;
+	@Convert(converter = CustomFieldValuesConverter.class)
+	@Column(name = "cf_values", columnDefinition = "text")
+	private CustomFieldValues cfValues;
 
-    @Override
-    public String getUuid() {
-        return uuid;
-    }
+	@Override
+	public String getUuid() {
+		return uuid;
+	}
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 
-    @Override
-    public CustomFieldValues getCfValues() {
-        return cfValues;
-    }
+	@Override
+	public CustomFieldValues getCfValues() {
+		return cfValues;
+	}
 
-    public void setCfValues(CustomFieldValues cfValues) {
-        this.cfValues = cfValues;
-    }
+	public void setCfValues(CustomFieldValues cfValues) {
+		this.cfValues = cfValues;
+	}
 
-    @Override
-    public CustomFieldValues getCfValuesNullSafe() {
-        if (cfValues == null) {
-            cfValues = new CustomFieldValues();
-        }
-        return cfValues;
-    }
+	@Override
+	public CustomFieldValues getCfValuesNullSafe() {
+		if (cfValues == null) {
+			cfValues = new CustomFieldValues();
+		}
+		return cfValues;
+	}
 
-    @Override
-    public void clearCfValues() {
-        cfValues = null;
-    }
+	@Override
+	public void clearCfValues() {
+		cfValues = null;
+	}
 
-    /**
-     * Change UUID value. Return old value
-     * 
-     * @return Old UUID value
-     */
-    @Override
-    public String clearUuid() {
-        String oldUuid = uuid;
-        uuid = UUID.randomUUID().toString();
-        return oldUuid;
-    }
+	/**
+	 * Change UUID value. Return old value
+	 * 
+	 * @return Old UUID value
+	 */
+	@Override
+	public String clearUuid() {
+		String oldUuid = uuid;
+		uuid = UUID.randomUUID().toString();
+		return oldUuid;
+	}
 
-    @Override
-    public ICustomFieldEntity[] getParentCFEntities() {
-        return null;
-    }
+	@Override
+	public ICustomFieldEntity[] getParentCFEntities() {
+		return null;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + " [uuid=" + uuid + ", cfValues=" + cfValues + ", code=" + code + ", id=" + id + "]";
+	}
+
 }

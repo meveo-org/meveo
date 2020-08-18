@@ -626,11 +626,12 @@
 								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.CHILD_ENTITY}" />
 						</h:panelGroup>
 						<h:panelGroup id="relationshipPanel">
+						
 							<hftl:decorateFormField
 								label="#{messages['customFieldTemplate.relationshipCode']}"
 								fieldId="relationship"
 								field="relationship" required="true" componentWidth="100"
-								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY}">
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY and not empty customFieldTemplateBean.entity.entityClazz}">
 							
 								<p:selectOneMenu id="relationship"
 									value="#{customFieldTemplateBean.entity.relationship}" required="true">
@@ -640,6 +641,8 @@
 										itemLabel="#{elem.code}" />
 									<hftl:objectConverter/>
 								</p:selectOneMenu>
+								
+								<p:commandButton value="+" oncomplete="PF('createRelationshipDialog').show();"/>
 									
 							</hftl:decorateFormField>
 							
@@ -1223,6 +1226,47 @@
 				</ui:define>
 			</hftl:formPanel>
 		</p:scrollPanel>
+	</p:dialog>
+	
+	<p:dialog responsive="true" 
+		header="Create relationship" 
+		id="createRelationshipDialog"
+		widgetVar="createRelationshipDialog">
+		
+		<hftl:decorateFormPanel formId="createCrtForm">
+		
+			<ui:define name="fields">
+				<hftl:decorateFormField fieldId="code" label="Code">
+					<p:inputText id="code" size="50" value="#{customFieldTemplateBean.relationshipToCreate.code}"/>
+				</hftl:decorateFormField>
+				
+				<hftl:decorateFormField fieldId="title" label="Title">
+					<p:inputText id="title" size="50" value="#{customFieldTemplateBean.relationshipToCreate.name}"/>
+				</hftl:decorateFormField>
+							
+				<hftl:decorateFormField fieldId="unique" label="Unique">
+					<p:selectBooleanCheckbox id="unique" value="#{customFieldTemplateBean.relationshipToCreate.unique}"/>
+				</hftl:decorateFormField>
+			</ui:define>
+			
+			<ui:param name="buttons" value="true" />
+			
+			<ui:define name="buttons">
+				<p:commandButton value="Create"
+					id="submit"
+					actionListener="#{customFieldTemplateBean.createRelationsip}" 
+					update="cftForm:relationship createCrtForm"
+					resetValues="true"
+					oncomplete="PF('createRelationshipDialog').hide()">
+						<p:resetInput target="createCrtForm" />
+				</p:commandButton>
+				<p:commandButton value="#{messages['commons.close']}" update="@form"
+				 oncomplete="PF('createRelationshipDialog').hide()">
+					<p:resetInput target="@form" />
+				</p:commandButton>
+			</ui:define>
+			
+		</hftl:decorateFormPanel>
 	</p:dialog>
 
 </ui:composition>

@@ -30,6 +30,7 @@ import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.api.module.OnDuplicate;
 import org.meveo.api.ws.ModuleWs;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
@@ -132,7 +133,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.install(moduleDto);
+            moduleApi.install(moduleDto, OnDuplicate.OVERWRITE);
 
         } catch (Exception e) {
             processException(e, result);

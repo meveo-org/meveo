@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -314,7 +315,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
         code = cf.getCode();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         description = cf.getDescription();
         languageDescriptions = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(cf.getDescriptionI18n());
         fieldType = cf.getFieldType();
@@ -335,7 +336,13 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         minValue = cf.getMinValue();
         maxValue = cf.getMaxValue();
         regExp = cf.getRegExp();
-        relationshipName = cf.getRelationshipName();
+        
+        if(cf.getRelationship() != null) {
+        	relationship = cf.getRelationship().getCode();
+        } else {
+            relationshipName = cf.getRelationshipName();
+        }
+        
         // cacheValue = cf.isCacheValue();
         // cacheValueTimeperiod = cf.getCacheValueTimeperiod();
         guiPosition = cf.getGuiPosition();
@@ -359,7 +366,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         }
 
         identifier = cf.isIdentifier();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         summary=cf.isSummary();
 
         saveOnExplorer = cf.isSaveOnExplorer();

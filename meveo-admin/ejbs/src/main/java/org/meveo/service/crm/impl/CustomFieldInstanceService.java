@@ -547,7 +547,7 @@ public class CustomFieldInstanceService extends BaseService {
         	
         	if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
         		/* Don't wrap primitive entity references */
-        		if(cft.getStorages().contains(DBStorageType.NEO4J)) {
+        		if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J)) {
         			String cetCode = cft.getEntityClazzCetCode();
         			CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cetCode);
         			if(refCet == null) {

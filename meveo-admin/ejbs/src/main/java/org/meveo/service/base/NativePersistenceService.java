@@ -421,7 +421,7 @@ public class NativePersistenceService extends BaseService {
 	 *                          updated with 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
-	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+	public String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
 		if("null".equals(values.get(FIELD_ID))) {
 			values.remove(FIELD_ID);
 		}

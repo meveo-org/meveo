@@ -41,7 +41,8 @@
             rendered="#{backingBean.entity.downloaded and !backingBean.entity.installed}">
             <p:column headerText="#{messages['businessEntity.code']}">
                 <h:outputText value="#{node.data}" styleClass="field-value" rendered="#{node.type ne 'item'}" />
-                <h:outputText value="#{item.code} #{item.class}" rendered="#{node.type eq 'item'}" />
+                <h:outputText value="#{item.code} #{item.class}" rendered="#{node.type eq 'item' and !of:isInstance('org.meveo.model.module.MeveoModuleItem', item)}" />
+                <h:outputText value="#{item.itemCode} #{item.class}" rendered="#{node.type eq 'item' and of:isInstance('org.meveo.model.module.MeveoModuleItem', item)}" />
             </p:column>
             <p:column headerText="#{messages['businessEntity.description']}">
                 <h:outputText value="#{item.description}" rendered="#{node.type eq 'item' and ref:hasField(item, 'description')}" />

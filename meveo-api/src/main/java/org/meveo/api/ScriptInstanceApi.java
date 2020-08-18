@@ -25,6 +25,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.storage.RepositoryDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
@@ -344,6 +345,14 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Override
 	public boolean exists(ScriptInstanceDto dto) {
-		return false;
+		return scriptInstanceService.findByCode(dto.getCode()) != null;
+	}
+	
+	@Override
+	public void remove(ScriptInstanceDto dto) throws MeveoApiException, BusinessException {
+		var entity = scriptInstanceService.findByCode(dto.getCode());
+		if(entity != null) {
+			scriptInstanceService.remove(entity);
+		}
 	}
 }

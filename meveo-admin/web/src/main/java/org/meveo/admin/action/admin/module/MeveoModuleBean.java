@@ -29,9 +29,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -54,6 +58,7 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -80,6 +85,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Inject
 	private MeveoModuleApi meveoModuleApi;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	@Inject
 	private ModuleReleaseApi moduleReleaseApi;
@@ -381,12 +389,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Override
 	public List<String> getFormFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@ActionMethod
@@ -585,5 +593,13 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	public void setNewMeveoModulePatch(MeveoModulePatch newMeveoModulePatch) {
 		this.newMeveoModulePatch = newMeveoModulePatch;
+	}
+	
+	public void synchronizeLinkedItems() throws BusinessException, IOException {
+		int nbItemsAdded = meveoModuleService.synchronizeLinkedItems(entity.getCode());
+		log.info("synchronizeLinkedItems : {} items added to module {}", nbItemsAdded, entity.getCode());
+	
+        messages.info("Synchronization", nbItemsAdded + " items added. Reload to see changes.");
+
 	}
 }

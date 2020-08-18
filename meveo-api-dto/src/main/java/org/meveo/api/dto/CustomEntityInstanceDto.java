@@ -7,9 +7,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.meveo.model.customEntities.CustomEntityInstance;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import org.meveo.model.customEntities.CustomEntityInstance;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

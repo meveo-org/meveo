@@ -141,14 +141,14 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     public void synchronizeStorages(CustomRelationshipTemplate crt) throws BusinessException {
     	// Synchronize custom fields storages with CRT available storages
     	for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(crt.getAppliesTo()).values()) {
-    		if(cft.getStorages() == null){
+    		if(cft.getStoragesNullSafe() == null){
     			cft.setStorages(new ArrayList<>());
     		}
 
-    		for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+    		for (DBStorageType storage : new ArrayList<>(cft.getStoragesNullSafe())) {
     			if (!crt.getAvailableStorages().contains(storage)) {
     				log.info("Remove storage '{}' from CFT '{}' of CRT '{}'", storage, cft.getCode(), crt.getCode());
-    				cft.getStorages().remove(storage);
+    				cft.getStoragesNullSafe().remove(storage);
     				customFieldTemplateService.update(cft);
     			}
     		}

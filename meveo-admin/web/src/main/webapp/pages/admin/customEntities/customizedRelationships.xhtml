@@ -19,6 +19,7 @@
             <hftl:searchField id="code" label="#{messages['BusinessEntity.code']}" field="code" />
             <hftl:searchField label="#{messages['customizedRelationships.name']}" field="name" />
             <hftl:searchField label="#{messages['customizedRelationships.description']}" field="description" />
+    	    <hftl:searchField label="Unique" field="unique" />
         </hftl:searchPanel>
 
         <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{customRelationshipTemplateListBean}" addToModule="true" deleteManyButton="true" sortBy="#{entity.code}">

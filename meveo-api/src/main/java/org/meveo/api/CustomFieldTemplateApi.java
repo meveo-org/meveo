@@ -9,6 +9,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.CustomFieldMatrixColumnDto;
@@ -129,7 +130,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
         }
 
-        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
+        if (!checkAppliesToExisted(appliesTo)) {
             throw new InvalidParameterException("appliesTo", appliesTo);
         }
 
@@ -142,6 +143,17 @@ public class CustomFieldTemplateApi extends BaseApi {
         validateSamples(cft);
         customFieldTemplateService.create(cft);
 
+    }
+
+    private boolean checkAppliesToExisted (String appliesTo) {
+        if (CollectionUtils.isNotEmpty(getCustomizedEntitiesAppliesTo())) {
+            for (String applyTo: getCustomizedEntitiesAppliesTo()) {
+                if (applyTo.equals(appliesTo)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -572,7 +584,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 	 */
 	public CustomRelationshipTemplate findOrCreateRelationship(String relationshipName, String sourceCet, String targetCet) throws BusinessException {
 		CustomRelationshipTemplate crt;
-		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(relationshipName, sourceCet, targetCet);
+		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(sourceCet, targetCet, relationshipName);
 		if(!availableCrts.isEmpty()) {
 			crt = availableCrts.get(0);
 		} else {

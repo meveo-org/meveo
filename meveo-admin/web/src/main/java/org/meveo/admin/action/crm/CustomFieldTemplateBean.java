@@ -39,6 +39,7 @@ import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.primefaces.PrimeFaces;
 import org.primefaces.model.DualListModel;
 
 /**
@@ -81,6 +82,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     private DualListModel<DBStorageType> storagesDM;
 
     private DualListModel<DBStorageType> cetStorageDM;
+    
+    private CustomRelationshipTemplate relationshipToCreate = new CustomRelationshipTemplate();
 
     /**
      * To what entity class CFT should be copied to - a appliesTo value
@@ -112,6 +115,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 
     @Override
     public CustomFieldTemplate initEntity() {
+    	relationshipToCreate = new CustomRelationshipTemplate();
         CustomFieldTemplate customFieldTemplate = super.initEntity();
 
         if (customFieldTemplate != null) {
@@ -276,9 +280,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             entity.setCalendar(calendarService.retrieveIfNotManaged(entity.getCalendar()));
         }
 
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }
@@ -573,9 +577,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         		perksTarget.addAll(cetStorageDM.getTarget());
         	} else {
         		perksSource.addAll(cetStorageDM.getTarget());
-	            if (getEntity().getStorages() != null) {
-	                perksTarget.addAll(getEntity().getStorages());		// Persistent data
-	                perksSource.removeAll(getEntity().getStorages());	// Display remaining available storages
+	            if (getEntity().getStoragesNullSafe() != null) {
+	                perksTarget.addAll(getEntity().getStoragesNullSafe());		// Persistent data
+	                perksSource.removeAll(getEntity().getStoragesNullSafe());	// Display remaining available storages
 	            }
         	}
 
@@ -663,9 +667,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 * On change available storages.
 	 */
     public void onChangeAvailableStorages() {
-        if (CollectionUtils.isNotEmpty(getEntity().getStorages())) {
-            getEntity().getStorages().clear();
-            getEntity().getStorages().addAll(storagesDM.getTarget());
+        if (CollectionUtils.isNotEmpty(getEntity().getStoragesNullSafe())) {
+            getEntity().getStoragesNullSafe().clear();
+            getEntity().getStoragesNullSafe().addAll(storagesDM.getTarget());
         } else {
             getEntity().setStorages(storagesDM.getTarget());
         }
@@ -685,5 +689,29 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         
         return null;
     }
+
+	public CustomRelationshipTemplate getRelationshipToCreate() {
+		return relationshipToCreate;
+	}
+	
+	public void createRelationsip() {
+		String sourceCetCode = CustomEntityTemplate.getCodeFromAppliesTo(getAppliesTo());
+		CustomEntityTemplate source = customEntityTemplateService.findByCode(sourceCetCode);
+		CustomEntityTemplate target = customEntityTemplateService.findByCode(entity.getEntityClazzCetCode());
+		
+		relationshipToCreate.setStartEntity(source);
+		relationshipToCreate.setEndEntity(target);
+		relationshipToCreate.setAvailableStorages(List.of(DBStorageType.NEO4J));
+		
+		try {
+			customRelationshipTemplateService.create(relationshipToCreate);
+			entity.setRelationship(relationshipToCreate);
+		} catch (BusinessException e) {
+			log.error("Can't create relationship", e);
+			
+			FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Can't create relationship", e.getLocalizedMessage());
+			PrimeFaces.current().dialog().showMessageDynamic(message);
+		}
+	}
 
 }
