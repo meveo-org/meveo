@@ -623,13 +623,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return update(cet);
 	}
 
-    public String getJsonSchemaContent(String cetCode) throws IOException {
+    @SuppressWarnings("unchecked")
+	public String getJsonSchemaContent(String cetCode) throws IOException {
 
         final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
+        
+        // Replace references in allOf
+        List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
+        allOf.forEach(item -> {
+    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
+        });
 
         Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
         if (items != null) {
