@@ -154,6 +154,10 @@ public class MeveoModuleItemInstaller {
             try {
                 if (itemEntity instanceof MeveoModule) {
                     uninstall((MeveoModule) itemEntity, true, removeItems);
+                } else if(itemEntity instanceof CustomFieldTemplate) {
+                	customFieldTemplateApi.remove(itemEntity.getCode(), ((CustomFieldTemplate) itemEntity).getAppliesTo());
+                } else if(itemEntity instanceof EntityCustomAction) {
+                	entityCustomActionApi.remove(itemEntity.getCode(), ((EntityCustomAction) itemEntity).getAppliesTo());
                 } else {
 
                     // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
