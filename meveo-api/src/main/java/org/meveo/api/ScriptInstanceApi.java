@@ -102,6 +102,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
 				result.add(errorDto);
 			}
+		} else {
+			scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 		}
 
 		return result;
@@ -123,13 +125,15 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
 
-		scriptInstanceService.update(scriptInstance);
+		scriptInstanceService.updateNoMerge(scriptInstance);
 
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
 				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
 				result.add(errorDto);
 			}
+		} else {
+			scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 		}
 		return result;
 	}
@@ -309,6 +313,8 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(scriptInstance.getScript());
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
 			scriptInstance.getImportScriptInstancesNullSafe().addAll(importedScripts);
+		} else {
+			scriptInstance.getImportScriptInstancesNullSafe().clear();
 		}
 
 		return scriptInstance;
