@@ -692,8 +692,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             	try {
     				typeClass = Class.forName(className);
     			} catch (ClassNotFoundException e1) {
-    				throw new BusinessException(e1);
-    			}
+    				try {
+    					typeClass = getScriptInterfaceWCompile(className).getScriptInterface().getClass();
+    				} catch (Exception e2) {
+    					throw new BusinessException(e2);
+    				}
+				}
         	}
 				
 			// Build getters and setter of extended types
