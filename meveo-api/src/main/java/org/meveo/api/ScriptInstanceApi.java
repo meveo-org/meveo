@@ -330,9 +330,13 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	public ScriptInstanceDto toDto(ScriptInstance scriptInstance) {
 
 		String source = scriptInstance.getScript();
-		scriptInstance = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
-		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstance, source);
-		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstance)) {
+		var scriptInstanceEntity = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
+		if(scriptInstanceEntity == null) {
+			scriptInstanceEntity = scriptInstance;
+		}
+		
+		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstanceEntity, source);
+		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstanceEntity)) {
 			scriptInstanceDtoResult.setScript("InvalidPermission");
 		}
 

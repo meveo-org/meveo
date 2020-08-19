@@ -410,6 +410,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         var dto = scriptInstanceApi.toDto(entity);
         try {
 			scriptInstanceApi.createOrUpdate(dto);
+			
+			if(entity.isTransient()) {
+				entity = scriptInstanceService.findByCode(dto.getCode());
+				setObjectId(entity.getId());
+			}
+			
 		} catch (MeveoApiException e) {
 			throw new BusinessException(e);
 		}
