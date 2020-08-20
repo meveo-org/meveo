@@ -199,12 +199,19 @@ public class CrossStorageService implements CustomPersistenceService {
 						if(withEntityReferences) {
 							for(CustomFieldTemplate cft : cfts) {
 								if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+									var referencedCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+									
+									// Don't fetch primitive entities
+									if(referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+										continue;
+									}
+									
 									if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), targets);
 										
 									} else {
-										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), cft.getEntityClazzCetCode());
+										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), target);
 									}
 								}
@@ -1290,6 +1297,12 @@ public class CrossStorageService implements CustomPersistenceService {
 	private void createCetReference(Repository repository, Map<String, Object> updatedValues, CustomFieldTemplate customFieldTemplate, CustomEntityTemplate referencedCet) throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 		List<Object> entitiesToCreate = new ArrayList<>();
 		final Object fieldValue = updatedValues.get(customFieldTemplate.getCode());
+		
+		// Don't save empty nodes
+		if(fieldValue == null) {
+			return;
+		}
+		
 		final Set<EntityRef> createdEntityReferences = new HashSet<>();
 
 		if (fieldValue instanceof Collection && customFieldTemplate.getStorageType() != CustomFieldStorageTypeEnum.LIST) {
@@ -1416,6 +1429,13 @@ public class CrossStorageService implements CustomPersistenceService {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
 				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
+				var nConf = cet.getNeo4JStorageConfiguration();
+				
+				// Don't fetch primitive entities
+				if(nConf != null && nConf.isPrimitiveEntity()) {
+					continue;
+				}
+				
 				if(entry.getValue() instanceof String) {
 					Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
 					values.put(cft.getCode(), refValues);

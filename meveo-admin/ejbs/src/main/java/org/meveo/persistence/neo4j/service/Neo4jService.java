@@ -461,7 +461,8 @@ public class Neo4jService implements CustomPersistenceService {
 
             final List<String> labels = getAdditionalLabels(cet);
             if (applicableConstraints.isEmpty()) {
-                if (uniqueFields.isEmpty() && neo4jDao.findNodeById(neo4JConfiguration, cet.getCode(), uuid) == null) {
+                var existingNode = neo4jDao.findNodeById(neo4JConfiguration, cet.getCode(), uuid);
+				if (uniqueFields.isEmpty() && (existingNode == null || existingNode.isEmpty())) {
                     String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels, uuid);
                     
                     if(nodeId != null) {
