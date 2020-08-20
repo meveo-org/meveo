@@ -58,15 +58,17 @@ public class CrossStorageApi{
 	 * 
 	 * @param repository the repository where to save data
 	 * @param value      the data to save
+	 * @return the UUID of the created / updated data
 	 * @throws BusinessApiException         See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 * @throws EntityDoesNotExistsException See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 * @throws BusinessException            See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 * @throws IOException                  See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createOrUpdate(Repository repository, Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
+	public String createOrUpdate(Repository repository, Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
 		CustomEntityInstance cei = CEIUtils.pojoToCei(value);
-		crossStorageService.createOrUpdate(repository, cei);
+		var result = crossStorageService.createOrUpdate(repository, cei);
+		return result.getBaseEntityUuid();
 	}
 	
 	/**
