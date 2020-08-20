@@ -237,7 +237,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
     @ActionMethod
     public void editWfTransition(WFTransition transitionToEdit) {
         this.wfTransition = transitionToEdit;
-        WFTransition wfTransition1 = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"), true);
+        WFTransition wfTransition1 = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"));
         if (wfTransition1 != null && wfTransition1.getWfDecisionRules() != null) {
             wfDecisionRulesByName.clear();
             selectedRules.clear();
