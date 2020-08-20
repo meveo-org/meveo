@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -39,6 +40,9 @@ public class CustomEntityInstanceObserver {
 
 	@Inject
 	private CustomEntityInstanceAuditService customEntityInstanceAuditService;
+	
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityInstance cei) {
@@ -51,6 +55,10 @@ public class CustomEntityInstanceObserver {
 	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei)
 			throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 
+		if(cei.getCet() == null) {
+			cei.setCet(cache.getCustomEntityTemplate(cei.getCetCode()));
+		}
+		
 		if (cei.getCet().isAudited()) {
 			log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOldNullSafe().getValues(), cei.getCfValues().getValues());
 			CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
