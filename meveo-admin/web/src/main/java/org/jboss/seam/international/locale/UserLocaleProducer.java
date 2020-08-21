@@ -47,6 +47,10 @@ public class UserLocaleProducer implements Serializable {
         this.userLocale = defaultLocale;
     }
 
+    public Locale getUserLocale() {
+        return userLocale;
+    }
+
     public void changeLocale(@Observes @Client Locale lc) {
         this.userLocale = lc;
     }
