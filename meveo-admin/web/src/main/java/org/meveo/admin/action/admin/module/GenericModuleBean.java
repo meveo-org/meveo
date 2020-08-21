@@ -244,6 +244,10 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
 		    // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
 		    try {
+		    	if(item.getItemEntity() != null) {
+		    		continue;	// Already loaded
+		    	}
+		    	
 				 meveoModuleService.loadModuleItem(item);
 				 
 		        if (item.getItemEntity() == null) {
@@ -635,13 +639,11 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     }
 
     @SuppressWarnings("unchecked")
-    @Transactional(TxType.REQUIRES_NEW)
-    public void install() {
+    public String install() {
     	
     	try {
 	        entity = (T) install(entity, onDuplicate);
-	        init();
-	        createTree(entity, new ArrayList<>());
+	        return "moduleDetail.xhtml?faces-redirect=true&meveoModuleId=" + entity.getId() + "&edit=true";
         
     	} catch (Exception e) {
             log.error("Failed to install meveo module {} ", entity.getCode(), e);
@@ -664,7 +666,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
             
             messages.error(new BundleKey("messages", "meveoModule.installFailed"), entity.getCode(), (rootCause.getMessage() == null ? rootCause.getClass().getSimpleName() : rootCause.getMessage()));
-        }
+            return null;
+    	}
     }
 
 	public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) throws Exception {
