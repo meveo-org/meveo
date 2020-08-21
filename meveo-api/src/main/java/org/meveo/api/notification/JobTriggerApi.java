@@ -28,7 +28,7 @@ import org.meveo.service.script.ScriptInstanceService;
  * @version 6.10
  **/
 @Stateless
-public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
+public class JobTriggerApi extends NotificationApi<JobTrigger, JobTriggerDto> {
 
     public JobTriggerApi() {
 		super(JobTrigger.class, JobTriggerDto.class);
@@ -46,6 +46,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
     @Inject
     private JobInstanceService jobInstanceService;
 
+    @Override
     public JobTrigger create(JobTriggerDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -74,7 +75,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public JobTriggerDto find(String notificationCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public JobTriggerDto find(String notificationCode) throws MeveoApiException {
         JobTriggerDto result = new JobTriggerDto();
 
         if (!StringUtils.isBlank(notificationCode)) {
@@ -93,7 +94,8 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 
         return result;
     }
-        
+
+    @Override
     public JobTrigger update(JobTriggerDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -172,15 +174,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         }
     }
 
-    @Override
-    public JobTrigger createOrUpdate(JobTriggerDto postData) throws MeveoApiException, BusinessException {
-        if (jobTriggerService.findByCode(postData.getCode()) == null) {
-            return create(postData);
-        } else {
-            return update(postData);
-        }
-    }
-
 	@Override
 	public JobTriggerDto toDto(JobTrigger entity) {
 		return new JobTriggerDto(entity);
@@ -235,11 +228,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 	@Override
 	public IPersistenceService<JobTrigger> getPersistenceService() {
 		return jobTriggerService;
-	}
-
-	@Override
-	public boolean exists(JobTriggerDto dto) {
-		return jobTriggerService.findByCode(dto.getCode()) != null;
 	}
 
 	@Override

@@ -27,7 +27,7 @@ import org.meveo.service.script.ScriptInstanceService;
  * @version 6.10
  **/
 @Stateless
-public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
+public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
 
     @Inject
     private WebHookService webHookService;
@@ -42,6 +42,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
     	super(WebHook.class, WebHookDto.class);
     }
 
+    @Override
     public WebHook create(WebHookDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -80,7 +81,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public WebHookDto find(String notificationCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public WebHookDto find(String notificationCode) throws MeveoApiException {
         WebHookDto result = new WebHookDto();
 
         if (!StringUtils.isBlank(notificationCode)) {
@@ -99,7 +100,8 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 
         return result;
     }
-    
+
+    @Override
     public WebHook update(WebHookDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -180,6 +182,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         return webHook;
     }
 
+    @Override
     public void remove(String notificationCode) throws MeveoApiException, BusinessException {
         if (!StringUtils.isBlank(notificationCode)) {
             WebHook webHook = webHookService.findByCode(notificationCode);
@@ -193,15 +196,6 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
             missingParameters.add("code");
 
             handleMissingParameters();
-        }
-    }
-
-    @Override
-    public WebHook createOrUpdate(WebHookDto postData) throws MeveoApiException, BusinessException {
-        if (webHookService.findByCode(postData.getCode()) == null) {
-            return create(postData);
-        } else {
-            return update(postData);
         }
     }
 
@@ -268,12 +262,6 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 	@Override
 	public IPersistenceService<WebHook> getPersistenceService() {
 		return webHookService;
-	}
-
-	@Override
-	public boolean exists(WebHookDto dto) {
-		var entity = webHookService.findByCode(dto.getCode());
-		return entity != null;
 	}
 	
 	@Override

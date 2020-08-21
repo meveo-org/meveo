@@ -18,7 +18,7 @@ import org.meveo.service.base.BusinessService;
  * @version 6.10.0
  */
 @Stateless
-public class ScriptNotificationService extends BusinessService<ScriptNotification> {
+public class ScriptNotificationService extends NotificationInstanceService<ScriptNotification> {
 
 	@SuppressWarnings("unchecked")
 	public List<Notification> listAll() {
@@ -62,28 +62,6 @@ public class ScriptNotificationService extends BusinessService<ScriptNotificatio
 		if (scriptNotification.isActive()) {
 			notificationCacheContainerProvider.addNotificationToCache(scriptNotification);
 		}
-		return scriptNotification;
-	}
-
-	@Override
-	public void remove(ScriptNotification scriptNotification) throws BusinessException {
-		super.remove(scriptNotification);
-		notificationCacheContainerProvider.removeNotificationFromCache(scriptNotification);
-	}
-
-	@Override
-	public ScriptNotification disable(ScriptNotification scriptNotification) throws BusinessException {
-		scriptNotification = super.disable(scriptNotification);
-		notificationCacheContainerProvider.removeNotificationFromCache(scriptNotification);
-		return scriptNotification;
-	}
-
-	@Override
-	public ScriptNotification enable(ScriptNotification scriptNotification) throws BusinessException {
-		scriptNotification = super.enable(scriptNotification);
-		// case when the entity was created as disabled
-		notificationCacheContainerProvider.removeNotificationFromCache(scriptNotification);
-		notificationCacheContainerProvider.addNotificationToCache(scriptNotification);
 		return scriptNotification;
 	}
 }
