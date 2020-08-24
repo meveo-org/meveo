@@ -43,7 +43,7 @@ public class CrossStorageApi{
 	 *
 	 * @param repository the repository where the instance is stored
 	 * @param uuid       the uuid of the instance
-	 * @param clazz      the clazz of the cet's type
+	 * @param cetClass   the clazz of the cet's type
 	 * @return the instanc of the cet
 	 * @throws EntityDoesNotExistsException the entity does not exists exception
 	 */
@@ -52,6 +52,25 @@ public class CrossStorageApi{
 		CustomEntityTemplate cet = getCet(cetClass);
 		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
 		return JacksonUtil.convert(values, cetClass);
+	}
+	
+	/**
+	 * Find an instance of a given CET
+	 *
+	 * @param repository the repository where the instance is stored
+	 * @param uuid       the uuid of the instance
+	 * @param cetCode    the code of the ce
+	 * @return the instanc of the cet
+	 * @throws EntityDoesNotExistsException the entity does not exists exception
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public CustomEntityInstance find(Repository repository, String uuid, String cetCode) throws EntityDoesNotExistsException {
+		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cetCode);
+		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
+		var cei = CEIUtils.pojoToCei(values);
+		cei.setCetCode(cetCode);
+		cei.setCet(cet);
+		return cei;
 	}
 
 	/**
