@@ -1,19 +1,8 @@
 ## Local installation
 
-### Preparation
-
-Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory.
-
-Edit `docker-compose.yml` file to replace `kc-server` by the localhost IP address. Localhost IP address can be found using the command `ifconfig` for Linux system or `ipconfig` for Windows system.
-
-For example:
-
-    KEYCLOAK_URL: http://192.168.0.10:8081/auth
-
-
 ### Start Meveo
 
-And then run:
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory. And then run:
 
 ```sh
   docker-compose up -d

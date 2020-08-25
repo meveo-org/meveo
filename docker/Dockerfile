@@ -6,9 +6,10 @@ FROM openjdk:11.0.7-jdk-slim-buster
 # Install packages necessary
 # procps : for 'free' command
 # iputils-ping : for 'ping' command
+# iproute2 : for 'ip' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping \
-    && apt autoremove -y && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 sudo \
+    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
 ENV TZ Europe/Paris
@@ -107,9 +108,9 @@ RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION
 ### ------------------------- Configurations ----------------------------- ###
 
 
-### Create some folders for meveo volumes
-RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infinispan \
-    && chown -R jboss:jboss ${JBOSS_HOME}/meveodata /tmp/meveo \
+### Create some folders for meveo volumes and db resource
+RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infinispan /opt/jboss/liquibase \
+    && chown -R jboss:jboss ${JBOSS_HOME}/meveodata /tmp/meveo /opt/jboss/liquibase \
 ### Backup the original standalone-full.xml
     && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
 
