@@ -318,7 +318,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         customFieldsCache.removeCustomEntityTemplate(cet);
 
-        super.remove(cet);
+        if(getEntityManager().contains(cet)) {
+        	super.remove(cet);
+        }
 
     }
 

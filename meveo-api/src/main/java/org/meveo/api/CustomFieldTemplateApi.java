@@ -248,14 +248,12 @@ public class CustomFieldTemplateApi extends BaseApi {
         handleMissingParameters();
 
         if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
-            throw new InvalidParameterException("appliesTo", appliesTo);
+        	return;
         }
 
         CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(code, appliesTo);
         if (cft != null) {
             customFieldTemplateService.remove(cft.getId());
-        } else {
-            throw new EntityDoesNotExistsException(CustomFieldTemplate.class, code);
         }
     }
 
