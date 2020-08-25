@@ -8,7 +8,7 @@ FROM openjdk:11.0.7-jdk-slim-buster
 # iputils-ping : for 'ping' command
 # iproute2 : for 'ip' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 sudo \
+    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 \
     && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
