@@ -649,19 +649,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             log.error("Failed to install meveo module {} ", entity.getCode(), e);
             
             Throwable rootCause = e;
-            while(rootCause.getCause() != null || rootCause instanceof EJBException) {
-            	if(rootCause instanceof EJBException) {
-            		var ejbException = (EJBException) rootCause;
-            		if(ejbException.getCausedByException() != null) {
-						rootCause = ejbException.getCausedByException();
-	            		continue;
-            		}
-            	}
-            	
-            	if(rootCause.getCause() == null) {
-            		break;
-            	}
-            	
+            while(rootCause.getCause() != null) {
             	rootCause = rootCause.getCause();
             }
             
