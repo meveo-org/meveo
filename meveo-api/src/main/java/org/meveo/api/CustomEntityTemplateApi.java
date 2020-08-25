@@ -149,19 +149,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			if (dto.getCustomEntityCategoryCode() != null) {
 				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
 				if (customEntityCategory == null) {
-					withNewCategory = true;
 					customEntityCategory = new CustomEntityCategory();
 					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-					customEntityTemplateService.createWithNewCategory(cet, customEntityCategory);
-				
-				} else {
-					cet.setCustomEntityCategory(customEntityCategory);
+					customEntityCategoryService.create(customEntityCategory);
 				}
-			}
-
-			if (!withNewCategory) {
-				customEntityTemplateService.create(cet);
+				cet.setCustomEntityCategory(customEntityCategory);
 			}
 
 	        if (dto.getFields() != null) {
