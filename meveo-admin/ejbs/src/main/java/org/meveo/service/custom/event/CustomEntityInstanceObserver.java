@@ -68,6 +68,7 @@ public class CustomEntityInstanceObserver {
 			param.setOldValues(cei.getCfValuesOldNullSafe());
 			param.setNewValues(cei.getCfValues());
 			param.setCeiUuid(cei.getUuid());
+			param.setAppliesTo(cei.getCet().getAppliesTo());
 
 			customEntityInstanceAuditService.auditChanges(param);
 		}

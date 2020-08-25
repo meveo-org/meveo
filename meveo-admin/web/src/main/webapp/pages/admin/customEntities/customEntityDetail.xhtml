@@ -53,6 +53,10 @@
 					</p:outputPanel>
 				</p:tab>
 
+				<hftl:customFields backingBean="#{customEntityInstanceBean}"
+					messagesId=":tabView:informationForm:messages" renderForm="true"
+					enctype="multipart/form-data" />
+
 				<p:tab title="#{messages['menu.auditLogs']}"
 					rendered="#{customEntityInstanceBean.entity.cet.audited}">
 
@@ -97,10 +101,6 @@
 					</p:dataTable>
 
 				</p:tab>
-
-				<hftl:customFields backingBean="#{customEntityInstanceBean}"
-					messagesId=":tabView:informationForm:messages" renderForm="true"
-					enctype="multipart/form-data" />
 
 			</p:tabView>
 

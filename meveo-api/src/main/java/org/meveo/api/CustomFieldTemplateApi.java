@@ -569,6 +569,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setMaxFileSizeAllowedInKb(dto.getMaxFileSizeAllowedInKb());
         cft.setFilePath(dto.getFilePath());
         cft.setSaveOnExplorer(dto.isSaveOnExplorer());
+        cft.setAudited(dto.isAudited());
 
         return cft;
     }

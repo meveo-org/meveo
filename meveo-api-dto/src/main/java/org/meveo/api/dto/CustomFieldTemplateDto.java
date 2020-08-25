@@ -300,6 +300,8 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     
     @JsonIgnore
 	private boolean hasReferenceJpaEntity;
+    
+	private boolean audited = false;
 
     /**
      * Instantiates a new custom field template dto.
@@ -314,6 +316,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * @param cf the cf
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
+    	audited = cf.isAudited()
         code = cf.getCode();
         storages = cf.getStoragesNullSafe();
         description = cf.getDescription();
@@ -1212,6 +1215,14 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 	 */
 	public void setRelationship(String relationship) {
 		this.relationship = relationship;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 	
 }

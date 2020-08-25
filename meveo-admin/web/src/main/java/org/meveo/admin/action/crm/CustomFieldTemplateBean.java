@@ -714,4 +714,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 		}
 	}
 
+	public boolean showAuditedField() {
+		return getEntity().getStoragesNullSafe().contains(DBStorageType.SQL);
+	}
 }
