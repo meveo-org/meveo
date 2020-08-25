@@ -363,6 +363,9 @@ public class MeveoModuleItemInstaller {
 
 		        } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
+	        		if(cftDto.getAppliesTo() == null) {
+	        			return result;
+	        		}
 	        		CustomFieldTemplateDto cft = customFieldTemplateApi.findIgnoreNotFound(cftDto.getCode(), cftDto.getAppliesTo());
 					if (cft != null) {
 						switch (onDuplicate) {
