@@ -26,7 +26,7 @@ import org.meveo.persistence.CrossStorageService;
  * The Class CrossStorageApi.
  *
  * @author clement.bareth
- * @version 6.8.0
+ * @version 6.10.0
  * @since 6.8.0
  */
 @Stateless
