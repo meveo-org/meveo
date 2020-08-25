@@ -536,8 +536,12 @@ public class CustomFieldTemplateApi extends BaseApi {
         if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+            if(cet == null) {
+            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode);
+            	throw new InvalidParameterException(message);
+            }
             storageTypes = cet.getAvailableStorages();
-        }else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        } else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             String crtCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(crtCode);
             storageTypes = crt.getAvailableStorages();

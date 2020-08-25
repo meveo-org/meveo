@@ -145,7 +145,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-			boolean withNewCategory = false;
 			if (dto.getCustomEntityCategoryCode() != null) {
 				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
 				if (customEntityCategory == null) {
@@ -156,6 +155,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 				}
 				cet.setCustomEntityCategory(customEntityCategory);
 			}
+			
+			customEntityTemplateService.create(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -171,15 +172,16 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        }
         
 		} catch (Exception e) {
-            if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+            var message = e.getMessage();
+			if (message != null && message.endsWith("is a PostgresQL reserved keyword")) {
                 throw new IllegalArgumentException(e.getMessage());
             } else {
             	try {
 	                // Delete CET if error occurs
-	                log.error("Creation of {} failed: {}", cet, e.getMessage());
+	                log.error("Creation of {} failed: {}", cet, message);
 	        		customEntityTemplateService.removeInNewTx(cet);
                 } catch(Exception ex) {
-                	log.warn("Failed to remove {}: {}", cet, ex.getMessage());
+                	log.warn("Failed to remove {}: {}", cet, message);
                 }
                 
                 throw e;
