@@ -37,6 +37,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -48,6 +50,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.Accessor;
@@ -295,15 +298,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Override
     @ActionMethod
+    @Transactional(TxType.REQUIRES_NEW)
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        // Make sure we don't work on a persistent entity
+    	getPersistenceService().detach(entity);
+
         String code = entity.getCode();
-        
-        // Update script references
-        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity().getScript());
-        getEntity().getImportScriptInstancesNullSafe().clear();
-        if (CollectionUtils.isNotEmpty(importedScripts)) {
-            getEntity().getImportScriptInstancesNullSafe().addAll(importedScripts);
-        }
         
         if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             code = CustomScriptService.getFullClassname(entity.getScript());
@@ -398,8 +398,28 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             return null;
         }
 
-        super.saveOrUpdate(true);
-
+        // Update script references
+        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity().getScript());
+        getEntity().getImportScriptInstancesNullSafe().clear();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            getEntity().getImportScriptInstancesNullSafe().addAll(importedScripts);
+        }
+        
+        // Manage entity
+        // super.saveOrUpdate(false);
+        var dto = scriptInstanceApi.toDto(entity);
+        try {
+			scriptInstanceApi.createOrUpdate(dto);
+			
+			if(entity.isTransient()) {
+				entity = scriptInstanceService.findByCode(dto.getCode());
+				setObjectId(entity.getId());
+			}
+			
+		} catch (MeveoApiException e) {
+			throw new BusinessException(e);
+		}
+        
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
 
         return result;

@@ -527,13 +527,11 @@ public class NativePersistenceService extends BaseService {
 					// Serialize list values
 					if (fieldValue instanceof Collection) {
 						fieldValue = JacksonUtil.toString(fieldValue);
-					}
-
-					if (fieldValue instanceof File) {
+					} else if(fieldValue instanceof Map) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof File) {
 						fieldValue = ((File) fieldValue).getAbsolutePath();
-					}
-					
-					if(fieldValue instanceof EntityReferenceWrapper) {
+					} else if(fieldValue instanceof EntityReferenceWrapper) {
 						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
 					}
 
@@ -1659,17 +1657,13 @@ public class NativePersistenceService extends BaseService {
 	 * @throws SQLException error assigning the parameter value
 	 */
 	protected void setParameterValue(PreparedStatement ps, int parameterIndex, Object value) throws SQLException {
-		
-		// Serialize list values
-		if (value instanceof Collection) {
+		if(value instanceof Map) {
 			value = JacksonUtil.toString(value);
-		}
-
-		if (value instanceof File) {
+		} else if (value instanceof Collection) {
+			value = JacksonUtil.toString(value);
+		} else if (value instanceof File) {
 			value = ((File) value).getAbsolutePath();
-		}
-		
-		if(value instanceof EntityReferenceWrapper) {
+		} if(value instanceof EntityReferenceWrapper) {
 			EntityReferenceWrapper erw = (EntityReferenceWrapper) value;
 			if (customFieldTemplateService.isReferenceJpaEntity(erw.getClassnameCode())) {
 				value = erw.getId();
