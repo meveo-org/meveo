@@ -381,6 +381,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "samples", columnDefinition = "TEXT")
     @Type(type = "jsonList")
     private List<String> samples = new ArrayList<>();
+    
+    @Type(type = "numeric_boolean")
+	@Column(name = "audited")
+	private boolean audited = false;
 
     /**
      * Database field name - derived from code
@@ -1811,6 +1815,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 */
 	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
 		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 	
 }

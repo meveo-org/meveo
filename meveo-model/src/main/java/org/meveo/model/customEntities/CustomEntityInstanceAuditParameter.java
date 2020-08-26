@@ -14,6 +14,7 @@ public class CustomEntityInstanceAuditParameter {
 	private String ceiUuid;
 	private CustomFieldValues oldValues;
 	private CustomFieldValues newValues;
+	private String appliesTo;
 
 	public String getCode() {
 		return code;
@@ -61,5 +62,13 @@ public class CustomEntityInstanceAuditParameter {
 
 	public void setCeiUuid(String ceiUuid) {
 		this.ceiUuid = ceiUuid;
+	}
+
+	public String getAppliesTo() {
+		return appliesTo;
+	}
+
+	public void setAppliesTo(String appliesTo) {
+		this.appliesTo = appliesTo;
 	}
 }
