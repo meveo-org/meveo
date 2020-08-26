@@ -38,8 +38,8 @@
             <p:tab title="#{cfTab.data eq 'Custom fields'? messages['customFieldTemplate.cfValues']: cfTab.data}">
 
                 <c:if test="#{cheIndex==0}">
-                    <hftl:formField entity="#{entity}" label="#{messages['businessEntity.code']}" field="code" required="true" />
-                    <hftl:formField entity="#{entity}" label="#{messages['businessEntity.description']}" field="description" useConverter="false" id="description" maxlength="50" />
+                    <hftl:formField entity="#{entity}" label="#{messages['businessEntity.code']}" field="code" required="true" rendered="#{!customFieldDataEntryBean.isStoreTable(cft.entityClazz)}"/>
+                    <hftl:formField entity="#{entity}" label="#{messages['businessEntity.description']}" field="description" useConverter="false" id="description" maxlength="50" rendered="#{!customFieldDataEntryBean.isStoreTable(cft.entityClazz)}"/>
                     <hftl:formField entity="#{entity}" label="#{messages['enableEntity.disabled']}" doNotShowOnNew="true" allowEdit="false" field="disabled" isMessage="true" edit="false"/>
                     <div class="clearLeft"/>
                 </c:if>

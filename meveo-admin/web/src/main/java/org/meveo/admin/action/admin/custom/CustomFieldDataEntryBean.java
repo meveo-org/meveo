@@ -1461,7 +1461,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			CustomEntityInstance cei = (CustomEntityInstance) childEntityValueHolder.getEntity();
 			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
-			if (customEntityTemplateCode.equals(cei.getCetCode()) && customEntityTemplate.isStoreAsTable() && childEntityValueHolder.getValuesByCode() != null) {
+			if (customEntityTemplate.isStoreAsTable() && childEntityValueHolder.getValuesByCode() != null) {
 				cei.getCfValuesNullSafe().getValuesByCode().putAll(childEntityValueHolder.getValuesByCode());
 				try {
 					Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, cei.getUuid());
@@ -1528,8 +1528,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 						String entityCode = (String) values.get("code");
 						Long entityId = (Long) values.getOrDefault("id", null);
 
-						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()),
-								entityCode, entityId);
+						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), (String) values.get("classnameCode"), entityCode, entityId);
 
 						childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
 					}
@@ -2134,14 +2133,22 @@ public class CustomFieldDataEntryBean implements Serializable {
 		return filesToDeleteOnExit;
 	}
 
-	public Object getValueObject(CustomFieldValueHolder childEntityValue, String fieldCode) {
+	public Object getValueObject(CustomFieldValueHolder childEntityValue, String fieldCode, String entityClazz) {
 		Object value = null;
-		if (childEntityValue != null && childEntityValue.getValuesByCode() != null) {
+		if (childEntityValue != null && childEntityValue.getValuesByCode() != null && isStoreTable(entityClazz)) {
 			try {
 				CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(childEntityValue.getValuesByCode().get("classnameCode").get(0).getStringValue());
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
 				Map<String, Object> childEntity = customTableService.findById("default", customEntityTemplate, childEntityValue.getValuesByCode().get("uuid").get(0).getStringValue());
 				if (childEntity != null) {
 					value = childEntity.get(fieldCode);
+					if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
+						if ((Integer) value == 1) {
+							return true;
+						} else {
+							return false;
+						}
+					}
 				}
 			} catch (EntityDoesNotExistsException e) {
 				log.error(e.getMessage());
