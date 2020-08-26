@@ -316,7 +316,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * @param cf the cf
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
-    	audited = cf.isAudited()
+    	audited = cf.isAudited();
         code = cf.getCode();
         storages = cf.getStoragesNullSafe();
         description = cf.getDescription();
