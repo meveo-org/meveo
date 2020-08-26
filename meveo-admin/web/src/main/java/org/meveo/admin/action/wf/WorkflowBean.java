@@ -42,6 +42,9 @@ import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.wf.DecisionRuleTypeEnum;
 import org.meveo.model.wf.WFAction;
@@ -50,6 +53,8 @@ import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.wf.WFActionService;
 import org.meveo.service.wf.WFDecisionRuleService;
 import org.meveo.service.wf.WFTransitionService;
@@ -88,6 +93,12 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     @Inject
     private WFActionService wfActionService;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
 
     private List<String> wfDecisionRulesName;
 
@@ -280,6 +291,29 @@ public class WorkflowBean extends BaseBean<Workflow> {
         return classNames;
     }
 
+    public List<String> autocompleteCETName(String query) {
+        List<CustomEntityTemplate> allCET = customEntityTemplateService.list();
+        List<String> cetNames = new ArrayList<String>();
+        for (CustomEntityTemplate customEntityTemplate: allCET) {
+           cetNames.add(customEntityTemplate.getCode());
+        }
+        Collections.sort(cetNames);
+        return cetNames;
+    }
+
+    public List<String> autocompleteCFTName(String query) {
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo("CE_" + entity.getCetCode());
+        List<String> cftNames = new ArrayList<String>();
+        if (cfts != null && CollectionUtils.isNotEmpty(cfts.values()))
+        for (CustomFieldTemplate cft: cfts.values()) {
+            if (cft.getFieldType() == CustomFieldTypeEnum.LIST && cft.getListValues() != null) {
+                cftNames.add(cft.getCode());
+            }
+        }
+        Collections.sort(cftNames);
+        return cftNames;
+    }
+
     /**
      * @see org.meveo.admin.action.BaseBean#getPersistenceService()
      */
@@ -296,15 +330,11 @@ public class WorkflowBean extends BaseBean<Workflow> {
     @SuppressWarnings({ "unchecked" })
     public Map<String, String> getTransitionStatusFromWorkflowType() {
         try {
-            if (entity.getWfType() != null) {
-                Class<?> clazz = workflowService.getWFTypeClassForName(entity.getWfType());
-                Object obj = clazz.newInstance();
-                Method testMethod = obj.getClass().getMethod("getStatusList");
-                List<String> statusList = (List<String>) testMethod.invoke(obj);
+            if (entity.getCetCode() != null && entity.getWfType() != null) {
+                CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(entity.getWfType(), "CE_" + entity.getCetCode());
+                Map<String, String> listValue = customFieldTemplate.getListValues();
                 Map<String, String> statusMap = new TreeMap<>();
-                for (String s : statusList) {
-                    statusMap.put(s, s);
-                }
+                statusMap.putAll(listValue);
                 return statusMap;
             }
         } catch (Exception e) {

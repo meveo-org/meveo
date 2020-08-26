@@ -25,9 +25,12 @@
                         <hftl:formField label="#{messages['businessEntity.code']}" field="code" allowEdit="false" required="true" validateUnique="true" />
                         <hftl:formField label="#{messages['businessEntity.description']}" field="description" useConverter="false" size="50" />
 
-                        <hftl:formField label="#{messages['workflow.type']}" field="wfType" allowEdit="false" required="true" size="60"
-                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteClassNames" isAutocomplete="true" />
-
+                        <hftl:formField label="#{messages['workflow.customEntity']}" field="cetCode" allowEdit="false" required="true" size="50"
+                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCETName" isAutocomplete="true" listenerUpdate="@this wfType"/>
+                        <h:panelGroup id="wfType">
+                            <hftl:formField label="#{messages['workflow.type']}" field="wfType" allowEdit="false" required="true" size="50"
+                                            rendered="#{workflowBean.entity.cetCode != null}" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCFTName" isAutocomplete="true"/>
+                        </h:panelGroup>
                         <hftl:formField label="#{messages['workflow.exportLot']}" field="exportLot" />
                         <hftl:formField label="#{messages['workflow.enableHistory']}" field="enableHistory" />
                         <hftl:formField label="#{messages['enableEntity.disabled']}" doNotShowOnNew="true" allowEdit="false" field="disabled" isMessage="true" newLine="true" />

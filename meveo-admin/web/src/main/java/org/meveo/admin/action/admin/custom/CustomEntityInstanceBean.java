@@ -29,7 +29,6 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
-import org.meveo.model.wf.Workflow;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -288,10 +287,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 				} else if (ceiMap.getValue() instanceof BusinessEntity) {
 					BusinessEntity be = (BusinessEntity) ceiMap.getValue();
-					if (be instanceof Workflow) {
-						return ((Workflow) be).getUuid();
-					}
-					if(be.getCode() != null) {
+					if (be.getCode() != null) {
 						CustomEntityInstance cei = new CustomEntityInstance();
 						cei.setCode(be.getCode());
 						cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());

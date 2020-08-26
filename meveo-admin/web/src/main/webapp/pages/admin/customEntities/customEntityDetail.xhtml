@@ -105,6 +105,7 @@
 			</p:tabView>
 
 			<h:form id="formId">
+				<p:growl id="messages" showDetail="true" autoUpdate="true" />
 				<hf:formButtons backingBean="#{customEntityInstanceBean}"
 					edit="#{customEntityInstanceBean.edit}" ajaxSubmit="true"
 					submitUpdate=":panelContent" showAddModuleButton="false"
