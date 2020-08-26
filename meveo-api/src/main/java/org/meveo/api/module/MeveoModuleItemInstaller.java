@@ -65,7 +65,6 @@ import org.slf4j.Logger;
  * @version 6.9.0
  */
 @Stateless
-//@TransactionManagement(TransactionManagementType.BEAN)
 public class MeveoModuleItemInstaller {
 	
     public static final ConcurrentHashMap<String, Class<?>> MODULE_ITEM_TYPES = new ConcurrentHashMap<>();
@@ -364,6 +363,9 @@ public class MeveoModuleItemInstaller {
 
 		        } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
+	        		if(cftDto.getAppliesTo() == null) {
+	        			return result;
+	        		}
 	        		CustomFieldTemplateDto cft = customFieldTemplateApi.findIgnoreNotFound(cftDto.getCode(), cftDto.getAppliesTo());
 					if (cft != null) {
 						switch (onDuplicate) {
@@ -485,7 +487,7 @@ public class MeveoModuleItemInstaller {
 		            }
 		        }
 		        
-
+		        log.info("Item {} installed", dto);
 
 		    } catch (IllegalAccessException e) {
 		        log.error("Failed to access field value in DTO {}", dto, e);

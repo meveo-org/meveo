@@ -1619,7 +1619,9 @@ public class Neo4jService implements CustomPersistenceService {
 		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
 		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
-
+		if(result == null) {
+			return 0;
+		}
 		return result.size();
     }
 

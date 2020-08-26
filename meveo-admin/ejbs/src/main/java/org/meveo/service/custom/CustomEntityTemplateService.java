@@ -150,10 +150,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         
 		ParamBean paramBean = paramBeanFactory.getInstance();
-		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
-			cet.setCustomEntityCategory(cec);
-		}
                 
         super.create(cet);
         
@@ -318,7 +314,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         customFieldsCache.removeCustomEntityTemplate(cet);
 
-        super.remove(cet);
+        if(getEntityManager().contains(cet)) {
+        	super.remove(cet);
+        }
 
     }
 
@@ -607,13 +605,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 //		CustomEntityTemplate cet = findByCode(code);
 //		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
 		return null;
-	}
-
-	public void createWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
-
-		customEntityCategoryService.create(customEntityCategory);
-		cet.setCustomEntityCategory(customEntityCategory);
-		create(cet);
 	}
 
 	public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {

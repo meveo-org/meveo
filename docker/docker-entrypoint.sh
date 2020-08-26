@@ -39,23 +39,36 @@ if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
     export WILDFLY_LOG_FILE_LEVEL=DEBUG
 fi
 
+DOCKER_GATEWAY_HOST=$(ip route|awk '/default/ { print $3 }')
+
 # Keycloak parameters
-# if [ "x${KEYCLOAK_URL}" = "x" ]; then
-#     if [ "x${DOMAIN_NAME}" = "x" ]; then
-#         export KEYCLOAK_URL="http://localhost:8080/auth"
-#     else
-#         export KEYCLOAK_URL="https://${DOMAIN_NAME}/auth"
-#     fi
-#     export KEYCLOAK_FIXED_HOSTNAME=${DOMAIN_NAME:-localhost}
-# else
-#     export KEYCLOAK_URL=${KEYCLOAK_URL}
-#     domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
-#     export KEYCLOAK_FIXED_HOSTNAME=${domain}
-# fi
-export KEYCLOAK_URL=${KEYCLOAK_URL:-http://localhost:8080/auth}
+if [ "x${KEYCLOAK_URL}" = "x" ]; then
+    export KEYCLOAK_URL="http://${DOCKER_GATEWAY_HOST}:8080/auth"
+else
+    domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
+    if [ "$domain" = "localhost" ]; then
+        # Replace the address 'localhost' by docker gateway address
+        KEYCLOAK_URL=$(echo "${KEYCLOAK_URL/localhost/$DOCKER_GATEWAY_HOST}")
+    fi
+    export KEYCLOAK_URL=${KEYCLOAK_URL}
+fi
+# export KEYCLOAK_URL=${KEYCLOAK_URL:-http://localhost:8080/auth}
 export KEYCLOAK_REALM=${KEYCLOAK_REALM:-meveo}
 export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
+
+
+## DB init & update
+# DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
+# if [ -f "${DB_CHANGELOG_FILE}" ]; then
+#     info "Update meveo database using liquibase"
+#     /opt/jboss/liquibase/liquibase \
+#         --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+#         --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+#         --changeLogFile=${DB_CHANGELOG_FILE} \
+#         update \
+#         -Ddb.schema=public
+# fi
 
 
 # Reset standalone-full.xml file

@@ -40,6 +40,7 @@ public class JacksonUtil {
         om.setVisibility(om.getVisibilityChecker().withIsGetterVisibility(Visibility.NONE));
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         om.setSerializationInclusion(Include.NON_NULL);
         om.registerModule(new JavaTimeModule());
 
