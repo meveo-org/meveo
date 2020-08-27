@@ -25,6 +25,8 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1673,6 +1675,14 @@ public class NativePersistenceService extends BaseService {
 		} else if (value instanceof Date) {
 			Date date = (Date) value;
 			ps.setDate(parameterIndex, new java.sql.Date(date.getTime()));
+			
+		} else if (value instanceof LocalDateTime) {
+			LocalDateTime date = LocalDateTime.parse(value.toString());
+			ps.setDate(parameterIndex, java.sql.Date.valueOf(date.toLocalDate()));
+			
+		} else if (value instanceof LocalDate) {
+			LocalDate date = LocalDate.parse(value.toString());
+			ps.setDate(parameterIndex, java.sql.Date.valueOf(date));
 
 		} else if(value instanceof Instant)  { 
 			Instant instant = (Instant) value;
