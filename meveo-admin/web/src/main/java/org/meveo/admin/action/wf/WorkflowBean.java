@@ -19,7 +19,6 @@
 package org.meveo.admin.action.wf;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +42,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.shared.DateUtils;
@@ -306,7 +306,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
         List<String> cftNames = new ArrayList<String>();
         if (cfts != null && CollectionUtils.isNotEmpty(cfts.values()))
         for (CustomFieldTemplate cft: cfts.values()) {
-            if (cft.getFieldType() == CustomFieldTypeEnum.LIST && cft.getListValues() != null) {
+            if (cft.getFieldType() == CustomFieldTypeEnum.LIST && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && cft.getListValues() != null) {
                 cftNames.add(cft.getCode());
             }
         }

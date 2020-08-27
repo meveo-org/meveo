@@ -93,6 +93,12 @@ public class WorkflowService extends BusinessService<Workflow> {
         return (List<Workflow>) getEntityManager().createQuery("from " + Workflow.class.getSimpleName() + " where wfType=:wfType ").setParameter("wfType", wfType).getResultList();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Workflow> findByCetCodeAndWFType (String cetCode, String wfType) {
+        return (List<Workflow>) getEntityManager().createQuery("from " + Workflow.class.getSimpleName() + " where cetCode=:cetCode and wfType=:wfType ")
+                .setParameter("cetCode", cetCode).setParameter("wfType", wfType).getResultList();
+    }
+
     /**
      * Return all workflowType classes.
      * 

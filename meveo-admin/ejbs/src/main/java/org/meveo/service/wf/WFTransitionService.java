@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -133,4 +135,11 @@ public class WFTransitionService extends PersistenceService<WFTransition> {
 		return entity;
 	}
 
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public WFTransition findById(Long id, List<String> fetchFields) {
+		WFTransition wfTransition = findById(id);
+		getEntityManager().detach(wfTransition);
+		return super.findById(id, fetchFields);
+	}
 }

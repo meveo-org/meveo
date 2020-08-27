@@ -105,6 +105,10 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
             throw new EntityDoesNotExistsException(Workflow.class, workflowDto.getCode());
         }
 
+        if (workflowDto.getCetCode() != null && !workflow.getCetCode().equals(workflowDto.getCetCode())) {
+            throw new BusinessApiException("CetCode does not match");
+        }
+
         if (workflowDto.getWfType() != null && !workflow.getWfType().equals(workflowDto.getWfType())) {
             throw new BusinessApiException("Workflow type does not match");
         }
@@ -229,9 +233,9 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
         if (workflowToUpdate != null) {
             workflow = workflowToUpdate;
         } else {
+            workflow.setCetCode(dto.getCetCode());
             workflow.setWfType(dto.getWfType());
         }
-
         workflow.setCode(dto.getCode());
         workflow.setDescription(dto.getDescription());
         workflow.setEnableHistory(dto.getEnableHistory());
@@ -247,6 +251,9 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
     public void validateDto(WorkflowDto workflowDto, boolean isUpdate) throws MissingParameterException {
         if (StringUtils.isBlank(workflowDto.getCode())) {
             missingParameters.add("code");
+        }
+        if (!isUpdate && StringUtils.isBlank(workflowDto.getCetCode())) {
+            missingParameters.add("cetCode");
         }
         if (!isUpdate && StringUtils.isBlank(workflowDto.getWfType())) {
             missingParameters.add("WFType");
