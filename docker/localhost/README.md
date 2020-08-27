@@ -2,13 +2,25 @@
 
 ### Start Meveo
 
-Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory. And then run:
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory. 
+
+#### Windows or Mac OS host system
+And then run:
 
 ```sh
   docker-compose up -d
 ```
 
-Then access meveo admin console at: `http://localhost:8080/meveo`
+#### Linux host system
+In the copied docker-compose.yml file, please uncomment `KEYCLOAK_URL: http://localhost:8081/auth` for Linux system, and comment `KEYCLOAK_URL` variable for Windows & Mac OS.
+
+And then run:
+
+```sh
+  docker-compose up -d
+```
+
+After start Meveo, then access meveo admin console at: `http://localhost:8080/meveo`
 
 The default credentials are: `meveo.admin / meveo`
 

@@ -47,7 +47,8 @@ services:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
-        KEYCLOAK_URL: http://localhost:8081/auth
+        #KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
+        KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
       ports:
         - 8080:8080
       depends_on:
