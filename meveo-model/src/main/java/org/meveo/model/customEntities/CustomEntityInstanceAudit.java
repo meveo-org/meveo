@@ -28,7 +28,7 @@ public class CustomEntityInstanceAudit {
 		Map<String, Object> result = new HashMap<>();
 		result.put("cei_uuid", getCeiUuid());
 		result.put("user", getUser());
-		result.put("event_date", java.sql.Timestamp.valueOf(getEventDate()));
+		result.put("event_date", getEventDate());
 		result.put("action", getAction().name());
 		result.put("field", getField());
 		result.put("old_value", getOldValue());
@@ -106,5 +106,4 @@ public class CustomEntityInstanceAudit {
 		return "CustomEntityInstanceAudit [uuid=" + uuid + ", ceiUuid=" + ceiUuid + ", user=" + user + ", eventDate=" + eventDate + ", action=" + action + ", field=" + field
 				+ ", oldValue=" + oldValue + ", newValue=" + newValue + "]";
 	}
-
 }

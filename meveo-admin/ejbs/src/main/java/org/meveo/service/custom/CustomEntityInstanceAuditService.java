@@ -21,6 +21,7 @@ import org.meveo.model.customEntities.CustomEntityInstanceAudit.CustomEntityInst
 import org.meveo.model.customEntities.CustomEntityInstanceAuditParameter;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
 /**
@@ -28,7 +29,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
  * @version 6.11.0
  */
 @Stateless
-public class CustomEntityInstanceAuditService {
+public class CustomEntityInstanceAuditService extends NativePersistenceService {
 
 	@Inject
 	@CurrentUser

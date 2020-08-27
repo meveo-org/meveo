@@ -259,4 +259,13 @@ public class PaginationConfiguration implements Serializable {
     public void setFilters(Map<String, Object> filters) {
         this.filters = filters;
     }
+    
+	public Map<String, Object> getFiltersNullSafe() {
+		
+		if (filters == null) {
+			filters = new HashMap<String, Object>();
+		}
+
+		return filters;
+	}
 }
