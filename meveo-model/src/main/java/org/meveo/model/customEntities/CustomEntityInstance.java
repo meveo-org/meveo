@@ -136,6 +136,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	public void setCet(CustomEntityTemplate cet) {
 		this.cet = cet;
+		if(cet != null) this.cetCode = cet.getCode();
 	}
 
 	/**
@@ -158,6 +159,10 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	public CustomFieldValues getCfValuesOld() {
 		return cfValuesOld;
 	}
+	
+	public <T> T get(String key) {
+		return (T) this.getCfValues().getValue(key);
+	}
 
 	public CustomFieldValues getCfValuesOldNullSafe() {
 		if (cfValuesOld == null) {
@@ -170,4 +175,5 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	public void setCfValuesOld(CustomFieldValues cfValuesOld) {
 		this.cfValuesOld = cfValuesOld;
 	}
+	
 }

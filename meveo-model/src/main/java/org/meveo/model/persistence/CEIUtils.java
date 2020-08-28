@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.typereferences.GenericTypeReferences;
 
 /**
@@ -17,6 +18,12 @@ import org.meveo.model.typereferences.GenericTypeReferences;
  * @version 6.8.0
  */
 public class CEIUtils {
+	
+	public static CustomEntityInstance fromMap(Map<String, Object> map, CustomEntityTemplate cet) {
+		var cei = pojoToCei(map);
+		cei.setCet(cet);
+		return cei;
+	}
 	
 	/**
 	 * Converts a POJO to a CEI
