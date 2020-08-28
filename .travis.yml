@@ -43,8 +43,6 @@ before_install:
 
   - |
     if [ "${TRAVIS_BRANCH}" == "master" ]; then
-      export DOCKER_IMAGE_TAG="latest"
-    elif [ "${TRAVIS_BRANCH}" == "develop" ]; then
       export DOCKER_IMAGE_TAG="dev-latest"
     else
       export DOCKER_IMAGE_TAG="${TRAVIS_BRANCH//[ \/]/-}"
@@ -128,16 +126,6 @@ script:
 
   # Copy meveo.sql and meveo.war files into the docker image folder for meveo
   - cp meveo.sql meveo-admin/web/target/meveo.war docker/
-
-  # If branch is master and this build is not triggered from a tag creation, we wouldn't build docker images. 
-  # Just it's ok to build the source code for testing.
-  # If the build is triggered from a tag creation, $TRAVIS_BRANCH environment is same as the tag name.
-  # [ "${TRAVIS_BRANCH}" == "master" ]  => this means it's not a tag creation.
-  - |
-    if [ "${TRAVIS_BRANCH}" == "master" ]; then
-      echo "Source Build OK. Skip to build docker images."
-      exit
-    fi
 
   # Build a postgres image for meveo environment
   - docker build
