@@ -42,8 +42,13 @@ public class CurrentRepositoryProvider implements Serializable {
 	}
 
 	public void setRepository(Repository repository) {
-		this.repository = repository;
-		log.info("Setting current repository to {}", repository.getCode());
+		if(repository == null) {
+			this.repository = repositoryService.findDefaultRepository();
+		} else {
+			this.repository = repository;
+		}
+		
+		log.info("Setting current repository to {}", this.repository.getCode());
 	}
 	
 }

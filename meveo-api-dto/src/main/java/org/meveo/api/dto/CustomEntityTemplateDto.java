@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel
-public class CustomEntityTemplateDto extends BaseEntityDto {
+public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable<CustomEntityTemplateDto> {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = -6633504145323452803L;
@@ -99,6 +99,10 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     
     @ApiModelProperty("List of samples")
     private List<String> samples = new ArrayList<>();
+    
+    @XmlAttribute()
+    @ApiModelProperty("Whether a table that will audit the changes will be created.")
+	private boolean audited = false;
     
     /**
      * Instantiates a new custom entity template dto.
@@ -259,6 +263,33 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 
 	public void setSamples(List<String> samples) {
 		this.samples = samples;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
+	}
+
+	@Override
+	public int compareTo(CustomEntityTemplateDto o) {
+		// If one CET is a super template of the other, it should be placed before
+		if(this.getSuperTemplate() != null && this.getSuperTemplate().equals(o.getCode())) {
+			return 1;
+		} else if(o.getSuperTemplate() != null && o.getSuperTemplate().equals(this.code)) {
+			return -1;
+		}
+		
+		// CET with super templates should be placed after CET that doesn't have super templates
+		if(this.superTemplate != null && o.superTemplate == null) {
+			return 1;
+		} else if(this.superTemplate == null && o.superTemplate != null) {
+			return -1;
+		}	
+		
+		return 0;
 	}
 
 }

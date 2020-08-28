@@ -9,7 +9,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -40,12 +43,14 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityCategoryService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -54,7 +59,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author Clement Bareth
- * @version 6.9.0
+ * @version 6.10.0
  */
 @Stateless
 public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, CustomEntityTemplateDto> {
@@ -83,6 +88,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
+    
+    @Inject
+    private Instance<CustomTableCreatorService> customTableCreatorService;
    
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -96,7 +104,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         handleMissingParameters();
-
 
         if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
@@ -138,24 +145,18 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         try {
         	
-			boolean withNewCategory = false;
 			if (dto.getCustomEntityCategoryCode() != null) {
 				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
 				if (customEntityCategory == null) {
-					withNewCategory = true;
 					customEntityCategory = new CustomEntityCategory();
 					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-					customEntityTemplateService.createWithNewCategory(cet, customEntityCategory);
-				
-				} else {
-					cet.setCustomEntityCategory(customEntityCategory);
+					customEntityCategoryService.create(customEntityCategory);
 				}
+				cet.setCustomEntityCategory(customEntityCategory);
 			}
-
-			if (!withNewCategory) {
-				customEntityTemplateService.create(cet);
-			}
+			
+			customEntityTemplateService.create(cet);
 
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
@@ -171,10 +172,20 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        }
         
 		} catch (Exception e) {
-			// Delete CET if error occurs
-			log.error("Creation of cet={} failed with error={}", cet, e);
-			customEntityTemplateService.remove(cet);
-			throw e;
+            var message = e.getMessage();
+			if (message != null && message.endsWith("is a PostgresQL reserved keyword")) {
+                throw new IllegalArgumentException(e.getMessage());
+            } else {
+            	try {
+	                // Delete CET if error occurs
+	                log.error("Creation of {} failed: {}", cet, message);
+	        		customEntityTemplateService.removeInNewTx(cet);
+                } catch(Exception ex) {
+                	log.warn("Failed to remove {}: {}", cet, message);
+                }
+                
+                throw e;
+            }
 		}
 
         return cet;
@@ -275,12 +286,24 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         CustomEntityTemplate cet = customEntityTemplateService.findByCode(code);
         if (cet != null) {
             // Related custom field templates will be removed along with CET
-            customEntityTemplateService.remove(cet.getId());
+            customEntityTemplateService.remove(cet);
 
         } else {
             throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);
         }
     }
+    
+	@Override
+	public void remove(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+		try { 
+			this.removeEntityTemplate(dto.getCode());
+		} catch (EntityDoesNotExistsException e) {
+			// Make sure custom table is removed if cet was not created correctly
+	        if (dto.getSqlStorageConfiguration() != null && dto.getSqlStorageConfiguration().isStoreAsTable()) {
+	            customTableCreatorService.get().removeTable(SQLStorageConfiguration.getCetDbTablename(dto.getCode()));
+	        }			
+		}
+	}
 
     /* (non-Javadoc)
      * @see org.meveo.api.ApiService#find(java.lang.String)
@@ -552,6 +575,28 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 		return result;
 	}
+
+    /**
+     * Generates the response schema of the custom entity template.
+     *
+     * @param cetCode code of the custom entity template
+     * @return response schema of the custom entity template
+     */
+    public Response responseJsonSchema(@NotNull String cetCode) {
+
+        CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+        if (customEntityTemplate == null) {
+            return Response.status(404).entity("Custom entity template " + cetCode + " was not found").build();
+        } else {
+            try {
+                String jsonSchema = customEntityTemplateService.getJsonSchemaContent(cetCode);
+                return Response.ok(jsonSchema).build();
+            } catch (Exception e) {
+                return Response.status(404).entity(e.getMessage()).build();
+            }
+        }
+
+    }
 	
     /**
      * Convert CustomEntityTemplateDto to a CustomEntityTemplate instance. Note: does not convert custom fields that are part of DTO
@@ -566,6 +611,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setName(dto.getName());
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
+        cet.setAudited(dto.isAudited());
 
         // sql configuration
 		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {
@@ -684,6 +730,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         dto.setName(cet.getName());
         dto.setDescription(cet.getDescription());
         dto.setAvailableStorages(cet.getAvailableStorages());
+        
+        if(cet.getSuperTemplate() != null) {
+        	dto.setSuperTemplate(cet.getSuperTemplate().getCode());
+        }
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
@@ -753,12 +803,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
 	@Override
 	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
-		// TODO Auto-generated method stub
-		return null;
+		var cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
+		var actions = entityCustomActionService.findByAppliesTo(entity.getAppliesTo());
+		return toDTO(entity, cfts.values(), actions.values());
 	}
 
 	@Override
-	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public CustomEntityTemplate fromDto(CustomEntityTemplateDto dto) throws MeveoApiException {
 		return fromDTO(dto, null);
 	}
 
@@ -771,4 +822,5 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	public boolean exists(CustomEntityTemplateDto dto) {
 		return customEntityTemplateService.findByCode(dto.getCode()) != null;
 	}
+
 }

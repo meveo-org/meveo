@@ -1,5 +1,0 @@
-# $WILDFLY_HOME/bin/jboss-cli.sh --file=/path/to/this/file.
-embed-server --server-config=standalone.xml
-run-batch --file=/opt/jboss/wildfly/cli/system-properties.cli
-run-batch --file=/opt/jboss/wildfly/cli/reverse-proxy.cli
-stop-embedded-server

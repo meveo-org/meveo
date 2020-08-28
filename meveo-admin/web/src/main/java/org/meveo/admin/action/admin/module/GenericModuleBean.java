@@ -31,8 +31,12 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJBException;
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +54,7 @@ import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -110,8 +115,13 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     protected MeveoInstance meveoInstance;
     private CroppedImage croppedImage;
     private String tmpPicture;
-    private boolean remove = false;
+    private boolean remove = true;
     private boolean deleteFiles;
+    private OnDuplicate onDuplicate = OnDuplicate.SKIP;
+    
+    // Properties used to force user to reload page between installation and uninstallation
+    private boolean showInstallBtn;
+	private boolean showUninstallBtn;
 
     public GenericModuleBean() {
 
@@ -127,7 +137,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         root = new DefaultTreeNode("Root");
     }
 
-    public MeveoInstance getMeveoInstance() {
+    public OnDuplicate getOnDuplicate() {
+		return onDuplicate;
+	}
+
+	public void setOnDuplicate(OnDuplicate onDuplicate) {
+		this.onDuplicate = onDuplicate;
+	}
+
+	public MeveoInstance getMeveoInstance() {
         return meveoInstance;
     }
 
@@ -141,38 +159,14 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         T module = super.initEntity();
 
         // If module is in being developed, show module items from meveoModule.moduleItems()
-        if (!module.isDownloaded()) {
+        if (!module.isDownloaded() || module.isInstalled()) {
             if (module.getModuleItems() == null) {
                 return module;
             }
 
             List<MeveoModuleItem> itemsToRemove = new ArrayList<>();
 
-            for (MeveoModuleItem item : module.getModuleItems()) {
-
-                // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
-                try {
-					 meveoModuleService.loadModuleItem(item);
-					 
-	                if (item.getItemEntity() == null) {
-	                    itemsToRemove.add(item);
-	                    continue;
-	                }
-	                
-	                if (item.getItemEntity() instanceof CustomFieldTemplate) {
-	                    TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
-	                    new DefaultTreeNode("item", item, classNode);
-	                    
-	                } else {
-	                    TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
-	                    new DefaultTreeNode("item", item, classNode);
-	                }
-	                
-				} catch (BusinessException e) {
-	                log.error("Failed to load module source {}", module.getCode(), e);
-				}
-
-            }
+            createTree(module, itemsToRemove);
             
             if(!itemsToRemove.isEmpty()) {
             	itemsToRemove.forEach(module::removeItem);
@@ -228,8 +222,54 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
         }
 
+        this.showInstallBtn = !module.isInstalled();
+        this.showUninstallBtn = module.isInstalled();
         return module;
     }
+    
+	public boolean isShowInstallBtn() {
+		return showInstallBtn;
+	}
+
+	public boolean isShowUninstallBtn() {
+		return showUninstallBtn;
+	}
+
+	/**
+	 * @param module
+	 * @param notLoadedItems
+	 */
+	private void createTree(T module, List<MeveoModuleItem> notLoadedItems) {
+		for (MeveoModuleItem item : module.getModuleItems()) {
+
+		    // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
+		    try {
+		    	if(item.getItemEntity() != null) {
+		    		continue;	// Already loaded
+		    	}
+		    	
+				 meveoModuleService.loadModuleItem(item);
+				 
+		        if (item.getItemEntity() == null) {
+		            notLoadedItems.add(item);
+		            continue;
+		        }
+		        
+		        if (item.getItemEntity() instanceof CustomFieldTemplate) {
+		            TreeNode classNode = getOrCreateNodeByAppliesTo(item.getAppliesTo(), item.getItemClass());
+		            new DefaultTreeNode("item", item, classNode);
+		            
+		        } else {
+		            TreeNode classNode = getOrCreateNodeByClass(item.getItemClass());
+		            new DefaultTreeNode("item", item, classNode);
+		        }
+		        
+			} catch (BusinessException e) {
+		        log.error("Failed to load module source {}", module.getCode(), e);
+			}
+
+		}
+	}
 
     public BusinessEntity getModuleItemEntity() {
         return moduleItemEntity;
@@ -282,6 +322,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                         }
                     }
                 }
+            } else {
+                messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), itemEntity.getCode(), entity.getCode());
+                return;
             }
 
             moduleItemEntity = itemEntity;
@@ -596,46 +639,57 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     }
 
     @SuppressWarnings("unchecked")
-    public void install() {
-        entity = (T) install(entity);
-        // fix lazy load issue
-        init();
-        entity = initEntity();
+    public String install() {
+    	
+    	try {
+	        entity = (T) install(entity, onDuplicate);
+	        return "moduleDetail.xhtml?faces-redirect=true&meveoModuleId=" + entity.getId() + "&edit=true";
+        
+    	} catch (Exception e) {
+            log.error("Failed to install meveo module {} ", entity.getCode(), e);
+            
+            Throwable rootCause = e;
+            while(rootCause.getCause() != null) {
+            	rootCause = rootCause.getCause();
+            }
+            
+            messages.error(new BundleKey("messages", "meveoModule.installFailed"), entity.getCode(), (rootCause.getMessage() == null ? rootCause.getClass().getSimpleName() : rootCause.getMessage()));
+            return null;
+    	}
     }
 
-    public MeveoModule install(MeveoModule module) {
-        try {
+	public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) throws Exception {
 
-            if (!module.isDownloaded()) {
-                return module;
+		if (!module.isDownloaded()) {
+			return module;
 
-            } else if (module.isInstalled()) {
-                messages.warn(new BundleKey("messages", "meveoModule.installedAlready"));
-                return module;
-            }
+		} else if (module.isInstalled()) {
+			messages.warn(new BundleKey("messages", "meveoModule.installedAlready"));
+			return module;
+		}
 
-            MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
-            if (module.getScript() != null) {
-                boolean checkTestSuits = meveoModuleService.checkTestSuites(module.getScript().getCode());
-                if (!checkTestSuits && module.getIsInDraft()) { 
-                    messages.error(new BundleKey("messages", "meveoModule.warningWhenInstallingModule"));  
-                }
-                if (!checkTestSuits && !module.getIsInDraft()) { 
-                    return null;  
-                }
-            }
-            module = moduleApi.install(moduleDto);
-            messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
+		MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
+		if (module.getScript() != null) {
+			boolean checkTestSuits = meveoModuleService.checkTestSuites(module.getScript().getCode());
+			if (!checkTestSuits && module.getIsInDraft()) {
+				messages.error(new BundleKey("messages", "meveoModule.warningWhenInstallingModule"));
+			}
+			if (!checkTestSuits && !module.getIsInDraft()) {
+				return null;
+			}
+		}
 
-        } catch (Exception e) {
-            log.error("Failed to install meveo module {} ", module.getCode(), e);
-            messages.error(new BundleKey("messages", "meveoModule.installFailed"), module.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
-        }
+		var result = moduleApi.install(moduleDto, onDuplicate);
+		messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
+		messages.info(result.toString());
 
-        return module;
+		module = result.getInstalledModule();
+
+		return module;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")	
+    @Transactional(TxType.REQUIRES_NEW)
     public void uninstall() {
         try {
 
@@ -647,7 +701,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return;
             }
 
-            entity = (T) meveoModuleService.uninstall(entity, remove);
+            entity = (T) moduleApi.uninstall(entity.getCode(), MeveoModule.class, remove);
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {
@@ -658,20 +712,26 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     @SuppressWarnings("unchecked")
 	public void removeFileFromModule(String item) {
-        entity.removeModuleFile(item);
-        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+        try {
+            entity.removeModuleFile(item);
+            entity = (T) meveoModuleService.update(entity);
+        } catch (BusinessException e) {
+            log.error("Failed to remove module file {}", item, e);
+        }
     }
     
     @SuppressWarnings("unchecked")
 	public void removeModuleDependency(MeveoModuleDependency dependency) {
-        entity.removeModuleDependency(dependency);
-        entity = (T) meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+        try {
+            entity.removeModuleDependency(dependency);
+            entity = (T) meveoModuleService.update(entity);
+        } catch (BusinessException e) {
+            log.error("Failed to remove module dependency {}", dependency, e);
+        }
     }
 
- 
-
 	public void setMeveoModule(MeveoModule meveoModule) {
-	
+
 	}
  
 	public MeveoModule getModuleDependencyEntity() {

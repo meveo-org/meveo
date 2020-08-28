@@ -10,7 +10,13 @@
         style="#{style}" labelStyle="#{labelStyle}" labelStyleClass="#{labelStyleClass}" inputStyle="#{inputStyle}" inputStyleClass="#{inputStyleClass}" labelWidth="#{labelWidth}"
         inputWidth="#{inputWidth}">
 
-        <c:if test="#{not isHtml and not textArea and listValues == null and !isAutocomplete and not popup and edit}">
+		<c:if test="#{secret}">
+			<h:inputSecret autocomplete="off" disabled="#{disabled}"
+				id="#{id}" value="#{fieldItem}" 
+				required="#{required}" size="#{size}" 
+				maxlength="#{maxlength}" />
+		</c:if>
+        <c:if test="#{not secret and not isHtml and not textArea and listValues == null and !isAutocomplete and not popup and edit}">
 
             <p:inputText id="#{id}" value="#{fieldItem}" disabled="#{disabled}" required="#{required}" size="#{size}" maxlength="#{maxlength}" >
 
@@ -33,15 +39,6 @@
                     <f:attribute name="fieldName" value="#{field}" />
                     <f:attribute name="idValue" value="#{entity.getId()}" />
                 </c:if>
-                <!--  commented out as validateRib is not used anywhere and need to find an equivalent solution for rich:clientId replacement -->
-                <!--                 <c:if test="#{validateRib}"> -->
-                <!--                     <f:validator validatorId="ribValidator" /> -->
-                <!--                     <f:attribute name="bankCodeId" value="#{rich:clientId('bankCode')}" /> -->
-                <!--                     <f:attribute name="branchCodeId" value="#{rich:clientId('branchCode')}" /> -->
-                <!--                     <f:attribute name="accountNumberId" value="#{rich:clientId('accountNumber')}" /> -->
-                <!--                     <f:attribute name="keyId" value="#{rich:clientId('key')}" /> -->
-                <!--                 </c:if> -->
-
                 <c:if test="#{not empty listenerUpdate and empty actionListenerBean}">
                     <p:ajax update="#{listenerUpdate}" event="change" />
                 </c:if>
@@ -53,7 +50,7 @@
                 </c:if>
             </p:inputText>
         </c:if>
-        <c:if test="#{isAutocomplete and  edit}">
+        <c:if test="#{not secret and isAutocomplete and  edit}">
             <p:autoComplete id="#{id}" value="#{fieldItem}" disabled="#{disabled}" required="#{required}" size="#{size}" maxlength="#{maxlength}" dropdown="true"
                 completeMethod="#{autocompleteBean[autocompleteMethod]}" var="e" itemLabel="#{e}" itemValue="#{e}">
                 <c:if test="#{not empty listenerUpdate and empty actionListenerBean}">
@@ -64,28 +61,28 @@
                 </c:if>
             </p:autoComplete>
         </c:if>
-        <c:if test="#{textArea and edit}">
+        <c:if test="#{not secret and textArea and edit}">
             <p:inputTextarea id="#{id}" disabled="#{disabled}" value="#{fieldItem}" required="#{required}" cols="#{cols}" rows="#{rows}" maxlength="#{maxlength}" autoResize="true"
                 style="width:100%;" />
         </c:if>
-        <c:if test="#{isHtml and edit}">
+        <c:if test="#{not secret and isHtml and edit}">
             <p:editor id="#{id}" disabled="#{disabled}" value="#{fieldItem}" required="#{required}"></p:editor>
         </c:if>
-        <c:if test="#{listValues != null and edit}">
+        <c:if test="#{not secret and listValues != null and edit}">
             <p:selectOneMenu id="#{id}" value="#{fieldItem}" required="#{required}" disabled="#{disabled}">
                 <f:selectItem itemValue="#{null}" itemLabel="" />
                 <f:selectItems value="#{listValues.entrySet()}" var="listVal" itemValue="#{listVal.key}" itemLabel="#{listVal.value}" />
             </p:selectOneMenu>
         </c:if>
 
-        <c:if test="#{popup and edit}">
+        <c:if test="#{not secret and popup and edit}">
             <p:inputText id="#{id}_text" value="#{fieldItem}" size="#{size}" disabled="true" />
             <p:inputText id="#{id}" type="hidden" value="#{fieldItem}" required="#{required}" size="#{size}" />
             <p:commandButton id="#{popupId}_selectLink" onclick="PF('dlg_#{popupId}').show()" type="button" icon="ui-icon-search" />
             <p:tooltip for="#{popupId}_selectLink" value="#{messages['commons.search']}" />
         </c:if>
 
-        <c:if test="#{!edit}">
+        <c:if test="#{not secret and !edit}">
             <h:outputText id="#{id}" value="#{fieldItem}" styleClass="field-value" />
         </c:if>
     </hftl:decorateFormField>

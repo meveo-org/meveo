@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.notification.ScriptNotificationDto;
 import org.meveo.api.dto.sql.SqlConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -18,8 +19,8 @@ import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.local.IPersistenceService;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @version 6.6.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  * @since 6.6.0
  */
 @Stateless
@@ -124,7 +125,7 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 	}
 
 	@Override
-	public SqlConfiguration fromDto(SqlConfigurationDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public SqlConfiguration fromDto(SqlConfigurationDto dto) throws MeveoApiException {
 		return toSqlConfiguration(dto, null);
 	}
 
@@ -150,6 +151,14 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 		}
 		
 		sqlConfigurationService.initializeCet(conf);		
+	}
+	
+	@Override
+	public void remove(SqlConfigurationDto dto) throws MeveoApiException, BusinessException {
+		var entity = sqlConfigurationService.findByCode(dto.getCode());
+		if(entity != null) {
+			sqlConfigurationService.remove(entity);
+		}
 	}
 
 }

@@ -24,6 +24,8 @@ import org.meveo.service.script.ScriptInstanceService;
 
 /**
  * @author Tyshan Shi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
@@ -60,45 +62,9 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         if (jobTriggerService.findByCode(postData.getCode()) != null) {
             throw new EntityAlreadyExistsException(JobTrigger.class, postData.getCode());
         }
-        ScriptInstance scriptInstance = null;
-        if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
-            scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
-            if (scriptInstance == null) {
-                throw new EntityDoesNotExistsException(ScriptInstance.class, postData.getScriptInstanceCode());
-            }
-        }
-        // check class
-        try {
-            Class.forName(postData.getClassNameFilter());
-        } catch (Exception e) {
-            throw new InvalidParameterException("classNameFilter", postData.getClassNameFilter());
-        }
-
-        CounterTemplate counterTemplate = null;
-        if (!StringUtils.isBlank(postData.getCounterTemplate())) {
-            counterTemplate = counterTemplateService.findByCode(postData.getCounterTemplate());
-            if (counterTemplate == null) {
-                throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
-            }
-        }
-        JobInstance jobInstance = null;
-        if (!StringUtils.isBlank(postData.getJobInstance())) {
-            jobInstance = jobInstanceService.findByCode(postData.getJobInstance());
-            if (jobInstance == null) {
-                throw new EntityDoesNotExistsException(JobInstance.class, postData.getJobInstance());
-            }
-        }
-
-        JobTrigger notif = new JobTrigger();
-        notif.setCode(postData.getCode());
-        notif.setClassNameFilter(postData.getClassNameFilter());
-        notif.setEventTypeFilter(postData.getEventTypeFilter());
-        notif.setFunction(scriptInstance);
-        notif.setParams(postData.getScriptParams());
-        notif.setElFilter(postData.getElFilter());
-        notif.setCounterTemplate(counterTemplate);
-        notif.setJobInstance(jobInstance);
-        notif.setJobParams(postData.getJobParams());
+        
+        JobTrigger notif = fromDto(postData);
+        
         jobTriggerService.create(notif);
 
         return notif;
@@ -217,25 +183,70 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 
 	@Override
 	public JobTriggerDto toDto(JobTrigger entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new JobTriggerDto(entity);
 	}
 
 	@Override
-	public JobTrigger fromDto(JobTriggerDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
-		// TODO Auto-generated method stub
-		return null;
+	public JobTrigger fromDto(JobTriggerDto postData) throws MeveoApiException {
+        ScriptInstance scriptInstance = null;
+        if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
+            scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
+            if (scriptInstance == null) {
+                throw new EntityDoesNotExistsException(ScriptInstance.class, postData.getScriptInstanceCode());
+            }
+        }
+        // check class
+        try {
+            Class.forName(postData.getClassNameFilter());
+        } catch (Exception e) {
+            throw new InvalidParameterException("classNameFilter", postData.getClassNameFilter());
+        }
+
+        CounterTemplate counterTemplate = null;
+        if (!StringUtils.isBlank(postData.getCounterTemplate())) {
+            counterTemplate = counterTemplateService.findByCode(postData.getCounterTemplate());
+            if (counterTemplate == null) {
+                throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
+            }
+        }
+        
+        JobInstance jobInstance = null;
+        if (!StringUtils.isBlank(postData.getJobInstance())) {
+            jobInstance = jobInstanceService.findByCode(postData.getJobInstance());
+            if (jobInstance == null) {
+                throw new EntityDoesNotExistsException(JobInstance.class, postData.getJobInstance());
+            }
+        }
+
+        JobTrigger notif = new JobTrigger();
+        notif.setCode(postData.getCode());
+        notif.setClassNameFilter(postData.getClassNameFilter());
+        notif.setEventTypeFilter(postData.getEventTypeFilter());
+        notif.setFunction(scriptInstance);
+        notif.setParams(postData.getScriptParams());
+        notif.setElFilter(postData.getElFilter());
+        notif.setCounterTemplate(counterTemplate);
+        notif.setJobInstance(jobInstance);
+        notif.setJobParams(postData.getJobParams());
+        
+		return notif;
 	}
 
 	@Override
 	public IPersistenceService<JobTrigger> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return jobTriggerService;
 	}
 
 	@Override
 	public boolean exists(JobTriggerDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		return jobTriggerService.findByCode(dto.getCode()) != null;
+	}
+
+	@Override
+	public void remove(JobTriggerDto dto) throws MeveoApiException, BusinessException {
+		var jobTrigger = jobTriggerService.findByCode(dto.getCode());
+		if(jobTrigger != null) {
+			jobTriggerService.remove(jobTrigger);
+		}
 	}
 }

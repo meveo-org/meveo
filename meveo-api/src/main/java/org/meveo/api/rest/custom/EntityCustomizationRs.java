@@ -1,5 +1,6 @@
 package org.meveo.api.rest.custom;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -10,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -295,5 +297,17 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@ApiOperation(value = "Execute")
 	ActionStatus execute(@PathParam("actionCode") @ApiParam("Code of the action") String actionCode,
 			@PathParam("appliesTo") @ApiParam("The action applies to the entity") String appliesTo, @PathParam("entityCode") @ApiParam("Code of the entity") String entityCode);
+
+	/**
+	 * Generates and returns the response schema of the custom entity template.
+	 *
+	 * @param cetCode code of the custom entity template
+	 * @return response schema of the custom entity template
+	 */
+	@GET
+	@Path("/entity/schema/{cetCode}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Generates and returns the response schema of the custom entity template.")
+	Response responseJsonSchema(@PathParam("cetCode") @NotNull @ApiParam("Code of the custom entity template") String cetCode);
 
 }

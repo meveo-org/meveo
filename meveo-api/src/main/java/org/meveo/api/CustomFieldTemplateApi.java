@@ -9,6 +9,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.CustomFieldMatrixColumnDto;
@@ -129,7 +130,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
         }
 
-        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
+        if (!checkAppliesToExisted(appliesTo)) {
             throw new InvalidParameterException("appliesTo", appliesTo);
         }
 
@@ -142,6 +143,17 @@ public class CustomFieldTemplateApi extends BaseApi {
         validateSamples(cft);
         customFieldTemplateService.create(cft);
 
+    }
+
+    private boolean checkAppliesToExisted (String appliesTo) {
+        if (CollectionUtils.isNotEmpty(getCustomizedEntitiesAppliesTo())) {
+            for (String applyTo: getCustomizedEntitiesAppliesTo()) {
+                if (applyTo.equals(appliesTo)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -236,14 +248,12 @@ public class CustomFieldTemplateApi extends BaseApi {
         handleMissingParameters();
 
         if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
-            throw new InvalidParameterException("appliesTo", appliesTo);
+        	return;
         }
 
         CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(code, appliesTo);
         if (cft != null) {
             customFieldTemplateService.remove(cft.getId());
-        } else {
-            throw new EntityDoesNotExistsException(CustomFieldTemplate.class, code);
         }
     }
 
@@ -421,6 +431,8 @@ public class CustomFieldTemplateApi extends BaseApi {
 
         if (dto.getDefaultValue() != null) {
             cft.setDefaultValue(dto.getDefaultValue());
+        } else if (StringUtils.isBlank(dto.getDefaultValue()) && dto.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+            cft.setDefaultValue("false");
         }
         if (dto.isUseInheritedAsDefaultValue() != null) {
             cft.setUseInheritedAsDefaultValue(dto.isUseInheritedAsDefaultValue());
@@ -524,8 +536,12 @@ public class CustomFieldTemplateApi extends BaseApi {
         if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+            if(cet == null) {
+            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode);
+            	throw new InvalidParameterException(message);
+            }
             storageTypes = cet.getAvailableStorages();
-        }else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        } else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             String crtCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(crtCode);
             storageTypes = crt.getAvailableStorages();
@@ -555,6 +571,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setMaxFileSizeAllowedInKb(dto.getMaxFileSizeAllowedInKb());
         cft.setFilePath(dto.getFilePath());
         cft.setSaveOnExplorer(dto.isSaveOnExplorer());
+        cft.setAudited(dto.isAudited());
 
         return cft;
     }
@@ -570,7 +587,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 	 */
 	public CustomRelationshipTemplate findOrCreateRelationship(String relationshipName, String sourceCet, String targetCet) throws BusinessException {
 		CustomRelationshipTemplate crt;
-		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(relationshipName, sourceCet, targetCet);
+		List<CustomRelationshipTemplate> availableCrts = customRelationshipTemplateService.findByNameAndSourceOrTarget(sourceCet, targetCet, relationshipName);
 		if(!availableCrts.isEmpty()) {
 			crt = availableCrts.get(0);
 		} else {

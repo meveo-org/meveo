@@ -10,15 +10,15 @@ The following binaries must be installed in your local environment:
 
 | Software           | Version        | Download Link |
 | --- | --- | --- |
-| Java | 8 | https://developers.redhat.com/products/openjdk/download |
+| Java | 11 | https://developers.redhat.com/products/openjdk/download |
 | Git | latest | https://git-scm.com/downloads |
 | Maven | latest | https://maven.apache.org/download.cgi |
 | PostgreSQL | 9.5 | https://www.postgresql.org/download/ |
 | PGAdmin | 4 | https://www.pgadmin.org/download/ |
-| PostgreSQL Driver | 42.2.4 | https://jdbc.postgresql.org/download.html |
-| Keycloak | >5 | https://www.keycloak.org/downloads.html |
-| Keycloak Adapter | >5 | https://www.keycloak.org/downloads.html |
-| Wildfly | 15.0.0.Final | https://wildfly.org/downloads/ |
+| PostgreSQL Driver | 42.2.5 | https://jdbc.postgresql.org/download.html |
+| Keycloak | >10 | https://www.keycloak.org/downloads.html |
+| Keycloak Adapter | >10 | https://www.keycloak.org/downloads.html |
+| Wildfly | 18.0.1.Final | https://wildfly.org/downloads/ |
 | Eclipse | JEE-latest | https://www.eclipse.org/downloads/packages/ |
 
 ## Installation Guide
@@ -77,8 +77,7 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 . In the left panel, hover on Master and click Add Realm.
 . In the right panel, click Select a file and choose `meveo-realm.json` file. [Meveo Realm](./src/main/resources/meveo-realm.json)
 . Click create. The Meveo realm should be created and it should now be the selected realm.
-. Back in the left panel, click Import / Select a file and select `meveo-users-0.json` file. [Meveo Users](./src/main/resources/meveo-users-0.json)
-. Hit import.
+. The default meveo clients, roles and users should be created as well.
 
 To check if meveo realm is correctly configured:
 
@@ -93,14 +92,14 @@ In the eclipse section, we will discuss how we can integrate Keycloak so we can 
 * Download and extract Wildfly into your PC. Let's call the folder where you extracted the files `WILDFLY_HOME`.
 * Inside `WILDFLY_HOME/modules` folder create this folder hierarchy `org/postgresql/main`.
 * Navigate to this folder.
-* Copy and paste the PostgreSQL driver (postgresql-42.2.4.jar) here.
+* Copy and paste the PostgreSQL driver (postgresql-42.2.5.jar) here.
 * Create a new file module.xml with the content below.
 
 ```
 <?xml version='1.0' encoding='UTF-8'?>
 <module xmlns="urn:jboss:module:1.1" name="org.postgresql">
     <resources>
-        <resource-root path="postgresql-42.2.4.jar"/>
+        <resource-root path="postgresql-42.2.5.jar"/>
     </resources>
 
     <dependencies>
@@ -237,7 +236,7 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 
 ##### Download Meveo Properties
 
-* Download this file [Meveo properties file](./docker/templates/meveo-admin.properties).
+* Download this file [Meveo properties file](./docker/configs/meveo-admin.properties).
 * Make sure to make the necessary changes depending on your local configuration. See keys like meveo.log.file, binary.storage.path and providers.rootDir.
 * Copy this file into `WILDFLY_HOME\standalone\configuration`.
 

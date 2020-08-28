@@ -2,6 +2,7 @@ package org.meveo.admin.action.admin.custom;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -71,6 +72,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     public void init(){
         customRelationshipTemplates = customRelationshipTemplateService.list();
         customEntityTemplates = customEntityTemplateService.list();
+        customEntityTemplates.sort(Comparator.comparing(CustomEntityTemplate::getCode));
     }
 
     @Override
@@ -78,6 +80,11 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         String returnView =  super.saveOrUpdate(killConversation);
         customRelationshipTemplateService.synchronizeStorages(getEntity());
         return returnView;
+    }
+    
+    @Override
+    public List<String> getFormFieldsToFetch() {
+    	return List.of("startNode", "endNode");
     }
 
     public void onChangeAvailableStorages() {

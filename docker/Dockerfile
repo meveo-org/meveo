@@ -1,14 +1,15 @@
-#FROM jboss/wildfly:15.0.1.Final
-FROM openjdk:8u242-jdk-slim-buster
+#FROM jboss/wildfly:18.0.1.Final
+FROM openjdk:11.0.7-jdk-slim-buster
 
 
 ### ------------------------- base ------------------------- ###
 # Install packages necessary
 # procps : for 'free' command
 # iputils-ping : for 'ping' command
+# iproute2 : for 'ip' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping \
-    && apt autoremove -y && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 \
+    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
 ENV TZ Europe/Paris
@@ -30,10 +31,12 @@ WORKDIR /opt/jboss
 ### ------------------------- base-end ------------------------- ###
 
 
-### ------------------------- Jboss Wildfly-15.0.1.Final -----------------------------###
+### ------------------------- Jboss Wildfly ----------------------------- ###
+# Ref: https://github.com/jboss-dockerfiles/wildfly/blob/18.0.1.Final/Dockerfile
+
 # Set the WILDFLY_VERSION env variable
-ENV WILDFLY_VERSION 15.0.1.Final
-ARG WILDFLY_SHA1=23d6a5889b76702fc518600fc5b2d80d6b3b7bb1
+ENV WILDFLY_VERSION 18.0.1.Final
+ARG WILDFLY_SHA1=ef0372589a0f08c36b15360fe7291721a7e3f7d9
 ENV JBOSS_HOME /opt/jboss/wildfly
 
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
@@ -47,51 +50,81 @@ RUN cd $HOME \
     && chown -R jboss:0 ${JBOSS_HOME} \
     && chmod -R g+rw ${JBOSS_HOME}
 
-### ------------------------- Jboss Wildfly-15.0.1.Final - End -----------------------------###
+### ------------------------- Jboss Wildfly - End ----------------------------- ###
 
 
-### ------------------------- Keycloak-4.8.3.Final -----------------------------###
+# Change to the jboss user
+USER jboss
 
-ENV KEYCLOAK_VERSION 4.8.3.Final
+
+### ------------------------- Keycloak ----------------------------- ###
+# Ref: https://github.com/keycloak/keycloak-containers/blob/10.0.2/adapter-wildfly/Dockerfile
+
+ARG KEYCLOAK_VERSION=10.0.2
 
 WORKDIR ${JBOSS_HOME}
 
-USER jboss
-
 RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-${KEYCLOAK_VERSION}.tar.gz | tar zx
 RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/adapters/saml/keycloak-saml-wildfly-adapter-dist-${KEYCLOAK_VERSION}.tar.gz | tar zx
-RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/keycloak-overlay-${KEYCLOAK_VERSION}.tar.gz | tar zx
 
-### ------------------------- Keycloak-4.8.3.Final - End -----------------------------###
-
-# Standalone.xml modifications regarding keycloak & activemq
-### Note: These actions will be done by replacing of standalone.xml file
-#RUN sed -i -e 's/<extensions>/&\n        <extension module="org.keycloak.keycloak-adapter-subsystem"\/>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml \
-#    && sed -i -e 's/<profile>/&\n        <subsystem xmlns="urn:jboss:domain:keycloak:1.1"\/>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml \
-#    && sed -i -e 's/<security-domains>/&\n                <security-domain name="keycloak">\n                    <authentication>\n                        <login-module code="org.keycloak.adapters.jboss.KeycloakLoginModule" flag="required"\/>\n                    <\/authentication>\n                <\/security-domain>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml \ 
-#    && sed -i -e 's/<extensions>/&\n        <extension module="org.keycloak.keycloak-saml-adapter-subsystem"\/>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml \
-#    && sed -i -e 's/<profile>/&\n        <subsystem xmlns="urn:jboss:domain:keycloak-saml:1.1"\/>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml \
-#    && sed -i -e 's/<extensions>/&\n        <extension module="org.wildfly.extension.messaging-activemq"\/>/' ${JBOSS_HOME}/standalone/configuration/standalone.xml
+### ------------------------- Keycloak - End ----------------------------- ###
 
 
-### Create some folders for meveo volumes
-RUN mkdir -p ${JBOSS_HOME}/standalone/data ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage \
-    && chown -R jboss:jboss ${JBOSS_HOME}/standalone/data ${JBOSS_HOME}/meveodata /tmp/meveo \
-### Backup the original standalone.xml
-    && mv ${JBOSS_HOME}/standalone/configuration/standalone.xml ${JBOSS_HOME}/standalone/configuration/standalone.xml.org
 
-### For meveo configuration ###
-COPY --chown=jboss:jboss templates/standalone.xml ${JBOSS_HOME}/templates/standalone.xml
-COPY --chown=jboss:jboss templates/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
-COPY --chown=jboss:jboss templates/profile.properties ${JBOSS_HOME}/standalone/configuration/profile.properties
-COPY --chown=jboss:jboss templates/postgresql ${JBOSS_HOME}/modules/system/layers/base/org/postgresql
-COPY --chown=jboss:jboss templates/keycloakdb ${JBOSS_HOME}/standalone/data/keycloakdb
+### ------------------------- Liquibase ----------------------------- ###
+# Ref: https://github.com/liquibase/docker/blob/main/Dockerfile
+
+# Create a directory to install liquibase
+RUN mkdir -p /opt/jboss/liquibase
+WORKDIR /opt/jboss/liquibase
+
+# Latest Liquibase Release Version
+ARG LIQUIBASE_VERSION=3.10.0
+
+# Download, install, clean up
+RUN set -x \
+  && curl -L https://github.com/liquibase/liquibase/releases/download/v${LIQUIBASE_VERSION}/liquibase-${LIQUIBASE_VERSION}.tar.gz | tar -xzf -
+
+
+# RUN curl -o /liquibase/lib/<db platform>.jar <url to maven jar driver>
+RUN curl -o /opt/jboss/liquibase/lib/postgresql.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.2.12/postgresql-42.2.12.jar
+
+
+
+### ------------------------- Postgresql module ----------------------------- ###
+
+WORKDIR ${JBOSS_HOME}
+
+ARG POSTGRESQL_VERSION=42.2.5
+
+COPY --chown=jboss:jboss configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+
+RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION}.jar \
+    && mv postgresql-${POSTGRESQL_VERSION}.jar ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/ \
+    && sed -i "s|\[POSTGRESQL\_VERSION\]|${POSTGRESQL_VERSION}|g" ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+
+
+
+### ------------------------- Configurations ----------------------------- ###
+
+
+### Create some folders for meveo volumes and db resource
+RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infinispan /opt/jboss/liquibase \
+    && chown -R jboss:jboss ${JBOSS_HOME}/meveodata /tmp/meveo /opt/jboss/liquibase \
+### Backup the original standalone-full.xml
+    && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
+
+### cli commands
+COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
+
+### meveo configuration
+COPY --chown=jboss:jboss configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+
+### Changelog files for Liquibase
+COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
 COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
-
-### cli commands
-COPY --chown=jboss:jboss tools/cli ${JBOSS_HOME}/cli
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true

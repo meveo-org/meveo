@@ -29,9 +29,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -43,15 +47,18 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.MeveoModulePatchApi;
 import org.meveo.api.module.ModuleReleaseApi;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -78,6 +85,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Inject
 	private MeveoModuleApi meveoModuleApi;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	@Inject
 	private ModuleReleaseApi moduleReleaseApi;
@@ -94,6 +104,10 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	private ModuleRelease moduleReleaseExport;
 	private transient UploadedFile patchFile;
 	private transient MeveoModulePatch newMeveoModulePatch;
+	private List<File> fileList;
+	private String selectedFolder;
+	private String selectedFileName;
+	private boolean currentDirEmpty;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -156,6 +170,91 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	public void setMeveoModules(List<MeveoModule> meveoModules) {
 		this.meveoModules = meveoModules;
+	}
+
+	public List<File> getFileList() {
+		return fileList;
+	}
+
+	public void setFileList(List<File> fileList) {
+		this.fileList = fileList;
+	}
+
+	public String getSelectedFolder() {
+		return selectedFolder;
+	}
+
+	public void setSelectedFolder(String selectedFolder) {
+		setSelectedFileName(null);
+		if (selectedFolder == null) {
+			this.selectedFolder = null;
+		} else if ("..".equals(selectedFolder)) {
+			if (this.selectedFolder.lastIndexOf(File.separator) > 0) {
+				this.selectedFolder = this.selectedFolder.substring(0, this.selectedFolder.lastIndexOf(File.separator));
+			} else {
+				this.selectedFolder = null;
+			}
+		} else {
+			if (this.selectedFolder == null) {
+				this.selectedFolder = File.separator + selectedFolder;
+			} else {
+				this.selectedFolder += File.separator + selectedFolder;
+			}
+		}
+		buildFileList();
+	}
+
+	private String getFilePath() {
+		return paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+
+	}
+
+	private String getFilePath(String name) {
+		String result = getFilePath() + File.separator + name;
+		if (selectedFolder != null) {
+			result = getFilePath() + File.separator + selectedFolder + File.separator + name;
+		}
+		return result;
+	}
+
+	private void buildFileList() {
+		String folder = getFilePath() + File.separator + (this.selectedFolder == null ? "" : this.selectedFolder);
+		File file = new File(folder);
+
+		File[] files = file.listFiles();
+
+		List<String> hiddenFolders = Arrays.asList("imports", "invoices", "jasper");
+
+		fileList = files == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(files));
+		fileList = fileList.stream().filter(e -> !e.isDirectory() || (e.isDirectory() && !hiddenFolders.contains(e.getName()))).collect(Collectors.toList());
+		currentDirEmpty = !StringUtils.isBlank(this.selectedFolder) && fileList.isEmpty();
+	}
+
+	public boolean hasSelectedFolder() {
+		return !StringUtils.isBlank(selectedFolder);
+	}
+
+	public String getSelectedFileName() {
+		return selectedFileName;
+	}
+
+	public void setSelectedFileName(String selectedFileName) {
+		this.selectedFileName = selectedFileName;
+	}
+
+	public boolean isCurrentDirEmpty() {
+		return currentDirEmpty;
+	}
+
+	public void setCurrentDirEmpty(boolean currentDirEmpty) {
+		this.currentDirEmpty = currentDirEmpty;
+	}
+
+	public String getFileType(String fileName) {
+		if (fileName != null && fileName.endsWith(".zip")) {
+			return "zip";
+		}
+		return "text";
 	}
 
 	/**
@@ -290,12 +389,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Override
 	public List<String> getFormFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+		return meveoModuleService.getLazyLoadedProperties();
 	}
 
 	@ActionMethod
@@ -361,35 +460,43 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		String fileName = event.getFile().getFileName();
 
 		switch (contentType.trim()) {
-		case "text/xml":
-		case "application/xml":
-			meveoModuleApi.importXML(inputStream, isOverride());
-			break;
+			case "text/xml":
+			case "application/xml":
+				meveoModuleApi.importXML(inputStream, isOverride());
+				break;
 
-		case "application/json":
-			List<MeveoModuleDto> meveoModuleDtos = meveoModuleApi.getModules(inputStream);
-			if (CollectionUtils.isNotEmpty(meveoModuleDtos)) {
-				boolean checkUpload = beforeUpload(meveoModuleDtos);
-				if (!checkUpload) {
-					return;
+			case "application/json":
+				try {
+					List<MeveoModuleDto> meveoModuleDtos = meveoModuleApi.getModules(inputStream);
+					if (CollectionUtils.isNotEmpty(meveoModuleDtos)) {
+						boolean checkUpload = beforeUpload(meveoModuleDtos);
+						if (!checkUpload) {
+							return;
+						}
+					}
+					meveoModuleApi.importJSON(meveoModuleDtos, isOverride());
+				} catch (EntityDoesNotExistsException e) {
+					messages.error(e.getMessage());
 				}
-			}
-			meveoModuleApi.importJSON(meveoModuleDtos, isOverride());
-			break;
+				break;
 
-		case "text/csv":
-		case "application/vnd.ms-excel":
-			meveoModuleApi.importCSV(inputStream, isOverride());
-			break;
+			case "text/csv":
+			case "application/vnd.ms-excel":
+				meveoModuleApi.importCSV(inputStream, isOverride());
+				break;
 
-		case "application/octet-stream":
-		case "application/x-zip-compressed":
-			meveoModuleApi.importZip(fileName, inputStream, isOverride());
-			break;
+			case "application/octet-stream":
+			case "application/x-zip-compressed":
+				try {
+					meveoModuleApi.importZip(fileName, inputStream, isOverride());
+				} catch (EntityDoesNotExistsException e) {
+					messages.error(e.getMessage());
+				}
+				break;
 		}
 	}
 
-	public boolean beforeUpload(List<MeveoModuleDto> meveoModuleDtos) {
+	public boolean beforeUpload(List<MeveoModuleDto> meveoModuleDtos) throws EntityDoesNotExistsException {
 
 		for (MeveoModuleDto meveoModuleDto : meveoModuleDtos) {
 			List<ModuleDependencyDto> dtos = new ArrayList<>();
@@ -397,7 +504,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 				for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
 					MeveoModule meveoModule = meveoModuleService.getMeveoModuleByVersionModule(dependencyDto.getCode(), dependencyDto.getCurrentVersion());
 					if (meveoModule == null) {
-						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode());
+						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode(), getFormFieldsToFetch());
 						Set<ModuleRelease> moduleReleases = module.getReleases();
 						List<Integer> versionReleases = new ArrayList<>();
 						for (ModuleRelease moduleRelease : moduleReleases) {
@@ -460,11 +567,39 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		return true;
 	}
 
+	public void getFilesFromFileExplorer() {
+		setSelectedFolder(null);
+		buildFileList();
+	}
+
+	public void importFromInternalFile() {
+		try {
+			File file = new File(getFilePath(selectedFileName));
+			InputStream inputStream = new FileInputStream(file);
+			if (selectedFileName.endsWith(".json")) {
+				meveoModuleApi.importJSON(inputStream, true);
+			} else if (selectedFileName.endsWith(".zip")) {
+				meveoModuleApi.importZip(selectedFileName, inputStream, true);
+			}
+			messages.info(new BundleKey("messages", "meveoModule.importFromFile.successful"), selectedFileName);
+		} catch (Exception e) {
+			messages.error(new BundleKey("messages", "meveoModule.importFromFile.error"), selectedFileName, e.getMessage());
+		}
+	}
+
 	public MeveoModulePatch getNewMeveoModulePatch() {
 		return newMeveoModulePatch;
 	}
 
 	public void setNewMeveoModulePatch(MeveoModulePatch newMeveoModulePatch) {
 		this.newMeveoModulePatch = newMeveoModulePatch;
+	}
+	
+	public void synchronizeLinkedItems() throws BusinessException, IOException {
+		int nbItemsAdded = meveoModuleService.synchronizeLinkedItems(entity.getCode());
+		log.info("synchronizeLinkedItems : {} items added to module {}", nbItemsAdded, entity.getCode());
+	
+        messages.info("Synchronization", nbItemsAdded + " items added. Reload to see changes.");
+
 	}
 }

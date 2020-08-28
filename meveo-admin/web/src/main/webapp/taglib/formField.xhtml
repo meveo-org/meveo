@@ -135,6 +135,9 @@
     <hftl:getFieldInformation backingBean="${backingBean}" entity="${entity}" entityClass="${entityClass}" defaultEntityFromBean="${defaultEntityFromBean}" fieldName="${field}"
         childFieldName="${childField}" var="fieldInfo" />
 
+	<c:if test="${empty(secret)}">
+		<c:set var="secret" value = "false"/>
+	</c:if>
     <c:if test="${empty(required)}">
         <c:set var="required" value="${fieldInfo.required}" />
     </c:if>
@@ -262,7 +265,7 @@
                 <c:set var="isAutocomplete" value="false" />
             </c:if>
 
-            <hftl:formTextField id="${empty(id)?fieldIdPrefix.concat('_txt'):id}" fieldItem="#{fieldItem}" entity="${entity}" field="${field}" childField="${childField}" label="${label}"
+            <hftl:formTextField id="${empty(id)?fieldIdPrefix.concat('_txt'):id}" secret="${secret}" fieldItem="#{fieldItem}" entity="${entity}" field="${field}" childField="${childField}" label="${label}"
                 disabled="${disabled}" required="${required}" componentWidth="${componentWidth}" newLine="${newLine}" displayOneLine="${displayOneLine}" styleClass="${styleClass}" style="${style}"
                 labelStyle="${labelStyle}" labelStyleClass="${labelStyleClass}" inputStyle="${inputStyle}" inputStyleClass="${inputStyleClass}" labelWidth="${labelWidth}" inputWidth="${inputWidth}"
                 size="${size}" maxlength="${maxlength}" isHtml="${isHtml}" textArea="${textArea}" cols="${cols}" rows="${rows}" isAutocomplete="${isAutocomplete}"

@@ -21,7 +21,9 @@ package org.meveo.service.admin.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
@@ -44,10 +47,15 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -55,8 +63,10 @@ import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -90,7 +100,7 @@ import org.meveo.util.EntityCustomizationUtils;
  * EJB for managing MeveoModule entities
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.9.0
+ * @lastModifiedVersion 6.10
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
@@ -110,8 +120,81 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     @Inject
     private JobExecutionService jobExecutionService;
 
-    @Inject
-    private ConcreteFunctionService concreteFunctionService;
+    /**
+     * Add missing dependencies of each module item
+     * 
+     * @param moduleCode Code of the module to synchronize
+     * @return the total number of items added to the module
+     * @throws BusinessException if the module can't be updated
+     */
+	public int synchronizeLinkedItems(String moduleCode) throws BusinessException {
+		MeveoModule meveoModule = findByCode(moduleCode, List.of("moduleItems"));
+		List<MeveoModuleItem> newItems = getMissingItems(meveoModule);
+		int totalCount = 0;
+		
+		while (!newItems.isEmpty()) {
+			totalCount += newItems.size();
+			meveoModule.getModuleItems().addAll(newItems);
+			newItems = getMissingItems(meveoModule);
+		}
+		
+		if(totalCount > 0) {
+			meveoModule.getModuleItems().forEach(m -> m.setMeveoModule(meveoModule));
+			update(meveoModule);
+		}
+		
+		return totalCount;
+	}
+
+	/**
+	 * @param MeveoModule meveoModule the module to get missing items froms
+	 * @return the missing dependencies of each module item
+	 */
+	private List<MeveoModuleItem> getMissingItems(MeveoModule meveoModule) {
+		List<MeveoModuleItem> newItems = new ArrayList<>();
+		
+		for (MeveoModuleItem item : meveoModule.getModuleItems()) {
+			try {
+				// Check if the module item has possible dependencies
+				Class<?> clazz = Class.forName(item.getItemClass());
+				List<Field> fields = ReflectionUtils.getAllFields(new ArrayList<>(), clazz)
+						.stream()
+						.filter(f -> f.getType().getAnnotation(ModuleItem.class) != null)
+						.collect(Collectors.toList());
+				
+				// Load each dependency and add them as module item if they are not present
+				if(!fields.isEmpty()) {
+					Object loadedItem = getItemEntity(item, clazz);
+					
+					for(Field field : fields) {
+						boolean canAccess = field.canAccess(loadedItem);
+						field.setAccessible(true);
+						BusinessEntity fieldValue = (BusinessEntity) field.get(loadedItem);
+						
+						if(fieldValue instanceof HibernateProxy) {
+							Hibernate.initialize(fieldValue); 
+							fieldValue = (BusinessEntity) ((HibernateProxy) fieldValue)
+					                  .getHibernateLazyInitializer()
+					                  .getImplementation();
+						}
+						
+						if(fieldValue != null) {
+							MeveoModuleItem newItem = new MeveoModuleItem(fieldValue);
+							if(!meveoModule.getModuleItems().contains(newItem)) {
+								newItems.add(newItem);
+							}
+						}
+						field.setAccessible(canAccess);
+					}
+				}
+			} catch (Exception e) {
+				log.error("Cannot retrieve dependencies for module item {}", item, e);
+			}
+		}
+		
+
+		return newItems;
+	}
 
     /**
      * import module from remote meveo instance.
@@ -214,137 +297,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             return (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
             return null;
-        }
-    }
-
-    /**
-     * Uninstall the module and disables it items
-     * 
-     * @param module the module to uninstall
-     * @return the uninstalled module
-     * @throws BusinessException if an error occurs
-     */
-    public MeveoModule uninstall(MeveoModule module) throws BusinessException {
-        return uninstall(module, false, false);
-    }
-
-	/**
-	 * Uninstall the module and disables it items
-	 * 
-	 * @param module      the module to uninstall
-	 * @param removeItems if true, module items will be deleted and not disabled
-	 * @return the uninstalled module
-	 * @throws BusinessException if an error occurs
-	 */
-    public MeveoModule uninstall(MeveoModule module, boolean removeItems) throws BusinessException {
-        return uninstall(module, false, removeItems);
-    }
-
-	/**
-	 * Uninstall the module and disables it items
-	 * 
-	 * @param module      the module to uninstall
-	 * @param childModule whether the module is a child module
-	 * @param removeItems if true, module items will be deleted and not disabled
-	 * @return the uninstalled module
-	 * @throws BusinessException if an error occurs
-	 */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean removeItems) throws BusinessException {
-
-        ModuleScriptInterface moduleScript = null;
-        if (module.getScript() != null) {
-            moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
-        }
-        
-        List<MeveoModuleItem> moduleItems = getSortedModuleItems(module.getModuleItems());
-
-        for (MeveoModuleItem item : moduleItems) {
-            
-            // check if moduleItem is linked to other active module
-            if (isChildOfOtherActiveModule(item.getItemCode(), item.getItemClass())) {
-                continue;
-            }
-            
-            loadModuleItem(item);
-            BusinessEntity itemEntity = item.getItemEntity();
-            if (itemEntity == null) {
-                continue;
-            }
-
-            try {
-                if (itemEntity instanceof MeveoModule) {
-                    uninstall((MeveoModule) itemEntity, true, removeItems);
-                } else {
-
-                    // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
-                    // superclasses)
-                    Class clazz = Class.forName(item.getItemClass());
-                    PersistenceService persistenceServiceForItem = (PersistenceService) EjbUtils.getServiceInterface(clazz.getSimpleName() + "Service");
-                    if (persistenceServiceForItem == null) {
-                        persistenceServiceForItem = (PersistenceService) EjbUtils.getServiceInterface(clazz.getSuperclass().getSimpleName() + "Service");
-                    }
-
-                    if (persistenceServiceForItem == null) {
-                        log.error("Failed to find implementation of persistence service for class {}", item.getItemClass());
-                        continue;
-                    }
-
-                    if(removeItems) {
-                        if (itemEntity instanceof Endpoint) {
-                            Endpoint endpoint = (Endpoint) itemEntity;
-                            if (CollectionUtils.isNotEmpty(endpoint.getPathParameters())) {
-                                getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
-                                        .setParameter("endpointId", endpoint.getId())
-                                        .executeUpdate();
-                            }
-                            Function service = concreteFunctionService.findById(endpoint.getService().getId());
-                            getEntityManager().createNamedQuery("Endpoint.deleteByService")
-                                    .setParameter("serviceId", service.getId())
-                                    .executeUpdate();
-                            
-                        } else {
-                            persistenceServiceForItem.remove(itemEntity);
-                        }
-                        
-					} else {
-						persistenceServiceForItem.preDisable(itemEntity);
-						itemEntity = getEntityManager().merge(itemEntity);
-					}
-
-                }
-                
-            } catch (Exception e) {
-                log.error("Failed to uninstall/disable module item. Module item {}", item, e);
-            }
-        }
-
-        if (moduleScript != null) {
-            moduleScriptService.postUninstallModule(moduleScript, module);
-        }
-
-        // Remove if it is a child module
-        if (childModule) {
-            remove(module);
-            return null;
-
-        // Otherwise mark it uninstalled and clear module items
-        } else {
-            MeveoModule moduleUpdated = module;
-            module.setInstalled(false);
-            
-            /* In case the module is uninstalled because of installation failure
-               and that the module is not inserted in db we should not update its persistent state */
-            module = reattach(module);
-            if(getEntityManager().contains(module)) {
-            	moduleUpdated = update(module);
-            }
-            
-            getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
-            	.setParameter("meveoModule", module)
-            	.executeUpdate();
-            
-			return moduleUpdated;
         }
     }
 
@@ -534,7 +486,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
-        entity = findById(entity.getId());
+        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
         ModuleRelease moduleRelease = new ModuleRelease();
         moduleRelease.setCode(entity.getCode());
         moduleRelease.setDescription(entity.getDescription());
@@ -596,7 +548,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
             moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
         }
-        entity.setInstalled(false);
         entity.setCurrentVersion(nextVersion);
         moduleRelease.setMeveoModule(entity);
         entity.getReleases().add(moduleRelease);
@@ -622,8 +573,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Override
     public MeveoModule update(MeveoModule entity) throws BusinessException {
-	    MeveoModule meveoModule = findById(entity.getId());
-	    Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
+	    MeveoModule meveoModule = updateModule(entity);
+        return super.update(meveoModule);
+    }
+
+    public MeveoModule mergeModule(MeveoModule entity) {
+	    MeveoModule meveoModule = updateModule(entity);
+	    return getEntityManager().merge(meveoModule);
+    }
+
+    private MeveoModule updateModule(MeveoModule entity) {
+        MeveoModule meveoModule = findById(entity.getId());
+        Set<MeveoModuleDependency> moduleDependencies = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
             for (MeveoModuleDependency meveoModuleDependency : entity.getModuleDependencies()) {
                 moduleDependencies.add(meveoModuleDependency);
@@ -631,7 +592,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         }
 
         if(meveoModule.getModuleDependencies() != null) {
-	    meveoModule.getModuleDependencies().clear();
+            meveoModule.getModuleDependencies().clear();
         }
         Set<String> moduleFiles = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
@@ -653,7 +614,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if(meveoModule.getModuleItems() != null) {
             meveoModule.getModuleItems().clear();
         }
-        
+
         Set<MeveoModulePatch> modulePatches = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getPatches())) {
             for (MeveoModulePatch meveoModulePatch : entity.getPatches()) {
@@ -692,11 +653,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 meveoModule.getPatches().add(modulePatch);
             }
         }
-        return super.update(meveoModule);
+        return meveoModule;
     }
 
-    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) {
+    public MeveoModule getMeveoModuleByVersionModule(String code, String currentVersion) throws EntityDoesNotExistsException {
         MeveoModule meveoModule = findByCode(code);
+        if (meveoModule == null) {
+            throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ code +" doesn't exists locally.");
+        }
         if (currentVersion.equals(meveoModule.getCurrentVersion())) {
             return meveoModule;
         }
@@ -800,5 +764,23 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 file.delete();
             }
         }
+    }
+
+    @Override
+    public MeveoModule findById(Long id, List<String> fetchFields, boolean refresh) {
+	    MeveoModule meveoModule = findById(id);
+	    if (getEntityManager().contains(meveoModule)) {
+	        getEntityManager().detach(meveoModule);
+        }
+        return super.findById(id, fetchFields, refresh);
+    }
+
+    @Override
+    public List<MeveoModule> list(PaginationConfiguration config) {
+    	return super.list(config);
+    }
+    
+    public List<String> getLazyLoadedProperties() {
+    	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
     }
 }

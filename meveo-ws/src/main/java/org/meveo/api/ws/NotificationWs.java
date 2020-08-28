@@ -6,7 +6,7 @@ import javax.jws.WebService;
 
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.notification.EmailNotificationDto;
-import org.meveo.api.dto.notification.NotificationDto;
+import org.meveo.api.dto.notification.ScriptNotificationDto;
 import org.meveo.api.dto.notification.WebHookDto;
 import org.meveo.api.dto.response.notification.GetEmailNotificationResponseDto;
 import org.meveo.api.dto.response.notification.GetNotificationResponseDto;
@@ -15,7 +15,8 @@ import org.meveo.api.dto.response.notification.InboundRequestsResponseDto;
 import org.meveo.api.dto.response.notification.NotificationHistoriesResponseDto;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @WebService
 public interface NotificationWs extends IBaseWs {
@@ -23,10 +24,10 @@ public interface NotificationWs extends IBaseWs {
 	// notification
 
 	@WebMethod
-	ActionStatus createNotification(@WebParam(name = "notification") NotificationDto postData);
+	ActionStatus createNotification(@WebParam(name = "notification") ScriptNotificationDto postData);
 
 	@WebMethod
-	ActionStatus updateNotification(@WebParam(name = "notification") NotificationDto postData);
+	ActionStatus updateNotification(@WebParam(name = "notification") ScriptNotificationDto postData);
 
 	@WebMethod
 	GetNotificationResponseDto findNotification(@WebParam(name = "notificationCode") String notificationCode);
@@ -35,7 +36,7 @@ public interface NotificationWs extends IBaseWs {
 	ActionStatus removeNotification(@WebParam(name = "notificationCode") String notificationCode);
 
 	@WebMethod
-	ActionStatus createOrUpdateNotification(@WebParam(name = "notification") NotificationDto postData);
+	ActionStatus createOrUpdateNotification(@WebParam(name = "notification") ScriptNotificationDto postData);
 
 	// webHook
 

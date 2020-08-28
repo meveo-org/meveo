@@ -25,8 +25,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.primefaces.model.SortOrder;
 
 /**
- * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.4.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, CustomEntityCategoryDto> {
@@ -126,7 +126,13 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
     @Override
     public CustomEntityCategoryDto findIgnoreNotFound(String code) {
-        return CustomEntityCategoryDto.toDTO(customEntityCategoryService.findByCode(code));
+        CustomEntityCategory category = customEntityCategoryService.findByCode(code);
+        
+        if(category == null) {
+        	return null;
+        }
+        
+		return CustomEntityCategoryDto.toDTO(category);
     }
 
     @Override
@@ -135,7 +141,7 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
     }
 
     @Override
-    public CustomEntityCategory fromDto(CustomEntityCategoryDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+    public CustomEntityCategory fromDto(CustomEntityCategoryDto dto) throws MeveoApiException {
         return CustomEntityCategoryDto.fromDTO(dto, new CustomEntityCategory());
     }
 
@@ -180,4 +186,14 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
 		return result;
 	}
+
+	@Override
+	public void remove(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
+		try {
+			this.removeCustomEntityCategory(dto.getCode(), false);
+		} catch (EntityDoesNotExistsException e) {
+			// Do nothing
+		}
+	}
+	
 }

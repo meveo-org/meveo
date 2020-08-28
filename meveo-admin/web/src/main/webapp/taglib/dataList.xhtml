@@ -19,6 +19,7 @@
         exportToCsv - show "export to Csv" button
         exportToJson - show "export to Json" button
         importCsv - show "import from Csv" button
+        import - show "Import" button
         sortBy and sortOrder - a default field to sort by and a default sort order
         rowsPerPage - possible paging sizes separated by a comma
         showFullTextSearch - shall a "global search" filter be visible in the header
@@ -81,6 +82,10 @@
 
 	<c:if test="${empty exportToCsv}">
 		<c:set var="exportToCsv" value="false" />
+	</c:if>
+	
+	<c:if test="${empty import}">
+		<c:set var="import" value="false"/>
 	</c:if>
 
 	<c:if test="${empty exportToJson}">
@@ -246,7 +251,10 @@
 			<p:commandButton value="#{messages['commons.importCsv']}"
 				rendered="#{importCsv and backingBean.canUserUpdateEntity()}"
 				type="button" onclick="PF('csvDialog').show();" />
-			<p:commandButton value="#{messages['action.import']} #{backingBean.entity.class.simpleName}"
+			
+			<p:commandButton 
+				rendered="#{import and backingBean.canUserUpdateEntity()}"
+				value="#{messages[backingBean != meveoModuleListBean?'action.import':'meveoModule.importFromFile']} #{backingBean != meveoModuleListBean? backingBean.entity.class.simpleName:''}"
 				id="#{formId}buttonImport" type="button"
 				onclick="PF('importDataDialog').show();" />
 

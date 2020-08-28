@@ -46,9 +46,11 @@ public class ValidationService {
      * @return true if object has unique field
      */
     public boolean validateUniqueField(String className, String fieldName, Object id, Object value) {
-
-        className = ReflectionUtils.getCleanClassName(className);
-
+        if (className.startsWith("Endpoint")) {
+            className = "Endpoint";
+        } else {
+            className = ReflectionUtils.getCleanClassName(className);
+        }
         String queryString = null;
         if (id == null) {
             queryString = String.format("select count(*) from %s where lower(%s)='%s'", className, fieldName,

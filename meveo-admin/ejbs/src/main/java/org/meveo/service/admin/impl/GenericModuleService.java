@@ -1,4 +1,5 @@
 /*
+ * (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors.
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
  * (C) Copyright 2009-2014 Manaty SARL (http://manaty.net/) and contributors.
  *
@@ -32,6 +33,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.LockOptions;
+import org.hibernate.NaturalIdLoadAccess;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.commons.utils.EjbUtils;
@@ -78,6 +81,9 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
     public void loadModuleItem(MeveoModuleItem item) throws BusinessException {
     	
         BusinessEntity entity = null;
+        if (item.getItemClass().startsWith("org.meveo.model.technicalservice.endpoint.Endpoint")) {
+            item.setItemClass("org.meveo.model.technicalservice.endpoint.Endpoint");
+        }
         if (CustomFieldTemplate.class.getName().equals(item.getItemClass()) && item.getAppliesTo() != null) {
             entity = customFieldTemplateService.findByCodeAndAppliesToNoCache(item.getItemCode(), item.getAppliesTo());
             if(entity != null && entity.getCode() == null) {
@@ -129,7 +135,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
             try {
                 entity = query.getSingleResult();
-
+                
             } catch (NoResultException | NonUniqueResultException e) {
                 log.error("Failed to find a module item {}. Reason: {}. This item will be removed from module", item, e.getClass().getSimpleName());
                 return;
@@ -141,6 +147,35 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         
         item.setItemEntity(entity);
     }
+    
+	/**
+	 * @param item
+	 * @param clazz
+	 * @return
+	 */
+    public BusinessEntity getItemEntity(MeveoModuleItem item, Class<?> clazz) {
+		NaturalIdLoadAccess<?> query = getEntityManager().
+				unwrap(org.hibernate.Session.class)
+				.byNaturalId(clazz)
+				.with(LockOptions.READ)
+				.using("code", item.getItemCode());
+		
+		if(item.getAppliesTo() != null) {
+			query = query.using("appliesTo", item.getAppliesTo());
+		}
+		
+		Object loadedItem = query.load();
+		return (BusinessEntity) loadedItem;
+	}
+	
+	public BusinessEntity getItemEntity(MeveoModuleItem item) {
+		try {
+			Class<?> clazz = Class.forName(item.getItemClass());
+			return (BusinessEntity) getItemEntity(item, clazz);
+		} catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -296,7 +331,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @SuppressWarnings("unchecked")
     @Override
-    public void remove(MeveoModule module) throws BusinessException {
+    public void remove(T module) throws BusinessException {
         // If module was downloaded, remove all submodules as well
         if (module.isDownloaded() && module.getModuleItems() != null) {
 
@@ -316,10 +351,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         }
 
         if (module != null) {
-            getEntityManager().createNamedQuery("MeveoModule.deleteModule")
-                    .setParameter("id", module.getId())
-                    .setParameter("version", module.getVersion())
-                    .executeUpdate();
+        	super.remove(module);
 
             if (module instanceof BaseEntity && (module.getClass().isAnnotationPresent(ObservableEntity.class) || module.getClass().isAnnotationPresent(ModuleItem.class))) {
                 entityRemovedEventProducer.fire((BaseEntity) module);

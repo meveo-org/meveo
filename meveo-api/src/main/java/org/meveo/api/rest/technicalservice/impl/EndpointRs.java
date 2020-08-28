@@ -194,7 +194,7 @@ public class EndpointRs extends BaseRs {
 
 	/**
 	 * Generates and returns the response schema of a given endpoint.
-	 * 
+	 *
 	 * @param code code of the endpoint
 	 * @return response schema of the given endpoint
 	 */

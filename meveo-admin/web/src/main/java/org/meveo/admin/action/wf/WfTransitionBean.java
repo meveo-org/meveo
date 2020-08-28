@@ -35,11 +35,9 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.admin.wf.types.OrderWF;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
-import org.meveo.model.order.OrderStatusEnum;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.model.wf.WFTransition;
@@ -175,8 +173,8 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
                 }
             }
             entity.setPriority(priority);
-            entity.setFromStatus(OrderStatusEnum.ACKNOWLEDGED.toString());
-            entity.setToStatus(OrderStatusEnum.IN_PROGRESS.toString());
+            entity.setFromStatus("ACKNOWLEDGED");
+            entity.setToStatus("IN_PROGRESS");
         }
         entity.getWfDecisionRules().clear();
         entity.getWfDecisionRules().addAll(wfDecisionRules);
@@ -211,46 +209,12 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
         return back();
     }
 
-    public Workflow getWorkflowOrder() throws BusinessException {
-        if (workflowOrder == null) {
-            List<Workflow> list = wfService.findByWFTypeWithoutStatus(OrderWF.class.getName());
-            if (CollectionUtils.isNotEmpty(list)) {
-                workflowOrder = list.get(0);
-                if (workflowOrder.isDisabled()) {
-                    disabledOrderWF = true;
-                }
-            } else {
-                workflowOrder = new Workflow();
-                workflowOrder.setWfType(OrderWF.class.getName());
-                workflowOrder.setCode(WF_ORDER);
-                wfService.create(workflowOrder);
-                WFTransition catchAllDefault = createCatchAll();
-                workflowOrder.getTransitions().add(catchAllDefault);
-            }
-        }
-        if (workflowOrder != null) {
-            operationList = wfTransitionService.listWFTransitionByStatusWorkFlow(OrderStatusEnum.ACKNOWLEDGED.toString(), OrderStatusEnum.IN_PROGRESS.toString(), workflowOrder);
-            if (CollectionUtils.isNotEmpty(operationList)) {
-                Collections.sort(operationList);
-                int indexCatchAll = operationList.size() - 1;
-                if (operationList.get(indexCatchAll).getPriority() == CATCH_ALL_PRIORITY) {
-                    catchAll = operationList.get(indexCatchAll);
-                    operationList.remove(indexCatchAll);
-                }
-            }
-            if (catchAll == null) {
-                catchAll = createCatchAll();
-            }
-        }
-        return workflowOrder;
-    }
-
     private WFTransition createCatchAll() throws BusinessException {
         WFTransition catchAllDefault = new WFTransition();
         catchAllDefault.setPriority(CATCH_ALL_PRIORITY);
         catchAllDefault.setDescription(CATCH_ALL);
-        catchAllDefault.setFromStatus(OrderStatusEnum.ACKNOWLEDGED.toString());
-        catchAllDefault.setToStatus(OrderStatusEnum.IN_PROGRESS.toString());
+        catchAllDefault.setFromStatus("ACKNOWLEDGED");
+        catchAllDefault.setToStatus("IN_PROGRESS");
         catchAllDefault.setWorkflow(workflowOrder);
         wfTransitionService.create(catchAllDefault);
         return catchAllDefault;

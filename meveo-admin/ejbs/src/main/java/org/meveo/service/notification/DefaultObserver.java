@@ -29,7 +29,6 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.InboundRequestReceived;
-import org.meveo.event.qualifier.LoggedIn;
 import org.meveo.event.qualifier.Processed;
 import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
@@ -40,16 +39,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.mediation.MeveoFtpFile;
-import org.meveo.model.notification.EmailNotification;
-import org.meveo.model.notification.InboundRequest;
-import org.meveo.model.notification.InstantMessagingNotification;
-import org.meveo.model.notification.JobTrigger;
-import org.meveo.model.notification.Notification;
-import org.meveo.model.notification.NotificationEventTypeEnum;
-import org.meveo.model.notification.NotificationHistory;
-import org.meveo.model.notification.NotificationHistoryStatusEnum;
-import org.meveo.model.notification.ScriptNotification;
-import org.meveo.model.notification.WebHook;
+import org.meveo.model.notification.*;
 import org.meveo.model.scripts.Function;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -82,6 +72,9 @@ public class DefaultObserver {
 
     @Inject
     private WebHookNotifier webHookNotifier;
+
+    @Inject
+    private WebNotifier webNotifier;
 
     @Inject
     private InstantMessagingNotifier imNotifier;
@@ -120,7 +113,7 @@ public class DefaultObserver {
     }
 
     @Asynchronous
-    private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) throws BusinessException, ELException {
+    private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) {
         log.debug("execute notification script: {}", function.getCode());
 
         try {
@@ -213,6 +206,10 @@ public class DefaultObserver {
             } else if (notif instanceof JobTrigger) {
                 MeveoUser lastCurrentUser = currentUser.unProxy();
                 jobTriggerLauncher.launch((JobTrigger) notif, entityOrEvent, lastCurrentUser);
+                
+            } else if (notif instanceof WebNotification) {
+                MeveoUser lastCurrentUser = currentUser.unProxy();
+                webNotifier.sendMessage((WebNotification) notif, entityOrEvent, context,lastCurrentUser);
             }
 
         } catch (Exception e1) {
@@ -291,7 +288,7 @@ public class DefaultObserver {
         checkEvent(NotificationEventTypeEnum.REJECTED, e);
     }
 
-    public void loggedIn(@Observes @LoggedIn User e) throws BusinessException {
+    public void loggedIn(@Observes User e) throws BusinessException {
         log.debug("Defaut observer : logged in class={} ", e.getClass().getName());
         checkEvent(NotificationEventTypeEnum.LOGGED_IN, e);
     }

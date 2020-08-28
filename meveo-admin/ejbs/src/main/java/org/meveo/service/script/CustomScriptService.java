@@ -83,6 +83,15 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.customEntities.CETConstants;
+import org.meveo.model.customEntities.CustomEntityCategory;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.customEntities.GraphQLQueryField;
+import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -96,6 +105,7 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -113,7 +123,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.9.0
+ * @version 6.10
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -145,10 +155,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private MavenConfigurationService mavenConfigurationService;
     
+    @Inject
+    private CustomEntityTemplateCompiler cetCompiler;
 
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
+    
+    private Map<String, List<File>> compiledCustomEntities = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
@@ -192,18 +206,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     protected void afterUpdateOrCreate(T script) {
         try {
+        	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
             if (scriptFile.exists()) {
                 String previousScript = MeveoFileUtils.readString(scriptFile.getAbsolutePath());
                 if (previousScript.equals(script.getScript())) {
                     // Don't commit if there are no difference
-                    return;
+                	commitFile = false;
                 }
             }
 
-            buildScriptFile(scriptFile, script);
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
-
+            if(commitFile) {
+	            buildScriptFile(scriptFile, script);
+	            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+            }
+            
         } catch (Exception e) {
             log.error("Error committing script", e);
         }
@@ -298,7 +315,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-            for (Accessor getter : script.getGetters()) {
+            for (Accessor getter : script.getGettersNullSafe()) {
                 try {
                     Object getterValue = engine.getClass().getMethod(getter.getMethodName()).invoke(engine);
                     context.put(getter.getName(), getterValue);
@@ -547,7 +564,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script instanceof ScriptInstance) {
             ScriptInstance scriptInstance = (ScriptInstance) script;
 
-            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependencies());
+            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
 
             synchronized (CLASSPATH_REFERENCE) {
                 mavenDependencies.stream().forEach(location -> {
@@ -647,9 +664,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes().stream().filter(e -> e instanceof ClassOrInterfaceDeclaration)
-                .map(e -> (ClassOrInterfaceDeclaration) e).findFirst().get();
+                .map(e -> (ClassOrInterfaceDeclaration) e)
+                .findFirst()
+                .get();
 
-        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers().stream().filter(e -> e instanceof MethodDeclaration).map(e -> (MethodDeclaration) e)
+        final List<MethodDeclaration> methods = classOrInterfaceDeclaration.getMembers()
+        		.stream().filter(e -> e instanceof MethodDeclaration)
+        		.map(e -> (MethodDeclaration) e)
                 .collect(Collectors.toList());
 
         final List<Accessor> setters = ScriptUtils.getSetters(methods);
@@ -658,33 +679,41 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         
         // Find getter and setter defined in super types
         for(ClassOrInterfaceType type : classOrInterfaceDeclaration.getExtendedTypes()) {
-        	String className = compilationUnit.getImports().stream()
-        		.filter(importEntry -> importEntry.getNameAsString().contains(type.getNameAsString()))
-        		.map(ImportDeclaration::getNameAsString)
-        		.findFirst()
-        		.orElse(type.getNameAsString());
+        	Class<?> typeClass = null;
         	
         	try {
-				Class<?> typeClass = Class.forName(className);
+        		typeClass = Class.forName(type.getNameAsString());
+        	} catch (Exception e) {
+            	String className = compilationUnit.getImports().stream()
+                		.filter(importEntry -> importEntry.getNameAsString().endsWith("." + type.getNameAsString()))
+                		.map(ImportDeclaration::getNameAsString)
+                		.findFirst()
+                		.get();
+            	try {
+    				typeClass = Class.forName(className);
+    			} catch (ClassNotFoundException e1) {
+    				try {
+    					typeClass = getScriptInterfaceWCompile(className).getScriptInterface().getClass();
+    				} catch (Exception e2) {
+    					throw new BusinessException(e2);
+    				}
+				}
+        	}
 				
-				// Build getters and setter of extended types
-				Arrays.stream(typeClass.getMethods())
-						.filter(m -> m.getName().startsWith(Accessor.SET))
-						.filter(m -> m.getParameterCount() == 1)
-						.filter(m -> m.getReturnType() == void.class)
-						.map(Accessor::new)
-						.forEach(setters::add);
-				
-				Arrays.stream(typeClass.getMethods())
-						.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
-						.filter(m -> m.getParameterCount() == 0)
-						.filter(m -> m.getReturnType() != void.class)
-						.map(Accessor::new)
-						.forEach(getters::add);
-				
-			} catch (ClassNotFoundException e1) {
-				log.warn("Can't find class {}", className);
-			}
+			// Build getters and setter of extended types
+			Arrays.stream(typeClass.getMethods())
+					.filter(m -> m.getName().startsWith(Accessor.SET))
+					.filter(m -> m.getParameterCount() == 1)
+					.filter(m -> m.getReturnType() == void.class)
+					.map(Accessor::new)
+					.forEach(setters::add);
+			
+			Arrays.stream(typeClass.getMethods())
+					.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
+					.filter(m -> m.getParameterCount() == 0)
+					.filter(m -> m.getReturnType() != void.class)
+					.map(Accessor::new)
+					.forEach(getters::add);
         }
 
         checkEndpoints(script, setters);
@@ -799,22 +828,25 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @SuppressWarnings("rawtypes")
     private List<File> supplementClassPathWithMissingImports(String javaSrc) {
-
-        List<File> files = new ArrayList<>();
+        Set<File> files = new HashSet<>();
 
         String regex = "import (.*?);";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(javaSrc);
         while (matcher.find()) {
             String className = matcher.group(1);
-            files.addAll(parseImportCustomEntity(pattern, className));
+            try {
+				files.addAll(parseImportCustomEntity(pattern, className));
+			} catch (BusinessException e1) {
+				log.error("Failed to parse custom entities references", e1);
+			}
             
             try {
                 if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
                 	Class clazz;
                 	
                 	try {
-	                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 	                    clazz = classLoader.loadClass(className);
 	                    
                 	} catch(ClassNotFoundException e) {
@@ -849,7 +881,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             }
         }
         
-        return files;
+        return new ArrayList<>(files);
     }
     
     /**
@@ -858,20 +890,51 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param pattern import patter
      * @param className class name of the cet
      * @return a list of CET java class file names.
+     * @throws BusinessException if a dependency file can't be retrieved
      */
-    private List<File> parseImportCustomEntity(Pattern pattern, String className) {
+    private List<File> parseImportCustomEntity(Pattern pattern, String className) throws BusinessException {
+    	// Skip if class is a meveo-model class
+    	// We must do that because generated entities have the same package than these classes
+    	List<Class<?>> modelClasses = List.of(
+			CustomEntityTemplate.class,
+			CustomEntityInstance.class,
+			CustomEntityCategory.class,
+			CETConstants.class,
+			CustomModelObject.class,
+			CustomRelationshipTemplate.class,
+			CustomTableRecord.class,
+			GraphQLQueryField.class,
+			Mutation.class
+		);
+    	
+    	boolean isModelClass = modelClasses.stream()
+    			.map(Class::getName)
+    			.anyMatch(className::equals);
+    	
+    	if(isModelClass) {
+    		return new ArrayList<>();
+    	}
     	
     	List<File> files = new ArrayList<>();
+
     	try {
             if (className.startsWith("org.meveo.model.customEntities")) {
                 String fileName = className.split("\\.")[4];
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + fileName + ".java");
+                File file = cetCompiler.getCETSourceFile(fileName);
                 String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 Matcher matcher2 = pattern.matcher(content);
                 while (matcher2.find()) {
                     String name = matcher2.group(1);
-                    if (name.startsWith("org.meveo.model.customEntities")) {
-                    	files.addAll(parseImportCustomEntity(pattern, name));
+                    if (name.startsWith("org.meveo.model.customEntities") && !name.equals(className)) {
+                    	var depFiles = compiledCustomEntities.computeIfAbsent(name, k -> {
+							try {
+								return parseImportCustomEntity(pattern, name);
+							} catch (Exception e) {
+								log.error("Failed to recursively parse dependencies for class {}", name, e);
+								return List.of();
+							}
+						});
+						files.addAll(depFiles);
                     }
                 }
                 
@@ -1025,19 +1088,40 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return null;
     }
 
-    public static void addLibrary(String location) {
+    /**
+     * Add a jar file to application class path
+     * 
+     * @param location location of the jar file
+     */
+    public void addLibrary(String location) {
         File file = new File(location);
-        URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Method method;
-
-        try {
-            URL url = file.toURI().toURL();
-            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            method.setAccessible(true);
-            method.invoke(classLoader, url);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        
+        if(systemClassLoader instanceof URLClassLoader) {
+			URLClassLoader classLoader = (URLClassLoader) systemClassLoader;
+	        Method method;
+	
+	        try {
+	            URL url = file.toURI().toURL();
+	            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+	            method.setAccessible(true);
+	            method.invoke(classLoader, url);
+	
+	        } catch (Exception e) {
+	            throw new RuntimeException(e);
+	        }
+	        
+        } else {
+	        try {
+	        	Method method = systemClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
+	            method.setAccessible(true);
+	            method.invoke(systemClassLoader, file.getAbsolutePath());
+	
+	        } catch (Exception e) {
+	        	log.warn("Libray {} not added to classpath", location);
+	        	log.warn("Can't access system class loader class, please restart JVM with the following options : --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED");
+	        }
         }
     }
 
@@ -1157,7 +1241,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             String name = matcher.group(1);
                             if (name.startsWith("org.meveo.model.customEntities")) {
                                 String cetName = name.split("\\.")[4];
-                                File cetFile = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "custom/entities/" + cetName + ".java");
+                                File cetFile = cetCompiler.getCETSourceFile(cetName);
                                 files.add(cetFile);
                                 continue;
                             }
@@ -1166,8 +1250,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         continue;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
-                    for (ScriptInstance instance : scriptInstance.getImportScriptInstances()) {
+                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstancesNullSafe())) {
+                    for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
                         String path = instance.getCode().replace('.', '/');
                         File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
                         if (fileImport.exists()) {

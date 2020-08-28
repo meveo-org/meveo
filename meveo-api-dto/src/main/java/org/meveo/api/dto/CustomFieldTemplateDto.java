@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -299,6 +300,8 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     
     @JsonIgnore
 	private boolean hasReferenceJpaEntity;
+    
+	private boolean audited = false;
 
     /**
      * Instantiates a new custom field template dto.
@@ -313,8 +316,9 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
      * @param cf the cf
      */
     public CustomFieldTemplateDto(CustomFieldTemplate cf) {
+    	audited = cf.isAudited();
         code = cf.getCode();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         description = cf.getDescription();
         languageDescriptions = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(cf.getDescriptionI18n());
         fieldType = cf.getFieldType();
@@ -335,7 +339,13 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         minValue = cf.getMinValue();
         maxValue = cf.getMaxValue();
         regExp = cf.getRegExp();
-        relationshipName = cf.getRelationshipName();
+        
+        if(cf.getRelationship() != null) {
+        	relationship = cf.getRelationship().getCode();
+        } else {
+            relationshipName = cf.getRelationshipName();
+        }
+        
         // cacheValue = cf.isCacheValue();
         // cacheValueTimeperiod = cf.getCacheValueTimeperiod();
         guiPosition = cf.getGuiPosition();
@@ -359,7 +369,7 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         }
 
         identifier = cf.isIdentifier();
-        storages = cf.getStorages();
+        storages = cf.getStoragesNullSafe();
         summary=cf.isSummary();
 
         saveOnExplorer = cf.isSaveOnExplorer();
@@ -1205,6 +1215,14 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 	 */
 	public void setRelationship(String relationship) {
 		this.relationship = relationship;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 	
 }

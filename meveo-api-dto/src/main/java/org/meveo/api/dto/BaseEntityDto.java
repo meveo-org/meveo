@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiModelProperty;
  * A base class for all API DTO classes
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.10.0
  **/
 @XmlTransient
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -39,6 +39,10 @@ public class BaseEntityDto implements Serializable {
 
 	public BaseEntityDto(BaseEntity e) {
 		id = e.getId();
+	}
+	
+	public String getCode() {
+		return null;
 	}
 
 	/**

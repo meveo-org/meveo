@@ -25,6 +25,8 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -85,6 +87,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.custom.PostgresReserverdKeywords;
 import org.meveo.util.MeveoParamBean;
 
 /**
@@ -128,10 +131,6 @@ public class NativePersistenceService extends BaseService {
 	@Inject
 	@Updated
 	private Event<CustomTableRecord> customTableRecordUpdate;
-
-    @Inject
-    @Updated
-    private Event<CustomEntityInstance> customEntityInstanceUpdate;
 
 	@Inject
 	@Removed
@@ -207,6 +206,10 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		try {
+			if (PostgresReserverdKeywords.isReserved(tableName)) {
+				tableName = "\"" + tableName + "\"";
+			}
+
 			Session session = sqlConnectionProvider.getSession(sqlConnectionCode);
 		
 			StringBuilder selectQuery = new StringBuilder();
@@ -219,6 +222,9 @@ public class NativePersistenceService extends BaseService {
 				selectQuery.append("uuid");
 			} else {
 				for (String field : selectFields) {
+					if (PostgresReserverdKeywords.isReserved(field)) {
+						field = "\"" + field.toLowerCase() + "\"";
+					}
 					selectQuery.append(field).append(", ");
 				}
 				selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
@@ -257,7 +263,11 @@ public class NativePersistenceService extends BaseService {
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
 	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
-		
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		if(queryValues.isEmpty()) {
 			throw new IllegalArgumentException("Query values should not be empty");
 		}
@@ -284,6 +294,9 @@ public class NativePersistenceService extends BaseService {
 		
 		AtomicInteger i = new AtomicInteger(1);
 		uniqueValues.forEach((key, value) -> {
+			if (PostgresReserverdKeywords.isReserved(key)) {
+				key = "\"" + key.toLowerCase() + "\"";
+			}
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
 				if(i.get() == 1) {
 					q.append("WHERE a." + key + " = ?\n");
@@ -410,13 +423,17 @@ public class NativePersistenceService extends BaseService {
 	 *                          updated with 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
-	protected String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+	public String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
 		if("null".equals(values.get(FIELD_ID))) {
 			values.remove(FIELD_ID);
 		}
 		
 		if (tableName == null) {
 			throw new BusinessException("Table name must not be null");
+		}
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
 		}
 
 		if (values == null || values.isEmpty()) {
@@ -434,10 +451,17 @@ public class NativePersistenceService extends BaseService {
 			StringBuilder findIdFields = new StringBuilder();
 
 			boolean first = true;
+			String fieldNameInSQL = null;
 			for (String fieldName : values.keySet()) {
 				// Ignore a null ID field
 				if (fieldName.equals(FIELD_ID) && values.get(fieldName) == null) {
 					continue;
+				}
+
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldNameInSQL = "\"" + fieldName.toLowerCase() + "\"";
+				} else {
+					fieldNameInSQL = fieldName;
 				}
 
 				if (!first) {
@@ -445,14 +469,14 @@ public class NativePersistenceService extends BaseService {
 					fieldValues.append(",");
 					findIdFields.append(" and ");
 				}
-				fields.append(fieldName);
+				fields.append(fieldNameInSQL);
 				if (values.get(fieldName) == null) {
 					fieldValues.append("NULL");
 					findIdFields.append(fieldName).append(" IS NULL");
 
 				} else {
 					fieldValues.append(" ? ");
-					findIdFields.append(fieldName).append(" = :").append(fieldName);
+					findIdFields.append(fieldNameInSQL).append(" = :").append(fieldName);
 				}
 				first = false;
 			}
@@ -505,13 +529,11 @@ public class NativePersistenceService extends BaseService {
 					// Serialize list values
 					if (fieldValue instanceof Collection) {
 						fieldValue = JacksonUtil.toString(fieldValue);
-					}
-
-					if (fieldValue instanceof File) {
+					} else if(fieldValue instanceof Map) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof File) {
 						fieldValue = ((File) fieldValue).getAbsolutePath();
-					}
-					
-					if(fieldValue instanceof EntityReferenceWrapper) {
+					} else if(fieldValue instanceof EntityReferenceWrapper) {
 						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
 					}
 
@@ -546,6 +568,10 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void create(String sqlConnectionCode, String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
 
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		List<Map<String, Object>> values = ceis.stream().map(e -> e.getCfValuesAsValues()).collect(Collectors.toList());
 
 		if (values == null || values.isEmpty()) {
@@ -562,6 +588,9 @@ public class NativePersistenceService extends BaseService {
 
 		boolean first = true;
 		for (String fieldName : firstValue.keySet()) {
+			if (PostgresReserverdKeywords.isReserved(fieldName)) {
+				fieldName = "\"" + fieldName.toLowerCase() + "\"";
+			}
 
 			if (!first) {
 				fields.append(",");
@@ -667,6 +696,10 @@ public class NativePersistenceService extends BaseService {
 			throws BusinessException {
 
 		String tableName = cei.getTableName();
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		
@@ -689,6 +722,13 @@ public class NativePersistenceService extends BaseService {
 			sql.append("UPDATE ").append(tableName).append(" SET ");
 			boolean first = true;
 			for (String fieldName : values.keySet()) {
+				String fieldNameInSQL = null;
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldNameInSQL = "\"" + fieldName.toLowerCase() + "\"";
+				} else {
+					fieldNameInSQL = fieldName;
+				}
+
 				if (fieldName.equals(FIELD_ID)) {
 					continue;
 				}
@@ -697,10 +737,10 @@ public class NativePersistenceService extends BaseService {
 					sql.append(",");
 				}
 				if (values.get(fieldName) == null) {
-					sql.append(fieldName).append(" = NULL");
+					sql.append(fieldNameInSQL).append(" = NULL");
 
 				} else {
-					sql.append(fieldName).append(" = ? ");
+					sql.append(fieldNameInSQL).append(" = ? ");
 				}
 				first = false;
 			}
@@ -733,13 +773,9 @@ public class NativePersistenceService extends BaseService {
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
-			record.setCetCode(tableName);
+			record.setCetCode(cei.getTableName());
 
 			customTableRecordUpdate.fire(record);
-
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.fromMap(customEntityTemplateService.findByCode(tableName), values);
-			customEntityInstance.setCetCode(tableName);
-			customEntityInstanceUpdate.fire(customEntityInstance);
 
 		} catch (Exception e) {
 			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);
@@ -760,6 +796,15 @@ public class NativePersistenceService extends BaseService {
 		// Serialize collections
 		if (value instanceof Collection) {
 			value = JacksonUtil.toString(value);
+		}
+
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
+		if (PostgresReserverdKeywords.isReserved(fieldName)) {
+			fieldName = "\"" + fieldName.toLowerCase() + "\"";
 		}
 		
 		StringBuilder sql = new StringBuilder();
@@ -782,7 +827,7 @@ public class NativePersistenceService extends BaseService {
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid(uuid);
-			record.setCetCode(tableName);
+			record.setCetCode(cetCode);
 			customTableRecordUpdate.fire(record);
 
 		} catch (Exception e) {
@@ -799,7 +844,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void disable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -811,7 +858,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void disable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
 	}
 
@@ -823,7 +872,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void enable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -836,6 +887,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode)
 			.createNativeQuery("update " + tableName + " set disabled=0 where uuid= ?")
 			.setParameter(1, uuid)
@@ -849,6 +903,9 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName) throws BusinessException {
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName).executeUpdate();
 
 	}
@@ -861,11 +918,16 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
+
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 
 		for (String id : ids) {
 			CustomTableRecord record = new CustomTableRecord();
-			record.setCetCode(tableName);
+			record.setCetCode(cetCode);
 			record.setUuid(id);
 			customTableRecordRemoved.fire(record);
 		}
@@ -879,13 +941,17 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
+		String cetCode = tableName;
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"";
+		}
 
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
 			.setParameter(1, uuid)
 			.executeUpdate();
 
 		CustomTableRecord record = new CustomTableRecord();
-		record.setCetCode(tableName);
+		record.setCetCode(cetCode);
 		record.setUuid(uuid);
 		customTableRecordRemoved.fire(record);
 	}
@@ -1012,6 +1078,10 @@ public class NativePersistenceService extends BaseService {
 	@SuppressWarnings({ "rawtypes" })
 	public QueryBuilder getQuery(String tableName, PaginationConfiguration config) {
 		String startQuery;
+
+		if (PostgresReserverdKeywords.isReserved(tableName)) {
+			tableName = "\"" + tableName + "\"" ;
+		}
 
 		// If no fetch fields are defined, return everyinthing
 		if (config == null || config.getFetchFields() == null) {
@@ -1583,17 +1653,13 @@ public class NativePersistenceService extends BaseService {
 	 * @throws SQLException error assigning the parameter value
 	 */
 	protected void setParameterValue(PreparedStatement ps, int parameterIndex, Object value) throws SQLException {
-		
-		// Serialize list values
-		if (value instanceof Collection) {
+		if(value instanceof Map) {
 			value = JacksonUtil.toString(value);
-		}
-
-		if (value instanceof File) {
+		} else if (value instanceof Collection) {
+			value = JacksonUtil.toString(value);
+		} else if (value instanceof File) {
 			value = ((File) value).getAbsolutePath();
-		}
-		
-		if(value instanceof EntityReferenceWrapper) {
+		} if(value instanceof EntityReferenceWrapper) {
 			EntityReferenceWrapper erw = (EntityReferenceWrapper) value;
 			if (customFieldTemplateService.isReferenceJpaEntity(erw.getClassnameCode())) {
 				value = erw.getId();
@@ -1609,6 +1675,14 @@ public class NativePersistenceService extends BaseService {
 		} else if (value instanceof Date) {
 			Date date = (Date) value;
 			ps.setDate(parameterIndex, new java.sql.Date(date.getTime()));
+			
+		} else if (value instanceof LocalDateTime) {
+			LocalDateTime date = LocalDateTime.parse(value.toString());
+			ps.setDate(parameterIndex, java.sql.Date.valueOf(date.toLocalDate()));
+			
+		} else if (value instanceof LocalDate) {
+			LocalDate date = LocalDate.parse(value.toString());
+			ps.setDate(parameterIndex, java.sql.Date.valueOf(date));
 
 		} else if(value instanceof Instant)  { 
 			Instant instant = (Instant) value;
@@ -1739,7 +1813,7 @@ public class NativePersistenceService extends BaseService {
 
                     // Replace cft code with db field name if needed
                     String dbFieldname = CustomFieldTemplate.getDbFieldname(fieldName);
-                    if (!fieldName.equals(dbFieldname)) {
+                    if (!fieldName.equalsIgnoreCase(dbFieldname)) {
                         key = key.replaceAll(fieldName, dbFieldname);
                     }
                     valuesConverted.put(key, value);
@@ -1768,7 +1842,11 @@ public class NativePersistenceService extends BaseService {
     			}
     			
     		} else if(v instanceof EntityReferenceWrapper) {
-    			serializedValues.put(k, ((EntityReferenceWrapper) v).getUuid());
+    			if (!StringUtils.isBlank(((EntityReferenceWrapper) v).getUuid())) {
+					serializedValues.put(k, ((EntityReferenceWrapper) v).getUuid());
+				} else {
+					serializedValues.put(k, ((EntityReferenceWrapper) v).getId());
+				}
     			
     		}
     	});

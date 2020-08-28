@@ -24,7 +24,8 @@ import java.util.Objects;
  * Configuration of an endpoint allowing to use a technical service.
  *
  * @author clement.bareth
- * @since 01.02.2019
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Entity
 @Table(name = "endpoint_path_parameter")
@@ -43,7 +44,7 @@ public class EndpointPathParameter {
 
     @PrePersist @PreUpdate
     private void prePersist(){
-        position = endpointParameter.getEndpoint().getPathParameters().indexOf(this);
+        position = endpointParameter.getEndpoint().getPathParametersNullSafe().indexOf(this);
     }
 
     @Override

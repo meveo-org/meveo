@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+	<changeSet author="EdwardPLegaspi"
+		id="20200626 - Github#16: Add web notification">
+		<createTable tableName="adm_notif_webnotification">
+			<column name="id" type="bigint">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="adm_notif_webnotification_pkey" />
+			</column>
+			<column name="id_strategy" type="varchar(25)"></column>
+			<column name="notif_data_el" type="text"></column>
+			<column name="publication_allowed" type="${type.boolean}" defaultValueNumeric="0"></column>
+			<column name="persist_history" type="${type.boolean}" defaultValueNumeric="0"></column>
+		</createTable>
+	</changeSet>
+
+
+	<changeSet id="#4284 - FunctionCategory" author="Clément Bareth">
+		<createTable tableName="function_category">
+			<column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="version" type="INT4" />
+            <column name="created" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="disabled" type="INT4"/>
+            <column name="updated" type="datetime"/>
+            <column name="creator" type="varchar(100)"/>
+            <column name="updater" type="varchar(100)"/>
+            <column name="description" type="varchar(255)"/>
+            <column name="code" type="varchar(255)"/>
+		</createTable>
+		<addColumn tableName="meveo_function">
+			<column name="category_id" type="bigint">
+				<constraints references="function_category(id)" foreignKeyName="fk_category_id"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#16 - Add order to endpoint roles" author="EdwardPLegaspi">
+		<addColumn tableName="service_endpoint_roles">
+			<column name="pos" type="int" defaultValueNumeric="0" defaultValue="0"></column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#48 - Drop unused roles" author="EdwardPLegaspi">
+		<delete tableName="adm_role_permission">
+			<where>role_id IN (-5, -6)</where>
+		</delete>
+		<delete tableName="adm_user_role">
+			<where>role_id IN (-5, -6)</where>
+		</delete>
+		<delete tableName="adm_role">
+			<where>id IN (-5, -6)</where>
+		</delete>
+	</changeSet>
+	
+	<changeSet id="#65 : Endpoint - Add possibility to unsecure an endpoint" author="Clément Bareth">
+		<addColumn tableName="service_endpoint">
+			<column name="secured" defaultValue="1" type="${type.boolean}">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Endpoint - Add option to disable path parameters check - #74" author="Clément Bareth">
+		<addColumn tableName="service_endpoint">
+			<column name="check_path_params" defaultValue="1" type="${type.boolean}">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="[Endpoint] Move permission handling from keycloak to meveo #72" author="Clément Bareth">
+        <insert tableName="adm_permission_category">
+        	<column name="id" value="ENDPOINT"></column>
+        </insert>
+        <insert tableName="adm_permission">
+            <column name="id" valueNumeric="-33" />
+            <column name="name" value="Execute endpoint" />
+            <column name="permission" value="execute-endpoint" />
+            <column name="category" value="ENDPOINT" />
+        </insert>
+        <sql>
+        	INSERT INTO entity_permission
+        	SELECT -1, 'execute-endpoint', endpoint.id, 'WHITE', -33 FROM service_endpoint as endpoint
+        </sql>
+	</changeSet>
+	
+	<changeSet id="#72 : remove roles column" author="Clément Bareth">
+		<dropTable tableName="service_endpoint_roles"/>
+	</changeSet>
+	
+	<changeSet id="Add code UK on crt table" author="Clément Bareth">
+		<addUniqueConstraint columnNames="code" tableName="cust_crt"/>
+	</changeSet>
+
+	<changeSet id="Create module files table for module release" author="Phu Bach">
+		<createTable tableName="module_release_files">
+			<column name="module_release_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column name="module_release_file" type="varchar(255)">
+			</column>
+		</createTable>
+		<addPrimaryKey columnNames="module_release_id, module_release_file" constraintName="module_release_files_pkey" tableName="module_release_files" />
+	</changeSet>
+</databaseChangeLog>

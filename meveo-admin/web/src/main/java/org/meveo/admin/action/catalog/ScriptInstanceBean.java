@@ -37,6 +37,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -48,6 +50,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.Accessor;
@@ -77,7 +80,7 @@ import com.github.javaparser.ast.CompilationUnit;
  * create, edit, view, delete operations). It works with Manaty custom JSF components.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.10
  */
 @Named
 @ViewScoped
@@ -222,8 +225,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (execRolesDM == null) {
             List<Role> perksSource = roleService.getAllRoles();
             List<Role> perksTarget = new ArrayList<>();
-            if (getEntity().getExecutionRoles() != null) {
-                perksTarget.addAll(getEntity().getExecutionRoles());
+            if (getEntity().getExecutionRolesNullSafe() != null) {
+                perksTarget.addAll(getEntity().getExecutionRolesNullSafe());
             }
             perksSource.removeAll(perksTarget);
             execRolesDM = new DualListModel<>(perksSource, perksTarget);
@@ -236,8 +239,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         if (sourcRolesDM == null) {
             List<Role> perksSource = roleService.getAllRoles();
             List<Role> perksTarget = new ArrayList<>();
-            if (getEntity().getSourcingRoles() != null) {
-                perksTarget.addAll(getEntity().getSourcingRoles());
+            if (getEntity().getSourcingRolesNullSafe() != null) {
+                perksTarget.addAll(getEntity().getSourcingRolesNullSafe());
             }
             perksSource.removeAll(perksTarget);
             sourcRolesDM = new DualListModel<>(perksSource, perksTarget);
@@ -295,15 +298,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     @Override
     @ActionMethod
+    @Transactional(TxType.REQUIRES_NEW)
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        // Make sure we don't work on a persistent entity
+    	getPersistenceService().detach(entity);
+
         String code = entity.getCode();
-        
-        // Update script references
-        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity().getScript());
-        getEntity().getImportScriptInstances().clear();
-        if (CollectionUtils.isNotEmpty(importedScripts)) {
-            getEntity().getImportScriptInstances().addAll(importedScripts);
-        }
         
         if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             code = CustomScriptService.getFullClassname(entity.getScript());
@@ -316,15 +316,15 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         }
         
         // Update roles
-        getEntity().getExecutionRoles().clear();
+        getEntity().getExecutionRolesNullSafe().clear();
         if (execRolesDM != null) {
-            getEntity().getExecutionRoles().addAll(roleService.refreshOrRetrieve(execRolesDM.getTarget()));
+            getEntity().getExecutionRolesNullSafe().addAll(roleService.refreshOrRetrieve(execRolesDM.getTarget()));
         }
         
         // Update roles
-        getEntity().getSourcingRoles().clear();
+        getEntity().getSourcingRolesNullSafe().clear();
         if (sourcRolesDM != null) {
-            getEntity().getSourcingRoles().addAll(roleService.refreshOrRetrieve(sourcRolesDM.getTarget()));
+            getEntity().getSourcingRolesNullSafe().addAll(roleService.refreshOrRetrieve(sourcRolesDM.getTarget()));
         }
         
         // Update inputs
@@ -334,8 +334,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 if (scriptIO.isEditable()) {
                     scriptInputs.add(scriptIO.getName());
                 }
-                getEntity().getScriptInputs().clear();
-                getEntity().getScriptInputs().addAll(scriptInputs);
+                getEntity().getScriptInputsNullSafe().clear();
+                getEntity().getScriptInputsNullSafe().addAll(scriptInputs);
             }
         }
         
@@ -346,8 +346,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 if (scriptIO.isEditable()) {
                     scriptOutputs.add(scriptIO.getName());
                 }
-                getEntity().getScriptOutputs().clear();
-                getEntity().getScriptOutputs().addAll(scriptOutputs);
+                getEntity().getScriptOutputsNullSafe().clear();
+                getEntity().getScriptOutputsNullSafe().addAll(scriptOutputs);
             }
         }
         
@@ -359,10 +359,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                     scriptMavens.add(mavenDependency);
                 }
             }
-            getEntity().getMavenDependencies().clear();
-            getEntity().getMavenDependencies().addAll(scriptMavens);
+            getEntity().getMavenDependenciesNullSafe().clear();
+            getEntity().getMavenDependenciesNullSafe().addAll(scriptMavens);
         } else {
-        	getEntity().getMavenDependencies().clear();
+        	getEntity().getMavenDependenciesNullSafe().clear();
         }
 
         boolean isUnique = false;
@@ -398,8 +398,28 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
             return null;
         }
 
-        super.saveOrUpdate(true);
-
+        // Update script references
+        List<ScriptInstance> importedScripts = scriptInstanceService.populateImportScriptInstance(getEntity().getScript());
+        getEntity().getImportScriptInstancesNullSafe().clear();
+        if (CollectionUtils.isNotEmpty(importedScripts)) {
+            getEntity().getImportScriptInstancesNullSafe().addAll(importedScripts);
+        }
+        
+        // Manage entity
+        // super.saveOrUpdate(false);
+        var dto = scriptInstanceApi.toDto(entity);
+        try {
+			scriptInstanceApi.createOrUpdate(dto);
+			
+			if(entity.isTransient()) {
+				entity = scriptInstanceService.findByCode(dto.getCode());
+				setObjectId(entity.getId());
+			}
+			
+		} catch (MeveoApiException e) {
+			throw new BusinessException(e);
+		}
+        
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
 
         return result;
@@ -476,9 +496,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                     }
                 }
             }
-            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptInputs())) {
+            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptInputsNullSafe())) {
                 ScriptIO input;
-                for (String item : entity.getScriptInputs()) {
+                for (String item : entity.getScriptInputsNullSafe()) {
                     input = new ScriptIO();
                     input.setName(item);
                     inputs.add(input);
@@ -491,7 +511,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public List<ScriptIO> getOutputs() {
         if (CollectionUtils.isEmpty(outputs)) {
             if (entity.getId() != null && entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                final List<Accessor> getters = entity.getGetters();
+                final List<Accessor> getters = entity.getGettersNullSafe();
                 if (CollectionUtils.isNotEmpty(getters)) {
                     for (Accessor accessor : getters) {
                         outputs.add(createIO(accessor.getName()));
@@ -499,9 +519,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
                 }
             }
 
-            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptOutputs())) {
+            if (entity.getId() != null && CollectionUtils.isNotEmpty(entity.getScriptOutputsNullSafe())) {
                 ScriptIO output;
-                for (String item : entity.getScriptOutputs()) {
+                for (String item : entity.getScriptOutputsNullSafe()) {
                     output = new ScriptIO();
                     output.setName(item);
                     outputs.add(output);
@@ -649,8 +669,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
     public List<MavenDependency> getMavenDependencies() {
         if (mavenDependencies == null) {
-            if (entity.getMavenDependencies() != null) {
-                mavenDependencies = new ArrayList<>(entity.getMavenDependencies());
+            if (entity.getMavenDependenciesNullSafe() != null) {
+                mavenDependencies = new ArrayList<>(entity.getMavenDependenciesNullSafe());
                 return mavenDependencies;
             } else {
                 return new ArrayList<>();

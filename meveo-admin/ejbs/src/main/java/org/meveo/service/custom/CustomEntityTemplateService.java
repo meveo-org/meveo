@@ -20,6 +20,8 @@
 package org.meveo.service.custom;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,21 +41,26 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.JsonUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
@@ -61,9 +68,12 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.EntityCustomizationUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -103,6 +113,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     private CustomEntityCategoryService customEntityCategoryService;
 
+    @Inject
+    private EntityCustomActionService entityCustomActionService;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
     private static boolean useCETCache = true;
 
     private final static String CLASSES_DIR = "/classes";
@@ -133,10 +150,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         
 		ParamBean paramBean = paramBeanFactory.getInstance();
-		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
-			cet.setCustomEntityCategory(cec);
-		}
                 
         super.create(cet);
         
@@ -246,11 +259,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         // Synchronize custom fields storages with CET available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
         	cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
-            if (cft.getStorages() != null) {
-                for (DBStorageType storage : new ArrayList<>(cft.getStorages())) {
+            if (cft.getStoragesNullSafe() != null) {
+                for (DBStorageType storage : new ArrayList<>(cft.getStoragesNullSafe())) {
                     if (!cet.getAvailableStorages().contains(storage)) {
                         log.info("Remove storage '{}' from CFT '{}' of CET '{}'", storage, cft.getCode(), cet.getCode());
-                        cft.getStorages().remove(storage);
+                        cft.getStoragesNullSafe().remove(storage);
                         customFieldTemplateService.update(cft);
                     }
                 }
@@ -266,11 +279,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return cetUpdated;
     }
+    
+    @Transactional(TxType.REQUIRES_NEW)
+    public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
+    }
 
     @Override
     public void remove(CustomEntityTemplate cet) throws BusinessException {
 
         Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+        Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
@@ -288,9 +308,15 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             neo4jService.removeUUIDIndexes(cet);
         }
 
+        for (EntityCustomAction entityCustomAction : customActionMap.values()) {
+            entityCustomActionService.remove(entityCustomAction.getId());
+        }
+
         customFieldsCache.removeCustomEntityTemplate(cet);
 
-        super.remove(cet);
+        if(getEntityManager().contains(cet)) {
+        	super.remove(cet);
+        }
 
     }
 
@@ -581,17 +607,52 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return null;
 	}
 
-	public void createWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
-
-		customEntityCategoryService.create(customEntityCategory);
-		cet.setCustomEntityCategory(customEntityCategory);
-		create(cet);
-	}
-
 	public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
 
 		customEntityCategoryService.create(customEntityCategory);
 		cet.setCustomEntityCategory(customEntityCategory);
 		return update(cet);
 	}
+
+    @SuppressWarnings("unchecked")
+	public String getJsonSchemaContent(String cetCode) throws IOException {
+
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
+        File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
+        byte[] mapData = Files.readAllBytes(file.toPath());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
+        
+        // Replace references in allOf
+        List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
+        allOf.forEach(item -> {
+    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
+        });
+
+        Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
+        if (items != null) {
+            for (Map.Entry<String, Object> item : items.entrySet()) {
+                Map<String, Object> values = (Map<String, Object>) item.getValue();
+                if (values.containsKey("$ref")) {
+                    String ref = (String) values.get("$ref");
+                    if (ref != null) {
+                        values.put("$ref", ref.replace("./", ""));
+                    }
+                } else {
+                    if (values.get("type") != null && values.get("type").equals("array")) {
+                        Map<String, Object> value = (Map<String, Object>) values.get("items");
+                        if (value.containsKey("$ref")) {
+                            String ref = (String) value.get("$ref");
+                            if (ref != null) {
+                                value.put("$ref", ref.replace("./", ""));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        String json = JsonUtils.toJson(jsonMap, true);
+        return json;
+    }
 }

@@ -65,9 +65,8 @@ import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.catalog.BusinessServiceModelDto;
-import org.meveo.api.dto.catalog.ServiceTemplateDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.exception.ActionForbiddenException;
@@ -75,13 +74,13 @@ import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
-import org.meveo.model.catalog.BusinessServiceModel;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.module.MeveoModule;
@@ -116,8 +115,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * @author Clément Bareth
  * @author Tyshan Shi(tyshan@manaty.net)
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @author Wassim Drira
- * @lastModifiedVersion 6.9.0
+ * @version 6.10
  */
 @Stateless
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
@@ -162,14 +160,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModule install(MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
+	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
-		meveoModuleItemInstaller.install(meveoModule, moduleDto);
-		return meveoModule;
+		try {
+			return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
+		} catch (ModuleInstallFail e) {
+    		log.warn("Failed to install module {}, uninstalling items", meveoModule);
+    		
+    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
+    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
+    		}
+    		
+    		throw e.getException();
+		}
 	}
 
 	public void registerModulePackage(String packageName) {
@@ -177,9 +184,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		Set<Class<?>> moduleItemClasses = reflections.getTypesAnnotatedWith(ModuleItem.class);
 
 		for (Class<?> aClass : moduleItemClasses) {
-			String type = aClass.getAnnotation(ModuleItem.class).value();
-			MeveoModuleItemInstaller.MODULE_ITEM_TYPES.put(type, aClass);
-			log.debug("Registering module item type {} from class {}", type, aClass);
+			MeveoModuleItemInstaller.MODULE_ITEM_TYPES.put(aClass.getSimpleName(), aClass);
+			log.debug("Registering module item type {} from class {}", aClass.getSimpleName(), aClass);
 		}
 	}
 
@@ -434,7 +440,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public void uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
+	public MeveoModule uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
 
 		if (StringUtils.isBlank(code)) {
 			missingParameters.add("code");
@@ -453,14 +459,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (!meveoModule.isInstalled()) {
 			throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
 		}
-		meveoModuleService.uninstall(meveoModule, remove);
+		
+		return meveoModuleItemInstaller.uninstall(meveoModule, remove);
 	}
 
-	private void parseModuleInfoOnlyFromDtoBSM(BusinessServiceModel bsm, BusinessServiceModelDto bsmDto) {
-
-		bsm.setDuplicatePricePlan(bsmDto.isDuplicatePricePlan());
-		bsm.setDuplicateService(bsmDto.isDuplicateService());
-	}
+	
 
 	public void parseModuleInfoOnlyFromDto(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 
@@ -495,10 +498,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 
-		// Converting subclasses of MeveoModuleDto class
-		if (moduleDto instanceof BusinessServiceModelDto) {
-			parseModuleInfoOnlyFromDtoBSM((BusinessServiceModel) meveoModule, (BusinessServiceModelDto) moduleDto);
-		}
 
 		// Extract module script used for installation and module activation
 		ScriptInstance scriptInstance = null;
@@ -609,9 +608,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		Class<? extends MeveoModuleDto> dtoClass = MeveoModuleDto.class;
-		if (module instanceof BusinessServiceModel) {
-			dtoClass = BusinessServiceModelDto.class;
-		}
 
 		MeveoModuleDto moduleDto;
 		try {
@@ -706,11 +702,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 
-		// Finish converting subclasses of MeveoModule class
-		if (module instanceof BusinessServiceModel) {
-			businessServiceModelToDto((BusinessServiceModel) module, (BusinessServiceModelDto) moduleDto);
-
-		}
 		
 		if (module.getPatches() != null && !module.getPatches().isEmpty()) {
 			moduleDto.setPatches(module.getPatches().stream().map(e -> modulePatchApi.toDto(e)).collect(Collectors.toList()));
@@ -719,21 +710,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return moduleDto;
 	}
 
-	/**
-	 * Finish converting BusinessServiceModel object to DTO representation
-	 * 
-	 * @param bsm BusinessServiceModel object to convert
-	 * @param dto BusinessServiceModel object DTO representation (as result of base MeveoModule object conversion)
-	 */
-	private void businessServiceModelToDto(BusinessServiceModel bsm, BusinessServiceModelDto dto) {
-
-		if (bsm.getServiceTemplate() != null) {
-			dto.setServiceTemplate(new ServiceTemplateDto(bsm.getServiceTemplate(), entityToDtoConverter.getCustomFieldsDTO(bsm.getServiceTemplate(), true)));
-		}
-		dto.setDuplicateService(bsm.isDuplicateService());
-		dto.setDuplicatePricePlan(bsm.isDuplicatePricePlan());
-
-	}
 
 	@Override
 	public MeveoModuleDto toDto(MeveoModule entity) {
@@ -745,7 +721,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
-	public MeveoModule fromDto(MeveoModuleDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
+	public MeveoModule fromDto(MeveoModuleDto dto) throws MeveoApiException {
 		try {
 			MeveoModule meveoModule = new MeveoModule();
 			parseModuleInfoOnlyFromDto(meveoModule, dto);
@@ -865,10 +841,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		List<MeveoModuleDto> modules = getModules(json);
 
-		// Import files contained in each modules
-		importFileFromModule(modules);
+		try {
+			checkModuleDependencies(modules);
+			// Import files contained in each modules
+			importFileFromModule(modules);
 
-		importEntities(modules, overwrite);
+			importEntities(modules, overwrite);
+		} catch (EntityDoesNotExistsException e) {
+			throw new EntityDoesNotExistsException(e.getMessage());
+		}
 	}
 
 	public void importJSON(List<MeveoModuleDto> modules, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
@@ -1008,7 +989,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
-	public void importZip(String fileName, InputStream inputStream, boolean overwrite) {
+	public void importZip(String fileName, InputStream inputStream, boolean overwrite) throws EntityDoesNotExistsException {
 		super.importZip(fileName, inputStream, overwrite);
 	}
 
@@ -1199,5 +1180,45 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		} else {
 			throw new ValidationException("Failed to release module. Next version is less than the current version " + module.getCurrentVersion());
 		}
+	}
+
+	private void checkModuleDependencies(List<MeveoModuleDto> modules) throws EntityDoesNotExistsException {
+		List<MeveoModule> meveoModules = meveoModuleService.list();
+		List<String> moduleCode = new ArrayList<>();
+		if (!meveoModules.isEmpty()) {
+			for (MeveoModule meveoModule : meveoModules) {
+				moduleCode.add(meveoModule.getCode());
+			}
+		}
+		for (MeveoModuleDto meveoModuleDto : modules) {
+			if (!meveoModuleDto.getModuleDependencies().isEmpty()) {
+				if (!moduleCode.isEmpty()) {
+					for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
+						if (!moduleCode.contains(dependencyDto.getCode())) {
+							throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() +" doesn't exists locally.");
+						} else {
+							MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode());
+							List<String> versions = new ArrayList<>();
+							versions.add(meveoModule.getCurrentVersion());
+							if (!meveoModule.getReleases().isEmpty()) {
+								for (ModuleRelease moduleRelease : meveoModule.getReleases()) {
+									versions.add(moduleRelease.getCurrentVersion());
+								}
+							}
+							if (!versions.contains(dependencyDto.getCurrentVersion())) {
+								throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() + " with version " + dependencyDto.getCurrentVersion() +" doesn't exists locally.");
+							}
+						}
+					}
+				} else {
+					throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency doesn't exists locally.");
+				}
+			}
+		}
+	}
+
+	@Override
+	public void remove(MeveoModuleDto dto) throws MeveoApiException, BusinessException {
+		uninstall(dto.getCode(), MeveoModule.class, true);
 	}
 }

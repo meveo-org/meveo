@@ -1,22 +1,34 @@
 package org.meveo.json.schema;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
+import org.everit.json.schema.CombinedObjectSchema;
+import org.everit.json.schema.CombinedSchema;
 import org.everit.json.schema.ObjectSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.internal.JSONPrinter;
 
-public class RootObjectSchema extends ObjectSchema {
+public class RootObjectSchema extends CombinedObjectSchema {
 
-	public static class Builder extends ObjectSchema.Builder {
+	public static class Builder extends CombinedObjectSchema.Builder {
 	
 	    private final Map<String, Schema> definitions = new LinkedHashMap<>();
 	    private String version = "http://json-schema.org/draft-06/schema";
+	    private CombinedSchema combinedSchema;
 		
         @Override
         public RootObjectSchema build() {
             return new RootObjectSchema(this);
+        }
+        
+        public Builder combinedSchema(CombinedSchema schema) {
+        	this.combinedSchema = schema;
+        	return this;
         }
         
         public Builder addDefinition(String name, Schema schema) {
@@ -41,6 +53,10 @@ public class RootObjectSchema extends ObjectSchema {
         	other.getSchemaDependencies().forEach((k, v) -> schemaDependency(k, v));
         	schemaOfAdditionalProperties(other.getSchemaOfAdditionalProperties());
         	propertyNameSchema(other.getPropertyNameSchema());
+        	
+        	if(other instanceof CombinedObjectSchema) {
+        		combinedSchema(((CombinedObjectSchema) other).getCombinedSchema());
+        	}
         	
         	
         	return this
@@ -206,6 +222,7 @@ public class RootObjectSchema extends ObjectSchema {
 	
 	public RootObjectSchema(Builder builder) {
 		super(builder);
+		setCombinedSchema(builder.combinedSchema);
 		this.definitions = Collections.unmodifiableMap( new LinkedHashMap<>(builder.definitions) );
 		this.version = builder.version;
 	}

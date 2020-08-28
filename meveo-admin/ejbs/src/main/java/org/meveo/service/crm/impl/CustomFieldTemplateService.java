@@ -84,7 +84,19 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         useCFTCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCFT", "true"));
     }
     
-    public boolean exists(String code, String appliesTo) {
+    @Override
+	protected void beforeUpdateOrCreate(CustomFieldTemplate entity) throws BusinessException {
+		super.beforeUpdateOrCreate(entity);
+		
+		if(entity.getRelationship() != null) {
+			if(entity.getRelationship().getId() != null) {
+				CustomRelationshipTemplate crt = getEntityManager().find(CustomRelationshipTemplate.class, entity.getRelationship().getId());
+				entity.setRelationship(crt);
+			}
+		}
+	}
+
+	public boolean exists(String code, String appliesTo) {
     	try { 
     		return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
     			+ "code = :code and applies_to = :appliesTo")
@@ -254,6 +266,11 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         checkIdentifierTypeAndUniqueness(cft);
 
+        //  if CFT is of type STRING
+        if (cft.getFieldType() == CustomFieldTypeEnum.STRING &&(cft.getMaxValue()== null || cft.getMaxValue() == 0)) {
+            cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
+        }
+
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
         	checkDateFormat(cft);
@@ -330,7 +347,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			
-			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStorages() != null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
+			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStoragesNullSafe() != null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
@@ -356,7 +373,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 	            customTableCreatorService.updateField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
-			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStorages()!= null && cachedCft.getStorages().contains(DBStorageType.SQL)) {
+			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStoragesNullSafe()!= null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
 				customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}

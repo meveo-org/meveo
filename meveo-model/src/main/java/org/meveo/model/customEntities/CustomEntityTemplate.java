@@ -78,6 +78,8 @@ import org.meveo.model.scripts.ScriptInstance;
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate>, CustomModelObject {
 
 	private static final long serialVersionUID = 8281478284763353310L;
+	
+	public static final String AUDIT_PREFIX = "audit_";
 
 	/**
 	 * Prefix for CustomEntityTemplate. If this prefix is changed, the hard-coded
@@ -119,7 +121,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
@@ -129,6 +131,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Column(name = "available_storages", columnDefinition = "TEXT")
 	@Type(type = "jsonList")
 	private List<DBStorageType> availableStorages = new ArrayList<>();
+	
+	@Type(type = "numeric_boolean")
+	@Column(name = "audited")
+	private boolean audited = false;
 
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
@@ -456,6 +462,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		}
 
 		return getSqlStorageConfiguration().isStoreAsTable();
+	}	
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 
 }

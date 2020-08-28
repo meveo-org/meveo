@@ -341,7 +341,7 @@ public class Neo4jService implements CustomPersistenceService {
             // Fallback to when entity is defined as primitive but does not have associated CFT
             if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
                 CustomFieldTemplate valueCft = cetFields.get("value");
-                if (valueCft == null || valueCft.getStorages() == null || !valueCft.getStorages().contains(DBStorageType.NEO4J)) {
+                if (valueCft == null || valueCft.getStoragesNullSafe() == null || !valueCft.getStoragesNullSafe().contains(DBStorageType.NEO4J)) {
                     valueCft = new CustomFieldTemplate();
                     CustomEntityTemplateUtils.turnIntoPrimitive(cet, valueCft);
                     customFieldTemplateService.create(valueCft);
@@ -461,7 +461,8 @@ public class Neo4jService implements CustomPersistenceService {
 
             final List<String> labels = getAdditionalLabels(cet);
             if (applicableConstraints.isEmpty()) {
-                if (uniqueFields.isEmpty() && neo4jDao.findNodeById(neo4JConfiguration, cet.getCode(), uuid) == null) {
+                var existingNode = neo4jDao.findNodeById(neo4JConfiguration, cet.getCode(), uuid);
+				if (uniqueFields.isEmpty() && (existingNode == null || existingNode.isEmpty())) {
                     String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels, uuid);
                     
                     if(nodeId != null) {
@@ -1116,12 +1117,12 @@ public class Neo4jService implements CustomPersistenceService {
             try {
 
                 // Check that field should be stored in Neo4J
-                if(cft.getStorages() == null){
+                if(cft.getStoragesNullSafe() == null){
                     log.error("No storages configured for CFT {}#{}", cft.getAppliesTo(), cft.getCode());
                     continue;
                 }
 
-                if(!cft.getStorages().contains(DBStorageType.NEO4J)){
+                if(!cft.getStoragesNullSafe().contains(DBStorageType.NEO4J)){
                     continue;
                 }
 
@@ -1618,7 +1619,9 @@ public class Neo4jService implements CustomPersistenceService {
 		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
 		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
-
+		if(result == null) {
+			return 0;
+		}
 		return result.size();
     }
 

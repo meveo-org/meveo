@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.dto.dwh.MeasurableQuantityDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
@@ -25,8 +26,8 @@ import org.meveo.service.storage.BinaryStorageConfigurationService;
 import org.meveo.service.storage.RepositoryService;
 
 /**
- * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Stateless
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
@@ -53,8 +54,14 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	}
 
 	@Override
-	public Repository fromDto(RepositoryDto dto) throws EntityDoesNotExistsException {
-		return toRepository(dto, null);
+	public Repository fromDto(RepositoryDto dto) throws MeveoApiException {
+
+		try {
+			return toRepository(dto, null);
+
+		} catch (EntityDoesNotExistsException e) {
+			throw new MeveoApiException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -63,7 +70,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	}
 
 	public Repository toRepository(RepositoryDto source, Repository target) throws EntityDoesNotExistsException {
-		
+
 		if (target == null) {
 			target = new Repository();
 		}
@@ -79,7 +86,7 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 				} else {
 					throw new EntityDoesNotExistsException(Repository.class, source.getParentCode());
 				}
-				
+
 			} else {
 				target.setParentRepository(null);
 			}
@@ -87,14 +94,16 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 		if (source.getBinaryStorageConfigurationCode() != null) {
 			if (!StringUtils.isBlank(source.getBinaryStorageConfigurationCode())) {
-				BinaryStorageConfiguration binaryStorageConfiguration = binaryStorageConfigurationService.findByCode(source.getBinaryStorageConfigurationCode());
+				BinaryStorageConfiguration binaryStorageConfiguration = binaryStorageConfigurationService
+						.findByCode(source.getBinaryStorageConfigurationCode());
 				if (binaryStorageConfiguration != null) {
 					target.setBinaryStorageConfiguration(binaryStorageConfiguration);
 
 				} else {
-					throw new EntityDoesNotExistsException(BinaryStorageConfiguration.class, source.getBinaryStorageConfigurationCode());
+					throw new EntityDoesNotExistsException(BinaryStorageConfiguration.class,
+							source.getBinaryStorageConfigurationCode());
 				}
-				
+
 			} else {
 				target.setBinaryStorageConfiguration(null);
 			}
@@ -102,14 +111,16 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 		if (source.getNeo4jConfigurationCode() != null) {
 			if (!StringUtils.isBlank(source.getNeo4jConfigurationCode())) {
-				Neo4JConfiguration neo4jConfiguration = neo4jConfigurationService.findByCode(source.getNeo4jConfigurationCode());
+				Neo4JConfiguration neo4jConfiguration = neo4jConfigurationService
+						.findByCode(source.getNeo4jConfigurationCode());
 				if (neo4jConfiguration != null) {
 					target.setNeo4jConfiguration(neo4jConfiguration);
 
 				} else {
-					throw new EntityDoesNotExistsException(Neo4JConfiguration.class, source.getNeo4jConfigurationCode());
+					throw new EntityDoesNotExistsException(Neo4JConfiguration.class,
+							source.getNeo4jConfigurationCode());
 				}
-				
+
 			} else {
 				target.setNeo4jConfiguration(null);
 			}
@@ -117,14 +128,15 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 		if (source.getSqlConfigurationCode() != null) {
 			if (!StringUtils.isBlank(source.getSqlConfigurationCode())) {
-				SqlConfiguration sqlConfiguration = sqlConfigurationService.findByCode(source.getSqlConfigurationCode());
+				SqlConfiguration sqlConfiguration = sqlConfigurationService
+						.findByCode(source.getSqlConfigurationCode());
 				if (sqlConfiguration != null) {
 					target.setSqlConfiguration(sqlConfiguration);
 
 				} else {
 					throw new EntityDoesNotExistsException(SqlConfiguration.class, source.getSqlConfigurationCode());
 				}
-				
+
 			} else {
 				target.setSqlConfiguration(null);
 			}
@@ -186,7 +198,8 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 	public List<RepositoryDto> findAll() {
 		List<Repository> entities = repositoryService.list();
 
-		return entities != null ? entities.stream().map(RepositoryDto::new).collect(Collectors.toList()) : new ArrayList<>();
+		return entities != null ? entities.stream().map(RepositoryDto::new).collect(Collectors.toList())
+				: new ArrayList<>();
 	}
 
 	public void remove(String code, Boolean forceDelete) throws BusinessException {
@@ -212,5 +225,13 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		}
 
 		repositoryService.removeHierarchy(entity);
+	}
+	
+	@Override
+	public void remove(RepositoryDto dto) throws MeveoApiException, BusinessException {
+		var entity = repositoryService.findByCode(dto.getCode());
+		if(entity != null) {
+			repositoryService.remove(entity);
+		}
 	}
 }

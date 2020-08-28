@@ -626,11 +626,12 @@
 								rendered="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY or customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.CHILD_ENTITY}" />
 						</h:panelGroup>
 						<h:panelGroup id="relationshipPanel">
+						
 							<hftl:decorateFormField
 								label="#{messages['customFieldTemplate.relationshipCode']}"
 								fieldId="relationship"
 								field="relationship" required="true" componentWidth="100"
-								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY}">
+								rendered="#{customFieldTemplateBean.storagesDM.target.contains(DBStorageType.NEO4J) and customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.ENTITY and not empty customFieldTemplateBean.entity.entityClazz}">
 							
 								<p:selectOneMenu id="relationship"
 									value="#{customFieldTemplateBean.entity.relationship}" required="true">
@@ -640,6 +641,8 @@
 										itemLabel="#{elem.code}" />
 									<hftl:objectConverter/>
 								</p:selectOneMenu>
+								
+								<p:commandButton value="+" oncomplete="PF('createRelationshipDialog').show();"/>
 									
 							</hftl:decorateFormField>
 							
@@ -918,6 +921,9 @@
 												componentWidth="15" />
 										</h:panelGroup>
 									</h:panelGroup>
+									<p:outputPanel id="auditedPanel">
+										<hftl:formField label="#{messages['customizedEntities.audited']}" id="audited" field="audited" />
+									</p:outputPanel>
 								</h:panelGrid>
 							</h:panelGrid>
 						</p:fieldset>
@@ -1058,33 +1064,51 @@
 			</h:panelGrid>
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
-				<hf:formButtons backingBean="#{entityCustomActionBean}"
-					showBackButton="false" ajaxSubmit="true"
-					submitUpdate="@form :fieldsForm:fields" edit="true"
-					killConversationOnSave="false">
-					<p:commandButton value="#{messages['commons.disable']}"
-						rendered="#{not empty entityCustomActionBean.entity.id and entityCustomActionBean.entity.active}"
-						actionListener="#{customEntityTemplateBean.refreshFields}"
-						action="#{entityCustomActionBean.disable}"
-						update="@form :fieldsForm:fields">
-						<p:confirm header="#{messages['commons.disable']}"
-							message="#{messages['commons.confirmDisable']}" />
-					</p:commandButton>
+				<!--<hf:formButtons backingBean="#{entityCustomActionBean}"-->
+				<!--showBackButton="false" ajaxSubmit="true"-->
+				<!--submitUpdate="@form :fieldsForm:fields" edit="true"-->
+				<!--killConversationOnSave="false">-->
+				<p:remoteCommand action="#{customEntityTemplateBean.refreshFields}"
+								 name="refreshFields" update=":fieldsForm:fields"/>
+				<p:commandButton value="#{messages['action.save']}"
+								 onclick="delayDisable(this);"
+								 oncomplete="if (args &amp;&amp; !args.validationFailed){refreshFields();PF('actionDialog').hide();}"
+								 actionListener="#{entityCustomActionBean.saveOrUpdateForPopup}"
+								 icon="ui-icon-check" process="@form" update="@form">
+					<f:param name="edit" value="true"/>
+				</p:commandButton>
+				<p:commandButton value="#{messages['commons.disable']}"
+								 rendered="#{not empty entityCustomActionBean.entity.id and entityCustomActionBean.entity.active}"
+								 actionListener="#{customEntityTemplateBean.refreshFields}"
+								 action="#{entityCustomActionBean.disable}"
+								 update="@form :fieldsForm:fields">
+					<p:confirm header="#{messages['commons.disable']}"
+							   message="#{messages['commons.confirmDisable']}"/>
+				</p:commandButton>
 
-					<p:commandButton value="#{messages['commons.enable']}"
-						rendered="#{not empty entityCustomActionBean.entity.id and entityCustomActionBean.entity.disabled}"
-						actionListener="#{customEntityTemplateBean.refreshFields}"
-						action="#{entityCustomActionBean.enable}"
-						update="@form :fieldsForm:fields">
-						<p:confirm header="#{messages['commons.enable']}"
-							message="#{messages['commons.confirmEnable']}" />
-					</p:commandButton>
+				<p:commandButton value="#{messages['commons.enable']}"
+								 rendered="#{not empty entityCustomActionBean.entity.id and entityCustomActionBean.entity.disabled}"
+								 actionListener="#{customEntityTemplateBean.refreshFields}"
+								 action="#{entityCustomActionBean.enable}"
+								 update="@form :fieldsForm:fields">
+					<p:confirm header="#{messages['commons.enable']}"
+							   message="#{messages['commons.confirmEnable']}"/>
+				</p:commandButton>
 
-					<p:commandButton value="#{messages['commons.close']}"
-						onclick="PF('actionDialog').hide()"
-						actionListener="#{customEntityTemplateBean.refreshFields}"
-						update=":fieldsForm:fields" process="@this" />
-				</hf:formButtons>
+				<p:commandButton value="#{messages['commons.close']}"
+								 onclick="PF('actionDialog').hide()"
+								 actionListener="#{customEntityTemplateBean.refreshFields}"
+								 update=":fieldsForm:fields" process="@this"/>
+				<hf:clearButton id="resetButtonCC" label="#{messages['action.reset']}"
+								edit="true" rendered="#{entityCustomActionBean.canUserUpdateEntity()}"
+								resetAction="#{entityCustomActionBean.resetFormEntity()}" includeViewParams="true"/>
+				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
+								 action="#{entityCustomActionBean.deleteWithBack}" immediate="true" update="@form"
+								 rendered="#{entityCustomActionBean.entity.id!=null and entityCustomActionBean.canUserUpdateEntity()}">
+					<p:confirm header="#{messages['commons.confirmationHeader']}"
+							   message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
+				</p:commandButton>
+				<!--</hf:formButtons>-->
 			</ui:define>
 		</hftl:formPanel>
 	</p:dialog>
@@ -1205,6 +1229,47 @@
 				</ui:define>
 			</hftl:formPanel>
 		</p:scrollPanel>
+	</p:dialog>
+	
+	<p:dialog responsive="true" 
+		header="Create relationship" 
+		id="createRelationshipDialog"
+		widgetVar="createRelationshipDialog">
+		
+		<hftl:decorateFormPanel formId="createCrtForm">
+		
+			<ui:define name="fields">
+				<hftl:decorateFormField fieldId="code" label="Code">
+					<p:inputText id="code" size="50" value="#{customFieldTemplateBean.relationshipToCreate.code}"/>
+				</hftl:decorateFormField>
+				
+				<hftl:decorateFormField fieldId="title" label="Title">
+					<p:inputText id="title" size="50" value="#{customFieldTemplateBean.relationshipToCreate.name}"/>
+				</hftl:decorateFormField>
+							
+				<hftl:decorateFormField fieldId="unique" label="Unique">
+					<p:selectBooleanCheckbox id="unique" value="#{customFieldTemplateBean.relationshipToCreate.unique}"/>
+				</hftl:decorateFormField>
+			</ui:define>
+			
+			<ui:param name="buttons" value="true" />
+			
+			<ui:define name="buttons">
+				<p:commandButton value="Create"
+					id="submit"
+					actionListener="#{customFieldTemplateBean.createRelationsip}" 
+					update="cftForm:relationship createCrtForm"
+					resetValues="true"
+					oncomplete="PF('createRelationshipDialog').hide()">
+						<p:resetInput target="createCrtForm" />
+				</p:commandButton>
+				<p:commandButton value="#{messages['commons.close']}" update="@form"
+				 oncomplete="PF('createRelationshipDialog').hide()">
+					<p:resetInput target="@form" />
+				</p:commandButton>
+			</ui:define>
+			
+		</hftl:decorateFormPanel>
 	</p:dialog>
 
 </ui:composition>

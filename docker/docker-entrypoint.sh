@@ -39,35 +39,48 @@ if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
     export WILDFLY_LOG_FILE_LEVEL=DEBUG
 fi
 
+DOCKER_GATEWAY_HOST=$(ip route|awk '/default/ { print $3 }')
+
 # Keycloak parameters
 if [ "x${KEYCLOAK_URL}" = "x" ]; then
-    if [ "x${DOMAIN_NAME}" = "x" ]; then
-        export KEYCLOAK_URL="http://localhost:8080/auth"
-    else
-        export KEYCLOAK_URL="https://${DOMAIN_NAME}/auth"
-    fi
-    export KEYCLOAK_FIXED_HOSTNAME=${DOMAIN_NAME:-localhost}
+    export KEYCLOAK_URL="http://${DOCKER_GATEWAY_HOST}:8080/auth"
 else
-    export KEYCLOAK_URL=${KEYCLOAK_URL}
     domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
-    export KEYCLOAK_FIXED_HOSTNAME=${domain}
+    if [ "$domain" = "localhost" ]; then
+        # Replace the address 'localhost' by docker gateway address
+        KEYCLOAK_URL=$(echo "${KEYCLOAK_URL/localhost/$DOCKER_GATEWAY_HOST}")
+    fi
+    export KEYCLOAK_URL=${KEYCLOAK_URL}
 fi
+# export KEYCLOAK_URL=${KEYCLOAK_URL:-http://localhost:8080/auth}
 export KEYCLOAK_REALM=${KEYCLOAK_REALM:-meveo}
 export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
 
 
-# Apply the template standalone.xml for meveo environment
-if [ -f ${JBOSS_HOME}/templates/standalone.xml ]; then
-    info "Apply the template standalone.xml for meveo environment"
-    cp -rf ${JBOSS_HOME}/templates/standalone.xml ${JBOSS_HOME}/standalone/configuration/standalone.xml
+## DB init & update
+# DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
+# if [ -f "${DB_CHANGELOG_FILE}" ]; then
+#     info "Update meveo database using liquibase"
+#     /opt/jboss/liquibase/liquibase \
+#         --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+#         --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+#         --changeLogFile=${DB_CHANGELOG_FILE} \
+#         update \
+#         -Ddb.schema=public
+# fi
+
+
+# Reset standalone-full.xml file
+if [ -f ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org ]; then
+    cp -rf ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org ${JBOSS_HOME}/standalone/configuration/standalone-full.xml
 else
-    ERROR=1; exit_with_error "No template configuration file : ${JBOSS_HOME}/templates/standalone.xml"
+    ERROR=1; exit_with_error "No default configuration file : ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org"
 fi
 
-# Configure standalone.xml
+# Configure standalone-full.xml
 if [ -f ${JBOSS_HOME}/cli/standalone-configuration.cli ]; then
-    info "Configure standalone.xml"
+    info "Configure standalone-full.xml"
     ${JBOSS_HOME}/bin/jboss-cli.sh --file=${JBOSS_HOME}/cli/standalone-configuration.cli
 fi
 
@@ -115,11 +128,19 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
         WILDFLY_CUSTOM_XMX="2048m"
     fi
     JAVA_OPTS="-Xms${WILDFLY_CUSTOM_XMS} -Xmx${WILDFLY_CUSTOM_XMX}"
-    JAVA_OPTS="${JAVA_OPTS} -XX:+UseContainerSupport -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
-    JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XX:+AggressiveOpts -XshowSettings:vm -XX:+UseContainerSupport"
+    JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
+    JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XshowSettings:vm"
     JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=${JBOSS_MODULES_SYSTEM_PKGS} -Djava.awt.headless=true"
+    JAVA_OPTS="${JAVA_OPTS} --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED"
 else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
+fi
+
+#
+# The extra options to pass to the Java VM.
+#
+if [ "x${JAVA_EXTRA_OPTS}" != "x" ]; then
+    JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
 fi
 
 export JAVA_OPTS=$JAVA_OPTS
@@ -140,12 +161,12 @@ if [ ! -z "${KEYCLOAK_ADMIN_USER}" -a ! -z "${KEYCLOAK_ADMIN_PASSWORD}" ]; then
     fi
 fi
 
-BIND_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
+WILDFLY_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
-    BIND_OPTS="${BIND_OPTS} --debug ${WILDFLY_DEBUG_PORT}"
+    WILDFLY_OPTS="${WILDFLY_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi
 
 info "Starting Wildfly"
-exec ${JBOSS_HOME}/bin/standalone.sh ${BIND_OPTS}
+exec ${JBOSS_HOME}/bin/standalone.sh ${WILDFLY_OPTS} -c standalone-full.xml
 
 exit 0

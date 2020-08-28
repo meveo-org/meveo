@@ -2,7 +2,8 @@ package org.meveo.model.security;
 
 public enum DefaultPermissionCategory {
 	
-	GIT("GIT");
+	GIT("GIT"),
+	ENDPOINT("ENDPOINT");
 
 	private String name;
 

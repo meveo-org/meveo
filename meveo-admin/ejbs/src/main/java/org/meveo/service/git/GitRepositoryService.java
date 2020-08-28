@@ -25,6 +25,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
@@ -224,11 +225,11 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.create(entity);
     }
 
+    @Transactional
     @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ }, orRole = DefaultRole.GIT_ADMIN)
     public GitRepository create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
         gitClient.create(entity, failIfExist, username, password);
         super.create(entity);
-        
         return entity;
     }
 

@@ -30,6 +30,7 @@ import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author clement.bareth
- * @version 6.9.0
+ * @version 6.11.0
  * @since 6.0.0
  */
 @Named
@@ -124,10 +125,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
 	}
-	
+
 	@Override
 	public CustomEntityTemplate initEntity() {
-		
+
 		CustomEntityTemplate entity = super.initEntity();
 		entity.getCustomEntityCategory();
 		return entity;
@@ -299,9 +300,24 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	@Override
 	@ActionMethod
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-		
-		String editView = super.saveOrUpdate(killConversation);
-		return editView;
+
+		String message = entity.isTransient() ? "save.successful" : "update.successful";
+
+		try {
+			entity = saveOrUpdate(entity);
+			messages.info(new BundleKey("messages", message));
+			if (killConversation) {
+				endConversation();
+			}
+		} catch (Exception e) {
+			if (e.getMessage().endsWith("is a PostgresQL reserved keyword")) {
+				messages.error(new BundleKey("messages", "error.createCetWithKeyWord"), entity.getCode());
+			} else {
+				messages.error("Entity can't be saved. Please retry.");
+				log.error("Can't update entity", e);
+			}
+		}
+		return getEditViewName();
 	}
 
 	/**
@@ -1267,10 +1283,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		if (entity != null && !getMeveoModule().equals(entity)) {
 			Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 			BusinessEntity businessEntity = (BusinessEntity) entity;
-			MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode());
+			MeveoModule module = meveoModuleService.findById(getMeveoModule().getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
 				module.addModuleItem(item);
+			} else {
+				messages.error(new BundleKey("messages", "customizedEntities.cetExisted.error"), businessEntity.getCode(), module.getCode());
+				return;
 			}
 
 			for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
@@ -1281,9 +1300,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				}
 			}
 			try {
-				meveoModuleService.update(module);
-			} catch (BusinessException e) {
-
+				if (!StringUtils.isBlank(module.getModuleSource())) {
+					module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+				}
+				meveoModuleService.mergeModule(module);
+				messages.info(new BundleKey("messages", "customizedEntities.addToModule.successfull"), module.getCode());
+			} catch (Exception e) {
+				messages.error(new BundleKey("messages", "customizedEntities.addToModule.error"), module.getCode());
 			}
 		}
 	}
@@ -1371,14 +1394,18 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public void setParameters(List<Map<String, String>> parameters) {
 		this.parameters = parameters;
 	}
-	
+
 	@Override
 	protected List<String> getFormFieldsToFetch() {
 		return Arrays.asList("customEntityCategory");
 	}
-	
+
 	@Override
 	protected List<String> getListFieldsToFetch() {
 		return Arrays.asList("customEntityCategory");
+	}
+
+	public boolean showAuditedField() {
+		return getAvailableStoragesDM().getTarget().contains(DBStorageType.SQL);
 	}
 }

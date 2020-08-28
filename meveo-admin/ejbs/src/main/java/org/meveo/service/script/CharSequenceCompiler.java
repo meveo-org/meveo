@@ -1,19 +1,48 @@
 package org.meveo.service.script;
 
-import org.apache.commons.io.FileUtils;
-import org.meveo.service.custom.CustomEntityTemplateService;
-
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.tools.*;
+import javax.tools.DiagnosticCollector;
+import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+
+import org.apache.commons.io.FileUtils;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Compile a String or other {@link CharSequence}, returning a Java
@@ -63,6 +92,8 @@ public class CharSequenceCompiler<T> {
 
    // The FileManager which will store source and class "files".
    private final FileManagerImpl javaFileManager;
+   
+   static final Logger LOGGER = LoggerFactory.getLogger(CharSequenceCompiler.class);
 
    /**
     * Construct a new instance which delegates to the named class loader.
@@ -221,25 +252,46 @@ public class CharSequenceCompiler<T> {
                javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, source);
             }
          }
+         
+         options.add("-d");
+         options.add(scriptsDir.getAbsolutePath());
 
          // Get a CompliationTask from the compiler and compile the sources
-         final CompilationTask task = compiler.getTask(null, javaFileManager, diagnostics,
-                 options, null, sources);
+         final CompilationTask task = compiler.getTask(
+        		 null, 
+        		 javaFileManager, 
+        		 diagnostics,
+                 options, 
+                 null, 
+                 sources
+             );
 
          final Boolean result = task.call();
+         
          if (result == null || !result.booleanValue()) {
             throw new CharSequenceCompilerException("Compilation failed.", classes.keySet(), diagnostics);
+         
          } else {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+            
+            
             Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(fileList);
-            compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits).call();
-            for (File file : fileList) {
-               file.delete();
-            }
+            compiler.getTask(null, 
+            		fileManager, 
+            		diagnostics, 
+            		options, 
+            		null, 
+            		compilationUnits)
+            	.call();
+//            for (File file : fileList) {
+//               file.delete();
+//            }
          }
+         
       } catch (IOException e) {
       }
+      
       try {
          // For each class name in the inpput map, get its compiled
          // class and put it in the output map
@@ -415,8 +467,7 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
     *      FileObject)
     */
    @Override
-   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName,
-         Kind kind, FileObject outputFile) throws IOException {
+   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName, Kind kind, FileObject outputFile) throws IOException {
       JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
       classLoader.add(qualifiedName, file);
       return file;
@@ -581,10 +632,23 @@ final class ClassLoaderImpl extends ClassLoader {
 	@Override
 	protected Class<?> findClass(final String qualifiedClassName) throws ClassNotFoundException {
 		JavaFileObject file = classes.get(qualifiedClassName);
-		if (file != null) {
-			byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
-			return defineClass(qualifiedClassName, bytes, 0, bytes.length);
+		
+		try {
+			if (file != null) {
+				byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
+				return defineClass(qualifiedClassName, bytes, 0, bytes.length);
+			} 
+		} catch (NoClassDefFoundError nf) {
+			try (URLClassLoader urlCl = new URLClassLoader(
+					new URL[] { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() },
+					this.getParent()
+			)){
+				return urlCl.loadClass(qualifiedClassName);
+			} catch (Exception e) {
+				CharSequenceCompiler.LOGGER.error("Can't load class", e);
+			}
 		}
+		
 		// Workaround for "feature" in Java 6
 		// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6434149
 		try {

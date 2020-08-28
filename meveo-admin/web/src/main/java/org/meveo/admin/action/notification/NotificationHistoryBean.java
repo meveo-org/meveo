@@ -20,7 +20,7 @@ import org.meveo.model.notification.WebHook;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.NotificationHistoryService;
-import org.meveo.service.notification.NotificationService;
+import org.meveo.service.notification.ScriptNotificationService;
 import org.primefaces.model.LazyDataModel;
 
 /**
@@ -28,6 +28,10 @@ import org.primefaces.model.LazyDataModel;
  * that provides almost all common methods to handle entities filtering/sorting
  * in datatable, their create, edit, view, delete operations). It works with
  * Manaty custom JSF components.
+ */
+/**
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  */
 @Named
 @ViewScoped
@@ -42,7 +46,7 @@ public class NotificationHistoryBean extends BaseBean<NotificationHistory> {
 	private transient ResourceBundle resourceMessages;
 
 	@Inject
-	private NotificationService notificationService;
+	private ScriptNotificationService notificationService;
 	
 
 

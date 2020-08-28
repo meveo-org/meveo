@@ -29,13 +29,19 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.jackson.deserializers.CustomEntityInstanceDeserializer;
+import org.meveo.jackson.serializers.CustomEntityInstanceSerializer;
 import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * @author Clément Bareth
@@ -52,6 +58,8 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 @Table(name = "cust_cei", uniqueConstraints = @UniqueConstraint(columnNames = { "code", "cet_code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "cust_cei_seq"), })
+@JsonSerialize(using = CustomEntityInstanceSerializer.class)
+@JsonDeserialize(using = CustomEntityInstanceDeserializer.class)
 public class CustomEntityInstance extends BusinessCFEntity {
 
 	private static final long serialVersionUID = 8281478284763353310L;
@@ -70,6 +78,9 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private String tableName;
+
+	@Transient
+	private CustomFieldValues cfValuesOld = new CustomFieldValues();
 
 	@Override
 	public boolean equals(Object obj) {
@@ -125,6 +136,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	public void setCet(CustomEntityTemplate cet) {
 		this.cet = cet;
+		if(cet != null) this.cetCode = cet.getCode();
 	}
 
 	/**
@@ -143,4 +155,25 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}
+
+	public CustomFieldValues getCfValuesOld() {
+		return cfValuesOld;
+	}
+	
+	public <T> T get(String key) {
+		return (T) this.getCfValues().getValue(key);
+	}
+
+	public CustomFieldValues getCfValuesOldNullSafe() {
+		if (cfValuesOld == null) {
+			cfValuesOld = new CustomFieldValues();
+		}
+
+		return cfValuesOld;
+	}
+
+	public void setCfValuesOld(CustomFieldValues cfValuesOld) {
+		this.cfValuesOld = cfValuesOld;
+	}
+	
 }

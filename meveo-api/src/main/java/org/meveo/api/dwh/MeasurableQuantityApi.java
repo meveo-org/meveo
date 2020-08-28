@@ -26,6 +26,8 @@ import org.meveocrm.services.dwh.MeasuredValueService;
 
 /**
  * @author Andrius Karpavicius
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.10
  **/
 @Stateless
 public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, MeasurableQuantityDto> {
@@ -198,26 +200,30 @@ public class MeasurableQuantityApi extends BaseCrudApi<MeasurableQuantity, Measu
 
 	@Override
 	public MeasurableQuantityDto toDto(MeasurableQuantity entity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MeasurableQuantityDto(entity);
 	}
 
 	@Override
-	public MeasurableQuantity fromDto(MeasurableQuantityDto dto) throws org.meveo.exceptions.EntityDoesNotExistsException {
-		// TODO Auto-generated method stub
-		return null;
+	public MeasurableQuantity fromDto(MeasurableQuantityDto dto) throws MeveoApiException {
+		return fromDTO(dto, new MeasurableQuantity());
 	}
 
 	@Override
 	public IPersistenceService<MeasurableQuantity> getPersistenceService() {
-		// TODO Auto-generated method stub
-		return null;
+		return measurableQuantityService;
 	}
 
 	@Override
 	public boolean exists(MeasurableQuantityDto dto) {
-		// TODO Auto-generated method stub
-		return false;
+		return measurableQuantityService.findByCode(dto.getCode()) != null;
+	}
+
+	@Override
+	public void remove(MeasurableQuantityDto dto) throws MeveoApiException, BusinessException {
+		var mq = measurableQuantityService.findByCode(dto.getCode());
+		if(mq != null) {
+			measurableQuantityService.remove(mq);
+		}
 	}
 	
 }

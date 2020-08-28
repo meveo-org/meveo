@@ -6,7 +6,7 @@
 		<artifactId>meveo-admin</artifactId>
 		<groupId>org.meveo</groupId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.9.0</version>
+		<version>6.10.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>meveo-admin-web</artifactId>
 	<name>Meveo Admin Web Application - Web Module</name>
@@ -139,7 +139,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.4</version>
+				<version>3.1.0</version>
 				<configuration>
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
@@ -147,6 +147,10 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
@@ -169,8 +173,8 @@
 		</dependency>
 		<!-- Libraries included in JBoss -->
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -186,8 +190,8 @@
 		<!-- <scope>provided</scope> -->
 		<!-- </dependency> -->
 		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -212,7 +216,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sun.mail</groupId>
-			<artifactId>javax.mail</artifactId>
+			<artifactId>jakarta.mail</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -300,11 +304,10 @@
 			<version>19.2.0.1</version>
 		</dependency>
 		<dependency>
-		    <groupId>io.undertow</groupId>
-		    <artifactId>undertow-servlet</artifactId>
-		    <scope>provided</scope>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-servlet</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 	<profiles>
 		<profile>
@@ -336,9 +339,9 @@
 			</activation>
 		</profile>
 		<profile>
-			<!-- An optional Arquillian testing profile that executes tests in your
+			<!-- An optional Arquillian testing profile that executes tests in your 
 				JBoss AS instance -->
-			<!-- This profile will start a new JBoss AS instance, and execute the
+			<!-- This profile will start a new JBoss AS instance, and execute the 
 				test, shutting it down when done -->
 			<!-- Run with: mvn clean test -Parq-jbossas-managed -->
 			<id>arq-jbossas-managed</id>

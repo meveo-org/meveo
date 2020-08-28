@@ -1,31 +1,59 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.meveo</groupId>
-        <artifactId>meveo</artifactId>
-        <relativePath>../pom.xml</relativePath>
-        <version>6.9.0</version>
-    </parent>
+	<parent>
+		<groupId>org.meveo</groupId>
+		<artifactId>meveo</artifactId>
+		<relativePath>../pom.xml</relativePath>
+		<version>6.10.0-SNAPSHOT</version>
+	</parent>
 
-    <artifactId>meveo-admin</artifactId>
-    <packaging>pom</packaging>
-    <name>Meveo Admin Web Application</name>
+	<artifactId>meveo-admin</artifactId>
+	<packaging>pom</packaging>
+	<name>Meveo Admin Web Application</name>
 
-    <modules>
-        <module>ejbs</module>
-        <module>web</module>
-    </modules>
+	<modules>
+		<module>ejbs</module>
+		<module>web</module>
+	</modules>
 
-    <properties>
-        <manaty.filterFile>meveo-admin-filter-${env}.properties</manaty.filterFile>
-    </properties>
+	<properties>
+		<manaty.filterFile>meveo-admin-filter-${env}.properties</manaty.filterFile>
+	</properties>
 
-    <build>
-        <filters>
-            <filter>${project.basedir}/../src/filters/${manaty.filterFile}</filter>
-        </filters>
-    </build>
+	<build>
+		<filters>
+			<filter>${project.basedir}/../src/filters/${manaty.filterFile}</filter>
+		</filters>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4.1</version>
+				<executions>
+					<execution>
+						<id>enforce-banned-dependencies</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<bannedDependencies>
+									<excludes>
+										<exclude>xml-apis:xml-apis</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

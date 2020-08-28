@@ -38,6 +38,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.api.module.OnDuplicate;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.module.ModuleRs;
 import org.meveo.model.module.MeveoModule;
@@ -148,7 +149,8 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.install(moduleDto);
+        	//TODO: add option in query
+            moduleApi.install(moduleDto, OnDuplicate.OVERWRITE);
 
         } catch (Exception e) {
             processException(e, result);
@@ -232,7 +234,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 	}
 
     @Override
-    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) {
+    public void importZip(@NotNull ModuleUploadForm uploadForm, boolean overwrite) throws EntityDoesNotExistsException {
         moduleApi.importZip(uploadForm.getFilename(), uploadForm.getData(), overwrite);
     }
 

@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"  xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org" 
+    xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:event type="preRenderView" listener="#{categoryTestBean.preRenderView}" />
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
+				<p:menuitem value="Tests"/>
+				<p:menuitem outcome="categoryTests" value="By category" />
+			</p:breadCrumb>
+		</h:form>     
+        <hftl:searchPanel label="#{messages['jobInstance.search']}" 
+        	backingBean="#{categoryTestBean}" 
+        	ajaxUpdateIds="timersBean_results_panel"
+        	renderNewButton="false">
+        	
+            <hftl:searchField label="Code" field="category.code" />
+            <hftl:searchField label="Stability" field="stable" />
+            
+            <hftl:decorateFormField fieldId="includeDisabled" label="Include disabled test">
+	            <p:selectBooleanCheckbox
+	            	id="includeDisabled"
+	       			value="#{categoryTestBean.filters['includeDisabled']}"/>
+    		</hftl:decorateFormField>
+            
+        </hftl:searchPanel>
+
+		
+        <h:panelGroup id="resultsDatatable">
+            <hftl:dataList backingBean="#{categoryTestBean}" 
+            			   resultsId="timersBean_results" 
+            			   addToModule="false" 
+            			   sortBy="code"
+            			   importCsv="false">
+            			   
+                <p:column headerText="Code" sortBy="#{entity.code}">
+                	<p:link outcome="testResults" value="#{entity.category.code}">
+		        		<f:param value="#{entity.category.code}" name="category"/>
+		        	</p:link>
+                </p:column>
+                <p:column headerText="Success">
+                	<h:outputText value="#{entity.successPercentage} %"/>
+                </p:column>
+               <p:column headerText="Failure">
+                	<h:outputText value="#{entity.failurePercentage} %"/>
+                </p:column>
+                <p:column headerText="Stability" sortBy="#{entity.stable}">
+                	<h:outputText value = "#{entity.isStable() ? 'Stable' : 'Unstable'}"/>
+                </p:column>
+            </hftl:dataList>
+        </h:panelGroup>
+    </ui:define>
+</ui:composition>

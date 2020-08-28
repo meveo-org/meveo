@@ -28,216 +28,241 @@ import com.thoughtworks.xstream.annotations.XStreamConverter;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.9.0
+ * @version 6.10
  **/
-@ExportIdentifier({ "code"})
+@ExportIdentifier({ "code" })
 @MappedSuperclass
 public abstract class CustomScript extends Function {
 
-    private static final long serialVersionUID = 8176170199770220430L;
+	private static final long serialVersionUID = 8176170199770220430L;
 
-    public static final String TYPE = "Script";
+	public static final String TYPE = "Script";
 
-    @Column(name = "script", nullable = false, columnDefinition = "TEXT")
-    @XStreamConverter(XStreamCDATAConverter.class)
-    private String script;
+	@Column(name = "script", nullable = false, columnDefinition = "TEXT")
+	@XStreamConverter(XStreamCDATAConverter.class)
+	private String script;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "src_type")
-    private ScriptSourceTypeEnum sourceTypeEnum = ScriptSourceTypeEnum.JAVA;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "src_type")
+	private ScriptSourceTypeEnum sourceTypeEnum = ScriptSourceTypeEnum.JAVA;
 
-    @Transient
-    private List<ScriptInstanceError> scriptErrors = new ArrayList<>();
+	@Transient
+	private List<ScriptInstanceError> scriptErrors = new ArrayList<>();
 
-    @Type(type="numeric_boolean")
-    @Column(name = "is_error")
-    private Boolean error = false;
+	@Type(type = "numeric_boolean")
+	@Column(name = "is_error")
+	private Boolean error = false;
 
-    /**
-     * Setters defined for the script
-     */
-    @Type(type = "jsonList")
-    @Column(name = "setters", columnDefinition = "text")
-    private List<Accessor> setters = new ArrayList<>();
+	/**
+	 * Setters defined for the script
+	 */
+	@Type(type = "jsonList")
+	@Column(name = "setters", columnDefinition = "text")
+	private List<Accessor> setters;
 
-    /**
-     * Getters defined for the script
-     */
-    @Type(type = "jsonList")
-    @Column(name = "getters", columnDefinition = "text")
-    private List<Accessor> getters = new ArrayList<>();
+	/**
+	 * Getters defined for the script
+	 */
+	@Type(type = "jsonList")
+	@Column(name = "getters", columnDefinition = "text")
+	private List<Accessor> getters;
 
-    @Fetch(FetchMode.JOIN)
-    @ElementCollection(fetch = FetchType.LAZY)
-    @JoinTable(name="meveo_script_inputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
-    @Column(name="script_input")
-    private Set<String> scriptInputs = new HashSet<>();
+	@Fetch(FetchMode.JOIN)
+	@ElementCollection(fetch = FetchType.LAZY)
+	@JoinTable(name = "meveo_script_inputs", joinColumns = @JoinColumn(name = "meveo_script_instance_id"))
+	@Column(name = "script_input")
+	private Set<String> scriptInputs;
 
-    @Fetch(FetchMode.JOIN)
-    @ElementCollection(fetch = FetchType.LAZY)
-    @JoinTable(name="meveo_script_outputs", joinColumns=@JoinColumn(name="meveo_script_instance_id"))
-    @Column(name="script_output")
-    private Set<String> scriptOutputs = new HashSet<>();
+	@Fetch(FetchMode.JOIN)
+	@ElementCollection(fetch = FetchType.LAZY)
+	@JoinTable(name = "meveo_script_outputs", joinColumns = @JoinColumn(name = "meveo_script_instance_id"))
+	@Column(name = "script_output")
+	private Set<String> scriptOutputs;
 
-    /**
-     * @return the script
-     */
-    public String getScript() {
-        return script;
-    }
+	/**
+	 * @return the script
+	 */
+	public String getScript() {
+		return script;
+	}
 
-    /**
-     * @param script The script to set
-     */
-    public void setScript(String script) {
-        this.script = script;
-    }
+	/**
+	 * @param script The script to set
+	 */
+	public void setScript(String script) {
+		this.script = script;
+	}
 
-    public List<Accessor> getSetters() {
-    	return setters;
-    }
-    
-    public List<Accessor> getSettersNullSafe() {
-      return setters != null ? setters : new ArrayList<>();
-    }
+	public List<Accessor> getSettersNullSafe() {
+		if (setters == null) {
+			setters = new ArrayList<Accessor>();
+		}
 
-    public void setSetters(List<Accessor> setters) {
-        this.setters = setters;
-    }
+		return getSetters();
+	}
 
-    public List<Accessor> getGetters() {
-        return getters;
-    }
+	public List<Accessor> getSetters() {
+		return setters;
+	}
 
-    public void setGetters(List<Accessor> getters) {
-        this.getters = getters;
-    }
+	public void setSetters(List<Accessor> setters) {
+		this.setters = setters;
+	}
 
-    /**
-     * @return Script language
-     */
-    public ScriptSourceTypeEnum getSourceTypeEnum() {
-        return sourceTypeEnum;
-    }
+	public List<Accessor> getGettersNullSafe() {
+		if (getters == null) {
+			getters = new ArrayList<>();
+		}
+		return getGetters();
+	}
 
-    /**
-     * @param sourceTypeEnum Script language
-     */
-    public void setSourceTypeEnum(ScriptSourceTypeEnum sourceTypeEnum) {
-        this.sourceTypeEnum = sourceTypeEnum;
-    }
+	public List<Accessor> getGetters() {
+		return getters;
+	}
 
-    /**
-     * @return the Script errors
-     */
-    public List<ScriptInstanceError> getScriptErrors() {
-        return scriptErrors;
-    }
+	public void setGetters(List<Accessor> getters) {
+		this.getters = getters;
+	}
 
-    /**
-     * @param scriptErrors Script errors to set
-     */
-    public void setScriptErrors(List<ScriptInstanceError> scriptErrors) {
-        this.scriptErrors = scriptErrors;
-    }
+	/**
+	 * @return Script language
+	 */
+	public ScriptSourceTypeEnum getSourceTypeEnum() {
+		return sourceTypeEnum;
+	}
 
-    /**
-     * @return the error
-     */
-    public Boolean isError() {
-        return error;
-    }
+	/**
+	 * @param sourceTypeEnum Script language
+	 */
+	public void setSourceTypeEnum(ScriptSourceTypeEnum sourceTypeEnum) {
+		this.sourceTypeEnum = sourceTypeEnum;
+	}
 
-    /**
-     * @return the error
-     */
-    public Boolean getError() {
-        return error;
-    }
+	/**
+	 * @return the Script errors
+	 */
+	public List<ScriptInstanceError> getScriptErrors() {
+		return scriptErrors;
+	}
 
-    /**
-     * @param error the error to set
-     */
-    public void setError(Boolean error) {
-        this.error = error;
-    }
+	/**
+	 * @param scriptErrors Script errors to set
+	 */
+	public void setScriptErrors(List<ScriptInstanceError> scriptErrors) {
+		this.scriptErrors = scriptErrors;
+	}
 
-    @Override
-    public List<FunctionIO> getInputs() {
-        if(setters == null) {
-            return new ArrayList<>();
-        }
-        List<FunctionIO> inputs = setters.stream().map(s -> {
-            FunctionIO inp = new FunctionIO();
-            inp.setDescription(s.getDescription());
-            inp.setName(s.getName());
-            inp.setType(s.getType());
-            return inp;
-        }).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(scriptInputs)) {
-            inputs.addAll(scriptInputs.stream().map(s -> {
-                FunctionIO inp = new FunctionIO();
-                inp.setDescription(s);
-                inp.setName(s);
-                inp.setType(StringUtils.EMPTY);
-                return inp;
-            }).collect(Collectors.toList()));
-        }
-        return inputs;
-    }
+	/**
+	 * @return the error
+	 */
+	public Boolean isError() {
+		return error;
+	}
 
-    @Override
-    public List<FunctionIO> getOutputs() {
-        if(setters == null) {
-            return new ArrayList<>();
-        }
-        List<FunctionIO> outputs = getters.stream().map(s -> {
-            FunctionIO inp = new FunctionIO();
-            inp.setDescription(s.getDescription());
-            inp.setName(s.getName());
-            inp.setType(s.getType());
-            return inp;
-        }).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(scriptOutputs)) {
-            outputs.addAll(scriptOutputs.stream().map(s -> {
-                FunctionIO inp = new FunctionIO();
-                inp.setDescription(s);
-                inp.setName(s);
-                inp.setType(StringUtils.EMPTY);
-                return inp;
-            }).collect(Collectors.toList()));
-        }
-        return outputs;
-    }
+	/**
+	 * @return the error
+	 */
+	public Boolean getError() {
+		return error;
+	}
 
-    @Override
-    public boolean hasInputs() {
-        return setters != null && !setters.isEmpty();
-    }
+	/**
+	 * @param error the error to set
+	 */
+	public void setError(Boolean error) {
+		this.error = error;
+	}
 
-    @Override
-    public boolean hasOutputs() {
-        return getters != null && !getters.isEmpty();
-    }
+	@Override
+	public List<FunctionIO> getInputs() {
+		if (setters == null) {
+			return new ArrayList<>();
+		}
+		List<FunctionIO> inputs = setters.stream().map(s -> {
+			FunctionIO inp = new FunctionIO();
+			inp.setDescription(s.getDescription());
+			inp.setName(s.getName());
+			inp.setType(s.getType());
+			return inp;
+		}).collect(Collectors.toList());
+		if (CollectionUtils.isNotEmpty(scriptInputs)) {
+			inputs.addAll(scriptInputs.stream().map(s -> {
+				FunctionIO inp = new FunctionIO();
+				inp.setDescription(s);
+				inp.setName(s);
+				inp.setType(StringUtils.EMPTY);
+				return inp;
+			}).collect(Collectors.toList()));
+		}
+		return inputs;
+	}
 
-    @Override
-    public String getFunctionType() {
-        return TYPE;
-    }
+	@Override
+	public List<FunctionIO> getOutputs() {
+		if (setters == null) {
+			return new ArrayList<>();
+		}
+		List<FunctionIO> outputs = getters.stream().map(s -> {
+			FunctionIO inp = new FunctionIO();
+			inp.setDescription(s.getDescription());
+			inp.setName(s.getName());
+			inp.setType(s.getType());
+			return inp;
+		}).collect(Collectors.toList());
+		if (CollectionUtils.isNotEmpty(scriptOutputs)) {
+			outputs.addAll(scriptOutputs.stream().map(s -> {
+				FunctionIO inp = new FunctionIO();
+				inp.setDescription(s);
+				inp.setName(s);
+				inp.setType(StringUtils.EMPTY);
+				return inp;
+			}).collect(Collectors.toList()));
+		}
+		return outputs;
+	}
 
-    public Set<String> getScriptInputs() {
-        return scriptInputs;
-    }
+	@Override
+	public boolean hasInputs() {
+		return setters != null && !setters.isEmpty();
+	}
 
-    public void setScriptInputs(Set<String> scriptInputs) {
-        this.scriptInputs = scriptInputs;
-    }
+	@Override
+	public boolean hasOutputs() {
+		return getters != null && !getters.isEmpty();
+	}
 
-    public Set<String> getScriptOutputs() {
-        return scriptOutputs;
-    }
+	@Override
+	public String getFunctionType() {
+		return TYPE;
+	}
 
-    public void setScriptOutputs(Set<String> scriptOutputs) {
-        this.scriptOutputs = scriptOutputs;
-    }
+	public Set<String> getScriptInputsNullSafe() {
+		if (scriptInputs == null) {
+			scriptInputs = new HashSet<String>();
+		}
+		return getScriptInputs();
+	}
+
+	public Set<String> getScriptInputs() {
+		return scriptInputs;
+	}
+
+	public void setScriptInputs(Set<String> scriptInputs) {
+		this.scriptInputs = scriptInputs;
+	}
+
+	public Set<String> getScriptOutputsNullSafe() {
+		if (scriptOutputs == null) {
+			scriptOutputs = new HashSet<String>();
+		}
+		return getScriptOutputs();
+	}
+
+	public Set<String> getScriptOutputs() {
+		return scriptOutputs;
+	}
+
+	public void setScriptOutputs(Set<String> scriptOutputs) {
+		this.scriptOutputs = scriptOutputs;
+	}
 }
