@@ -64,6 +64,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -88,6 +89,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private SqlConfigurationService sqlConfigurationService;
 
     @Inject
     private PermissionService permissionService;
@@ -142,6 +146,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return new File(getClassesDirectory(currentUser));
     }
     
+    /**
+     * @param cet The parent template
+     * @return the sub-templates of the given template
+     */
+    public List<CustomEntityTemplate> getSubTemplates(CustomEntityTemplate cet) {
+    	return getEntityManager()
+    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate WHERE id = :id", CustomEntityTemplate.class)
+    			.setParameter("id", cet.getId())
+    			.getSingleResult()
+    			.getSubTemplates();
+    }
+    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
     	
@@ -156,7 +172,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet), cet.hasReferenceJpaEntity());
+            customTableCreatorService.createTable(cet);
         }
 
         elasticClient.createCETMapping(cet);
@@ -229,6 +245,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
+        CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
         
     	if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
@@ -275,6 +292,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             neo4jService.addUUIDIndexes(cet);
         } else {
             neo4jService.removeUUIDIndexes(cet);
+        }
+        
+        var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
+        
+        // Handle SQL inheritance
+        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
+        		// Inheritance removed
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        	} else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
+        		// Inheritance added
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        	}
         }
 
         return cetUpdated;

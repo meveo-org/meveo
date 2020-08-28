@@ -434,7 +434,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 		try {
 			if (!appendImportedData) {
 				// Delete current data first if in override mode
-				customTableService.remove(null, SQLStorageConfiguration.getDbTablename(entity));
+				customTableService.remove(repositoryProvider.getRepository().getSqlConfigurationCode(), entity);
 			}
 
 			importFuture = customTableService.importDataAsync(getSqlConnectionCode(), entity, file.getInputstream(), appendImportedData);
@@ -487,7 +487,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
 	@ActionMethod
 	public void delete(String uuid) throws BusinessException {
-		customTableService.remove(customTableName, uuid);
+		customTableService.remove(repositoryProvider.getRepository().getSqlConfigurationCode(), entity, uuid);
 		customTableBasedDataModel = null;
 		messages.info(new BundleKey("messages", "delete.successful"));
 	}
@@ -509,7 +509,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
 		}
 
-		customTableService.remove(null, customTableName, ids);
+		customTableService.remove(repositoryProvider.getRepository().getSqlConfigurationCode(), entity, ids);
 		customTableBasedDataModel = null;
 		messages.info(new BundleKey("messages", "delete.entitities.successful"));
 	}

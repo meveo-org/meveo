@@ -363,6 +363,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public CustomEntityTemplate getSuperTemplate() {
 		return superTemplate;
 	}
+	
+	/**
+	 * @param storage Storage type to check
+	 * @return whether the template is stored in this storage
+	 */
+	public boolean storedIn(DBStorageType storage) {
+		return availableStorages.contains(storage);
+	}
 
 	/**
 	 * Sets the template that current template inherits from.
