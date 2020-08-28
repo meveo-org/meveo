@@ -85,7 +85,10 @@ public class CrossStorageApi{
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public String createOrUpdate(Repository repository, Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
-		CustomEntityInstance cei = CEIUtils.pojoToCei(value);
+		CustomEntityInstance cei = value instanceof CustomEntityInstance
+				? (CustomEntityInstance) value 
+				: CEIUtils.pojoToCei(value);
+				
 		var result = crossStorageService.createOrUpdate(repository, cei);
 		return result.getBaseEntityUuid();
 	}
