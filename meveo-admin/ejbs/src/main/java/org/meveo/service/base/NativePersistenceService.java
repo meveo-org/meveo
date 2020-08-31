@@ -945,12 +945,10 @@ public class NativePersistenceService extends BaseService {
 		var tableName = tableName(template);
 		
 		// Remove records in children tables
-		if(template.getSubTemplates() != null) {
-			var subTemplates = customEntityTemplateService.getSubTemplates(template);
-			subTemplates.forEach(subT -> getEntityManager(sqlConnectionCode)
-					.createNativeQuery("delete from {h-schema}" + tableName(subT))
-					.executeUpdate());
-		}
+		var subTemplates = customEntityTemplateService.getSubTemplates(template);
+		subTemplates.forEach(subT -> getEntityManager(sqlConnectionCode)
+				.createNativeQuery("delete from {h-schema}" + tableName(subT))
+				.executeUpdate());
 		
 		// Remove in own table
 		getEntityManager(sqlConnectionCode)
@@ -977,10 +975,8 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Set<String> ids) throws BusinessException {
 		// Remove record in children tables
-		if(template.getSubTemplates() != null) {
-			var subTemplates = customEntityTemplateService.getSubTemplates(template);
-			subTemplates.forEach(subT -> removeRecords(sqlConnectionCode, tableName(subT), ids));
-		}
+		var subTemplates = customEntityTemplateService.getSubTemplates(template);
+		subTemplates.forEach(subT -> removeRecords(sqlConnectionCode, tableName(subT), ids));
 		
 		// Remove in own table
 		removeRecords(sqlConnectionCode, tableName(template), ids);
@@ -1030,10 +1026,8 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template, String uuid) throws BusinessException {
 		// Remove record in children tables
-		if(template.getSubTemplates() != null) {
-			var subTemplates = customEntityTemplateService.getSubTemplates(template);
-			subTemplates.forEach(subT -> removeRecord(sqlConnectionCode, uuid, tableName(subT)));
-		}
+		var subTemplates = customEntityTemplateService.getSubTemplates(template);
+		subTemplates.forEach(subT -> removeRecord(sqlConnectionCode, uuid, tableName(subT)));
 		
 		// Remove in own table
 		removeRecord(sqlConnectionCode, uuid, tableName(template));

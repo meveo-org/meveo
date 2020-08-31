@@ -151,11 +151,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @return the sub-templates of the given template
      */
     public List<CustomEntityTemplate> getSubTemplates(CustomEntityTemplate cet) {
-    	return getEntityManager()
-    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate WHERE id = :id", CustomEntityTemplate.class)
+    	/* CustomEntityTemplate result = (CustomEntityTemplate) getEntityManager()
+    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate cet WHERE cet.id = :id")
     			.setParameter("id", cet.getId())
-    			.getSingleResult()
-    			.getSubTemplates();
+    			.getSingleResult();
+		return result.getSubTemplates();*/ 
+    	return getEntityManager()
+			.createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
+			.setParameter("id", cet.getId())
+			.getResultList();
+    	
     }
     
     @Override
