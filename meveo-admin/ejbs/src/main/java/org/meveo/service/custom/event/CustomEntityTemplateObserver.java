@@ -47,7 +47,9 @@ public class CustomEntityTemplateObserver {
 	private void createAuditTable(String sqlConnectionCode, String dbTableName) {
 
 		// create table
-		customTableCreatorService.createTable(sqlConnectionCode, dbTableName, false);
+		CustomEntityTemplate template = new CustomEntityTemplate();
+		template.setCode(dbTableName);
+		customTableCreatorService.createTable(sqlConnectionCode, template, false);
 
 		// add fields
 

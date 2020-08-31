@@ -185,7 +185,7 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 		for (CustomEntityTemplate cet : cets) {
 			
 			String tableName = SQLStorageConfiguration.getCetDbTablename(cet.getCode());
-			customTableCreatorService.createTable(entity.getCode(), tableName);
+			customTableCreatorService.createTable(cet);
 			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
 
 			try {
