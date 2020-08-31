@@ -925,7 +925,7 @@ public class CustomTableService extends NativePersistenceService {
 	 */
 	@SuppressWarnings("deprecation")
 	public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid, List<String> selectFields) throws EntityDoesNotExistsException {
-		var selectFieldsCopy = new ArrayList<>(selectFields);
+		var selectFieldsCopy = selectFields == null ? null : new ArrayList<>(selectFields);
 		
 		// Retrieve fields of the template
 		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
@@ -935,15 +935,21 @@ public class CustomTableService extends NativePersistenceService {
 		// Complete data with parent table
 		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
 			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
-			var parentFieldsToSelect = new ArrayList<String>();
-			parentCfts.values()
-				.forEach(cft -> {
-					var dbColKey = cft.getDbFieldname();
-					var isFieldSelected =  selectFieldsCopy.remove(dbColKey);
-					if(isFieldSelected) {
-						parentFieldsToSelect.add(dbColKey);
-					}
-				});
+			List<String> parentFieldsToSelect;
+			if(selectFieldsCopy != null) {
+				parentFieldsToSelect = new ArrayList<>();
+				parentCfts.values()
+					.forEach(cft -> {
+						var dbColKey = cft.getDbFieldname();
+						var isFieldSelected =  selectFieldsCopy.remove(dbColKey);
+						if(isFieldSelected) {
+							parentFieldsToSelect.add(dbColKey);
+						}
+					});
+			} else {
+				parentFieldsToSelect = null;
+			}
+
 			
 			var parentData = super.findById(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet.getSuperTemplate()), uuid, parentFieldsToSelect);
 			if(parentData != null) {
