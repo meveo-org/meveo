@@ -701,6 +701,7 @@ public class NativePersistenceService extends BaseService {
 
 	/**
 	 * Update a record in a table. Record is identified by an "uuid" field value.
+	 * @param sqlConnectionCode Code of the {@link SqlConfiguration} to use
 	 *
 	 * @param cei              the {@link CustomEntityInstance}. The cf values must
 	 *                         contain the field uuid.
@@ -715,8 +716,9 @@ public class NativePersistenceService extends BaseService {
 		if(cei.getCet().getSuperTemplate() != null && cei.getCet().getSuperTemplate().storedIn(DBStorageType.SQL)) {
 			var parentCfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getSuperTemplate().getAppliesTo()).values();
 			var parentCei = new CustomEntityInstance();
-			parentCei.setCet(cei.getCet());
+			parentCei.setCet(cei.getCet().getSuperTemplate());
 			parentCei.setCfValues(cei.getCfValues());
+			parentCei.setUuid(cei.getUuid());
 			update(sqlConnectionCode, parentCei, true, parentCfts, removeNullValues);
 		}
 
@@ -724,9 +726,21 @@ public class NativePersistenceService extends BaseService {
 		if (PostgresReserverdKeywords.isReserved(tableName)) {
 			tableName = "\"" + tableName + "\"";
 		}
-
+		
 		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		var appliesTo = CustomEntityTemplate.getAppliesTo(cei.getCetCode());
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
+				.filter(cft -> cft.getAppliesTo().equals(appliesTo))
+				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		
+		// remove inherited data
+		for(String sqlValueKey : List.copyOf(sqlValues.keySet())) {
+			if(sqlValueKey.equals("uuid")) continue;
+			
+			if(!cftsMap.containsKey(sqlValueKey)) {
+				sqlValues.remove(sqlValueKey);
+			}
+		}
 		
 		final Map<String, Object> values = serializeValues(
 				convertValue(sqlValues, cftsMap, removeNullValues, null), 
