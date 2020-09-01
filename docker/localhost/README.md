@@ -30,6 +30,42 @@ Local keycloak server is addressed at `http://localhost:8081/auth`
 
 The default keycloak credentials are: `admin / admin`
 
+### Start Neo4j for Meveo
+
+In docker-compose.yml file, please uncomment all lines regarding neo4j service.
+
+```yaml
+.....
+volumes:
+  neo4j_data:
+    driver: local
+.....
+services:
+  neo4j:
+      image: manaty/neo4j-meveo:dev-latest
+      container_name: neo4j
+      networks:
+        - meveo
+      restart: unless-stopped
+      volumes:
+        - neo4j_data:/data
+      environment:
+        NEO4J_AUTH: neo4j/neo4j123
+      ports:
+        - 7474:7474
+        - 7687:7687
+```
+
+Then run:
+```sh
+  docker-compose up -d neo4j
+```
+
+After neo4j container, please open neo4j browser at `http://localhost:7474/`
+
+The default neo4j credentials are: `neo4j / neo4j123`
+
+
 ### Externalize all meveo files
 
 To store all meveo files (git files, maven .m2, webapps ...) outside the docker image, first stop the containers and remove the volumes

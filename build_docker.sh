@@ -78,6 +78,9 @@ cp meveo-admin/web/target/meveo.war docker/
 echo "Build the postgres docker image for meveo environment"
 docker build -t ${DCK_IMAGE_REPO}/postgres-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile.postgres ./docker
 
+echo "Build the neo4j docker image for meveo environment"
+docker build -t ${DCK_IMAGE_REPO}/neo4j-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile.neo4j ./docker
+
 echo "Build the meveo docker image"
 docker build -t ${DCK_IMAGE_REPO}/wildfly-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile ./docker
 
