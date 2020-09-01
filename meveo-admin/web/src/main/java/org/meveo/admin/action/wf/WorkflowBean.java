@@ -96,9 +96,9 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     private boolean showDetailPage = false;
 
-    private String oldCetCode;
+    private String oldCetCode = null;
 
-    private String oldWFType;
+    private String oldWFType = null;
 
     // @Produces
     // @Named
@@ -158,6 +158,25 @@ public class WorkflowBean extends BaseBean<Workflow> {
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        if ((oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) || (oldWFType != null && !entity.getWfType().equals(oldWFType))) {
+            List<WFTransition> wfTransitions = entity.getTransitions();
+            if (CollectionUtils.isNotEmpty(wfTransitions)) {
+                for (WFTransition wfTransition: wfTransitions) {
+                    if (wfTransition != null) {
+                        wfTransition = wFTransitionService.findById(wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"));
+                        if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+                            for (WFAction wfAction : wfTransition.getWfActions()) {
+                                wfActionService.remove(wfAction);
+                            }
+                        }
+                    }
+                }
+                for (WFTransition wfTransition: wfTransitions) {
+                    wFTransitionService.remove(wfTransition);
+                }
+            }
+            entity.setTransitions(new ArrayList<>());
+        }
         super.saveOrUpdate(killConversation);
         return "workflowDetail";
     }
@@ -305,18 +324,13 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     @SuppressWarnings({ "unchecked" })
     public Map<String, String> getTransitionStatusFromWorkflowType() {
-        try {
-            if (entity.getCetCode() != null && entity.getWfType() != null) {
-                CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(entity.getWfType(), "CE_" + entity.getCetCode());
-                Map<String, String> listValue = customFieldTemplate.getListValues();
-                Map<String, String> statusMap = new TreeMap<>();
-                statusMap.putAll(listValue);
-                return statusMap;
-            }
-        } catch (Exception e) {
-            log.error("Unable to get/instantiate or retrieve status list for class " + entity.getWfType(), e);
+        Map<String, String> statusMap = new TreeMap<>();
+        if (entity.getCetCode() != null && entity.getWfType() != null) {
+            CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(entity.getWfType(), "CE_" + entity.getCetCode());
+            Map<String, String> listValue = customFieldTemplate.getListValues();
+            statusMap.putAll(listValue);
         }
-        return new TreeMap<>();
+        return statusMap;
     }
 
     public void addNewAction() {
@@ -376,15 +390,18 @@ public class WorkflowBean extends BaseBean<Workflow> {
             }
         }
 
-        if (isUpdate) {
+        if (isUpdate && this.wfTransition != null) {
             WFTransition currentTransition = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfActions"));
             List<WFAction> deletedActions = currentTransition.getWfActions();
             if (CollectionUtils.isNotEmpty(deletedActions)) {
                 deletedActions.removeAll(updatedActions);
-                wfTransition.getWfActions().clear();
             }
             for (WFAction wfAction : deletedActions) {
                 wfActionService.remove(wfAction);
+            }
+
+            if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+                wfTransition.getWfActions().clear();
             }
             for (WFAction wfAction : updatedActions) {
                 wfActionService.update(wfAction);
@@ -485,5 +502,11 @@ public class WorkflowBean extends BaseBean<Workflow> {
             filters.put("wfType", "org.meveo.admin.wf.types.DunningWF");
         }
         return filters;
+    }
+
+    public void resetValueForWFType() {
+        if (oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) {
+            entity.setWfType(null);
+        }
     }
 }

@@ -137,9 +137,13 @@ public class WFTransitionService extends PersistenceService<WFTransition> {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public WFTransition findById(Long id, List<String> fetchFields) {
-		WFTransition wfTransition = findById(id);
-		getEntityManager().detach(wfTransition);
-		return super.findById(id, fetchFields);
+	public WFTransition update(WFTransition entity) throws BusinessException {
+		return super.update(entity);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void remove(WFTransition entity) throws BusinessException {
+		super.remove(entity);
 	}
 }

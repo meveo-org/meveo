@@ -25,11 +25,11 @@
                         <hftl:formField label="#{messages['businessEntity.code']}" field="code" allowEdit="false" required="true" validateUnique="true" />
                         <hftl:formField label="#{messages['businessEntity.description']}" field="description" useConverter="false" size="50" />
 
-                        <hftl:formField label="#{messages['workflow.customEntity']}" field="cetCode" allowEdit="false" required="true" size="50"
-                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCETName" isAutocomplete="true" listenerUpdate="@this wfType"/>
+                        <hftl:formField label="#{messages['workflow.customEntity']}" field="cetCode" required="true" size="50"
+                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCETName" isAutocomplete="true" listenerUpdate="@this wfType :tabView" actionListenerBean="#{workflowBean}" actionListenerMethod="resetValueForWFType"/>
                         <h:panelGroup id="wfType">
-                            <hftl:formField label="#{messages['workflow.type']}" field="wfType" allowEdit="false" required="true" size="50"
-                                            rendered="#{workflowBean.entity.cetCode != null}" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCFTName" isAutocomplete="true"/>
+                            <hftl:formField label="#{messages['workflow.field']}" field="wfType" required="true" size="50"
+                                            rendered="#{workflowBean.entity.cetCode != null}" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCFTName" isAutocomplete="true" listenerUpdate=":tabView"/>
                         </h:panelGroup>
                         <hftl:formField label="#{messages['workflow.exportLot']}" field="exportLot" />
                         <hftl:formField label="#{messages['workflow.enableHistory']}" field="enableHistory" />
@@ -37,7 +37,7 @@
                     </hftl:formPanel>
                 </p:tab>
 
-                <p:tab title="#{messages['dunningPlan.transitions']}" id="tab2" rendered="#{!workflowBean.entity.isTransient()}">
+                <p:tab title="#{messages['dunningPlan.transitions']}" id="tab2" rendered="#{!workflowBean.entity.isTransient() and (workflowBean.entity.cetCode eq workflowBean.oldCetCode) and (workflowBean.entity.wfType eq workflowBean.oldWFType)}">
                     <p:outputPanel id="dunningPlanTransition_panel">
                         <p:messages id="messages" rendered="#{!workflowBean.showDetailPage}" />
                         <p:dataTable id="dunningPlanTransitions_results" value="#{workflowBean.entity.transitions}" var="entity" sortBy="#{entity.fromStatus}" paginator="true" rows="10"

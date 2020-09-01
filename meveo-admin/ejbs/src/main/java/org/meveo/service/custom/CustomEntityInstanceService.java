@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import javax.persistence.Query;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -34,6 +33,8 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 
 import com.ibm.icu.math.BigDecimal;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.wf.WFActionService;
+import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
 
 /**
@@ -61,7 +62,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	private WorkflowService workflowService;
 
 	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
+	private WFTransitionService wfTransitionService;
+
+	@Inject
+	private WFActionService wfActionService;
 
 	@Override
 	public void create(CustomEntityInstance entity) throws BusinessException {
@@ -351,9 +355,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			List<String> statusWF = new ArrayList<>();
 			for (Workflow workflow: workflows) {
 				List<WFTransition> wfTransitions = workflow.getTransitions();
-				transitions.addAll(wfTransitions);
 				if (CollectionUtils.isNotEmpty(wfTransitions)) {
 					for (WFTransition wfTransition : wfTransitions) {
+						wfTransition = wfTransitionService.findById(wfTransition.getId());
+						transitions.add(wfTransition);
 						statusWF.add(wfTransition.getToStatus());
 						if (wfTransition.getConditionEl() != null) {
 							conditionEls.add(wfTransition.getConditionEl());
@@ -373,6 +378,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 					for (WFTransition wfTransition : transitions) {
 						if (wfTransition.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
 							for (WFAction action : wfTransition.getWfActions()) {
+								action = wfActionService.findById(action.getId());
 								if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
 									workflowService.executeExpression(action.getActionEl(), instance);
 								}
