@@ -26,7 +26,7 @@ import org.meveo.persistence.CrossStorageService;
  * The Class CrossStorageApi.
  *
  * @author clement.bareth
- * @version 6.10.0
+ * @version 6.11.0
  * @since 6.8.0
  */
 @Stateless
@@ -37,6 +37,10 @@ public class CrossStorageApi{
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	public <T> CrossStorageRequest<T> find(Repository repository, Class<T> cetClass) {
+		return new CrossStorageRequest(repository, crossStorageService, cetClass, getCet(cetClass));
+	}
 	
 	/**
 	 * Find an instance of a given CET
