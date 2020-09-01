@@ -5,7 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ejb.*;
+import javax.ejb.Asynchronous;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.spi.BeanManager;
@@ -39,15 +45,25 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.mediation.MeveoFtpFile;
-import org.meveo.model.notification.*;
+import org.meveo.model.notification.EmailNotification;
+import org.meveo.model.notification.InboundRequest;
+import org.meveo.model.notification.InstantMessagingNotification;
+import org.meveo.model.notification.JobTrigger;
+import org.meveo.model.notification.Notification;
+import org.meveo.model.notification.NotificationEventTypeEnum;
+import org.meveo.model.notification.NotificationHistory;
+import org.meveo.model.notification.NotificationHistoryStatusEnum;
+import org.meveo.model.notification.ScriptNotification;
+import org.meveo.model.notification.WebHook;
+import org.meveo.model.notification.WebNotification;
 import org.meveo.model.scripts.Function;
+import org.meveo.persistence.neo4j.graph.Neo4jEntity;
+import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.billing.impl.CounterValueInsufficientException;
-import org.meveo.persistence.neo4j.graph.Neo4jEntity;
-import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.Script;
 import org.slf4j.Logger;
@@ -243,7 +259,9 @@ public class DefaultObserver {
     private boolean checkEvent(NotificationEventTypeEnum type, Object entityOrEvent) throws BusinessException {
         boolean result = false;
         for (Notification notif : genericNotificationService.getApplicableNotifications(type, entityOrEvent)) {
-            result = fireNotification(notif, entityOrEvent) || result;
+        	if(notif.isActive()) {
+        		result = fireNotification(notif, entityOrEvent) || result;
+        	}
         }
         return result;
     }
