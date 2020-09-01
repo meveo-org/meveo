@@ -946,7 +946,9 @@ public class CustomTableCreatorService implements Serializable {
 			}
 			if (referenceCet == null && !cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
 				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
-				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));
+				String pkColumnName = PersistenceUtils.getPKColumnName(jpaEntityClazz);
+				String pkColumnType = PersistenceUtils.getPKColumnType(jpaEntityClazz, pkColumnName);
+				fieldType = CustomFieldTypeEnum.guessEnum(pkColumnType);
 				
 				// check the storage as well referenceJPA must be stored in SINGLE storage
 				// TODO: Must support different storage types
