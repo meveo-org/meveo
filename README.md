@@ -22,6 +22,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 ### Services
 
 [Endpoint](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+
 [Notifications](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
 ## Debugging
