@@ -28,6 +28,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.observers.OntologyObserver;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -91,6 +92,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private Instance<CustomTableCreatorService> customTableCreatorService;
+    
+    @Inject
+    private OntologyObserver ontologyObserver;
    
     public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
@@ -139,6 +143,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     	boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
         CustomEntityTemplate cet = fromDTO(dto, null);
+        
+        // Prevent trigger of events in OntologyObserver
+        cet.setInDraft(true);
+        
         cet.setHasReferenceJpaEntity(hasReferenceJpaEntity);
 
         setSuperTemplate(dto, cet);
@@ -161,6 +169,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        if (dto.getFields() != null) {
 	            for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 	            	cftDto.setHasReferenceJpaEntity(hasReferenceJpaEntity);
+	            	cftDto.setInDraft(true);
 	                customFieldTemplateApi.createOrUpdate(cftDto, cet.getAppliesTo());
 	            }
 	        }
@@ -170,6 +179,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	                entityCustomActionApi.createOrUpdate(actionDto, cet.getAppliesTo());
 	            }
 	        }
+	        
+	        // Manually trigger actions on cet creation
+	        cet.setInDraft(false);
+	        ontologyObserver.cetCreated(cet);
         
 		} catch (Exception e) {
             var message = e.getMessage();
@@ -184,7 +197,13 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 	log.warn("Failed to remove {}: {}", cet, message);
                 }
                 
-                throw e;
+            	if(e instanceof BusinessException) {
+            		throw (BusinessException) e;
+            	} else if(e instanceof MeveoApiException) {
+            		throw (MeveoApiException) e;
+            	} else {
+            		throw new BusinessException(e);
+            	}
             }
 		}
 
@@ -241,37 +260,53 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
                 }
             }
         }
-
+        
+        var sqlStorageAddition = !cet.getAvailableStorages().contains(DBStorageType.SQL) && dto.getAvailableStorages().contains(DBStorageType.SQL);
 
         setSuperTemplate(dto, cet);
 
         cet = fromDTO(dto, cet);
+        
+        
+        // If template becomes stored in sql, create the table
+        if(sqlStorageAddition) {
+        	customTableCreatorService.get().createTable(cet);
+        }
 
-		boolean withNewCategory = false;
-		if (dto.getCustomEntityCategoryCode() != null) {
-			if (StringUtils.isBlank(dto.getCustomEntityCategoryCode())) {
-				cet.setCustomEntityCategory(null);
-
-			} else {
-				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
-				if (customEntityCategory == null) {
-					withNewCategory = true;
-					customEntityCategory = new CustomEntityCategory();
-					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
-					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-					cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
-
+        try {
+			boolean withNewCategory = false;
+			if (dto.getCustomEntityCategoryCode() != null) {
+				if (StringUtils.isBlank(dto.getCustomEntityCategoryCode())) {
+					cet.setCustomEntityCategory(null);
+	
 				} else {
-					cet.setCustomEntityCategory(customEntityCategory);
+					CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
+					if (customEntityCategory == null) {
+						withNewCategory = true;
+						customEntityCategory = new CustomEntityCategory();
+						customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
+						customEntityCategory.setName(dto.getCustomEntityCategoryCode());
+						cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
+	
+					} else {
+						cet.setCustomEntityCategory(customEntityCategory);
+					}
 				}
 			}
-		}
-
-		if (!withNewCategory) {
-			cet = customEntityTemplateService.update(cet);
-		}
-
-        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
+	
+			if (!withNewCategory) {
+				cet = customEntityTemplateService.update(cet);
+			}
+	
+	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
+        
+        } catch (Exception e) {
+        	if(sqlStorageAddition) {
+        		customTableCreatorService.get().removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        	}
+        	
+        	throw e;
+        }
 
         return cet;
     }
