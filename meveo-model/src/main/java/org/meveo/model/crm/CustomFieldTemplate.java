@@ -223,6 +223,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Transient
     private PrimitiveTypeEnum primitiveType;
+    
+	@Transient
+	private boolean isInDraft = false;
 
     /**
      * Where field should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;fieldGroup:&lt;fieldgroup name&gt;:&lt;fieldgroup relative
@@ -428,7 +431,15 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return storages == null ? new ArrayList<>() : storages;
     }
     
-    public List<DBStorageType> getStorages() {
+    public boolean isInDraft() {
+		return isInDraft;
+	}
+
+	public void setInDraft(boolean isInDraft) {
+		this.isInDraft = isInDraft;
+	}
+
+	public List<DBStorageType> getStorages() {
         return storages;
     }
 

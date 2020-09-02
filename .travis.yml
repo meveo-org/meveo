@@ -77,8 +77,10 @@ before_script:
 
   # Pull the necessary docker images in advance
   - docker pull postgres:9.5.21
+  - docker pull neo4j:3.5.13
   - docker pull openjdk:11.0.7-jdk-slim-buster
   - if docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "postgres pulled up"; fi
+  - if docker pull manaty/neo4j-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "neo4j pulled up"; fi
   - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
 
   # Start the postgres container to create DB schemas
@@ -134,6 +136,13 @@ script:
     --build-arg BUILDKIT_INLINE_CACHE=1
     -f docker/Dockerfile.postgres ./docker
 
+  # Build a neo4j image for meveo environment
+  - docker build
+    --cache-from manaty/neo4j-meveo:${DOCKER_IMAGE_TAG}
+    --tag manaty/neo4j-meveo:${DOCKER_IMAGE_TAG}
+    --build-arg BUILDKIT_INLINE_CACHE=1
+    -f docker/Dockerfile.neo4j ./docker
+
   # Build a meveo image
   - docker build
     --cache-from manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
@@ -144,11 +153,14 @@ script:
 
 after_success:
   - docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
+  - docker push manaty/neo4j-meveo:${DOCKER_IMAGE_TAG}
   - docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
   - |
     if [ ! -z "${TRAVIS_TAG}" ]; then
       docker tag manaty/postgres-meveo:${DOCKER_IMAGE_TAG} manaty/postgres-meveo:${TRAVIS_TAG}
       docker push manaty/postgres-meveo:${TRAVIS_TAG}
+      docker tag manaty/neo4j-meveo:${DOCKER_IMAGE_TAG} manaty/neo4j-meveo:${TRAVIS_TAG}
+      docker push manaty/neo4j-meveo:${TRAVIS_TAG}
       docker tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} manaty/wildfly-meveo:${TRAVIS_TAG}
       docker push manaty/wildfly-meveo:${TRAVIS_TAG}
     fi

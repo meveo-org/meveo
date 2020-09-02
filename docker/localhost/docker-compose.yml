@@ -3,12 +3,14 @@ version: '3.5'
 volumes:
   postgres_data:
     driver: local
+  # neo4j_data:
+  #   driver: local
   keycloak_data:
-      driver: local
+    driver: local
   meveo_data:
-      driver: local
+    driver: local
   meveo_binary_data:
-      driver: local
+    driver: local
 
 services:
   postgres:
@@ -25,6 +27,19 @@ services:
         POSTGRES_PASSWORD: meveo
       ports:
         - 5432:5432
+  # neo4j:
+  #     image: manaty/neo4j-meveo:dev-latest
+  #     container_name: neo4j
+  #     networks:
+  #       - meveo
+  #     restart: unless-stopped
+  #     volumes:
+  #       - neo4j_data:/data
+  #     environment:
+  #       NEO4J_AUTH: neo4j/neo4j123
+  #     ports:
+  #       - 7474:7474
+  #       - 7687:7687
   keycloak:
       image: manaty/keycloak
       container_name: keycloak

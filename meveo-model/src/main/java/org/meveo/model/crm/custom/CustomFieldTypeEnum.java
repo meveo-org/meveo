@@ -146,7 +146,11 @@ public enum CustomFieldTypeEnum {
 	 * @return the custom field type enum
 	 */
 	public static CustomFieldTypeEnum guessEnum(String enumType) {
-		Optional<CustomFieldTypeEnum> opt = Arrays.asList(CustomFieldTypeEnum.values()).stream().filter(e -> e.name().equals(enumType)).findFirst();
+		Optional<CustomFieldTypeEnum> opt = Arrays.asList(CustomFieldTypeEnum.values())
+				.stream()
+				.filter(e -> e.name().toUpperCase().equals(enumType.toUpperCase()))
+				.findFirst();
+		
 		if (opt.isPresent()) {
 			return opt.get();
 		}

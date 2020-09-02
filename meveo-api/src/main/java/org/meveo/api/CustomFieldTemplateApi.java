@@ -401,6 +401,8 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
             cft.setAppliesTo(appliesTo);
         }
+        
+        cft.setInDraft(dto.isInDraft());
 
         if (dto.getDescription() != null) {
             cft.setDescription(dto.getDescription());

@@ -121,26 +121,6 @@ public class CustomTableService extends NativePersistenceService {
     private CustomFieldInstanceService customFieldInstanceService;
 
 	/**
-	 * Inserts a {@linkplain CustomEntityInstance} into the database.
-	 *
-	 * @param cei transient {@link CustomEntityInstance}
-	 * @return UUID of created row
-	 * @deprecated Use {@link CustomTableService#create(CustomEntityTemplate, Map)}
-	 *             instead. If you have to use, check that all the values has to be
-	 *             stored in SQL
-	 */
-	@Override
-	@Deprecated
-	public String create(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-
-		String uuid = super.create(sqlConnectionCode, cei, true); // Force to return ID as we need it to retrieve data for Elastic Search
-												// population
-		elasticClient.createOrUpdate(CustomTableRecord.class, uuid, cei, false, true);
-
-		return uuid;
-	}
-
-	/**
 	 * Inserts an instance of {@linkplain CustomEntityInstance} into the database.
 	 *
 	 * @param cet {@link CustomEntityTemplate} to insert values to
@@ -148,34 +128,10 @@ public class CustomTableService extends NativePersistenceService {
 	 * @return uuid of the newly created entity
 	 * @throws BusinessException failed creating the entity
 	 */
-	@SuppressWarnings("deprecation")
 	public String create(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-
 		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+		cei.setCet(cet);
 		return create(sqlConnectionCode, cei, true, true, cfts, true);
-	}
-
-	/**
-	 * Insert multiple values into table
-	 *
-	 * @param tableName Table name to insert values to
-	 * @param ceis transient list of {@link CustomEntityInstance}
-	 * @throws BusinessException General exception
-	 * @deprecated prefer using
-	 *             {@link CustomTableService#create(CustomEntityTemplate, List)}
-	 *             instead for value filtering.
-	 */
-	@Override
-	@Deprecated
-	public void create(String sqlConnectionCode, String tableName, List<CustomEntityInstance> ceis) throws BusinessException {
-
-		for (CustomEntityInstance cei : ceis) {
-			String uuid = super.create(sqlConnectionCode, cei, true); // Force to return ID as we need it to retrieve data for Elastic Search
-																// population
-			elasticClient.createOrUpdate(CustomTableRecord.class, uuid, cei, false, false);
-		}
-
-		elasticClient.flushChanges();
 	}
 
 	/**
@@ -275,9 +231,9 @@ public class CustomTableService extends NativePersistenceService {
 	 */
     @SuppressWarnings("deprecation")
     public void update(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-
     	Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
-		super.update(sqlConnectionCode, cei, true, cfts, false);
+		cei.setCet(cet);
+    	super.update(sqlConnectionCode, cei, true, cfts, false);
     }
 
     /**
@@ -328,24 +284,6 @@ public class CustomTableService extends NativePersistenceService {
             elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, false);
         }
         elasticClient.flushChanges();
-    }
-
-    @Override
-    public void remove(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
-        super.remove(sqlConnectionCode, tableName, uuid);
-        elasticClient.remove(CustomTableRecord.class, tableName, uuid, true);
-    }
-
-    @Override
-    public void remove(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
-        super.remove(sqlConnectionCode, tableName, ids);
-//        elasticClient.remove(CustomTableRecord.class, tableName, ids, true); FIXME: Update ES to use UUID instead of ID
-    }
-
-    @Override
-    public void remove(String sqlConnectionCode, String tableName) throws BusinessException {
-        super.remove(sqlConnectionCode, tableName);
-        elasticClient.remove(CustomTableRecord.class, tableName);
     }
 
     /**
@@ -603,7 +541,7 @@ public class CustomTableService extends NativePersistenceService {
 
         // Delete current data first if in override mode
         if (!append) {
-            customTableService.remove(sqlConnectionCode, tableName);
+            customTableService.remove(sqlConnectionCode, (CustomEntityTemplate) customModelObject);
         }
 
         // By default will update ES immediately. If more than 100 records are being updated, ES will be updated in batch way - reconstructed from a table
@@ -987,14 +925,45 @@ public class CustomTableService extends NativePersistenceService {
 	 */
 	@SuppressWarnings("deprecation")
 	public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid, List<String> selectFields) throws EntityDoesNotExistsException {
+		var selectFieldsCopy = selectFields == null ? null : new ArrayList<>(selectFields);
+		
 		// Retrieve fields of the template
 		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
-		// Get raw data
-		Map<String, Object> data = super.findById(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), uuid, selectFields);
+		Map<String, Object> data = new HashMap<>();
+		
+		// Complete data with parent table
+		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
+			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
+			List<String> parentFieldsToSelect;
+			if(selectFieldsCopy != null) {
+				parentFieldsToSelect = new ArrayList<>();
+				parentCfts.values()
+					.forEach(cft -> {
+						var dbColKey = cft.getDbFieldname();
+						var isFieldSelected =  selectFieldsCopy.remove(dbColKey);
+						if(isFieldSelected) {
+							parentFieldsToSelect.add(dbColKey);
+						}
+					});
+			} else {
+				parentFieldsToSelect = null;
+			}
 
-		if(data == null) {
-		    //throw new EntityDoesNotExistsException("CET " + cet.getCode() + " with UUID : " + uuid);
+			
+			var parentData = super.findById(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet.getSuperTemplate()), uuid, parentFieldsToSelect);
+			if(parentData != null) {
+				data.putAll(parentData);
+			}
+		}
+		
+		// Get raw data
+		var rowData = super.findById(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), uuid, selectFieldsCopy);
+		if(rowData != null) {
+			data.putAll(rowData);
+		}
+		
+		if(data.isEmpty()) {
 			return null;
         }
 
@@ -1024,7 +993,12 @@ public class CustomTableService extends NativePersistenceService {
      * @return the converted data
      */
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
-        final Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+        var cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
+		if(cet.getSuperTemplate() != null) {
+			var parentCfts = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
+			parentCfts.forEach(cfts::putIfAbsent);
+		}
+        
         final List<Map<String, Object>> convertedData = new ArrayList<>();
 
         for(int i = 0; i < data.size(); i++){
@@ -1037,7 +1011,7 @@ public class CustomTableService extends NativePersistenceService {
             		continue;
             	}
 
-            	Optional<CustomFieldTemplate> customFieldTemplate = getCustomFieldTemplate(cfts, field);
+            	Optional<CustomFieldTemplate> customFieldTemplate = getCustomFieldTemplate(cfts.values(), field);
             	if(!customFieldTemplate.isPresent()) {
             		log.warn("No custom field template found for {}", field);
             		continue;
@@ -1050,9 +1024,12 @@ public class CustomTableService extends NativePersistenceService {
                     if(!(field.getValue() instanceof Collection) && field.getValue() != null){
                         modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
                     }
+                } else if(cft.getFieldType().equals(CustomFieldTypeEnum.BOOLEAN) && field.getValue() instanceof Integer) {
+                	modifiableMap.put(field.getKey(), ((int) field.getValue()) == 1);
                 } else {
                 	modifiableMap.put(field.getKey(), field.getValue());
                 }
+                
             }
         }
 

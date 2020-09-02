@@ -1139,7 +1139,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-				customTableService.remove(repository.getSqlConfigurationCode(), dbTablename, uuid);
+				customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
 			} else {
 				final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
 				customEntityInstanceService.remove(customEntityInstance);
@@ -1159,25 +1159,6 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
 			customEntityInstanceDelete.fire(cei);
-		}
-	}
-
-	/**
-	 * Remove a relation from database
-	 *
-	 * @param repository Repository
-	 * @param crt            Template of the relation
-	 * @param uuid           UUID of the relation
-	 * @throws BusinessException if error happens
-	 */
-	public void remove(Repository repository, CustomRelationshipTemplate crt, String uuid) throws BusinessException {
-		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			final String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-			customTableRelationService.remove(repository.getSqlConfigurationCode(), dbTablename, uuid);
-		}
-
-		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			neo4jDao.removeRelation(repository.getNeo4jConfiguration().getCode(), crt.getCode(), uuid);
 		}
 	}
 

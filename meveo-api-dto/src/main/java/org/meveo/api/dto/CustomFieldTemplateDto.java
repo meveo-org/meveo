@@ -301,7 +301,11 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     @JsonIgnore
 	private boolean hasReferenceJpaEntity;
     
+    @JsonIgnore
+	private boolean inDraft = false;
+	
 	private boolean audited = false;
+	
 
     /**
      * Instantiates a new custom field template dto.
@@ -1180,6 +1184,14 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
     public String getEntityClazzCetCode() {
         return CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
+
+	public boolean isInDraft() {
+		return inDraft;
+	}
+
+	public void setInDraft(boolean inDraft) {
+		this.inDraft = inDraft;
+	}
 
 	/**
 	 * Checks for reference jpa entity.

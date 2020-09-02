@@ -1,6 +1,7 @@
 package org.meveo.service.custom;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -252,19 +253,80 @@ public class CustomTableCreatorService implements Serializable {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createTable(String sqlConnectionCode, String dbTableName) {
-		createTable(sqlConnectionCode, dbTableName, true);
+	public void createTable(String sqlConnectionCode, CustomEntityTemplate template) {
+		createTable(sqlConnectionCode, template, true);
+	}
+	
+	public void addInheritance(String sqlCode, CustomEntityTemplate template) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+
+		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+		var fkChange = new AddForeignKeyConstraintChange();
+		fkChange.setBaseTableName(dbTableName);
+		fkChange.setBaseColumnNames(UUID);
+		fkChange.setReferencedTableName(parentTableName);
+		fkChange.setReferencedColumnNames(UUID);
+		fkChange.setConstraintName(getInheritanceFK(dbTableName, parentTableName));
+		
+		ChangeSet pgChangeSet = new ChangeSet(dbTableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql", dbLog);
+		pgChangeSet.addChange(fkChange);
+		dbLog.addChangeSet(pgChangeSet);
+		
+		try(Session hibernateSession = sqlConnectionProvider.getSession(sqlCode)) {
+			hibernateSession.doWork(connection -> {
+				Database database = getDatabase(connection);
+				try {
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+				} catch (Exception e) {
+					log.error("Failed to add parent foreign key on table {} on SQL Configuration {}", dbTableName, sqlCode, e);
+					throw new SQLException(e);
+				}
+			});
+		}
+
+	}
+
+	public void removeInheritance(String sqlCode, CustomEntityTemplate template) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+
+		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+		var fkChange = new DropForeignKeyConstraintChange();
+		fkChange.setBaseTableName(dbTableName);
+		fkChange.setConstraintName(getInheritanceFK(dbTableName, parentTableName));
+		
+		ChangeSet pgChangeSet = new ChangeSet(dbTableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql", dbLog);
+		pgChangeSet.addChange(fkChange);
+		dbLog.addChangeSet(pgChangeSet);
+		
+		try(Session hibernateSession = sqlConnectionProvider.getSession(sqlCode)) {
+			hibernateSession.doWork(connection -> {
+				Database database = getDatabase(connection);
+				try {
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+				} catch (Exception e) {
+					log.error("Failed to remove parent foreign key on table {} on SQL Configuration {}", dbTableName, sqlCode, e);
+					throw new SQLException(e);
+				}
+			});
+		}
 	}
 	
 	/**
 	 * Create a table with a single 'id' field. Value is autoincremented for mysql
 	 * or taken from sequence for Postgress databases.
 	 * 
-	 * @param dbTableName DB table name
+	 * @param sqlConnectionCode Code of the {@link SqlConfiguration}
+	 * @param template 			Template used to create the table
+	 * @param createSequence 	Whether to create a sequence to generate ids
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createTable(String sqlConnectionCode, String dbTableName, boolean createSequence) {
-
+	public void createTable(String sqlConnectionCode, CustomEntityTemplate template, boolean createSequence) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
 		// Changeset for Postgress
@@ -278,11 +340,20 @@ public class CustomTableCreatorService implements Serializable {
 		pgUuidColumn.setType("varchar(255)");
 		pgUuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
+		// Primary key constraint
 		ConstraintsConfig idConstraints = new ConstraintsConfig();
 		idConstraints.setNullable(false);
 		idConstraints.setPrimaryKey(true);
 		idConstraints.setPrimaryKeyName(dbTableName + "PK");
-
+		
+		// If template has a parent template, uuid should have foreign key on parent table
+		if(template.getSuperTemplate() != null && template.getSuperTemplate().getAvailableStorages().contains(DBStorageType.SQL)) {
+			var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+			idConstraints.setForeignKeyName(getInheritanceFK(dbTableName, parentTableName));
+			idConstraints.setReferencedTableName(parentTableName);
+			idConstraints.setReferencedColumnNames(UUID);
+		}
+		
 		pgUuidColumn.setConstraints(idConstraints);
 		createPgTableChange.addColumn(pgUuidColumn);
 		pgChangeSet.addChange(createPgTableChange);
@@ -357,6 +428,15 @@ public class CustomTableCreatorService implements Serializable {
 		});
 
 		hibernateSession.close();
+	}
+
+	/**
+	 * @param dbTableName
+	 * @param parentTableName
+	 * @return
+	 */
+	private String getInheritanceFK(String dbTableName, String parentTableName) {
+		return "fk_" + dbTableName + "_" + parentTableName;
 	}
 
 	private void setSchemaName(Database database) throws DatabaseException {
@@ -828,7 +908,7 @@ public class CustomTableCreatorService implements Serializable {
 			}
 		});
 	}
-
+	
 	public static String getFkConstraintName(String tableName, CustomFieldTemplate cft) {
 		return String.format("fk_%s_%s", tableName, cft.getDbFieldname());
 	}
@@ -866,7 +946,9 @@ public class CustomTableCreatorService implements Serializable {
 			}
 			if (referenceCet == null && !cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
 				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
-				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));
+				String pkColumnName = PersistenceUtils.getPKColumnName(jpaEntityClazz);
+				String pkColumnType = PersistenceUtils.getPKColumnType(jpaEntityClazz, pkColumnName);
+				fieldType = CustomFieldTypeEnum.guessEnum(pkColumnType);
 				
 				// check the storage as well referenceJPA must be stored in SINGLE storage
 				// TODO: Must support different storage types
@@ -920,12 +1002,12 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
-	public void createTable(String dbTablename, boolean hasReferenceJpaEntity) {
+	public void createTable(CustomEntityTemplate template) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> {
-			if (!hasReferenceJpaEntity || (hasReferenceJpaEntity && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				createTable(e.getCode(), dbTablename);
+			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				createTable(e.getCode(), template);
 			}
 		});
 	}
@@ -1010,5 +1092,18 @@ public class CustomTableCreatorService implements Serializable {
 		});
 
 		hibernateSession.close();
+	}
+	
+	private Database getDatabase(Connection connection) throws SQLException {
+		Database database;
+		try {
+			database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+			setSchemaName(database);
+
+		} catch (DatabaseException e1) {
+			log.error("Failed to retrieve database for connection {}", connection);
+			throw new SQLException(e1);
+		}
+		return database;
 	}
 }

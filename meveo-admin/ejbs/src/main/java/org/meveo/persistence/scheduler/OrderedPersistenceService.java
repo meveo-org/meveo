@@ -103,8 +103,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                     CustomEntityInstance cei = new CustomEntityInstance();
                     cei.setCode((String) entityToPersist.getValues().get("code"));
                     cei.setCetCode(entityToPersist.getCode());
-                    customFieldInstanceService.setCfValues(cei, entityToPersist.getCode(), itemToPersist.getValues());
                     cei.setCet(cacheContainerProvider.getCustomEntityTemplate(cei.getCetCode()));
+                    customFieldInstanceService.setCfValues(cei, entityToPersist.getCode(), itemToPersist.getValues());
 
                     result = storageService.createOrUpdate(repository, cei);
                     Set<EntityRef> persistedEntities = result.getPersistedEntities();

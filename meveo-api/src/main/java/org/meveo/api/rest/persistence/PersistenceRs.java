@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -174,14 +175,18 @@ public class PersistenceRs {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Get persistence")
     public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
-        final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+    	final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
         if (customEntityTemplate == null) {
-            throw new NotFoundException();
+            throw new NotFoundException("Template " + cetCode + " does not exists");
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
         Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
 
+        if(values.size() == 1 && values.containsKey("uuid")) {
+        	throw new NotFoundException(cetCode + " with uuid " + uuid + " does not exists");
+        }
+        
         convertFiles(customEntityTemplate, values, base64Encode);
 
         return values;
