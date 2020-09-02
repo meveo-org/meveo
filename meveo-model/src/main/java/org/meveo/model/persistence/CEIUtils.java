@@ -3,12 +3,23 @@
  */
 package org.meveo.model.persistence;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.typereferences.GenericTypeReferences;
 
 /**
  * Utilitary class for manipulating {@link CustomEntityInstance}
@@ -32,7 +43,41 @@ public class CEIUtils {
 	 * @return converted CEI
 	 */
 	public static CustomEntityInstance pojoToCei(Object pojo) {
-		Map<String, Object> pojoAsMap = JacksonUtil.convert(pojo, GenericTypeReferences.MAP_STRING_OBJECT);
+		Map<String, Object> pojoAsMap;
+		if(pojo instanceof Map) {
+			pojoAsMap = (Map<String, Object>) pojo;
+		} else { 
+			// Transform POJO into Map
+			Map<String, Object> values = new HashMap<>();
+			Stream.of(pojo.getClass().getMethods())
+				.filter(m -> m.getName().startsWith("get") | m.getName().startsWith("is"))
+				.filter(m -> m.getParameterCount() == 0)
+				.forEach(m -> {
+					var key = getFieldForGetter(pojo.getClass(), m);
+					try {
+						if(key != null) {
+							var value = m.invoke(pojo);
+							values.put(key, value);
+						}
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+						throw new RuntimeException(e);
+					}
+				});
+				
+			pojoAsMap = new HashMap<>();
+			values.entrySet()
+				.stream()
+				.forEach(e -> {
+					if(e.getValue() != null && e.getValue().getClass().getAnnotation(Entity.class) != null) {
+						pojoAsMap.put(e.getKey(), getIdValue(e.getValue()));
+					} else {
+						pojoAsMap.put(e.getKey(), e.getValue());
+					}
+				});
+		}
+				
+				
+				//JacksonUtil.convert(pojo, GenericTypeReferences.MAP_STRING_OBJECT);
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setUuid((String) pojoAsMap.get("uuid"));
 		cei.setCetCode(pojo.getClass().getSimpleName());
@@ -54,6 +99,86 @@ public class CEIUtils {
 		Map<String, Object> pojoValues = cei.getCfValuesAsValues();
 		pojoValues.put("uuid", cei.getUuid());
 		return JacksonUtil.convert(pojoValues, pojoClass);
+	}
+	
+	private static String getFieldForGetter(Class<?> clazz, Method getter) {
+		String fieldName;
+		if(getter.getName().startsWith("is")) {
+			fieldName = getter.getName().substring(2);
+		} else {
+			fieldName = getter.getName().substring(3);
+		}
+		
+		return ReflectionUtils.getAllFields(new ArrayList<>(),clazz)
+			.stream()
+			.filter(f -> f.getName().toUpperCase().equals(fieldName.toUpperCase()))
+			.findFirst()
+			.map(Field::getName)
+			.orElse(null);
+	}
+	
+	private static void setIdField(Object object, Object id) {
+		ReflectionUtils.getAllFields(new ArrayList<>(),object.getClass())
+			.stream()
+			.filter(f -> f.getAnnotation(Id.class) != null)
+			.findFirst()
+			.ifPresent(f -> {
+				try {
+					f.setAccessible(true);
+					f.set(object, id);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+			});
+	}
+	
+	private static Object getIdValue(Object object) {
+		return ReflectionUtils.getAllFields(new ArrayList<>(),object.getClass())
+				.stream()
+				.filter(f -> f.getAnnotation(Id.class) != null)
+				.findFirst()
+				.map(f -> {
+					try {
+						f.setAccessible(true);
+						return f.get(object);
+					} catch (IllegalArgumentException | IllegalAccessException e) {
+						throw new RuntimeException(e);
+					}
+				}).orElse(null);
+	}
+	
+	/**
+	 * @param value
+	 * @return
+	 * @throws RuntimeException
+	 */
+	public static <T> T deserialize(Map<String, Object> value, Class<T> clazz) throws RuntimeException {
+		try {
+			T instance = clazz.getDeclaredConstructor().newInstance();
+			for(var entry : value.entrySet()) {
+				var setter = findSetter(entry.getKey(), clazz);
+				try {
+					setter.invoke(instance, entry.getValue());
+				} catch (IllegalArgumentException e) {
+					Object lazyInitInstance = setter.getParameters()[0]
+							.getType()
+							.getDeclaredConstructor()
+							.newInstance();
+					setIdField(lazyInitInstance, entry.getValue());
+					setter.invoke(instance, lazyInitInstance);
+				}
+			}
+			return instance;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static Method findSetter(String fieldName, Class<?> clazz) {
+		return Stream.of(clazz.getMethods())
+			.filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase()))
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("No setter found for field " + fieldName + " in " + clazz));
 	}
 
 }
