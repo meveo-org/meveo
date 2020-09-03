@@ -223,6 +223,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Transient
     private PrimitiveTypeEnum primitiveType;
+    
+	@Transient
+	private boolean isInDraft = false;
 
     /**
      * Where field should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;fieldGroup:&lt;fieldgroup name&gt;:&lt;fieldgroup relative
@@ -381,6 +384,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Column(name = "samples", columnDefinition = "TEXT")
     @Type(type = "jsonList")
     private List<String> samples = new ArrayList<>();
+    
+    @Type(type = "numeric_boolean")
+	@Column(name = "audited")
+	private boolean audited = false;
 
     /**
      * Database field name - derived from code
@@ -424,7 +431,15 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         return storages == null ? new ArrayList<>() : storages;
     }
     
-    public List<DBStorageType> getStorages() {
+    public boolean isInDraft() {
+		return isInDraft;
+	}
+
+	public void setInDraft(boolean isInDraft) {
+		this.isInDraft = isInDraft;
+	}
+
+	public List<DBStorageType> getStorages() {
         return storages;
     }
 
@@ -1811,6 +1826,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	 */
 	public void setHasReferenceJpaEntity(boolean hasReferenceJpaEntity) {
 		this.hasReferenceJpaEntity = hasReferenceJpaEntity;
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 	
 }

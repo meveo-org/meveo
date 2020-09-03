@@ -1299,4 +1299,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         return scriptInstances;
     }
+   
+    public Map<CacheKeyStr, ScriptInterfaceSupplier> getScriptCache() {
+    	return ALL_SCRIPT_INTERFACES;
+    }
 }

@@ -1,0 +1,11 @@
+FROM neo4j:3.5.13
+
+# Neo4j plugins
+RUN curl -L --fail --silent --show-error "https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/3.5.0.6/apoc-3.5.0.6-all.jar" > ${NEO4J_HOME}/plugins/apoc-3.5.0.6-all.jar
+
+RUN curl -L --fail --silent --show-error "https://github.com/neo4j-graphql/neo4j-graphql/releases/download/3.5.0.4/neo4j-graphql-3.5.0.4.jar" > ${NEO4J_HOME}/plugins/neo4j-graphql-3.5.0.4.jar
+
+RUN mv "${NEO4J_HOME}"/plugins /plugins \
+    && chown -R neo4j:neo4j /plugins \
+    && chmod -R 777 /plugins \
+    && ln -s /plugins "${NEO4J_HOME}"/plugins

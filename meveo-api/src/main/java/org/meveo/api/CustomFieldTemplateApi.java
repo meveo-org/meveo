@@ -401,6 +401,8 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
             cft.setAppliesTo(appliesTo);
         }
+        
+        cft.setInDraft(dto.isInDraft());
 
         if (dto.getDescription() != null) {
             cft.setDescription(dto.getDescription());
@@ -571,6 +573,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setMaxFileSizeAllowedInKb(dto.getMaxFileSizeAllowedInKb());
         cft.setFilePath(dto.getFilePath());
         cft.setSaveOnExplorer(dto.isSaveOnExplorer());
+        cft.setAudited(dto.isAudited());
 
         return cft;
     }

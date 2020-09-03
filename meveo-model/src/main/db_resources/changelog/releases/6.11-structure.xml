@@ -22,6 +22,13 @@
 			<column name="audited" type="${type.boolean}" defaultValue="0"></column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet author="EdwardPLegaspi"
+		id="20200825 - Github#140: CFT Audit Trail">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="audited" type="${type.boolean}" defaultValue="0"></column>
+		</addColumn>
+	</changeSet>
 
 	<changeSet id="Add cetCode on workflow table" author="Phu Bach">
 		<addColumn tableName="wf_workflow">

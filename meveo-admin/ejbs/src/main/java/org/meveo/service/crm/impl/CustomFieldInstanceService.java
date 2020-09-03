@@ -2555,8 +2555,15 @@ public class CustomFieldInstanceService extends BaseService {
      */
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
 		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
-
-		for (Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
+		if(entity instanceof CustomEntityInstance) {
+			var cei = (CustomEntityInstance) entity;
+			if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
+				var parentCfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getSuperTemplate().getAppliesTo());
+				parentCfts.forEach(cetFields::putIfAbsent);
+			}
+		}
+		
+		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
 			if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {
 			    if ((Integer) value == 1) {
