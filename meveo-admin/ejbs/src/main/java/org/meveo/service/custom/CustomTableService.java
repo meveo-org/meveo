@@ -891,14 +891,14 @@ public class CustomTableService extends NativePersistenceService {
 		PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
 
 		// Only use SQL filters
-		if (config.getFilters() != null) {
+		if (config != null && config.getFilters() != null) {
 			final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream().filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
 					.filter(e -> Objects.nonNull(e.getValue())).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 			paginationConfiguration.setFilters(sqlFilters);
 		}
 
 		// Only fetch SQL fields
-		if (config.getFetchFields() != null) {
+		if (config != null && config.getFetchFields() != null) {
 			List<String> sqlFetchFields = config.getFetchFields().stream().filter(s -> sqlCftFilter(cet, s)).collect(Collectors.toList());
 			paginationConfiguration.setFetchFields(sqlFetchFields);
 		}
@@ -1124,7 +1124,7 @@ public class CustomTableService extends NativePersistenceService {
                     Optional<CustomFieldTemplate> customFieldTemplateOpt = getCustomFieldTemplate(cfts, entry);
 
                     if(customFieldTemplateOpt.isPresent()) {
-                        return customFieldTemplateOpt.get().getStoragesNullSafe().contains(DBStorageType.SQL);
+                        return customFieldTemplateOpt.get().getStorages().contains(DBStorageType.SQL);
                     }else {
                     	log.warn("Column {} of table {} cannot be translated into custom field", entry.getKey(), SQLStorageConfiguration.getCetDbTablename(cet.getCode()));
                     	return false;

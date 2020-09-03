@@ -18,8 +18,6 @@
  */
 package org.meveo.admin.action.wf;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.faces.context.FacesContext;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,20 +37,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
-import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.shared.DateUtils;
-import org.meveo.model.wf.DecisionRuleTypeEnum;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.wf.WFAction;
-import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.wf.WFActionService;
-import org.meveo.service.wf.WFDecisionRuleService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
 import org.omnifaces.cdi.Param;
@@ -84,26 +84,25 @@ public class WorkflowBean extends BaseBean<Workflow> {
     private WFTransitionService wFTransitionService;
 
     @Inject
-    private WFDecisionRuleService wfDecisionRuleService;
-
-    @Inject
     private WFActionService wfActionService;
 
-    private List<String> wfDecisionRulesName;
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
 
-    private List<List<WFDecisionRule>> wfDecisionRulesByName = new ArrayList<>();
-
-    private List<GroupedDecisionRule> selectedRules = new ArrayList<>();
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
 
     private List<WFAction> wfActions = new ArrayList<>();
 
     private boolean showDetailPage = false;
 
+    private String oldCetCode = null;
+
+    private String oldWFType = null;
+
     // @Produces
     // @Named
     private transient WFTransition wfTransition = new WFTransition();
-
-    private transient WFDecisionRule newWFDecisionRule = new WFDecisionRule();
 
     @Inject
     @Param
@@ -119,6 +118,10 @@ public class WorkflowBean extends BaseBean<Workflow> {
     @Override
     public Workflow initEntity() {
         super.initEntity();
+        if (entity != null) {
+            oldCetCode = entity.getCetCode();
+            oldWFType = entity.getWfType();
+        }
         // PersistenceUtils.initializeAndUnproxy(entity.getActions());
         return entity;
     }
@@ -131,52 +134,71 @@ public class WorkflowBean extends BaseBean<Workflow> {
         this.wfTransition = wfTransition;
     }
 
+    public String getOldCetCode() {
+        return oldCetCode;
+    }
+
+    public void setOldCetCode(String oldCetCode) {
+        this.oldCetCode = oldCetCode;
+    }
+
+    public String getOldWFType() {
+        return oldWFType;
+    }
+
+    public void setOldWFType(String oldWFType) {
+        this.oldWFType = oldWFType;
+    }
+
     public void cancelTransitionDetail() {
         this.wfTransition = new WFTransition();
-        selectedRules.clear();
         showDetailPage = false;
     }
 
     @Override
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+        if ((oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) || (oldWFType != null && !entity.getWfType().equals(oldWFType))) {
+            List<WFTransition> wfTransitions = entity.getTransitions();
+            if (CollectionUtils.isNotEmpty(wfTransitions)) {
+                for (WFTransition wfTransition: wfTransitions) {
+                    if (wfTransition != null) {
+                        wfTransition = wFTransitionService.findById(wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"));
+                        if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+                            for (WFAction wfAction : wfTransition.getWfActions()) {
+                                wfActionService.remove(wfAction);
+                            }
+                        }
+                    }
+                }
+                for (WFTransition wfTransition: wfTransitions) {
+                    wFTransitionService.remove(wfTransition);
+                }
+            }
+            entity.setTransitions(new ArrayList<>());
+        }
         super.saveOrUpdate(killConversation);
         return "workflowDetail";
     }
 
     public void saveWfTransition() throws BusinessException {
 
-        List<WFDecisionRule> wfDecisionRules = new ArrayList<>();
-
-        boolean isUniqueNameValue = checkAndPopulateDecisionRules(selectedRules, wfDecisionRules);
-        if (!isUniqueNameValue) {
-            return;
-        }
-
-        for (WFDecisionRule wfDecisionRuleFor : wfDecisionRules) {
-            if (wfDecisionRuleFor.getId() == null) {
-                wfDecisionRuleService.create(wfDecisionRuleFor);
-            }
-        }
-
         if (wfTransition.getId() != null) {
-            WFTransition wfTrs = wFTransitionService.findById(wfTransition.getId());
+            WFTransition wfTrs = wFTransitionService.findById(wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"));
             wfTrs.setFromStatus(wfTransition.getFromStatus());
             wfTrs.setToStatus(wfTransition.getToStatus());
             wfTrs.setConditionEl(wfTransition.getConditionEl());
             wfTrs.setDescription(wfTransition.getDescription());
 
-            wfTrs.getWfDecisionRules().clear();
-            wfTrs.getWfDecisionRules().addAll(wfDecisionRules);
-
             wFTransitionService.update(wfTrs);
 
             addOrUpdateOrDeleteActions(wfTrs, wfActions, true);
 
+            entity.getTransitions().remove(wfTransition);
+            entity.getTransitions().add(wfTrs);
+
             messages.info(new BundleKey("messages", "update.successful"));
         } else {
-            wfTransition.getWfDecisionRules().clear();
-            wfTransition.getWfDecisionRules().addAll(wfDecisionRules);
 
             wfTransition.setWorkflow(entity);
             wFTransitionService.create(wfTransition);
@@ -187,8 +209,6 @@ public class WorkflowBean extends BaseBean<Workflow> {
             messages.info(new BundleKey("messages", "save.successful"));
         }
 
-        wfDecisionRulesByName.clear();
-        selectedRules.clear();
         wfActions.clear();
         showDetailPage = false;
         wfTransition = new WFTransition();
@@ -199,8 +219,6 @@ public class WorkflowBean extends BaseBean<Workflow> {
         try {
             wFTransitionService.remove(transitionToDelete.getId());
             entity = workflowService.refreshOrRetrieve(entity);
-            wfDecisionRulesByName.clear();
-            selectedRules.clear();
             wfActions.clear();
             showDetailPage = false;
             messages.info(new BundleKey("messages", "delete.successful"));
@@ -235,22 +253,10 @@ public class WorkflowBean extends BaseBean<Workflow> {
     }
 
     @ActionMethod
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void editWfTransition(WFTransition transitionToEdit) {
         this.wfTransition = transitionToEdit;
-        WFTransition wfTransition1 = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"), true);
-        if (wfTransition1 != null && wfTransition1.getWfDecisionRules() != null) {
-            wfDecisionRulesByName.clear();
-            selectedRules.clear();
-            for (WFDecisionRule wfDecisionRule : wfTransition1.getWfDecisionRules()) {
-                GroupedDecisionRule groupedDecisionRule = new GroupedDecisionRule();
-                groupedDecisionRule.setName(wfDecisionRule.getName());
-                groupedDecisionRule.setValue(wfDecisionRule);
-                List<WFDecisionRule> list = wfDecisionRuleService.getWFDecisionRules(wfDecisionRule.getName());
-                Collections.sort(list);
-                wfDecisionRulesByName.add(list);
-                selectedRules.add(groupedDecisionRule);
-            }
-        }
+        WFTransition wfTransition1 = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfDecisionRules", "wfActions"));
         if (wfTransition1 != null && wfTransition1.getWfActions() != null) {
             wfActions.clear();
             wfActions.addAll(wfTransition1.getWfActions());
@@ -280,6 +286,29 @@ public class WorkflowBean extends BaseBean<Workflow> {
         return classNames;
     }
 
+    public List<String> autocompleteCETName(String query) {
+        List<CustomEntityTemplate> allCET = customEntityTemplateService.list();
+        List<String> cetNames = new ArrayList<String>();
+        for (CustomEntityTemplate customEntityTemplate: allCET) {
+           cetNames.add(customEntityTemplate.getCode());
+        }
+        Collections.sort(cetNames);
+        return cetNames;
+    }
+
+    public List<String> autocompleteCFTName(String query) {
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo("CE_" + entity.getCetCode());
+        List<String> cftNames = new ArrayList<String>();
+        if (cfts != null && CollectionUtils.isNotEmpty(cfts.values()))
+        for (CustomFieldTemplate cft: cfts.values()) {
+            if (cft.getFieldType() == CustomFieldTypeEnum.LIST && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && cft.getListValues() != null) {
+                cftNames.add(cft.getCode());
+            }
+        }
+        Collections.sort(cftNames);
+        return cftNames;
+    }
+
     /**
      * @see org.meveo.admin.action.BaseBean#getPersistenceService()
      */
@@ -295,56 +324,13 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     @SuppressWarnings({ "unchecked" })
     public Map<String, String> getTransitionStatusFromWorkflowType() {
-        try {
-            if (entity.getWfType() != null) {
-                Class<?> clazz = workflowService.getWFTypeClassForName(entity.getWfType());
-                Object obj = clazz.newInstance();
-                Method testMethod = obj.getClass().getMethod("getStatusList");
-                List<String> statusList = (List<String>) testMethod.invoke(obj);
-                Map<String, String> statusMap = new TreeMap<>();
-                for (String s : statusList) {
-                    statusMap.put(s, s);
-                }
-                return statusMap;
-            }
-        } catch (Exception e) {
-            log.error("Unable to get/instantiate or retrieve status list for class " + entity.getWfType(), e);
+        Map<String, String> statusMap = new TreeMap<>();
+        if (entity.getCetCode() != null && entity.getWfType() != null) {
+            CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(entity.getWfType(), "CE_" + entity.getCetCode());
+            Map<String, String> listValue = customFieldTemplate.getListValues();
+            statusMap.putAll(listValue);
         }
-        return new TreeMap<>();
-    }
-
-    public List<String> getWfDecisionRulesName() {
-        if (wfDecisionRulesName == null) {
-            wfDecisionRulesName = wfDecisionRuleService.getDistinctNameWFTransitionRules();
-        }
-        return wfDecisionRulesName;
-    }
-
-    public void setWfDecisionRulesName(List<String> wfDecisionRulesName) {
-        this.wfDecisionRulesName = wfDecisionRulesName;
-    }
-
-    public List<List<WFDecisionRule>> getWfDecisionRulesByName() {
-        return wfDecisionRulesByName;
-    }
-
-    public void setWfDecisionRulesByName(List<List<WFDecisionRule>> wfDecisionRulesByName) {
-        this.wfDecisionRulesByName = wfDecisionRulesByName;
-    }
-
-    public void changedRuleName(int indexRule) {
-        List<WFDecisionRule> list = wfDecisionRuleService.getWFDecisionRules(selectedRules.get(indexRule).getName());
-        Collections.sort(list);
-        if (wfDecisionRulesByName.size() > indexRule && wfDecisionRulesByName.get(indexRule) != null) {
-            wfDecisionRulesByName.remove(indexRule);
-            wfDecisionRulesByName.add(indexRule, list);
-        } else {
-            wfDecisionRulesByName.add(indexRule, list);
-        }
-    }
-
-    public void addNewRule() {
-        selectedRules.add(new GroupedDecisionRule());
+        return statusMap;
     }
 
     public void addNewAction() {
@@ -358,33 +344,10 @@ public class WorkflowBean extends BaseBean<Workflow> {
         wfActions.add(newInstance);
     }
 
-    public void deleteWfDecisionRule(int indexRule) {
-        if (wfDecisionRulesByName.size() > indexRule && wfDecisionRulesByName.get(indexRule) != null) {
-            wfDecisionRulesByName.remove(indexRule);
-        }
-        selectedRules.remove(indexRule);
-    }
-
     public void deleteWfAction(int indexAction) {
         if (wfActions.size() > indexAction && wfActions.get(indexAction) != null) {
             wfActions.remove(indexAction);
         }
-    }
-
-    public List<GroupedDecisionRule> getSelectedRules() {
-        return selectedRules;
-    }
-
-    public void setSelectedRules(List<GroupedDecisionRule> selectedRules) {
-        this.selectedRules = selectedRules;
-    }
-
-    public WFDecisionRule getNewWFDecisionRule() {
-        return newWFDecisionRule;
-    }
-
-    public void setNewWFDecisionRule(WFDecisionRule newWFDecisionRule) {
-        this.newWFDecisionRule = newWFDecisionRule;
     }
 
     public boolean isShowDetailPage() {
@@ -397,9 +360,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     public void newTransition() {
         showDetailPage = true;
-        selectedRules.clear();
         wfActions.clear();
-        wfDecisionRulesByName.clear();
         List<WFTransition> wfTransitionList = entity.getTransitions();
         if (CollectionUtils.isNotEmpty(wfTransitionList)) {
             WFTransition lastWFTransition = wfTransitionList.get(wfTransitionList.size() - 1);
@@ -429,7 +390,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
             }
         }
 
-        if (isUpdate) {
+        if (isUpdate && this.wfTransition != null) {
             WFTransition currentTransition = wFTransitionService.findById(this.wfTransition.getId(), Arrays.asList("wfActions"));
             List<WFAction> deletedActions = currentTransition.getWfActions();
             if (CollectionUtils.isNotEmpty(deletedActions)) {
@@ -438,87 +399,23 @@ public class WorkflowBean extends BaseBean<Workflow> {
             for (WFAction wfAction : deletedActions) {
                 wfActionService.remove(wfAction);
             }
+
+            if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+                wfTransition.getWfActions().clear();
+            }
             for (WFAction wfAction : updatedActions) {
                 wfActionService.update(wfAction);
+                wfTransition.getWfActions().add(wfAction);
             }
         }
         for (WFAction wfAction : newActions) {
             wfAction.setWfTransition(wfTransition);
             wfActionService.create(wfAction);
+            wfTransition.getWfActions().add(wfAction);
         }
 
         updatedActions.clear();
         newActions.clear();
-    }
-
-    public boolean checkAndPopulateDecisionRules(List<GroupedDecisionRule> groupedDecisionRules, List<WFDecisionRule> wfDecisionRules) {
-
-        String datePattern = paramBeanFactory.getInstance().getDateFormat();
-        List<RuleNameValue> uniqueNameValues = new ArrayList<>();
-        for (GroupedDecisionRule groupedDecisionRule : groupedDecisionRules) {
-            if (groupedDecisionRule.getValue() != null && groupedDecisionRule.getValue().getModel()) {
-                WFDecisionRule wfDecisionRule = groupedDecisionRule.getValue();
-                newWFDecisionRule.setModel(Boolean.FALSE);
-                newWFDecisionRule.setConditionEl(wfDecisionRule.getConditionEl());
-                newWFDecisionRule.setName(wfDecisionRule.getName());
-                newWFDecisionRule.setType(wfDecisionRule.getType());
-                newWFDecisionRule.setDisabled(Boolean.FALSE);
-
-                if (wfDecisionRule.getType().toString().startsWith("RANGE")) {
-                    StringBuffer value = new StringBuffer();
-                    if (wfDecisionRule.getType() == DecisionRuleTypeEnum.RANGE_DATE) {
-                        if (groupedDecisionRule.getNewDate() != null && groupedDecisionRule.getAnotherDate() == null) {
-                            value.append(DateUtils.formatDateWithPattern(groupedDecisionRule.getNewDate(), datePattern)).append(LESS_SEPARATOR_NO_SPACE_RIGHT);
-                        } else if (groupedDecisionRule.getNewDate() == null && groupedDecisionRule.getAnotherDate() != null) {
-                            value.append(LESS_SEPARATOR_NO_SPACE_LEFT).append(DateUtils.formatDateWithPattern(groupedDecisionRule.getAnotherDate(), datePattern));
-                        } else {
-                            value.append(DateUtils.formatDateWithPattern(groupedDecisionRule.getNewDate(), datePattern)).append(LESS_SEPARATOR)
-                                .append(DateUtils.formatDateWithPattern(groupedDecisionRule.getAnotherDate(), datePattern));
-                        }
-                    } else {
-                        if (groupedDecisionRule.getNewValue() != null && groupedDecisionRule.getAnotherValue() == null) {
-                            value.append(groupedDecisionRule.getNewValue()).append(LESS_SEPARATOR_NO_SPACE_RIGHT);
-                        } else if (groupedDecisionRule.getNewValue() == null && groupedDecisionRule.getAnotherValue() != null) {
-                            value.append(LESS_SEPARATOR_NO_SPACE_LEFT).append(groupedDecisionRule.getAnotherValue());
-                        } else {
-                            value.append(groupedDecisionRule.getNewValue()).append(LESS_SEPARATOR).append(groupedDecisionRule.getAnotherValue());
-                        }
-                    }
-                    newWFDecisionRule.setValue(value.toString());
-                } else if (wfDecisionRule.getType() == DecisionRuleTypeEnum.DATE && groupedDecisionRule.getNewDate() != null) {
-                    newWFDecisionRule.setValue(DateUtils.formatDateWithPattern(groupedDecisionRule.getNewDate(), datePattern));
-                } else {
-                    newWFDecisionRule.setValue(groupedDecisionRule.getNewValue());
-                }
-                WFDecisionRule existedDecisionRule = wfDecisionRuleService.getWFDecisionRuleByNameValue(newWFDecisionRule.getName(), newWFDecisionRule.getValue());
-
-                if (existedDecisionRule != null) {
-                    messages.error(new BundleKey("messages", "decisionRule.uniqueNameValue"), new Object[] { newWFDecisionRule.getName(), newWFDecisionRule.getValue() });
-                    FacesContext.getCurrentInstance().validationFailed();
-                    return false;
-                }
-                RuleNameValue ruleNameValue = new RuleNameValue(newWFDecisionRule.getName(), newWFDecisionRule.getValue());
-                if (uniqueNameValues.contains(ruleNameValue)) {
-                    messages.error(new BundleKey("messages", "decisionRule.duplicateNameValue"), new Object[] { ruleNameValue.getName(), ruleNameValue.getValue() });
-                    FacesContext.getCurrentInstance().validationFailed();
-                    return false;
-                }
-
-                uniqueNameValues.add(ruleNameValue);
-                wfDecisionRules.add(newWFDecisionRule);
-                newWFDecisionRule = new WFDecisionRule();
-            } else if (groupedDecisionRule.getValue() != null) {
-                RuleNameValue ruleNameValue = new RuleNameValue(groupedDecisionRule.getValue().getName(), groupedDecisionRule.getValue().getValue());
-                if (uniqueNameValues.contains(ruleNameValue)) {
-                    messages.error(new BundleKey("messages", "decisionRule.duplicateNameValue"), new Object[] { ruleNameValue.getName(), ruleNameValue.getValue() });
-                    FacesContext.getCurrentInstance().validationFailed();
-                    return false;
-                }
-                uniqueNameValues.add(ruleNameValue);
-                wfDecisionRules.add(groupedDecisionRule.getValue());
-            }
-        }
-        return true;
     }
 
     public void moveUpTransition(WFTransition selectedWfTransition) throws BusinessException {
@@ -583,61 +480,6 @@ public class WorkflowBean extends BaseBean<Workflow> {
         }
     }
 
-    public class RuleNameValue implements Serializable {
-
-        private static final long serialVersionUID = 3694377290046737073L;
-        private String name;
-        private String value;
-
-        public RuleNameValue() {
-        }
-
-        public RuleNameValue(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public void setValue(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-
-            RuleNameValue nameValue = (RuleNameValue) o;
-
-            if (!name.equals(nameValue.name))
-                return false;
-            if (!value.equals(nameValue.value))
-                return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = name.hashCode();
-            result = 31 * result + value.hashCode();
-            return result;
-        }
-    }
-
     @ActionMethod
     public void duplicate() {
         if (entity != null && entity.getId() != null) {
@@ -660,5 +502,11 @@ public class WorkflowBean extends BaseBean<Workflow> {
             filters.put("wfType", "org.meveo.admin.wf.types.DunningWF");
         }
         return filters;
+    }
+
+    public void resetValueForWFType() {
+        if (oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) {
+            entity.setWfType(null);
+        }
     }
 }
