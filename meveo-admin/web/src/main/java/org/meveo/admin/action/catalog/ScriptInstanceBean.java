@@ -117,7 +117,11 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     private TreeNode rootNode;
 
     private TreeNode selectedNode;
-    
+
+    public void initialize() {
+        rootNode = computeRootNode();
+    }
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void organizeImports() {
     	// Don't need to re-compile if compilation already has errors
@@ -423,6 +427,12 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
 
         return result;
+    }
+
+    @Override
+    public String deleteWithBack() throws BusinessException {
+        entity = scriptInstanceService.findById(getEntity().getId());
+        return super.deleteWithBack();
     }
 
 	public String execute() {
