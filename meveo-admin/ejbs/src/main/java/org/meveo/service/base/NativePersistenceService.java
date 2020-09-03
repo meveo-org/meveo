@@ -397,10 +397,11 @@ public class NativePersistenceService extends BaseService {
 		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
 			var parentFields = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
 			
+			var parentData = new HashMap<String, Object>();
 			// Only insert parent data
-			var parentData = convertedValues.entrySet().stream()
-					.filter(x -> x.getKey().equals("uuid") || parentFields.containsKey(x.getKey()))
-					.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+			 convertedValues.entrySet().stream()
+			 	.filter(x -> x.getKey().equals("uuid") || parentFields.containsKey(x.getKey()))
+				.forEach(x -> parentData.put(x.getKey(), x.getValue()));
 			
 			var tableName = tableName(cet.getSuperTemplate());
 			var uuid = create(sqlConnectionCode, tableName, parentData, true);

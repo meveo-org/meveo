@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1026,7 +1027,9 @@ public class CustomTableService extends NativePersistenceService {
                     }
                 } else if(cft.getFieldType().equals(CustomFieldTypeEnum.BOOLEAN) && field.getValue() instanceof Integer) {
                 	modifiableMap.put(field.getKey(), ((int) field.getValue()) == 1);
-                } else {
+                } else if(field.getValue() instanceof BigInteger) {
+                	modifiableMap.put(field.getKey(), ((BigInteger) field.getValue()).longValue());
+            	} else {
                 	modifiableMap.put(field.getKey(), field.getValue());
                 }
                 

@@ -5,12 +5,13 @@ package org.meveo.api.persistence;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 
@@ -46,7 +47,7 @@ public class CrossStorageRequest<T> {
 		try {
 			return api.find(repository, cet, configuration)
 					.stream()
-					.map(value -> JacksonUtil.convert(value, clazz))
+					.map(v -> CEIUtils.deserialize(v, clazz))
 					.collect(Collectors.toList());
 		} catch (EntityDoesNotExistsException e) {
 			return List.of();
@@ -60,14 +61,13 @@ public class CrossStorageRequest<T> {
 				return null;
 			}
 			
-			return JacksonUtil.convert(values.get(0), clazz);
+			return CEIUtils.deserialize(values.get(0), clazz);
+			
 		} catch (EntityDoesNotExistsException e) {
 			return null;
 		}
 	}
-	
-	
-	
+
 	
 
 }

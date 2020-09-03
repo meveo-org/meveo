@@ -675,7 +675,8 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @return Custom field template or NULL if not found
      */
     public CustomFieldTemplate getCustomFieldTemplate(String code, String appliesTo) {
-
+    	if(code == null) throw new IllegalArgumentException("Code should be provided");
+    	
         Map<String, CustomFieldTemplate> cfts = getCustomFieldTemplates(appliesTo);
         if (cfts != null) {
             return cfts.get(code);
