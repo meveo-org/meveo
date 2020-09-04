@@ -23,13 +23,6 @@ env:
   # To enable BuildKit, set the DOCKER_BUILDKIT environment variable to 1
   - DOCKER_BUILDKIT=1
 
-  # Some variables for the temporary postgres container
-  - POSTGRES_ADDR="localhost"
-  - POSTGRES_DB="meveo"
-  - POSTGRES_USER="meveo"
-  - POSTGRES_PASSWORD="meveo"
-  - POSTGRES_TMP_CONTAINER_NAME="postgres_tmp"
-
   # get all the branches referencing this commit
   #- REAL_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
 
@@ -76,65 +69,21 @@ before_script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
   # Pull the necessary docker images in advance
-  - docker pull postgres:9.5.21
   - docker pull neo4j:3.5.13
   - docker pull openjdk:11.0.7-jdk-slim-buster
-  - if docker pull manaty/postgres-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "postgres pulled up"; fi
   - if docker pull manaty/neo4j-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "neo4j pulled up"; fi
   - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
-
-  # Start the postgres container to create DB schemas
-  - docker run -d -p 5432:5432
-    --name ${POSTGRES_TMP_CONTAINER_NAME}
-    -e POSTGRES_DB=${POSTGRES_DB}
-    -e POSTGRES_USER=${POSTGRES_USER}
-    -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    postgres:9.5.21
 
 
 script:
   - set -e
-  # Wait with timeout 30s until postgres is up
-  - |
-    timeout=30
-    counter=0
-    until docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} /usr/bin/pg_isready -h localhost -p 5432
-    do
-      if [ $counter -gt $timeout ]; then
-        echo "ERROR: timeout occurred after waiting $timeout seconds for postgres"
-        exit 1
-      else
-        echo "Waiting for postgres ..."
-        counter=$((counter+1))
-        sleep 1
-      fi
-    done
-    echo "postgres is up"
-
-  # Creating the database schema
-  - cd meveo-model &&
-    mvn liquibase:dropAll
-      liquibase:update
-      -Ddb.url=jdbc:postgresql://${POSTGRES_ADDR}/${POSTGRES_DB}
-      -Ddb.username=${POSTGRES_USER}
-      -Ddb.password=${POSTGRES_PASSWORD}
-      -Prebuild
 
   # Packaging meveo.war file
-  - cd .. && mvn clean package -Dscm.url="scm:git:ssh://git@github.com:meveo-org/meveo.git" -DskipTests
+  - mvn clean package -Dscm.url="scm:git:ssh://git@github.com:meveo-org/meveo.git" -DskipTests
 
-  # Dump the database schema
-  - docker exec -i ${POSTGRES_TMP_CONTAINER_NAME} pg_dump --no-owner -U ${POSTGRES_USER} ${POSTGRES_DB} > meveo.sql
-
-  # Copy meveo.sql and meveo.war files into the docker image folder for meveo
+  # Copy dbchangelog and meveo.war files into the docker image folder for meveo
+  - cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
   - cp meveo.sql meveo-admin/web/target/meveo.war docker/
-
-  # Build a postgres image for meveo environment
-  - docker build
-    --cache-from manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
-    --tag manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
-    --build-arg BUILDKIT_INLINE_CACHE=1
-    -f docker/Dockerfile.postgres ./docker
 
   # Build a neo4j image for meveo environment
   - docker build
@@ -152,13 +101,10 @@ script:
 
 
 after_success:
-  - docker push manaty/postgres-meveo:${DOCKER_IMAGE_TAG}
   - docker push manaty/neo4j-meveo:${DOCKER_IMAGE_TAG}
   - docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
   - |
     if [ ! -z "${TRAVIS_TAG}" ]; then
-      docker tag manaty/postgres-meveo:${DOCKER_IMAGE_TAG} manaty/postgres-meveo:${TRAVIS_TAG}
-      docker push manaty/postgres-meveo:${TRAVIS_TAG}
       docker tag manaty/neo4j-meveo:${DOCKER_IMAGE_TAG} manaty/neo4j-meveo:${TRAVIS_TAG}
       docker push manaty/neo4j-meveo:${TRAVIS_TAG}
       docker tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} manaty/wildfly-meveo:${TRAVIS_TAG}
