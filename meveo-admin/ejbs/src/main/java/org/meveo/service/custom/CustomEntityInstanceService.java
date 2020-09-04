@@ -394,15 +394,18 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
     /**
      *  Returns a list of states for a given CET.
      */
-	public List<String> statesOfCET(String cetCode) {
-		List<String> states = new ArrayList<>();
+	public Map<String, List<String>> statesOfCET(String cetCode) {
+		Map<String, List<String>> states = new HashMap<>();
 		Map<String, Set<String>> map = getValueCetCodeAndWfTypeFromWF();
-		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo("CE_" + cetCode);
-		if (customFieldTemplates != null) {
-			for (CustomFieldTemplate cft : customFieldTemplates.values()) {
-				if (cft != null && !map.isEmpty() && map.keySet().contains(cetCode) && map.get(cetCode).contains(cft.getCode())) {
-					for (String key: cft.getListValues().keySet()) {
-						states.add(key);
+		if (!map.isEmpty()) {
+			Set<String> cftCodes = map.get(cetCode);
+			if (CollectionUtils.isNotEmpty(cftCodes)) {
+				for (String code: cftCodes) {
+					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(code, "CE_" + cetCode);
+					if (customFieldTemplate != null) {
+						List<String> values = new ArrayList<>();
+						values.addAll(customFieldTemplate.getListValues().keySet());
+						states.put(code, values);
 					}
 				}
 			}

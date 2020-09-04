@@ -14,6 +14,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.response.CustomEntityInstanceResponseDto;
 import org.meveo.api.dto.response.CustomEntityInstancesResponseDto;
+import org.meveo.api.dto.response.GetStatesResponse;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
@@ -109,4 +110,15 @@ public interface CustomEntityInstanceRs extends IBaseRs {
 	@ApiOperation(value = "Create or update code of the custom entity template")
 	ActionStatus createOrUpdate(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode,
 			@ApiParam("Custom entity instance information") CustomEntityInstanceDto dto);
+
+	/**
+	 * List states available of a given CET
+	 *
+	 * @param customEntityTemplateCode The custom entity template's code
+	 * @return A list of states available of a given CET
+	 */
+	@GET
+	@Path("/states/{customEntityTemplateCode}")
+	@ApiOperation(value = "List states available of a given CET")
+	GetStatesResponse listStatesOfCet(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode);
 }

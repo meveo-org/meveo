@@ -289,4 +289,9 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 	public void remove(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {
 		this.remove(dto.getCetCode(), dto.getCode());
 	}
+
+	public Map<String, List<String>> statesOfCET(String cetCode) {
+		Map<String, List<String>> statesOfCET = customEntityInstanceService.statesOfCET(cetCode);
+		return statesOfCET;
+	}
 }
