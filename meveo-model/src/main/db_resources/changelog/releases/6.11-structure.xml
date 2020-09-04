@@ -30,4 +30,14 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="Add cetCode on workflow table" author="Phu Bach">
+		<addColumn tableName="wf_workflow">
+			<column name="cet_code" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="Remove uuid and cfValues on workflow table" author="Phu Bach">
+		<dropColumn tableName="wf_workflow" columnName="uuid"/>
+		<dropColumn tableName="wf_workflow" columnName="cf_values"/>
+	</changeSet>
 </databaseChangeLog>
