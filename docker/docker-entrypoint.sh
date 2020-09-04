@@ -58,17 +58,33 @@ export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
 
 
-## DB init & update
-# DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
-# if [ -f "${DB_CHANGELOG_FILE}" ]; then
-#     info "Update meveo database using liquibase"
-#     /opt/jboss/liquibase/liquibase \
-#         --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
-#         --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
-#         --changeLogFile=${DB_CHANGELOG_FILE} \
-#         update \
-#         -Ddb.schema=public
-# fi
+# wait with timeout 30s until postgres is up
+timeout=30
+counter=0
+until pg_isready -h ${MEVEO_DB_HOST} -p ${MEVEO_DB_PORT}
+do
+    if [ $counter -gt $timeout ]; then
+        ERROR=1; exit_with_error "Timeout occurred after waiting $timeout seconds for postgres"
+    else
+        info "Waiting for postgres ..."
+        counter=$((counter+1))
+        sleep 1
+    fi
+done
+info "Postgres is up"
+
+
+# DB init & update
+DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
+if [ -f "${DB_CHANGELOG_FILE}" ]; then
+    info "Update meveo database using liquibase"
+    /opt/jboss/liquibase/liquibase \
+        --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+        --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+        --changeLogFile=${DB_CHANGELOG_FILE} \
+        update \
+        -Ddb.schema=public
+fi
 
 
 # Reset standalone-full.xml file
