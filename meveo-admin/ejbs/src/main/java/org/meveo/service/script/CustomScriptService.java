@@ -1250,7 +1250,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         continue;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstancesNullSafe())) {
+                if (scriptInstance.getImportScriptInstances() != null && CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
                     for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
                         String path = instance.getCode().replace('.', '/');
                         File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
