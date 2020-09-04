@@ -228,10 +228,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             log.error("Error committing script", e);
         }
 
-        // inject the service so transaction attribute will kick in
-        FunctionService<? super T, ScriptInterface> fnService = (FunctionService<? super T, ScriptInterface>) concreteFunctionService.getFunctionService(script);
-        detach(script);
-        fnService.compileScript(script, false);
+//        // inject the service so transaction attribute will kick in
+//        FunctionService<? super T, ScriptInterface> fnService = (FunctionService<? super T, ScriptInterface>) concreteFunctionService.getFunctionService(script);
+//        detach(script);
+//        fnService.compileScript(script, false);
     }
 
     @Override
