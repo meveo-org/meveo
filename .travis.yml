@@ -83,7 +83,7 @@ script:
 
   # Copy dbchangelog and meveo.war files into the docker image folder for meveo
   - cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
-  - cp meveo.sql meveo-admin/web/target/meveo.war docker/
+  - cp meveo-admin/web/target/meveo.war docker/
 
   # Build a neo4j image for meveo environment
   - docker build
