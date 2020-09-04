@@ -607,6 +607,7 @@ public class MeveoModuleItemInstaller {
 						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
 						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
 						cftModuleItem.setDtoData(cftData);
+						cftData.setAppliesTo("CE_" + cet.getCode());
 						moduleDto.getModuleItems().add(cftModuleItem);
 
 						cet.getFields().remove(cftData);

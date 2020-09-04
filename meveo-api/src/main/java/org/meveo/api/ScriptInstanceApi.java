@@ -95,7 +95,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		ScriptInstance scriptInstance = scriptInstanceFromDTO(scriptInstanceDto, null);
 
 		scriptInstanceService.create(scriptInstance);
-		scriptInstanceService.flush();
 
 		if (scriptInstance != null && scriptInstance.isError() != null && scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {

@@ -19,6 +19,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -59,6 +60,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
     
     private String displayFormat;
 
@@ -539,7 +543,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
             if(cet == null) {
-            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode);
+            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode, cft.getCode());
             	throw new InvalidParameterException(message);
             }
             storageTypes = cet.getAvailableStorages();
@@ -609,9 +613,15 @@ public class CustomFieldTemplateApi extends BaseApi {
         filter.setIncludeNonManagedEntities(true);
         filter.setIncludeParentClassesOnly(true);
         List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
+        
         for (CustomizedEntity customizedEntity : entities) {
             cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));
         }
+        
+        for(var cet : cache.getCustomEntityTemplates()) {
+        	cftAppliesto.add(cet.getAppliesTo());
+        }
+        
         return cftAppliesto;
     }
 
