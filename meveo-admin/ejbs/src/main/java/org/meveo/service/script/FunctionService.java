@@ -162,7 +162,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Override
     public T update(T executable) throws BusinessException {
         validateAndSetCode(executable);
-        super.update(executable);
+        executable = super.update(executable);
         publish(executable, CrudActionEnum.update);
         return executable;
     }
@@ -384,6 +384,11 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.setParameter("testSuite", finalTestSuite)
 			.setParameter("code", code)
 			.executeUpdate();	
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public void compileScript(T script, boolean testCompile) {
+		
 	}
 
 }

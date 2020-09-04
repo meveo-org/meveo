@@ -157,6 +157,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+    
+    @Inject
+    private ConcreteFunctionService concreteFunctionService;
 
     private RepositorySystem defaultRepositorySystem;
 
@@ -225,7 +228,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             log.error("Error committing script", e);
         }
 
-        compileScript(script, false);
+        // inject the service so transaction attribute will kick in
+        FunctionService<? super T, ScriptInterface> fnService = (FunctionService<? super T, ScriptInterface>) concreteFunctionService.getFunctionService(script);
+        detach(script);
+        fnService.compileScript(script, false);
     }
 
     @Override
@@ -541,6 +547,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param testCompile Is it a compilation for testing purpose. Won't clear nor
      *                    overwrite existing compiled script cache.
      */
+    @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
     	
@@ -1250,7 +1257,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         continue;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstancesNullSafe())) {
+                if (scriptInstance.getImportScriptInstances() != null && CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
                     for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
                         String path = instance.getCode().replace('.', '/');
                         File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
