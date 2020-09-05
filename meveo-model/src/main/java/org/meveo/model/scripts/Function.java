@@ -10,6 +10,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -20,7 +21,7 @@ import org.meveo.model.ExportIdentifier;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.5.0
+ * @version 6.11
  */
 @ExportIdentifier({ "code" })
 @Entity
@@ -55,6 +56,9 @@ public class Function extends BusinessEntity {
 	@Type(type="numeric_boolean")
     @Column(name = "generate_outputs")
     private Boolean generateOutputs = false;
+	
+	@Transient
+	private boolean isModifiedFromGUI = false;
 
 	public Integer getFunctionVersion() {
 		return functionVersion;
@@ -121,6 +125,14 @@ public class Function extends BusinessEntity {
 
 	public void setCategory(FunctionCategory category) {
 		this.category = category;
+	}
+
+	public boolean isModifiedFromGUI() {
+		return isModifiedFromGUI;
+	}
+
+	public void setModifiedFromGUI(boolean isModifiedFromGUI) {
+		this.isModifiedFromGUI = isModifiedFromGUI;
 	}
 
 }

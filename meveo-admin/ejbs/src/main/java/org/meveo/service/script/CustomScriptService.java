@@ -123,7 +123,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.10
+ * @version 6.11
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -208,6 +208,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     protected void afterUpdateOrCreate(T script) {
+    	
         try {
         	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
@@ -228,10 +229,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             log.error("Error committing script", e);
         }
 
-//        // inject the service so transaction attribute will kick in
 //        FunctionService<? super T, ScriptInterface> fnService = (FunctionService<? super T, ScriptInterface>) concreteFunctionService.getFunctionService(script);
-//        detach(script);
 //        fnService.compileScript(script, false);
+		compileScript(script, false);
     }
 
     @Override
@@ -550,6 +550,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
+
+    	if(script.isModifiedFromGUI()) {
+    		detach(script);
+    	}
     	
         final String source;
         if (testCompile || !findScriptFile(script).exists()) {
@@ -568,20 +572,22 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private void addScriptDependencies(T script) {
 
-        if (script instanceof ScriptInstance) {
-            ScriptInstance scriptInstance = (ScriptInstance) script;
+		if (script instanceof ScriptInstance) {
+			ScriptInstance scriptInstance = (ScriptInstance) script;
 
-            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
+			if (scriptInstance.getMavenDependencies() != null && scriptInstance.getMavenDependencies().size() > 0) {
+				Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
 
-            synchronized (CLASSPATH_REFERENCE) {
-                mavenDependencies.stream().forEach(location -> {
-                    if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-                        addLibrary(location);
-                        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-                    }
-                });
-            }
-        }
+				synchronized (CLASSPATH_REFERENCE) {
+					mavenDependencies.stream().forEach(location -> {
+						if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+							addLibrary(location);
+							CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+						}
+					});
+				}
+			}
+		}
     }
 
 	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {

@@ -51,6 +51,8 @@ import org.meveo.service.job.JobInstanceService;
  * @param <T> Type of function (service, script ...)
  * @param <E> Type of engine
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.11
  */
 public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
@@ -96,6 +98,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     private void publish(T executable, CrudActionEnum action) {
+    	
         afterUpdateOrCreate(executable);
         clusterEventPublisher.publishEvent(executable, action);
     }
@@ -162,7 +165,11 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Override
     public T update(T executable) throws BusinessException {
         validateAndSetCode(executable);
+
+        boolean isModifiedFromGUI = executable.isModifiedFromGUI(); 
         executable = super.update(executable);
+        executable.setModifiedFromGUI(isModifiedFromGUI);
+        
         publish(executable, CrudActionEnum.update);
         return executable;
     }

@@ -37,8 +37,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,7 +48,6 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.Accessor;
@@ -82,7 +79,7 @@ import com.github.javaparser.ast.CompilationUnit;
  * Manaty custom JSF components.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.10
+ * @version 6.11
  */
 @Named
 @ViewScoped
@@ -405,6 +402,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
 			getEntity().getImportScriptInstancesNullSafe().addAll(importedScripts);
 		}
+		
+		entity.setModifiedFromGUI(!entity.isTransient());
 
 		// Manage entity
 		super.saveOrUpdate(false);
