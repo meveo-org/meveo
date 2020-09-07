@@ -380,6 +380,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * @return whether the template is stored in this storage
 	 */
 	public boolean storedIn(DBStorageType storage) {
+		if(availableStorages == null) {
+			return false;
+		}
 		return availableStorages.contains(storage);
 	}
 

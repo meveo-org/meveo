@@ -302,7 +302,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
         
         // Handle SQL inheritance
-        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        if(cet.storedIn(DBStorageType.SQL)) {
         	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
         		// Inheritance removed
         		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
