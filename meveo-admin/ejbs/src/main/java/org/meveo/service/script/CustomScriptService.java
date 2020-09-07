@@ -45,8 +45,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
@@ -229,9 +227,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             log.error("Error committing script", e);
         }
 
-//        FunctionService<? super T, ScriptInterface> fnService = (FunctionService<? super T, ScriptInterface>) concreteFunctionService.getFunctionService(script);
-//        fnService.compileScript(script, false);
-		compileScript(script, false);
+        compileScript(script, false);
     }
 
     @Override
@@ -548,12 +544,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *                    overwrite existing compiled script cache.
      */
     @Override
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
-
-    	if(script.isModifiedFromGUI()) {
-    		detach(script);
-    	}
+    	
+    	script = findById(script.getId());
     	
         final String source;
         if (testCompile || !findScriptFile(script).exists()) {
@@ -733,7 +726,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         script.setGetters(getters);
         script.setSetters(setters);
-
     }
 
 	/**

@@ -48,6 +48,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.scripts.Accessor;
@@ -402,26 +403,27 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		if (CollectionUtils.isNotEmpty(importedScripts)) {
 			getEntity().getImportScriptInstancesNullSafe().addAll(importedScripts);
 		}
-		
-		entity.setModifiedFromGUI(!entity.isTransient());
 
 		// Manage entity
-		super.saveOrUpdate(false);
-//		var dto = scriptInstanceApi.toDto(entity);
-//		try {
-//			scriptInstanceApi.createOrUpdate(dto);
-//
-//			if (entity.isTransient()) {
-//				entity = scriptInstanceService.findByCode(dto.getCode());
-//				setObjectId(entity.getId());
-//			}
-//
-//		} catch (MeveoApiException e) {
-//			throw new BusinessException(e);
-//		}
+		// super.saveOrUpdate(false);
+	
+		var dto = scriptInstanceApi.toDto(entity);
+		try {
+			scriptInstanceApi.createOrUpdate(dto);
 
-      String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
-      return result;
+			if (entity.isTransient()) {
+				entity = scriptInstanceService.findByCode(dto.getCode());
+				setObjectId(entity.getId());
+			}
+
+		} catch (MeveoApiException e) {
+			throw new BusinessException(e);
+		}
+		String message = entity.isTransient() ? "save.successful" : "update.successful";
+        messages.info(new BundleKey("messages", message));
+
+		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
+		return result;
 	}
 
 	public String execute() {

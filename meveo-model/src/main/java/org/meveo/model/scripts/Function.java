@@ -56,9 +56,6 @@ public class Function extends BusinessEntity {
 	@Type(type="numeric_boolean")
     @Column(name = "generate_outputs")
     private Boolean generateOutputs = false;
-	
-	@Transient
-	private boolean isModifiedFromGUI = false;
 
 	public Integer getFunctionVersion() {
 		return functionVersion;
@@ -125,14 +122,6 @@ public class Function extends BusinessEntity {
 
 	public void setCategory(FunctionCategory category) {
 		this.category = category;
-	}
-
-	public boolean isModifiedFromGUI() {
-		return isModifiedFromGUI;
-	}
-
-	public void setModifiedFromGUI(boolean isModifiedFromGUI) {
-		this.isModifiedFromGUI = isModifiedFromGUI;
 	}
 
 }

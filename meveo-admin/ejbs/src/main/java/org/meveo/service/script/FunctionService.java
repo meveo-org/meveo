@@ -164,13 +164,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     @Override
     public T update(T executable) throws BusinessException {
-        validateAndSetCode(executable);
-
-        boolean isModifiedFromGUI = executable.isModifiedFromGUI(); 
-        executable = super.update(executable);
-        executable.setModifiedFromGUI(isModifiedFromGUI);
         
+    	validateAndSetCode(executable);
+        beforeUpdateOrCreate(executable);
+        executable = super.update(executable);        
         publish(executable, CrudActionEnum.update);
+        
         return executable;
     }
 
@@ -393,9 +392,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.executeUpdate();	
 	}
 	
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
-		
 	}
 
 }
