@@ -173,7 +173,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
 
 		if (values != null && !values.isEmpty()) {
-			return resultList.stream().filter(customEntityInstance -> filterOnValues(values, customEntityInstance)).collect(Collectors.toList());
+			return resultList.stream()
+					.filter(customEntityInstance -> filterOnValues(values, customEntityInstance))
+					.collect(Collectors.toList());
 		}
 
 		return resultList;
@@ -192,7 +194,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
 
 		if (values != null && !values.isEmpty()) {
-			return resultList.stream().filter(customEntityInstance -> filterOnValues(values, customEntityInstance, isStoreAsTable)).collect(Collectors.toList());
+			return resultList.stream()
+					.filter(customEntityInstance -> filterOnValues(values, customEntityInstance, isStoreAsTable))
+					.collect(Collectors.toList());
 		}
 
 		return resultList;
@@ -274,12 +278,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 						if (!matcher.matches()) {
 							return false;
 						}
-
-					} else {
-						if (!referenceValue.equals(pattern)) {
-							return false;
-						}
 					}
+				} else {
+					return filterValue.getValue().equals(referenceValue);
 				}
 			}
 		}
