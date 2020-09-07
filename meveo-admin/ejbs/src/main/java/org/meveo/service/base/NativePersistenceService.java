@@ -529,38 +529,43 @@ public class NativePersistenceService extends BaseService {
 			
 			// Find the identifier of the last inserted record
 			if (returnId) {
-				if (uuid != null) {
+				var session = sqlConnectionProvider.getSession(sqlConnectionCode);
+				try {
+					if (uuid != null) {
+						return (String) uuid;
+					}
+	
+					Query query = session.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields)
+							.setMaxResults(1);
+	
+					for (String fieldName : values.keySet()) {
+						Object fieldValue = values.get(fieldName);
+						if (fieldValue == null) {
+							continue;
+						}
+	
+						// Serialize list values
+						if (fieldValue instanceof Collection) {
+							fieldValue = JacksonUtil.toString(fieldValue);
+						} else if(fieldValue instanceof Map) {
+							fieldValue = JacksonUtil.toString(fieldValue);
+						} else if (fieldValue instanceof File) {
+							fieldValue = ((File) fieldValue).getAbsolutePath();
+						} else if(fieldValue instanceof EntityReferenceWrapper) {
+							fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
+						}
+	
+						query.setParameter(fieldName, fieldValue);
+					}
+	
+					uuid = query.getSingleResult();
+					values.put(FIELD_ID, uuid);
+	
 					return (String) uuid;
+				
+				} finally {
+					session.close();
 				}
-
-				Query query = getEntityManager(sqlConnectionCode)
-						.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields)
-						.setMaxResults(1);
-
-				for (String fieldName : values.keySet()) {
-					Object fieldValue = values.get(fieldName);
-					if (fieldValue == null) {
-						continue;
-					}
-
-					// Serialize list values
-					if (fieldValue instanceof Collection) {
-						fieldValue = JacksonUtil.toString(fieldValue);
-					} else if(fieldValue instanceof Map) {
-						fieldValue = JacksonUtil.toString(fieldValue);
-					} else if (fieldValue instanceof File) {
-						fieldValue = ((File) fieldValue).getAbsolutePath();
-					} else if(fieldValue instanceof EntityReferenceWrapper) {
-						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
-					}
-
-					query.setParameter(fieldName, fieldValue);
-				}
-
-				uuid = query.getSingleResult();
-				values.put(FIELD_ID, uuid);
-
-				return (String) uuid;
 
 			} else {
 				return null;
@@ -1445,8 +1450,15 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(sqlConnectionProvider.getSession(sqlConnectionCode), true);
-		return query.list();
+		
+		var session = sqlConnectionProvider.getSession(sqlConnectionCode);
+
+		try {
+			NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
+			return query.list();
+		} finally {
+			session.close();
+		}
 	}
 
 	/**
