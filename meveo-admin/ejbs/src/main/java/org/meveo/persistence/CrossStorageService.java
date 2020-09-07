@@ -349,12 +349,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
 		// Make sure the filters matches the fields
-		filters.keySet()
-			.forEach(key -> {
-				if(fields.get(key) == null) {
-					throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
-				}
-			});
+		if(filters != null) {
+			filters.keySet()
+				.forEach(key -> {
+					if(fields.get(key) == null) {
+						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
+					}
+				});
+		}
 		
 		// Collect initial data
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
