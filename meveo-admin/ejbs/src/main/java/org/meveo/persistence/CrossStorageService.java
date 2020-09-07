@@ -332,6 +332,8 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
+		final var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
+
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
 
 		// If no pagination nor fetch fields are defined, we consider that we must fetch
@@ -346,6 +348,14 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
+		// Make sure the filters matches the fields
+		filters.keySet()
+			.forEach(key -> {
+				if(fields.get(key) == null) {
+					throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
+				}
+			});
+		
 		// Collect initial data
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -396,7 +406,6 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			
 			// Check if filters contains a field not stored in Neo4J
-			var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
 			var dontFilterOnNeo4J = filters.keySet().stream()
 					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
