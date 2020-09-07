@@ -400,7 +400,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			} else {
 				GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(cet.getCode());
 				builder.field("meveo_uuid");
-				filters.forEach(builder::filter);
+				if(filters != null) {
+					filters.forEach(builder::filter);
+				}
 				if(actualFetchFields != null) { 
 					actualFetchFields.forEach(builder::field);
 				}
@@ -408,7 +410,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			
 			// Check if filters contains a field not stored in Neo4J
-			var dontFilterOnNeo4J = filters.keySet().stream()
+			var dontFilterOnNeo4J = filters != null && filters.keySet().stream()
 					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
 			Map<String, Object> result = null;
