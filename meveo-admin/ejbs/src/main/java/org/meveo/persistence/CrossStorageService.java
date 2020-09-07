@@ -634,8 +634,11 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCetCode(ceiToSave.getCetCode());
 		cei.setCode(ceiToSave.getCode());
 		cei.setDescription(ceiToSave.getDescription());
-		cei.setUuid(ceiToSave.getUuid());
 		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
+		
+		if(ceiToSave.getUuid() != null) {
+			cei.setUuid(ceiToSave.getUuid());
+		}
 		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cei.getCetCode());
