@@ -812,6 +812,9 @@ public class NativePersistenceService extends BaseService {
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 						connection.commit();
 					}
+					
+				} catch (Exception e) {
+					log.error("Native SQL update failed: {}", e.getMessage());
 				}
 			});
 			

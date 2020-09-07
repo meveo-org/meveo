@@ -45,6 +45,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
@@ -544,11 +546,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *                    overwrite existing compiled script cache.
      */
     @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
     	
-    	script = findById(script.getId());
-    	
-        final String source;
+    	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
         } else {
