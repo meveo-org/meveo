@@ -429,6 +429,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 	public String execute() {
 		scriptInstanceService.test(entity.getCode(), null);
 		endConversation();
+        messages.info(new BundleKey("messages", "info.entity.executed"));
 		return "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&";
 	}
 
