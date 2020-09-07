@@ -261,7 +261,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             }
         }
         
-        var sqlStorageAddition = !cet.getAvailableStorages().contains(DBStorageType.SQL) && dto.getAvailableStorages().contains(DBStorageType.SQL);
+        var sqlStorageAddition = !cet.storedIn(DBStorageType.SQL) && 
+        		dto.getAvailableStorages() != null &&
+        		dto.getAvailableStorages().contains(DBStorageType.SQL);
 
         setSuperTemplate(dto, cet);
 
