@@ -39,6 +39,7 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.CacheRetrieveMode;
+import javax.ws.rs.NotFoundException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -59,6 +60,7 @@ import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -81,7 +83,7 @@ public class GraphQLService {
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-
+    
     @Inject
     @MeveoJpa
     private EntityManagerWrapper entityManagerWrapper;
