@@ -33,8 +33,6 @@ import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.enterprise.event.Event;
@@ -615,13 +613,15 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @return the persisted entites
 	 */
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance ceiToSave) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		if (repository == null) {
 			throw new IllegalArgumentException("Repository should be provided");
 		}
 		
-		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(ceiToSave.getCetCode());
+		// Retrieve corresponding CET
+		CustomEntityTemplate cet = cache.getCustomEntityTemplate(ceiToSave.getCetCode());
+				
+		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(cet);
 		
 		if (hasReferenceJpaEntity && !repository.getSqlConfigurationCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			throw new IllegalArgumentException("CET with JPA reference entity cannot be save in a non-default SqlConfiguration.");
@@ -639,9 +639,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		if(ceiToSave.getUuid() != null) {
 			cei.setUuid(ceiToSave.getUuid());
 		}
-		
-		// Retrieve corresponding CET
-		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cei.getCetCode());
+				
 		final Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
 		cei.setCet(cet);
 
