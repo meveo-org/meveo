@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -62,12 +61,14 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.api.rest.RestUtils;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -81,7 +82,6 @@ import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +121,9 @@ public class PersistenceRs {
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private CrossStorageApi crossStorageApi;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -147,8 +150,10 @@ public class PersistenceRs {
         for (Map<String, Object> values : data) {
             convertFiles(customEntityTemplate, values, base64Encode);
         }
-
-        return data;
+        
+        return data.stream()
+        		.map(this::serializeJpaEntities)
+        		.collect(Collectors.toList());
     }
 
     @DELETE
@@ -181,6 +186,7 @@ public class PersistenceRs {
         }
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
+        
         Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
 
         if(values.size() == 1 && values.containsKey("uuid")) {
@@ -188,7 +194,8 @@ public class PersistenceRs {
         }
         
         convertFiles(customEntityTemplate, values, base64Encode);
-
+        values = serializeJpaEntities(values);
+        
         return values;
     }
 
@@ -508,6 +515,16 @@ public class PersistenceRs {
         List<Map<String, String>> listExamples = customEntityTemplateService.listExamples(cetCode, paginationConfiguration);
         Collections.shuffle(listExamples);
         return listExamples;
+    }
+    
+    private Map<String, Object> serializeJpaEntities(Map<String, Object> values) {
+    	var convertedValues = new HashMap<>(values);
+    	values.forEach((k,v) -> {
+    		if(v instanceof BaseEntity) {
+    			convertedValues.put(k, ((BaseEntity) v).getId());
+    		}
+    	});
+    	return convertedValues;
     }
 
     @PostConstruct
