@@ -689,13 +689,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         	Class<?> typeClass = null;
         	
         	try {
-        		typeClass = Class.forName(type.getNameAsString());
+        		typeClass = Class.forName(type.toString());
         	} catch (Exception e) {
             	String className = compilationUnit.getImports().stream()
                 		.filter(importEntry -> importEntry.getNameAsString().endsWith("." + type.getNameAsString()))
                 		.map(ImportDeclaration::getNameAsString)
                 		.findFirst()
-                		.get();
+                		.orElseThrow(() -> new RuntimeException("No declaration found for extended type " + type.getNameAsString()));
+            	
             	try {
     				typeClass = Class.forName(className);
     			} catch (ClassNotFoundException e1) {
