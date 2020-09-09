@@ -172,8 +172,17 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         
         return executable;
     }
+    
 
     @Override
+	public void updateNoMerge(T entity) throws BusinessException {
+    	validateAndSetCode(entity);
+        beforeUpdateOrCreate(entity);
+        entity = super.update(entity);        
+        publish(entity, CrudActionEnum.update);
+	}
+
+	@Override
     public void remove(T executable) throws BusinessException {
         // First remove test jobs
         final List<JobInstance> jobsToRemove = jobInstanceService.findJobsByTypeAndParameters(FUNCTION_TEST_JOB, executable.getCode(), JobCategoryEnum.TEST);
