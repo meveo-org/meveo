@@ -210,13 +210,6 @@ public class CustomFieldTemplateApi extends BaseApi {
             throw new EntityDoesNotExistsException(CustomFieldTemplate.class, postData.getCode());
         }
 
-        if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY && postData.isVersionable() != null && postData.isVersionable()) {
-            throw new InvalidParameterException("Custom field of type CHILD_ENTITY only supports unversioned values and storage type of LIST");
-        }
-        if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY && (cft.getChildEntityFields() == null || postData.getChildEntityFieldsForSummary().isEmpty())) {
-            missingParameters.add("childEntityFieldsForSummary");
-        }
-
         cft = fromDTO(postData, appliesTo, cft);
 
         validateSamples(cft);
