@@ -118,34 +118,40 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 	private TreeNode rootNode;
 
-	private TreeNode selectedNode;
+    private TreeNode selectedNode;
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void organizeImports() {
-		// Don't need to re-compile if compilation already has errors
-		if (entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
-			scriptInstanceService.compileScript(entity, true);
-		}
+    public void initialize() {
+        rootNode = computeRootNode();
+    }
 
-		if (entity.getScriptErrors() == null) {
-			return;
-		}
-
-		List<Class<?>> classesToImport = new ArrayList<>();
-		List<ScriptInstanceError> resolvedErrors = new ArrayList<>();
-
-		for (ScriptInstanceError error : entity.getScriptErrors()) {
-			Pattern shouldMatch = Pattern.compile("cannot find symbol.*class.*", Pattern.DOTALL);
-			Pattern pattern = Pattern.compile("symbol.*class (.*)");
-			Matcher matcher = pattern.matcher(error.getMessage());
-			if (shouldMatch.matcher(error.getMessage()).matches() && matcher.find()) {
-				String className = matcher.group(1);
-				try {
-					ReflectionUtils.getClasses("").stream().filter(e -> e.getSimpleName().equals(className)).findFirst().ifPresent(e -> {
-						resolvedErrors.add(error);
-						classesToImport.add(e);
-					});
-
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public void organizeImports() {
+    	// Don't need to re-compile if compilation already has errors
+    	if(entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
+    		scriptInstanceService.compileScript(entity, true);
+    	}
+    	
+    	if(entity.getScriptErrors() == null) {
+    		return;
+    	}
+    	
+    	List<Class<?>> classesToImport = new ArrayList<>();
+    	List<ScriptInstanceError> resolvedErrors = new ArrayList<>();
+    	
+        for(ScriptInstanceError error : entity.getScriptErrors()) {
+        	Pattern shouldMatch = Pattern.compile("cannot find symbol.*class.*", Pattern.DOTALL);
+        	Pattern pattern = Pattern.compile("symbol.*class (.*)");
+        	Matcher matcher = pattern.matcher(error.getMessage());
+        	if(shouldMatch.matcher(error.getMessage()).matches() && matcher.find()) {
+        		String className = matcher.group(1);
+        		try {
+					ReflectionUtils.getClasses("")
+						.stream()
+		        		.filter(e -> e.getSimpleName().equals(className)).findFirst()
+	        			.ifPresent(e -> {
+	        	        	resolvedErrors.add(error);
+	        	        	classesToImport.add(e);
+	        			});					
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				} catch (IOException e1) {
@@ -186,6 +192,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public String getSourceCode() throws IOException {
 		if (!StringUtils.isBlank(entity.getScript())) {
 			return entity.getScript();
@@ -426,6 +433,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
 		return result;
 	}
+
+
+    @Override
+    public String deleteWithBack() throws BusinessException {
+        entity = scriptInstanceService.findById(getEntity().getId());
+        return super.deleteWithBack();
+    }
+
 
 	@ActionMethod
 	@JpaAmpNewTx
