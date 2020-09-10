@@ -126,14 +126,15 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 		scriptInstanceService.updateNoMerge(scriptInstance);
 
+		scriptInstanceService.afterUpdateOrCreate(scriptInstance);
+
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
 				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
 				result.add(errorDto);
 			}
-		} else {
-			scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 		}
+			
 		return result;
 	}
 
