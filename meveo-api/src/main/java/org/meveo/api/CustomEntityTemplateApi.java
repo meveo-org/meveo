@@ -801,8 +801,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if(cet.getNeo4JStorageConfiguration() != null) {
 
         	Neo4JStorageConfigurationDto neo4jConf = new Neo4JStorageConfigurationDto();
-
-            neo4jConf.setLabels(cet.getNeo4JStorageConfiguration().getLabels());
+            neo4jConf.getLabels().addAll(cet.getNeo4JStorageConfiguration().getLabels());
             neo4jConf.setGraphqlQueryFields(cet.getNeo4JStorageConfiguration().getGraphqlQueryFields());
             neo4jConf.setMutations(cet.getNeo4JStorageConfiguration().getMutations());
             neo4jConf.setPrimitiveEntity(cet.getNeo4JStorageConfiguration().isPrimitiveEntity());
