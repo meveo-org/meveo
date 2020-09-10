@@ -167,9 +167,6 @@ public class SQLConnectionProvider {
 			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
 			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
 			config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
-			config.setProperty("hibernate.c3p0.min_size", "5");
-			config.setProperty("hibernate.c3p0.acquire_increment", "5");
-			config.setProperty("hibernate.c3p0.timeout", "1800");
 			
 			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
 				config.setProperty("hibernate.default_schema", sqlConfiguration.getSchema());
