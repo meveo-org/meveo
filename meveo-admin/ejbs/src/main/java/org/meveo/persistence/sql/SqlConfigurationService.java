@@ -128,10 +128,10 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	public boolean testConnection(String sqlConfigurationCode) {
 
 		boolean result = false;
-		Session session = sqlConnectionProvider.getSession(sqlConfigurationCode);
-		if (session != null) {
-			result = true;
-			session.close();
+		try (Session session = sqlConnectionProvider.getSession(sqlConfigurationCode)) {
+			if (session != null) {
+				result = true;
+			}
 		}
 
 		return result;

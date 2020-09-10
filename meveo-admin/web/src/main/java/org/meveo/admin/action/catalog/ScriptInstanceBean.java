@@ -51,6 +51,7 @@ import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
+import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.MavenDependency;
@@ -426,6 +427,8 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		return result;
 	}
 
+	@ActionMethod
+	@JpaAmpNewTx
 	public String execute() {
 		scriptInstanceService.test(entity.getCode(), null);
 		endConversation();

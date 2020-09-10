@@ -19,6 +19,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.storage.RepositoryService;
+import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -31,6 +32,9 @@ import org.meveo.service.storage.RepositoryService;
 public class CustomEntityTemplateObserver {
 
 	@Inject
+	private Logger log;
+
+	@Inject
 	private CustomTableCreatorService customTableCreatorService;
 
 	@Inject
@@ -39,6 +43,7 @@ public class CustomEntityTemplateObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) {
 
+		log.debug("CET onCreated observer={}", cet);
 		if (cet.isAudited()) {
 			createAuditTable(repositoryService.findDefaultRepository().getCode(), CustomEntityTemplate.AUDIT_PREFIX + SQLStorageConfiguration.getDbTablename(cet));
 		}
@@ -82,7 +87,7 @@ public class CustomEntityTemplateObserver {
 		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 	}
 
-	public CustomFieldTemplate createCft(String code, CustomFieldTypeEnum fieldType, boolean unique, boolean identifier) {
+	private CustomFieldTemplate createCft(String code, CustomFieldTypeEnum fieldType, boolean unique, boolean identifier) {
 
 		CustomFieldTemplate cft = new CustomFieldTemplate();
 		cft.setSummary(true);

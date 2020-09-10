@@ -589,11 +589,6 @@
 			<artifactId>aether-impl</artifactId>
 			<version>${aether.version}</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>org.hibernate</groupId> -->
-		<!-- <artifactId>hibernate-c3p0</artifactId> -->
-		<!-- <version>5.4.10.Final</version> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
