@@ -157,9 +157,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
-    
-    @Inject
-    private ConcreteFunctionService concreteFunctionService;
 
     private RepositorySystem defaultRepositorySystem;
 
