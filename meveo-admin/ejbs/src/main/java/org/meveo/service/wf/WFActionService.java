@@ -21,7 +21,10 @@ package org.meveo.service.wf;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
@@ -50,4 +53,9 @@ public class WFActionService extends PersistenceService<WFAction> {
 		return wfTransitions;
 	}
 
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public WFAction update(WFAction entity) throws BusinessException {
+		return super.update(entity);
+	}
 }

@@ -6,9 +6,11 @@ FROM openjdk:11.0.7-jdk-slim-buster
 # Install packages necessary
 # procps : for 'free' command
 # iputils-ping : for 'ping' command
+# iproute2 : for 'ip' command
+# postgresql-client : for 'pg_isready' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping \
-    && apt autoremove -y && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 postgresql-client \
+    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
 ENV TZ Europe/Paris
@@ -71,14 +73,14 @@ RUN curl -L https://downloads.jboss.org/keycloak/${KEYCLOAK_VERSION}/adapters/sa
 
 
 ### ------------------------- Liquibase ----------------------------- ###
-# Ref: https://github.com/liquibase/docker/blob/main/Dockerfile
+# Ref: https://github.com/liquibase/docker/blob/main/3.10.x/Dockerfile
 
 # Create a directory to install liquibase
 RUN mkdir -p /opt/jboss/liquibase
 WORKDIR /opt/jboss/liquibase
 
 # Latest Liquibase Release Version
-ARG LIQUIBASE_VERSION=3.10.0
+ARG LIQUIBASE_VERSION=3.10.2
 
 # Download, install, clean up
 RUN set -x \
@@ -107,9 +109,9 @@ RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION
 ### ------------------------- Configurations ----------------------------- ###
 
 
-### Create some folders for meveo volumes
-RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infinispan \
-    && chown -R jboss:jboss ${JBOSS_HOME}/meveodata /tmp/meveo \
+### Create some folders for meveo volumes and db resource
+RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infinispan /opt/jboss/liquibase \
+    && chown -R jboss:jboss ${JBOSS_HOME}/meveodata /tmp/meveo /opt/jboss/liquibase \
 ### Backup the original standalone-full.xml
     && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
 

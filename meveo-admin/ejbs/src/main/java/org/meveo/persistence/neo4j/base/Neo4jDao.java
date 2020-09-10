@@ -19,6 +19,7 @@ package org.meveo.persistence.neo4j.base;
 import static org.meveo.persistence.neo4j.service.Neo4JRequests.CREATION_DATE;
 import static org.meveo.persistence.neo4j.service.Neo4JRequests.INTERNAL_UPDATE_DATE;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -767,7 +768,8 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, fields);
+            var params = convertParams(fields);
+            final StatementResult result = transaction.run(resolvedStatement, params);
             Set<String> ids = result.list()
                     .stream()
                     .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
@@ -1138,6 +1140,16 @@ public class Neo4jDao {
                 (transaction, result) -> result.list().stream().map(r -> r.get(0)).map(Value::asNode).collect(Collectors.toList()),
     			e -> LOGGER.error("Error retrieving target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
         );
+    }
+    
+    private Map<String, Object> convertParams(Map<String, Object> params) {
+    	var returnedParams = new HashMap<>(params);
+    	params.forEach((k,v)->{
+    		if(v instanceof Instant) {
+    			returnedParams.put(k, ((Instant) v).toEpochMilli());
+    		}
+    	});
+    	return returnedParams;
     }
 
 }

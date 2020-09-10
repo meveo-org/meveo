@@ -115,4 +115,15 @@
 		</createTable>
 		<addPrimaryKey columnNames="module_release_id, module_release_file" constraintName="module_release_files_pkey" tableName="module_release_files" />
 	</changeSet>
+	
+	<changeSet id="Add uuid and cfValues on workflow table with default value" author="Phu Bach">
+		<addColumn tableName="wf_workflow">
+			<column name="uuid" type="varchar(60)" defaultValue="uuid_generate_v4()">
+				<constraints nullable="false" />
+			</column>
+			<column name="cf_values" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
+
+
 </databaseChangeLog>

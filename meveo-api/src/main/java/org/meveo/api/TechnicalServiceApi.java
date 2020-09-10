@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,6 @@ import org.meveo.api.technicalservice.DescriptionApi;
 import org.meveo.event.model.AttributeUpdateEvent;
 import org.meveo.event.qualifier.AttributeUpdated;
 import org.meveo.exceptions.EntityAlreadyExistsException;
-import org.meveo.model.BaseEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.technicalservice.Description;
@@ -391,7 +391,14 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     public TechnicalServicesDto list(TechnicalServiceFilters filters) {
         List<T> list = persistenceService.list(filters);
         List<TechnicalServiceDto> customEntityInstanceDTOs = list.stream()
-                .map(this::toDto)
+                .map(t -> { 
+                	try {
+                		return toDto(t);
+                	} catch (Exception e) {
+                		log.error("Failed to serialize {}", t, e);
+                		return null;
+                	}
+                }).filter(Objects::nonNull)
                 .collect(Collectors.toList());
         return new TechnicalServicesDto(customEntityInstanceDTOs);
     }

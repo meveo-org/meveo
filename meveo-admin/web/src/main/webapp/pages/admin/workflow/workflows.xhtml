@@ -20,7 +20,7 @@
             <hftl:searchField label="#{messages['subscription.description']}" field="description" />
             <!-- 			<hftl:searchField label="#{messages['workflow.type']}" -->
             <!-- 				field="wfType" /> -->
-            <hftl:searchField label="#{messages['workflow.type']}" field="wfType" size="50" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteClassNames"
+            <hftl:searchField label="#{messages['workflow.field']}" field="wfType" size="50" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteClassNames"
                 isAutocomplete="true" />
             <hftl:searchField label="#{messages['commons.status']}" field="status" />
         </hftl:searchPanel>
@@ -28,7 +28,8 @@
         <hftl:dataList label="#{messages['dunningPlan.title']}" backingBean="#{workflowListBean}" addToModule="true" sortBy="code">
             <hftl:column label="#{messages['businessEntity.code']}" field="code" useCustomIdParam="true" objectIdParamName="workflowId" />
             <hftl:column label="#{messages['businessEntity.description']}" field="description" />
-            <hftl:column label="#{messages['workflow.type']}" field="wfType" />
+            <hftl:column label="#{messages['workflow.customEntity']}" field="cetCode" />
+            <hftl:column label="#{messages['workflow.field']}" field="wfType" />
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
 
             <hftl:column label="#{messages['workflow.enableHistory']}" field="enableHistory" />

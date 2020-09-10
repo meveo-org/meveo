@@ -1,17 +1,18 @@
 ## Local installation
 
-### Preparation
-
-Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory.
-
-Edit `docker-compose.yml` file to replace `kc-server` by the localhost IP address. Localhost IP address can be found using the command `ifconfig` for Linux system or `ipconfig` for Windows system.
-
-For example:
-
-    KEYCLOAK_URL: http://192.168.0.10:8081/auth
-
-
 ### Start Meveo
+
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory. 
+
+#### Windows or Mac OS host system
+And then run:
+
+```sh
+  docker-compose up -d
+```
+
+#### Linux host system
+In the copied docker-compose.yml file, please uncomment `KEYCLOAK_URL: http://localhost:8081/auth` for Linux system, and comment `KEYCLOAK_URL` variable for Windows & Mac OS.
 
 And then run:
 
@@ -19,7 +20,7 @@ And then run:
   docker-compose up -d
 ```
 
-Then access meveo admin console at: `http://localhost:8080/meveo`
+After start Meveo, then access meveo admin console at: `http://localhost:8080/meveo`
 
 The default credentials are: `meveo.admin / meveo`
 
@@ -28,6 +29,42 @@ The default credentials are: `meveo.admin / meveo`
 Local keycloak server is addressed at `http://localhost:8081/auth`
 
 The default keycloak credentials are: `admin / admin`
+
+### Start Neo4j for Meveo
+
+In docker-compose.yml file, please uncomment all lines regarding neo4j service.
+
+```yaml
+.....
+volumes:
+  neo4j_data:
+    driver: local
+.....
+services:
+  neo4j:
+      image: manaty/neo4j-meveo:dev-latest
+      container_name: neo4j
+      networks:
+        - meveo
+      restart: unless-stopped
+      volumes:
+        - neo4j_data:/data
+      environment:
+        NEO4J_AUTH: neo4j/neo4j123
+      ports:
+        - 7474:7474
+        - 7687:7687
+```
+
+Then run:
+```sh
+  docker-compose up -d neo4j
+```
+
+After neo4j container, please open neo4j browser at `http://localhost:7474/`
+
+The default neo4j credentials are: `neo4j / neo4j123`
+
 
 ### Externalize all meveo files
 

@@ -40,25 +40,26 @@ public class CustomEntityInstanceObserver {
 
 	@Inject
 	private CustomEntityInstanceAuditService customEntityInstanceAuditService;
-	
+
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityInstance cei) {
 
-		// log.debug("onCreated={}, cfValuesOld={}, cfValues={}",
-		// cei.getCfValuesOldNullSafe(), cei.getCfValues());
+		log.debug("CEI onCreated={}, cfValuesOld={}, cfValues={}", cei.getCfValuesOldNullSafe(), cei.getCfValues());
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityInstance cei)
 			throws BusinessException, BusinessApiException, EntityDoesNotExistsException, IOException {
 
-		if(cei.getCet() == null) {
+		log.debug("CEI onUpdated observer={}", cei);
+
+		if (cei.getCet() == null) {
 			cei.setCet(cache.getCustomEntityTemplate(cei.getCetCode()));
 		}
-		
+
 		if (cei.getCet().isAudited()) {
 			log.debug("onUpdated cfValuesOld={}, cfValues={}", cei.getCfValuesOldNullSafe().getValues(), cei.getCfValues().getValues());
 			CustomEntityInstanceAuditParameter param = new CustomEntityInstanceAuditParameter();
@@ -68,6 +69,7 @@ public class CustomEntityInstanceObserver {
 			param.setOldValues(cei.getCfValuesOldNullSafe());
 			param.setNewValues(cei.getCfValues());
 			param.setCeiUuid(cei.getUuid());
+			param.setAppliesTo(cei.getCet().getAppliesTo());
 
 			customEntityInstanceAuditService.auditChanges(param);
 		}
@@ -76,6 +78,6 @@ public class CustomEntityInstanceObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityInstance cei) {
 
-		log.debug("onRemoved={}", cei);
+		log.debug("CEI onRemoved observer={}", cei);
 	}
 }

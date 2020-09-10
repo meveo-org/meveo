@@ -32,21 +32,18 @@ import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
-import org.meveo.admin.action.admin.custom.GroupedDecisionRule;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.wf.WFAction;
-import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.wf.WFActionService;
-import org.meveo.service.wf.WFDecisionRuleService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
 import org.primefaces.model.DefaultTreeNode;
@@ -75,9 +72,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
     private WFTransitionService wfTransitionService;
 
     @Inject
-    private WFDecisionRuleService wfDecisionRuleService;
-
-    @Inject
     private WorkflowService wfService;
 
     @Inject
@@ -99,12 +93,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
     private TreeNode userGroupRootNode;
 
     private TreeNode userGroupSelectedNode;
-
-    private List<String> wfDecisionRulesName;
-
-    private List<List<WFDecisionRule>> wfDecisionRulesByName = new ArrayList<>();
-
-    private List<GroupedDecisionRule> selectedRules = new ArrayList<>();
 
     private List<WFAction> wfActions = new ArrayList<>();
 
@@ -149,17 +137,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
      */
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-        List<WFDecisionRule> wfDecisionRules = new ArrayList<>();
-        boolean isUniqueNameValue = workflowBean.checkAndPopulateDecisionRules(selectedRules, wfDecisionRules);
-        if (!isUniqueNameValue) {
-            return null;
-        }
-        for (WFDecisionRule wfTransitionRuleFor : wfDecisionRules) {
-            if (wfTransitionRuleFor.getId() == null) {
-                wfDecisionRuleService.create(wfTransitionRuleFor);
-            }
-        }
-
         entity.setDescription(wfTransition.getDescription());
 
         if (entity.getId() == null) {
@@ -176,8 +153,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
             entity.setFromStatus("ACKNOWLEDGED");
             entity.setToStatus("IN_PROGRESS");
         }
-        entity.getWfDecisionRules().clear();
-        entity.getWfDecisionRules().addAll(wfDecisionRules);
         entity.setWorkflow(workflowOrder);
         super.saveOrUpdate(killConversation);
 
@@ -340,33 +315,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
         this.wfTransition = wfTransition;
     }
 
-    public List<String> getWfDecisionRulesName() {
-        if (wfDecisionRulesName == null) {
-            wfDecisionRulesName = wfDecisionRuleService.getDistinctNameWFTransitionRules();
-        }
-        return wfDecisionRulesName;
-    }
-
-    public void setWfDecisionRulesName(List<String> wfDecisionRulesName) {
-        this.wfDecisionRulesName = wfDecisionRulesName;
-    }
-
-    public List<List<WFDecisionRule>> getWfDecisionRulesByName() {
-        return wfDecisionRulesByName;
-    }
-
-    public void setWfDecisionRulesByName(List<List<WFDecisionRule>> wfDecisionRulesByName) {
-        this.wfDecisionRulesByName = wfDecisionRulesByName;
-    }
-
-    public List<GroupedDecisionRule> getSelectedRules() {
-        return selectedRules;
-    }
-
-    public void setSelectedRules(List<GroupedDecisionRule> selectedRules) {
-        this.selectedRules = selectedRules;
-    }
-
     public List<WFAction> getWfActions() {
         return wfActions;
     }
@@ -378,31 +326,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
     @ActionMethod
     public void editWfTransition(WFTransition wfTransition) {
         this.wfTransition = wfTransition;
-        if (wfTransition != null && wfTransition.getWfDecisionRules() != null) {
-            wfDecisionRulesByName.clear();
-            selectedRules.clear();
-            for (WFDecisionRule wfTransitionRule : wfTransition.getWfDecisionRules()) {
-                GroupedDecisionRule groupedTransitionRule = new GroupedDecisionRule();
-                groupedTransitionRule.setName(wfTransitionRule.getName());
-                groupedTransitionRule.setValue(wfTransitionRule);
-                List<WFDecisionRule> list = wfDecisionRuleService.getWFDecisionRules(wfTransitionRule.getName());
-                Collections.sort(list);
-                wfDecisionRulesByName.add(list);
-                selectedRules.add(groupedTransitionRule);
-            }
-        }
-    }
-
-    public void addNewRule() {
-        selectedRules.add(new GroupedDecisionRule());
-    }
-
-    @ActionMethod
-    public void deleteWfDecisionRule(int indexRule) {
-        if (wfDecisionRulesByName.size() > indexRule && wfDecisionRulesByName.get(indexRule) != null) {
-            wfDecisionRulesByName.remove(indexRule);
-        }
-        selectedRules.remove(indexRule);
     }
 
     @ActionMethod
@@ -437,8 +360,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
         try {
             wfTransitionService.remove(wfTransition.getId());
             workflowOrder = wfService.refreshOrRetrieve(workflowOrder);
-            wfDecisionRulesByName.clear();
-            selectedRules.clear();
             wfActions.clear();
             messages.info(new BundleKey("messages", "delete.successful"));
 
@@ -494,17 +415,6 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
             }
         }
         return newNode;
-    }
-
-    public void changedRuleName(int indexRule) {
-        List<WFDecisionRule> list = wfDecisionRuleService.getWFDecisionRules(selectedRules.get(indexRule).getName());
-        Collections.sort(list);
-        if (wfDecisionRulesByName.size() > indexRule && wfDecisionRulesByName.get(indexRule) != null) {
-            wfDecisionRulesByName.remove(indexRule);
-            wfDecisionRulesByName.add(indexRule, list);
-        } else {
-            wfDecisionRulesByName.add(indexRule, list);
-        }
     }
 
     @ActionMethod

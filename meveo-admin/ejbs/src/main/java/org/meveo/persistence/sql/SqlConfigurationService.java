@@ -128,10 +128,10 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	public boolean testConnection(String sqlConfigurationCode) {
 
 		boolean result = false;
-		Session session = sqlConnectionProvider.getSession(sqlConfigurationCode);
-		if (session != null) {
-			result = true;
-			session.close();
+		try (Session session = sqlConnectionProvider.getSession(sqlConfigurationCode)) {
+			if (session != null) {
+				result = true;
+			}
 		}
 
 		return result;
@@ -185,7 +185,7 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 		for (CustomEntityTemplate cet : cets) {
 			
 			String tableName = SQLStorageConfiguration.getCetDbTablename(cet.getCode());
-			customTableCreatorService.createTable(entity.getCode(), tableName);
+			customTableCreatorService.createTable(cet);
 			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
 
 			try {
