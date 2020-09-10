@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
@@ -33,8 +34,10 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.CETUtils;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -65,6 +68,8 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.Script;
@@ -131,6 +136,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private CustomEntityInstanceService customEntityInstanceService;
 
 	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
+
+	@Inject
+	private CustomTableService customTableService;
+
+	@Inject
 	private CustomFieldsCacheContainerProvider cache;
 
 	@Inject
@@ -156,9 +167,19 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	private String customEntityInstanceCode;
 
+	private String customEntityInstanceUuid;
+
+	private String fieldName;
+
 	private List<CustomEntityInstance> entityInstances;
 
+	private List<Map<String, Object>> entityInstancesForTable;
+
+	private Map<String, Object> entityInstanceTable;
+
 	private CustomEntityInstance entityInstance;
+
+	private CustomEntityTemplate customEntityTemplate;
 
 	private List<BusinessEntity> availableEntities = new ArrayList<>();
 
@@ -1264,14 +1285,28 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 * @param mainEntityCfv Main entity's custom field value containing child
 	 *                      entities
 	 */
-	public void attachChildEntity(CustomFieldValue mainEntityCfv) {
+	public void attachChildEntity(CustomFieldValue mainEntityCfv) throws BusinessException {
+		CustomEntityInstance cei = new CustomEntityInstance();
+		Map<String, CustomFieldTemplate> customFieldTemplates = null;
+		if (!customEntityTemplate.isStoreAsTable()) {
+			customFieldTemplates = customFieldTemplateService.findByAppliesTo(entityInstance);
+			cei = entityInstance;
 
-		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entityInstance);
+	 	} else {
+			customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+			CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+			customEntityInstance.setCet(customEntityTemplate);
+			customEntityInstance.setCetCode(customEntityTemplateCode);
+			customEntityInstance.setUuid((String) entityInstanceTable.get("uuid"));
+			customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entityInstanceTable);
+
+			cei = customEntityInstance;
+		}
 
 		customFieldTemplates = sortByValue(customFieldTemplates);
 
 		GroupedCustomField groupedCustomField = new GroupedCustomField(customFieldTemplates.values(), "Custom fields", false);
-		groupedFieldTemplates.put(entityInstance.getUuid(), groupedCustomField);
+		groupedFieldTemplates.put(cei.getUuid(), groupedCustomField);
 
 		Map<String, List<CustomFieldValue>> cfValuesByCode = null;
 		// Get custom field instances mapped by a CFT code if entity has any field
@@ -1281,13 +1316,13 @@ public class CustomFieldDataEntryBean implements Serializable {
 		// No longer checking for isTransient as for offer new version creation, CFs are
 		// duplicated, but entity is not persisted, offering to review it in GUI before
 		// saving it.
-		if (customFieldTemplates != null && customFieldTemplates.size() > 0 && ((ICustomFieldEntity) entityInstance).getCfValues() != null) {
-			cfValuesByCode = ((ICustomFieldEntity) entityInstance).getCfValues().getValuesByCode();
+		if (customFieldTemplates != null && customFieldTemplates.size() > 0 && ((ICustomFieldEntity) cei).getCfValues() != null) {
+			cfValuesByCode = ((ICustomFieldEntity) cei).getCfValues().getValuesByCode();
 		}
-		cfValuesByCode = prepareCFIForGUI(customFieldTemplates, cfValuesByCode, entityInstance);
-		CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(customFieldTemplates, cfValuesByCode, entityInstance);
-		fieldsValues.put(entityInstance.getUuid(), entityFieldsValues);
-		CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(entityInstance.getUuid());
+		cfValuesByCode = prepareCFIForGUI(customFieldTemplates, cfValuesByCode, cei);
+		CustomFieldValueHolder entityFieldsValues = new CustomFieldValueHolder(customFieldTemplates, cfValuesByCode, cei);
+		fieldsValues.put(cei.getUuid(), entityFieldsValues);
+		CustomFieldValueHolder childEntityValueHolder = getFieldValueHolderByUUID(cei.getUuid());
 
 		String message = "customFieldInstance.childEntity.save.successful";
 
@@ -1425,17 +1460,33 @@ public class CustomFieldDataEntryBean implements Serializable {
 		for (CustomFieldValueHolder childEntityValueHolder : customFieldValue.getChildEntityValuesForGUI()) {
 
 			CustomEntityInstance cei = (CustomEntityInstance) childEntityValueHolder.getEntity();
-			boolean isNewEntity = cei.isTransient();
-			if (isNewEntity) {
-				customEntityInstanceService.create(cei);
-				saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
-
-			} else {
-				if (childEntityValueHolder.isUpdated()) {
-					cei = customEntityInstanceService.update(cei);
-					saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
+			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
+			if (customEntityTemplate.isStoreAsTable() && childEntityValueHolder.getValuesByCode() != null) {
+				cei.getCfValuesNullSafe().getValuesByCode().putAll(childEntityValueHolder.getValuesByCode());
+				try {
+					Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, cei.getUuid());
+					if (objectMap == null) {
+						customTableService.create("default", customEntityTemplate, cei);
+					} else {
+						customTableService.update("default", customEntityTemplate, cei);
+					}
+					previousChildEntities.remove(cei);
+				} catch (EntityDoesNotExistsException e) {
+					log.error(e.getMessage());
 				}
-				previousChildEntities.remove(cei);
+			} else {
+				boolean isNewEntity = cei.isTransient();
+				if (isNewEntity) {
+					customEntityInstanceService.create(cei);
+					saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
+
+				} else {
+					if (childEntityValueHolder.isUpdated()) {
+						cei = customEntityInstanceService.update(cei);
+						saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
+					}
+					previousChildEntities.remove(cei);
+				}
 			}
 		}
 
@@ -1477,8 +1528,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 						String entityCode = (String) values.get("code");
 						Long entityId = (Long) values.getOrDefault("id", null);
 
-						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()),
-								entityCode, entityId);
+						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), (String) values.get("classnameCode"), entityCode, entityId);
 
 						childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
 					}
@@ -1836,6 +1886,14 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.customEntityInstanceCode = customEntityInstanceCode;
 	}
 
+	public String getCustomEntityInstanceUuid() {
+		return customEntityInstanceUuid;
+	}
+
+	public void setCustomEntityInstanceUuid(String customEntityInstanceUuid) {
+		this.customEntityInstanceUuid = customEntityInstanceUuid;
+	}
+
 	public CustomEntityInstance getEntityInstance() {
 		return entityInstance;
 	}
@@ -1846,9 +1904,47 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public void initializeCustomEntityTemplateCode(String entityClazz) {
 		customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
-		customEntityInstanceCode = null;
-		entityInstance = null;
-		entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		if (customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
+			customEntityInstanceUuid = null;
+			entityInstanceTable = null;
+			entityInstancesForTable = customTableService.list("default", customEntityTemplate);
+		} else if (customEntityTemplate != null && !customEntityTemplate.isStoreAsTable()){
+			customEntityInstanceCode = null;
+			entityInstance = null;
+			entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		}
+	}
+
+	public boolean isStoreTable(String entityClazz) {
+		customEntityTemplateCode = CustomFieldTemplate.retrieveCetCode(entityClazz);
+		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
+		return customEntityTemplate.isStoreAsTable();
+	}
+
+	public String getFieldName() {
+
+		if (customEntityTemplate != null) {
+			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+			if (cfts != null) {
+				List<String> identifierFields = cfts.values().stream().filter(f -> f.isIdentifier()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+				if (CollectionUtils.isNotEmpty(identifierFields)) {
+					return fieldName = identifierFields.get(0);
+				}
+				List<String> requireFields = cfts.values().stream().filter(f -> f.isValueRequired()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+				if (CollectionUtils.isNotEmpty(requireFields)) {
+					return fieldName = requireFields.get(0);
+				}
+				List<String> summaryFields = cfts.values().stream().filter(f -> f.isSummary()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+				if (CollectionUtils.isNotEmpty(summaryFields)) {
+					return fieldName = summaryFields.get(0);
+				}
+			}
+		}
+		return fieldName = null;
+	}
+
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
 	}
 
 	public List<CustomEntityInstance> getEntityInstances() {
@@ -1859,13 +1955,40 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.entityInstances = entityInstances;
 	}
 
+	public List<Map<String, Object>> getEntityInstancesForTable() {
+		return entityInstancesForTable;
+	}
+
+	public void setEntityInstancesForTabe(List<Map<String, Object>> entityInstancesForTable) {
+		this.entityInstancesForTable = entityInstancesForTable;
+	}
+
+	public Map<String, Object> getEntityInstanceTable() {
+		return entityInstanceTable;
+	}
+
+	public void setEntityInstanceTable(Map<String, Object> entityInstanceTable) {
+		this.entityInstanceTable = entityInstanceTable;
+	}
+
 	public void search() {
-		entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		if (!customEntityTemplate.isStoreAsTable()) {
+			entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		} else {
+			Map<String, Object> filters = new HashMap<>();
+			filters.put("uuid", customEntityInstanceUuid);
+			PaginationConfiguration paginationConfiguration = new PaginationConfiguration(0, 1000, filters, null, null, null, null, null);
+			entityInstancesForTable = customTableService.searchAndFetch("default", customEntityTemplateCode, paginationConfiguration);
+		}
 	}
 
 	public void clean() {
-		customEntityInstanceCode = null;
-		entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		if (!customEntityTemplate.isStoreAsTable()) {
+			customEntityInstanceCode = null;
+			entityInstances = customEntityInstanceService.findByCode(customEntityTemplateCode, customEntityInstanceCode);
+		} else {
+			entityInstancesForTable = customTableService.list("default", customEntityTemplate);
+		}
 	}
 
 	public UploadedFile getUploadedBinaryFile() {
@@ -2008,6 +2131,31 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public List<String> getFilesToDeleteOnExit() {
 		return filesToDeleteOnExit;
+	}
+
+	public Object getValueObject(CustomFieldValueHolder childEntityValue, String fieldCode, String entityClazz) {
+		Object value = null;
+		if (childEntityValue != null && childEntityValue.getValuesByCode() != null && isStoreTable(entityClazz)) {
+			try {
+				CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(childEntityValue.getValuesByCode().get("classnameCode").get(0).getStringValue());
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
+				Map<String, Object> childEntity = customTableService.findById("default", customEntityTemplate, childEntityValue.getValuesByCode().get("uuid").get(0).getStringValue());
+				if (childEntity != null) {
+					value = childEntity.get(fieldCode);
+					if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
+						if ((Integer) value == 1) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+				}
+			} catch (EntityDoesNotExistsException e) {
+				log.error(e.getMessage());
+			}
+
+		}
+		return value;
 	}
 
 }
