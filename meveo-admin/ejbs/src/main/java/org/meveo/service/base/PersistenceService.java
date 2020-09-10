@@ -505,19 +505,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	}
 
 	/**
-	 * Persist an entity in a separated transaction.
-	 * 
-	 * @param e Entity to persist.
-	 * 
-	 * @throws BusinessException business exception.
-	 */
-	@JpaAmpNewTx
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createInNewTx(E e) throws BusinessException {
-		create(e);
-	}
-
-	/**
 	 * @see org.meveo.service.base.local.IPersistenceService#create(org.meveo.model.IEntity)
 	 */
 	@Override

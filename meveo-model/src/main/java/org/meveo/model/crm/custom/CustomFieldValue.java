@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.meveo.commons.utils.CustomDateSerializer;
 import org.meveo.commons.utils.CustomInstantSerializer;
@@ -196,6 +197,9 @@ public class CustomFieldValue implements Serializable {
      */
     @JsonProperty("mapEntity")
     private Map<String, EntityReferenceWrapper> mapEntityValue = null;
+    
+    @JsonProperty("mapEmbeddedEntity")
+    private Map<String, Object> mapEmbeddedEntityValue = null;
 
     /**
      * Contains mapValue adapted for GUI data entry in the following way:
@@ -448,18 +452,15 @@ public class CustomFieldValue implements Serializable {
 
     @SuppressWarnings("rawtypes")
     public Map getMapValue() {
-        if (mapStringValue != null && !mapStringValue.isEmpty()) {
-            return mapStringValue;
-        } else if (mapDateValue != null && !mapDateValue.isEmpty()) {
-            return mapDateValue;
-        } else if (mapLongValue != null && !mapLongValue.isEmpty()) {
-            return mapLongValue;
-        } else if (mapDoubleValue != null && !mapDoubleValue.isEmpty()) {
-            return mapDoubleValue;
-        } else if (mapEntityValue != null && !mapEntityValue.isEmpty()) {
-            return mapEntityValue;
-        }
-        return null;
+    	return Stream.of(mapStringValue,
+			mapDateValue,
+			mapLongValue,
+			mapDoubleValue,
+			mapEntityValue,
+			mapEmbeddedEntityValue)
+    	.filter(m -> m != null && !m.isEmpty())
+    	.findFirst()
+    	.orElse(null);
     }
 
     /**
@@ -535,6 +536,8 @@ public class CustomFieldValue implements Serializable {
             for (Entry<String, Object> mapItem : mapCopy.entrySet()) {
                 mapEntityValue.put(mapItem.getKey(), (EntityReferenceWrapper) mapItem.getValue());
             }
+        } else {
+        	mapEmbeddedEntityValue = mapCopy;
         }
     }
 
@@ -974,7 +977,8 @@ public class CustomFieldValue implements Serializable {
                 && (listLongValue == null || listLongValue.isEmpty()) && (listDoubleValue == null || listDoubleValue.isEmpty())
                 && (listEntityValue == null || listEntityValue.isEmpty()) && (mapStringValue == null || mapStringValue.isEmpty())
                 && (mapDateValue == null || mapDateValue.isEmpty()) && (mapLongValue == null || mapLongValue.isEmpty()) && (mapDoubleValue == null || mapDoubleValue.isEmpty())
-                && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()));
+                && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()))
+        		&& (mapEmbeddedEntityValue == null || mapEmbeddedEntityValue.isEmpty());
     }
 
     /**
@@ -1253,7 +1257,7 @@ public class CustomFieldValue implements Serializable {
         } else if (listLongValue != null && !listLongValue.isEmpty()) {
             return listLongValue;
         }else if (booleanValue != null) {
-                return booleanValue;
+            return booleanValue;
         } else if (listDoubleValue != null && !listDoubleValue.isEmpty()) {
             return listDoubleValue;
         } else if (listEntityValue != null && !listEntityValue.isEmpty()) {
@@ -1270,6 +1274,8 @@ public class CustomFieldValue implements Serializable {
             return entityReferenceValue;
         } else if(fileValue != null) {
             return fileValue;
+        } else if(mapEmbeddedEntityValue != null && !mapEmbeddedEntityValue.isEmpty()) {
+        	return mapEmbeddedEntityValue;
         }
 
         return null;
@@ -1293,6 +1299,7 @@ public class CustomFieldValue implements Serializable {
         mapLongValue = null;
         mapDoubleValue = null;
         mapEntityValue = null;
+        mapEmbeddedEntityValue = null;
         listStringValue = null;
         listDateValue = null;
         listLongValue = null;

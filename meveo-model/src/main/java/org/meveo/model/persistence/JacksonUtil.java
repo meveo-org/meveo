@@ -2,12 +2,8 @@ package org.meveo.model.persistence;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.FileSerializer;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -18,6 +14,14 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.FileSerializer;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
  * Helper class for processing JSON.
@@ -36,6 +40,7 @@ public class JacksonUtil {
         om.setVisibility(om.getVisibilityChecker().withIsGetterVisibility(Visibility.NONE));
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         om.setSerializationInclusion(Include.NON_NULL);
         om.registerModule(new JavaTimeModule());
 
@@ -111,6 +116,10 @@ public class JacksonUtil {
     }
     
     public static <T> T read(String value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.readValue(value, clazz);
+    }
+    
+    public static <T> T read(InputStream value, TypeReference<T> clazz) throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(value, clazz);
     }
 

@@ -4,7 +4,7 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	template="/layout/template.xhtml" xmlns:o="http://omnifaces.org/ui"
-	xmlns:of="http://omnifaces.org/functions"
+	xmlns:of="http://omnifaces.org/functions" xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions"
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
 	<ui:define name="metadata">
@@ -202,7 +202,7 @@
 								rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] != null}" />
 
 							<h:outputText id="field_#{entity[field.dbFieldname]}_out"
-										  value="#{field.code ne 'code' and field.code ne 'description'?entity[field.code]:''}" styleClass="field-value"
+										  value="#{!(field.code eq fn:toLowerCase(field.code))?entity[field.code]:''}" styleClass="field-value"
 										  rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] == null}" />
 
 							<!--  Double -->

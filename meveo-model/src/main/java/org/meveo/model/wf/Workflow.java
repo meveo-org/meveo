@@ -21,15 +21,7 @@ package org.meveo.model.wf;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -48,13 +40,17 @@ import org.meveo.model.ModuleItemOrder;
 @Entity
 @ModuleItem("Workflow")
 @ModuleItemOrder(207)
-@Cacheable
 @ExportIdentifier({ "code"})
 @Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "wf_workflow_seq"), })
 public class Workflow extends BusinessEntity {
 
 	private static final long serialVersionUID = 1L;
+
+	@Column(name = "cet_code", length = 255)
+	@NotNull
+	@Size(max = 255)
+	String cetCode = null;
 
 	@Column(name = "wf_type", length = 255)
 	@NotNull
@@ -64,11 +60,19 @@ public class Workflow extends BusinessEntity {
 	@OneToMany(mappedBy = "workflow", fetch = FetchType.LAZY, cascade = { CascadeType.REMOVE })
     @OrderBy("priority ASC")
 	private List<WFTransition> transitions = new ArrayList<WFTransition>();
-	
-	
+
+
 	@Type(type="numeric_boolean")
     @Column(name = "enable_hostory")
 	private boolean enableHistory;
+
+	public String getCetCode() {
+		return cetCode;
+	}
+
+	public void setCetCode(String cetCode) {
+		this.cetCode = cetCode;
+	}
 
 	/**
 	 * @return the wfType

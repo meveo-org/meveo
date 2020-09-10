@@ -64,6 +64,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
@@ -88,6 +89,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private SqlConfigurationService sqlConfigurationService;
 
     @Inject
     private PermissionService permissionService;
@@ -142,6 +146,23 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return new File(getClassesDirectory(currentUser));
     }
     
+    /**
+     * @param cet The parent template
+     * @return the sub-templates of the given template
+     */
+    public List<CustomEntityTemplate> getSubTemplates(CustomEntityTemplate cet) {
+    	/* CustomEntityTemplate result = (CustomEntityTemplate) getEntityManager()
+    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate cet WHERE cet.id = :id")
+    			.setParameter("id", cet.getId())
+    			.getSingleResult();
+		return result.getSubTemplates();*/ 
+    	return getEntityManager()
+			.createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
+			.setParameter("id", cet.getId())
+			.getResultList();
+    	
+    }
+    
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
     	
@@ -150,17 +171,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         
 		ParamBean paramBean = paramBeanFactory.getInstance();
-		if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
-			cet.setCustomEntityCategory(cec);
-		}
                 
         super.create(cet);
         
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(SQLStorageConfiguration.getDbTablename(cet), cet.hasReferenceJpaEntity());
+            customTableCreatorService.createTable(cet);
         }
 
         elasticClient.createCETMapping(cet);
@@ -233,6 +250,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
+        CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
         
     	if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
@@ -280,6 +298,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         } else {
             neo4jService.removeUUIDIndexes(cet);
         }
+        
+        var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
+        
+        // Handle SQL inheritance
+        if(cet.storedIn(DBStorageType.SQL)) {
+        	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
+        		// Inheritance removed
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        	} else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
+        		// Inheritance added
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        	}
+        }
 
         return cetUpdated;
     }
@@ -318,7 +349,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         customFieldsCache.removeCustomEntityTemplate(cet);
 
-        super.remove(cet);
+        if(getEntityManager().contains(cet)) {
+        	super.remove(cet);
+        }
 
     }
 
@@ -469,10 +502,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
 
-        CustomEntityTemplate cet = findByCode(codeOrDbTablename);
-        if (cet != null) {
-            return cet;
-        }
+    	CustomEntityTemplate cet = null;
+    	if(useCETCache) {
+    		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    	}
+    	
+		if (cet == null) {
+			cet = findByCode(codeOrDbTablename);
+			if (cet != null) {
+				return cet;
+			}
+		}
         return findByDbTablename(codeOrDbTablename);
     }
 
@@ -587,6 +627,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
 	public boolean hasReferenceJpaEntity(String cetCode) {
         CustomEntityTemplate cet = findByCode(cetCode);
+        return hasReferenceJpaEntity(cet);
+	}
+	
+	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		if (cfts.size() > 0) {
@@ -600,20 +644,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return false;
 	}
 	
-
-	
 	public String requestSchema(String code) {
 		
 //		CustomEntityTemplate cet = findByCode(code);
 //		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
 		return null;
-	}
-
-	public void createWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
-
-		customEntityCategoryService.create(customEntityCategory);
-		cet.setCustomEntityCategory(customEntityCategory);
-		create(cet);
 	}
 
 	public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {

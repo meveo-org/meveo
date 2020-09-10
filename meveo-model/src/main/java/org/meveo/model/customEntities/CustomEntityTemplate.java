@@ -121,7 +121,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Custom Entity Category
 	 */
-	@ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE })
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "custom_entity_category")
 	private CustomEntityCategory customEntityCategory;
 
@@ -138,6 +138,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
+	
+	@Transient
+	private boolean isInDraft = false;
 
 //	void setCustomEntityCategory(CustomEntityCategory customEntityCategory, boolean isAdd) {
 //		
@@ -155,6 +158,14 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
 //		setCustomEntityCategory(customEntityCategory);
 		this.customEntityCategory = customEntityCategory;
+	}
+
+	public boolean isInDraft() {
+		return isInDraft;
+	}
+
+	public void setInDraft(boolean isInDraft) {
+		this.isInDraft = isInDraft;
 	}
 
 	/**
@@ -362,6 +373,17 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 */
 	public CustomEntityTemplate getSuperTemplate() {
 		return superTemplate;
+	}
+	
+	/**
+	 * @param storage Storage type to check
+	 * @return whether the template is stored in this storage
+	 */
+	public boolean storedIn(DBStorageType storage) {
+		if(availableStorages == null) {
+			return false;
+		}
+		return availableStorages.contains(storage);
 	}
 
 	/**

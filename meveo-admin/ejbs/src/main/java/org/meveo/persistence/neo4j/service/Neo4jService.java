@@ -422,10 +422,12 @@ public class Neo4jService implements CustomPersistenceService {
 
                         } else if(value instanceof String){ 
                             // If entity reference's value is a string and the entity reference is not primitive, then the value is likely the UUID of the referenced node
-                        	
                             handleUuidReference(neo4JConfiguration, cet, relationshipsToCreate, entityReference, referencedCet, value);
 
-                        } else if(value instanceof Collection) {
+                        } else if(value instanceof EntityReferenceWrapper) {
+                            handleUuidReference(neo4JConfiguration, cet, relationshipsToCreate, entityReference, referencedCet, ((EntityReferenceWrapper) value).getUuid());
+                        
+                    	} else if(value instanceof Collection) {
                         	for(Object item : (Collection<?>) value) {
                         		if(item instanceof String) {
                         			handleUuidReference(neo4JConfiguration, cet, relationshipsToCreate, entityReference, referencedCet, value);
@@ -1619,7 +1621,9 @@ public class Neo4jService implements CustomPersistenceService {
 		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
 		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
-
+		if(result == null) {
+			return 0;
+		}
 		return result.size();
     }
 

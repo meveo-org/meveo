@@ -31,6 +31,7 @@ import org.meveo.model.catalog.CalendarYearly;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
@@ -199,7 +200,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
         try {
-            return findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
+        	var field = findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
+            if(field == null && entity instanceof CustomEntityInstance) {
+            	var cet = ((CustomEntityInstance) entity).getCet();
+            	if(cet.getSuperTemplate() != null) {
+            		return findByCodeAndAppliesTo(code, cet.getSuperTemplate().getAppliesTo());
+            	}
+            }
+        	return field;
 
         } catch (CustomFieldException e) {
             log.error("Can not determine applicable CFT type for entity of {} class.", entity.getClass().getSimpleName());

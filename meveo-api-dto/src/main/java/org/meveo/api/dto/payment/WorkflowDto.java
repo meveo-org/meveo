@@ -60,6 +60,11 @@ public class WorkflowDto extends BaseEntityDto {
 	@ApiModelProperty("Description of workflow")
 	private String description;
 
+	/** The cetCode. */
+	@XmlElement(required = true)
+	@ApiModelProperty("Code of custom entity template")
+	private String cetCode;
+
 	/** The wf type. */
 	@XmlElement(required = true)
 	@ApiModelProperty("The type")
@@ -89,6 +94,7 @@ public class WorkflowDto extends BaseEntityDto {
 	public WorkflowDto(Workflow workflow) {
 		this.code = workflow.getCode();
 		this.description = workflow.getDescription();
+		this.cetCode = workflow.getCetCode();
 		this.wfType = workflow.getWfType();
 		this.enableHistory = workflow.isEnableHistory();
 		for (WFTransition wfTransition : workflow.getTransitions()) {
@@ -131,6 +137,24 @@ public class WorkflowDto extends BaseEntityDto {
 	 */
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	/**
+	 * Gets the cetCode.
+	 *
+	 * @return the cetCode
+	 */
+	public String getCetCode() {
+		return cetCode;
+	}
+
+	/**
+	 * Sets the cetCode.
+	 *
+	 * @param cetCode the cetCode to set
+	 */
+	public void setCetCode(String cetCode) {
+		this.cetCode = cetCode;
 	}
 
 	/**
@@ -189,7 +213,7 @@ public class WorkflowDto extends BaseEntityDto {
 
 	@Override
 	public String toString() {
-		return "WorkflowDto [code=" + code + ", description=" + description + ", wfType=" + wfType + " enableHistory=" + enableHistory + ", listWFTransitionDto="
+		return "WorkflowDto [code=" + code + ", description=" + description + ", cetCode=" + cetCode + ", wfType=" + wfType + " enableHistory=" + enableHistory + ", listWFTransitionDto="
 				+ listWFTransitionDto + "]";
 	}
 
