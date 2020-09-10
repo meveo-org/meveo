@@ -10,7 +10,7 @@ volumes:
 
 services:
   postgres:
-      image: manaty/postgres-meveo:${MEVEO_VERSION}
+      image: postgres:9.5.21
       container_name: postgres
       networks:
         - meveo

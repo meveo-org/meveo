@@ -591,7 +591,7 @@ public class CustomFieldInstanceService extends BaseService {
 						if (entityReferenceWrapper.getUuid() == null) {
 							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
 						}
-
+						
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
 						fetchCode(cft, (String) value, entityReferenceWrapper);
@@ -643,6 +643,8 @@ public class CustomFieldInstanceService extends BaseService {
 						} else if (!entityValues.isEmpty()) {
 							cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityValues);
 						}
+					} else {
+						entity.getCfValuesNullSafe().setValue(cfCode, value);
 					}
 				}
 

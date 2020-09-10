@@ -302,7 +302,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
         
         // Handle SQL inheritance
-        if(cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+        if(cet.storedIn(DBStorageType.SQL)) {
         	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
         		// Inheritance removed
         		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
@@ -502,10 +502,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
 
-        CustomEntityTemplate cet = findByCode(codeOrDbTablename);
-        if (cet != null) {
-            return cet;
-        }
+    	CustomEntityTemplate cet = null;
+    	if(useCETCache) {
+    		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    	}
+    	
+		if (cet == null) {
+			cet = findByCode(codeOrDbTablename);
+			if (cet != null) {
+				return cet;
+			}
+		}
         return findByDbTablename(codeOrDbTablename);
     }
 
@@ -620,6 +627,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
 	public boolean hasReferenceJpaEntity(String cetCode) {
         CustomEntityTemplate cet = findByCode(cetCode);
+        return hasReferenceJpaEntity(cet);
+	}
+	
+	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
 		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
 		if (cfts.size() > 0) {
@@ -632,8 +643,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
 		return false;
 	}
-	
-
 	
 	public String requestSchema(String code) {
 		

@@ -39,7 +39,6 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.hibernate.Hibernate;

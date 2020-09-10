@@ -51,6 +51,8 @@ import org.meveo.service.job.JobInstanceService;
  * @param <T> Type of function (service, script ...)
  * @param <E> Type of engine
  * @author clement.bareth
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.11
  */
 public abstract class FunctionService<T extends Function, E extends ScriptInterface>
         extends BusinessService<T> {
@@ -96,6 +98,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     }
 
     private void publish(T executable, CrudActionEnum action) {
+    	
         afterUpdateOrCreate(executable);
         clusterEventPublisher.publishEvent(executable, action);
     }
@@ -161,13 +164,25 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     @Override
     public T update(T executable) throws BusinessException {
-        validateAndSetCode(executable);
-        super.update(executable);
+        
+    	validateAndSetCode(executable);
+        beforeUpdateOrCreate(executable);
+        executable = super.update(executable);        
         publish(executable, CrudActionEnum.update);
+        
         return executable;
     }
+    
 
     @Override
+	public void updateNoMerge(T entity) throws BusinessException {
+    	validateAndSetCode(entity);
+        beforeUpdateOrCreate(entity);
+        entity = super.update(entity);        
+        publish(entity, CrudActionEnum.update);
+	}
+
+	@Override
     public void remove(T executable) throws BusinessException {
         // First remove test jobs
         final List<JobInstance> jobsToRemove = jobInstanceService.findJobsByTypeAndParameters(FUNCTION_TEST_JOB, executable.getCode(), JobCategoryEnum.TEST);
@@ -330,6 +345,34 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         E engine = getExecutionEngine(code, context);
         return execute(engine, context);
     }
+    
+    @TransactionAttribute(TransactionAttributeType.NEVER)
+   	public Map<String, Object> postCommit(String code, Map<String, Object> context) throws BusinessException {
+
+   		E engine = getExecutionEngine(code, context);
+
+   		if (context == null) {
+   			context = new HashMap<>();
+   		}
+
+   		engine.postCommit(context);
+
+   		return buildResultMap(engine, context);
+   	}
+
+   	@TransactionAttribute(TransactionAttributeType.NEVER)
+   	public Map<String, Object> postRollback(String code, Map<String, Object> context) throws BusinessException {
+
+   		E engine = getExecutionEngine(code, context);
+
+   		if (context == null) {
+   			context = new HashMap<>();
+   		}
+
+   		engine.postRollback(context);
+
+   		return buildResultMap(engine, context);
+   	}
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
 
@@ -384,6 +427,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.setParameter("testSuite", finalTestSuite)
 			.setParameter("code", code)
 			.executeUpdate();	
+	}
+	
+    public void compileScript(T script, boolean testCompile) {
 	}
 
 }

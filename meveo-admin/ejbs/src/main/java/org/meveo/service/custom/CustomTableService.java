@@ -941,7 +941,7 @@ public class CustomTableService extends NativePersistenceService {
 				parentFieldsToSelect = new ArrayList<>();
 				parentCfts.values()
 					.forEach(cft -> {
-						var dbColKey = cft.getDbFieldname();
+						var dbColKey = cft.getCode();
 						var isFieldSelected =  selectFieldsCopy.remove(dbColKey);
 						if(isFieldSelected) {
 							parentFieldsToSelect.add(dbColKey);
@@ -1029,6 +1029,10 @@ public class CustomTableService extends NativePersistenceService {
                 	modifiableMap.put(field.getKey(), ((int) field.getValue()) == 1);
                 } else if(field.getValue() instanceof BigInteger) {
                 	modifiableMap.put(field.getKey(), ((BigInteger) field.getValue()).longValue());
+            	} else if(field.getValue() instanceof String && (
+            			cft.getFieldType().equals(CustomFieldTypeEnum.EMBEDDED_ENTITY) || cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY)
+        			)) {
+                    modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
             	} else {
                 	modifiableMap.put(field.getKey(), field.getValue());
                 }
