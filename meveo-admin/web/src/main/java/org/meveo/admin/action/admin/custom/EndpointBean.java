@@ -21,15 +21,15 @@ import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
-import org.meveo.keycloak.client.KeycloakAdminClientConfig;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
-import org.meveo.keycloak.client.KeycloakUtils;
 import org.meveo.model.scripts.FunctionIO;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.primefaces.model.DualListModel;
 
@@ -49,6 +49,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	private EndpointService endpointService;
 
 	@Inject
+	private ScriptInstanceService scriptInstanceService;
+
+	@Inject
 	protected Messages messages;
 
 	@EJB
@@ -63,6 +66,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	private String endpointUrl;
 
 	private String serviceCode;
+
+	private ScriptInstance scriptInstance = null;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -110,8 +115,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		List<String> perksTarget;
 		if (pathParametersDL == null) {
 			List<String> perksSource = new ArrayList<>();
-			if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
-				List<FunctionIO> functionIOList = entity.getService().getInputs();
+			if (scriptInstance != null && CollectionUtils.isNotEmpty(scriptInstance.getInputs())) {
+				List<FunctionIO> functionIOList = scriptInstance.getInputs();
 				Set<String> parameterTarget = new HashSet<>();
 				perksTarget = new ArrayList<>();
 				if (entity.getPathParameters() != null && CollectionUtils.isNotEmpty(entity.getPathParameters())) {
@@ -135,12 +140,13 @@ public class EndpointBean extends BaseBean<Endpoint> {
 				pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
 			}
 
-		} else if (entity.getService() != null && !entity.getService().getCode().equals(serviceCode)
-				&& CollectionUtils.isNotEmpty(entity.getService().getInputs())) {
-			List<FunctionIO> functionIOList = entity.getService().getInputs();
+		} else if (scriptInstance != null && !scriptInstance.getCode().equals(serviceCode)) {
+			List<FunctionIO> functionIOList = scriptInstance.getInputs();
 			List<String> perksSource = new ArrayList<>();
-			for (FunctionIO functionIO : functionIOList) {
-				perksSource.add(functionIO.getName());
+			if (CollectionUtils.isNotEmpty(functionIOList)) {
+				for (FunctionIO functionIO : functionIOList) {
+					perksSource.add(functionIO.getName());
+				}
 			}
 			perksTarget = new ArrayList<>();
 			pathParametersDL = new DualListModel<String>(perksSource, perksTarget);
@@ -191,18 +197,20 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	 * name and serialize result fields.
 	 */
 	public void onFunctionChange() {
-		List<FunctionIO> functionIOList = entity.getService().getOutputs();
-		if (CollectionUtils.isNotEmpty(functionIOList)) {
-			if (entity.getReturnedVariableName() != null) {
-				for (FunctionIO functionIO : functionIOList) {
-					if (entity.getReturnedVariableName().equals(functionIO.getName())) {
-						if (functionIO.getType().startsWith("Map")) {
-							entity.setSerializeResult(true);
-						} else {
-							entity.setSerializeResult(false);
-						}
+		if (scriptInstance != null) {
+			List<FunctionIO> functionIOList = scriptInstance.getOutputs();
+			if (CollectionUtils.isNotEmpty(functionIOList)) {
+				if (entity.getReturnedVariableName() != null) {
+					for (FunctionIO functionIO : functionIOList) {
+						if (entity.getReturnedVariableName().equals(functionIO.getName())) {
+							if (functionIO.getType().startsWith("Map")) {
+								entity.setSerializeResult(true);
+							} else {
+								entity.setSerializeResult(false);
+							}
 
-						break;
+							break;
+						}
 					}
 				}
 			}
@@ -221,16 +229,17 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	public List<String> getReturnedVariableNames() {
 		if (returnedVariableNames == null) {
 			returnedVariableNames = new ArrayList<>();
-			if (entity.getService() != null && CollectionUtils.isNotEmpty(entity.getService().getOutputs())) {
-				List<FunctionIO> functionIOList = entity.getService().getOutputs();
+			if (scriptInstance != null && CollectionUtils.isNotEmpty(scriptInstance.getOutputs())) {
+				List<FunctionIO> functionIOList = scriptInstance.getOutputs();
 				functionIOList.forEach(item -> returnedVariableNames.add(item.getName()));
 			}
 
-		} else if (entity.getService() != null && !entity.getService().getCode().equals(serviceCode)
-				&& CollectionUtils.isNotEmpty(entity.getService().getOutputs())) {
-			List<FunctionIO> functionIOList = entity.getService().getOutputs();
+		} else if (scriptInstance != null && !scriptInstance.getCode().equals(serviceCode)) {
+			List<FunctionIO> functionIOList = scriptInstance.getOutputs();
 			returnedVariableNames.clear();
-			functionIOList.forEach(item -> returnedVariableNames.add(item.getName()));
+			if (CollectionUtils.isNotEmpty(functionIOList)) {
+				functionIOList.forEach(item -> returnedVariableNames.add(item.getName()));
+			}
 		}
 		return returnedVariableNames;
 	}
@@ -308,5 +317,16 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	@Override
 	public String getEditViewName() {
 		return "technicalServiceEndpointDetail";
+	}
+
+	public ScriptInstance getScriptInstance() {
+		if (entity.getService() != null) {
+			scriptInstance = scriptInstanceService.findById(entity.getService().getId());
+		}
+		return scriptInstance;
+	}
+
+	public void setScriptInstance(ScriptInstance scriptInstance) {
+		this.scriptInstance = scriptInstance;
 	}
 }

@@ -157,22 +157,29 @@ public class CustomFieldInstanceService extends BaseService {
                 return cei;
             }
         } else {
+            BusinessEntity businessEntity = new BusinessEntity();
             if (classNameAndCode.equals(User.class.getName())) {
                 User user = userService.findByUsername(value);
-                BusinessEntity businessEntity = new BusinessEntity();
-                businessEntity.setCode(value);
-                businessEntity.setId(user.getId());
-                return businessEntity;
+                if (user != null) {
+                    businessEntity.setCode(value);
+                    businessEntity.setId(user.getId());
+                    return businessEntity;
+                } else {
+                    return null;
+                }
             } else if (classNameAndCode.equals(Provider.class.getName())) {
                 Provider provider = providerService.findByCode(value);
                 if (provider == null) {
                   provider = providerService.findById(Long.valueOf(value));
                 }
-                BusinessEntity businessEntity = new BusinessEntity();
-                businessEntity.setCode(provider.getCode());
-                businessEntity.setId(provider.getId());
-                return businessEntity;
-            } else {
+                if (provider != null) {
+                    businessEntity.setCode(provider.getCode());
+                    businessEntity.setId(provider.getId());
+                    return businessEntity;
+                } else {
+                    return null;
+                }
+            }else {
                 query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) = :code");
                 query.setParameter("code", value.toLowerCase());
             }
@@ -572,7 +579,7 @@ public class CustomFieldInstanceService extends BaseService {
 					} else if (StringUtils.isNumeric(String.valueOf(value))) {
 						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
 					}
-					
+
 					cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
 					
 				} else {
@@ -584,7 +591,7 @@ public class CustomFieldInstanceService extends BaseService {
 						if (entityReferenceWrapper.getUuid() == null) {
 							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
 						}
-
+						
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
 						fetchCode(cft, (String) value, entityReferenceWrapper);
@@ -636,6 +643,8 @@ public class CustomFieldInstanceService extends BaseService {
 						} else if (!entityValues.isEmpty()) {
 							cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityValues);
 						}
+					} else {
+						entity.getCfValuesNullSafe().setValue(cfCode, value);
 					}
 				}
 

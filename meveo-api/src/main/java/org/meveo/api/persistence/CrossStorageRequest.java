@@ -3,6 +3,7 @@
  */
 package org.meveo.api.persistence;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class CrossStorageRequest<T> {
 	private Class<T> clazz;
 	private PaginationConfiguration configuration;
 	private CustomEntityTemplate cet;
+	private List<String> relationsToFetch;
 	
 	public CrossStorageRequest(Repository repo, CrossStorageService api, Class<T> clazz, CustomEntityTemplate cet) {
 		repository = repo;
@@ -36,6 +38,7 @@ public class CrossStorageRequest<T> {
 		this.cet = cet;
 		configuration = new PaginationConfiguration();
 		configuration.setFilters(new HashMap<>());
+		this.relationsToFetch = new ArrayList<>();
 	}
 	
 	public CrossStorageRequest<T> by(String field, Object value) {
@@ -43,10 +46,20 @@ public class CrossStorageRequest<T> {
 		return this;
 	}
 	
+	public CrossStorageRequest<T> fetch(String field) {
+		this.relationsToFetch.add(field);
+		return this;
+	}
+	
 	public List<T> getResults() {
 		try {
-			return api.find(repository, cet, configuration)
-					.stream()
+			var results = api.find(repository, cet, configuration);
+			
+			if(!relationsToFetch.isEmpty()) {
+				results.forEach(this::fetch);
+			}
+			
+			return results.stream()
 					.map(v -> CEIUtils.deserialize(v, clazz))
 					.collect(Collectors.toList());
 		} catch (EntityDoesNotExistsException e) {
@@ -61,10 +74,30 @@ public class CrossStorageRequest<T> {
 				return null;
 			}
 			
+			if(!relationsToFetch.isEmpty()) {
+				fetch(values.get(0));
+			}
+			
 			return CEIUtils.deserialize(values.get(0), clazz);
 			
 		} catch (EntityDoesNotExistsException e) {
 			return null;
+		}
+	}
+	
+	private void fetch(Map<String, Object> values) {
+		Map<String, Object> valuesToFetch = new HashMap<>(values);
+		values.forEach((k,v) -> {
+			if(!k.equals("uuid") && !relationsToFetch.contains(k)) {
+				valuesToFetch.remove(k);
+			}
+		});
+		
+		try {
+			api.fetchEntityReferences(repository, cet, valuesToFetch);
+			valuesToFetch.forEach(values::put);
+		} catch (EntityDoesNotExistsException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

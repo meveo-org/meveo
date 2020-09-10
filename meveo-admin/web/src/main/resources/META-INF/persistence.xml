@@ -23,12 +23,8 @@
             <property name="hibernate.discriminator.ignore_explicit_for_joined" value="true" />
             <property name="hibernate.ejb.event.flush" value="org.meveo.jpa.event.FlushEventListener" /> <!-- Needed for ES -->
             <property name="hibernate.jpa.compliance.global_id_generators" value="false"/>
-            <property name="hibernate.c3p0.min_size" value="5"></property>
-			<property name="hibernate.c3p0.max_size" value="20"></property>
-			<property name="hibernate.c3p0.acquire_increment" value="5"></property>
-			<property name="hibernate.c3p0.timeout" value="1800"></property>
-			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property>
-			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/>
+<!-- 			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property> -->
+<!-- 			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/> -->
         </properties>
     </persistence-unit>
 
@@ -54,12 +50,8 @@
             <property name="hibernate.discriminator.ignore_explicit_for_joined" value="true" />
             <property name="hibernate.ejb.event.flush" value="org.meveo.jpa.event.FlushEventListener" /> <!-- Needed for ES -->
             <property name="hibernate.jpa.compliance.global_id_generators" value="false"/>
-            <property name="hibernate.c3p0.min_size" value="5"></property>
-			<property name="hibernate.c3p0.max_size" value="20"></property>
-			<property name="hibernate.c3p0.acquire_increment" value="5"></property>
-			<property name="hibernate.c3p0.timeout" value="1800"></property>
-			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property>
-			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/>
+<!-- 			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property> -->
+<!-- 			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/> -->
         </properties>
     </persistence-unit>
 

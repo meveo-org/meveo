@@ -123,7 +123,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 /**
  * @param <T>
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.10
+ * @version 6.11
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
@@ -205,6 +205,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     protected void afterUpdateOrCreate(T script) {
+    	
         try {
         	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
@@ -541,10 +542,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param testCompile Is it a compilation for testing purpose. Won't clear nor
      *                    overwrite existing compiled script cache.
      */
+    @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
     	
-        final String source;
+    	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
         } else {
@@ -561,20 +563,22 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private void addScriptDependencies(T script) {
 
-        if (script instanceof ScriptInstance) {
-            ScriptInstance scriptInstance = (ScriptInstance) script;
+		if (script instanceof ScriptInstance) {
+			ScriptInstance scriptInstance = (ScriptInstance) script;
 
-            Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
+			if (scriptInstance.getMavenDependencies() != null && scriptInstance.getMavenDependencies().size() > 0) {
+				Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
 
-            synchronized (CLASSPATH_REFERENCE) {
-                mavenDependencies.stream().forEach(location -> {
-                    if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-                        addLibrary(location);
-                        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-                    }
-                });
-            }
-        }
+				synchronized (CLASSPATH_REFERENCE) {
+					mavenDependencies.stream().forEach(location -> {
+						if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+							addLibrary(location);
+							CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+						}
+					});
+				}
+			}
+		}
     }
 
 	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
@@ -682,13 +686,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         	Class<?> typeClass = null;
         	
         	try {
-        		typeClass = Class.forName(type.getNameAsString());
+        		typeClass = Class.forName(type.toString());
         	} catch (Exception e) {
             	String className = compilationUnit.getImports().stream()
                 		.filter(importEntry -> importEntry.getNameAsString().endsWith("." + type.getNameAsString()))
                 		.map(ImportDeclaration::getNameAsString)
                 		.findFirst()
-                		.get();
+                		.orElseThrow(() -> new RuntimeException("No declaration found for extended type " + type.getNameAsString()));
+            	
             	try {
     				typeClass = Class.forName(className);
     			} catch (ClassNotFoundException e1) {
@@ -720,7 +725,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         script.setGetters(getters);
         script.setSetters(setters);
-
     }
 
 	/**
@@ -1250,7 +1254,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         continue;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstancesNullSafe())) {
+                if (scriptInstance.getImportScriptInstances() != null && CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
                     for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
                         String path = instance.getCode().replace('.', '/');
                         File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
@@ -1298,5 +1302,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             }
         }
         return scriptInstances;
+    }
+   
+    public Map<CacheKeyStr, ScriptInterfaceSupplier> getScriptCache() {
+    	return ALL_SCRIPT_INTERFACES;
     }
 }

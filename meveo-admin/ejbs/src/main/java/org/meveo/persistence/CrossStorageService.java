@@ -33,8 +33,6 @@ import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.enterprise.event.Event;
@@ -332,6 +330,8 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
+		final var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
+
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
 
 		// If no pagination nor fetch fields are defined, we consider that we must fetch
@@ -346,6 +346,16 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
+		// Make sure the filters matches the fields
+		if(filters != null) {
+			filters.keySet()
+				.forEach(key -> {
+					if(fields.get(key) == null) {
+						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
+					}
+				});
+		}
+		
 		// Collect initial data
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -388,7 +398,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			} else {
 				GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(cet.getCode());
 				builder.field("meveo_uuid");
-				filters.forEach(builder::filter);
+				if(filters != null) {
+					filters.forEach(builder::filter);
+				}
 				if(actualFetchFields != null) { 
 					actualFetchFields.forEach(builder::field);
 				}
@@ -396,8 +408,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			
 			// Check if filters contains a field not stored in Neo4J
-			var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
-			var dontFilterOnNeo4J = filters.keySet().stream()
+			var dontFilterOnNeo4J = filters != null && filters.keySet().stream()
 					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
 			Map<String, Object> result = null;
@@ -602,13 +613,15 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @return the persisted entites
 	 */
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance ceiToSave) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		if (repository == null) {
 			throw new IllegalArgumentException("Repository should be provided");
 		}
 		
-		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(ceiToSave.getCetCode());
+		// Retrieve corresponding CET
+		CustomEntityTemplate cet = cache.getCustomEntityTemplate(ceiToSave.getCetCode());
+				
+		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(cet);
 		
 		if (hasReferenceJpaEntity && !repository.getSqlConfigurationCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 			throw new IllegalArgumentException("CET with JPA reference entity cannot be save in a non-default SqlConfiguration.");
@@ -621,11 +634,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCetCode(ceiToSave.getCetCode());
 		cei.setCode(ceiToSave.getCode());
 		cei.setDescription(ceiToSave.getDescription());
-		cei.setUuid(ceiToSave.getUuid());
 		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 		
-		// Retrieve corresponding CET
-		CustomEntityTemplate cet = cache.getCustomEntityTemplate(cei.getCetCode());
+		if(ceiToSave.getUuid() != null) {
+			cei.setUuid(ceiToSave.getUuid());
+		}
+				
 		final Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
 		cei.setCet(cet);
 
@@ -1416,7 +1430,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		return null;
 	}
 
-	private void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
+	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {

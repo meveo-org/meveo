@@ -57,6 +57,10 @@ public class OutputPropertyDto implements PropertyDescription {
 	 * @param p the property to copy
 	 */
 	public OutputPropertyDto(OutputMeveoProperty p) {
+		if(p.getCet() == null) {
+			throw new IllegalArgumentException("Property " + p + " not linked to a template");
+		}
+		
         setProperty(p.getCet().getCode());
         setTrustness(p.getTrustness());
         setInherited(p.isInherited());

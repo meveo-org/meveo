@@ -19,6 +19,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.model.catalog.Calendar;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
@@ -59,6 +60,9 @@ public class CustomFieldTemplateApi extends BaseApi {
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
     
     private String displayFormat;
 
@@ -108,14 +112,6 @@ public class CustomFieldTemplateApi extends BaseApi {
             }
         }
 
-        if (postData.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY
-                && (postData.getStorageType() != CustomFieldStorageTypeEnum.LIST || (postData.isVersionable() != null && postData.isVersionable()))) {
-            throw new InvalidParameterException("Custom field of type CHILD_ENTITY only supports unversioned values and storage type of LIST");
-        }
-        if (postData.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY
-                && (postData.getChildEntityFieldsForSummary() == null || postData.getChildEntityFieldsForSummary().isEmpty())) {
-            missingParameters.add("childEntityFieldsForSummary");
-        }
         handleMissingParameters();
 
         if (appliesTo != null) {
@@ -212,13 +208,6 @@ public class CustomFieldTemplateApi extends BaseApi {
         CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesToNoCache(postData.getCode(), appliesTo);
         if (cft == null) {
             throw new EntityDoesNotExistsException(CustomFieldTemplate.class, postData.getCode());
-        }
-
-        if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY && postData.isVersionable() != null && postData.isVersionable()) {
-            throw new InvalidParameterException("Custom field of type CHILD_ENTITY only supports unversioned values and storage type of LIST");
-        }
-        if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY && (cft.getChildEntityFields() == null || postData.getChildEntityFieldsForSummary().isEmpty())) {
-            missingParameters.add("childEntityFieldsForSummary");
         }
 
         cft = fromDTO(postData, appliesTo, cft);
@@ -539,7 +528,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
             if(cet == null) {
-            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode);
+            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode, cft.getCode());
             	throw new InvalidParameterException(message);
             }
             storageTypes = cet.getAvailableStorages();
@@ -609,9 +598,15 @@ public class CustomFieldTemplateApi extends BaseApi {
         filter.setIncludeNonManagedEntities(true);
         filter.setIncludeParentClassesOnly(true);
         List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
+        
         for (CustomizedEntity customizedEntity : entities) {
             cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));
         }
+        
+        for(var cet : cache.getCustomEntityTemplates()) {
+        	cftAppliesto.add(cet.getAppliesTo());
+        }
+        
         return cftAppliesto;
     }
 
