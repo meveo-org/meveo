@@ -345,6 +345,34 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         E engine = getExecutionEngine(code, context);
         return execute(engine, context);
     }
+    
+    @TransactionAttribute(TransactionAttributeType.NEVER)
+   	public Map<String, Object> postCommit(String code, Map<String, Object> context) throws BusinessException {
+
+   		E engine = getExecutionEngine(code, context);
+
+   		if (context == null) {
+   			context = new HashMap<>();
+   		}
+
+   		engine.postCommit(context);
+
+   		return buildResultMap(engine, context);
+   	}
+
+   	@TransactionAttribute(TransactionAttributeType.NEVER)
+   	public Map<String, Object> postRollback(String code, Map<String, Object> context) throws BusinessException {
+
+   		E engine = getExecutionEngine(code, context);
+
+   		if (context == null) {
+   			context = new HashMap<>();
+   		}
+
+   		engine.postRollback(context);
+
+   		return buildResultMap(engine, context);
+   	}
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);
 
