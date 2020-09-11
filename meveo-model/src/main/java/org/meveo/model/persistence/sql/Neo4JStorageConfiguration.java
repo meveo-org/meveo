@@ -30,7 +30,7 @@ public class Neo4JStorageConfiguration implements Serializable {
 	/**
 	 * Labels to apply to the template.
 	 */
-	@ElementCollection(fetch = FetchType.LAZY)
+	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "cet_labels", joinColumns = { @JoinColumn(name = "cet_id") })
 	@Column(name = "label")
 	private List<String> labels = new ArrayList<>();
