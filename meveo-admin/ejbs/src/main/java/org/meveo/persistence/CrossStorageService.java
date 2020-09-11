@@ -926,6 +926,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			customEntityInstanceUpdatedAfterTx.fire(cei);
 
 		} else {
+
+
+			customEntityInstanceCreate.fire(cei);
+			
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			cei.setUuid(uuid);
 
@@ -938,8 +942,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					customTableService.updateValue(repository.getSqlConfigurationCode(), cei.getTableName(), uuid, binary.getKey().getDbFieldname(), binary.getValue());
 				}
 			}
-
-			customEntityInstanceCreate.fire(cei);
+			
 			customEntityInstanceCreatedAfterTx.fire(cei);
 		}
 
