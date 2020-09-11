@@ -608,6 +608,10 @@ public class CustomFieldTemplateApi extends BaseApi {
         	cftAppliesto.add(cet.getAppliesTo());
         }
         
+        for(var crt : cache.getCustomRelationshipTemplates()) {
+        	cftAppliesto.add(crt.getAppliesTo());
+        }
+        
         return cftAppliesto;
     }
 
