@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -83,6 +84,10 @@ public class CrossStorageRequest<T> {
 		} catch (EntityDoesNotExistsException e) {
 			return null;
 		}
+	}
+	
+	public Optional<T> getResultOpt() {
+		return Optional.ofNullable(getResult());
 	}
 	
 	private void fetch(Map<String, Object> values) {
