@@ -587,6 +587,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 			crt.setName(relationshipName);
 			crt.setStartNode(customEntityTemplateService.findByCode(sourceCet));
 			crt.setEndNode(customEntityTemplateService.findByCode(targetCet));
+			customRelationshipTemplateService.create(crt);
 		}
 		return crt;
 	}

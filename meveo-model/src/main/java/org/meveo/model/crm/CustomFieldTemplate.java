@@ -275,7 +275,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
      * Required in case of Neo4J storage and {@link CustomFieldTypeEnum#ENTITY} type.
      * Replacement for {@link #relationshipName}
      */
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "crt_id")
     private CustomRelationshipTemplate relationship;
 
