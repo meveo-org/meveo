@@ -492,8 +492,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
 
         if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
-            cft.setStorageType(CustomFieldStorageTypeEnum.LIST);
             cft.setVersionable(false);
+            cft.setStorageType(dto.getStorageType());
             if (dto.getChildEntityFieldsForSummary() != null) {
                 cft.setChildEntityFieldsAsList(dto.getChildEntityFieldsForSummary());
             }
