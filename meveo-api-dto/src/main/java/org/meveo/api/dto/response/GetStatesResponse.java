@@ -3,11 +3,10 @@ package org.meveo.api.dto.response;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.xml.bind.annotation.*;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-@XmlRootElement(name = "GetStatesResponse")
+@XmlRootElement(name = "StatesResponse")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GetStatesResponse extends BaseResponse {
 
@@ -15,15 +14,15 @@ public class GetStatesResponse extends BaseResponse {
     private static final long serialVersionUID = 1262341691039525086L;
 
     /** The states. */
-    @ApiModelProperty("The states of CET")
-    private Map<String, List<String>> states = new HashMap<>();
+    @ApiModelProperty("The states")
+    private List<String> states = new ArrayList<>();
 
     /**
      * Gets the states.
      *
      * @return the states
      */
-    public Map<String, List<String>> getStates() {
+    public List<String> getStates() {
         return states;
     }
 
@@ -32,7 +31,7 @@ public class GetStatesResponse extends BaseResponse {
      *
      * @param states the new states
      */
-    public void setStates(Map<String, List<String>> states) {
+    public void setStates(List<String> states) {
         this.states = states;
     }
 }

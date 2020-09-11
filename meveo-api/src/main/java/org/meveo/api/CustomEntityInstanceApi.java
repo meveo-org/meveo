@@ -290,8 +290,8 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		this.remove(dto.getCetCode(), dto.getCode());
 	}
 
-	public Map<String, List<String>> statesOfCET(String cetCode) {
-		Map<String, List<String>> statesOfCET = customEntityInstanceService.statesOfCET(cetCode);
-		return statesOfCET;
+	public List<String> statesOfCEI(String cetCode, String uuid) throws EntityDoesNotExistsException {
+		List<String> statesOfCEI = customEntityInstanceService.statesOfCEI(cetCode, uuid);
+		return statesOfCEI;
 	}
 }

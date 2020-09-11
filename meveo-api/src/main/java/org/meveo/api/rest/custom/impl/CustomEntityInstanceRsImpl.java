@@ -119,9 +119,13 @@ public class CustomEntityInstanceRsImpl extends BaseRs implements CustomEntityIn
     }
 
     @Override
-    public GetStatesResponse listStatesOfCet(String customEntityTemplateCode) {
+    public GetStatesResponse listStatesOfCei(String customEntityTemplateCode, String uuid) {
         GetStatesResponse result = new GetStatesResponse();
-        result.setStates(customEntityInstanceApi.statesOfCET(customEntityTemplateCode));
+        try {
+            result.setStates(customEntityInstanceApi.statesOfCEI(customEntityTemplateCode, uuid));
+        } catch (Exception e) {
+            processException(e, result.getActionStatus());
+        }
         return result;
     }
 }

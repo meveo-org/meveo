@@ -23,6 +23,7 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
@@ -66,6 +67,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private WFActionService wfActionService;
+
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
 
 	@Override
 	public void create(CustomEntityInstance entity) throws BusinessException {
@@ -393,20 +397,37 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	}
 
     /**
-     *  Returns a list of states for a given CET.
+     *  Returns a list of states for a given CEI.
      */
-	public Map<String, List<String>> statesOfCET(String cetCode) {
-		Map<String, List<String>> states = new HashMap<>();
+	public List<String> statesOfCEI(String cetCode, String uuid) throws EntityDoesNotExistsException {
+		List<String> states = new ArrayList<>();
 		Map<String, Set<String>> map = getValueCetCodeAndWfTypeFromWF();
-		if (!map.isEmpty()) {
-			Set<String> cftCodes = map.get(cetCode);
-			if (CollectionUtils.isNotEmpty(cftCodes)) {
-				for (String code: cftCodes) {
-					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(code, "CE_" + cetCode);
-					if (customFieldTemplate != null) {
-						List<String> values = new ArrayList<>();
-						values.addAll(customFieldTemplate.getListValues().keySet());
-						states.put(code, values);
+		CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+		if (customEntityTemplate != null && customFieldTemplates != null) {
+			for (CustomFieldTemplate customFieldTemplate : customFieldTemplates.values()) {
+				if (customFieldTemplate != null && map != null && map.keySet().contains(cetCode) && map.get(cetCode).contains(customFieldTemplate.getCode())) {
+					String originStatus = null;
+					if (customEntityTemplate.isStoreAsTable()) {
+						Map<String, Object> ceiMap = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, uuid);
+						if (ceiMap != null) {
+							originStatus = (String) ceiMap.get(customFieldTemplate.getCode());
+						}
+					} else {
+						CustomEntityInstance customEntityInstance = findByUuid(cetCode, uuid);
+						if (customEntityInstance != null) {
+							originStatus = (String) customEntityInstance.getCfValues().getValue(customFieldTemplate.getCode());
+						}
+					}
+					List<Workflow> workflows = workflowService.findByCetCodeAndWFType(cetCode, customFieldTemplate.getCode());
+					for (Workflow workflow : workflows) {
+						if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+							for (WFTransition wfTransition : workflow.getTransitions()) {
+								if (wfTransition != null && wfTransition.getFromStatus().equals(originStatus)) {
+									states.add(wfTransition.getToStatus());
+								}
+							}
+						}
 					}
 				}
 			}
