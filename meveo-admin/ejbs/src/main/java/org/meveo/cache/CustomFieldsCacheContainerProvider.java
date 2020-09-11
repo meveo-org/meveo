@@ -459,6 +459,13 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public void addUpdateCustomEntityTemplate(CustomEntityTemplate cet) {
         log.trace("Adding CET template {} to CET cache", cet.getCode());
+        
+        // Initialiaze Neo4j labels
+        if(cet.getNeo4JStorageConfiguration() != null) {
+        	if(cet.getNeo4JStorageConfiguration().getLabels() != null) {
+        		Hibernate.initialize(cet.getNeo4JStorageConfiguration().getLabels());
+        	}
+        }
 
         Lock lock = cacheLock.writeLock();
         lock.lock();
@@ -467,9 +474,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         } finally {
             lock.unlock();
         }
-
-        // Sort values by cet.name
-        // Collections.sort(cetsByProvider);
 
     }
 
@@ -596,8 +600,8 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         if(customEntityTemplate == null){
             customEntityTemplate = customEntityTemplateService.findByCode(code);
             if(customEntityTemplate != null) {
-                customEntityTemplateService.detach(customEntityTemplate);
                 addUpdateCustomEntityTemplate(customEntityTemplate);
+                customEntityTemplateService.detach(customEntityTemplate);
             }
         }
 
