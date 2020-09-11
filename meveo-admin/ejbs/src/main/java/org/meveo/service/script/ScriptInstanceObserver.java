@@ -12,7 +12,7 @@ import javax.inject.Inject;
 
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.scripts.ScriptInstance;
 import org.slf4j.Logger;
 
@@ -36,7 +36,7 @@ public class ScriptInstanceObserver {
 	 * Remove orphan maven dependencies
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onScriptUpdated(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Updated ScriptInstance si) {
+	public void onScriptUpdated(@Observes(during = TransactionPhase.AFTER_COMPLETION) @UpdatedAfterTx ScriptInstance si) {
 		log.debug("[CDI event]  Trigger onScriptUpdated script instance with id={}", si.getId());
 		mavenDependencyService.removeOrphans();
 	}
@@ -44,8 +44,7 @@ public class ScriptInstanceObserver {
 	/**
 	 * Remove orphan maven dependencies
 	 */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onScriptDeleted(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Removed ScriptInstance si) {
+	public void onScriptDeleted(@Observes @Removed ScriptInstance si) {
 		mavenDependencyService.removeOrphans();
 	}
 }

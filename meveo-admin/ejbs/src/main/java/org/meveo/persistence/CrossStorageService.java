@@ -50,8 +50,10 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -83,7 +85,7 @@ import org.slf4j.Logger;
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author clement.bareth
- * @version 6.9.0
+ * @version 6.11.0
  */
 @Stateless
 @LocalBean
@@ -133,6 +135,14 @@ public class CrossStorageService implements CustomPersistenceService {
     @Inject
     @Created
     private Event<CustomEntityInstance> customEntityInstanceCreate;
+    
+    @Inject
+    @UpdatedAfterTx
+    private Event<CustomEntityInstance> customEntityInstanceUpdatedAfterTx;
+    
+    @Inject
+    @CreatedAfterTx
+    private Event<CustomEntityInstance> customEntityInstanceCreatedAfterTx;
     
     @Inject
     @Removed
@@ -913,6 +923,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			
 			customEntityInstanceUpdate.fire(cei);
+			customEntityInstanceUpdatedAfterTx.fire(cei);
 
 		} else {
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
@@ -929,6 +940,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 
 			customEntityInstanceCreate.fire(cei);
+			customEntityInstanceCreatedAfterTx.fire(cei);
 		}
 
 		return cei.getUuid();
