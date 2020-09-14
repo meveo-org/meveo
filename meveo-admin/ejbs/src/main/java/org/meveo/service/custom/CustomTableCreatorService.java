@@ -672,7 +672,7 @@ public class CustomTableCreatorService implements Serializable {
 						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
 						addDefaultValueChange.setColumnDataType("int");
-						addDefaultValueChange.setDefaultValueBoolean("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()));
+						addDefaultValueChange.setDefaultValueNumeric("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()) ? "1" : "0");
 					}
 
 					changeSet.addChange(addDefaultValueChange);
