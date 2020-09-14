@@ -597,6 +597,8 @@ public class CustomTableCreatorService implements Serializable {
 				dropNotNullChange.setColumnDataType("bigInt");
 			} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 				dropNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+			} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+				dropNotNullChange.setColumnDataType("int");
 			}
 
 			changeSet.addChange(dropNotNullChange);
@@ -618,6 +620,8 @@ public class CustomTableCreatorService implements Serializable {
 					addNotNullChange.setColumnDataType("bigInt");
 				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 					addNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+					addNotNullChange.setColumnDataType("int");
 				}
 
 				changeSet.addChange(addNotNullChange);
@@ -642,6 +646,8 @@ public class CustomTableCreatorService implements Serializable {
 					dropDefaultValueChange.setColumnDataType("bigInt");
 				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 					dropDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+					dropDefaultValueChange.setColumnDataType("int");
 				}
 
 				changeSet.addChange(dropDefaultValueChange);
@@ -664,6 +670,9 @@ public class CustomTableCreatorService implements Serializable {
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 						addDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
 						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+						addDefaultValueChange.setColumnDataType("int");
+						addDefaultValueChange.setDefaultValueBoolean("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()));
 					}
 
 					changeSet.addChange(addDefaultValueChange);
