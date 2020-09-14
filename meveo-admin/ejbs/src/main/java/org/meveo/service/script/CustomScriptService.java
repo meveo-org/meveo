@@ -266,7 +266,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             ScriptInterface scriptInstance = this.getScriptInstance(script.getCode());
 
             // Call setters if those are provided
-            if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+            if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA && context != null) {
                 for (Accessor setter : script.getSettersNullSafe()) {
                     Object setterValue = context.get(setter.getName());
                     if (setterValue != null) {
