@@ -1128,6 +1128,7 @@ public class Neo4jService implements CustomPersistenceService {
                     continue;
                 }
 
+                // Set default value
                 if (fieldValue == null && cft.getDefaultValue() != null) {
                     if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
                         fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, String.class);
@@ -1154,7 +1155,7 @@ public class Neo4jService implements CustomPersistenceService {
                 if (fieldValue != null
                         && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
                         cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
-                        cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION)) {
+                        cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION || cft.getFieldType() == CustomFieldTypeEnum.LIST)) {
                     List valuesToCheck = new ArrayList<>();
                     if (fieldValue instanceof Map) {
                         // Skip Key item if Storage type is Matrix
@@ -1174,8 +1175,20 @@ public class Neo4jService implements CustomPersistenceService {
                     } else {
                         valuesToCheck.add(fieldValue);
                     }
+                    //TODO: Make CF Values validation at higher level : maybe in CustomFieldInstanceService#setCfValues
                     for (Object valueToCheck : valuesToCheck) {
-                        if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
+                    	
+                    	// Validate LIST type
+                    	if(cft.getFieldType() == CustomFieldTypeEnum.LIST && !"null".equals(valueToCheck)) {
+                    		String stringValue = String.valueOf(valueToCheck);
+                    		if(!cft.getListValues().containsKey(stringValue)) {
+                    			throw new InvalidCustomFieldException("Value for field " + cft.getCode() + " is not in the list " + cft.getListValues().keySet());
+                    		}
+                            fieldValue = ((String) fieldValue).trim().replaceAll("'", "’").replaceAll("\"", "").trim();
+                    	}
+                    	
+                    	// Validate STRING type
+                    	else if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
                             String stringValue;
                             if (valueToCheck instanceof Integer) {
                                 stringValue = ((Integer) valueToCheck).toString();
@@ -1212,7 +1225,10 @@ public class Neo4jService implements CustomPersistenceService {
                                 fieldValue = ((String) fieldValue).trim().replaceAll("'", "’").replaceAll("\"", "").trim();
                             }
 
-                        } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
+                        } 
+                        
+                        // Validate LONG type
+                        else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                             Long longValue;
                             if (valueToCheck instanceof Integer) {
                                 longValue = ((Integer) valueToCheck).longValue();
@@ -1234,7 +1250,10 @@ public class Neo4jService implements CustomPersistenceService {
                             }
                             
                             fieldValue = longValue;
-                        } else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+                        } 
+                        
+                    	// Validate DOUBLE type
+                        else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                             Double doubleValue;
                             if (valueToCheck instanceof Integer) {
                                 doubleValue = ((Integer) valueToCheck).doubleValue();
@@ -1256,12 +1275,16 @@ public class Neo4jService implements CustomPersistenceService {
                             
                             fieldValue = doubleValue;
                         }
+                    	
                         if (cft.isUnique() && uniqueFields != null) {
                             uniqueFields.put(cft.getCode(), fieldValue);
                         }
+                        
                         convertedFields.put(cft.getCode(), fieldValue);
                     }
                 }
+                
+                // Validate EXPRESSION type
                 if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
                     fieldValue = setExpressionField(fieldValues, cft, convertedFields);
                     convertedFields.put(cft.getCode(), fieldValue);
@@ -1269,6 +1292,8 @@ public class Neo4jService implements CustomPersistenceService {
                         uniqueFields.put(cft.getCode(), fieldValue);
                     }
                 }
+                
+                
             } catch (NumberFormatException e) {
                 if (fieldValue != null) {
                     LOGGER.error(
