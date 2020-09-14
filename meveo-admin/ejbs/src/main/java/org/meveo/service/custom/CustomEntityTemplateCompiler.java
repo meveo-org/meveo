@@ -18,6 +18,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -40,6 +41,9 @@ public class CustomEntityTemplateCompiler {
 	
     @Inject
     private JSONSchemaIntoJavaClassParser jsonSchemaIntoJavaClassParser;
+    
+    @Inject
+    private JSONSchemaGenerator jsonSchemaGenerator;
     
     @Inject
     private CustomFieldsCacheContainerProvider cache;
@@ -67,13 +71,23 @@ public class CustomEntityTemplateCompiler {
         	if (cet == null)
         		throw new EntityDoesNotExistsException("CET does not exists : " + cetCode);
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
-            try {
+             try {
+                 if (!schemaFile.exists()) {
+                	 String templateSchema = getTemplateSchema(cet);
+                	 FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
+                 }
 				javaFile = generateCETSourceFile(Files.readString(schemaFile.toPath()), cet);
 			} catch (IOException e) {
-				throw new BusinessException("Can't read schema file", e);
+				throw new BusinessException("Can't write/read schema file for " + cetCode, e);
 			}
         }
     	return javaFile;
+    }
+    
+    public String getTemplateSchema(CustomEntityTemplate cet) {
+        String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
+        return schema.replaceAll("#/definitions", ".");
+
     }
 
     /**
