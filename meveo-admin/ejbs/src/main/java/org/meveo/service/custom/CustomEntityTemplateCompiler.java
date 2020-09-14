@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
@@ -63,6 +64,8 @@ public class CustomEntityTemplateCompiler {
         File javaFile = new File(cetDir, cetCode + ".java");
         if(!javaFile.exists()) {
         	var cet = cache.getCustomEntityTemplate(cetCode);
+        	if (cet == null)
+        		throw new EntityDoesNotExistsException("CET does not exists : " + cetCode);
             File schemaFile = new File(cetDir, cet.getCode() + ".json");
             try {
 				javaFile = generateCETSourceFile(Files.readString(schemaFile.toPath()), cet);
