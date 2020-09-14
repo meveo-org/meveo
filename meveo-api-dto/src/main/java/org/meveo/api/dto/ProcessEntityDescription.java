@@ -36,8 +36,4 @@ public class ProcessEntityDescription extends InputOutputDescription {
 		this.name = name;
 	}
 
-	public String getDescriptionType() {
-		return ENTITY_DESCRIPTION;
-	}
-
 }

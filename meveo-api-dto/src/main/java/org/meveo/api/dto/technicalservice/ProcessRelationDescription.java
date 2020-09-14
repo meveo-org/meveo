@@ -51,8 +51,4 @@ public class ProcessRelationDescription extends InputOutputDescription {
     	this.name = name;
     }
 
-    public String getDescriptionType(){
-        return RELATION_DESCRIPTION;
-    }
-
 }
