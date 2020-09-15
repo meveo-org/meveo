@@ -12,11 +12,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.meveo.commons.utils.CustomDateSerializer;
 import org.meveo.commons.utils.CustomInstantSerializer;
@@ -196,6 +199,9 @@ public class CustomFieldValue implements Serializable {
      */
     @JsonProperty("mapEntity")
     private Map<String, EntityReferenceWrapper> mapEntityValue = null;
+    
+    @JsonProperty("mapEmbeddedEntity")
+    private Map<String, Object> mapEmbeddedEntityValue = null;
 
     /**
      * Contains mapValue adapted for GUI data entry in the following way:
@@ -448,18 +454,15 @@ public class CustomFieldValue implements Serializable {
 
     @SuppressWarnings("rawtypes")
     public Map getMapValue() {
-        if (mapStringValue != null && !mapStringValue.isEmpty()) {
-            return mapStringValue;
-        } else if (mapDateValue != null && !mapDateValue.isEmpty()) {
-            return mapDateValue;
-        } else if (mapLongValue != null && !mapLongValue.isEmpty()) {
-            return mapLongValue;
-        } else if (mapDoubleValue != null && !mapDoubleValue.isEmpty()) {
-            return mapDoubleValue;
-        } else if (mapEntityValue != null && !mapEntityValue.isEmpty()) {
-            return mapEntityValue;
-        }
-        return null;
+    	return Stream.of(mapStringValue,
+			mapDateValue,
+			mapLongValue,
+			mapDoubleValue,
+			mapEntityValue,
+			mapEmbeddedEntityValue)
+    	.filter(m -> m != null && !m.isEmpty())
+    	.findFirst()
+    	.orElse(null);
     }
 
     /**
@@ -480,17 +483,8 @@ public class CustomFieldValue implements Serializable {
             mapCopy.putAll(mapValue);
             mapCopy.remove(MAP_KEY);
 
-            // Object columnNames = mapValue.get(MAP_KEY);
-            // String columnNamesString = null;
-            // if (columnNames instanceof String) {
-            // columnNamesString = (String) columnNames;
-            //
-            // } else if (columnNames instanceof Collection) {
-            // columnNamesString = StringUtils.concatenate(MATRIX_COLUMN_NAME_SEPARATOR, (Collection) columnNames);
-            // }
-
-            // A regular map
         } else {
+            // A regular map
             mapCopy = mapValue;
         }
 
@@ -535,6 +529,8 @@ public class CustomFieldValue implements Serializable {
             for (Entry<String, Object> mapItem : mapCopy.entrySet()) {
                 mapEntityValue.put(mapItem.getKey(), (EntityReferenceWrapper) mapItem.getValue());
             }
+        } else {
+        	mapEmbeddedEntityValue = mapCopy;
         }
     }
 
@@ -974,7 +970,8 @@ public class CustomFieldValue implements Serializable {
                 && (listLongValue == null || listLongValue.isEmpty()) && (listDoubleValue == null || listDoubleValue.isEmpty())
                 && (listEntityValue == null || listEntityValue.isEmpty()) && (mapStringValue == null || mapStringValue.isEmpty())
                 && (mapDateValue == null || mapDateValue.isEmpty()) && (mapLongValue == null || mapLongValue.isEmpty()) && (mapDoubleValue == null || mapDoubleValue.isEmpty())
-                && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()));
+                && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()))
+        		&& (mapEmbeddedEntityValue == null || mapEmbeddedEntityValue.isEmpty());
     }
 
     /**
@@ -1073,36 +1070,29 @@ public class CustomFieldValue implements Serializable {
      * Get the data type of the first item. If the type is Integer check for further item in the list to see if a Double item exists.
      */
     @SuppressWarnings("rawtypes")
-    private static Class findItemClass(Iterator iterator) {
+    private static Class findItemClass(Iterator<?> iterator) {
         if (!iterator.hasNext()) {
             return null;
         }
-        Object item = iterator.next();
-        while (item == null && iterator.hasNext()) {
-            item = iterator.next();
-        }
-
-        Class itemClass = null;
-        if (item != null) {
-            itemClass = item.getClass();
+        
+        Set<Class<?>> classes = new HashSet<>();
+        
+        iterator.forEachRemaining(item -> {
+        	if(item != null) {
+        		classes.add(item.getClass());
+        	}
+        });
+        
+        if(classes.isEmpty()) {
+        	return null;
+        } else if(classes.size() == 1) {
+        	return classes.iterator().next();
+        } else if(classes.contains(Double.class)) {
+        	return Double.class;
         } else {
-            return null;
+        	return Object.class;
         }
-
-        if (itemClass != null && (itemClass.equals(Long.class) || itemClass.equals(Integer.class))) {
-            // check for further type
-            while (iterator.hasNext()) {
-                item = iterator.next();
-                if (item != null) {
-                    if (Double.class.equals(item.getClass())) {
-                        itemClass = Double.class;
-                        break;
-                    }
-                }
-            }
-        }
-
-        return itemClass;
+        
     }
     public static void main(String[] args) {
 		System.out.println(deserializeValueFromString("list_HashMap|[{\"companyName\":\"INFAUTELEC\",\"cetCode\":\"Company\",\"country\":\"france\"}]"));
@@ -1253,7 +1243,7 @@ public class CustomFieldValue implements Serializable {
         } else if (listLongValue != null && !listLongValue.isEmpty()) {
             return listLongValue;
         }else if (booleanValue != null) {
-                return booleanValue;
+            return booleanValue;
         } else if (listDoubleValue != null && !listDoubleValue.isEmpty()) {
             return listDoubleValue;
         } else if (listEntityValue != null && !listEntityValue.isEmpty()) {
@@ -1270,6 +1260,8 @@ public class CustomFieldValue implements Serializable {
             return entityReferenceValue;
         } else if(fileValue != null) {
             return fileValue;
+        } else if(mapEmbeddedEntityValue != null && !mapEmbeddedEntityValue.isEmpty()) {
+        	return mapEmbeddedEntityValue;
         }
 
         return null;
@@ -1293,6 +1285,7 @@ public class CustomFieldValue implements Serializable {
         mapLongValue = null;
         mapDoubleValue = null;
         mapEntityValue = null;
+        mapEmbeddedEntityValue = null;
         listStringValue = null;
         listDateValue = null;
         listLongValue = null;

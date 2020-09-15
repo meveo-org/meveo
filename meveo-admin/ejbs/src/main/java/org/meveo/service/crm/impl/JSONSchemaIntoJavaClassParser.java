@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.hibernate.Hibernate;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -66,7 +67,10 @@ public class JSONSchemaIntoJavaClassParser {
             parseFields(jsonMap, compilationUnit);
             
             if(template.getSuperTemplate() != null) {
-            	var parentTemplate = cetService.findById(template.getSuperTemplate().getId());
+            	var parentTemplate = Hibernate.isInitialized(template.getSuperTemplate()) ? 
+            			template.getSuperTemplate() :
+            			cetService.findById(template.getSuperTemplate().getId());
+            			
             	var parentClass = JavaParser.parseClassOrInterfaceType(parentTemplate.getCode());
             	compilationUnit.getClassByName((String) jsonMap.get("id"))
             		.ifPresent(cl -> {

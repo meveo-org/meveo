@@ -18,6 +18,19 @@
  */
 package org.meveo.admin.action.admin;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
@@ -29,17 +42,11 @@ import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.view.LazyDataModelWSize;
 import org.omnifaces.cdi.Param;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.Serializable;
-import java.util.*;
-import java.util.Map.Entry;
 
 @Named
 @ViewScoped
@@ -55,6 +62,9 @@ public class CacheBean implements Serializable {
 
     @Inject
     private JobCacheContainerProvider jobCacheContainerProvider;
+    
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     /** Logger. */
     @Inject
@@ -141,6 +151,12 @@ public class CacheBean implements Serializable {
             cacheInfo.put("count", Integer.toString(cache.getValue().size()));
             cacheSummary.add(cacheInfo);
         }
+        
+		Map<String, String> cacheInfo = new HashMap<String, String>();
+		cacheInfo.put("name", "meveo-scripts");
+		cacheInfo.put("count", Integer.toString(scriptInstanceService.getScriptCache().size()));
+		cacheSummary.add(cacheInfo);
+        
         return cacheSummary;
     }
 
@@ -198,6 +214,39 @@ public class CacheBean implements Serializable {
         }
         return cacheContents;
     }
+    
+    @SuppressWarnings("rawtypes")
+    public LazyDataModel getScriptCacheContents() {
+        return getScriptCacheContents(null, false);
+    }
+    
+	@SuppressWarnings("rawtypes")
+	public LazyDataModel getScriptCacheContents(Map<String, Object> inputFilters, boolean forceReload) {
+		if (cacheContents == null || forceReload) {
+
+			// final Map<String, Object> filters = inputFilters;
+
+			cacheContents = new LazyDataModelWSize() {
+
+				private static final long serialVersionUID = -5796910936316457321L;
+
+				@SuppressWarnings("unchecked")
+				@Override
+				public List load(int first, int pageSize, String sortField, SortOrder sortOrder, Map filters) {
+					setRowCount(scriptInstanceService.getScriptCache().size());
+
+					if (getRowCount() > 0) {
+						int toNr = first + pageSize;
+						return new LinkedList(scriptInstanceService.getScriptCache().entrySet()).subList(first, getRowCount() <= toNr ? getRowCount() : toNr);
+
+					} else {
+						return new ArrayList();
+					}
+				}
+			};
+		}
+		return cacheContents;
+	}
 
     @SuppressWarnings("rawtypes")
     public LazyDataModel getCacheMapContents() {
@@ -266,9 +315,9 @@ public class CacheBean implements Serializable {
         return cacheItemContents;
     }
 
-    public String getCacheName() {
-        return selectedCache.getName();
-    }
+	public String getCacheName() {
+		return selectedCache == null ? cacheName : selectedCache.getName();
+	}
 
     public Object getSelectedCacheItem() {
         return selectedCacheItem;

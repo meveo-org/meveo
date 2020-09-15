@@ -164,17 +164,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				
 				// Load each dependency and add them as module item if they are not present
 				if(!fields.isEmpty()) {
-					NaturalIdLoadAccess<?> query = getEntityManager().
-							unwrap(org.hibernate.Session.class)
-							.byNaturalId(clazz)
-							.with(LockOptions.READ)
-							.using("code", item.getItemCode());
-					
-					if(item.getAppliesTo() != null) {
-						query = query.using("appliesTo", item.getAppliesTo());
-					}
-					
-					Object loadedItem = query.load();
+					Object loadedItem = getItemEntity(item, clazz);
 					
 					for(Field field : fields) {
 						boolean canAccess = field.canAccess(loadedItem);

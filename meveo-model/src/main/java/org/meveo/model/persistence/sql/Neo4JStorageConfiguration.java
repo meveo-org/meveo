@@ -25,6 +25,8 @@ import org.meveo.model.customEntities.Mutation;
 @Embeddable
 public class Neo4JStorageConfiguration implements Serializable {
 
+	private static final long serialVersionUID = 7692492509071553409L;
+
 	/**
 	 * Labels to apply to the template.
 	 */

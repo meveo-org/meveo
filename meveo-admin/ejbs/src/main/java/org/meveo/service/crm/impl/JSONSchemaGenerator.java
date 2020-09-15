@@ -31,6 +31,7 @@ import org.everit.json.schema.RelationSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
+import org.json.JSONObject;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.json.schema.RootCombinedSchema;
 import org.meveo.json.schema.RootObjectSchema;
@@ -191,7 +192,8 @@ public class JSONSchemaGenerator {
 		JSONPrinter json = new JSONPrinter(out);
 
 		builder.build().describeTo(json);
-		return out.toString();
+		JSONObject jsonObj = new JSONObject(out.toString());
+		return jsonObj.toString(4);
 	}
 
 	public ObjectSchema createSchemaOfCet(String schemaLocation, CustomEntityTemplate cet) {
@@ -244,17 +246,11 @@ public class JSONSchemaGenerator {
 				result = createDateSchema(field);
 				break;
 			case ENTITY:
+			case CHILD_ENTITY:
 				result = createReferenceSchema(field, allRefs);
 				break;
-//					case CHILD_ENTITY:
-			// TODO: Handle this case
-//						throw new IllegalStateException(
-//							"Child entity type of field supports only list of entities" +
-//							": field = " + field +
-//							", storageType = " + field.getStorageType()
-//						);
-			case TEXT_AREA:
 			case EMBEDDED_ENTITY:
+			case TEXT_AREA:
 			case STRING:
 				result = createStringSchema(field);
 				break;

@@ -1,6 +1,7 @@
 package org.meveo.service.custom;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -252,19 +253,80 @@ public class CustomTableCreatorService implements Serializable {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createTable(String sqlConnectionCode, String dbTableName) {
-		createTable(sqlConnectionCode, dbTableName, true);
+	public void createTable(String sqlConnectionCode, CustomEntityTemplate template) {
+		createTable(sqlConnectionCode, template, true);
+	}
+	
+	public void addInheritance(String sqlCode, CustomEntityTemplate template) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+
+		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+		var fkChange = new AddForeignKeyConstraintChange();
+		fkChange.setBaseTableName(dbTableName);
+		fkChange.setBaseColumnNames(UUID);
+		fkChange.setReferencedTableName(parentTableName);
+		fkChange.setReferencedColumnNames(UUID);
+		fkChange.setConstraintName(getInheritanceFK(dbTableName, parentTableName));
+		
+		ChangeSet pgChangeSet = new ChangeSet(dbTableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql", dbLog);
+		pgChangeSet.addChange(fkChange);
+		dbLog.addChangeSet(pgChangeSet);
+		
+		try(Session hibernateSession = sqlConnectionProvider.getSession(sqlCode)) {
+			hibernateSession.doWork(connection -> {
+				Database database = getDatabase(connection);
+				try {
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+				} catch (Exception e) {
+					log.error("Failed to add parent foreign key on table {} on SQL Configuration {}", dbTableName, sqlCode, e);
+					throw new SQLException(e);
+				}
+			});
+		}
+
+	}
+
+	public void removeInheritance(String sqlCode, CustomEntityTemplate template) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+
+		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
+		var fkChange = new DropForeignKeyConstraintChange();
+		fkChange.setBaseTableName(dbTableName);
+		fkChange.setConstraintName(getInheritanceFK(dbTableName, parentTableName));
+		
+		ChangeSet pgChangeSet = new ChangeSet(dbTableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "postgresql", dbLog);
+		pgChangeSet.addChange(fkChange);
+		dbLog.addChangeSet(pgChangeSet);
+		
+		try(Session hibernateSession = sqlConnectionProvider.getSession(sqlCode)) {
+			hibernateSession.doWork(connection -> {
+				Database database = getDatabase(connection);
+				try {
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+				} catch (Exception e) {
+					log.error("Failed to remove parent foreign key on table {} on SQL Configuration {}", dbTableName, sqlCode, e);
+					throw new SQLException(e);
+				}
+			});
+		}
 	}
 	
 	/**
 	 * Create a table with a single 'id' field. Value is autoincremented for mysql
 	 * or taken from sequence for Postgress databases.
 	 * 
-	 * @param dbTableName DB table name
+	 * @param sqlConnectionCode Code of the {@link SqlConfiguration}
+	 * @param template 			Template used to create the table
+	 * @param createSequence 	Whether to create a sequence to generate ids
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createTable(String sqlConnectionCode, String dbTableName, boolean createSequence) {
-
+	public void createTable(String sqlConnectionCode, CustomEntityTemplate template, boolean createSequence) {
+		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
+		
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
 		// Changeset for Postgress
@@ -278,11 +340,20 @@ public class CustomTableCreatorService implements Serializable {
 		pgUuidColumn.setType("varchar(255)");
 		pgUuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
+		// Primary key constraint
 		ConstraintsConfig idConstraints = new ConstraintsConfig();
 		idConstraints.setNullable(false);
 		idConstraints.setPrimaryKey(true);
 		idConstraints.setPrimaryKeyName(dbTableName + "PK");
-
+		
+		// If template has a parent template, uuid should have foreign key on parent table
+		if(template.getSuperTemplate() != null && template.getSuperTemplate().getAvailableStorages().contains(DBStorageType.SQL)) {
+			var parentTableName = SQLStorageConfiguration.getDbTablename(template.getSuperTemplate());
+			idConstraints.setForeignKeyName(getInheritanceFK(dbTableName, parentTableName));
+			idConstraints.setReferencedTableName(parentTableName);
+			idConstraints.setReferencedColumnNames(UUID);
+		}
+		
 		pgUuidColumn.setConstraints(idConstraints);
 		createPgTableChange.addColumn(pgUuidColumn);
 		pgChangeSet.addChange(createPgTableChange);
@@ -315,48 +386,56 @@ public class CustomTableCreatorService implements Serializable {
 		mysqlChangeSet.addChange(createMsTableChange);
 		dbLog.addChangeSet(mysqlChangeSet);
 
-		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
-		
-		hibernateSession.doWork(connection -> {
-			var meta = connection.getMetaData();
-			
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-			} catch (DatabaseException e1) {
-				log.error("Failed to retrieve database for connection {}", connection);
-				throw new SQLException(e1);
-			}
-			
-			// Check table does not exists
-			try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName, new String[] {"TABLE"})) {
-				if(res.next()) {
-					throw new IllegalArgumentException("Table with name " + dbTableName + " in schema " + database.getDefaultSchemaName() + " already exists !");
+			hibernateSession.doWork(connection -> {
+				var meta = connection.getMetaData();
+
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+
+				} catch (DatabaseException e1) {
+					log.error("Failed to retrieve database for connection {}", connection);
+					throw new SQLException(e1);
 				}
-			}
-			
-			// Check sequence does not exists
-			try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName + "_seq", new String[] {"SEQUENCE"})) {
-				if(res.next()) {
-					throw new IllegalArgumentException("Sequence with name " + dbTableName + "_seq in schema " + database.getDefaultSchemaName() + " already exists !");
+
+				// Check table does not exists
+				try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName, new String[] { "TABLE" })) {
+					if (res.next()) {
+						throw new IllegalArgumentException("Table with name " + dbTableName + " in schema " + database.getDefaultSchemaName() + " already exists !");
+					}
 				}
-			}
-			
-			try {
 
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
+				// Check sequence does not exists
+				try (var res = meta.getTables(null, database.getDefaultSchemaName(), dbTableName + "_seq", new String[] { "SEQUENCE" })) {
+					if (res.next()) {
+						throw new IllegalArgumentException("Sequence with name " + dbTableName + "_seq in schema " + database.getDefaultSchemaName() + " already exists !");
+					}
+				}
 
-			} catch (Exception e) {
-				log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
-				throw new SQLException(e);
-			}
+				try {
 
-		});
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
 
-		hibernateSession.close();
+				} catch (Exception e) {
+					log.error("Failed to create a custom table {} on SQL Configuration {}", dbTableName, sqlConnectionCode, e);
+					throw new SQLException(e);
+				}
+
+			});
+		}
+	}
+
+	/**
+	 * @param dbTableName
+	 * @param parentTableName
+	 * @return
+	 */
+	private String getInheritanceFK(String dbTableName, String parentTableName) {
+		return "fk_" + dbTableName + "_" + parentTableName;
 	}
 
 	private void setSchemaName(Database database) throws DatabaseException {
@@ -446,30 +525,30 @@ public class CustomTableCreatorService implements Serializable {
 
 			dbLog.addChangeSet(changeSet);
 
-			Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+			try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-			try {
-				CompletableFuture.runAsync(() -> {
-					hibernateSession.doWork(connection -> {
-						Database database;
-						try {
-							database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-							setSchemaName(database);
-							Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-							liquibase.update(new Contexts(), new LabelExpression());
-							liquibase.forceReleaseLocks();
+				try {
+					CompletableFuture.runAsync(() -> {
+						hibernateSession.doWork(connection -> {
+							Database database;
+							try {
+								database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+								setSchemaName(database);
+								Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+								liquibase.update(new Contexts(), new LabelExpression());
+								liquibase.forceReleaseLocks();
 
-						} catch (Exception e) {
-							log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
-							throw new SQLException(e);
-						}
-					});
-				}).get(1, TimeUnit.MINUTES);
-			} catch (InterruptedException | ExecutionException | TimeoutException e) {
-				log.error("Failed to add field {} to custom table {} within 1 minute", e);
-				throw new RuntimeException(e);
-			} finally {
-				hibernateSession.close();
+							} catch (Exception e) {
+								log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
+								throw new SQLException(e);
+							}
+						});
+					}).get(1, TimeUnit.MINUTES);
+					
+				} catch (InterruptedException | ExecutionException | TimeoutException e) {
+					log.error("Failed to add field {} to custom table {} within 1 minute", e);
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}
@@ -485,145 +564,153 @@ public class CustomTableCreatorService implements Serializable {
 
 		String dbFieldname = cft.getDbFieldname();
 
-		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-		String columnExistsQueryStr = "SELECT EXISTS(\n" + "	SELECT column_name\n" + "	FROM information_schema.columns \n"
-				+ "	WHERE table_name=:tableName and column_name=:columnName\n" + ");";
+			String columnExistsQueryStr = "SELECT EXISTS(\n" + "	SELECT column_name\n" + "	FROM information_schema.columns \n"
+					+ "	WHERE table_name=:tableName and column_name=:columnName\n" + ");";
 
-		Query columnExistsQuery = hibernateSession.createNativeQuery(columnExistsQueryStr).setParameter("tableName", dbTableName).setParameter("columnName", dbFieldname);
+			Query columnExistsQuery = hibernateSession.createNativeQuery(columnExistsQueryStr).setParameter("tableName", dbTableName).setParameter("columnName", dbFieldname);
 
-		boolean columnExists = (boolean) columnExistsQuery.getSingleResult();
+			boolean columnExists = (boolean) columnExistsQuery.getSingleResult();
 
-		if (!columnExists) {
-			addField(sqlConnectionCode, dbTableName, cft);
-			return;
-		}
-
-		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
-
-		// Drop not null constraint and add again if needed - a better way would be to
-		// check if valueRequired field value was changed
-		ChangeSet changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_RNN_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
-		changeSet.setFailOnError(false);
-
-		DropNotNullConstraintChange dropNotNullChange = new DropNotNullConstraintChange();
-		dropNotNullChange.setTableName(dbTableName);
-		dropNotNullChange.setColumnName(dbFieldname);
-
-		if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-			dropNotNullChange.setColumnDataType("datetime");
-		} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-			dropNotNullChange.setColumnDataType("numeric(23, 12)");
-		} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-			dropNotNullChange.setColumnDataType("bigInt");
-		} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-			dropNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
-		}
-
-		changeSet.addChange(dropNotNullChange);
-		dbLog.addChangeSet(changeSet);
-
-		// Add not null constraint if needed
-		if (cft.isValueRequired()) {
-			changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_ANN_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
-			AddNotNullConstraintChange addNotNullChange = new AddNotNullConstraintChange();
-
-			addNotNullChange.setTableName(dbTableName);
-			addNotNullChange.setColumnName(dbFieldname);
-
-			if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-				addNotNullChange.setColumnDataType("datetime");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-				addNotNullChange.setColumnDataType("numeric(23, 12)");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-				addNotNullChange.setColumnDataType("bigInt");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-				addNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+			if (!columnExists) {
+				addField(sqlConnectionCode, dbTableName, cft);
+				return;
 			}
 
-			changeSet.addChange(addNotNullChange);
-			dbLog.addChangeSet(changeSet);
+			DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
-		}
-
-		// Drop default value and add it again if needed - a better way would be to
-		// check if defaultValue field value was changed
-		// Default value does not apply to date type field
-		if (cft.getFieldType() != CustomFieldTypeEnum.DATE) {
-			changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_RD_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+			// Drop not null constraint and add again if needed - a better way would be to
+			// check if valueRequired field value was changed
+			ChangeSet changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_RNN_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
 			changeSet.setFailOnError(false);
 
-			DropDefaultValueChange dropDefaultValueChange = new DropDefaultValueChange();
-			dropDefaultValueChange.setTableName(dbTableName);
-			dropDefaultValueChange.setColumnName(dbFieldname);
+			DropNotNullConstraintChange dropNotNullChange = new DropNotNullConstraintChange();
+			dropNotNullChange.setTableName(dbTableName);
+			dropNotNullChange.setColumnName(dbFieldname);
 
-			if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-				dropDefaultValueChange.setColumnDataType("numeric(23, 12)");
+			if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
+				dropNotNullChange.setColumnDataType("datetime");
+			} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+				dropNotNullChange.setColumnDataType("numeric(23, 12)");
 			} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-				dropDefaultValueChange.setColumnDataType("bigInt");
+				dropNotNullChange.setColumnDataType("bigInt");
 			} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-				dropDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				dropNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+			} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+				dropNotNullChange.setColumnDataType("int");
 			}
 
-			changeSet.addChange(dropDefaultValueChange);
+			changeSet.addChange(dropNotNullChange);
 			dbLog.addChangeSet(changeSet);
 
-			// Add default value if needed
-			if (cft.getDefaultValue() != null) {
-				changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AD_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
-				AddDefaultValueChange addDefaultValueChange = new AddDefaultValueChange();
+			// Add not null constraint if needed
+			if (cft.isValueRequired()) {
+				changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_ANN_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+				AddNotNullConstraintChange addNotNullChange = new AddNotNullConstraintChange();
 
-				addDefaultValueChange.setTableName(dbTableName);
-				addDefaultValueChange.setColumnName(dbFieldname);
+				addNotNullChange.setTableName(dbTableName);
+				addNotNullChange.setColumnName(dbFieldname);
 
-				if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-					addDefaultValueChange.setColumnDataType("numeric(23, 12)");
-					addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
+				if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
+					addNotNullChange.setColumnDataType("datetime");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+					addNotNullChange.setColumnDataType("numeric(23, 12)");
 				} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-					addDefaultValueChange.setColumnDataType("bigInt");
-					addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
+					addNotNullChange.setColumnDataType("bigInt");
 				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-					addDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
-					addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
+					addNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+					addNotNullChange.setColumnDataType("int");
 				}
 
-				changeSet.addChange(addDefaultValueChange);
+				changeSet.addChange(addNotNullChange);
 				dbLog.addChangeSet(changeSet);
 
 			}
-		}
 
-		// Update field length for String type fields.
-		if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-			changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_M_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
-			changeSet.setFailOnError(false);
+			// Drop default value and add it again if needed - a better way would be to
+			// check if defaultValue field value was changed
+			// Default value does not apply to date type field
+			if (cft.getFieldType() != CustomFieldTypeEnum.DATE) {
+				changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_RD_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+				changeSet.setFailOnError(false);
 
-			ModifyDataTypeChange modifyDataTypeChange = new ModifyDataTypeChange();
-			modifyDataTypeChange.setTableName(dbTableName);
-			modifyDataTypeChange.setColumnName(dbFieldname);
-			modifyDataTypeChange.setNewDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				DropDefaultValueChange dropDefaultValueChange = new DropDefaultValueChange();
+				dropDefaultValueChange.setTableName(dbTableName);
+				dropDefaultValueChange.setColumnName(dbFieldname);
 
-			changeSet.addChange(modifyDataTypeChange);
-			dbLog.addChangeSet(changeSet);
-		}
-		createOrUpdateUniqueField(dbTableName, cft, changeSet);
+				if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+					dropDefaultValueChange.setColumnDataType("numeric(23, 12)");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
+					dropDefaultValueChange.setColumnDataType("bigInt");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
+					dropDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+					dropDefaultValueChange.setColumnDataType("int");
+				}
 
-		hibernateSession.doWork(connection -> {
+				changeSet.addChange(dropDefaultValueChange);
+				dbLog.addChangeSet(changeSet);
 
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
+				// Add default value if needed
+				if (cft.getDefaultValue() != null) {
+					changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_AD_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+					AddDefaultValueChange addDefaultValueChange = new AddDefaultValueChange();
 
-			} catch (Exception e) {
-				log.error("Failed to update a field {} in a custom table {}", dbTableName, dbFieldname, e);
-				throw new SQLException(e);
+					addDefaultValueChange.setTableName(dbTableName);
+					addDefaultValueChange.setColumnName(dbFieldname);
+
+					if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
+						addDefaultValueChange.setColumnDataType("numeric(23, 12)");
+						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
+						addDefaultValueChange.setColumnDataType("bigInt");
+						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
+						addDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+						addDefaultValueChange.setColumnDataType("int");
+						addDefaultValueChange.setDefaultValueNumeric("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()) ? "1" : "0");
+					}
+
+					changeSet.addChange(addDefaultValueChange);
+					dbLog.addChangeSet(changeSet);
+
+				}
 			}
-		});
 
-		hibernateSession.close();
+			// Update field length for String type fields.
+			if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
+				changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_M_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+				changeSet.setFailOnError(false);
+
+				ModifyDataTypeChange modifyDataTypeChange = new ModifyDataTypeChange();
+				modifyDataTypeChange.setTableName(dbTableName);
+				modifyDataTypeChange.setColumnName(dbFieldname);
+				modifyDataTypeChange.setNewDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+
+				changeSet.addChange(modifyDataTypeChange);
+				dbLog.addChangeSet(changeSet);
+			}
+			createOrUpdateUniqueField(dbTableName, cft, changeSet);
+
+			hibernateSession.doWork(connection -> {
+
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+
+				} catch (Exception e) {
+					log.error("Failed to update a field {} in a custom table {}", dbTableName, dbFieldname, e);
+					throw new SQLException(e);
+				}
+			});
+		}
 	}
 
 	/**
@@ -744,24 +831,23 @@ public class CustomTableCreatorService implements Serializable {
 		changeSet.addChange(dropColumnChange);
 		dbLog.addChangeSet(changeSet);
 
-		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-		hibernateSession.doWork(connection -> {
+			hibernateSession.doWork(connection -> {
 
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
 
-			} catch (Exception e) {
-				log.error("Failed to remove a field {} to a custom table {}", dbTableName, dbFieldname, e);
-				throw new SQLException(e);
-			}
-		});
-
-		hibernateSession.close();
+				} catch (Exception e) {
+					log.error("Failed to remove a field {} to a custom table {}", dbTableName, dbFieldname, e);
+					throw new SQLException(e);
+				}
+			});
+		}
 	}
 
 	/**
@@ -807,28 +893,30 @@ public class CustomTableCreatorService implements Serializable {
 
 		dbLog.addChangeSet(pgChangeSet);
 
-		Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-		hibernateSession.doWork(connection -> {
+			hibernateSession.doWork(connection -> {
 
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
 
-			} catch (MigrationFailedException e) {
-				if (!e.getMessage().toLowerCase().contains("precondition")) {
-					throw new HibernateException(e);
+				} catch (MigrationFailedException e) {
+					if (!e.getMessage().toLowerCase().contains("precondition")) {
+						throw new HibernateException(e);
+					}
+					
+				} catch (Exception e) {
+					log.error("Failed to drop a custom table {}", dbTableName, e);
+					throw new SQLException(e);
 				}
-			} catch (Exception e) {
-				log.error("Failed to drop a custom table {}", dbTableName, e);
-				throw new SQLException(e);
-			}
-		});
+			});
+		}
 	}
-
+	
 	public static String getFkConstraintName(String tableName, CustomFieldTemplate cft) {
 		return String.format("fk_%s_%s", tableName, cft.getDbFieldname());
 	}
@@ -866,7 +954,9 @@ public class CustomTableCreatorService implements Serializable {
 			}
 			if (referenceCet == null && !cft.getEntityClazz().startsWith(CustomEntityTemplate.class.getName())) {
 				Class<?> jpaEntityClazz = Class.forName(cft.getEntityClazzCetCode());
-				fieldType = CustomFieldTypeEnum.guessEnum(PersistenceUtils.getPKColumnType(jpaEntityClazz, PersistenceUtils.getPKColumnName(jpaEntityClazz)));
+				String pkColumnName = PersistenceUtils.getPKColumnName(jpaEntityClazz);
+				String pkColumnType = PersistenceUtils.getPKColumnType(jpaEntityClazz, pkColumnName);
+				fieldType = CustomFieldTypeEnum.guessEnum(pkColumnType);
 				
 				// check the storage as well referenceJPA must be stored in SINGLE storage
 				// TODO: Must support different storage types
@@ -920,12 +1010,12 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
-	public void createTable(String dbTablename, boolean hasReferenceJpaEntity) {
+	public void createTable(CustomEntityTemplate template) {
 
 		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
 		sqlConfigs.forEach(e -> {
-			if (!hasReferenceJpaEntity || (hasReferenceJpaEntity && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				createTable(e.getCode(), dbTablename);
+			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				createTable(e.getCode(), template);
 			}
 		});
 	}
@@ -998,17 +1088,29 @@ public class CustomTableCreatorService implements Serializable {
 
 		String uuidExtension = "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"";
 
-		Session hibernateSession = sqlConnectionProvider.getSession(sqlConfigurationCode);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConfigurationCode)) {
 
-		hibernateSession.doWork(connection -> {
-			try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
-				ps.executeUpdate();
-				if (!StringUtils.isBlank(sqlConfigurationCode)) {
-					connection.commit();
+			hibernateSession.doWork(connection -> {
+				try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
+					ps.executeUpdate();
+					if (!StringUtils.isBlank(sqlConfigurationCode)) {
+						connection.commit();
+					}
 				}
-			}
-		});
+			});
+		}
+	}
+	
+	private Database getDatabase(Connection connection) throws SQLException {
+		Database database;
+		try {
+			database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+			setSchemaName(database);
 
-		hibernateSession.close();
+		} catch (DatabaseException e1) {
+			log.error("Failed to retrieve database for connection {}", connection);
+			throw new SQLException(e1);
+		}
+		return database;
 	}
 }

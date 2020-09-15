@@ -46,8 +46,9 @@
                 <h:outputText value="#{childEntityValueHolder.entity.code}" rendered="#{fieldCode eq 'code'}" />
                 <h:outputText value="#{childEntityValueHolder.entity.description}" rendered="#{fieldCode eq 'description'}" />
                 <h:outputText value="#{cfv:getShortRepresentationOfValueObj(childEntityValueHolder.getFirstValue(fieldCode).value, datePattern)}"
-                    rendered="#{fieldCode ne 'code' and fieldCode ne 'description'}" />
-
+                    rendered="#{fieldCode ne 'code' and fieldCode ne 'description' and childEntityValueHolder.getFirstValue(fieldCode).value != null}" />
+                <h:outputText value="#{cfv:getShortRepresentationOfValueObj(customFieldDataEntryBean.getValueObject(childEntityValueHolder, fieldCode, cft.entityClazz), datePattern)}"
+                              rendered="#{fieldCode ne 'code' and fieldCode ne 'description' and childEntityValueHolder.getFirstValue(fieldCode).value == null}" />
                 <!--                 <h:outputText value="#{childEntityValueHolder.getFirstValue(fieldCode).getShortRepresentationOfValue(column, datePattern)}" /> -->
             </p:columns>
             <!--             <p:column headerText="#{messages['businessEntity.code']}"> -->
@@ -76,15 +77,20 @@
 
             <c:if test="#{edit and !disabled}">
                 <f:facet name="footer">
-                    <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this"
+                    <p:commandButton value="#{messages['commons.addNew']}"
                         update=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm #{messagesId}"
                         actionListener="#{customFieldDataEntryBean.newChildEntity(cfValueHolder, field, cft)}" oncomplete="PF('#{fieldPrefix}childEntityDialogWidget').show()">
                         <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm" />
                     </p:commandButton>
-                    <p:commandButton value="#{messages['commons.attachNew']}" partialSubmit="true" process="@this"
+                    <p:commandButton value="#{messages['commons.attachNew']}"
                         update=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm #{messagesId}"
-                        actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').show()">
+                        actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').show()" rendered="#{!customFieldDataEntryBean.isStoreTable(cft.entityClazz)}">
                         <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" />
+                    </p:commandButton>
+                    <p:commandButton value="#{messages['commons.attachNew']}"
+                                     update=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable #{messagesId}"
+                                     actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidgetForTable').show()" rendered="#{customFieldDataEntryBean.isStoreTable(cft.entityClazz)}">
+                        <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" />
                     </p:commandButton>
                 </f:facet>
             </c:if>
@@ -160,6 +166,52 @@
                          action="#{customFieldDataEntryBean.attachChildEntity(field)}" rendered="#{edit and !disabled}" />
                     <p:commandButton value="#{messages['commons.close']}" update="@this :#{clientGuiId}:childEntityTable"
                          oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').hide()">
+                        <p:resetInput target="@form" />
+                    </p:commandButton>
+                </f:facet>
+            </p:dataTable>
+        </h:form>
+    </p:dialog>
+    <p:dialog widgetVar="#{fieldPrefix}attachChildEntityDialogWidgetForTable" header="#{cft.description}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="90%" appendTo="@(body)">
+        <h:form id="#{fieldPrefix}dlg_attachChildEntityFormForTable">
+            <h:panelGroup layout="block" styleClass="search-panel">
+                <p:outputPanel styleClass="search-panel-fields">
+                    <p:inputText id="ceiUuid" value="#{customFieldDataEntryBean.customEntityInstanceUuid}">
+                        <c:if test="#{not empty converter}">
+                            <f:converter converterId="#{converter}" />
+                        </c:if>
+                    </p:inputText>
+                </p:outputPanel>
+                <h:panelGroup layout="block" styleClass="search-panel-actions">
+                    <p:commandButton id="buttonSearchForTable" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" partialSubmit="true" action="#{customFieldDataEntryBean.search}" value="#{messages['commons.search']}" update="@form" />
+                    <p:commandButton id="buttonClearForTable" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" action="#{customFieldDataEntryBean.clean}" value="#{messages['commons.clean']}" update="@form" />
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dataTable id="resultSearchEntityForTable" var="mapValue" paginator="true" resizableColumns="true" value="#{customFieldDataEntryBean.entityInstancesForTable}" rows="10" selection="#{customFieldDataEntryBean.entityInstanceTable}"
+                         rowKey="#{mapValue['uuid']}" lazy="#{lazy}">
+                <p:ajax event="rowSelect"/>
+                <p:ajax event="rowUnselect"/>
+                <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                <p:column>
+                    <f:facet name="header">
+                        <h:outputText value="#{messages['BusinessEntity.uuid']}" />
+                    </f:facet>
+                    <h:outputText value="#{mapValue['uuid']}"/>
+                </p:column>
+                <p:column rendered="#{customFieldDataEntryBean.fieldName != null}">
+                    <f:facet name="header">
+                        <h:outputText value="#{customFieldDataEntryBean.fieldName}" />
+                    </f:facet>
+                    <h:outputText value="#{mapValue[customFieldDataEntryBean.fieldName]}" />
+                </p:column>
+                <f:facet name="footer">
+                    <p:commandButton value="#{messages['action.attach']}" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" partialSubmit="true"
+                                     partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :#{clientGuiId}:childEntityTable"
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed) PF('#{fieldPrefix}attachChildEntityDialogWidgetForTable').hide()"
+                                     action="#{customFieldDataEntryBean.attachChildEntity(field)}" rendered="#{edit and !disabled}" />
+                    <p:commandButton value="#{messages['commons.close']}" update="@this :#{clientGuiId}:childEntityTable"
+                                     oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidgetForTable').hide()">
                         <p:resetInput target="@form" />
                     </p:commandButton>
                 </f:facet>

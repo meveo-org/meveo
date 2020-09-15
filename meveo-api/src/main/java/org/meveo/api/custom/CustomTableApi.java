@@ -299,7 +299,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 		}
 
 		if (dto.getValues() == null || dto.getValues().isEmpty()) {
-			customTableService.remove(null, SQLStorageConfiguration.getDbTablename(cet));
+			customTableService.remove(null, cet);
 
 		} else {
 			Set<String> ids = new HashSet<>();
@@ -313,7 +313,7 @@ public class CustomTableApi extends BaseApi implements ICustomTableApi<CustomTab
 					throw new InvalidParameterException("Not all values have an 'id' field specified");
 				}
 			}
-			customTableService.remove(null, SQLStorageConfiguration.getDbTablename(cet), ids);
+			customTableService.remove(null, cet, ids);
 		}
 	}
 

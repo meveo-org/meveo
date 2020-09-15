@@ -421,7 +421,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             if (getEntity().getChildEntityFields() != null) {
                 for (String fieldCode : getEntity().getChildEntityFieldsAsList()) {
                     CustomFieldTemplate cft = cfts.get(fieldCode);
-                    perksTarget.add(new CustomFieldMatrixColumn(cft.getCode(), cft.getDescription()));
+                    if(cft != null) {
+                    	perksTarget.add(new CustomFieldMatrixColumn(cft.getCode(), cft.getDescription()));
+                    }
                 }
             }
             childEntityFieldsList.removeAll(perksTarget);
@@ -714,4 +716,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 		}
 	}
 
+	public boolean showAuditedField() {
+		return getEntity().getStoragesNullSafe().contains(DBStorageType.SQL);
+	}
 }

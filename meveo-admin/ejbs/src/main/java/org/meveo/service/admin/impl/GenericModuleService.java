@@ -33,6 +33,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.LockOptions;
+import org.hibernate.NaturalIdLoadAccess;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.commons.utils.EjbUtils;
@@ -133,7 +135,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
             try {
                 entity = query.getSingleResult();
-
+                
             } catch (NoResultException | NonUniqueResultException e) {
                 log.error("Failed to find a module item {}. Reason: {}. This item will be removed from module", item, e.getClass().getSimpleName());
                 return;
@@ -145,6 +147,35 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         
         item.setItemEntity(entity);
     }
+    
+	/**
+	 * @param item
+	 * @param clazz
+	 * @return
+	 */
+    public BusinessEntity getItemEntity(MeveoModuleItem item, Class<?> clazz) {
+		NaturalIdLoadAccess<?> query = getEntityManager().
+				unwrap(org.hibernate.Session.class)
+				.byNaturalId(clazz)
+				.with(LockOptions.READ)
+				.using("code", item.getItemCode());
+		
+		if(item.getAppliesTo() != null) {
+			query = query.using("appliesTo", item.getAppliesTo());
+		}
+		
+		Object loadedItem = query.load();
+		return (BusinessEntity) loadedItem;
+	}
+	
+	public BusinessEntity getItemEntity(MeveoModuleItem item) {
+		try {
+			Class<?> clazz = Class.forName(item.getItemClass());
+			return (BusinessEntity) getItemEntity(item, clazz);
+		} catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
 
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })

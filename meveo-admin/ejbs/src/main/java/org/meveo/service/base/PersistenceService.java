@@ -57,12 +57,13 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
-import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessCFEntity;
@@ -153,6 +154,14 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Inject
 	@Updated
 	protected Event<BaseEntity> entityUpdatedEventProducer;
+	
+	@Inject
+	@CreatedAfterTx
+	protected Event<BaseEntity> entityCreatedAfterTxEventProducer;
+
+	@Inject
+	@UpdatedAfterTx
+	protected Event<BaseEntity> entityUpdatedAfterTxEventProducer;
 
 	@Inject
 	@Disabled
@@ -436,9 +445,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
 			if (asynchEvent) {
 				entityUpdatedEventProducer.fireAsync((BaseEntity) entity);
+				entityUpdatedAfterTxEventProducer.fireAsync((BaseEntity) entity);
 
 			} else {
 				entityUpdatedEventProducer.fire((BaseEntity) entity);
+				entityUpdatedAfterTxEventProducer.fire((BaseEntity) entity);
 			}
 		}
 
@@ -505,19 +516,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	}
 
 	/**
-	 * Persist an entity in a separated transaction.
-	 * 
-	 * @param e Entity to persist.
-	 * 
-	 * @throws BusinessException business exception.
-	 */
-	@JpaAmpNewTx
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void createInNewTx(E e) throws BusinessException {
-		create(e);
-	}
-
-	/**
 	 * @see org.meveo.service.base.local.IPersistenceService#create(org.meveo.model.IEntity)
 	 */
 	@Override
@@ -529,19 +527,23 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (entity instanceof IAuditable) {
 			((IAuditable) entity).updateAudit(currentUser);
 		}
+		
+		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			entityCreatedEventProducer.fire((BaseEntity) entity);
+		}
 
 		getEntityManager().persist(entity);
 
+		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			entityCreatedAfterTxEventProducer.fire((BaseEntity) entity);
+		}
+		
 		// Add entity to Elastic Search
 		if (ISearchable.class.isAssignableFrom(entity.getClass())) {
 			// flush first to allow child entities to be lazy loaded
 			// getEntityManager().flush();
 			// getEntityManager().refresh(entity);
 			elasticClient.createOrFullUpdate((ISearchable) entity);
-		}
-
-		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
-			entityCreatedEventProducer.fire((BaseEntity) entity);
 		}
 
 		// Schedule end of period events

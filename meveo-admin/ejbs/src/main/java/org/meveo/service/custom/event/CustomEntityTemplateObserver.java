@@ -11,7 +11,7 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
 import org.meveo.event.logging.LoggedEvent;
-import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -19,6 +19,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.storage.RepositoryService;
+import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -31,14 +32,18 @@ import org.meveo.service.storage.RepositoryService;
 public class CustomEntityTemplateObserver {
 
 	@Inject
+	private Logger log;
+
+	@Inject
 	private CustomTableCreatorService customTableCreatorService;
 
 	@Inject
 	private RepositoryService repositoryService;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onCetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) {
+	public void onCetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx CustomEntityTemplate cet) {
 
+		log.debug("CET onCreated observer={}", cet);
 		if (cet.isAudited()) {
 			createAuditTable(repositoryService.findDefaultRepository().getCode(), CustomEntityTemplate.AUDIT_PREFIX + SQLStorageConfiguration.getDbTablename(cet));
 		}
@@ -47,7 +52,9 @@ public class CustomEntityTemplateObserver {
 	private void createAuditTable(String sqlConnectionCode, String dbTableName) {
 
 		// create table
-		customTableCreatorService.createTable(sqlConnectionCode, dbTableName, false);
+		CustomEntityTemplate template = new CustomEntityTemplate();
+		template.setCode(dbTableName);
+		customTableCreatorService.createTable(sqlConnectionCode, template, false);
 
 		// add fields
 
@@ -80,7 +87,7 @@ public class CustomEntityTemplateObserver {
 		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 	}
 
-	public CustomFieldTemplate createCft(String code, CustomFieldTypeEnum fieldType, boolean unique, boolean identifier) {
+	private CustomFieldTemplate createCft(String code, CustomFieldTypeEnum fieldType, boolean unique, boolean identifier) {
 
 		CustomFieldTemplate cft = new CustomFieldTemplate();
 		cft.setSummary(true);

@@ -79,7 +79,7 @@
 					label="#{messages['endpoint.technicalServiceParameters']}">
 					<p:dataTable id="technicalServiceParametersId"
 						resizableColumns="true" var="item" paginator="false" reflow="true"
-						value="#{endpointBean.entity.service.inputs}">
+						value="#{endpointBean.scriptInstance.inputs}">
 						<p:column
 							headerText="#{messages['endpoint.technicalServiceParameters.name']}">
 							<h:outputText value="#{item.name}" />
