@@ -72,6 +72,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     /**
      * A list of order items. Not modifiable once started processing.
      */
+    @Fetch(FetchMode.JOIN)
     @OneToMany(mappedBy = "meveoModule", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ModuleRelease> releases = new HashSet<>();
 
