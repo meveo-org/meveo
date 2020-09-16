@@ -7,13 +7,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.notification.EmailNotificationDto;
-import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.EmailNotification;
@@ -64,16 +61,7 @@ public class EmailNotificationApi extends NotificationApi<EmailNotification, Ema
 
         handleMissingParameters();
 
-        if (emailNotificationService.findByCode(postData.getCode()) != null) {
-            throw new EntityAlreadyExistsException(EmailNotification.class, postData.getCode());
-        }
-
-
-        EmailNotification notif = fromDto(postData);
-
-        emailNotificationService.create(notif);
-
-        return notif;
+        return super.create(postData);
     }
 
     /* (non-Javadoc)

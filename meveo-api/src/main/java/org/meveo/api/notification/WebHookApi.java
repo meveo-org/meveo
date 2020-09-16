@@ -4,14 +4,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseCrudApi;
-import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.api.dto.notification.WebHookDto;
-import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.HttpProtocol;
@@ -66,15 +62,7 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
 
         handleMissingParameters();
 
-        if (webHookService.findByCode(postData.getCode()) != null) {
-            throw new EntityAlreadyExistsException(WebHook.class, postData.getCode());
-        }
-        
-        var webHook = fromDto(postData);
-
-        webHookService.create(webHook);
-
-        return webHook;
+        return super.create(postData);
     }
 
     /* (non-Javadoc)
@@ -236,13 +224,13 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
         webHook.setParams(dto.getScriptParams());
         webHook.setElFilter(dto.getElFilter());
         webHook.setCounterTemplate(counterTemplate);
-        
+
         if (!StringUtils.isBlank(dto.getHttpProtocol())) {
             webHook.setHttpProtocol(dto.getHttpProtocol());
         } else {
             webHook.setHttpProtocol(HttpProtocol.HTTP);
         }
-        
+
         webHook.setHost(dto.getHost());
         webHook.setPort(dto.getPort());
         webHook.setPage(dto.getPage());
@@ -255,7 +243,7 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
         if (dto.getParams() != null) {
             webHook.getWebhookParams().putAll(dto.getParams());
         }
-        
+
 		return webHook;
 	}
 

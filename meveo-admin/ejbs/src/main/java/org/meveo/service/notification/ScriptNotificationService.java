@@ -10,7 +10,6 @@ import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.ScriptNotification;
-import org.meveo.service.base.BusinessService;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -39,12 +38,6 @@ public class ScriptNotificationService extends NotificationInstanceService<Scrip
 
 	@Inject
 	private NotificationCacheContainerProvider notificationCacheContainerProvider;
-
-	@Override
-	public void create(ScriptNotification scriptNotification) throws BusinessException {
-		super.create(scriptNotification);
-		notificationCacheContainerProvider.addNotificationToCache(scriptNotification);
-	}
 
 	/**
 	 * Update scriptNotification v5.0: adding notification to cache only when
