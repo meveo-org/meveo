@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -306,6 +305,8 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 	
 	private boolean audited = false;
 	
+	private boolean persisted = true;
+	
 
     /**
      * Instantiates a new custom field template dto.
@@ -382,7 +383,8 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         maxFileSizeAllowedInKb = cf.getMaxFileSizeAllowedInKb();
         filePath = cf.getFilePath();
         samples = cf.getSamples();
-
+        audited = cf.isAudited();
+        persisted = cf.isPersisted();
     }
 
     /**
@@ -1235,6 +1237,14 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
 	public void setAudited(boolean audited) {
 		this.audited = audited;
+	}
+
+	public boolean isPersisted() {
+		return persisted;
+	}
+
+	public void setPersisted(boolean persisted) {
+		this.persisted = persisted;
 	}
 	
 }

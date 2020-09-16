@@ -563,6 +563,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setFilePath(dto.getFilePath());
         cft.setSaveOnExplorer(dto.isSaveOnExplorer());
         cft.setAudited(dto.isAudited());
+        cft.setPersisted(dto.isPersisted());
 
         return cft;
     }
