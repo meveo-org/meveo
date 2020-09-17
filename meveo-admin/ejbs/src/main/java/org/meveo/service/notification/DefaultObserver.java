@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
+import javax.ejb.EJBContext;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -15,6 +17,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+import javax.transaction.TransactionSynchronizationRegistry;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.ftp.event.FileDelete;
@@ -83,7 +86,7 @@ public class DefaultObserver {
 
 	@Inject
 	private Logger log;
-
+	
 	@Inject
 	private BeanManager manager;
 
@@ -315,7 +318,7 @@ public class DefaultObserver {
 		checkEvent(NotificationEventTypeEnum.UPDATED, e);
 	}
 
-	public void onEntityRemove(@Observes @Removed BaseEntity e) throws BusinessException {
+	public void onEntityRemove(@Observes(during = TransactionPhase.BEFORE_COMPLETION) @Removed BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} removed", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.REMOVED, e);
 	}

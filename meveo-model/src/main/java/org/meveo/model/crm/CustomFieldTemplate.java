@@ -388,6 +388,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Type(type = "numeric_boolean")
 	@Column(name = "audited")
 	private boolean audited = false;
+    
+    @Type(type = "numeric_boolean")
+	@Column(name = "is_persisted")
+	private boolean persisted = true;
 
     /**
      * Database field name - derived from code
@@ -1834,6 +1838,14 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
 	public void setAudited(boolean audited) {
 		this.audited = audited;
+	}
+
+	public boolean isPersisted() {
+		return persisted;
+	}
+
+	public void setPersisted(boolean persisted) {
+		this.persisted = persisted;
 	}
 	
 }
