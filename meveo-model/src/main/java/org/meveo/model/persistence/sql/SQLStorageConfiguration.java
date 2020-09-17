@@ -43,7 +43,7 @@ public class SQLStorageConfiguration implements Serializable {
 	@Type(type = "numeric_boolean")
 	@Column(name = "store_as_table", nullable = false)
 	@NotNull
-	private boolean storeAsTable = false;
+	private boolean storeAsTable = true;
 
 	/**
 	 * Get a database field name derived from a code value. Lowercase and spaces
