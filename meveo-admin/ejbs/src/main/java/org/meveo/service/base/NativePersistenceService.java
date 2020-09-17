@@ -1915,6 +1915,10 @@ public class NativePersistenceService extends BaseService {
 
                     Object value = castValue(valueEntry.getValue(), dataClass, isList, datePatterns);
 
+					if (!customFieldTemplate.isPersisted()) {
+						value = null;
+					}
+                    
                     // Replace cft code with db field name if needed
                     String dbFieldname = CustomFieldTemplate.getDbFieldname(fieldName);
                     if (!fieldName.equalsIgnoreCase(dbFieldname)) {

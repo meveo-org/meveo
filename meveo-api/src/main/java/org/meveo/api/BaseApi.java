@@ -172,7 +172,7 @@ public abstract class BaseApi {
      * 
      * @throws MeveoApiException meveo api exception.
      */
-    protected void populateCustomFields(CustomFieldsDto customFieldsDto, ICustomFieldEntity entity, boolean isNewEntity) throws MeveoApiException {
+    public void populateCustomFields(CustomFieldsDto customFieldsDto, ICustomFieldEntity entity, boolean isNewEntity) throws MeveoApiException {
         populateCustomFields(customFieldsDto, entity, isNewEntity, true);
     }
 

@@ -40,4 +40,16 @@
 		<dropColumn tableName="wf_workflow" columnName="uuid"/>
 		<dropColumn tableName="wf_workflow" columnName="cf_values"/>
 	</changeSet>
+
+	<changeSet author="EdwardPLegaspi"
+		id="20200916 - Add option for cft to be transient">
+		<addColumn tableName="crm_custom_field_tmpl">
+			<column name="is_persisted" type="${type.boolean}"
+				defaultValue="0"></column>
+		</addColumn>
+		<update tableName="crm_custom_field_tmpl">
+			<column name="is_persisted" value="1"></column>
+		</update>
+	</changeSet>
+	
 </databaseChangeLog>

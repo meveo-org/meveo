@@ -328,7 +328,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
-            customFieldTemplateService.remove(cft.getId());
+        	// Don't remove super-template cfts
+        	if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
+        		customFieldTemplateService.remove(cft);
+        	}
         }
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -349,9 +352,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         customFieldsCache.removeCustomEntityTemplate(cet);
 
-        if(getEntityManager().contains(cet)) {
+//        if(getEntityManager().contains(cet)) {
         	super.remove(cet);
-        }
+//        }
 
     }
 

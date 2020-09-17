@@ -18,6 +18,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -664,4 +665,26 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		return false;
 	}
+
+    public String getFieldName(CustomEntityTemplate customEntityTemplate) {
+
+        if (customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
+            Map<String, CustomFieldTemplate> cfts = findByAppliesTo(customEntityTemplate.getAppliesTo());
+            if (cfts != null) {
+                List<String> identifierFields = cfts.values().stream().filter(f -> f.isIdentifier()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(identifierFields)) {
+                    return identifierFields.get(0);
+                }
+                List<String> requireFields = cfts.values().stream().filter(f -> f.isValueRequired()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(requireFields)) {
+                    return requireFields.get(0);
+                }
+                List<String> summaryFields = cfts.values().stream().filter(f -> f.isSummary()).map(CustomFieldTemplate::getDbFieldname).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(summaryFields)) {
+                    return summaryFields.get(0);
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -65,6 +65,7 @@ import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -83,6 +84,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
@@ -90,12 +92,14 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
@@ -124,6 +128,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@Inject
 	private MeveoModuleService meveoModuleService;
+
+	@Inject
+	private CustomTableService customTableService;
 
 	@Inject
 	private CustomFieldTemplateApi customFieldTemplateApi;
@@ -669,6 +676,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
 						itemDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
 
+					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+						try {
+							Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
+							CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+							customEntityInstance.setUuid((String) ceiTable.get("uuid"));
+							customEntityInstance.setCode((String) ceiTable.get("uuid"));
+							customEntityInstance.setCetCode(item.getAppliesTo());
+							customEntityInstance.setCet(customEntityTemplateService.findByCode(item.getAppliesTo()));
+							customFieldInstanceService.setCfValues(customEntityInstance, item.getAppliesTo(), ceiTable);
+							itemDto = CustomEntityInstanceDto.toDTO(customEntityInstance, entityToDtoConverter.getCustomFieldsDTO(customEntityInstance, true));
+						} catch (BusinessException e) {
+							log.error(e.getMessage());
+						}
 					} else {
 						Class clazz = Class.forName(item.getItemClass());
 						if (clazz.isAnnotationPresent(VersionedEntity.class)) {

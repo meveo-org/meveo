@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJBException;
-import javax.ejb.EJBTransactionRolledbackException;
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -249,7 +247,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 		    	}
 		    	
 				 meveoModuleService.loadModuleItem(item);
-				 
+
 		        if (item.getItemEntity() == null) {
 		            notLoadedItems.add(item);
 		            continue;
@@ -290,6 +288,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return;
             }
             MeveoModuleItem item = new MeveoModuleItem(itemEntity);
+            if (itemEntity instanceof CustomEntityInstance && itemEntity.getId() == null) {
+                item.setAppliesTo(((CustomEntityInstance) itemEntity).getCetCode());
+            }
             if (!entity.getModuleItems().contains(item)) {
                 entity.addModuleItem(item);
                 if (itemEntity instanceof CustomFieldTemplate) {
@@ -328,6 +329,11 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
 
             moduleItemEntity = itemEntity;
+            try {
+                entity = (T) meveoModuleService.update(entity);
+            } catch (BusinessException e) {
+                log.error(e.getMessage());
+            }
         }
     }
 
