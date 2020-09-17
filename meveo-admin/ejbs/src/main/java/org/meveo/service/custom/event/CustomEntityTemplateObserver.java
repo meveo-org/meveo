@@ -11,7 +11,7 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
 import org.meveo.event.logging.LoggedEvent;
-import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -41,7 +41,7 @@ public class CustomEntityTemplateObserver {
 	private RepositoryService repositoryService;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onCetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) {
+	public void onCetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx CustomEntityTemplate cet) {
 
 		log.debug("CET onCreated observer={}", cet);
 		if (cet.isAudited()) {

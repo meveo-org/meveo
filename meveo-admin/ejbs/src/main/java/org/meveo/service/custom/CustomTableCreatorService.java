@@ -588,16 +588,15 @@ public class CustomTableCreatorService implements Serializable {
 			DropNotNullConstraintChange dropNotNullChange = new DropNotNullConstraintChange();
 			dropNotNullChange.setTableName(dbTableName);
 			dropNotNullChange.setColumnName(dbFieldname);
-
-			if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-				dropNotNullChange.setColumnDataType("datetime");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-				dropNotNullChange.setColumnDataType("numeric(23, 12)");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-				dropNotNullChange.setColumnDataType("bigInt");
-			} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-				dropNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+	
+			String type;
+			try {
+				type = getColumnType(cft);
+			} catch (ClassNotFoundException e1) {
+				throw new IllegalArgumentException("Cannot get field type for entity with class or code " + cft.getEntityClazzCetCode(), e1);
 			}
+			
+			dropNotNullChange.setColumnDataType(type);
 
 			changeSet.addChange(dropNotNullChange);
 			dbLog.addChangeSet(changeSet);
@@ -606,19 +605,9 @@ public class CustomTableCreatorService implements Serializable {
 			if (cft.isValueRequired()) {
 				changeSet = new ChangeSet(dbTableName + "_CT_" + dbFieldname + "_ANN_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
 				AddNotNullConstraintChange addNotNullChange = new AddNotNullConstraintChange();
-
 				addNotNullChange.setTableName(dbTableName);
 				addNotNullChange.setColumnName(dbFieldname);
-
-				if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
-					addNotNullChange.setColumnDataType("datetime");
-				} else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-					addNotNullChange.setColumnDataType("numeric(23, 12)");
-				} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-					addNotNullChange.setColumnDataType("bigInt");
-				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-					addNotNullChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
-				}
+				addNotNullChange.setColumnDataType(type);
 
 				changeSet.addChange(addNotNullChange);
 				dbLog.addChangeSet(changeSet);
@@ -635,14 +624,7 @@ public class CustomTableCreatorService implements Serializable {
 				DropDefaultValueChange dropDefaultValueChange = new DropDefaultValueChange();
 				dropDefaultValueChange.setTableName(dbTableName);
 				dropDefaultValueChange.setColumnName(dbFieldname);
-
-				if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-					dropDefaultValueChange.setColumnDataType("numeric(23, 12)");
-				} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-					dropDefaultValueChange.setColumnDataType("bigInt");
-				} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-					dropDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
-				}
+				dropDefaultValueChange.setColumnDataType(type);
 
 				changeSet.addChange(dropDefaultValueChange);
 				dbLog.addChangeSet(changeSet);
@@ -654,16 +636,16 @@ public class CustomTableCreatorService implements Serializable {
 
 					addDefaultValueChange.setTableName(dbTableName);
 					addDefaultValueChange.setColumnName(dbFieldname);
-
+					addDefaultValueChange.setColumnDataType(type);
+					
 					if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
-						addDefaultValueChange.setColumnDataType("numeric(23, 12)");
 						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
-						addDefaultValueChange.setColumnDataType("bigInt");
 						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
-						addDefaultValueChange.setColumnDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
 						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
+						addDefaultValueChange.setDefaultValueBoolean("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()));
 					}
 
 					changeSet.addChange(addDefaultValueChange);
@@ -680,7 +662,7 @@ public class CustomTableCreatorService implements Serializable {
 				ModifyDataTypeChange modifyDataTypeChange = new ModifyDataTypeChange();
 				modifyDataTypeChange.setTableName(dbTableName);
 				modifyDataTypeChange.setColumnName(dbFieldname);
-				modifyDataTypeChange.setNewDataType("varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")");
+				modifyDataTypeChange.setNewDataType(type);
 
 				changeSet.addChange(modifyDataTypeChange);
 				dbLog.addChangeSet(changeSet);

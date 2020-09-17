@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
+import javax.ejb.EJBContext;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -15,6 +17,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+import javax.transaction.TransactionSynchronizationRegistry;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.ftp.event.FileDelete;
@@ -31,6 +34,7 @@ import org.meveo.event.communication.InboundCommunicationEvent;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.monitoring.BusinessExceptionEvent;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.InboundRequestReceived;
@@ -39,6 +43,7 @@ import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Terminated;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
@@ -81,7 +86,7 @@ public class DefaultObserver {
 
 	@Inject
 	private Logger log;
-
+	
 	@Inject
 	private BeanManager manager;
 
@@ -133,7 +138,7 @@ public class DefaultObserver {
 		return result == null ? false : result;
 	}
 
-	private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context) {
+	private void executeFunction(Function function, Object entityOrEvent, Map<String, String> params, Map<String, Object> context, boolean afterTx) {
 		log.debug("execute notification script: {}", function.getCode());
 
 		try {
@@ -144,10 +149,14 @@ public class DefaultObserver {
 				context.put(entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression(entry.getValue(), userMap, Object.class));
 			}
 
-			context.putAll(concreteFunctionService.execute(function.getCode(), context));
+			if (afterTx) {
+				concreteFunctionService.postCommit(function.getCode(), context);
 
-			concreteFunctionService.postCommit(function.getCode(), context);
-
+			} else {
+				context.putAll(concreteFunctionService.execute(function.getCode(), context));
+			}
+			
+			
 		} catch (Exception e) {
 			log.error("Failed script execution", e);
 
@@ -161,7 +170,7 @@ public class DefaultObserver {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private boolean fireNotification(Notification notif, Object entityOrEvent) throws BusinessException {
+	private boolean fireNotification(Notification notif, Object entityOrEvent, boolean afterTx) throws BusinessException {
 		if (notif == null) {
 			return false;
 		}
@@ -170,6 +179,7 @@ public class DefaultObserver {
 		if (entityOrEvent instanceof IEntity) {
 			entity = (IEntity) entityOrEvent;
 			log.debug("Fire Notification for notif with {} and entity with id={}", notif, entity.getId());
+			
 		} else if (entityOrEvent instanceof IEvent) {
 			entity = ((IEvent) entityOrEvent).getEntity();
 			log.debug("Fire Notification for notif with {} and entity with id={}", notif, entity.getId());
@@ -205,7 +215,7 @@ public class DefaultObserver {
 			// TODO: Rethink notif and script - maybe create pre and post script
 			if (!(notif instanceof WebHook)) {
 				if (notif.getFunction() != null) {
-					executeFunction(notif.getFunction(), entityOrEvent, notif.getParams(), context);
+					executeFunction(notif.getFunction(), entityOrEvent, notif.getParams(), context, afterTx);
 				}
 			}
 
@@ -263,6 +273,10 @@ public class DefaultObserver {
 
 		return true;
 	}
+	
+	private boolean checkEvent(NotificationEventTypeEnum type, Object entityOrEvent) throws BusinessException {
+		return checkEvent(type, entityOrEvent, false);
+	}
 
 	/**
 	 * Check and fire all matched notifications
@@ -272,67 +286,75 @@ public class DefaultObserver {
 	 * @return True if at least one notification has been triggered
 	 * @throws BusinessException Business exception
 	 */
-	private boolean checkEvent(NotificationEventTypeEnum type, Object entityOrEvent) throws BusinessException {
+	private boolean checkEvent(NotificationEventTypeEnum type, Object entityOrEvent, boolean afterTx) throws BusinessException {
 		boolean result = false;
 		for (Notification notif : genericNotificationService.getApplicableNotifications(type, entityOrEvent)) {
 			if (notif.isActive()) {
-				result = fireNotification(notif, entityOrEvent) || result;
+				result = fireNotification(notif, entityOrEvent, afterTx) || result;
 			}
 		}
 		return result;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void entityCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created BaseEntity e) throws BusinessException {
+	public void onEntityCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx BaseEntity e) throws BusinessException {
+		log.debug("Defaut observer : Entity {} with id {} after tx created", e.getClass().getName(), e.getId());
+		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onEntityUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @UpdatedAfterTx BaseEntity e) throws BusinessException {
+		log.debug("Defaut observer : Entity {} with id {} after tx updated", e.getClass().getName(), e.getId());
+		checkEvent(NotificationEventTypeEnum.UPDATED, e, true);
+	}
+	
+	public void onEntityCreate(@Observes @Created BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} created", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.CREATED, e);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void entityUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated BaseEntity e) throws BusinessException {
+	public void onEntityUpdate(@Observes @Updated BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} updated", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.UPDATED, e);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void entityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed BaseEntity e) throws BusinessException {
+	public void onEntityRemove(@Observes(during = TransactionPhase.BEFORE_COMPLETION) @Removed BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} removed", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.REMOVED, e);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void entityDisabled(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Disabled BaseEntity e) throws BusinessException {
+	public void onEntityDisable(@Observes @Disabled BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} disabled", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.DISABLED, e);
 	}
 
-	public void entityEnabled(@Observes @Enabled BaseEntity e) throws BusinessException {
+	public void onEntityEnable(@Observes @Enabled BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} enabled", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.ENABLED, e);
 	}
 
-	public void entityTerminated(@Observes @Terminated BaseEntity e) throws BusinessException {
+	public void onEntityTerminate(@Observes @Terminated BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} terminated", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.TERMINATED, e);
 	}
 
-	public void entityProcessed(@Observes @Processed BaseEntity e) throws BusinessException {
+	public void onEntityProcess(@Observes @Processed BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} processed", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.PROCESSED, e);
 	}
 
-	public void entityRejected(@Observes @Rejected BaseEntity e) throws BusinessException {
+	public void onEntityRejecte(@Observes @Rejected BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} rejected", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.REJECTED, e);
 	}
 
-	public void loggedIn(@Observes User e) throws BusinessException {
+	public void onLoggedIn(@Observes User e) throws BusinessException {
 		log.debug("Defaut observer : logged in class={} ", e.getClass().getName());
 		checkEvent(NotificationEventTypeEnum.LOGGED_IN, e);
 	}
 
 	@MeveoAudit
-	public void inboundRequest(@Observes @InboundRequestReceived InboundRequest e) throws BusinessException {
+	public void onInboundRequest(@Observes @InboundRequestReceived InboundRequest e) throws BusinessException {
 		log.debug("Defaut observer : inbound request {} ", e.getCode());
 		boolean fired = checkEvent(NotificationEventTypeEnum.INBOUND_REQ, e);
 		e.getHeaders().put("fired", fired ? "true" : "false");

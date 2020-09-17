@@ -492,8 +492,8 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
 
         if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
-            cft.setStorageType(CustomFieldStorageTypeEnum.LIST);
             cft.setVersionable(false);
+            cft.setStorageType(dto.getStorageType());
             if (dto.getChildEntityFieldsForSummary() != null) {
                 cft.setChildEntityFieldsAsList(dto.getChildEntityFieldsForSummary());
             }
@@ -563,6 +563,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         cft.setFilePath(dto.getFilePath());
         cft.setSaveOnExplorer(dto.isSaveOnExplorer());
         cft.setAudited(dto.isAudited());
+        cft.setPersisted(dto.isPersisted());
 
         return cft;
     }
@@ -587,6 +588,7 @@ public class CustomFieldTemplateApi extends BaseApi {
 			crt.setName(relationshipName);
 			crt.setStartNode(customEntityTemplateService.findByCode(sourceCet));
 			crt.setEndNode(customEntityTemplateService.findByCode(targetCet));
+			customRelationshipTemplateService.create(crt);
 		}
 		return crt;
 	}
@@ -605,6 +607,10 @@ public class CustomFieldTemplateApi extends BaseApi {
         
         for(var cet : cache.getCustomEntityTemplates()) {
         	cftAppliesto.add(cet.getAppliesTo());
+        }
+        
+        for(var crt : cache.getCustomRelationshipTemplates()) {
+        	cftAppliesto.add(crt.getAppliesTo());
         }
         
         return cftAppliesto;

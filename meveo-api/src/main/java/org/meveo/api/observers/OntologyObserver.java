@@ -26,11 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,12 +41,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -71,7 +60,6 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
@@ -185,7 +173,7 @@ public class OntologyObserver {
 
         List<File> commitFiles = new ArrayList<>();
 
-        final String templateSchema = getTemplateSchema(cet);
+        final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
         final File cetDir = cetCompiler.getCetDir();
 
@@ -220,7 +208,7 @@ public class OntologyObserver {
             IOException, BusinessException {
         hasChange.set(true);
 
-        final String templateSchema = getTemplateSchema(cet);
+        final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
         final File cetDir = cetCompiler.getCetDir();
 
@@ -398,7 +386,7 @@ public class OntologyObserver {
             if (schemaFile.exists()) {
                 schemaFile.delete();
                 fileList.add(schemaFile);
-                final String templateSchema = getTemplateSchema(cet);
+                final String templateSchema = cetCompiler.getTemplateSchema(cet);
                 FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
 
                 if (javaFile.exists()) {
@@ -737,11 +725,6 @@ public class OntologyObserver {
         return new File(repositoryDir, "custom/relationships");
     }
 
-    private String getTemplateSchema(CustomEntityTemplate cet) {
-        String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
-        return schema.replaceAll("#/definitions", ".");
-
-    }
 
     private String getTemplateSchema(CustomRelationshipTemplate crt) {
         String schema = jsonSchemaGenerator.generateSchema(crt.getCode(), crt);
@@ -758,7 +741,7 @@ public class OntologyObserver {
      */
 	private List<File> updateCetFiles(CustomEntityTemplate cet, final File classDir, File schemaFile, File javaFile) throws IOException {
 		List<File> listFile = new ArrayList<>();
-		final String templateSchema = getTemplateSchema(cet);
+		final String templateSchema = cetCompiler.getTemplateSchema(cet);
 		FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
 
 		if (javaFile.exists()) {

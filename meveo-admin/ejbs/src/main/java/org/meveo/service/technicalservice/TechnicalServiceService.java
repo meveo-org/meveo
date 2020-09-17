@@ -215,9 +215,10 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
     				 + "WHERE service.code = :serviceCode";
     	
     	try {
-    		return (Set<TechnicalService>) getEntityManager().createQuery(query, Set.class)
+    		var result = getEntityManager().createQuery(query)
 				.setParameter("serviceCode", serviceCode)
-    			.getSingleResult();
+    			.getResultList();
+			return new HashSet<>(result);
     	} catch(NoResultException e) {
     		return new HashSet<>();
     	}

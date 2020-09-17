@@ -11,6 +11,7 @@ import javax.naming.NamingException;
 import javax.persistence.Table;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -192,4 +193,13 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	public void setCustomFieldTemplateList(List<CustomFieldTemplate> customFieldTemplateList) {
 		this.customFieldTemplateList = customFieldTemplateList;
 	}
+
+	@Override
+	public Map<String, Object> getFilters() {
+		var filters = super.getFilters();
+		filters.values().removeIf(StringUtils::isBlank);
+		return filters;
+	}
+	
+	
 }
