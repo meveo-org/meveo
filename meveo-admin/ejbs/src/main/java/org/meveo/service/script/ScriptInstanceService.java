@@ -131,8 +131,12 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
     	
         ScriptInstance scriptInstance = findByCode(scriptCode);
         
+        if(scriptInstance == null) {
+    		throw new ElementNotFoundException( scriptCode, "ScriptInstance");
+    	}        
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
+
         
         ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
         return super.execute(executionEngine, context);
