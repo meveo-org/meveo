@@ -39,6 +39,10 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
@@ -1450,9 +1454,11 @@ public class CrossStorageService implements CustomPersistenceService {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
 				
+				
 				// Check if target is not JPA entity
 				try {
 					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
+					transaction.begin();
 					values.put(
 						entry.getKey(), 
 						customEntityInstanceService
@@ -1462,6 +1468,14 @@ public class CrossStorageService implements CustomPersistenceService {
 					continue;
 				} catch (ClassNotFoundException e) {
 					
+				} catch(Exception e) {
+					throw new RuntimeException(e);
+				} finally {
+					try {
+						transaction.commit();
+					} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
+						throw new RuntimeException(e);
+					}
 				}
 				
 				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
