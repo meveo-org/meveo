@@ -128,13 +128,16 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        if (!name.startsWith("org.meveo")) {
-                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                        } else {
-                                            compilationUnit.addImport(name);
+                                        
+                                        try {
+                                        	Class.forName(name);
+                                        	compilationUnit.addImport(name);
                                             String[] className = name.split("\\.");
                                             name = className[className.length -1];
+                                        } catch (ClassNotFoundException e) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
                                         }
+                                        
                                         vd.setType("List<" + name + ">");
                                     }
                                 }
@@ -161,12 +164,13 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        if (!name.startsWith("org.meveo")) {
-                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                        } else {
-                                            compilationUnit.addImport(name);
+                                        try {
+                                        	Class.forName(name);
+                                        	compilationUnit.addImport(name);
                                             String[] className = name.split("\\.");
                                             name = className[className.length -1];
+                                        } catch (ClassNotFoundException e) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
                                         }
                                         vd.setType("Map<String, " + name + ">");
                                     }
@@ -206,17 +210,13 @@ public class JSONSchemaIntoJavaClassParser {
                             // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
                             name = CustomFieldTemplate.retrieveCetCode(name);
                             
-                            if (!name.startsWith("org.meveo")) {
-                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                            } else {
-                            	try {
-                            		compilationUnit.addImport(name);
-                            	} catch (Exception e) {
-                            		log.error("Can't add import " + name, e);
-                            	}
-                            	
+                            try {
+                            	Class.forName(name);
+                            	compilationUnit.addImport(name);
                                 String[] className = name.split("\\.");
                                 name = className[className.length -1];
+                            } catch (ClassNotFoundException e) {
+                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
                             }
                             vd.setType(name);
                         }
