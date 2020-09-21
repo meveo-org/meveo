@@ -186,12 +186,23 @@ public class JMeterService {
 			}
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+        	var error = new SampleResult(false, "Error", e.getMessage());
+        	sampleResults.add(error);
+        	return new TestResult(e.toString(), sampleResults);
+        	
+        } finally {
+        	if(logFile.exists()) {
+        		logFile.delete();
+        	}
+        	
+        	if(jtlFile.exists()) {
+        		jtlFile.delete();
+        	}
+        	
+        	if(jmxFile.exists()) {
+        		jmxFile.delete();
+        	}
         }
-
-        logFile.delete();
-        jtlFile.delete();
-        jmxFile.delete();
 
         return new TestResult(responeData, sampleResults);
 
