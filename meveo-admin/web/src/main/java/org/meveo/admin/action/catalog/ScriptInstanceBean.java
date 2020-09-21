@@ -66,6 +66,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.cache.ScriptInstancesCache;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
@@ -106,6 +107,9 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 	@Inject
 	private MavenDependencyService mavenDependencyService;
+	
+	@Inject
+	private ScriptInstancesCache scriptInstancesCache;
 
 	private DualListModel<Role> execRolesDM;
 	private DualListModel<Role> sourcRolesDM;
@@ -128,7 +132,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public void organizeImports() {
     	// Don't need to re-compile if compilation already has errors
     	if(entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
-    		scriptInstanceService.compileScript(entity, true);
+    		scriptInstancesCache.compileScript(entity, true);
     	}
     	
     	if(entity.getScriptErrors() == null) {
@@ -222,7 +226,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		}
 
 		if (entity.isError()) {
-			scriptInstanceService.compileScript(entity, true);
+			scriptInstancesCache.compileScript(entity, true);
 		}
 	}
 
@@ -489,7 +493,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 			return;
 		}
 
-		scriptInstanceService.compileScript(entity, true);
+		scriptInstancesCache.compileScript(entity, true);
 		if (!entity.isError()) {
 			messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
 			initEntity(entity.getId());

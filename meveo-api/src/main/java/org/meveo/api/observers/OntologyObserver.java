@@ -72,6 +72,7 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.cache.ScriptInstancesCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +140,7 @@ public class OntologyObserver {
     public void init() {
         try {
             updateIDL();
-            CustomScriptService.constructClassPath();
+            ScriptInstancesCache.constructClassPath();
         } catch (IOException e) {
         }
     }
@@ -703,10 +704,10 @@ public class OntologyObserver {
                         location = location.substring(0, location.length() - 2);
                     }
 
-                    if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
-                        synchronized (CustomScriptService.CLASSPATH_REFERENCE) {
-                            if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
-                                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+                    if (!ScriptInstancesCache.CLASSPATH_REFERENCE.get().contains(location)) {
+                        synchronized (ScriptInstancesCache.CLASSPATH_REFERENCE) {
+                            if (!ScriptInstancesCache.CLASSPATH_REFERENCE.get().contains(location)) {
+                            	ScriptInstancesCache.CLASSPATH_REFERENCE.set(ScriptInstancesCache.CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
                             }
                         }
                     }

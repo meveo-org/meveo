@@ -428,8 +428,5 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.setParameter("code", code)
 			.executeUpdate();	
 	}
-	
-    public void compileScript(T script, boolean testCompile) {
-	}
 
 }

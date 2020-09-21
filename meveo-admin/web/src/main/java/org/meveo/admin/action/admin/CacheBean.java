@@ -42,7 +42,7 @@ import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
-import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.cache.ScriptInstancesCache;
 import org.meveo.util.view.LazyDataModelWSize;
 import org.omnifaces.cdi.Param;
 import org.primefaces.model.LazyDataModel;
@@ -64,7 +64,7 @@ public class CacheBean implements Serializable {
     private JobCacheContainerProvider jobCacheContainerProvider;
     
     @Inject
-    private ScriptInstanceService scriptInstanceService;
+    private ScriptInstancesCache scriptInstancesCache;
 
     /** Logger. */
     @Inject
@@ -154,7 +154,7 @@ public class CacheBean implements Serializable {
         
 		Map<String, String> cacheInfo = new HashMap<String, String>();
 		cacheInfo.put("name", "meveo-scripts");
-		cacheInfo.put("count", Integer.toString(scriptInstanceService.getScriptCache().size()));
+		cacheInfo.put("count", Integer.toString(scriptInstancesCache.getScriptCache().size()));
 		cacheSummary.add(cacheInfo);
         
         return cacheSummary;
@@ -233,11 +233,11 @@ public class CacheBean implements Serializable {
 				@SuppressWarnings("unchecked")
 				@Override
 				public List load(int first, int pageSize, String sortField, SortOrder sortOrder, Map filters) {
-					setRowCount(scriptInstanceService.getScriptCache().size());
+					setRowCount(scriptInstancesCache.getScriptCache().size());
 
 					if (getRowCount() > 0) {
 						int toNr = first + pageSize;
-						return new LinkedList(scriptInstanceService.getScriptCache().entrySet()).subList(first, getRowCount() <= toNr ? getRowCount() : toNr);
+						return new LinkedList(scriptInstancesCache.getScriptCache().entrySet()).subList(first, getRowCount() <= toNr ? getRowCount() : toNr);
 
 					} else {
 						return new ArrayList();

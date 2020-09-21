@@ -11,11 +11,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +37,7 @@ import javax.tools.ToolProvider;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.script.cache.ScriptInstancesCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +223,7 @@ public class CharSequenceCompiler<T> {
             scriptsDir.mkdirs();
          }
 
-         String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
+         String classPath = ScriptInstancesCache.CLASSPATH_REFERENCE.get();
 
          List<File> fileList = new ArrayList<File>();
          List<JavaFileObject> sources = new ArrayList<>();

@@ -6,7 +6,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -28,6 +27,7 @@ import org.meveo.service.index.ElasticClient;
 import org.meveo.service.index.ElasticSearchIndexPopulationService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.cache.ScriptInstancesCache;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
 
@@ -133,7 +133,7 @@ public class ApplicationInitializer {
         jobInstanceService.registerJobs();
 
         try {
-            scriptInstanceService.constructClassPath();
+        	ScriptInstancesCache.constructClassPath();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

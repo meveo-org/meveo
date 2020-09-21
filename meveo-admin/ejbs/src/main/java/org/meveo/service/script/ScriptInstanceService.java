@@ -108,9 +108,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * Compile all scriptInstances.
      */
     public void compileAll() {
-
         List<ScriptInstance> scriptInstances = findByType(ScriptSourceTypeEnum.JAVA);
-        compile(scriptInstances);
+        scriptInstancesCache.compile(scriptInstances);
     }
 
     /**
@@ -136,7 +135,6 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
     	}        
         // Check access to the script
         isUserHasExecutionRole(scriptInstance);
-
         
         ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
         return super.execute(executionEngine, context);
@@ -165,7 +163,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         
         Class<ScriptInterface> compiledScript;
         try {
-        	compiledScript = compileJavaSource(javaSrc);
+        	compiledScript = scriptInstancesCache.compileJavaSource(javaSrc);
         } catch (Exception e) {
         	log.error("Can't compile script {} for test", scriptCode, e);
         	return;
