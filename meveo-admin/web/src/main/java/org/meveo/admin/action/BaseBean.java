@@ -192,8 +192,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     /**
      * Request parameter. A custom back view page instead of a regular list page
      */
-    @Inject
-    @Param()
+    // @Inject
+    @Param
     private String backView;
 
     private String backViewSave;

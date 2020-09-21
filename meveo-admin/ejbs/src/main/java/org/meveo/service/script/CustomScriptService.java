@@ -967,7 +967,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param scriptCode Script code
      * @return Script interface Class
      */
-    public ScriptInterface getScriptInterface(String scriptCode) throws Exception {
+    public synchronized ScriptInterface getScriptInterface(String scriptCode) throws Exception {
         ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
 
         if (supplier == null) {
@@ -1027,7 +1027,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @throws InvalidScriptException Were not able to instantiate or compile a
      *                                script
      */
-    public ScriptInterface getScriptInstance(String scriptCode) throws InvalidScriptException {
+    public synchronized ScriptInterface getScriptInstance(String scriptCode) throws InvalidScriptException {
         try {
             return getScriptInterface(scriptCode);
         } catch (Exception e) {
