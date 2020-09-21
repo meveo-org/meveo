@@ -49,6 +49,21 @@ function normalize(text) {
 }
 
 /**
+ * Retrieves the custom config object from the config.js file on the root of
+ * the app if specified
+ *
+ * @param {*} endpoint the EndpointInterface object
+ * @param {*} parameters the parameters passed in by the client
+ */
+function buildEndpointConfig(endpoint, parameters) {
+	const { name } = endpoint;
+	const { config } = parameters;
+	const getEndpointConfig = (config || {})[name] || (() => { });
+	const endpointConfig = getEndpointConfig({ endpoint, parameters });
+	return endpointConfig || {};
+}
+
+/**
  * Generate the api URL using the base endpoint URL and then appending
  * any included path parameters
  *
@@ -57,9 +72,8 @@ function normalize(text) {
  * @returns
  */
 function buildApiUrl(endpoint, parameters) {
-	const { name, endpointUrl, pathParameters } = endpoint;
-	const { config } = parameters;
-	const endpointConfig = (config || {})[name] || {};
+	const { endpointUrl, pathParameters } = endpoint;
+	const endpointConfig = buildEndpointConfig(endpoint, parameters);
 	const { OVERRIDE_URL } = endpointConfig;
 	const hasPathParameters = !!pathParameters && pathParameters.length > 0;
 
@@ -99,9 +113,8 @@ class ApiRequest {
 	 * @memberof ApiRequest
 	 */
 	buildHeaders(parameters) {
-		const { name } = this.endpoint;
-		const { token, config, noAuth } = parameters;
-		const endpointConfig = (config || {})[name] || {};
+		const { token, noAuth } = parameters;
+		const endpointConfig = buildEndpointConfig(this.endpoint, parameters);
 		const { OVERRIDE_HEADER } = endpointConfig;
 		const headers = new Headers();
 		const appendHeaders = OVERRIDE_HEADER || {
@@ -362,8 +375,7 @@ export default class EndpointInterface {
 			component.addEventListener(errorEvent, errorCallback);
 		}
 		const parameters = params || {};
-		const { config } = parameters;
-		const endpointConfig = (config || {})[name] || {};
+		const endpointConfig = buildEndpointConfig(this, parameters);
 		const { USE_MOCK = false } = endpointConfig;
 
 		if (USE_MOCK === "OFFLINE") {

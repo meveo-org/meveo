@@ -33,7 +33,7 @@
             <hftl:column label="#{messages['entity.notification.classNameFilter']}" field="classNameFilter" />
 <!--             <hftl:column style="display:none" label="#{messages['entity.notification.elFilter']}" field="elFilter" /> -->
             <hftl:column label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" />
-            <hftl:column label="#{messages['entity.notification.scriptInstance']}" field="scriptInstance" />
+            <hftl:column label="#{messages['entity.notification.scriptInstance']}" field="function.code" />
             <hftl:column label="#{messages['entity.notification.jobInstance']}" field="jobInstance" />
             <hftl:column label="#{messages['enableEntity.active']}" field="active" isMessage="true" />
             <hftl:actionsColumn permission="#{persistentPermissionResolver.hasPermission('reporting','reportingManagement')}" renderEnableLink="true" renderAddModule="true"/>

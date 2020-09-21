@@ -213,8 +213,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 	}
 
 	@Override
-	public D find(String code) throws EntityDoesNotExistsException, MissingParameterException,
-			InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+	public D find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
 		E entity = getPersistenceService().findByCode(code);
 		if (entity == null) {
@@ -233,7 +232,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 		this.remove(dto.getCode());
 	}
 
-	public void remove(String notificationCode) throws BusinessException, EntityDoesNotExistsException {
+	public void remove(String notificationCode) throws BusinessException, MeveoApiException {
 		E entity = getPersistenceService().findByCode(notificationCode);
 		if (entity != null) {
 			getPersistenceService().remove(entity);
