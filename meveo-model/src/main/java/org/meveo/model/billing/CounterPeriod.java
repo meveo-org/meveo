@@ -29,11 +29,11 @@ import javax.validation.constraints.Size;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.commons.utils.JsonUtils;
 import org.meveo.commons.utils.ListUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.catalog.CounterTypeEnum;
+import org.meveo.model.persistence.JacksonUtil;
 
 @Entity
 @ObservableEntity
@@ -149,7 +149,7 @@ public class CounterPeriod extends BusinessEntity {
 
         Map<String, BigDecimal> bdLevelMap = new LinkedHashMap<>();
 
-        Map<String, ?> bdLevelMapObj = JsonUtils.toObject(notificationLevels, LinkedHashMap.class);
+        Map<String, ?> bdLevelMapObj = JacksonUtil.fromString(notificationLevels, LinkedHashMap.class);
 
         for (Entry<String, ?> mapItem : bdLevelMapObj.entrySet()) {
 
@@ -213,7 +213,7 @@ public class CounterPeriod extends BusinessEntity {
 
         convertedLevels = ListUtils.sortMapByValue(convertedLevels);
 
-        this.notificationLevels = JsonUtils.toJson(convertedLevels, false);
+        this.notificationLevels = JacksonUtil.toString(convertedLevels);
     }
 
     public boolean isCorrespondsToPeriod(Date dateToCheck) {

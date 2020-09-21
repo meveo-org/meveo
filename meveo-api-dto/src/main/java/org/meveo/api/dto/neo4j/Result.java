@@ -2,16 +2,16 @@
 package org.meveo.api.dto.neo4j;
 
 import java.util.List;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Result {
 
-    @SerializedName("columns")
-    @Expose
+    @JsonProperty("columns")
+    
     private List<String> columns = null;
-    @SerializedName("data")
-    @Expose
+    @JsonProperty("data")
+    
     private List<Datum> data = null;
 
     public List<String> getColumns() {

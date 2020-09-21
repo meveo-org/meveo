@@ -2,16 +2,15 @@
 package org.meveo.api.dto.neo4j;
 
 import java.util.List;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Graph {
 
-    @SerializedName("nodes")
-    @Expose
+	@JsonProperty("nodes")
     private List<Node> nodes = null;
-    @SerializedName("relationships")
-    @Expose
+	
+	@JsonProperty("relationships")
     private List<Relationship> relationships = null;
 
     public List<Node> getNodes() {

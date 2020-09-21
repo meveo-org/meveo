@@ -1,18 +1,16 @@
 
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class GraphTable {
 
-    @SerializedName("nodes")
-    @Expose
+	@JsonProperty("nodes")
     private List<NodeTable> nodes = null;
-    @SerializedName("relationships")
-    @Expose
+	
+	@JsonProperty("relationships")
     private List<Relationship> relationships = null;
 
     public List<NodeTable> getNodes() {

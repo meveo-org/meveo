@@ -38,13 +38,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.FileSerializer;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.reflect.TypeToken;
 
 /**
  * Encapsulates a custom field value. Supports the following data types:
@@ -993,12 +990,9 @@ public class CustomFieldValue implements Serializable {
             return null;
         }
 
-        GsonBuilder builder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        Gson gson = builder.create();
-
         String sValue = null;
         if (valueToSerialize instanceof EntityReferenceWrapper && !((EntityReferenceWrapper) valueToSerialize).isEmpty()) {
-            sValue = "entity" + SERIALIZATION_SEPARATOR + gson.toJson(valueToSerialize);
+            sValue = "entity" + SERIALIZATION_SEPARATOR + JacksonUtil.toString(valueToSerialize);
 
         } else if (valueToSerialize instanceof List && !((List) valueToSerialize).isEmpty()) {
 
@@ -1018,7 +1012,7 @@ public class CustomFieldValue implements Serializable {
             }
 
             if (itemClass != null) {
-                sValue = "list_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + gson.toJson(((List) valueToSerialize));
+                sValue = "list_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + JacksonUtil.toString(valueToSerialize);
             } else {
                 sValue = null;
             }
@@ -1048,7 +1042,7 @@ public class CustomFieldValue implements Serializable {
                 String columnNamesString = StringUtils.concatenate(MATRIX_COLUMN_NAME_SEPARATOR, cft.getMatrixColumnCodes());
 
                 if (itemClass != null) {
-                    sValue = "matrix_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + columnNamesString + SERIALIZATION_SEPARATOR + gson.toJson(mapCopy);
+                    sValue = "matrix_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + columnNamesString + SERIALIZATION_SEPARATOR + JacksonUtil.toString(valueToSerialize);;
                 } else {
                     sValue = null;
                 }
@@ -1057,7 +1051,7 @@ public class CustomFieldValue implements Serializable {
             } else {
 
                 if (itemClass != null) {
-                    sValue = "map_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + gson.toJson(((Map) valueToSerialize));
+                    sValue = "map_" + itemClass.getSimpleName() + SERIALIZATION_SEPARATOR + JacksonUtil.toString(valueToSerialize);;
                 } else {
                     sValue = null;
                 }
@@ -1108,9 +1102,6 @@ public class CustomFieldValue implements Serializable {
             return null;
         }
 
-        GsonBuilder builder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        Gson gson = builder.create();
-
         int firstSeparatorIndex = serializedValue.indexOf(SERIALIZATION_SEPARATOR);
 
         String type = serializedValue.substring(0, firstSeparatorIndex);
@@ -1124,98 +1115,88 @@ public class CustomFieldValue implements Serializable {
 
         if ("entity".equals(type)) {
             String sValue = serializedValue.substring(firstSeparatorIndex + 1);
-            EntityReferenceWrapper entityReferenceValue = gson.fromJson(sValue, EntityReferenceWrapper.class);
+            EntityReferenceWrapper entityReferenceValue = JacksonUtil.fromString(sValue, EntityReferenceWrapper.class);
             deserializedValue = entityReferenceValue;
 
         } else if ("list".equals(type)) {
 
             // Type defaults to String
-            Type itemType = new TypeToken<List<String>>() {
-            }.getType();
+            TypeReference<?> itemType = new TypeReference<List<String>>() {};
 
             // Determine an appropriate type
             if (Date.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<Date>>() {
-                }.getType();
+                itemType = new TypeReference<List<Date>>() {};
             } else if (Double.class.getSimpleName().equals(subType) || BigDecimal.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<Double>>() {
-                }.getType();
+                itemType = new TypeReference<List<Double>>() {};
             } else if (Long.class.getSimpleName().equals(subType) || Integer.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<Long>>() {
-                }.getType();
+                itemType = new TypeReference<List<Long>>() {};
             } else if (EntityReferenceWrapper.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<EntityReferenceWrapper>>() {
-                }.getType();
+                itemType = new TypeReference<List<EntityReferenceWrapper>>() {};
             }
             else if (HashMap.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<Map<String, Object>>>() {
-                }.getType();
+                itemType = new TypeReference<List<Map<String, Object>>>() {};
             }
             else if (LinkedHashMap.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<LinkedHashMap<String, Object>>>() {
-                }.getType();
-            } else if (LinkedTreeMap.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<List<LinkedTreeMap<String, Object>>>() {
-                }.getType();
+                itemType = new TypeReference<List<LinkedHashMap<String, Object>>>() {};
             }
 
             String sValue = serializedValue.substring(firstSeparatorIndex + 1);
-            List<Object> listValue = gson.fromJson(sValue, itemType);
+            List<Object> listValue = (List<Object>) JacksonUtil.fromString(sValue, itemType);
             deserializedValue = listValue;
 
         } else if ("map".equals(type)) {
 
             // Type defaults to String
-            Type itemType = new TypeToken<LinkedHashMap<String, String>>() {
-            }.getType();
+        	TypeReference itemType = new TypeReference<LinkedHashMap<String, String>>() {
+            };
 
             // Determine an appropriate type
             if (Date.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, Date>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Date>>() {
+                };
             } else if (Double.class.getSimpleName().equals(subType) || BigDecimal.class.getSimpleName().equals(subType))
 
             {
-                itemType = new TypeToken<LinkedHashMap<String, Double>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Double>>() {
+                };
             } else if (Long.class.getSimpleName().equals(subType) || Integer.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, Long>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Long>>() {
+                };
             } else if (EntityReferenceWrapper.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, EntityReferenceWrapper>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, EntityReferenceWrapper>>() {
+                };
             }
 
             String sValue = serializedValue.substring(firstSeparatorIndex + 1);
-            Map<String, Object> mapValue = gson.fromJson(sValue, itemType);
+            Map<String, Object> mapValue = (Map<String, Object>) JacksonUtil.fromString(sValue, itemType);
             deserializedValue = mapValue;
 
         } else if ("matrix".equals(type)) {
 
             // Type defaults to String
-            Type itemType = new TypeToken<LinkedHashMap<String, String>>() {
-            }.getType();
+        	TypeReference itemType = new TypeReference<LinkedHashMap<String, String>>() {
+            };
 
             // Determine an appropriate type
             if (Date.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, Date>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Date>>() {
+                };
             } else if (Double.class.getSimpleName().equals(subType) || BigDecimal.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, Double>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Double>>() {
+                };
             } else if (Long.class.getSimpleName().equals(subType) || Integer.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, Long>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, Long>>() {
+                };
             } else if (EntityReferenceWrapper.class.getSimpleName().equals(subType)) {
-                itemType = new TypeToken<LinkedHashMap<String, EntityReferenceWrapper>>() {
-                }.getType();
+                itemType = new TypeReference<LinkedHashMap<String, EntityReferenceWrapper>>() {
+                };
             }
 
             int secondSeparatorIndex = serializedValue.indexOf(SERIALIZATION_SEPARATOR, firstSeparatorIndex + 1);
             String keys = serializedValue.substring(firstSeparatorIndex + 1, secondSeparatorIndex);
             String sValue = serializedValue.substring(secondSeparatorIndex + 1);
 
-            Map<String, Object> mapValue = gson.fromJson(sValue, itemType);
+            Map<String, Object> mapValue = (Map<String, Object>) JacksonUtil.fromString(sValue, itemType);
             mapValue.put(MAP_KEY, keys);
             deserializedValue = mapValue;
         }

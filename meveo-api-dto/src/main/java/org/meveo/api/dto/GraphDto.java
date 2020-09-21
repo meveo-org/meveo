@@ -5,8 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,24 +22,21 @@ public class GraphDto {
 	/**
 	 * Entity id
 	 */
-	@SerializedName("id")
-	@Expose
+	@JsonProperty("id")
 	@ApiModelProperty("Entity id")
 	private String id;
 
 	/**
 	 * Display label
 	 */
-	@SerializedName("label")
-	@Expose
+	@JsonProperty("label")
 	@ApiModelProperty("Display label")
 	private String label = null;
 
 	/**
 	 * Map of properties
 	 */
-	@SerializedName("properties")
-	@Expose
+	@JsonProperty("properties")
 	@ApiModelProperty("Map of properties")
 	private Map<String, String> properties;
 

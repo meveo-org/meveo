@@ -49,7 +49,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
-import org.meveo.commons.utils.JsonUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
@@ -62,6 +61,7 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.sql.SqlConfigurationService;
@@ -699,7 +699,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
 
-        String json = JsonUtils.toJson(jsonMap, true);
-        return json;
+        return JacksonUtil.toStringPrettyPrinted(jsonMap);
     }
 }

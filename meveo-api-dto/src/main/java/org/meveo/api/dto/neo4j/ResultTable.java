@@ -1,18 +1,17 @@
 
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ResultTable {
 
-    @SerializedName("columns")
-    @Expose
+    @JsonProperty("columns")
+    
     private List<String> columns = null;
-    @SerializedName("data")
-    @Expose
+    @JsonProperty("data")
+    
     private List<DatumTable> data = null;
 
     public List<String> getColumns() {

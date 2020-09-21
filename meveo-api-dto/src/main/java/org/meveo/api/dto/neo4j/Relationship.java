@@ -1,25 +1,24 @@
 
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Relationship {
 
-    @SerializedName("id")
-    @Expose
+    @JsonProperty("id")
+    
     private String id;
-    @SerializedName("type")
-    @Expose
+    @JsonProperty("type")
+    
     private String type;
-    @SerializedName("startNode")
-    @Expose
+    @JsonProperty("startNode")
+    
     private String startNode;
-    @SerializedName("endNode")
-    @Expose
+    @JsonProperty("endNode")
+    
     private String endNode;
-    @SerializedName("properties")
-    @Expose
+    @JsonProperty("properties")
+    
     private Properties_ properties;
 
     public String getId() {

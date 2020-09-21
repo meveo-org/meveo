@@ -1,17 +1,16 @@
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SearchResultDTO {
 
-    @SerializedName("results")
-    @Expose
+    @JsonProperty("results")
+    
     private List<Result> results = null;
-    @SerializedName("errors")
-    @Expose
+    @JsonProperty("errors")
+    
     private List<Object> errors = null;
 
     public List<Result> getResults() {
