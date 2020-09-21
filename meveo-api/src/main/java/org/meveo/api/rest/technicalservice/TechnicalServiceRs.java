@@ -213,34 +213,6 @@ public interface TechnicalServiceRs<D extends TechnicalServiceDto> extends IBase
 	ActionStatus remove(@PathParam("name") @ApiParam("Name of the technical service") String name,
 			@QueryParam("version") @ApiParam("Version of the technical service") Integer version);
 
-	/**
-	 * Update the name of a technical service
-	 *
-	 * @param oldName Service name to update
-	 * @param newName New name of the service
-	 * @return
-	 */
-	@Path("/rename")
-	@PUT
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	@ApiOperation(value = "Update name technical service")
-	ActionStatus rename(@FormParam("oldName") @ApiParam("Service name to update") String oldName, @FormParam("newName") @ApiParam("New name of the service") String newName);
-
-	/**
-	 * Re-number the specified version
-	 *
-	 * @param name       Name of the technical service to update
-	 * @param oldVersion Version number to update
-	 * @param newVersion New version number to give
-	 * @return
-	 */
-	@Path("/renameVersion/{name}")
-	@PUT
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	@ApiOperation(value = "Update version technical service")
-	ActionStatus renameVersion(@PathParam("name") @ApiParam("Name of the technical service to update") String name,
-			@FormParam("oldVersion") @ApiParam("Version number to update") Integer oldVersion, @FormParam("newVersion") @ApiParam("New version number to give") Integer newVersion);
-
 	@Path("/{name}/{version}/disable")
 	@POST
 	@ApiOperation(value = "Disable technical service")
