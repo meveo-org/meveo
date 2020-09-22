@@ -277,6 +277,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
 			mavenDependency.setVersion(mavenDependencyDto.getVersion());
 			mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+			mavenDependency.getBuiltCoordinates();
 			mavenDependencyList.add(mavenDependency);
 		}
 		scriptInstance.getMavenDependenciesNullSafe().clear();
