@@ -100,11 +100,21 @@ public class JMeterService {
             throw new IllegalArgumentException("Jmeter test server is not set.");
         }
         
+        final List<SampleResult> sampleResults = new ArrayList<>();
+        
         // Temp log file
         File logFile = File.createTempFile(functionCode, ".log");
 
         // Retrieve and create test file
-        final Function function = functionService.findByCode(functionCode);
+        final Function function;
+        try {
+        	function = functionService.findByCode(functionCode);
+        } catch(Exception e) {
+        	var error = new SampleResult(false, "Failed to retrieve function", "[WARN] " + e.getMessage());
+        	sampleResults.add(error);
+        	return new TestResult(e.toString(), sampleResults);
+        }
+        
         if(function == null) {
         	throw new IllegalArgumentException("Function with code " + functionCode + " does not exist");
         }
@@ -153,7 +163,6 @@ public class JMeterService {
             throw new RuntimeException(e);
         }
 
-        final List<SampleResult> sampleResults = new ArrayList<>();
         String responeData = null;
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
