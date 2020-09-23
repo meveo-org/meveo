@@ -2,6 +2,7 @@ package org.meveo.api.rest;
 
 import javax.ejb.EJBException;
 import javax.ejb.Singleton;
+import javax.transaction.RollbackException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
@@ -47,6 +48,9 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
 
             } else if (e instanceof EJBException) {
                 return toResponse(((EJBException) e).getCausedByException());
+
+            } else if (e instanceof RollbackException && e.getCause() instanceof Exception) {
+                return toResponse((Exception)((RollbackException) e).getCause());
 
             } else if (e instanceof ExistsRelatedEntityException) {
                 return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
