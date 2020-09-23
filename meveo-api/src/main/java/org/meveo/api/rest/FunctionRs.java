@@ -73,17 +73,18 @@ public class FunctionRs extends BaseRs {
 	@GET
 	@Path("/{code}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public FunctionDto getFunction(@PathParam("code") String code) {
+	public FunctionDto getFunction(@PathParam("code") String code) throws BusinessException{
 		return functionApi.find(code);
 	}
 
 	/**
 	 * @param codeOnly Whether to retrieve only codes
 	 * @return either all the functions or their codes
+	 * @throws BusinessException 
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFunctions(@QueryParam("codeOnly") @ApiParam("Whether to retrieve only codes") boolean codeOnly) {
+	public Response getFunctions(@QueryParam("codeOnly") @ApiParam("Whether to retrieve only codes") boolean codeOnly) throws BusinessException {
 		if(!codeOnly) {
 			return Response.ok(functionApi.list(), MediaType.APPLICATION_JSON)
 					.build();

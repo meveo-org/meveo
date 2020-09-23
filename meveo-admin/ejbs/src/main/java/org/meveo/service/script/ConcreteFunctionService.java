@@ -27,6 +27,8 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
@@ -67,14 +69,14 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<FunctionIO> getInputs(Function function) {
+	public List<FunctionIO> getInputs(Function function) throws BusinessException {
 		FunctionService<Function, ScriptInterface> functionService = (FunctionService<Function, ScriptInterface>) getFunctionService(function.getCode());
 		return functionService.getInputs(function);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<FunctionIO> getOutputs(Function function) {
+	public List<FunctionIO> getOutputs(Function function) throws BusinessException {
 		FunctionService<Function, ScriptInterface> functionService = (FunctionService<Function, ScriptInterface>) getFunctionService(function.getCode());
 		return functionService.getOutputs(function);
 	}
@@ -83,13 +85,13 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	 * Retrieve function class from its code and call corresponding service. When knowing type in advance, prefer use corresponding service.
 	 */
 	@Override
-	public ScriptInterface getExecutionEngine(String executableCode, Map<String, Object> context) {
+	public ScriptInterface getExecutionEngine(String executableCode, Map<String, Object> context) throws BusinessException{
 		FunctionService<?, ScriptInterface> functionService = getFunctionService(executableCode);
 		return functionService.getExecutionEngine(executableCode, context);
 	}
 	
 	@Override
-	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) {
+	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) throws BusinessException {
 		FunctionService<?, ScriptInterface> functionService = getFunctionService(function);
 		return functionService.getExecutionEngine(function.getCode(), context);
 	}
@@ -104,9 +106,12 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	}
 
 	@SuppressWarnings("unchecked")
-	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) {
+	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) throws ElementNotFoundException {
 		
 		final Function function = findByCode(executableCode);
+        if(function == null) {
+    		throw new ElementNotFoundException( executableCode, "Function");
+    	}  
 //		getEntityManager().detach(function);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);

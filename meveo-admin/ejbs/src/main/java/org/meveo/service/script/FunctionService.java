@@ -141,7 +141,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param function the function
      * @return inputs of the function
      */
-    public List<FunctionIO> getInputs(T function) {
+    public List<FunctionIO> getInputs(T function) throws BusinessException {
     	return function.getInputs();
     }
     
@@ -151,7 +151,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param function the function
      * @return outputs of the function
      */
-    public List<FunctionIO> getOutputs(T function) {
+    public List<FunctionIO> getOutputs(T function) throws BusinessException {
     	return function.getOutputs();
     }
     
@@ -213,9 +213,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param executableCode Code of the execution engine to retrieve
      * @return An instance of an execution engine for the executable with code
      */
-    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context);
+    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context) throws BusinessException;
     
-    public abstract E getExecutionEngine(T function, Map<String, Object> context);
+    public abstract E getExecutionEngine(T function, Map<String, Object> context) throws BusinessException;
 
     /**
      * Add a log line for a script

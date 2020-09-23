@@ -57,7 +57,7 @@ import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
 public abstract class TechnicalServiceService<T extends TechnicalService> extends FunctionService<T, TechnicalServiceEngine<T>> {
 
     @Override
-	public List<FunctionIO> getInputs(T function) {
+	public List<FunctionIO> getInputs(T function) throws BusinessException {
     	try {
     		Hibernate.initialize(function.getDescriptions());
     	} catch (LazyInitializationException e) {
@@ -68,7 +68,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	}
 
 	@Override
-	public List<FunctionIO> getOutputs(T function) {
+	public List<FunctionIO> getOutputs(T function) throws BusinessException {
     	try {
     		Hibernate.initialize(function.getDescriptions());
     	} catch (LazyInitializationException e) {

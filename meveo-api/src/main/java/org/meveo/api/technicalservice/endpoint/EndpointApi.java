@@ -34,6 +34,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
@@ -168,6 +169,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
 
+		//FIXME
 		return execute(execution, functionService, parameterMap, executionEngine);
 
 	}
@@ -211,10 +213,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @param functionService
 	 * @param parameterMap
 	 * @return
+	 * @throws BusinessException 
 	 * @throws IllegalArgumentException
 	 */
 	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
-			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap) {
+			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
 		List<String> pathParameters = new ArrayList<>(
 				Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
@@ -284,7 +287,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			parameterMap.put(paramName, parameterValue);
 		}
 
-		final ScriptInterface executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+		ScriptInterface executionEngine;
+		try {
+			executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+		} catch (BusinessException e) {
+			throw new IllegalArgumentException(
+					"Endpoint's code " + service.getCode() + "is not valid, function is not found.",e);
+		}
 
 		if (executionEngine instanceof EndpointScript) {
 			// Explicitly pass the request and response information to the script
@@ -309,9 +318,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return the created Endpoint
 	 */
 	public Endpoint create(EndpointDto endpointDto) throws BusinessException {
-		Endpoint endpoint = fromDto(endpointDto);
-		endpointService.create(endpoint);
-		return endpoint;
+		try {
+			Endpoint endpoint = fromDto(endpointDto);
+			endpointService.create(endpoint);
+			return endpoint;
+		} catch (EntityDoesNotExistsException e) {
+			throw new BusinessException("The endpoint references a missing element",e); 
+		}
 	}
 
 	/**
@@ -384,7 +397,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	private void update(Endpoint endpoint, EndpointDto endpointDto) throws BusinessException {
 
-		endpoint = fromDto(endpointDto, endpoint);
+		try {
+			endpoint = fromDto(endpointDto, endpoint);
+		} catch (EntityDoesNotExistsException e) {
+			throw new BusinessException("The endpoint references a missing element", e); 
+		}
 
 		if (endpointDto.getPathParameters() != null && !endpointDto.getPathParameters().isEmpty()) {
 			if (endpoint.getPathParametersNullSafe() == null || endpoint.getPathParametersNullSafe().isEmpty()) {
@@ -482,11 +499,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	@Override
-	public Endpoint fromDto(EndpointDto endpointDto) {
+	public Endpoint fromDto(EndpointDto endpointDto) throws EntityDoesNotExistsException  {
 		return fromDto(endpointDto, null);
 	}
 
-	public Endpoint fromDto(EndpointDto endpointDto, Endpoint endpoint) {
+	public Endpoint fromDto(EndpointDto endpointDto, Endpoint endpoint) throws EntityDoesNotExistsException  {
 
 		if (endpoint == null) {
 			endpoint = new Endpoint();
@@ -526,10 +543,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		// Technical Service
 		if (!StringUtils.isBlank(endpointDto.getServiceCode())) {
-			final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
-					.getFunctionService(endpointDto.getServiceCode());
-			Function service = functionService.findByCode(endpointDto.getServiceCode());
-			endpoint.setService(service);
+			try {
+				final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+						.getFunctionService(endpointDto.getServiceCode());
+				Function service = functionService.findByCode(endpointDto.getServiceCode());
+				endpoint.setService(service);
+			} catch (ElementNotFoundException e) {
+				throw new EntityDoesNotExistsException("endpoint's serviceCode is not linked to a function : " + e.getLocalizedMessage());
+			}
 		}
 
 		endpoint.setSerializeResult(endpointDto.isSerializeResult());
