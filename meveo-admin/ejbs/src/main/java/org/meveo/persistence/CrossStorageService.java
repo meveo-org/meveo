@@ -924,14 +924,11 @@ public class CrossStorageService implements CustomPersistenceService {
 
 			}
 
-			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
-			
 			customEntityInstanceUpdate.fire(cei);
+			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			customEntityInstanceUpdatedAfterTx.fire(cei);
 
 		} else {
-
-
 			customEntityInstanceCreate.fire(cei);
 			
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
