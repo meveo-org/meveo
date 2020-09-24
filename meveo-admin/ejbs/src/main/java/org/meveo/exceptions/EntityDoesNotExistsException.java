@@ -17,6 +17,7 @@ public class EntityDoesNotExistsException extends BusinessException {
 	private Class<?> clazz;
 	
 	public EntityDoesNotExistsException(BusinessEntity e) {
+		super(e.getClass().getSimpleName() + " with code = " + e.getCode() + " does not exists");
 		this.id = e.getId();
 		this.clazz = e.getClass();
 		this.code = e.getCode();
@@ -59,6 +60,13 @@ public class EntityDoesNotExistsException extends BusinessException {
 	 */
 	public boolean concerns(BusinessEntity entity) {
 		boolean result = false;
+
+		// We can't compare the entities if we don't know the class of the non-existing entity
+		if(this.clazz == null) {
+			return false;
+		} else {
+			result = result && this.clazz.isAssignableFrom(entity.getClass());
+		}
 		
 		if(this.code != null && entity.getCode() != null) {
 			result = result && entity.getCode().equals(this.code);
@@ -66,10 +74,6 @@ public class EntityDoesNotExistsException extends BusinessException {
 		
 		if(this.id != null && entity.getId() != null) {
 			result = result && entity.getId().equals(this.id);
-		}
-		
-		if(this.clazz != null) {
-			result = result && this.clazz.isAssignableFrom(entity.getClass());
 		}
 		
 		return result;
