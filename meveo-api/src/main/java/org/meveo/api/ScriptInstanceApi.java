@@ -101,8 +101,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
 				result.add(errorDto);
 			}
-		} else {
-			scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 		}
 
 		return result;
@@ -125,8 +123,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
 
 		scriptInstanceService.updateNoMerge(scriptInstance);
-
-		scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {

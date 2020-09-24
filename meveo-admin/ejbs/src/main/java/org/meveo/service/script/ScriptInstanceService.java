@@ -77,7 +77,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	}
     
 	@Override
-	public void afterUpdateOrCreate(ScriptInstance script) {
+	protected void afterUpdateOrCreate(ScriptInstance script) {
 		super.afterUpdateOrCreate(script);
 		
 		mdService.removeOrphans();
