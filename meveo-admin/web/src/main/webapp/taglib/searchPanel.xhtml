@@ -85,7 +85,7 @@
 	                        actionListener="#{backingBean.advancedAction}" update="@form" />
 	                    <p:commandButton id="buttonHideAdvanced" rendered="#{renderHideAdvancedLink and backingBean.advanced}" value="#{messages['commons.hideAdvancedButton']}"
 	                        actionListener="#{backingBean.advancedAction}" update="@form" />
-	                    <p:commandButton value="#{messages['commons.clean']}" process="@this" update="@form" action="#{backingBean.clean}">
+	                    <p:commandButton value="#{messages['commons.clean']}" ajax="#{ajax}" update="@form #{ajaxUpdateIds}" action="#{backingBean.clean}">
 	                        <f:actionListener type="org.omnifaces.eventlistener.ResetInputAjaxActionListener" />
 	                    </p:commandButton>
 	            
