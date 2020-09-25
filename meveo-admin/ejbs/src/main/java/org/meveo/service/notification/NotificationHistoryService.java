@@ -58,7 +58,7 @@ public class NotificationHistoryService extends PersistenceService<NotificationH
 
         if(entity != null) {
             history.setSerializedEntity(entity.getId() == null ? entity.toString() : entity.getId().toString());
-        }else {
+        } else {
             history.setSerializedEntity(entityOrEvent.toString());
         }
 

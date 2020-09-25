@@ -2,15 +2,13 @@ package org.meveo.exceptions;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.BusinessEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-/**
- * @author Rachid
- *
- */
 public class EntityDoesNotExistsException extends BusinessException {
 
 	private static final long serialVersionUID = 4814463369593237028L;
+	private static final Logger LOGGER = LoggerFactory.getLogger(EntityDoesNotExistsException.class);
 	
 	private String code;
 	private Long id;
@@ -59,14 +57,25 @@ public class EntityDoesNotExistsException extends BusinessException {
 	 * @return {@code true} if the exception concerns the given entity
 	 */
 	public boolean concerns(BusinessEntity entity) {
-		boolean result = false;
-
 		// We can't compare the entities if we don't know the class of the non-existing entity
 		if(this.clazz == null) {
+			LOGGER.warn("Class of missing entity not provided");
 			return false;
-		} else {
-			result = result && this.clazz.isAssignableFrom(entity.getClass());
 		}
+		
+		// We can't compare the entities if we don't know the id or the code of the non-existing entity
+		if(this.code == null && this.id == null) {
+			LOGGER.warn("Code and Id of missing entity not provided");
+			return false;
+		}
+		
+		// We can't compare the entities if we don't know the id or the code of the entity to compare
+		if(entity.getCode() == null && entity.getId() == null) {
+			LOGGER.warn("Code and Id of entity to compare not provided");
+			return false;
+		}
+		
+		boolean result = this.clazz.isAssignableFrom(entity.getClass());
 		
 		if(this.code != null && entity.getCode() != null) {
 			result = result && entity.getCode().equals(this.code);
