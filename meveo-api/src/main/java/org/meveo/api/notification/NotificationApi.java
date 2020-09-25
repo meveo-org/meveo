@@ -25,6 +25,7 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.InboundRequest;
@@ -51,6 +52,9 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 
 	@Inject
 	protected ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	protected NotificationCacheContainerProvider notificationCache;
 
 	@Inject
 	private NotificationService notificationService;
@@ -188,9 +192,14 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 	public E update(D postData) throws MeveoApiException, BusinessException {
 
 		E entity = getPersistenceService().findByCode(postData.getCode());
+		
 		if (entity == null) {
 			throw new EntityDoesNotExistsException(entityClass.getSimpleName(), postData.getCode());
 		}
+		
+		// Remove notification from cache before the update,
+		// otherwise if the type of event has changed the old value will remain in the cache
+		notificationCache.removeNotificationFromCache(entity);
 
 		fromDto(postData, entity);
 

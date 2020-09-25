@@ -85,7 +85,7 @@ public class JobTriggerApi extends NotificationApi<JobTrigger, JobTriggerDto> {
     }
 
     @Override
-    public JobTrigger update(JobTriggerDto postData) throws MeveoApiException, BusinessException {
+    public JobTrigger fromDto(JobTriggerDto postData, JobTrigger notif) throws MeveoApiException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -98,10 +98,6 @@ public class JobTriggerApi extends NotificationApi<JobTrigger, JobTriggerDto> {
         }
         handleMissingParameters();
 
-        JobTrigger notif = jobTriggerService.findByCode(postData.getCode());
-        if (notif == null) {
-            throw new EntityDoesNotExistsException(JobTrigger.class, postData.getCode());
-        }
         ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
@@ -141,8 +137,6 @@ public class JobTriggerApi extends NotificationApi<JobTrigger, JobTriggerDto> {
         notif.setCounterTemplate(counterTemplate);
         notif.setJobInstance(jobInstance);
         notif.setJobParams(postData.getJobParams());
-
-        notif = jobTriggerService.update(notif);
 
         return notif;
     }

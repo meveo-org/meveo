@@ -87,11 +87,10 @@ public class EmailNotificationApi extends NotificationApi<EmailNotification, Ema
 
         return result;
     }
-
+    
     @Override
-    public EmailNotification update(EmailNotificationDto postData) throws MeveoApiException, BusinessException {
-
-        if (StringUtils.isBlank(postData.getCode())) {
+	public EmailNotification fromDto(EmailNotificationDto postData, EmailNotification notif) throws MeveoApiException {
+    	if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
         }
         if (StringUtils.isBlank(postData.getClassNameFilter())) {
@@ -109,10 +108,6 @@ public class EmailNotificationApi extends NotificationApi<EmailNotification, Ema
 
         handleMissingParameters();
 
-        EmailNotification notif = emailNotificationService.findByCode(postData.getCode());
-        if (notif == null) {
-            throw new EntityDoesNotExistsException(EmailNotification.class, postData.getCode());
-        }
         ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
@@ -153,10 +148,9 @@ public class EmailNotificationApi extends NotificationApi<EmailNotification, Ema
         }
         notif.setEmails(emails);
 
-        notif = emailNotificationService.update(notif);
-
         return notif;
-    }
+	}
+
 
     @Override
     public void remove(String notificationCode) throws MeveoApiException, BusinessException {

@@ -90,9 +90,30 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
     }
 
     @Override
-    public WebHook update(WebHookDto postData) throws MeveoApiException, BusinessException {
+    public void remove(String notificationCode) throws MeveoApiException, BusinessException {
+        if (!StringUtils.isBlank(notificationCode)) {
+            WebHook webHook = webHookService.findByCode(notificationCode);
 
-        if (StringUtils.isBlank(postData.getCode())) {
+            if (webHook == null) {
+                throw new EntityDoesNotExistsException(WebHook.class, notificationCode);
+            }
+
+            webHookService.remove(webHook);
+        } else {
+            missingParameters.add("code");
+
+            handleMissingParameters();
+        }
+    }
+
+	@Override
+	public WebHookDto toDto(WebHook entity) {
+		return new WebHookDto(entity);
+	}
+	
+	@Override
+	public WebHook fromDto(WebHookDto postData, WebHook webHook) throws MeveoApiException {
+		if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
         }
         if (StringUtils.isBlank(postData.getClassNameFilter())) {
@@ -112,11 +133,6 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
         }
 
         handleMissingParameters();
-
-        WebHook webHook = webHookService.findByCode(postData.getCode());
-        if (webHook == null) {
-            throw new EntityDoesNotExistsException(WebHook.class, postData.getCode());
-        }
 
         ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
@@ -164,32 +180,8 @@ public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
         if (postData.getParams() != null) {
             webHook.getWebhookParams().putAll(postData.getParams());
         }
-
-        webHook = webHookService.update(webHook);
-
+        
         return webHook;
-    }
-
-    @Override
-    public void remove(String notificationCode) throws MeveoApiException, BusinessException {
-        if (!StringUtils.isBlank(notificationCode)) {
-            WebHook webHook = webHookService.findByCode(notificationCode);
-
-            if (webHook == null) {
-                throw new EntityDoesNotExistsException(WebHook.class, notificationCode);
-            }
-
-            webHookService.remove(webHook);
-        } else {
-            missingParameters.add("code");
-
-            handleMissingParameters();
-        }
-    }
-
-	@Override
-	public WebHookDto toDto(WebHook entity) {
-		return new WebHookDto(entity);
 	}
 
 	@Override
