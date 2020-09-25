@@ -83,15 +83,6 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
-import org.meveo.model.customEntities.CETConstants;
-import org.meveo.model.customEntities.CustomEntityCategory;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomModelObject;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.customEntities.CustomTableRecord;
-import org.meveo.model.customEntities.GraphQLQueryField;
-import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -105,11 +96,9 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
-import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,25 +110,21 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
- * @param <T>
+ * @param <T> Script sub-type
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.11
  */
 public abstract class CustomScriptService<T extends CustomScript> extends FunctionService<T, ScriptInterface> {
 
     private static final Map<CacheKeyStr, ScriptInterfaceSupplier> ALL_SCRIPT_INTERFACES = new ConcurrentHashMap<>();
+    
+    /** Class path used to compile scripts */
     public static final AtomicReference<String> CLASSPATH_REFERENCE = new AtomicReference<>("");
     
     private static Logger staticLogger = LoggerFactory.getLogger(CustomScriptService.class);
 
     @Inject
     private ResourceBundle resourceMessages;
-
-    @Inject
-    private EndpointService endpointService;
-
-    @Inject
-    private ScriptInstanceService scriptInstanceService;
 
     @Inject
     @CurrentUser
@@ -155,15 +140,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private MavenConfigurationService mavenConfigurationService;
     
-    @Inject
-    private CustomEntityTemplateCompiler cetCompiler;
-
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
     
-    private Map<String, List<File>> compiledCustomEntities = new ConcurrentHashMap<>();
-
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -294,7 +274,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         	method.invoke(scriptInstance, classAndValue.getValue());
                         }
                         
-                       // , classAndValue.getTypeClass()).invoke(scriptInstance, classAndValue.getValue());
                     }
                 }
             }
@@ -365,6 +344,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     /**
      * Construct classpath for script compilation
+     * @throws IOException if a file can't be read
      */
     public static void constructClassPath() throws IOException {
         if (CLASSPATH_REFERENCE.get().length() == 0) {
@@ -485,12 +465,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         List<String> deletedProperties = scriptInstance.getInputs().stream().map(FunctionIO::getName).collect(Collectors.toList());
 
         deletedProperties.removeAll(newInputs);
-
-        final boolean hasEndpoint = deletedProperties.stream().anyMatch(o -> !endpointService.findByParameterName(scriptInstance.getCode(), o).isEmpty());
-
-//        if (hasEndpoint) {
-//            throw new ExistsRelatedEntityException("An Endpoint is associated to one of those input : " + deletedProperties + " and therfore can't be deleted");
-//        }
     }
 
     private static String getFilePath(File jar) {
@@ -519,8 +493,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    /*
-     * Compile a script
+    /**
+     * @param scriptCode code of the script to re-compile
      */
     public void refreshCompiledScript(String scriptCode) {
 
@@ -754,7 +728,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
                 if (!testCompile && isActive) {
 
-                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript::newInstance);
+                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript.getDeclaredConstructor()::newInstance);
                     log.debug("Compiled script {} added to compiled interface map", scriptCode);
                 }
 
@@ -810,8 +784,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
 
-        List<File> fileList = supplementClassPathWithMissingImports(javaSrc);
-
         String fullClassName = getFullClassname(javaSrc);
 
         String classPath = CLASSPATH_REFERENCE.get();
@@ -820,145 +792,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, fileList, ScriptInterface.class);
-    }
-
-    /**
-     * Supplement classpath with classes needed for the particular script
-     * compilation. Solves issue when classes server as jboss modules are referenced
-     * in script. E.g. prg.slf4j.Logger
-     *
-     * @param javaSrc Java source to compile
-     */
-    @SuppressWarnings("rawtypes")
-    private List<File> supplementClassPathWithMissingImports(String javaSrc) {
-        Set<File> files = new HashSet<>();
-
-        String regex = "import (.*?);";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(javaSrc);
-        while (matcher.find()) {
-            String className = matcher.group(1);
-            try {
-				files.addAll(parseImportCustomEntity(pattern, className));
-			} catch (BusinessException e1) {
-				log.error("Failed to parse custom entities references", e1);
-			}
-            
-            try {
-                if ((!className.startsWith("java") || className.startsWith("javax.persistence")) && !className.startsWith("org.meveo")) {
-                	Class clazz;
-                	
-                	try {
-                		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-	                    clazz = classLoader.loadClass(className);
-	                    
-                	} catch(ClassNotFoundException e) {
-                		clazz = Class.forName(className);
-                	}
-                	
-                    try {
-                        String location = clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
-                        if (location.startsWith("file:")) {
-                            location = location.substring(5);
-                        }
-                        
-                        if (location.endsWith("!/")) {
-                            location = location.substring(0, location.length() - 2);
-                        }
-
-                        if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                            synchronized (CLASSPATH_REFERENCE) {
-                                if (!CLASSPATH_REFERENCE.get().contains(location)) {
-                                    CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-                                }
-                            }
-                        }
-
-                    } catch (Exception e) {
-                        log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
-                    }
-                }
-                
-            } catch (Exception e) {
-                log.warn("Failed to find location for class {} with error {}", className, e.getMessage());
-            }
-        }
-        
-        return new ArrayList<>(files);
-    }
-    
-    /**
-     * Recursively read the dependency of CET in a script.
-     * 
-     * @param pattern import patter
-     * @param className class name of the cet
-     * @return a list of CET java class file names.
-     * @throws BusinessException if a dependency file can't be retrieved
-     */
-    private List<File> parseImportCustomEntity(Pattern pattern, String className) throws BusinessException {
-    	// Skip if class is a meveo-model class
-    	// We must do that because generated entities have the same package than these classes
-    	List<Class<?>> modelClasses = List.of(
-			CustomEntityTemplate.class,
-			CustomEntityInstance.class,
-			CustomEntityCategory.class,
-			CETConstants.class,
-			CustomModelObject.class,
-			CustomRelationshipTemplate.class,
-			CustomTableRecord.class,
-			GraphQLQueryField.class,
-			Mutation.class
-		);
-    	
-    	boolean isModelClass = modelClasses.stream()
-    			.map(Class::getName)
-    			.anyMatch(className::equals);
-    	
-    	if(isModelClass) {
-    		return new ArrayList<>();
-    	}
-    	
-    	List<File> files = new ArrayList<>();
-
-    	try {
-            if (className.startsWith("org.meveo.model.customEntities")) {
-                String fileName = className.split("\\.")[4];
-                File file = cetCompiler.getCETSourceFile(fileName);
-                String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                Matcher matcher2 = pattern.matcher(content);
-                while (matcher2.find()) {
-                    String name = matcher2.group(1);
-                    if (name.startsWith("org.meveo.model.customEntities") && !name.equals(className)) {
-                    	var depFiles = compiledCustomEntities.computeIfAbsent(name, k -> {
-							try {
-								return parseImportCustomEntity(pattern, name);
-							} catch (Exception e) {
-								log.error("Failed to recursively parse dependencies for class {}", name, e);
-								return List.of();
-							}
-						});
-						files.addAll(depFiles);
-                    }
-                }
-                
-                files.add(file);
-                
-            } else {
-                String name = className.replace('.', '/');
-                File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts/" + name + ".java");
-                if (file.exists()) {
-                    ScriptInstance scriptInstance = scriptInstanceService.findByCode(className);
-                    populateImportScriptInstance(scriptInstance, files);
-                    files.add(file);
-                }
-            }
-            
-        } catch (IOException e) {
-        	log.warn("Miss matcher when loading custom entities {}", e.getMessage());
-        }
-    	
-    	return files;
+        return compiler.compile(fullClassName, javaSrc, errs, List.of(), ScriptInterface.class);
     }
 
     /**
@@ -966,6 +800,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param scriptCode Script code
      * @return Script interface Class
+     * @throws Exception if error occurs
      */
     public synchronized ScriptInterface getScriptInterface(String scriptCode) throws Exception {
         ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
@@ -1083,6 +918,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
     }
 
+    /**
+     * Clear the script cache
+     */
     public void clearCompiledScripts() {
         ALL_SCRIPT_INTERFACES.clear();
     }
@@ -1133,6 +971,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * When a script is deleted, remove the file from git repository
      *
      * @param scriptInstance Removed {@link ScriptInstance}
+     * @throws BusinessException if the modifications can't be committed
      */
     public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
         File file = findScriptFile(scriptInstance);
@@ -1149,6 +988,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * <li>If script file has been modified, re-compile it</li>
      * <li>If script file has been deleted, remove the JPA entity</li>
      * </ul>
+     * @param commitEvent the event
+     * @throws BusinessException if the modifications can't be committed
+     * @throws IOException if a file can't be accessed
      */
     @SuppressWarnings("unchecked")
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
@@ -1185,23 +1027,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private void updateScript(CustomScript scriptInstance, String script) {
-    	ScriptInstance customScript = getEntityManager().find(ScriptInstance.class, scriptInstance.getId());
-    	customScript.setScript(script);
-    	getEntityManager().merge(customScript);
-    }
-
     private void buildScriptFile(File scriptFile, CustomScript scriptInstance) throws IOException {
         if (!scriptFile.getParentFile().exists()) {
             scriptFile.getParentFile().mkdirs();
         }
 
-        org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript());
+        org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript(), StandardCharsets.UTF_8);
     }
 
     private File findScriptFile(CustomScript scriptInstance) {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
-        final File scriptDir = new File(repositoryDir, "/scripts");
+        final File scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
         if (!scriptDir.exists()) {
             scriptDir.mkdirs();
         }
@@ -1211,6 +1046,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return new File(scriptDir, path + extension);
     }
 
+    /**
+     * @param script the script to get the file
+     * @return the content of the script file
+     */
     public String readScriptFile(CustomScript script) {
         File scriptFile = findScriptFile(script);
 
@@ -1222,56 +1061,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     /**
-     * Populate import script instance.
-     *
-     * @param scriptInstance script instance
-     * @param files list of files
-     */
-    private void populateImportScriptInstance(ScriptInstance scriptInstance, List<File> files) {
-        try {
-            if (scriptInstance != null) {
-                String javaSource = scriptInstance.getScript();
-                String regex = "import (.*?);";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(javaSource);
-                while (matcher.find()) {
-                    String className = matcher.group(1);
-                    if (className.startsWith("org.meveo.model.customEntities")) {
-                        String fileName = className.split("\\.")[4];
-                        File file = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/","custom" + File.separator + "entities" + File.separator + fileName + ".java");
-                        String content = org.apache.commons.io.FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-                        matcher = pattern.matcher(content);
-                        while (matcher.find()) {
-                            String name = matcher.group(1);
-                            if (name.startsWith("org.meveo.model.customEntities")) {
-                                String cetName = name.split("\\.")[4];
-                                File cetFile = cetCompiler.getCETSourceFile(cetName);
-                                files.add(cetFile);
-                                continue;
-                            }
-                        }
-                        files.add(file);
-                        continue;
-                    }
-                }
-                if (scriptInstance.getImportScriptInstances() != null && CollectionUtils.isNotEmpty(scriptInstance.getImportScriptInstances())) {
-                    for (ScriptInstance instance : scriptInstance.getImportScriptInstancesNullSafe()) {
-                        String path = instance.getCode().replace('.', '/');
-                        File fileImport = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()).getAbsolutePath() + "/src/main/java/", "scripts" + File.separator + path + ".java");
-                        if (fileImport.exists()) {
-                            files.add(fileImport);
-                        }
-                        populateImportScriptInstance(instance, files);
-                    }
-                }
-            }
-        } catch (Exception e) {}
-    }
-
-    /**
      * Return list of import scripts.
      *
      * @param javaSource java source
+     * @return the script imported in the java source
      */
     public List<String> getImportScripts(String javaSource) {
         String regexImport = "import (.*?);";
@@ -1285,6 +1078,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return results;
     }
 
+    /**
+     * @param script the script content to analyze
+     * @return the list of the scripts imported
+     */
     public List<ScriptInstance> populateImportScriptInstance(String script) {
         List<String> importedScripts = getImportScripts(script);
         List<ScriptInstance> scriptInstances = new ArrayList<>();
@@ -1304,6 +1101,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return scriptInstances;
     }
    
+    /**
+     * @return the script cache
+     */
     public Map<CacheKeyStr, ScriptInterfaceSupplier> getScriptCache() {
     	return ALL_SCRIPT_INTERFACES;
     }

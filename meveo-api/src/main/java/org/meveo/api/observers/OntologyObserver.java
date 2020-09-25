@@ -234,9 +234,9 @@ public class OntologyObserver {
         
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
 
-        String sourceCode = Files.readString(javaFile.toPath());
-        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
-        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
+//        String sourceCode = Files.readString(javaFile.toPath());
+//        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+//        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
     }
 
     /**
@@ -267,7 +267,7 @@ public class OntologyObserver {
         if (classFile.exists()) {
             classFile.delete();
         }
-
+        
         gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
     }
 
