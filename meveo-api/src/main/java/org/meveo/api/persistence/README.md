@@ -80,7 +80,7 @@ To retrieve the entity, call `CrossStorageRequest#getResult` to retrieve a singl
 ```java
 Repository defaultRepo = repositoryService.findDefaultRepository();
 MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
-    .filter("valueOne", "test")
+    .by("valueOne", "test")
     .fetch("relationshipOne") // Optional
     .getResult();
 
