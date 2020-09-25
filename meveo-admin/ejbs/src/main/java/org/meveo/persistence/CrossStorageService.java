@@ -362,9 +362,13 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// Make sure the filters matches the fields
 		if(filters != null) {
+			Map<String, CustomFieldTemplate> fieldTemplate = new HashMap<>();
+			for (String keyField : fields.keySet()) {
+				fieldTemplate.put(keyField.toLowerCase(), fields.get(keyField));
+			}
 			filters.keySet()
 				.forEach(key -> {
-					if(fields.get(key) == null) {
+					if(fieldTemplate.get(key) == null) {
 						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
 					}
 				});

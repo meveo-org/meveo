@@ -53,7 +53,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	private static final long serialVersionUID = -459772193950603406L;
 
 	@Inject
-	private Logger log;
+	protected Logger log;
 
 	@Inject
 	private CustomizedEntityService customizedEntityService;

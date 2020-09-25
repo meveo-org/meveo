@@ -125,6 +125,11 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 		super.clean();
 		nativeDataModel = null;
+		try {
+			getNativeDataModel();
+		} catch (NamingException e) {
+			log.error(e.getMessage());
+		}
 	}
 
 	public void handleRepositoryChangeEvent() {
@@ -200,6 +205,6 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		filters.values().removeIf(StringUtils::isBlank);
 		return filters;
 	}
-	
+
 	
 }
