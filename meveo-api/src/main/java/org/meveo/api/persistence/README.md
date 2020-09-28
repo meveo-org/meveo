@@ -19,15 +19,29 @@ To persist an entity, use `CrossStorageApi#createOrUpdate` with these parameters
 - *force the entity to have a certain UUID if the entity does not exists*
 - *speed-up the update process by enabling the persistence engine to retrieve the entity to update by UUID if the entity already exists*
 
+Imagine you created a CET (Custom Entity Template), then a java class MyCet has been created with package org.meveo.model.customEntities
+
 **Example**:
 
 ```java
+
+import org.meveo.model.customEntities.MyCet;
+import org.meveo.service.storage.RepositoryService;
+import org.meveo.persistence.CrossStorageService;
+
+... in your class definition use script getCDIBean to get instance of services
+
+	private CrossStorageService crossStorageService = getCDIBean(CrossStorageService.class);
+	private RepositoryService repoService = getCDIBean(RepositoryService.class);
+  
+...
+
 MyCet cei = new MyCet();
 cei.setUuid("2434e3a3-3c32-4b18-869d-ea5ff1aeafbb") // Optionally set UUID
 // Set cei properties ...
 
 Repository defaultRepo = repositoryService.findDefaultRepository();
-String uuid = crossStorageApi.createOrUpdate(defaultRepo, cei);
+String uuid = crossStorageApi.createOrUpdate(repoService.findDefaultRepository(), cei);
 
 System.out.println("MyCet instance " + uuid + " created / updated");
 ```
