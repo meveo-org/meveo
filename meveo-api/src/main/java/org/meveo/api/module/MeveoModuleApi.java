@@ -86,6 +86,7 @@ import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
@@ -94,6 +95,7 @@ import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
@@ -102,6 +104,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -131,9 +134,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	private MeveoModuleService meveoModuleService;
 
 	@Inject
-	private CustomTableService customTableService;
-
-	@Inject
 	private CustomFieldTemplateApi customFieldTemplateApi;
 
 	@Inject
@@ -159,6 +159,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	
 	@EJB
 	private MeveoModuleApi meveoModuleApi;
+	
+    @Inject
+    private RepositoryService repositoryService;
+    
+    @Inject
+    private CrossStorageService crossStorageService;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -681,7 +687,21 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
 						try {
-							Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
+				            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
+
+							Map<String, Object> ceiTable;
+				        	try {
+				        		ceiTable = crossStorageService.find(
+				    				repositoryService.findDefaultRepository(), // XXX: Maybe we will need to parameterize this or search in all repositories ?
+				    				customEntityTemplate,
+				    				item.getItemCode(),
+				    				false	// XXX: Maybe it should also be a parameter
+				    			);
+				        	} catch (EntityDoesNotExistsException e) {
+				        		ceiTable = null;
+				        	}
+							
+							//Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
 							CustomEntityInstance customEntityInstance = new CustomEntityInstance();
 							customEntityInstance.setUuid((String) ceiTable.get("uuid"));
 							customEntityInstance.setCode((String) ceiTable.get("uuid"));
