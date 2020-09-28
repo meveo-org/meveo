@@ -24,6 +24,7 @@
 		<o:importConstants
 			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
 		<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
+		<o:importConstants type="org.meveo.model.persistence.DBStorageType" />
 
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -37,13 +38,15 @@
 			label="#{customEntityInstanceListBean.customEntityTemplate.name} #{messages['customEntityInstance.search']}"
 			backingBean="#{customEntityInstanceListBean}" renderNewButton="false">
 
-			<hftl:searchField label="#{messages['BusinessEntity.code']}"
-				field="code" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
-			<hftl:searchField label="#{messages['BusinessEntity.description']}"
-				field="description" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
-				
-			<c:forEach items="#{customEntityInstanceListBean.filterFields}"
-				var="field">
+			<c:if test="#{customEntityInstanceListBean.customEntityTemplate.storedIn(DBStorageType.SQL)}">
+				<hftl:searchField label="#{messages['BusinessEntity.code']}"
+					field="code" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
+					
+				<hftl:searchField label="#{messages['BusinessEntity.description']}"
+						field="description" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
+			</c:if>
+			
+			<c:forEach items="#{customEntityInstanceListBean.filterFields}" var="field">
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
 					<hftl:searchTextField id="#{field.dbFieldname}"
 						backingBean="#{customEntityInstanceListBean}"
