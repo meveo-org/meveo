@@ -778,21 +778,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *
      * @param javaSrc Java source to compile
      * @return Compiled class instance
-     * @throws CharSequenceCompilerException char sequence
-     *                                                                compiler
-     *                                                                exception.
+     * @throws CharSequenceCompilerException char sequence compiler exception.
      */
     protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
-
         String fullClassName = getFullClassname(javaSrc);
-
         String classPath = CLASSPATH_REFERENCE.get();
-
-        log.trace("Compile JAVA script {} with classpath {}", fullClassName, classPath);
-
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, List.of(), ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
     }
 
     /**
