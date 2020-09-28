@@ -19,9 +19,14 @@ To persist an entity, use `CrossStorageApi#createOrUpdate` with these parameters
 - *force the entity to have a certain UUID if the entity does not exists*
 - *speed-up the update process by enabling the persistence engine to retrieve the entity to update by UUID if the entity already exists*
 
+Imagine you created a CET (Custom Entity Template), then a java class MyCet has been created with package org.meveo.model.customEntities
+
 **Example**:
 
 ```java
+
+import org.meveo.model.customEntities.MyCet;
+
 MyCet cei = new MyCet();
 cei.setUuid("2434e3a3-3c32-4b18-869d-ea5ff1aeafbb") // Optionally set UUID
 // Set cei properties ...
