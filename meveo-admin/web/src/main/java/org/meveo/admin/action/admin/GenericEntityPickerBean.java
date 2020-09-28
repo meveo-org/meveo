@@ -49,9 +49,6 @@ public class GenericEntityPickerBean extends BaseBean<IEntity> {
     private CustomFieldInstanceService customFieldInstanceService;
 
     @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
-
-    @Inject
     private CustomFieldTemplateService customFieldTemplateService;
     
     @Inject
