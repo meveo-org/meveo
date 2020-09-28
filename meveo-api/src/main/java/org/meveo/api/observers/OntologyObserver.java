@@ -283,7 +283,9 @@ public class OntologyObserver {
             classFile.delete();
         }
         
-        gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
+        if(!fileList.isEmpty()) {
+        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
+        }
     }
 
     /* ------------ CRT Notifications ------------ */
