@@ -1450,12 +1450,11 @@ public class CrossStorageService implements CustomPersistenceService {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
-				
-				
+								
 				// Check if target is not JPA entity
 				try {
-					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 					transaction.begin();
+					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 					values.put(
 						entry.getKey(), 
 						customEntityInstanceService
@@ -1463,13 +1462,18 @@ public class CrossStorageService implements CustomPersistenceService {
 							.find(clazz, entry.getValue())
 					);
 					continue;
-				} catch (ClassNotFoundException e) {
 					
+				} catch (ClassNotFoundException e) {
+					log.warn("Missing CFT class {}", e.getMessage());
+				
 				} catch(Exception e) {
+					log.error("Cannot find referenced entity {}", e.getMessage());
 					throw new RuntimeException(e);
+				
 				} finally {
 					try {
 						transaction.commit();
+				
 					} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
 						throw new RuntimeException(e);
 					}
