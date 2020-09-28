@@ -307,6 +307,10 @@ public class Neo4jService implements CustomPersistenceService {
         Map<String, Object> uniqueFields = new HashMap<>();
         validateAndConvertCustomFields(cfts, fields, uniqueFields, true);
 
+        if(uniqueFields.isEmpty()) {
+        	return null;
+        }
+        
         return neo4jDao.findNodeId(neo4JConfiguration, cet.getCode(), uniqueFields);
     }
     
