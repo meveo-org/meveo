@@ -645,7 +645,8 @@ public class CustomTableCreatorService implements Serializable {
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
-						addDefaultValueChange.setDefaultValueBoolean("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()));
+						addDefaultValueChange.setColumnDataType("int");
+						addDefaultValueChange.setDefaultValueNumeric("1".equals(cft.getDefaultValue()) || "true".equalsIgnoreCase(cft.getDefaultValue()) ? "1" : "0");
 					}
 
 					changeSet.addChange(addDefaultValueChange);
