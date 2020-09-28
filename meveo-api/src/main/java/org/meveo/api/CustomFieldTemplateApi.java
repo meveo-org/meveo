@@ -528,7 +528,7 @@ public class CustomFieldTemplateApi extends BaseApi {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
             if(cet == null) {
-            	var message = String.format("CET {} referenced from cft {} does not exists", cetCode, cft.getCode());
+            	var message = String.format("CET %s referenced from cft %s does not exists", cetCode, cft.getCode());
             	throw new InvalidParameterException(message);
             }
             storageTypes = cet.getAvailableStorages();
