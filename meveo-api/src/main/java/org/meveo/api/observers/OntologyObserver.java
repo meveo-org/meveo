@@ -155,7 +155,6 @@ public class OntologyObserver {
     @Schedule(minute = "*/1", hour = "*", persistent = false)
     @Asynchronous
     public void updateIDL() {
-    	LOGGER.debug("Checking for ontology changes");
         if (hasChange.get()) {
             hasChange.set(false);
             
