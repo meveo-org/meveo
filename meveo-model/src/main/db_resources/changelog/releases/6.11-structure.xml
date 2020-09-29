@@ -59,5 +59,12 @@
 		<sql>update crm_custom_field_tmpl set max_value=1024 where
 			code='ScriptingJob_variables';</sql>
 	</changeSet>
+	
+	<changeSet id="Delete cascade module item" author="Clément Bareth">
+		<dropForeignKeyConstraint baseTableName="meveo_module_item" constraintName="fk_meveo_module_item_meveo_module" />
+		<addForeignKeyConstraint baseTableName="meveo_module_item" baseColumnNames="module_id" 
+			constraintName="fk_meveo_module_item_meveo_module" referencedTableName="meveo_module" 
+			referencedColumnNames="id" onDelete="CASCADE"/>
+	</changeSet>
 
 </databaseChangeLog>
