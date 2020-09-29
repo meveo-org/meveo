@@ -28,6 +28,10 @@ public class MeveoApiException extends Exception {
 	public MeveoApiException(String message) {
 		super(message);
 	}
+	
+	public MeveoApiException(String message, Throwable e) {
+		super(message, e);
+	}
 
 	public MeveoApiErrorCodeEnum getErrorCode() {
 		return errorCode;

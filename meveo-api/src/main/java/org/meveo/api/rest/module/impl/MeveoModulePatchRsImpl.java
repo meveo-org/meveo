@@ -58,7 +58,7 @@ public class MeveoModulePatchRsImpl extends BaseRs {
 			return Response.status(Status.CREATED).entity(modulePatchApi.create(postData)).build();
 
 		} catch (Exception e) {
-			throw new MeveoApiException("Error creating modulePatch " + e.getMessage());
+			throw new MeveoApiException("Error creating modulePatch " + e.getMessage(), e);
 		}
 	}
 
