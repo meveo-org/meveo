@@ -368,7 +368,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			filters.keySet()
 				.forEach(key -> {
-					if(fieldTemplate.get(key) == null) {
+					String[] fieldInfo = key.split(" ");
+					String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
+					if(fieldTemplate.get(fieldName) == null) {
 						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
 					}
 				});
