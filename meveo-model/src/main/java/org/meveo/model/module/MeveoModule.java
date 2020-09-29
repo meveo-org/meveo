@@ -62,7 +62,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.MERGE, CascadeType.PERSIST }, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<MeveoModuleItem> moduleItems = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
