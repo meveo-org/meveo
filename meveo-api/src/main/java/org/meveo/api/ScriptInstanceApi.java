@@ -325,24 +325,16 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Override
 	public ScriptInstanceDto toDto(ScriptInstance scriptInstance) {
-
-		String source = scriptInstance.getScript();
-		var scriptInstanceEntity = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
-		if(scriptInstanceEntity == null) {
-			scriptInstanceEntity = scriptInstance;
-		}
-		
-		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstanceEntity, source);
-		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstanceEntity)) {
-			scriptInstanceDtoResult.setScript("InvalidPermission");
-		}
-
-		return scriptInstanceDtoResult;
+		return new ScriptInstanceDto(scriptInstance, scriptInstance.getScript());
 	}
 
 	@Override
 	public ScriptInstance fromDto(ScriptInstanceDto dto) throws MeveoApiException {
-		return null;
+		try {
+			return scriptInstanceFromDTO(dto, null);
+		} catch (Exception e) {
+			throw new MeveoApiException(e);
+		}
 	}
 
 	@Override

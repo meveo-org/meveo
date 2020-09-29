@@ -431,7 +431,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		String message = entity.isTransient() ? "save.successful" : "update.successful";
         messages.info(new BundleKey("messages", message));
 
-		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
+		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
 		return result;
 	}
 
