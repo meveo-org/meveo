@@ -153,10 +153,11 @@ public class JMeterService {
     		"-t", jmxFile.getAbsolutePath(),
     		"-l", jtlFile.getAbsolutePath(),
     		"-j", logFile.getAbsolutePath(),
-    		"-Dtoken", accessTokenString,
-    		"-DhostName", hostName,
-    		"-DportNumber", portNumber,
-    		"-Dprotocol", protocol
+    		"-Dtoken=" + accessTokenString,
+    		"-DhostName=" + hostName,
+    		"-DportNumber=" + portNumber,
+    		"-Dprotocol=" + protocol,
+    		"-Jjmeter.save.saveservice.output_format=xml"
 		);
         
         processBuilder.environment().put("HEAP", "-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m");
