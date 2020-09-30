@@ -145,7 +145,7 @@ public class JMeterService {
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        String commandLine = String.format("%s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
+        String commandLine = String.format("%s -n -t %s -l %s -j %s -DHEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\" -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
                         "-Jjmeter.save.saveservice.output_format=xml",
                 JMETER_BIN_FOLDER,
                 jmxFile.getAbsolutePath(),
