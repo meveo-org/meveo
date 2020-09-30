@@ -7,7 +7,7 @@ It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence 
 
 Backend documentation https://meveo.org 
 
-Frontend framework  https://front.meveo.org
+Frontend framework  https://github.com/meveo-org/meveo-fronted.github.io
 
 Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
 
