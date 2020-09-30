@@ -147,34 +147,22 @@ public class JMeterService {
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        boolean windows = System.getProperty("os.name").toLowerCase().contains("win");
+        ProcessBuilder processBuilder = new ProcessBuilder(
+    		JMETER_BIN_FOLDER, 
+    		"-n", 
+    		"-t", jmxFile.getAbsolutePath(),
+    		"-l", jtlFile.getAbsolutePath(),
+    		"-j", logFile.getAbsolutePath(),
+    		"-Dtoken", accessTokenString,
+    		"-Dhostname", hostName,
+    		"-DportNumber", portNumber,
+    		"-Dprotocol", protocol
+		);
         
-        String commandLine;
-        if(!windows) {
-        	commandLine = String.format("HEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\"; %s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
-                        "-Jjmeter.save.saveservice.output_format=xml",
-                JMETER_BIN_FOLDER,
-                jmxFile.getAbsolutePath(),
-                jtlFile.getAbsolutePath(),
-                logFile.getAbsolutePath(),
-                accessTokenString,
-                hostName,
-                protocol,
-                portNumber);
-        } else {
-        	commandLine = String.format("set HEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\" && %s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
-                    "-Jjmeter.save.saveservice.output_format=xml",
-            JMETER_BIN_FOLDER,
-            jmxFile.getAbsolutePath(),
-            jtlFile.getAbsolutePath(),
-            logFile.getAbsolutePath(),
-            accessTokenString,
-            hostName,
-            protocol,
-            portNumber);
-        }
+        processBuilder.environment().put("HEAP", "-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m");
 
-        final Process exec = Runtime.getRuntime().exec(commandLine);
+        final Process exec = processBuilder.start();
+        
         try {
             exec.waitFor();
         } catch (InterruptedException e) {
