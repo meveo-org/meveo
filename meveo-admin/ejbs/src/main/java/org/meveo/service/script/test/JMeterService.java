@@ -154,7 +154,7 @@ public class JMeterService {
     		"-l", jtlFile.getAbsolutePath(),
     		"-j", logFile.getAbsolutePath(),
     		"-Dtoken", accessTokenString,
-    		"-Dhostname", hostName,
+    		"-DhostName", hostName,
     		"-DportNumber", portNumber,
     		"-Dprotocol", protocol
 		);
