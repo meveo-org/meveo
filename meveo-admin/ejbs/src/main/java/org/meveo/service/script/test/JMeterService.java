@@ -147,7 +147,11 @@ public class JMeterService {
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        String commandLine = String.format("%s -n -t %s -l %s -j %s -DHEAP=\"-Xms512m -Xmx512m -XX:MaxMetaspaceSize=256m\" -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
+        boolean windows = System.getProperty("os.name").toLowerCase().contains("win");
+        
+        String commandLine;
+        if(!windows) {
+        	commandLine = String.format("HEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\"; %s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
                         "-Jjmeter.save.saveservice.output_format=xml",
                 JMETER_BIN_FOLDER,
                 jmxFile.getAbsolutePath(),
@@ -157,6 +161,18 @@ public class JMeterService {
                 hostName,
                 protocol,
                 portNumber);
+        } else {
+        	commandLine = String.format("set HEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\" && %s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
+                    "-Jjmeter.save.saveservice.output_format=xml",
+            JMETER_BIN_FOLDER,
+            jmxFile.getAbsolutePath(),
+            jtlFile.getAbsolutePath(),
+            logFile.getAbsolutePath(),
+            accessTokenString,
+            hostName,
+            protocol,
+            portNumber);
+        }
 
         final Process exec = Runtime.getRuntime().exec(commandLine);
         try {
