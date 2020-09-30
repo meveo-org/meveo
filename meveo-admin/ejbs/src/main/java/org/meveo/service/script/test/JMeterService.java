@@ -35,10 +35,12 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
 import org.meveo.service.script.DefaultFunctionService;
+import org.primefaces.shaded.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -145,7 +147,7 @@ public class JMeterService {
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        String commandLine = String.format("%s -n -t %s -l %s -j %s -DHEAP=\"-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m\" -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
+        String commandLine = String.format("%s -n -t %s -l %s -j %s -DHEAP=\"-Xms512m -Xmx512m -XX:MaxMetaspaceSize=256m\" -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
                         "-Jjmeter.save.saveservice.output_format=xml",
                 JMETER_BIN_FOLDER,
                 jmxFile.getAbsolutePath(),
@@ -157,13 +159,24 @@ public class JMeterService {
                 portNumber);
 
         final Process exec = Runtime.getRuntime().exec(commandLine);
-
         try {
             exec.waitFor();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
+        
+        String logs = IOUtils.toString(exec.getInputStream());
+        if(!StringUtils.isBlank(logs)) {
+        	LOG.info("[JMETER] " + logs);
+        }
+        
+        String errors = IOUtils.toString(exec.getErrorStream());
+        if(!StringUtils.isBlank(errors)) {
+        	LOG.error("[JMETER] " + errors);
+        }
+        
+        exec.destroy();
+        
         String responeData = null;
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
