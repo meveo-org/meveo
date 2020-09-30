@@ -19,13 +19,13 @@ package org.meveo.service.script.test;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -34,10 +34,10 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.FileUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
-import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.DefaultFunctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +45,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 @ApplicationScoped 
 public class JMeterService {
@@ -194,6 +195,14 @@ public class JMeterService {
 				responeData = node.getTextContent();
 			}
 
+        } catch(SAXParseException e) {
+        	String message = "[WARN] " + e.getMessage() + "\n in file :\n\n" + FileUtils.readFileToString(jtlFile, StandardCharsets.UTF_8);
+
+        	var error = new SampleResult(false, "XML Parsing error", message);
+        	sampleResults.add(error);
+        	
+        	return new TestResult(message, sampleResults);
+        	
         } catch (Exception e) {
         	var error = new SampleResult(false, "Error", e.getMessage());
         	sampleResults.add(error);
