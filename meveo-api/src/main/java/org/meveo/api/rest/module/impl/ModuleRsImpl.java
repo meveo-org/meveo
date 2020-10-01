@@ -202,12 +202,12 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public MeveoModuleDto addToModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+    public MeveoModuleDto addItemToModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
         return moduleApi.addToModule(moduleCode, itemCode, itemType);
     }
 
     @Override
-    public MeveoModuleDto removeFromModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+    public MeveoModuleDto removeItemFromModule(String moduleCode, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
         return moduleApi.removeFromModule(moduleCode, itemCode, itemType);
     }
 

@@ -802,13 +802,22 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		meveoModuleService.loadModuleItem(moduleItem);
 
 		module.addModuleItem(moduleItem);
+
+        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
+        if(api instanceof BaseCrudApi) {
+        	BaseCrudApi crudApi = (BaseCrudApi) api;
+        	crudApi.addToModule(moduleItem.getItemEntity(), module);
+        }
+		
 		meveoModuleService.update(module);
 
 		return toDto(module);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
@@ -816,14 +825,26 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		final String itemClassName = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(itemType).getName();
-
+		if(itemClassName == null) {
+			throw new IllegalArgumentException(itemType + " is not a module item type");
+		}
+		
 		MeveoModuleItem moduleItem = new MeveoModuleItem();
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
-
+		meveoModuleService.loadModuleItem(moduleItem);
+		
 		module.removeItem(moduleItem);
+		
+        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
+        if(api instanceof BaseCrudApi) {
+        	BaseCrudApi crudApi = (BaseCrudApi) api;
+        	crudApi.removeFromModule(moduleItem.getItemEntity(), module);
+        }
+        
 		meveoModuleService.update(module);
+
 
 		return toDto(module);
 	}

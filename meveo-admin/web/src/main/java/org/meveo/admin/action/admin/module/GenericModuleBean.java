@@ -46,6 +46,8 @@ import org.meveo.admin.action.catalog.ScriptInstanceBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
+import org.meveo.api.ApiUtils;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -266,7 +268,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         return moduleItemEntity;
     }
 
-    public void setModuleItemEntity(BusinessEntity itemEntity) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public void setModuleItemEntity(BusinessEntity itemEntity) {
         if (itemEntity != null && !entity.equals(itemEntity)) {
             List<String> uuidList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(entity.getModuleItems())) {
@@ -322,6 +325,14 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
 
             moduleItemEntity = itemEntity;
+            
+            // Retrieve corresponding API to check for any additional operations
+            var api = ApiUtils.getApiService(itemEntity.getClass(), true);
+            if(api instanceof BaseCrudApi) {
+            	BaseCrudApi crudApi = (BaseCrudApi) api;
+            	crudApi.addToModule(itemEntity, entity);
+            }
+            
             try {
                 entity = (T) meveoModuleService.update(entity);
             } catch (BusinessException e) {
@@ -398,7 +409,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         };
     }
 
-    public void removeTreeNode(TreeNode node) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public void removeTreeNode(TreeNode node) throws BusinessException {
         MeveoModuleItem item = (MeveoModuleItem) node.getData();
         TreeNode parent = node.getParent();
         parent.getChildren().remove(node);
@@ -406,6 +418,15 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             parent.getParent().getChildren().remove(parent);
         }
         entity.removeItem(item);
+        
+        // Retrieve corresponding API to check for any additional operations
+        var api = ApiUtils.getApiService(item.getItemEntity().getClass(), true);
+        if(api instanceof BaseCrudApi) {
+        	BaseCrudApi crudApi = (BaseCrudApi) api;
+        	crudApi.removeFromModule(item.getItemEntity(), entity);
+        	meveoModuleService.update(entity);
+        }
+        
     }
 
     public void publishModule() {

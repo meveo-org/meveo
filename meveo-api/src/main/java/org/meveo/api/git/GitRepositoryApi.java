@@ -31,6 +31,9 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
@@ -55,6 +58,10 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     @Inject
     @MeveoRepository
     private GitRepository meveoRepository;
+    
+    @Inject
+    @CurrentUser
+    private MeveoUser user;
 
     public GitRepositoryApi() {
         super(GitRepository.class, GitRepositoryDto.class);
@@ -237,4 +244,22 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 	public void remove(GitRepositoryDto dto) throws MeveoApiException, BusinessException {
 		this.remove(dto.getCode());
 	}
+
+	@Override
+	public void addToModule(GitRepository gitRepository, MeveoModule module) {
+		final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+		module.addModuleFile(repoDir.getAbsolutePath());
+		
+		super.addToModule(gitRepository, module);
+	}
+
+	@Override
+	public void removeFromModule(GitRepository gitRepository, MeveoModule module) {
+		final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+		module.removeModuleFile(repoDir.getAbsolutePath());
+		
+		super.removeFromModule(gitRepository, module);
+	}
+	
+	
 }

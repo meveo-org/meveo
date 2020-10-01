@@ -510,30 +510,34 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         }
         return backViewSave;
     }
+    
+    protected void addToModule(T entity, MeveoModule module) {
+        BusinessEntity businessEntity = (BusinessEntity) entity;
+        MeveoModuleItem item = new MeveoModuleItem(businessEntity);
+        if (!module.getModuleItems().contains(item)) {
+            module.addModuleItem(item);
+            try {
+                if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
+                    module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
+                }
+                meveoModuleService.mergeModule(module);
+                messages.info(businessEntity.getCode() + " added to module " + module.getCode());
+            } catch (Exception e) {
+                messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
+            }
+        } else {
+            messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), businessEntity.getCode(), module.getCode());
+            return;
+        }
+    }
 
     public void addToModule()  {
-            for (MeveoModule eachModule : selectedMeveoModules) {
-                MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-                if (entity != null && !eachModule.equals(entity)) {
-                    BusinessEntity businessEntity = (BusinessEntity) entity;
-                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-                    if (!module.getModuleItems().contains(item)) {
-                        module.addModuleItem(item);
-                        try {
-                            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
-                                module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
-                            }
-                            meveoModuleService.mergeModule(module);
-                            messages.info(businessEntity.getCode() + " added to module " + module.getCode());
-                        } catch (Exception e) {
-                            messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
-                        }
-                    } else {
-                        messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), businessEntity.getCode(), module.getCode());
-                        return;
-                    }
-                }
+        for (MeveoModule eachModule : selectedMeveoModules) {
+            MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+            if (entity != null && !eachModule.equals(entity)) {
+            	addToModule(entity, module);
             }
+        }
     }
 
     public void addManyToModule()  {
@@ -547,33 +551,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         		.collect(Collectors.joining(", ", "[", "]"));
 
         for (MeveoModule eachModule : selectedMeveoModules) {
-
             MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-
-            try {
-                List<String> itemExisted = new ArrayList<>();
-	            for (IEntity entity : selectedEntities) {
-	                if (entity != null && !eachModule.equals(entity)) {
-	                    BusinessEntity businessEntity = (BusinessEntity) entity;
-	                    MeveoModuleItem item = new MeveoModuleItem(businessEntity);
-	                    if (!module.getModuleItems().contains(item)) {
-	                        module.addModuleItem(item);
-	                    } else {
-	                        itemExisted.add(item.getItemCode());
-                        }
-	                }
-	            }
-	            if (!itemExisted.isEmpty()) {
-	                messages.error(itemExisted + " already exist in the module items of module " + module.getCode());
-	                return;
+            List<String> itemExisted = new ArrayList<>();
+            for (T entity : selectedEntities) {
+                if (entity != null && !eachModule.equals(entity)) {
+                	addToModule(entity, module);
                 }
-	            if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
-                    module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
-                }
-                meveoModuleService.mergeModule(module);
-                messages.info(codes + " added to module " + module.getCode());
-            } catch (Exception e) {
-                messages.error(codes + " not added to module " + module.getCode(), e);
             }
         }
     }
