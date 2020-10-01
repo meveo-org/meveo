@@ -391,6 +391,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 queryBuilder.append(" AND m.disabled = 1 ");
             }
         }
+        
+        if(StringUtils.isNoBlank(filters.getCode())) {
+        	queryBuilder.append(" AND code like '%:code%' ");
+        	parameters.put("code", filters.getCode());
+        }
 
         if(filters.getDownloaded() != null){
             if(!filters.getDownloaded()) {

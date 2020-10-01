@@ -27,6 +27,9 @@ public class MeveoModuleFilters {
 
     @QueryParam("downloaded")
     private Boolean downloaded;
+    
+    @QueryParam("code")
+    private String code;
 
     @QueryParam("itemCode")
     private String itemCode;
@@ -36,8 +39,22 @@ public class MeveoModuleFilters {
 
     @JsonIgnore
     private transient String itemClass;
+    
+    /**
+	 * @return the {@link #code}
+	 */
+	public String getCode() {
+		return code;
+	}
 
-    public Boolean getActive() {
+	/**
+	 * @param code the code to set
+	 */
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public Boolean getActive() {
         return active;
     }
 
