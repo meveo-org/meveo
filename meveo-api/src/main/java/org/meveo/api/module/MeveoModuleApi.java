@@ -94,7 +94,6 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -102,7 +101,6 @@ import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -202,6 +200,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			log.debug("Registering module item type {} from class {}", aClass.getSimpleName(), aClass);
 		}
 	}
+	
+    public List<Class<?>> getModuleItemClasses() {
+    	return new ArrayList<>(MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values());
+    }
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public MeveoModule createInNewTx(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {

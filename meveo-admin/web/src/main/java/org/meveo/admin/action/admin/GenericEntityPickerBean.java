@@ -1,32 +1,36 @@
 package org.meveo.admin.action.admin;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.faces.view.ViewScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.IEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.base.BaseEntityService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.RepositoryService;
 import org.primefaces.model.LazyDataModel;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.lang.annotation.Annotation;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @ViewScoped
 @Named
@@ -53,6 +57,9 @@ public class GenericEntityPickerBean extends BaseBean<IEntity> {
     
     @Inject
     private RepositoryService repositoryService;
+    
+    @Inject
+    private MeveoModuleApi moduleApi;
 
     private List<CustomEntityInstance> customEntityInstances = new ArrayList<>();
 
@@ -70,6 +77,10 @@ public class GenericEntityPickerBean extends BaseBean<IEntity> {
      * @return A list of classes
      */
     public List<Class<?>> getEntityClasses(String annotation) {
+    	if(annotation.equals(ModuleItem.class.getName())) {
+    		return moduleApi.getModuleItemClasses();
+    	}
+    	
         try {
 
             final Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) Class.forName(annotation);
