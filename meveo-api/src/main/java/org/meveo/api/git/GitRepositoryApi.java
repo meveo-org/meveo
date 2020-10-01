@@ -208,7 +208,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 
     @Override
     public GitRepository createOrUpdate(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {
-        return exists(dtoData) ? update(dtoData) : create(dtoData, true, null, null);
+        return exists(dtoData) ? update(dtoData) : create(dtoData, false, null, null);
     }
 
     public GitRepository create(GitRepositoryDto dtoData, boolean failIfExist, String username, String password) throws MeveoApiException, BusinessException {

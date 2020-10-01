@@ -221,7 +221,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Override
     @RequirePermission(allOf = { DefaultPermission.GIT_WRITE, DefaultPermission.GIT_READ }, orRole = DefaultRole.GIT_ADMIN)
     public void create(@Whitelist(DefaultRole.GIT_ADMIN) GitRepository entity) throws BusinessException {
-        gitClient.create(entity, true, null, null);
+        gitClient.create(entity, false, null, null);
         super.create(entity);
     }
 
