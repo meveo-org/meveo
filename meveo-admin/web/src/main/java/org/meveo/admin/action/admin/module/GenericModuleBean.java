@@ -243,10 +243,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 		    // Load an entity related to a module item. If it was not been able to load (e.g. was deleted), mark it to be deleted and delete
 		    try {
 		    	if(item.getItemEntity() != null) {
-		    		continue;	// Already loaded
+		    		meveoModuleService.loadModuleItem(item);
 		    	}
-		    	
-				 meveoModuleService.loadModuleItem(item);
 
 		        if (item.getItemEntity() == null) {
 		            notLoadedItems.add(item);
