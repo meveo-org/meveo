@@ -1111,8 +1111,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			// Add files contained in modules
 			for (MeveoModule meveoModule : meveoModules) {
 				for (String pathFile : meveoModule.getModuleFiles()) {
-					String path = pathFile.startsWith(File.separator) ? pathFile.substring(1) : pathFile;
-					int lastIndexOf = path.lastIndexOf(File.separator);
+					String path = pathFile.startsWith("/") ? pathFile.substring(1) : pathFile;
+					int lastIndexOf = path.lastIndexOf("/");
+					
+					// Handle windows-like paths
+					if(lastIndexOf == -1) {
+						path = pathFile.startsWith("\\") ? pathFile.substring(1) : pathFile;
+						lastIndexOf = path.lastIndexOf("\\");
+					}
+					
 					String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
 					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
 					File file = new File(chrootDir, pathFile);
