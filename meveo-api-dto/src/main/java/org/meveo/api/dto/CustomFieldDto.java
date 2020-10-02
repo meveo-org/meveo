@@ -387,6 +387,7 @@ public class CustomFieldDto {
 			case LIST:
 			case STRING:
 			case TEXT_AREA:
+			case LONG_TEXT:
 			case EMBEDDED_ENTITY:
 				return stringValue == null;
 			case ENTITY:

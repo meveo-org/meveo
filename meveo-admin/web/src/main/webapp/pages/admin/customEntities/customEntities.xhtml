@@ -243,6 +243,17 @@
 										  rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.code] == null}">
 							</h:outputText>
 
+							<!--  Long Text -->
+							<h:outputText id="#{entity[field.code]}_out_longtext"
+										  value="#{entity[field.code]}" styleClass="field-value"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] != null}">
+							</h:outputText>
+
+							<h:outputText id="field_#{entity[field.code]}_out_longtext"
+										  value="#{entity[field.code]}" styleClass="field-value"
+										  rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] == null}">
+							</h:outputText>
+
 							<h:outputText id="#{entity[field.code]}_input_link"
 								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] != null}"
 								value="#{entity[field.code]}" styleClass="field-value">

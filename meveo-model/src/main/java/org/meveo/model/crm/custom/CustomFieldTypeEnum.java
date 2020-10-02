@@ -76,7 +76,12 @@ public enum CustomFieldTypeEnum {
 	/**
 	 * Binary type value - only the path is stored
 	 */
-	BINARY(true, true, String.class);
+	BINARY(true, true, String.class),
+
+    /**
+     * LONG_TEXT value
+     */
+    LONG_TEXT(false, true, String.class);
 
     /**
      * Is value stored in a serialized form in DB
