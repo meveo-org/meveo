@@ -26,13 +26,15 @@ Imagine you created a CET (Custom Entity Template), then a java class MyCet has 
 ```java
 
 import org.meveo.model.customEntities.MyCet;
+import org.meveo.api.exception.BusinessApiException;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.storage.RepositoryService;
-import org.meveo.persistence.CrossStorageService;
+import org.meveo.api.persistence.CrossStorageApi;
 
 ... in your class definition use script getCDIBean to get instance of services
 
-	private CrossStorageService crossStorageService = getCDIBean(CrossStorageService.class);
-	private RepositoryService repoService = getCDIBean(RepositoryService.class);
+	private CrossStorageApi crossStorageApi = getCDIBean(CrossStorageApi.class);
+	private RepositoryService repositoryService = getCDIBean(RepositoryService.class);
   
 ...
 
@@ -41,7 +43,7 @@ cei.setUuid("2434e3a3-3c32-4b18-869d-ea5ff1aeafbb") // Optionally set UUID
 // Set cei properties ...
 
 Repository defaultRepo = repositoryService.findDefaultRepository();
-String uuid = crossStorageApi.createOrUpdate(repoService.findDefaultRepository(), cei);
+String uuid = crossStorageApi.createOrUpdate(defaultRepo, cei);
 
 System.out.println("MyCet instance " + uuid + " created / updated");
 ```
