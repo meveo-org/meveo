@@ -989,8 +989,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
-                if (modifiedFile.startsWith("src/main/java/scripts")) {
-                    String scriptCode = modifiedFile.replaceAll("src/main/java/scripts/(.*)\\..*$", "$1").replaceAll("/", ".");
+                if (modifiedFile.startsWith("src/main/java") && !modifiedFile.contains("customEntities")) {
+                    String scriptCode = modifiedFile.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
                     File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
                     File scriptFile = new File(repositoryDir, modifiedFile);
