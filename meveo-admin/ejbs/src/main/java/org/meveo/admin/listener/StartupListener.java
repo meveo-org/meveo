@@ -18,9 +18,12 @@
  */
 package org.meveo.admin.listener;
 
+import java.util.Set;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -29,10 +32,13 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.security.DefaultRole;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
@@ -76,10 +82,21 @@ public class StartupListener {
 	
 	@Inject
 	private GitClient gitClient;
+	
+	@Inject
+	@CurrentUser
+	private MeveoUser appInitUser;
+	
+    @Inject
+    private Instance<MeveoInitializer> initializers;
 
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public void init() {
+		//MeveoUser forcedUser = MeveoUser.instantiate("applicationInitializer", null);
+		//forcedUser.setRoles(Set.of(DefaultRole.GIT_ADMIN.getRoleName()));
+		// appInitUser.loadUser(forcedUser);
+		
 		entityManagerWrapper.getEntityManager().joinTransaction();
 		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
 		session.doWork(connection -> {
@@ -115,9 +132,9 @@ public class StartupListener {
 			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
 			if (meveoRepo == null) {
 				try {
-					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR, //
-							false, //
-							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(), //
+					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR,
+							false,
+							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
 							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
 
 					log.info("Created Meveo GIT repository");
@@ -159,7 +176,15 @@ public class StartupListener {
 			log.info("Thank you for running Meveo Community code.");
 		});
 		
-		session.flush();	
+		session.flush();
+		
+	    for(MeveoInitializer initializer : initializers) {
+	    	try {
+	    		initializer.init();
+	    	} catch (Exception e) {
+	    		log.error("Error during execution of {}", initializer.getClass(), e);
+	    	}
+	    }
 	}
 
 	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {

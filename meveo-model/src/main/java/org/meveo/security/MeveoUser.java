@@ -63,9 +63,9 @@ public abstract class MeveoUser implements Serializable {
 
     protected String sshPublicKey;
     
-    private Map<String, List<String>> whiteList;
+    protected Map<String, List<String>> whiteList;
     
-    private Map<String, List<String>> blackList;
+    protected Map<String, List<String>> blackList;
 
 
     public MeveoUser() {
@@ -90,29 +90,12 @@ public abstract class MeveoUser implements Serializable {
         this.providerCode = providerCode;
     }
     
-    public void loadUser(MeveoUser user) {
-    	this.userName = user.getUserName();
-        this.providerCode = user.getProviderCode();
-        this.roles = user.roles;
-        this.whiteList = user.whiteList;
-        this.blackList = user.blackList;
-        this.mail = user.mail;
-    }
-
     public Map<String, List<String>> getWhiteList() {
 		return whiteList;
 	}
 
-	public void setWhiteList(Map<String, List<String>> whiteList) {
-		this.whiteList = whiteList;
-	}
-
 	public Map<String, List<String>> getBlackList() {
 		return blackList;
-	}
-
-	public void setBlackList(Map<String, List<String>> blackList) {
-		this.blackList = blackList;
 	}
 
 	public String getSshPrivateKey() {
@@ -279,10 +262,6 @@ public abstract class MeveoUser implements Serializable {
 
 	public void setAuthenticated(boolean authenticated) {
 		this.authenticated = authenticated;
-	}
-
-	public void setRoles(Set<String> roles) {
-		this.roles = roles;
 	}
 
 	public void setLocale(String locale) {
