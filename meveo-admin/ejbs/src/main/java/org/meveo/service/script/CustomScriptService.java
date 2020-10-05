@@ -83,7 +83,9 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
@@ -264,10 +266,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         		.orElse(null);
                         
                         if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
-                        	// If value is a map, convert the map into target class
+                        	// If value is a map or a custom entity instance, convert into target class
                         	if(classAndValue.getValue() instanceof Map) {
                         		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
+                        	} else if(classAndValue.getValue() instanceof CustomEntityInstance) {
+                        		CustomEntityInstance cei = (CustomEntityInstance) classAndValue.getValue();
+                        		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
+                            	method.invoke(scriptInstance, convertedValue);
+                        	} else {
+                        		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
                         	}
                         	
                         } else {
