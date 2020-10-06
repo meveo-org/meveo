@@ -32,9 +32,9 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.12
  **/
-
 @Stateless
 public class EntityCustomActionApi extends BaseApi {
 
@@ -258,6 +258,14 @@ public class EntityCustomActionApi extends BaseApi {
             }
             action.setScript(scriptInstance);
         }
+        
+		if (dto.getApplicableToEntityList() != null) {
+			action.setApplicableToEntityList(dto.getApplicableToEntityList());
+		}
+
+		if (dto.getApplicableToEntityInstance() != null) {
+			action.setApplicableToEntityInstance(dto.getApplicableToEntityInstance());
+		}
     }
 
     @SuppressWarnings("rawtypes")

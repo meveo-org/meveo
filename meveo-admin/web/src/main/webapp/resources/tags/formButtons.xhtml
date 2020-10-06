@@ -182,7 +182,7 @@
 		</p:button>
 
 		<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(cc.attrs.backingBean.entity)}">
-			<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActions(cc.attrs.backingBean.entity)}">
+			<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActionsInDetail(cc.attrs.backingBean.entity)}">
 				<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customFieldDataEntryBean.executeCustomAction(cc.attrs.backingBean.entity, customAction, null)}"
 								 process="@this #{cc.attrs.submitPartialProcess!=null?cc.attrs.submitPartialProcess:'@form'}" partialSubmit="#{cc.attrs.submitPartialProcess !=null}"
 								 partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" update="@form"
