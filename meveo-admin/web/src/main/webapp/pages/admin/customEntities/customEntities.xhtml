@@ -324,6 +324,10 @@
 						</p:column>
 					</p:dataTable>
 					<p:column id="customActionButton">
+						<p:commandButton value="#{messages['commons.deleteMultiple']}" immediate="true" action="#{customEntityInstanceListBean.deleteMany()}" icon="ui-icon-trash" update="@form">
+							<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />
+							<f:ajax render="@all" />
+						</p:commandButton>
 						<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
 							<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
 								<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
