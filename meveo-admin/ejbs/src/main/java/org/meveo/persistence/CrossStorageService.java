@@ -133,14 +133,6 @@ public class CrossStorageService implements CustomPersistenceService {
 	private CustomEntityTemplateService customEntityTemplateService;
 	
     @Inject
-    @Updated
-    private Event<CustomEntityInstance> customEntityInstanceUpdate;
-    
-    @Inject
-    @Created
-    private Event<CustomEntityInstance> customEntityInstanceCreate;
-    
-    @Inject
     @UpdatedAfterTx
     private Event<CustomEntityInstance> customEntityInstanceUpdatedAfterTx;
     
@@ -926,12 +918,10 @@ public class CrossStorageService implements CustomPersistenceService {
 
 			}
 
-			customEntityInstanceUpdate.fire(cei);
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			customEntityInstanceUpdatedAfterTx.fire(cei);
 
 		} else {
-			customEntityInstanceCreate.fire(cei);
 			
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			cei.setUuid(uuid);
