@@ -671,10 +671,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					BaseEntityDto itemDto = null;
 
 					if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
-						// we will only add a cft if it's not a field of a cet
+						// we will only add a cft if it's not a field of a cet contained in the module
 						if (!StringUtils.isBlank(item.getAppliesTo())) {
 							String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
-							if (customEntityTemplateService.findByCode(cetCode) == null) {
+							
+							boolean isCetInModule = moduleItems.stream()
+									.filter(moduleItem -> moduleItem.getItemClass().equals(CustomEntityTemplate.class.getName()))
+									.anyMatch(moduleItem -> moduleItem.getItemCode().equals(cetCode));
+							
+							if (!isCetInModule) {
 								itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
 							}
 
