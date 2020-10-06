@@ -335,9 +335,9 @@
 					</p:dataTable>
 					<p:column id="customActionButton">
 						<c:if
-							test="#{! empty customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
+							test="#{! empty customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
 							<ui:repeat var="customAction"
-								value="#{customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
+								value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
 								<p:commandButton
 									value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
 									action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
