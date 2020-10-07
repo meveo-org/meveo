@@ -158,10 +158,15 @@
 						selection="#{customEntityInstanceListBean.selectedValues}"
 						rowIndexVar="rowIdx">
 
-						<p:ajax event="rowSelectCheckbox" update="contentBody" />
-						<p:ajax event="rowUnselectCheckbox" update="contentBody" />
-						<p:ajax event="rowSelect" update="contentBody" />
-						<p:ajax event="rowUnselect" update="contentBody" />
+						<p:ajax event="rowSelectCheckbox"
+							update="contentBody customActionButton" />
+						<p:ajax event="rowUnselectCheckbox"
+							update="contentBody customActionButton" />
+						<p:ajax event="rowSelect" update="contentBody customActionButton" />
+						<p:ajax event="rowUnselect"
+							update="contentBody customActionButton" />
+						<p:ajax event="toggleSelect"
+							update="contentBody customActionButton" />
 
 						<p:column id="multiSelect" selectionMode="multiple" width="4%"
 							exportable="false" toggleable="false" selectRow="false" />
@@ -333,30 +338,58 @@
 							</p:commandButton>
 						</p:column>
 					</p:dataTable>
-					<p:column id="customActionButton">
-						<c:if
-							test="#{! empty customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
-							<ui:repeat var="customAction"
-								value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
-								<p:commandButton
-									value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
-									action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
-									rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity) and ! empty customEntityInstanceListBean.selectedValues}"
-									update="contentBody">
-								</p:commandButton>
-							</ui:repeat>
+					<h:panelGroup id="customActionButton">
+						<c:set var="customActionsInList"
+							value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}"
+							scope="request" />
+						<c:set var="scriptConfirmMessage"
+							value="#{of:format1(messages['entity.customAction.executionActionInList'], customEntityInstanceListBean.selectedValues.size())}" />
+
+						<c:if test="#{! empty customActionsInList}">
+							<c:if
+								test="#{! empty customEntityInstanceListBean.selectedValues}">
+								<ui:repeat var="customAction"
+									value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
+									<p:commandButton
+										value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
+										action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
+										rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity)}"
+										update="contentBody">
+										<p:confirm header="#{messages['commons.confirmationHeader']}"
+											message="#{scriptConfirmMessage}"
+											icon="pi pi-exclamation-triangle" />
+									</p:commandButton>
+								</ui:repeat>
+							</c:if>
+							<c:if test="#{empty customEntityInstanceListBean.selectedValues}">
+								<ui:repeat var="customAction"
+									value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
+									<p:commandButton
+										value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
+										action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
+										rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity)}"
+										update="contentBody">
+									</p:commandButton>
+								</ui:repeat>
+							</c:if>
 						</c:if>
+
 						<p:commandButton id="buttonCsvExportCEI"
 							value="#{messages['commons.exportCsv']}" ajax="false">
 							<l:dataExporter fileType="csv" source="results_panel"
 								fileName="CEI_Export"
 								fileOptions="#{customEntityInstanceBean.csvOptions()}" />
 						</p:commandButton>
-					</p:column>
+					</h:panelGroup>
 				</h:form>
 			</p:panel>
 		</p:outputPanel>
-
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<p:commandButton value="Yes" type="button"
+				styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+			<p:commandButton value="No" type="button"
+				styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+		</p:confirmDialog>
 	</ui:define>
 
 </ui:composition>
