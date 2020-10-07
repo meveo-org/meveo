@@ -24,6 +24,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.util.PasswordUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -94,6 +95,20 @@ public class GitRepository extends BusinessEntity {
 
     @Transient
     private List<String> branches;
+    
+    @Transient
+    private String clearDefaultRemotePassword;
+    
+    @PrePersist
+    @PreUpdate
+    protected void prePersist() {
+    	if(defaultRemoteUsername == null) {
+    		this.defaultRemotePassword = null;
+    	} else if(clearDefaultRemotePassword != null) {
+    		String salt = PasswordUtils.getSalt(getId(), getCode());
+    		this.defaultRemotePassword = PasswordUtils.encrypt(salt, clearDefaultRemotePassword);
+    	}
+    }
 
     public List<String> getBranches() {
         return branches;
@@ -154,8 +169,22 @@ public class GitRepository extends BusinessEntity {
     public String getDefaultRemotePassword() {
         return defaultRemotePassword;
     }
+    
+    /**
+	 * @return the {@link #clearDefaultRemotePassword}
+	 */
+	public String getClearDefaultRemotePassword() {
+		return clearDefaultRemotePassword;
+	}
 
-    public void setDefaultRemotePassword(String defaultRemotePassword) {
+	/**
+	 * @param clearDefaultRemotePassword the clearDefaultRemotePassword to set
+	 */
+	public void setClearDefaultRemotePassword(String clearDefaultRemotePassword) {
+		this.clearDefaultRemotePassword = clearDefaultRemotePassword;
+	}
+
+	public void setDefaultRemotePassword(String defaultRemotePassword) {
         this.defaultRemotePassword = defaultRemotePassword;
     }
 

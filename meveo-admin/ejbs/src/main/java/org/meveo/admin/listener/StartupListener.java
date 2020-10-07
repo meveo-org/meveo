@@ -143,7 +143,7 @@ public class StartupListener {
 					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR,
 							false,
 							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
-							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
+							GitRepositoryService.MEVEO_DIR.getClearDefaultRemotePassword());
 
 					log.info("Created Meveo GIT repository");
 

@@ -31,7 +31,6 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.local.IPersistenceService;
@@ -162,7 +161,8 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         dto.setWritingRoles(entity.getWritingRoles());
         dto.setRemoteOrigin(entity.getRemoteOrigin());
         dto.setRemoteUsername(entity.getDefaultRemoteUsername());
-        dto.setRemotePassword(entity.getDefaultRemotePassword());
+        dto.setRemotePasswordEncrypted(entity.getDefaultRemotePassword());
+        dto.setRemotePassword(entity.getClearDefaultRemotePassword());
         dto.setCode(entity.getCode());
         dto.setDescription(entity.getDescription());
         dto.setMeveoRepository(entity.isMeveoRepository());
@@ -225,9 +225,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         }
 
         updateEntity(dto, entity);
-
         gitRepositoryService.update(entity);
-
         return entity;
     }
 
@@ -235,7 +233,8 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         entity.setReadingRoles(dto.getReadingRoles());
         entity.setWritingRoles(dto.getWritingRoles());
         entity.setDefaultRemoteUsername(dto.getRemoteUsername());
-        entity.setDefaultRemotePassword(dto.getRemotePassword());
+        entity.setDefaultRemotePassword(dto.getRemotePasswordEncrypted());
+        entity.setClearDefaultRemotePassword(dto.getRemotePassword());
         entity.setDescription(dto.getDescription());
         entity.setMeveoRepository(dto.isMeveoRepository());
     }
