@@ -66,7 +66,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         MEVEO_DIR.setCode("Meveo");
         MEVEO_DIR.setRemoteOrigin(remoteUrl);
         MEVEO_DIR.setDefaultRemoteUsername(remoteUsername);
-        MEVEO_DIR.setDefaultRemotePassword(remotePassword);
+        MEVEO_DIR.setClearDefaultRemotePassword(remotePassword);
     }
 
     @Inject

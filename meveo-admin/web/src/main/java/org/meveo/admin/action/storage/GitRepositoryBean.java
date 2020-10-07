@@ -107,17 +107,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
         String filename = file.getFileName();
         try {
             InputStream inputStream = file.getInputstream();
-            GitRepositoryDto dto = new GitRepositoryDto();
-            dto.setCode(entity.getCode());
-            dto.setDescription(entity.getDescription());
-            dto.setReadingRoles(entity.getReadingRoles());
-            dto.setWritingRoles(entity.getWritingRoles());
-            dto.setRemoteOrigin(entity.getRemoteOrigin());
-            dto.setRemoteUsername(entity.getDefaultRemoteUsername());
-            dto.setRemotePassword(entity.getDefaultRemotePassword());
-            dto.setMeveoRepository(entity.isMeveoRepository());
-            dto.setCurrentBranch(entity.getCurrentBranch());
-            dto.setBranches(entity.getBranches());
+            GitRepositoryDto dto = gitRepositoryApi.toDto(entity);
             gitRepositoryApi.importZip(inputStream, dto, isEdit());
             messages.info(new BundleKey("messages", "importZip.successfull"), filename);
         } catch (Exception e) {
@@ -166,9 +156,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
     }
 
     public String getPassword() {
-        if (password == null && entity.getDefaultRemotePassword() != null) {
-            password = entity.getDefaultRemotePassword();
-        }
         return password;
     }
 
