@@ -272,7 +272,7 @@
 						<p:inputText value="#{mapValues['key']}" size="30" maxlength="100"/>
 					</p:column>
 					<p:column headerText="#{messages['commons.value']}">
-						<p:inputText value="#{mapValues['value']}" size="40" maxlength="100"/>
+						<p:inputText value="#{mapValues['value']}" size="40" maxlength="1024"/>
 					</p:column>
 					<f:facet name="footer">
 						<p:commandButton value="#{messages['action.execute']}" process="@form @parent" partialSubmit="true"
