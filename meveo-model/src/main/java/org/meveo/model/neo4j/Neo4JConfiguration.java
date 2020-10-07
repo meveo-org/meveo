@@ -19,12 +19,16 @@ package org.meveo.model.neo4j;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.util.PasswordUtils;
 
 /**
  * Configuration used to access a Neo4j repository
@@ -62,6 +66,18 @@ public class Neo4JConfiguration extends BusinessEntity {
 	 */
 	@Column(name = "neo4j_password")
 	private String neo4jPassword;
+	
+	@Transient
+	private String clearPassword;
+	
+    @PrePersist
+    @PreUpdate
+    protected void prePersist() {
+    	if(clearPassword != null) {
+    		String salt = PasswordUtils.getSalt(getId(), getCode());
+    		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
+    	}
+    }
 
 	public String getNeo4jUrl() {
 		return neo4jUrl;
@@ -86,4 +102,19 @@ public class Neo4JConfiguration extends BusinessEntity {
 	public void setNeo4jPassword(String neo4jPassword) {
 		this.neo4jPassword = neo4jPassword;
 	}
+
+	/**
+	 * @return the {@link #clearPassword}
+	 */
+	public String getClearPassword() {
+		return clearPassword;
+	}
+
+	/**
+	 * @param clearPassword the clearPassword to set
+	 */
+	public void setClearPassword(String clearPassword) {
+		this.clearPassword = clearPassword;
+	}
+	
 }
