@@ -2,7 +2,10 @@ package org.meveo.model.sql;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
@@ -11,6 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
+import org.meveo.util.PasswordUtils;
 
 /**
  * The Class SqlConfiguration.
@@ -60,6 +64,32 @@ public class SqlConfiguration extends BusinessEntity {
 	@Column(name = "initialized")
 	private boolean initialized = false;
 	
+	@Transient
+	private String clearPassword;
+	
+	@PreUpdate
+	@PrePersist
+	protected void prePersist() {
+		if(clearPassword != null) {
+			String salt = PasswordUtils.getSalt(getCode(), getUrl());
+			this.password = PasswordUtils.encrypt(salt, clearPassword);
+		}
+	}
+	
+	/**
+	 * @return the {@link #clearPassword}
+	 */
+	public String getClearPassword() {
+		return clearPassword;
+	}
+
+	/**
+	 * @param clearPassword the clearPassword to set
+	 */
+	public void setClearPassword(String clearPassword) {
+		this.clearPassword = clearPassword;
+	}
+
 	/**
 	 * Gets the schema or tablespace to use.
 	 *
@@ -185,5 +215,7 @@ public class SqlConfiguration extends BusinessEntity {
 	public void setInitialized(boolean initialized) {
 		this.initialized = initialized;
 	}
+	
+	
 
 }
