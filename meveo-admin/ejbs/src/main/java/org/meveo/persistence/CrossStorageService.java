@@ -1466,7 +1466,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					continue;
 					
 				} catch (ClassNotFoundException e) {
-					log.warn("Missing CFT class {}", e.getMessage());
+					//NOOP
 				
 				} catch(Exception e) {
 					log.error("Cannot find referenced entity {}", e.getMessage());
