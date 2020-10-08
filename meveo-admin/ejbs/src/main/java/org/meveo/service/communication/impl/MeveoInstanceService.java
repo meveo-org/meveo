@@ -43,6 +43,7 @@ import org.meveo.event.communication.InboundCommunicationEvent;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.service.base.BusinessService;
+import org.meveo.util.PasswordUtils;
 
 /**
  * MeveoInstance service implementation.
@@ -99,6 +100,10 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
 		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
 		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		if(password != null) {
+			password = PasswordUtils.decrypt(meveoInstance.getSalt(), password);
+		}
+		
 		try {
 			ResteasyClient client = new ResteasyClientBuilder().build();
 			ResteasyWebTarget target = client.target(baseurl + url);
@@ -138,6 +143,10 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
 		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
 		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		if(password != null) {
+			password = PasswordUtils.decrypt(meveoInstance.getSalt(), password);
+		}
+		
 		try {
 			ResteasyClient client = new ResteasyClientBuilder().build();
 			ResteasyWebTarget target = client.target(baseurl + url);
@@ -173,6 +182,10 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 		String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
 		String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
 		String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+		if(password != null) {
+			password = PasswordUtils.decrypt(meveoInstance.getSalt(), password);
+		}
+		
 		try {
 			ResteasyClient client = new ResteasyClientBuilder().build();
 			ResteasyWebTarget target = client.target(baseurl + url);

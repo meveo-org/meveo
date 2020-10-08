@@ -95,6 +95,7 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.meveo.util.PasswordUtils;
 
 /**
  * EJB for managing MeveoModule entities
@@ -210,6 +211,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             String baseurl = meveoInstance.getUrl().endsWith("/") ? meveoInstance.getUrl() : meveoInstance.getUrl() + "/";
             String username = meveoInstance.getAuthUsername() != null ? meveoInstance.getAuthUsername() : "";
             String password = meveoInstance.getAuthPassword() != null ? meveoInstance.getAuthPassword() : "";
+    		if(password != null) {
+    			password = PasswordUtils.decrypt(meveoInstance.getSalt(), password);
+    		}
+            
             ResteasyClient client = meveoInstanceService.getRestEasyClient();
             ResteasyWebTarget target = client.target(baseurl + url);
             BasicAuthentication basicAuthentication = new BasicAuthentication(username, password);
