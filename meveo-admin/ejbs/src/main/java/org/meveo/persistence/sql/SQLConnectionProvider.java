@@ -29,6 +29,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.util.PasswordUtils;
 import org.slf4j.Logger;
 
 /**
@@ -74,7 +75,8 @@ public class SQLConnectionProvider {
 		defaultSqlConfiguration.setDriverClass(driverClass);
 		defaultSqlConfiguration.setUrl(url);
 		defaultSqlConfiguration.setUsername(username);
-		defaultSqlConfiguration.setPassword(password);
+		String salt = PasswordUtils.getSalt(defaultSqlConfiguration.getCode(), defaultSqlConfiguration.getUrl());
+		defaultSqlConfiguration.setPassword(PasswordUtils.encrypt(salt, password));
 		defaultSqlConfiguration.setDialect(dialect);
 	}
 
@@ -166,7 +168,14 @@ public class SQLConnectionProvider {
 			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
 			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
 			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
-			config.setProperty("hibernate.connection.password", sqlConfiguration.getPassword());
+			
+			if(sqlConfiguration.getClearPassword() == null) {
+				String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
+				var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());
+				config.setProperty("hibernate.connection.password", clearPwd);
+			} else {
+				config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
+			}
 			
 			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
 				config.setProperty("hibernate.default_schema", sqlConfiguration.getSchema());
