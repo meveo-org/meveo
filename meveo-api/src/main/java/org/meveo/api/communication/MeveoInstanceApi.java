@@ -81,7 +81,7 @@ public class MeveoInstanceApi extends BaseApi {
 		meveoInstance.setAsVersion(postData.getAsVersion());
 		meveoInstance.setUrl(postData.getUrl());
 		meveoInstance.setAuthUsername(postData.getAuthUsername());
-		meveoInstance.setAuthPassword(postData.getAuthPassword());
+		meveoInstance.setClearPassword(postData.getAuthPassword());
 		if (!StringUtils.isBlank(postData.getUser())) {
 			User user = userService.findByUsername(postData.getUser());
 			if (user == null) {
@@ -129,7 +129,7 @@ public class MeveoInstanceApi extends BaseApi {
 			meveoInstance.setUrl(postData.getUrl());
 		}
 		meveoInstance.setAuthUsername(postData.getAuthUsername());
-		meveoInstance.setAuthPassword(postData.getAuthPassword());
+		meveoInstance.setClearPassword(postData.getAuthPassword());
 		if (!StringUtils.isBlank(postData.getUser())) {
 			User user = userService.findByUsername(postData.getUser());
 			if (user == null) {

@@ -24,5 +24,12 @@
 		</addColumn>
 		<sql>UPDATE crm_custom_action SET applicable_to_entity_list=0, applicable_to_entity_instance=1;</sql>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="Increase auth_password length">
+	    <modifyDataType
+	        columnName="auth_password"
+	        newDataType="varchar(255)"
+	        tableName="com_meveo_instance"/>
+	</changeSet>
 
 </databaseChangeLog>

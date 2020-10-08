@@ -115,6 +115,7 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.util.ApplicationProvider;
+import org.meveo.util.PasswordUtils;
 import org.meveo.util.PersistenceUtils;
 import org.primefaces.model.LazyDataModel;
 import org.reflections.Reflections;
@@ -2297,7 +2298,8 @@ public class EntityExportImportService implements Serializable {
             ResteasyClient client = meveoInstanceService.getRestEasyClient();
             ResteasyWebTarget target = client.target(remoteInstance.getUrl() + (remoteInstance.getUrl().endsWith("/") ? "" : "/") + "api/rest/importExport/importData");
 
-            BasicAuthentication basicAuthentication = new BasicAuthentication(remoteInstance.getAuthUsername(), remoteInstance.getAuthPassword());
+    		var password = PasswordUtils.decrypt(remoteInstance.getSalt(), remoteInstance.getAuthPassword());
+            BasicAuthentication basicAuthentication = new BasicAuthentication(remoteInstance.getAuthUsername(), password);
             target.register(basicAuthentication);
 
             MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -2351,7 +2353,8 @@ public class EntityExportImportService implements Serializable {
         ResteasyWebTarget target = client
             .target(remoteInstance.getUrl() + (remoteInstance.getUrl().endsWith("/") ? "" : "/") + "api/rest/importExport/checkImportDataResult?executionId=" + executionId);
 
-        BasicAuthentication basicAuthentication = new BasicAuthentication(remoteInstance.getAuthUsername(), remoteInstance.getAuthPassword());
+		var password = PasswordUtils.decrypt(remoteInstance.getSalt(), remoteInstance.getAuthPassword());
+        BasicAuthentication basicAuthentication = new BasicAuthentication(remoteInstance.getAuthUsername(), password);
         target.register(basicAuthentication);
 
         Response response = target.request().get();// post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));

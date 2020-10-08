@@ -103,7 +103,7 @@ public class PasswordUtils {
 	private static byte[] addIVToCipher(byte[] encrypted) {
 		byte[] cipherWithIv = new byte[ivCode.length + encrypted.length];
 		System.arraycopy(ivCode, 0, cipherWithIv, 0, ivCode.length);
-		System.arraycopy(encrypted, 0, cipherWithIv, encrypted.length, encrypted.length);
+		System.arraycopy(encrypted, 0, cipherWithIv, ivCode.length, encrypted.length);
 		return cipherWithIv;
 	}
 }
