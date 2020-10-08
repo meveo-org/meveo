@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author akadid abdelmounaim
- * @lastModifiedVersion 6.8.0
+ * @lastModifiedVersion 6.12
  */
 @Named
 @ViewScoped
@@ -255,6 +255,19 @@ public class CustomFieldDataEntryBean implements Serializable {
 		return groupedFieldTemplates.get(entity.getUuid());
 	}
 
+
+	public List<EntityCustomAction> getCustomActionsInDetail(IEntity entity) {
+
+		List<EntityCustomAction> customActions = getCustomActions(entity);
+		return customActions.stream().filter(e -> e.getApplicableToEntityInstance()).collect(Collectors.toList());
+	}
+	
+	public List<EntityCustomAction> getCustomActionsInList(IEntity entity) {
+
+		List<EntityCustomAction> customActions = getCustomActions(entity);
+		return customActions.stream().filter(e -> e.getApplicableToEntityList()).collect(Collectors.toList());
+	}
+	
 	/**
 	 * Get a list of actions applicable for an entity. If needed, load them.
 	 *

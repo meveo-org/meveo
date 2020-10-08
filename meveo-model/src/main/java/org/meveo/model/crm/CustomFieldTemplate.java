@@ -345,7 +345,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
      */
     @Column(name = "display_format", length = 20)
     @Size(max = 20)
-    private String displayFormat;
+    private String displayFormat = "dd-M-yyyy hh:mm:ss";
 
 	/**
 	 * List of content types

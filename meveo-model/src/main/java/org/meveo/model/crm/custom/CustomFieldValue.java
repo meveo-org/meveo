@@ -2,7 +2,6 @@ package org.meveo.model.crm.custom;
 
 import java.io.File;
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -26,9 +25,11 @@ import org.meveo.commons.utils.CustomInstantSerializer;
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.slf4j.Logger;
@@ -430,7 +431,34 @@ public class CustomFieldValue implements Serializable {
             for (Object listItem : listValue) {
                 listEntityValue.add(new EntityReferenceWrapper((BusinessEntity) listItem));
             }
-        } else {
+        } else if(CustomEntity.class.isAssignableFrom(itemClass)) {
+        	listEntityValue = new ArrayList<>(); 
+        	listMapValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+            	CustomEntity customEntity = (CustomEntity) listItem;
+            	if(customEntity.getUuid() != null) {
+	            	EntityReferenceWrapper efw = new EntityReferenceWrapper();
+	            	efw.setUuid(customEntity.getUuid());
+	            	efw.setClassnameCode(customEntity.getCetCode());
+	            	efw.setClassname(listItem.getClass().getName());
+	                listEntityValue.add(efw);
+            	} else {
+            		Map<String, Object> mapValue = CEIUtils.pojoToCei(customEntity)
+        					.getCfValuesAsValues();
+            		listMapValue.add(mapValue);
+            	}
+            }
+            
+            if(listEntityValue.isEmpty()) {
+            	listEntityValue = null;
+            }
+            
+            if(listMapValue.isEmpty()) {
+            	listMapValue = null;
+            }
+        }
+        
+        else {
     	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
         }
     }

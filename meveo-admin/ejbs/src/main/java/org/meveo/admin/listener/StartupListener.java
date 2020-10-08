@@ -18,12 +18,22 @@
  */
 package org.meveo.admin.listener;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -33,8 +43,11 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
@@ -76,10 +89,22 @@ public class StartupListener {
 	
 	@Inject
 	private GitClient gitClient;
+	
+	@Inject
+	@CurrentUser
+	private Instance<MeveoUser> appInitUser;
+	
+    @Inject
+    private Instance<MeveoInitializer> initializers;
 
+	@SuppressWarnings("unchecked")
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public void init() {
+		//MeveoUser forcedUser = MeveoUser.instantiate("applicationInitializer", null);
+		//forcedUser.setRoles(Set.of(DefaultRole.GIT_ADMIN.getRoleName()));
+		// appInitUser.loadUser(forcedUser);
+		
 		entityManagerWrapper.getEntityManager().joinTransaction();
 		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
 		session.doWork(connection -> {
@@ -115,9 +140,9 @@ public class StartupListener {
 			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
 			if (meveoRepo == null) {
 				try {
-					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR, //
-							false, //
-							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(), //
+					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR,
+							false,
+							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
 							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
 
 					log.info("Created Meveo GIT repository");
@@ -137,6 +162,37 @@ public class StartupListener {
 				} catch (BusinessException e) {
 					log.error("Cannot create Meveo Git folder", e);
 				}
+			}
+			
+			// Generate .gitignore file
+			List<String> ignoredFiles = List.of(
+					".classpath",
+					".project",
+					".settings/*",
+					".vscode/*",
+					"target/*"
+			);
+			
+			File gitRepo = GitHelper.getRepositoryDir(appInitUser.get(), meveoRepo.getCode());
+			File gitIgnoreFile = new File(gitRepo, ".gitignore");
+			
+			try {
+				List<String> actualIgnoredFiles = gitIgnoreFile.exists() ? Files.readAllLines(gitIgnoreFile.toPath()) : List.of();
+				Collection<String> missingEntries = CollectionUtils.subtract(ignoredFiles, actualIgnoredFiles);
+				try (
+						FileWriter fw = new FileWriter(gitIgnoreFile, true);
+						BufferedWriter output = new BufferedWriter(fw);
+					) {
+					for(String missingEntry : missingEntries) {
+						output.append(missingEntry);
+						output.newLine();
+					}
+				}
+				gitClient.commitFiles(meveoRepo, List.of(gitIgnoreFile), "Update .gitignore");
+			} catch (IOException e1) {
+				log.error("Can't read / write .gitignore file");
+			} catch (BusinessException e) {
+				log.error("Can't commit .gitignore file", e);
 			}
 
 			// Create default pom file
@@ -159,7 +215,15 @@ public class StartupListener {
 			log.info("Thank you for running Meveo Community code.");
 		});
 		
-		session.flush();	
+		session.flush();
+		
+	    for(MeveoInitializer initializer : initializers) {
+	    	try {
+	    		initializer.init();
+	    	} catch (Exception e) {
+	    		log.error("Error during execution of {}", initializer.getClass(), e);
+	    	}
+	    }
 	}
 
 	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {

@@ -445,7 +445,12 @@ public class Neo4jService implements CustomPersistenceService {
 
                     if (relatedPersistedEntities != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
-                                .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+                        		.orElseGet(() -> entityReference.getRelationship() != null ? entityReference.getRelationship().getName() : null);
+                        
+                        if(relationshipName == null) {
+                        	throw new BusinessException(entityReference.getAppliesTo() + "#" + entityReference.getCode() + ": Relationship name must be provided !");
+                        }
+                        
                         for (EntityRef entityRef : relatedPersistedEntities) {
                             relationshipsToCreate.put(entityRef, relationshipName);
                         }

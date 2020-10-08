@@ -16,6 +16,13 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
-	
-	
+	<changeSet author="EdwardPLegaspi"
+		id="20201006 - Github#197: Custom action enhancement">
+		<addColumn tableName="crm_custom_action">
+			<column name="applicable_to_entity_list" type="${type.boolean}" defaultValue="0"></column>
+			<column name="applicable_to_entity_instance" type="${type.boolean}" defaultValue="1"></column>
+		</addColumn>
+		<sql>UPDATE crm_custom_action SET applicable_to_entity_list=0, applicable_to_entity_instance=1;</sql>
+	</changeSet>
+
 </databaseChangeLog>

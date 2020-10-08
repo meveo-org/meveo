@@ -245,17 +245,4 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 		this.remove(dto.getCode());
 	}
 
-	@Override
-	public void addToModule(GitRepository gitRepository, MeveoModule module) {
-		module.addModuleFile("/git/" + gitRepository.getCode());
-		super.addToModule(gitRepository, module);
-	}
-
-	@Override
-	public void removeFromModule(GitRepository gitRepository, MeveoModule module) {
-		module.removeModuleFile("/git/" + gitRepository.getCode());
-		super.removeFromModule(gitRepository, module);
-	}
-	
-	
 }
