@@ -23,7 +23,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Persistence](https://github.com/meveo-org/meveo/tree/master/meveo-api/src/main/java/org/meveo/api/persistence)
 
-[Function](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/)
+[Function](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/script)
 
 [Endpoint](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
 
