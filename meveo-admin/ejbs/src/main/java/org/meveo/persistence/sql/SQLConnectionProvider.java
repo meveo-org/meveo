@@ -29,7 +29,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.sql.SqlConfiguration;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 import org.slf4j.Logger;
 
 /**

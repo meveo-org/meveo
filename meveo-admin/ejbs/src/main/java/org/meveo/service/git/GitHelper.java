@@ -26,7 +26,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.MeveoUser;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

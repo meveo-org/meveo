@@ -42,8 +42,8 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.event.communication.InboundCommunicationEvent;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.communication.MeveoInstance;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.base.BusinessService;
-import org.meveo.util.PasswordUtils;
 
 /**
  * MeveoInstance service implementation.

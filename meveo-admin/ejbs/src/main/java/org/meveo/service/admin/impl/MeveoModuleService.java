@@ -87,6 +87,7 @@ import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.job.JobExecutionService;
@@ -95,7 +96,6 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
-import org.meveo.util.PasswordUtils;
 
 /**
  * EJB for managing MeveoModule entities

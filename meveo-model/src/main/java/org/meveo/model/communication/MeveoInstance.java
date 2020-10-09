@@ -41,7 +41,7 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.User;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
