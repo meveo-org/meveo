@@ -101,8 +101,7 @@ public class GitHelper {
 
         } else if (gitRepository.hasCredentials()) {
             // Use configured / default credentials as fallback
-        	String salt = PasswordUtils.getSalt(gitRepository.getId(), gitRepository.getCode());
-            String pwd = PasswordUtils.decrypt(salt, gitRepository.getDefaultRemotePassword());
+            String pwd = PasswordUtils.decrypt(gitRepository.getSalt(), gitRepository.getDefaultRemotePassword());
 			return new UsernamePasswordCredentialsProvider(gitRepository.getDefaultRemoteUsername(), pwd);
 
         } else if(gitRepository.isMeveoRepository()){

@@ -43,6 +43,8 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.User;
 import org.meveo.util.PasswordUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Cacheable
 @ExportIdentifier({ "code"})
@@ -548,6 +550,7 @@ public class MeveoInstance extends BusinessEntity {
         this.authPassword = authPassword;
     }
     
+    @JsonIgnore
     public String getSalt() {
     	return PasswordUtils.getSalt(getCode(), getUrl());
     }

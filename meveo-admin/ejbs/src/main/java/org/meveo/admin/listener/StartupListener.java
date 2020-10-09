@@ -96,15 +96,11 @@ public class StartupListener {
 	
     @Inject
     private Instance<MeveoInitializer> initializers;
-
+    
 	@SuppressWarnings("unchecked")
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public void init() {
-		//MeveoUser forcedUser = MeveoUser.instantiate("applicationInitializer", null);
-		//forcedUser.setRoles(Set.of(DefaultRole.GIT_ADMIN.getRoleName()));
-		// appInitUser.loadUser(forcedUser);
-		
 		entityManagerWrapper.getEntityManager().joinTransaction();
 		Session session = entityManagerWrapper.getEntityManager().unwrap(Session.class);
 		session.doWork(connection -> {
