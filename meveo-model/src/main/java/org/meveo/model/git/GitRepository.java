@@ -26,6 +26,8 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.util.PasswordUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 
@@ -105,9 +107,13 @@ public class GitRepository extends BusinessEntity {
     	if(defaultRemoteUsername == null) {
     		this.defaultRemotePassword = null;
     	} else if(clearDefaultRemotePassword != null) {
-    		String salt = PasswordUtils.getSalt(getId(), getCode());
-    		this.defaultRemotePassword = PasswordUtils.encrypt(salt, clearDefaultRemotePassword);
+    		this.defaultRemotePassword = PasswordUtils.encrypt(getSalt(), clearDefaultRemotePassword);
     	}
+    }
+    
+    @JsonIgnore
+    public String getSalt() {
+    	return PasswordUtils.getSalt(getRemoteOrigin(), getCode());
     }
 
     public List<String> getBranches() {

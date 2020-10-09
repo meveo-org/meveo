@@ -72,7 +72,7 @@ public class Neo4JConfiguration extends BusinessEntity {
 	
     @PrePersist
     @PreUpdate
-    protected void prePersist() {
+    public void prePersist() {
     	if(clearPassword != null) {
     		String salt = PasswordUtils.getSalt(getId(), getCode());
     		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);

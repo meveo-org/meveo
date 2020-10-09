@@ -31,5 +31,14 @@
 	        newDataType="varchar(255)"
 	        tableName="com_meveo_instance"/>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="Create patch_execution table">
+    	<createTable tableName="patch_execution">
+    		<column name="name" type="varchar(255)">
+    			<constraints primaryKey="true" primaryKeyName="pk_patch_execution"/>
+    		</column>
+		    <column name="ran" type="${type.boolean}" defaultValue="0"/>
+    	</createTable>
+	</changeSet>
 
 </databaseChangeLog>

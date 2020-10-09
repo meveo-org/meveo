@@ -83,29 +83,22 @@ public class Neo4jConnectionProvider {
     private String neo4jPassword;
     private Integer neo4jRestPort;
 
-    private Neo4JConfiguration defaultConfiguration = null; 
+    private Neo4JConfiguration defaultConfiguration = new Neo4JConfiguration(); 
 
     @PostConstruct
     public void loadConfig() {
-        neo4jUrl = ParamBean.getInstance().getProperty("neo4j.host", null);
-        neo4jRestPort = Integer.valueOf(ParamBean.getInstance().getProperty("neo4j.rest.port", "-1"));
-        neo4jLogin = ParamBean.getInstance().getProperty("neo4j.login", null);
-        neo4jPassword = ParamBean.getInstance().getProperty("neo4j.password", null);
+        ParamBean paramBean = ParamBean.getInstance();
+		neo4jUrl = paramBean.getProperty("neo4j.host", null);
+        neo4jRestPort = Integer.valueOf(paramBean.getProperty("neo4j.rest.port", "-1"));
+        neo4jLogin = paramBean.getProperty("neo4j.login", null);
+        neo4jPassword = paramBean.getProperty("neo4j.password", null);
 
-        defaultConfiguration = emWrapperProvider.get().getEntityManager()
-        	.unwrap(org.hibernate.Session.class)
-        	.byNaturalId(Neo4JConfiguration.class)
-        	.with(LockOptions.READ)
-        	.using("code", Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION)
-        	.load();
-        
-        if(defaultConfiguration == null && neo4jUrl != null && neo4jRestPort != -1 && neo4jLogin != null && neo4jUrl != null) {
+        if(neo4jUrl != null && neo4jRestPort != -1 && neo4jLogin != null && neo4jUrl != null) {
 	        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
 	        defaultConfiguration.setNeo4jLogin(neo4jLogin);
 	        defaultConfiguration.setClearPassword(neo4jPassword);
+	        defaultConfiguration.prePersist(); // Encrypt password
 	        defaultConfiguration.setNeo4jUrl(neo4jUrl);
-	        emWrapperProvider.get().getEntityManager()
-	        	.persist(defaultConfiguration);
 	    }
     }
 
