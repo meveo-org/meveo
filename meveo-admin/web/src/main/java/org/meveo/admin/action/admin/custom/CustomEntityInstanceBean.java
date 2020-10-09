@@ -81,7 +81,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
 	protected CustomEntityTemplate customEntityTemplate;
-	private Repository repository;
+	protected Repository repository;
 
 	protected String customEntityTemplateCode;
 	protected String customTableName;
@@ -89,7 +89,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Inject
 	@Cookie(name = "repository")
-	private String repositoryCode;
+	protected String repositoryCode;
 
 	private Map<String, CustomFieldTemplate> customFieldTemplates;
 

@@ -337,6 +337,16 @@
 						</p:column>
 					</p:dataTable>
 					<h:panelGroup id="customActionButton">
+						<p:commandButton value="#{messages['commons.deleteMultiple']}"
+							immediate="true"
+							action="#{customEntityInstanceListBean.deleteMany()}"
+							icon="ui-icon-trash" update="@form">
+							<p:confirm header="#{messages['commons.confirmationHeader']}"
+								message="#{messages['commons.confirmDelete']}"
+								icon="ui-icon-alert" />
+							<f:ajax render="@all" />
+						</p:commandButton>
+
 						<c:set var="customActionsInList"
 							value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}"
 							scope="request" />
