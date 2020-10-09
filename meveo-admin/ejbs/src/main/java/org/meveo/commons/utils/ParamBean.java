@@ -134,6 +134,10 @@ public class ParamBean {
 	 * @return Application configuration instance
 	 */
 	public static ParamBean getInstance(String propertiesName) {
+		if(instance != null && !instance._propertyFile.endsWith(propertiesName)) {
+			return new ParamBean(propertiesName);
+		}
+		
 		if (reload) {
 			instance = new ParamBean(propertiesName);
 		} else if (instance == null) {

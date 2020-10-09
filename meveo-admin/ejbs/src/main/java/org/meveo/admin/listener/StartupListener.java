@@ -22,11 +22,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.inject.Instance;
@@ -36,6 +42,7 @@ import javax.transaction.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
@@ -213,6 +220,31 @@ public class StartupListener {
 		
 		session.flush();
 		
+		try {
+			// Set-up secret key
+			String secret = System.getProperty("meveo.security.secret");
+			if(secret == null) {
+				var paramBean = ParamBean.getInstance("meveo-security.properties");
+				secret = paramBean.getProperty("meveo.security.secret", null);
+				if(secret == null) {
+					KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+					SecureRandom secureRandom = new SecureRandom();
+					int keyBitSize = 256;
+					keyGenerator.init(keyBitSize, secureRandom);
+					SecretKey secretKey = keyGenerator.generateKey();
+					byte[] encodedKey = Base64.getEncoder().encode(secretKey.getEncoded());
+					var randomSecret = 	new String(encodedKey, StandardCharsets.UTF_8);
+					paramBean.setProperty("meveo.security.secret", randomSecret);
+					paramBean.saveProperties();
+					secret = randomSecret;
+				}
+				System.setProperty("meveo.security.secret", secret);
+			}
+			
+		} catch (NoSuchAlgorithmException e1) {
+			throw new RuntimeException(e1);
+		}
+				
 	    for(MeveoInitializer initializer : initializers) {
 	    	try {
 	    		initializer.init();
