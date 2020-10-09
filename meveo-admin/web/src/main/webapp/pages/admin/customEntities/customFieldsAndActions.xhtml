@@ -363,10 +363,9 @@
 							hideEffect="slide" />
 
 						<p:remoteCommand id="remoteDeleteActionButton"
-							actionListener="#{entityCustomActionBean.deleteInlist}"
+							actionListener="#{entityCustomActionBean.delete}"
 							action="#{customEntityTemplateBean.refreshFields}"
-							name="actionsDoDelete"
-							oncomplete="handleDeleteComplete(xhr,status,args)" update="@form" />
+							name="actionsDoDelete" update="@form" />
 						<p:tooltip for="deleteActionlink"
 							value="#{messages['commons.delete']}" showEffect="slide"
 							hideEffect="slide" />
@@ -1109,10 +1108,12 @@
 								edit="true" rendered="#{entityCustomActionBean.canUserUpdateEntity()}"
 								resetAction="#{entityCustomActionBean.resetFormEntity()}" includeViewParams="true"/>
 				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
-								 action="#{entityCustomActionBean.deleteWithBack}" immediate="true" update="@form"
+								 actionListener="#{customEntityTemplateBean.refreshFields}"
+								 action="#{entityCustomActionBean.delete}" immediate="true" update=":fieldsForm:fields"
 								 rendered="#{entityCustomActionBean.entity.id!=null and entityCustomActionBean.canUserUpdateEntity()}">
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 							   message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
+					<f:ajax render="@all"/>
 				</p:commandButton>
 				<!--</hf:formButtons>-->
 			</ui:define>
