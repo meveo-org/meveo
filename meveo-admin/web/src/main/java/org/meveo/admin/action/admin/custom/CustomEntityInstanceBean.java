@@ -270,8 +270,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					return wrapper.getCode();
 				}
 
-				BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
-				return cei.getCode();
+				if(ceiMap.getValue() instanceof BusinessEntity) {
+					BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
+					return cei.getCode();
+				} else {
+					return ceiMap.getValue().toString();
+				}
 			}
 		}
 

@@ -341,6 +341,11 @@ input[type="text"] .ui-button-text,
   margin-top: -1px;
 }
 
+td.ui-selection-column {
+  text-align: center!important;
+  padding-left: 7px!important;
+}
+
 .ui-state-highlight {
   background: #264676 !important;
   background-image: none !important;

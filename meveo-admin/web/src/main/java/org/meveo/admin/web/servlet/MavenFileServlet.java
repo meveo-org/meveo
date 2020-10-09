@@ -1,5 +1,7 @@
 package org.meveo.admin.web.servlet;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -8,14 +10,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URLDecoder;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -26,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -55,7 +62,7 @@ public class MavenFileServlet extends HttpServlet {
 	@Inject
 	@CurrentUser
 	private MeveoUser currentUser;
-
+	
 	private String userPath;
 
 	// Actions
@@ -162,6 +169,22 @@ public class MavenFileServlet extends HttpServlet {
 					String pathFile = deployDir.getAbsolutePath() + File.separator + "deployments" + File.separator + nameWarDir + File.separator + "WEB-INF" + File.separator + "lib";
 					//file = new File(pathFile, URLDecoder.decode(requestedFile, "UTF-8"));
 					file = new File(pathFile, file.getName());
+					
+					// If file is a directory and ends with ".jar", zip it to a jar file and store it to .m2
+					if(file.isDirectory() && file.getName().endsWith(".jar")) {
+						File zipfile = new File(userPath, URLDecoder.decode(requestedFile, "UTF-8"));
+						zipfile.getParentFile().mkdirs();
+						
+						try(
+				            var zos = new ZipOutputStream(new FileOutputStream(zipfile))
+	            		) {
+							org.meveo.commons.utils.FileUtils.addToZipFile(file, zos, "");
+						} catch(Exception e) {
+							throw new RuntimeException(e);
+						}
+						
+						file = zipfile;
+					}
 				} else {
 					// If archive is zipped, extract the file to the .m2 directory
 					try (JarFile wf = new JarFile(warDir)) {

@@ -17,23 +17,21 @@ package org.meveo.api.function;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
-import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.ws.rs.PathParam;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.api.dto.function.FunctionDto;
-import org.meveo.event.qualifier.Created;
-import org.meveo.model.BaseEntity;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
@@ -74,8 +72,9 @@ public class FunctionApi {
     /**
      * @param code Function code
      * @return the dto represenation of the function, or null if not found.
+     * @throws BusinessException 
      */
-    public FunctionDto find(String code) {
+    public FunctionDto find(String code) throws BusinessException {
     	Function function = concreteFunctionService.findByCode(code);
     	if(function == null) {
     		return null;
@@ -95,23 +94,25 @@ public class FunctionApi {
     /**
      * @return the list of dto representation of the functions in databases
      */
-    public List<FunctionDto> list() {
+    public List<FunctionDto> list() throws BusinessException {
         final List<Function> functions = concreteFunctionService.list();
-        return functions.stream().map(e -> {
+        List<FunctionDto> result = new LinkedList<FunctionDto>();
+        for (Function e : functions) {
             final FunctionDto functionDto = new FunctionDto();
             functionDto.setCode(e.getCode());
             functionDto.setTestSuite(e.getTestSuite());
-            functionDto.setInputs(concreteFunctionService.getInputs(e));
+			functionDto.setInputs(concreteFunctionService.getInputs(e));
             functionDto.setOutputs(concreteFunctionService.getOutputs(e));
             if(e.getCategory() != null) {
             	e.setCategory(e.getCategory());
             }            
-            return functionDto;
-        }).collect(Collectors.toList());
+            result.add(functionDto);
+        }
+        return result;
     }
 
     public Map<String, Object> execute(String code, Map<String, Object> inputs) throws BusinessException {
-        return concreteFunctionService.getFunctionService(code).execute(code, inputs);
+        return concreteFunctionService.getFunctionService(code).execute(code, inputs); 
     }
 
     public String getTest(String code) {
@@ -170,7 +171,7 @@ public class FunctionApi {
         return "FunctionTestJob_" + functionCode;
     }
 
-    public List<Sample> getSamples(String functionCode) {
+    public List<Sample> getSamples(String functionCode) throws ElementNotFoundException {
         return concreteFunctionService.getFunctionService(functionCode).getSamples(functionCode);
     }
 

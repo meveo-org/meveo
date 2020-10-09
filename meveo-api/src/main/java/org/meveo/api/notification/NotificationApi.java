@@ -18,7 +18,6 @@ import org.meveo.api.dto.notification.InboundRequestsDto;
 import org.meveo.api.dto.notification.NotificationDto;
 import org.meveo.api.dto.notification.NotificationHistoriesDto;
 import org.meveo.api.dto.notification.NotificationHistoryDto;
-import org.meveo.api.dto.notification.WebHookDto;
 import org.meveo.api.dto.notification.WebNotificationDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.notification.NotificationResponsesDto;
@@ -26,7 +25,7 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
+import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.InboundRequest;
@@ -53,6 +52,9 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 
 	@Inject
 	protected ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	protected NotificationCacheContainerProvider notificationCache;
 
 	@Inject
 	private NotificationService notificationService;
@@ -190,9 +192,14 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 	public E update(D postData) throws MeveoApiException, BusinessException {
 
 		E entity = getPersistenceService().findByCode(postData.getCode());
+		
 		if (entity == null) {
 			throw new EntityDoesNotExistsException(entityClass.getSimpleName(), postData.getCode());
 		}
+		
+		// Remove notification from cache before the update,
+		// otherwise if the type of event has changed the old value will remain in the cache
+		notificationCache.removeNotificationFromCache(entity);
 
 		fromDto(postData, entity);
 
@@ -213,8 +220,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 	}
 
 	@Override
-	public D find(String code) throws EntityDoesNotExistsException, MissingParameterException,
-			InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+	public D find(String code) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
 		E entity = getPersistenceService().findByCode(code);
 		if (entity == null) {
@@ -233,7 +239,7 @@ public abstract class NotificationApi<E extends Notification, D extends Notifica
 		this.remove(dto.getCode());
 	}
 
-	public void remove(String notificationCode) throws BusinessException, EntityDoesNotExistsException {
+	public void remove(String notificationCode) throws BusinessException, MeveoApiException {
 		E entity = getPersistenceService().findByCode(notificationCode);
 		if (entity != null) {
 			getPersistenceService().remove(entity);

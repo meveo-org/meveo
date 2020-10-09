@@ -102,13 +102,10 @@
                 <h:panelGroup id="persistences">
                     <p:fieldset id="sql" toggleable="true" collapsed="false" legend="SQL Persistence" width="100%" rendered="#{not empty customEntityTemplateBean.entity.sqlStorageConfiguration}">
                     	<h:panelGroup id="sqlPanel">
-	                        <hftl:formField label="#{messages['customizedEntities.storeAsTable']}" id="storeAsTable"
-	                                        field="sqlStorageConfiguration"
-	                                        childField="storeAsTable"
-	                                        allowEdit="false"
-	                                        listenerUpdate="sqlPanel" />
-	                        <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}"
-	                                                rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable == true}">
+                            <hftl:decorateFormField label="#{messages['customizedEntities.storeAsTable']}">
+                                <h:outputText value="#{customEntityTemplateBean.entity.storeAsTable}" styleClass="field-value"/>
+                            </hftl:decorateFormField>
+	                        <hftl:decorateFormField label="#{messages['customizedEntities.dbTablename']}" rendered="#{!customEntityTemplateBean.entity.transient and customEntityTemplateBean.entity.sqlStorageConfiguration.storeAsTable == true}">
 	                            <h:outputText value="#{customEntityTemplateBean.tableName}" styleClass="field-value"/>
 	                        </hftl:decorateFormField>
                         </h:panelGroup>

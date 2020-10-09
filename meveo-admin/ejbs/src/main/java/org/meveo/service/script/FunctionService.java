@@ -32,6 +32,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
@@ -141,7 +142,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param function the function
      * @return inputs of the function
      */
-    public List<FunctionIO> getInputs(T function) {
+    public List<FunctionIO> getInputs(T function) throws BusinessException {
     	return function.getInputs();
     }
     
@@ -151,7 +152,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param function the function
      * @return outputs of the function
      */
-    public List<FunctionIO> getOutputs(T function) {
+    public List<FunctionIO> getOutputs(T function) throws BusinessException {
     	return function.getOutputs();
     }
     
@@ -213,9 +214,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @param executableCode Code of the execution engine to retrieve
      * @return An instance of an execution engine for the executable with code
      */
-    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context);
+    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context) throws BusinessException;
     
-    public abstract E getExecutionEngine(T function, Map<String, Object> context);
+    public abstract E getExecutionEngine(T function, Map<String, Object> context) throws BusinessException;
 
     /**
      * Add a log line for a script
@@ -268,10 +269,28 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         if (context == null) {
             context = new HashMap<>();
         }
-        engine.init(context);
-        engine.execute(context);
-        engine.finalize(context);
-        return buildResultMap(engine, context);
+        try {
+			engine.init(context);
+		} catch (Throwable e) {
+			throw new ScriptExecutionException(engine.getClass().getName(), "init", e);
+		}
+        try {
+			engine.execute(context);
+		} catch (Throwable e) {
+			throw new ScriptExecutionException(engine.getClass().getName(), "execute", e);
+		}
+        try {
+			engine.finalize(context);
+		} catch (Throwable e) {
+			throw new ScriptExecutionException(engine.getClass().getName(), "finalize", e);
+		}
+
+        try {
+        	return buildResultMap(engine, context);
+		} catch (Throwable e) {
+			throw new ScriptExecutionException(engine.getClass().getName(), "buildResultMap", e);
+		}
+        
     }
 
     protected Map<String, Object> buildResultMap(E engine, Map<String, Object> context) {
@@ -290,7 +309,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws ElementNotFoundException   Script not found
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(IEntity entity, String scriptCode, String encodedParameters) throws BusinessException {
+    public Map<String, Object> execute(IEntity<?> entity, String scriptCode, String encodedParameters) throws BusinessException {
         return execute(entity, scriptCode, CustomScriptService.parseParameters(encodedParameters));
     }
 
@@ -321,7 +340,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws InvalidPermissionException Insufficient access to run the script
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(IEntity entity, String scriptCode, Map<String, Object> context) throws BusinessException {
+    public Map<String, Object> execute(IEntity<?> entity, String scriptCode, Map<String, Object> context) throws BusinessException {
         if (context == null) {
             context = new HashMap<>();
         }

@@ -19,6 +19,7 @@
 package org.meveo.admin.action.admin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.faces.view.ViewScoped;
@@ -98,6 +99,11 @@ public class UserRoleBean extends BaseBean<Role> {
 
     public void setRoleListModel(DualListModel<Role> perks) {
         this.rolesDM = perks;
+    }
+    
+    @Override
+    protected List<String> getListFieldsToFetch() {
+    	return Arrays.asList("permissions");
     }
 
     @Override

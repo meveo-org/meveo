@@ -38,14 +38,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.dwh.MeasurableQuantityDto;
-import org.meveo.api.dto.payment.WorkflowDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.IEntity;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.util.NullAwareBeanUtilsBean;
 import org.primefaces.model.SortOrder;
@@ -438,6 +437,26 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 
 	public Set<File> getFileImport() {
 		return fileImport;
+	}
+	
+	/**
+	 * Additional operation to be done when adding an entity to a module
+	 *  
+	 * @param entity The entity to add
+	 * @param module The module to update
+	 */
+	public void addToModule(E entity, MeveoModule module) {
+		//NOOP by default
+	}
+	
+	/**
+	 * Additional operation to be done when removing an entity from a module
+	 *  
+	 * @param entity The entity to remove
+	 * @param module The module to update
+	 */
+	public void removeFromModule(E entity, MeveoModule module) {
+		//NOOP by default
 	}
 	
 }

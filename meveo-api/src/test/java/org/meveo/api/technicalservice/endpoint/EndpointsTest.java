@@ -16,11 +16,25 @@
 
 package org.meveo.api.technicalservice.endpoint;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.api.rest.technicalservice.EndpointExecution;
 import org.meveo.api.rest.technicalservice.EndpointExecutionBuilder;
 import org.meveo.model.scripts.Accessor;
@@ -35,13 +49,6 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.mockito.Answers;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-
 @RunWith(MockitoJUnitRunner.class)
 public class EndpointsTest {
 
@@ -51,7 +58,7 @@ public class EndpointsTest {
 
     @SuppressWarnings("unchecked")
     @Before
-    public void before() {
+    public void before() throws ElementNotFoundException {
         concreteFunctionService = mock(ConcreteFunctionService.class);
         customScriptService = mock(ScriptInstanceService.class, Answers.CALLS_REAL_METHODS.get());
 

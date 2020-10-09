@@ -175,38 +175,40 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/disable")
 	@ApiOperation(value = "Disable meveo module")
 	ActionStatus disable(@QueryParam("code") @ApiParam("Code of the meveo module") String code);
-
+	
 	/**
-	 * Add a business entity to a module
-	 *
-	 * @param moduleCode Code of the module to modify
-	 * @param itemCode   Code of the item to add
-	 * @param itemType   Type of the item to add
-	 * @return the modified module
+	 * @param moduleCode
+	 * @param itemCode
+	 * @param itemType
+	 * @return
+	 * @throws EntityDoesNotExistsException
+	 * @throws BusinessException
 	 */
-	@POST()
-	@Path("/{code}/items/add")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	@ApiOperation(value = "Add to module")
-	MeveoModuleDto addToModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
-			@FormParam("itemCode") @ApiParam("Code of the item to add") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to add") String itemType)
-			throws EntityDoesNotExistsException, BusinessException;
-
-	/**
-	 * Remove a business entity from a module
-	 *
-	 * @param moduleCode Code of the module to modify
-	 * @param itemCode   Code of the item to remove
-	 * @param itemType   Type of the item to remove
-	 * @return the modified module
-	 */
-	@POST()
-	@Path("/{code}/items/remove")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@DELETE
+	@Path("/{code}/items/{itemType}/{itemCode}")
 	@ApiOperation(value = "Remove from module")
-	MeveoModuleDto removeFromModule(@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
-			@FormParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, @FormParam("itemType") @ApiParam("Type of the item to remove") String itemType)
-			throws EntityDoesNotExistsException, BusinessException;
+	MeveoModuleDto removeItemFromModule(
+			@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+			@PathParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, 
+			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType
+		) throws EntityDoesNotExistsException, BusinessException;
+	
+	/**
+	 * @param moduleCode
+	 * @param itemCode
+	 * @param itemType
+	 * @return
+	 * @throws EntityDoesNotExistsException
+	 * @throws BusinessException
+	 */
+	@PUT
+	@Path("/{code}/items/{itemType}/{itemCode}")
+	@ApiOperation(value = "Remove from module")
+	MeveoModuleDto addItemToModule(
+			@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
+			@PathParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, 
+			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType
+		) throws EntityDoesNotExistsException, BusinessException;
 
 	/**
 	 * Add a file/folder to a module

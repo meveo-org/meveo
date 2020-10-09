@@ -42,6 +42,15 @@ public class GenericNotificationService extends BusinessService<Notification> {
     private void init() {
         useNotificationCache = Boolean.parseBoolean(paramBeanFactory.getInstance().getProperty("cache.cacheNotification", "true"));
     }
+    
+    /**
+     * Refresh the notification cache
+     */
+    public void refreshCache() {
+    	if(useNotificationCache) {
+    		notificationCacheContainerProvider.refreshCache(null);
+    	}
+    }
 
     /**
      * Get a list of notifications that match event type and entity class. Notifications are looked up from cache or retrieved from DB.

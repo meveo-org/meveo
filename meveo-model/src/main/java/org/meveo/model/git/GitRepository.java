@@ -21,6 +21,8 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 
 import javax.persistence.*;
@@ -41,6 +43,8 @@ import java.util.List;
         parameters = {
                 @Parameter(name = "sequence_name", value = "git_storage_repository_seq")
         })
+@ModuleItem("GitRepository")
+@ModuleItemOrder(999)
 public class GitRepository extends BusinessEntity {
 
     /**

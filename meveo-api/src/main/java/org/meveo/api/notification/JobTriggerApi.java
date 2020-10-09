@@ -4,13 +4,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.notification.JobTriggerDto;
-import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.jobs.JobInstance;
@@ -28,7 +25,7 @@ import org.meveo.service.script.ScriptInstanceService;
  * @version 6.10
  **/
 @Stateless
-public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
+public class JobTriggerApi extends NotificationApi<JobTrigger, JobTriggerDto> {
 
     public JobTriggerApi() {
 		super(JobTrigger.class, JobTriggerDto.class);
@@ -46,6 +43,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
     @Inject
     private JobInstanceService jobInstanceService;
 
+    @Override
     public JobTrigger create(JobTriggerDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -59,22 +57,14 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         }
         handleMissingParameters();
 
-        if (jobTriggerService.findByCode(postData.getCode()) != null) {
-            throw new EntityAlreadyExistsException(JobTrigger.class, postData.getCode());
-        }
-        
-        JobTrigger notif = fromDto(postData);
-        
-        jobTriggerService.create(notif);
-
-        return notif;
+        return super.create(postData);
     }
 
     /* (non-Javadoc)
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public JobTriggerDto find(String notificationCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public JobTriggerDto find(String notificationCode) throws MeveoApiException {
         JobTriggerDto result = new JobTriggerDto();
 
         if (!StringUtils.isBlank(notificationCode)) {
@@ -93,8 +83,9 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 
         return result;
     }
-        
-    public JobTrigger update(JobTriggerDto postData) throws MeveoApiException, BusinessException {
+
+    @Override
+    public JobTrigger fromDto(JobTriggerDto postData, JobTrigger notif) throws MeveoApiException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -107,10 +98,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         }
         handleMissingParameters();
 
-        JobTrigger notif = jobTriggerService.findByCode(postData.getCode());
-        if (notif == null) {
-            throw new EntityDoesNotExistsException(JobTrigger.class, postData.getCode());
-        }
         ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
             scriptInstance = scriptInstanceService.findByCode(postData.getScriptInstanceCode());
@@ -151,8 +138,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
         notif.setJobInstance(jobInstance);
         notif.setJobParams(postData.getJobParams());
 
-        notif = jobTriggerService.update(notif);
-
         return notif;
     }
 
@@ -169,15 +154,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
             missingParameters.add("code");
 
             handleMissingParameters();
-        }
-    }
-
-    @Override
-    public JobTrigger createOrUpdate(JobTriggerDto postData) throws MeveoApiException, BusinessException {
-        if (jobTriggerService.findByCode(postData.getCode()) == null) {
-            return create(postData);
-        } else {
-            return update(postData);
         }
     }
 
@@ -209,7 +185,7 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
                 throw new EntityDoesNotExistsException(CounterTemplate.class, postData.getCounterTemplate());
             }
         }
-        
+
         JobInstance jobInstance = null;
         if (!StringUtils.isBlank(postData.getJobInstance())) {
             jobInstance = jobInstanceService.findByCode(postData.getJobInstance());
@@ -235,11 +211,6 @@ public class JobTriggerApi extends BaseCrudApi<JobTrigger, JobTriggerDto> {
 	@Override
 	public IPersistenceService<JobTrigger> getPersistenceService() {
 		return jobTriggerService;
-	}
-
-	@Override
-	public boolean exists(JobTriggerDto dto) {
-		return jobTriggerService.findByCode(dto.getCode()) != null;
 	}
 
 	@Override

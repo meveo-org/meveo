@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +33,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
@@ -50,6 +50,7 @@ import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -60,6 +61,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
@@ -129,6 +131,9 @@ public class OntologyObserver {
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+    
+    @Inject
+    private GraphQLService graphQlService;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
     
@@ -145,16 +150,26 @@ public class OntologyObserver {
     }
 
     /**
-     * Every 5 minutes, check if some element of ontology have changed. If it does, update the IDL definitions.
+     * Every minute, check if some element of ontology have changed. If it does, update the IDL definitions.
      */
-    //@Schedule(minute = "*/5", hour = "*", persistent = false)
+    @Schedule(minute = "*/1", hour = "*", persistent = false)
     @Asynchronous
     public void updateIDL() {
-        // log.debug("Checking for ontology changes");
         if (hasChange.get()) {
             hasChange.set(false);
-            // log.info("Ontology has changed, updating IDL definitions");
-            // graphQLService.updateIDL(); TODO: Reactive once graphql validation feature is done
+            
+            ParamBean instance = ParamBean.getInstance();
+			boolean updateGraphQlOnChange = Boolean.parseBoolean(instance.getProperty("meveo.graphql.updateOnChange", "true"));
+            if(updateGraphQlOnChange) {
+	            LOGGER.info("Ontology has changed, updating IDL definitions");
+	            try {
+	            	graphQlService.updateIDL();
+	            } catch (Exception e) {
+	            	LOGGER.error("Fail to update graphql definition", e);
+	            	instance.setProperty("meveo.graphql.updateOnChange", "false");
+	            	instance.saveProperties();
+	            }
+	        }
         }
     }
 
@@ -234,9 +249,9 @@ public class OntologyObserver {
         
         gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
 
-        String sourceCode = Files.readString(javaFile.toPath());
-        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
-        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
+//        String sourceCode = Files.readString(javaFile.toPath());
+//        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
+//        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
     }
 
     /**
@@ -267,8 +282,10 @@ public class OntologyObserver {
         if (classFile.exists()) {
             classFile.delete();
         }
-
-        gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
+        
+        if(!fileList.isEmpty()) {
+        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
+        }
     }
 
     /* ------------ CRT Notifications ------------ */

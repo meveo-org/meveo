@@ -235,29 +235,6 @@ public abstract class AbstractTechnicalServiceRsImpl<T extends TechnicalService,
         return response;
     }
 
-
-    @Override
-    public ActionStatus rename(String oldName, String newName) {
-        ActionStatus result = new ActionStatus();
-        try {
-            tsApi.rename(oldName, newName);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-        return result;
-    }
-
-    @Override
-    public ActionStatus renameVersion(String name, Integer oldVersion, Integer newVersion) {
-        ActionStatus result = new ActionStatus();
-        try {
-            tsApi.renameVersion(name, oldVersion, newVersion);
-        } catch (Exception e) {
-            processException(e, result);
-        }
-        return result;
-    }
-
     @Override
     public void enable(String name, Integer version) throws EntityDoesNotExistsException, BusinessException {
         tsApi.disable(name, version, false);

@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,6 +59,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -134,18 +137,10 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	 * initialize Modules
 	 */
 	public void initializeModules() {
-		meveoModules = meveoModuleService.findLikeWithCode(moduleCode);
-		if (!meveoModules.isEmpty()) {
-			List<MeveoModule> list = new ArrayList<>();
-			for (MeveoModule meveoModule : meveoModules) {
-				meveoModule = meveoModuleService.findById(meveoModule.getId(), getListFieldsToFetch());
-				if (!meveoModule.isDownloaded() || meveoModule.isInstalled()) {
-					list.add(meveoModule);
-				}
-			}
-			meveoModules.clear();
-			meveoModules = list;
-		}
+		MeveoModuleFilters filters = new MeveoModuleFilters();
+		filters.setActive(true);
+		filters.setCode(moduleCode);
+		meveoModules = meveoModuleService.list(filters);
 	}
 
 	public String getModuleCode() {

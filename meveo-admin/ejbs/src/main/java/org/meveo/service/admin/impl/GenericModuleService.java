@@ -20,11 +20,7 @@
 package org.meveo.service.admin.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -37,6 +33,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -48,16 +46,23 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+import org.meveo.service.storage.RepositoryService;
 
 @Stateless
 public class GenericModuleService<T extends MeveoModule> extends BusinessService<T> {
@@ -76,6 +81,15 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @Inject
     private ModuleScriptService moduleScriptService;
+
+    @Inject
+    private CrossStorageService crossStorageService;
+
+    @Inject
+    private CustomEntityTemplateService customEntityTemplateService;
+    
+    @Inject
+    private RepositoryService repositoryService;
     
     @SuppressWarnings("rawtypes")
     public void loadModuleItem(MeveoModuleItem item) throws BusinessException {
@@ -90,6 +104,41 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             	entity = null;
             }
 
+        } else if (CustomEntityInstance.class.getName().equals(item.getItemClass()) && item.getAppliesTo() != null) {
+            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
+            Map<String, Object> ceiTable;
+            
+        	try {
+        		ceiTable = crossStorageService.find(
+    				repositoryService.findDefaultRepository(), // XXX: Maybe we will need to parameterize this or search in all repositories ?
+    				customEntityTemplate,
+    				item.getItemCode(),
+    				false	// XXX: Maybe it should also be a parameter
+    			);
+        	} catch (EntityDoesNotExistsException e) {
+        		ceiTable = null;
+        	}
+            
+            if (ceiTable != null) {
+                CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+                customEntityInstance.setUuid((String) ceiTable.get("uuid"));
+                customEntityInstance.setCode((String) ceiTable.get("uuid"));
+                String fieldName = customFieldTemplateService.getFieldName(customEntityTemplate);
+                if (fieldName != null) {
+                    Object description = null;
+                    Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
+                    for (CustomFieldTemplate customFieldTemplate : customFieldTemplates.values()) {
+                        if (customFieldTemplate != null && customFieldTemplate.getCode().toLowerCase().equals(fieldName)) {
+                            description = ceiTable.get(customFieldTemplate.getCode());
+                        }
+                    }
+                    customEntityInstance.setDescription(fieldName + ": " + description);
+                }
+                customEntityInstance.setCetCode(item.getAppliesTo());
+                customEntityInstance.setCet(customEntityTemplate);
+                customFieldInstanceService.setCfValues(customEntityInstance, item.getAppliesTo(), ceiTable);
+                entity = customEntityInstance;
+            }
         } else {
 
             String sql = "select mi from " + item.getItemClass() + " mi where mi.code=:code ";

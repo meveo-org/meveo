@@ -98,6 +98,32 @@ public class CrossStorageApi{
 	}
 	
 	/**
+	 * Remove an instance of a given CET
+	 *
+	 * @param repository the repository where the instance is stored
+	 * @param uuid       the uuid of the instance
+	 * @param cetCode 	 code of the cet
+	 * @throws BusinessException if error occurs
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void remove(Repository repository, String uuid, String cetCode) throws BusinessException {
+		crossStorageService.remove(repository, cache.getCustomEntityTemplate(cetCode), uuid);
+	}
+	
+	/**
+	 * Remove an instance of a given CET
+	 *
+	 * @param repository the repository where the instance is stored
+	 * @param uuid       the uuid of the instance
+	 * @param cetClass   the clazz of the cet's type
+	 * @throws BusinessException if error occurs
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void remove(Repository repository, String uuid, Class<?> cetClass) throws BusinessException {
+		crossStorageService.remove(repository, getCet(cetClass), uuid);
+	}
+	
+	/**
 	 * @param cetClass
 	 * @return
 	 * @throws IllegalArgumentException

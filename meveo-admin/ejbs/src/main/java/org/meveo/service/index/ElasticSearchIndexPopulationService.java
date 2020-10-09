@@ -56,7 +56,6 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.commons.utils.JsonUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -74,11 +73,12 @@ import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomTableRecord;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -386,7 +386,7 @@ public class ElasticSearchIndexPopulationService implements Serializable {
                 String cfCode = cfValueInfo.getKey();
                 Object value = cfValueInfo.getValue();
                 if (value instanceof Map || value instanceof EntityReferenceWrapper) {
-                    value = JsonUtils.toJson(value, false);
+                    value = JacksonUtil.toString(value);
                 }
 
                 if (cftIndexable != null && cftIndexable.contains(entity.getClass().getName() + "_" + cfCode)) {

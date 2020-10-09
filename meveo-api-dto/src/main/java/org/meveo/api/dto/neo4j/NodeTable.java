@@ -1,22 +1,20 @@
 
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class NodeTable {
 
-    @SerializedName("id")
-    @Expose
+	@JsonProperty("id")
     private String id;
-    @SerializedName("labels")
-    @Expose
+	
+	@JsonProperty("labels")
     private List<String> labels = null;
-    @SerializedName("properties")
-    @Expose
+	
+	@JsonProperty("properties")
     private Map<String, String> properties;
 
     public String getId() {

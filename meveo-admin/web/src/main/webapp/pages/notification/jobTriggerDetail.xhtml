@@ -27,9 +27,9 @@
             column2Label="#{messages['BusinessEntity.description']}" column2="description" updateField=":jobTriggerForm:jobInstanceSelectId :jobTriggerForm:jobInstanceSelectId_text">
         </hftl:entityPopup>
 
-        <hftl:entityPopup id="scriptInstancePopup" header="#{messages['scriptInstance.title']}" backingBean="#{scriptInstanceBean}"
+        <hftl:entityPopup id="scriptInstancePopup" header="#{messages['scriptInstance.title']}" backingBean="#{functionBean}"
             searchField1Label="#{messages['BusinessEntity.code']}" searchField1="code" column1Label="#{messages['BusinessEntity.code']}" column1="code"
-            selection="#{jobTriggerBean.entity.scriptInstance}" column2Label="#{messages['BusinessEntity.description']}" column2="description"
+            selection="#{jobTriggerBean.entity.function}" column2Label="#{messages['BusinessEntity.description']}" column2="description"
             updateField=":jobTriggerForm:scriptInstanceSelectId :jobTriggerForm:scriptInstanceSelectId_text">
         </hftl:entityPopup>
 
@@ -40,7 +40,7 @@
             <hftl:formField id="eventTypeFilter" label="#{messages['entity.notification.eventTypeFilter']}" field="eventTypeFilter" required="true"  listValues="#{jobTriggerBean.getNotificationEventTypeFilters()}"/>
             <hftl:formField label="#{messages['entity.notification.elFilter']}" field="elFilter" textArea="true" rows="1" maxlength="2000" componentWidth="50" newLine="true" />
 
-            <hftl:formField id="scriptInstanceSelectId" label="#{messages['entity.notification.scriptInstance']}" field="scriptInstance" valueLabelField="code" required="false"
+            <hftl:formField id="scriptInstanceSelectId" label="#{messages['entity.notification.scriptInstance']}" field="function" valueLabelField="code" required="false"
                 popup="true" popupId="scriptInstancePopup" newLine="true" />
 
             <hftl:formField label="#{messages['entity.notification.params']}" field="params" componentWidth="100" />

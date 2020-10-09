@@ -65,6 +65,8 @@ import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityInstanceDto;
+import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -83,6 +85,8 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
@@ -90,6 +94,7 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
@@ -97,6 +102,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -151,6 +157,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	
 	@EJB
 	private MeveoModuleApi meveoModuleApi;
+	
+    @Inject
+    private RepositoryService repositoryService;
+    
+    @Inject
+    private CrossStorageService crossStorageService;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -188,6 +200,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			log.debug("Registering module item type {} from class {}", aClass.getSimpleName(), aClass);
 		}
 	}
+	
+    public List<Class<?>> getModuleItemClasses() {
+    	return new ArrayList<>(MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values());
+    }
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public MeveoModule createInNewTx(MeveoModuleDto moduleDto, boolean development) throws MeveoApiException, BusinessException {
@@ -655,10 +671,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					BaseEntityDto itemDto = null;
 
 					if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
-						// we will only add a cft if it's not a field of a cet
+						// we will only add a cft if it's not a field of a cet contained in the module
 						if (!StringUtils.isBlank(item.getAppliesTo())) {
 							String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
-							if (customEntityTemplateService.findByCode(cetCode) == null) {
+							
+							boolean isCetInModule = moduleItems.stream()
+									.filter(moduleItem -> moduleItem.getItemClass().equals(CustomEntityTemplate.class.getName()))
+									.anyMatch(moduleItem -> moduleItem.getItemCode().equals(cetCode));
+							
+							if (!isCetInModule) {
 								itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
 							}
 
@@ -667,8 +688,37 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 						}
 
 					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
-						itemDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+						EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+						entityCustomActionDto.getScript().setScript(null); // Don't serialize the script
+						itemDto = entityCustomActionDto;
 
+					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+						try {
+				            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
+
+							Map<String, Object> ceiTable;
+				        	try {
+				        		ceiTable = crossStorageService.find(
+				    				repositoryService.findDefaultRepository(), // XXX: Maybe we will need to parameterize this or search in all repositories ?
+				    				customEntityTemplate,
+				    				item.getItemCode(),
+				    				false	// XXX: Maybe it should also be a parameter
+				    			);
+				        	} catch (EntityDoesNotExistsException e) {
+				        		ceiTable = null;
+				        	}
+							
+							//Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
+							CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+							customEntityInstance.setUuid((String) ceiTable.get("uuid"));
+							customEntityInstance.setCode((String) ceiTable.get("uuid"));
+							customEntityInstance.setCetCode(item.getAppliesTo());
+							customEntityInstance.setCet(customEntityTemplateService.findByCode(item.getAppliesTo()));
+							customFieldInstanceService.setCfValues(customEntityInstance, item.getAppliesTo(), ceiTable);
+							itemDto = CustomEntityInstanceDto.toDTO(customEntityInstance, entityToDtoConverter.getCustomFieldsDTO(customEntityInstance, true));
+						} catch (BusinessException e) {
+							log.error(e.getMessage());
+						}
 					} else {
 						Class clazz = Class.forName(item.getItemClass());
 						if (clazz.isAnnotationPresent(VersionedEntity.class)) {
@@ -757,13 +807,22 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		meveoModuleService.loadModuleItem(moduleItem);
 
 		module.addModuleItem(moduleItem);
+
+        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
+        if(api instanceof BaseCrudApi) {
+        	BaseCrudApi crudApi = (BaseCrudApi) api;
+        	crudApi.addToModule(moduleItem.getItemEntity(), module);
+        }
+		
 		meveoModuleService.update(module);
 
 		return toDto(module);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
@@ -771,14 +830,26 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		final String itemClassName = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(itemType).getName();
-
+		if(itemClassName == null) {
+			throw new IllegalArgumentException(itemType + " is not a module item type");
+		}
+		
 		MeveoModuleItem moduleItem = new MeveoModuleItem();
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
-
+		meveoModuleService.loadModuleItem(moduleItem);
+		
 		module.removeItem(moduleItem);
+		
+        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
+        if(api instanceof BaseCrudApi) {
+        	BaseCrudApi crudApi = (BaseCrudApi) api;
+        	crudApi.removeFromModule(moduleItem.getItemEntity(), module);
+        }
+        
 		meveoModuleService.update(module);
+
 
 		return toDto(module);
 	}
@@ -1045,8 +1116,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			// Add files contained in modules
 			for (MeveoModule meveoModule : meveoModules) {
 				for (String pathFile : meveoModule.getModuleFiles()) {
-					String path = pathFile.startsWith(File.separator) ? pathFile.substring(1) : pathFile;
-					int lastIndexOf = path.lastIndexOf(File.separator);
+					String path = pathFile.startsWith("/") ? pathFile.substring(1) : pathFile;
+					int lastIndexOf = path.lastIndexOf("/");
+					
+					// Handle windows-like paths
+					if(lastIndexOf == -1) {
+						path = pathFile.startsWith("\\") ? pathFile.substring(1) : pathFile;
+						lastIndexOf = path.lastIndexOf("\\");
+					}
+					
 					String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
 					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
 					File file = new File(chrootDir, pathFile);

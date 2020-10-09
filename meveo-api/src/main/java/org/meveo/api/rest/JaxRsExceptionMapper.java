@@ -2,6 +2,7 @@ package org.meveo.api.rest;
 
 import javax.ejb.EJBException;
 import javax.ejb.Singleton;
+import javax.transaction.RollbackException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
@@ -14,10 +15,12 @@ import javax.ws.rs.ext.Provider;
 import org.jboss.resteasy.api.validation.Validation;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
+import org.meveo.admin.exception.ValidationException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +45,18 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             } else if (e instanceof NotFoundException || e instanceof NotAllowedException || e instanceof EntityDoesNotExistsException || e instanceof org.meveo.exceptions.EntityDoesNotExistsException) {
                 return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
-            } else if (e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
+            } else if (e instanceof ValidationException || e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
                 return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 
             } else if (e instanceof EJBException) {
                 return toResponse(((EJBException) e).getCausedByException());
 
+            } else if (e instanceof RollbackException && e.getCause() instanceof Exception) {
+                return toResponse((Exception)((RollbackException) e).getCause());
+
+            } else if(e instanceof MeveoApiException && e.getCause() instanceof Exception) {
+                return toResponse((Exception)((MeveoApiException) e).getCause());
+                
             } else if (e instanceof ExistsRelatedEntityException) {
                 return Response.status(Status.CONFLICT).entity(e.getMessage()).build();
 

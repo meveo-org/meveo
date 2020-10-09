@@ -4,8 +4,7 @@ import java.util.List;
 
 import org.meveo.api.dto.neo4j.ResultTable;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -20,16 +19,16 @@ public class SearchTableResultDTO {
 	/**
 	 * List of {@link ResultTable}
 	 */
-	@SerializedName("results")
-	@Expose
+	@JsonProperty("results")
+	
 	@ApiModelProperty("List of result table")
 	private List<ResultTable> results = null;
 
 	/**
 	 * List of errors
 	 */
-	@SerializedName("errors")
-	@Expose
+	@JsonProperty("errors")
+	
 	@ApiModelProperty("List of errors")
 	private List<Object> errors = null;
 

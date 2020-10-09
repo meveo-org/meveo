@@ -1,25 +1,24 @@
 
 package org.meveo.api.dto.neo4j;
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Properties_ {
 
-    @SerializedName("updateDate")
-    @Expose
+    @JsonProperty("updateDate")
+    
     private Integer internalUpdateDate;
     
-    @SerializedName("sourceName")
-    @Expose
+    @JsonProperty("sourceName")
+    
     private String sourceName;
     
-    @SerializedName("sourceCode")
-    @Expose
+    @JsonProperty("sourceCode")
+    
     private String sourceCode;
     
-    @SerializedName("internal_identifier")
-    @Expose
+    @JsonProperty("internal_identifier")
+    
     private String internal_identifier;
 
     public Integer getInternalUpdateDate() {

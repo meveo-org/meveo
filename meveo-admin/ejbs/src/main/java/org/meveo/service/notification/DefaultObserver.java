@@ -45,6 +45,7 @@ import org.meveo.event.qualifier.Terminated;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.admin.User;
@@ -254,6 +255,12 @@ public class DefaultObserver {
 				webNotifier.sendMessage((WebNotification) notif, entityOrEvent, context, lastCurrentUser);
 			}
 
+		} catch(EntityDoesNotExistsException entityDoesNotExistsException) {
+			if(entityDoesNotExistsException.concerns(notif)) {
+				log.error("Notification {} present in cache but not in database. Refreshing cache", notif);
+				genericNotificationService.refreshCache();
+			}
+			
 		} catch (Exception e1) {
 			log.error("Error while firing notification {} ", notif.getCode(), e1);
 			try {
@@ -264,11 +271,13 @@ public class DefaultObserver {
 			} catch (Exception e2) {
 				log.error("Failed to create notification history", e2);
 			}
+			
 			if (!(e1 instanceof BusinessException)) {
 				throw new BusinessException(e1);
 			} else {
 				throw (BusinessException) e1;
 			}
+			
 		}
 
 		return true;

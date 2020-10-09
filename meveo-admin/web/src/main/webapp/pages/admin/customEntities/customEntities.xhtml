@@ -4,8 +4,10 @@
 	xmlns:p="http://primefaces.org/ui"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	template="/layout/template.xhtml" xmlns:o="http://omnifaces.org/ui"
-	xmlns:of="http://omnifaces.org/functions" xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions"
-	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+	xmlns:of="http://omnifaces.org/functions"
+	xmlns:fn="http://xmlns.jcp.org/jsp/jstl/functions"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+	xmlns:l="http://www.lapis.com/jsf/exporter">
 
 	<ui:define name="metadata">
 		<f:metadata>
@@ -23,7 +25,9 @@
 
 		<o:importConstants
 			type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
-		<o:importFunctions type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
+		<o:importFunctions
+			type="org.meveo.service.base.MeveoValueExpressionWrapper" var="exp" />
+		<o:importConstants type="org.meveo.model.persistence.DBStorageType" />
 
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
@@ -37,51 +41,57 @@
 			label="#{customEntityInstanceListBean.customEntityTemplate.name} #{messages['customEntityInstance.search']}"
 			backingBean="#{customEntityInstanceListBean}" renderNewButton="false">
 
-			<hftl:searchField label="#{messages['BusinessEntity.code']}"
-				field="code" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
-			<hftl:searchField label="#{messages['BusinessEntity.description']}"
-				field="description" rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
-				
+			<c:if
+				test="#{customEntityInstanceListBean.customEntityTemplate.storedIn(DBStorageType.SQL)}">
+				<hftl:searchField label="#{messages['BusinessEntity.code']}"
+					field="code"
+					rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
+
+				<hftl:searchField label="#{messages['BusinessEntity.description']}"
+					field="description"
+					rendered="#{!customEntityInstanceListBean.customEntityTemplate.isStoreAsTable()}" />
+			</c:if>
+
 			<c:forEach items="#{customEntityInstanceListBean.filterFields}"
 				var="field">
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.STRING}">
-					<hftl:searchTextField id="#{field.dbFieldname}"
+					<hftl:searchTextField id="#{field.code}"
 						backingBean="#{customEntityInstanceListBean}"
-						field="#{field.dbFieldname}"
+						field="#{field.code}"
 						label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 						maxlength="#{field.maxValue}" />
 				</c:if>
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DATE}">
-					<hftl:searchDateField id="#{field.dbFieldname}"
+					<hftl:searchDateField id="#{field.code}"
 						backingBean="#{customEntityInstanceListBean}"
-						field="#{field.dbFieldname}"
+						field="#{field.code}"
 						label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 						datePattern="#{paramBean.dateFormat}" rangeSearch="true"
 						componentWidth="25" />
 				</c:if>
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE}">
-					<hftl:searchNumberField id="#{field.dbFieldname}"
+					<hftl:searchNumberField id="#{field.code}"
 						converterId="javax.faces.Double"
 						backingBean="#{customEntityInstanceListBean}"
-						field="${field.dbFieldname}"
+						field="${field.code}"
 						label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 						componentWidth="25" rangeSearch="true" />
 				</c:if>
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LONG}">
-					<hftl:searchNumberField id="#{field.dbFieldname}"
+					<hftl:searchNumberField id="#{field.code}"
 						converterId="javax.faces.Long"
 						backingBean="#{customEntityInstanceListBean}"
-						field="${field.dbFieldname}"
+						field="${field.code}"
 						label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 						componentWidth="25" rangeSearch="true" />
 				</c:if>
 
 				<c:if test="#{field.fieldType eq CustomFieldTypeEnum.LIST}">
-					<hftl:decorateFormField fieldId="#{field.dbFieldname}"
+					<hftl:decorateFormField fieldId="#{field.code}"
 						label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 						componentWidth="25">
-						<p:selectOneMenu id="#{field.dbFieldname}"
-							value="#{customEntityInstanceListBean.filters[field.dbFieldname]}"
+						<p:selectOneMenu id="#{field.code}"
+							value="#{customEntityInstanceListBean.filters[field.code]}"
 							placeholder="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
 							label="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}">
 							<f:selectItem itemValue="#{null}" itemLabel="" />
@@ -135,7 +145,7 @@
 			<p:panel width="100"
 				rendered="#{customEntityInstanceListBean.repository != null}">
 				<h:form prependId="false">
-					<p:messages autoUpdate="true"/>
+					<p:messages autoUpdate="true" />
 					<p:dataTable id="results_panel"
 						value="#{customEntityInstanceListBean.nativeDataModel}"
 						var="entity" lazy="true" widgetVar="ctTable"
@@ -147,10 +157,15 @@
 						selection="#{customEntityInstanceListBean.selectedValues}"
 						rowIndexVar="rowIdx">
 
-						<p:ajax event="rowSelectCheckbox" update="contentBody" />
-						<p:ajax event="rowUnselectCheckbox" update="contentBody" />
-						<p:ajax event="rowSelect" update="contentBody" />
-						<p:ajax event="rowUnselect" update="contentBody" />
+						<p:ajax event="rowSelectCheckbox"
+							update="contentBody customActionButton" />
+						<p:ajax event="rowUnselectCheckbox"
+							update="contentBody customActionButton" />
+						<p:ajax event="rowSelect" update="contentBody customActionButton" />
+						<p:ajax event="rowUnselect"
+							update="contentBody customActionButton" />
+						<p:ajax event="toggleSelect"
+							update="contentBody customActionButton" />
 
 						<p:column id="multiSelect" selectionMode="multiple" width="4%"
 							exportable="false" toggleable="false" selectRow="false" />
@@ -175,107 +190,108 @@
 							</h:outputText>
 						</p:column>
 
-						<p:columns value="#{customEntityInstanceListBean.summaryFields}"
-							var="field"
-							headerText="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
-							columnIndexVar="colIndex" sortBy="#{field.dbFieldname}"
-							selectRow="false">
+						<c:forEach var="field"
+							items="#{customEntityInstanceListBean.summaryFields}">
+							<p:column
+								headerText="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}"
+								sortBy="#{field.code}" selectRow="false">
+								<!--  Date -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.code] != null}">
+									<f:converter binding="#{instantConverter}" />
+									<f:attribute name="format"
+										value="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
+								</h:outputText>
 
-							<!--  Date -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out_date"
-								value="#{entity[field.dbFieldname]}" styleClass="field-value"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] != null}">
-								<f:converter binding="#{instantConverter}" />
-								<f:attribute name="format" value="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
-							</h:outputText>
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.code] == null}">
+									<f:converter binding="#{instantConverter}" />
+									<f:attribute name="format"
+										value="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
+								</h:outputText>
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out_date"
-										  value="#{entity[field.code]}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.DATE and entity[field.dbFieldname] == null}">
-								<f:converter binding="#{instantConverter}" />
-								<f:attribute name="format" value="#{field.displayFormat!=null? field.displayFormat:paramBean.dateFormat}" />
-							</h:outputText>
+								<!--  String, Enum or Long  -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.code] != null}" />
 
-							<!--  String, Enum or Long  -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out"
-								value="#{entity[field.dbFieldname]}" styleClass="field-value"
-								rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] != null}" />
+								<h:outputText
+									value="#{!(field.code eq fn:toLowerCase(field.code))?entity[field.code]:''}"
+									styleClass="field-value"
+									rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.code] == null}" />
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out"
-										  value="#{!(field.code eq fn:toLowerCase(field.code))?entity[field.code]:''}" styleClass="field-value"
-										  rendered="#{(field.fieldType eq CustomFieldTypeEnum.STRING or field.fieldType eq CustomFieldTypeEnum.LIST or field.fieldType eq CustomFieldTypeEnum.LONG) and entity[field.dbFieldname] == null}" />
+								<!--  Double -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE and entity[field.code] != null}">
+									<f:converter converterId="javax.faces.Double" />
+								</h:outputText>
 
-							<!--  Double -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out_double"
-								value="#{entity[field.dbFieldname]}" styleClass="field-value"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE and entity[field.dbFieldname] != null}">
-								<f:converter converterId="javax.faces.Double" />
-							</h:outputText>
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE and entity[field.code] == null}">
+									<f:converter converterId="javax.faces.Double" />
+								</h:outputText>
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out_double"
-										  value="#{entity[field.code]}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.DOUBLE and entity[field.dbFieldname] == null}">
-								<f:converter converterId="javax.faces.Double" />
-							</h:outputText>
+								<!--  Boolean -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value" converter="booleanConverter"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.code] != null}">
+								</h:outputText>
 
-							<!--  Boolean -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out_boolean"
-										  value="#{entity[field.dbFieldname]}" styleClass="field-value" converter="booleanConverter"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.dbFieldname] != null}">
-							</h:outputText>
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value" converter="booleanConverter"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.code] == null}">
+								</h:outputText>
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out_boolean"
-										  value="#{entity[field.code]}" styleClass="field-value" converter="booleanConverter"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.BOOLEAN and entity[field.dbFieldname] == null}">
-							</h:outputText>
+								<!--  Text Area -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.code] != null}">
+								</h:outputText>
 
-							<!--  Text Area -->
-							<h:outputText id="#{entity[field.dbFieldname]}_out_textarea"
-										  value="#{entity[field.dbFieldname]}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.dbFieldname] != null}">
-							</h:outputText>
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.code] == null}">
+								</h:outputText>
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out_textarea"
-										  value="#{entity[field.code]}" styleClass="field-value"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.dbFieldname] == null}">
-							</h:outputText>
+								<!--  Long Text -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] != null}">
+								</h:outputText>
 
-							<h:outputText id="#{entity[field.dbFieldname]}_input_link"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] != null}"
-								value="#{entity[field.dbFieldname]}" styleClass="field-value">
-								<f:converter binding="#{entityReferenceConverter}" />
-								<f:attribute name="field" value="#{field}" />
-								<f:attribute name="repository" value="#{bean.repository}" />
-							</h:outputText>
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] == null}">
+								</h:outputText>
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_input_link"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] == null and entity[field.code] != null}"
-										  value="#{entity[field.code]}" styleClass="field-value">
-								<f:converter binding="#{entityReferenceConverter}" />
-								<f:attribute name="field" value="#{field}" />
-								<f:attribute name="repository" value="#{bean.repository}" />
-							</h:outputText>
+								<h:outputText
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] != null}"
+									value="#{entity[field.code]}" styleClass="field-value">
+									<f:converter binding="#{entityReferenceConverter}" />
+									<f:attribute name="field" value="#{field}" />
+									<f:attribute name="repository" value="#{bean.repository}" />
+								</h:outputText>
 
-							<h:outputText id="choose_#{entity[field.dbFieldname]}_input_link"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.dbFieldname] == null and entity[field.code] == null}"
-								value="Choose a #{field.code}" styleClass="field-value">
-							</h:outputText>
+								<h:outputText
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] == null}"
+									value="Choose a field #{field.fieldType}"
+									styleClass="field-value">
+								</h:outputText>
 
-							<h:outputText id="#{entity[field.dbFieldname]}_out_link"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.dbFieldname] != null}"
-								value="#{entity[field.dbFieldname]}" converter="jsonConverter"
-								styleClass="field-value" />
+								<h:outputText
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] != null}"
+									value="#{entity[field.code]}" converter="jsonConverter"
+									styleClass="field-value" />
 
-							<h:outputText id="field_#{entity[field.dbFieldname]}_out_link"
-										  rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.dbFieldname] == null and entity[field.code] != null}"
-										  value="#{entity[field.code]}" converter="jsonConverter"
-										  styleClass="field-value" />
-
-							<h:outputText id="enter_#{entity[field.dbFieldname]}_out_link"
-								rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.dbFieldname] == null and entity[field.code] == null}"
-								value="Enter the #{field.code}" styleClass="field-value" />
-
-						</p:columns>
+								<h:outputText
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] == null}"
+									value="Enter the #{field.fieldType}" styleClass="field-value" />
+							</p:column>
+						</c:forEach>
 
 						<p:column headerText="#{messages['commons.actions']}"
 							exportable="false" selectRow="false">
@@ -320,18 +336,58 @@
 							</p:commandButton>
 						</p:column>
 					</p:dataTable>
-					<p:column id="customActionButton">
-						<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
-							<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActions(customEntityInstanceBean.entity)}">
-								<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
-												 rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity) and ! empty customEntityInstanceListBean.selectedValues}" update="contentBody">
-								</p:commandButton>
-							</ui:repeat>
+					<h:panelGroup id="customActionButton">
+						<c:set var="customActionsInList"
+							value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}"
+							scope="request" />
+						<c:set var="scriptConfirmMessage"
+							value="#{of:format1(messages['entity.customAction.executionActionInList'], customEntityInstanceListBean.selectedValues.size())}" />
+
+						<c:if test="#{! empty customActionsInList}">
+							<c:if
+								test="#{! empty customEntityInstanceListBean.selectedValues}">
+								<ui:repeat var="customAction"
+									value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
+									<p:commandButton
+										value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
+										action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
+										rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity)}"
+										update="contentBody">
+										<p:confirm header="#{messages['commons.confirmationHeader']}"
+											message="#{scriptConfirmMessage}"
+											icon="pi pi-exclamation-triangle" />
+									</p:commandButton>
+								</ui:repeat>
+							</c:if>
+							<c:if test="#{empty customEntityInstanceListBean.selectedValues}">
+								<ui:repeat var="customAction"
+									value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}">
+									<p:commandButton
+										value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
+										action="#{customEntityInstanceListBean.executeCustomAction(customEntityInstanceListBean.selectedValues, customAction)}"
+										rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',customEntityInstanceBean.entity)}"
+										update="contentBody">
+									</p:commandButton>
+								</ui:repeat>
+							</c:if>
 						</c:if>
-					</p:column>
+
+						<p:commandButton id="buttonCsvExportCEI"
+							value="#{messages['commons.exportCsv']}" ajax="false">
+							<l:dataExporter fileType="csv" source="results_panel"
+								fileName="CEI_Export"
+								fileOptions="#{customEntityInstanceBean.csvOptions()}" />
+						</p:commandButton>
+					</h:panelGroup>
 				</h:form>
 			</p:panel>
 		</p:outputPanel>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<p:commandButton value="Yes" type="button"
+				styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+			<p:commandButton value="No" type="button"
+				styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+		</p:confirmDialog>
 
 	</ui:define>
 

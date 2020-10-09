@@ -308,64 +308,6 @@ public abstract class TechnicalServiceApi<T extends TechnicalService, D extends 
     }
 
     /**
-     * Rename the technical service
-     *
-     * @param oldName Current name of the service
-     * @param newName New name of the service
-     * @throws BusinessException If an error occurs
-     */
-    public void rename(String oldName, String newName) throws BusinessException {
-        final List<T> technicalServices = persistenceService.findByName(oldName);
-        for (T t : technicalServices) {
-        	String oldCode = t.getCode();
-        	
-            t.setName(newName);
-            t.setCode(newName + "." + t.getFunctionVersion());
-            persistenceService.update(t);
-            
-            // Modify the test job associated
-            List<JobInstance> jobsToUpdate = jobInstanceService.findJobsByTypeAndParameters(FunctionService.FUNCTION_TEST_JOB, oldCode, JobCategoryEnum.TEST);
-            jobsToUpdate.forEach(job -> { 
-            	job.setParametres(t.getCode());
-            	job.setCode(FunctionApi.getTestJobCode(t.getCode()));
-            });
-            
-            serviceRenamedEventProducer.fire(new AttributeUpdateEvent(t, oldCode, t.getCode()));
-        }
-
-    }
-
-    /**
-     * Re-number a technical service's version
-     *
-     * @param name       Name of the service
-     * @param oldVersion Old version number
-     * @param newVersion New version number
-     * @throws EntityDoesNotExistsException If the service does not exists
-     * @throws BusinessException If an error occurs
-     */
-    public void renameVersion(String name, Integer oldVersion, Integer newVersion) throws EntityDoesNotExistsException, BusinessException {
-        String oldCode = name + "." + oldVersion;
-        
-    	final T service = persistenceService.findByNameAndVersion(name, oldVersion)
-                .orElseThrow(() -> new EntityDoesNotExistsException(oldCode));
-    	
-        service.setFunctionVersion(newVersion);
-        service.setCode(name + "." + service.getFunctionVersion());
-        persistenceService.update(service);
-        
-        // Modify the test job associated
-        List<JobInstance> jobsToUpdate = jobInstanceService.findJobsByTypeAndParameters(FunctionService.FUNCTION_TEST_JOB, oldCode, JobCategoryEnum.TEST);
-        jobsToUpdate.forEach(job -> { 
-        	job.setParametres(service.getCode());
-        	job.setCode(FunctionApi.getTestJobCode(service.getCode()));
-        });
-        
-        serviceRenamedEventProducer.fire(new AttributeUpdateEvent(service, oldCode, service.getCode()));
-    
-    }
-
-    /**
      * Retrieve the technical service with the specified name and version. If version is not
      * provided, retrieve the last version of the technical service.
      *

@@ -24,6 +24,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
 import org.meveo.model.admin.User;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.security.Permission;
@@ -158,11 +160,12 @@ public class CurrentUserProvider {
      * 
      * @return Current user implementation
      */
-    public MeveoUser getCurrentUser(String providerCode, EntityManager em) {
+    @SuppressWarnings("rawtypes")
+	public MeveoUser getCurrentUser(String providerCode, EntityManager em) {
 
         String username = MeveoUserKeyCloakImpl.extractUsername(ctx, getForcedUsername());
 
-        MeveoUser user;
+        MeveoUserKeyCloakImpl user;
 
         long start = System.currentTimeMillis();
         List<Role> availableRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p ",
@@ -170,40 +173,33 @@ public class CurrentUserProvider {
         		Role.class)
         		.getResultList();
         
-        // User was forced authenticated, so need to lookup the rest of user information
-        if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
-            user = new MeveoUserKeyCloakImpl(ctx, 
-            		getForcedUsername(), 
-            		getCurrentTenant(), 
-            		getAdditionalRoles(username, em), 
-            		getRoleToPermissionMapping(providerCode, em, availableRoles)
-        		);
-
-        } else {
-            user = new MeveoUserKeyCloakImpl(ctx, 
-            		null, 
-            		null, 
-            		getAdditionalRoles(username, em), 
-            		getRoleToPermissionMapping(providerCode, em, availableRoles)
-        		);
-        }
-
-        if(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
-            KeycloakPrincipal<?> keycloakPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
-            final String email = keycloakPrincipal.getKeycloakSecurityContext().getToken().getEmail();
-            user.setMail(email != null ? email : "no-mail@meveo.com");
-            user.setToken(keycloakPrincipal.getKeycloakSecurityContext().getTokenString());
-        }
-
-        supplementOrCreateUserInApp(user, em);
-        
         // Aggregate whitelists and blacklists
         Map<String, List<String>> whiteList = new HashMap<>();
         Map<String, List<String>> blackList = new HashMap<>();
         
+        Set<String> additionalRoles = getAdditionalRoles(username, em);
+        
+        // Build roles list
+        Set<String> allRoles = new HashSet<>();
+        if(additionalRoles != null) {
+        	allRoles.addAll(additionalRoles);
+        }
+        
+        if (ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
+            KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) ctx.getCallerPrincipal();
+            KeycloakSecurityContext keycloakSecurityContext = keycloakPrincipal.getKeycloakSecurityContext();
+            AccessToken accessToken = keycloakSecurityContext.getToken();
+            if (accessToken.getRealmAccess() != null) {
+            	allRoles.addAll(accessToken.getRealmAccess().getRoles());
+            }
+            for(AccessToken.Access access : accessToken.getResourceAccess().values()) {
+            	allRoles.addAll(access.getRoles());
+            }
+        }
+        
         try {
         	availableRoles.forEach(role -> {
-        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT") && user.hasRole(role.getName())) {
+        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT") && allRoles.contains(role.getName())) {
         			
 	        		Map<String, List<String>> roleWhiteList = getWhiteList(em, role);
 	        		Map<String, List<String>> roleBlacklist = getBlackList(em, role);
@@ -219,12 +215,40 @@ public class CurrentUserProvider {
 
         	});
         	
-    	user.setBlackList(blackList);
-    	user.setWhiteList(whiteList);
-        	
         } catch(Exception e) {
-        	log.error("Error retrieve black and white list of user {}", user, e);
+        	log.error("Error retrieve black and white list of user {}", username, e);
         }
+        
+        // User was forced authenticated, so need to lookup the rest of user information
+		if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
+            user = new MeveoUserKeyCloakImpl(ctx, 
+            		getForcedUsername(), 
+            		getCurrentTenant(), 
+            		additionalRoles, 
+            		getRoleToPermissionMapping(providerCode, em, availableRoles),
+            		whiteList,
+            		blackList
+        		);
+
+        } else {
+            user = new MeveoUserKeyCloakImpl(ctx, 
+            		null, 
+            		null, 
+            		additionalRoles, 
+            		getRoleToPermissionMapping(providerCode, em, availableRoles),
+            		whiteList,
+            		blackList
+        		);
+        }
+        
+        if(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) {
+            KeycloakPrincipal<?> keycloakPrincipal = (KeycloakPrincipal<?>) ctx.getCallerPrincipal();
+            final String email = keycloakPrincipal.getKeycloakSecurityContext().getToken().getEmail();
+            user.setMail(email != null ? email : "no-mail@meveo.com");
+            user.setToken(keycloakPrincipal.getKeycloakSecurityContext().getTokenString());
+        }
+        
+        supplementOrCreateUserInApp(user, em);
 
         log.trace("Current user is {}", user);
         return user;
@@ -468,4 +492,5 @@ public class CurrentUserProvider {
     private static void setForcedUsername(final String username) {
         forcedUserUsername.set(username);
     }
+    
 }

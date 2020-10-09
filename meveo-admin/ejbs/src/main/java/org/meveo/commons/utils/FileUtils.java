@@ -445,14 +445,16 @@ public final class FileUtils {
      * @throws Exception exception
      */
     public static void unzipFile(String folder, InputStream in) throws Exception {
-        ZipInputStream zis = null;
-        BufferedInputStream bis = null;
-        CheckedInputStream cis = null;
-        
-        try {
-            cis = new CheckedInputStream(in, new CRC32());
-            zis = new ZipInputStream(cis);
-            bis = new BufferedInputStream(zis);
+    	if(in == null) {
+    		throw new IllegalArgumentException("Input stream can't be null");
+    	}
+    	
+        try (
+        		CheckedInputStream cis = new CheckedInputStream(in, new CRC32());
+        		ZipInputStream zis = new ZipInputStream(cis);
+        		BufferedInputStream bis = new BufferedInputStream(zis);
+    		) {
+
             ZipEntry entry = null;
             File fileout = null;
             while ((entry = zis.getNextEntry()) != null) {
@@ -480,10 +482,6 @@ public final class FileUtils {
                     throw ex;
                 }
             }
-        } finally {
-            IOUtils.closeQuietly(bis);
-            IOUtils.closeQuietly(zis);
-            IOUtils.closeQuietly(cis);
         }
     }
 

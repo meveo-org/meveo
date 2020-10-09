@@ -11,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.jobs.JobInstance;
@@ -30,7 +32,8 @@ public class JobTrigger extends Notification {
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "adm_notif_job_params") 
 	private Map<String, String> jobParams = new HashMap<String, String>();
-	
+
+	@Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_instance_id")
     private JobInstance jobInstance;

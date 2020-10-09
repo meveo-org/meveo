@@ -36,6 +36,8 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.model.IEntity;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -200,4 +202,11 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 	public ExportFormat[] getExportFormats(){
 	    return ExportFormat.values();
     }
+
+	@Override
+	public void addToModule(T entity, MeveoModule module) {
+		baseCrudApi.addToModule(entity, module);
+		super.addToModule(entity, module);
+	}
+	
 }

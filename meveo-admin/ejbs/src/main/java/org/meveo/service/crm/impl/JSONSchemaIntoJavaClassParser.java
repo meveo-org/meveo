@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.hibernate.Hibernate;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -20,9 +21,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
+import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 
 /**
  * Parse a cet map into a java source code.
@@ -61,6 +65,8 @@ public class JSONSchemaIntoJavaClassParser {
 
     public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
+        compilationUnit.addImport(CustomEntity.class);
+        
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
@@ -78,6 +84,23 @@ public class JSONSchemaIntoJavaClassParser {
             			cl.addExtendedType(parentClass);
             		});
             }
+            
+            compilationUnit.getClassByName((String) jsonMap.get("id"))
+    		.ifPresent(cl -> {
+                cl.addImplementedType(CustomEntity.class);
+    			
+    			cl.getMethodsByName("getUuid")
+    				.stream()
+    				.findFirst()
+    				.ifPresent(method -> method.addAnnotation(Override.class));
+    			
+    			var getCetCode = cl.addMethod("getCetCode", Keyword.PUBLIC);
+    			getCetCode.addAnnotation(Override.class);
+    			getCetCode.setType(String.class);
+    			var getCetCodeBody = new BlockStmt();
+    			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
+    			getCetCode.setBody(getCetCodeBody);
+    		});
             
         } catch (IOException e) {
         	
@@ -128,13 +151,16 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        if (!name.startsWith("org.meveo")) {
-                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                        } else {
-                                            compilationUnit.addImport(name);
+                                        
+                                        try {
+                                        	Class.forName(name);
+                                        	compilationUnit.addImport(name);
                                             String[] className = name.split("\\.");
                                             name = className[className.length -1];
+                                        } catch (ClassNotFoundException e) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
                                         }
+                                        
                                         vd.setType("List<" + name + ">");
                                     }
                                 }
@@ -161,12 +187,13 @@ public class JSONSchemaIntoJavaClassParser {
                                     String[] data = ref.split("/");
                                     if (data.length > 0) {
                                         String name = data[data.length - 1];
-                                        if (!name.startsWith("org.meveo")) {
-                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                        } else {
-                                            compilationUnit.addImport(name);
+                                        try {
+                                        	Class.forName(name);
+                                        	compilationUnit.addImport(name);
                                             String[] className = name.split("\\.");
                                             name = className[className.length -1];
+                                        } catch (ClassNotFoundException e) {
+                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
                                         }
                                         vd.setType("Map<String, " + name + ">");
                                     }
@@ -206,17 +233,13 @@ public class JSONSchemaIntoJavaClassParser {
                             // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
                             name = CustomFieldTemplate.retrieveCetCode(name);
                             
-                            if (!name.startsWith("org.meveo")) {
-                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                            } else {
-                            	try {
-                            		compilationUnit.addImport(name);
-                            	} catch (Exception e) {
-                            		log.error("Can't add import " + name, e);
-                            	}
-                            	
+                            try {
+                            	Class.forName(name);
+                            	compilationUnit.addImport(name);
                                 String[] className = name.split("\\.");
                                 name = className[className.length -1];
+                            } catch (ClassNotFoundException e) {
+                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
                             }
                             vd.setType(name);
                         }

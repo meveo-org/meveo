@@ -43,7 +43,8 @@ import org.meveo.model.scripts.ScriptInstance;
 
 /**
  * @author Clément Bareth
- * @version 6.9.0
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.12
  */
 @Entity
 @ModuleItem("EntityCustomAction")
@@ -77,6 +78,14 @@ public class EntityCustomAction extends BusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
+    
+	@Type(type = "numeric_boolean")
+	@Column(name = "applicable_to_entity_list")
+	private Boolean applicableToEntityList = false;
+
+	@Type(type = "numeric_boolean")
+	@Column(name = "applicable_to_entity_instance")
+	private Boolean applicableToEntityInstance = true;
 
     /**
      * Where action should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;action:&lt;action relative position in tab&gt;
@@ -224,4 +233,20 @@ public class EntityCustomAction extends BusinessEntity {
             return labelI18n.get(language);
         }
     }
+
+	public Boolean getApplicableToEntityList() {
+		return applicableToEntityList;
+	}
+
+	public void setApplicableToEntityList(Boolean applicableToEntityList) {
+		this.applicableToEntityList = applicableToEntityList;
+	}
+
+	public Boolean getApplicableToEntityInstance() {
+		return applicableToEntityInstance;
+	}
+
+	public void setApplicableToEntityInstance(Boolean applicableToEntityInstance) {
+		this.applicableToEntityInstance = applicableToEntityInstance;
+	}
 }

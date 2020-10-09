@@ -251,6 +251,7 @@ public class JSONSchemaGenerator {
 				break;
 			case EMBEDDED_ENTITY:
 			case TEXT_AREA:
+			case LONG_TEXT:
 			case STRING:
 				result = createStringSchema(field);
 				break;
@@ -327,6 +328,7 @@ public class JSONSchemaGenerator {
 		// list of entities: field = " + field + ", storageType = " +
 		// field.getStorageType());
 		case TEXT_AREA:
+		case LONG_TEXT:
 		case STRING:
 			result = createStringSchema(field);
 			break;

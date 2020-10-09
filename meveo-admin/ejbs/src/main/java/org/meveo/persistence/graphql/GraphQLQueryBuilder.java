@@ -57,7 +57,7 @@ public class GraphQLQueryBuilder {
 			tabsMinus.append("\t");
 		}
 		
-		String filtersStr = filters.entrySet()
+		String filtersStr = filters.isEmpty() ? "" : filters.entrySet()
 				.stream()
 				.map(e -> { 
 					if(e.getValue() instanceof String) {

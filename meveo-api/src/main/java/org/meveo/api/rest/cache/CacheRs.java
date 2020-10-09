@@ -28,6 +28,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.notification.NotificationEventTypeEnum;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -46,6 +49,9 @@ public class CacheRs {
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	@Inject
+	private NotificationCacheContainerProvider notifCache;
 
 	@POST
 	@Path("/refresh")
@@ -86,7 +92,10 @@ public class CacheRs {
 	@Path("/status")
 	@ApiOperation("Count elements by cache")
 	public Map<String, Integer> getNbElementByCacheName() {
-		return this.cache.getCaches().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, c -> c.getValue().size()));
+		Map<String, Integer> caches = this.cache.getCaches().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, c -> c.getValue().size()));
+		Map<String, Integer> notifCaches = this.notifCache.getCaches().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, c -> c.getValue().size()));
+		caches.putAll(notifCaches);
+		return caches;
 	}
 
 }

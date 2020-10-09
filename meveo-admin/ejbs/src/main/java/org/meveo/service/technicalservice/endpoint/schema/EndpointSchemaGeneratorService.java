@@ -15,8 +15,8 @@ import org.everit.json.schema.ObjectSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
-import org.meveo.commons.utils.JsonUtils;
 import org.meveo.json.schema.RootObjectSchema;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 
@@ -133,7 +133,7 @@ public class EndpointSchemaGeneratorService {
 		JSONPrinter json = new JSONPrinter(out);
 
 		builder.build().describeTo(json);
-		return JsonUtils.beautifyString(out.toString());
+		return JacksonUtil.beautifyString(out.toString());
 	}
 
 	/**

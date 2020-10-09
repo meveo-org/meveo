@@ -19,13 +19,13 @@ package org.meveo.service.script.test;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -34,17 +34,20 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
-import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.DefaultFunctionService;
+import org.primefaces.shaded.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 @ApplicationScoped 
 public class JMeterService {
@@ -100,11 +103,21 @@ public class JMeterService {
             throw new IllegalArgumentException("Jmeter test server is not set.");
         }
         
+        final List<SampleResult> sampleResults = new ArrayList<>();
+        
         // Temp log file
         File logFile = File.createTempFile(functionCode, ".log");
 
         // Retrieve and create test file
-        final Function function = functionService.findByCode(functionCode);
+        final Function function;
+        try {
+        	function = functionService.findByCode(functionCode);
+        } catch(Exception e) {
+        	var error = new SampleResult(false, "Failed to retrieve function", "[WARN] " + e.getMessage());
+        	sampleResults.add(error);
+        	return new TestResult(e.toString(), sampleResults);
+        }
+        
         if(function == null) {
         	throw new IllegalArgumentException("Function with code " + functionCode + " does not exist");
         }
@@ -134,26 +147,41 @@ public class JMeterService {
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
 
-        String commandLine = String.format("%s -n -t %s -l %s -j %s -Dtoken=%s -DhostName=%s -Dprotocol=%s -DportNumber=%s " +
-                        "-Jjmeter.save.saveservice.output_format=xml",
-                JMETER_BIN_FOLDER,
-                jmxFile.getAbsolutePath(),
-                jtlFile.getAbsolutePath(),
-                logFile.getAbsolutePath(),
-                accessTokenString,
-                hostName,
-                protocol,
-                portNumber);
+        ProcessBuilder processBuilder = new ProcessBuilder(
+    		JMETER_BIN_FOLDER, 
+    		"-n", 
+    		"-t", jmxFile.getAbsolutePath(),
+    		"-l", jtlFile.getAbsolutePath(),
+    		"-j", logFile.getAbsolutePath(),
+    		"-Dtoken=" + accessTokenString,
+    		"-DhostName=" + hostName,
+    		"-DportNumber=" + portNumber,
+    		"-Dprotocol=" + protocol,
+    		"-Jjmeter.save.saveservice.output_format=xml"
+		);
+        
+        processBuilder.environment().put("HEAP", "-Xms256m -Xmx256m -XX:MaxMetaspaceSize=256m");
 
-        final Process exec = Runtime.getRuntime().exec(commandLine);
-
+        final Process exec = processBuilder.start();
+        
         try {
             exec.waitFor();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-        final List<SampleResult> sampleResults = new ArrayList<>();
+        
+        String logs = IOUtils.toString(exec.getInputStream());
+        if(!StringUtils.isBlank(logs)) {
+        	LOG.info("[JMETER] " + logs);
+        }
+        
+        String errors = IOUtils.toString(exec.getErrorStream());
+        if(!StringUtils.isBlank(errors)) {
+        	LOG.error("[JMETER] " + errors);
+        }
+        
+        exec.destroy();
+        
         String responeData = null;
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -185,13 +213,32 @@ public class JMeterService {
 				responeData = node.getTextContent();
 			}
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        } catch(SAXParseException e) {
+        	String message = "[WARN] " + e.getMessage() + "\n in file :\n\n" + FileUtils.readFileToString(jtlFile, StandardCharsets.UTF_8);
 
-        logFile.delete();
-        jtlFile.delete();
-        jmxFile.delete();
+        	var error = new SampleResult(false, "XML Parsing error", message);
+        	sampleResults.add(error);
+        	
+        	return new TestResult(message, sampleResults);
+        	
+        } catch (Exception e) {
+        	var error = new SampleResult(false, "Error", e.getMessage());
+        	sampleResults.add(error);
+        	return new TestResult(e.toString(), sampleResults);
+        	
+        } finally {
+        	if(logFile.exists()) {
+        		logFile.delete();
+        	}
+        	
+        	if(jtlFile.exists()) {
+        		jtlFile.delete();
+        	}
+        	
+        	if(jmxFile.exists()) {
+        		jmxFile.delete();
+        	}
+        }
 
         return new TestResult(responeData, sampleResults);
 

@@ -101,8 +101,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				ScriptInstanceErrorDto errorDto = new ScriptInstanceErrorDto(error);
 				result.add(errorDto);
 			}
-		} else {
-			scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 		}
 
 		return result;
@@ -125,8 +123,6 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstanceFromDTO(scriptInstanceDto, scriptInstance);
 
 		scriptInstanceService.updateNoMerge(scriptInstance);
-
-		scriptInstanceService.afterUpdateOrCreate(scriptInstance);
 
 		if (scriptInstance.isError().booleanValue()) {
 			for (ScriptInstanceError error : scriptInstance.getScriptErrors()) {
@@ -277,6 +273,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			mavenDependency.setArtifactId(mavenDependencyDto.getArtifactId());
 			mavenDependency.setVersion(mavenDependencyDto.getVersion());
 			mavenDependency.setClassifier(mavenDependencyDto.getClassifier());
+			mavenDependency.getBuiltCoordinates();
 			mavenDependencyList.add(mavenDependency);
 		}
 		scriptInstance.getMavenDependenciesNullSafe().clear();
@@ -328,24 +325,16 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Override
 	public ScriptInstanceDto toDto(ScriptInstance scriptInstance) {
-
-		String source = scriptInstance.getScript();
-		var scriptInstanceEntity = scriptInstanceService.findById(scriptInstance.getId(), Arrays.asList("executionRoles", "sourcingRoles", "mavenDependencies", "importScriptInstances"));
-		if(scriptInstanceEntity == null) {
-			scriptInstanceEntity = scriptInstance;
-		}
-		
-		ScriptInstanceDto scriptInstanceDtoResult = new ScriptInstanceDto(scriptInstanceEntity, source);
-		if (!scriptInstanceService.isUserHasSourcingRole(scriptInstanceEntity)) {
-			scriptInstanceDtoResult.setScript("InvalidPermission");
-		}
-
-		return scriptInstanceDtoResult;
+		return new ScriptInstanceDto(scriptInstance, scriptInstance.getScript());
 	}
 
 	@Override
 	public ScriptInstance fromDto(ScriptInstanceDto dto) throws MeveoApiException {
-		return null;
+		try {
+			return scriptInstanceFromDTO(dto, null);
+		} catch (Exception e) {
+			throw new MeveoApiException(e);
+		}
 	}
 
 	@Override

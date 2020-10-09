@@ -158,8 +158,6 @@ public class MeveoModuleItem extends BaseEntity {
         int result = 31;
         result += itemClass != null ? itemClass.hashCode() : 0;
         result += itemCode != null ? itemCode.hashCode() : 0;
-        result += appliesTo != null ? appliesTo.hashCode() : 0;
-        result += validity != null ? validity.hashCode() : 0;
         return result;
     }
 
@@ -173,21 +171,10 @@ public class MeveoModuleItem extends BaseEntity {
         } else if (!(obj instanceof MeveoModuleItem)) {
             return false;
         }
-
+        
         MeveoModuleItem other = (MeveoModuleItem) obj;
-        if (id != null && other.getId() != null && id.equals(other.getId())) {
-            return true;
-        }
 
-        if (!itemClass.equals(other.getItemClass()) || !itemCode.equalsIgnoreCase(other.getItemCode()) || StringUtils.compare(appliesTo, other.getAppliesTo()) != 0) {
-            return false;
-        }
-        if (validity != null && !validity.equals(other.getValidity())) {
-            return false;
-        } else if (validity == null && (other.getValidity() != null && !other.getValidity().isEmpty())) {
-            return false;
-        }
-        return true;
+        return itemClass.equals(other.getItemClass()) && itemCode.equals(other.getItemCode());
     }
 
     public BusinessEntity getItemEntity() {

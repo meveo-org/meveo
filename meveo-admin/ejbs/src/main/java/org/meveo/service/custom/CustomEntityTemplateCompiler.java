@@ -122,6 +122,6 @@ public class CustomEntityTemplateCompiler {
 	 */
     public File getCetDir() {
         final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
-        return new File(repositoryDir, "custom/entities");
+        return new File(repositoryDir, "org/meveo/model/customEntities");
     }
 }

@@ -425,12 +425,13 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 			}
 
 		} catch (MeveoApiException e) {
+			messages.error("Entity can't be saved. Please retry.");
 			throw new BusinessException(e);
 		}
 		String message = entity.isTransient() ? "save.successful" : "update.successful";
         messages.info(new BundleKey("messages", message));
 
-		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true";
+		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
 		return result;
 	}
 

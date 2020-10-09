@@ -4,14 +4,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BaseCrudApi;
-import org.meveo.api.dto.job.TimerEntityDto;
 import org.meveo.api.dto.notification.WebHookDto;
-import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.HttpProtocol;
@@ -27,7 +23,7 @@ import org.meveo.service.script.ScriptInstanceService;
  * @version 6.10
  **/
 @Stateless
-public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
+public class WebHookApi extends NotificationApi<WebHook, WebHookDto> {
 
     @Inject
     private WebHookService webHookService;
@@ -42,6 +38,7 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
     	super(WebHook.class, WebHookDto.class);
     }
 
+    @Override
     public WebHook create(WebHookDto postData) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
@@ -65,22 +62,14 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 
         handleMissingParameters();
 
-        if (webHookService.findByCode(postData.getCode()) != null) {
-            throw new EntityAlreadyExistsException(WebHook.class, postData.getCode());
-        }
-        
-        var webHook = fromDto(postData);
-
-        webHookService.create(webHook);
-
-        return webHook;
+        return super.create(postData);
     }
 
     /* (non-Javadoc)
      * @see org.meveo.api.ApiService#find(java.lang.String)
      */
     @Override
-    public WebHookDto find(String notificationCode) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException {
+    public WebHookDto find(String notificationCode) throws MeveoApiException {
         WebHookDto result = new WebHookDto();
 
         if (!StringUtils.isBlank(notificationCode)) {
@@ -99,10 +88,32 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
 
         return result;
     }
-    
-    public WebHook update(WebHookDto postData) throws MeveoApiException, BusinessException {
 
-        if (StringUtils.isBlank(postData.getCode())) {
+    @Override
+    public void remove(String notificationCode) throws MeveoApiException, BusinessException {
+        if (!StringUtils.isBlank(notificationCode)) {
+            WebHook webHook = webHookService.findByCode(notificationCode);
+
+            if (webHook == null) {
+                throw new EntityDoesNotExistsException(WebHook.class, notificationCode);
+            }
+
+            webHookService.remove(webHook);
+        } else {
+            missingParameters.add("code");
+
+            handleMissingParameters();
+        }
+    }
+
+	@Override
+	public WebHookDto toDto(WebHook entity) {
+		return new WebHookDto(entity);
+	}
+	
+	@Override
+	public WebHook fromDto(WebHookDto postData, WebHook webHook) throws MeveoApiException {
+		if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
         }
         if (StringUtils.isBlank(postData.getClassNameFilter())) {
@@ -122,11 +133,6 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         }
 
         handleMissingParameters();
-
-        WebHook webHook = webHookService.findByCode(postData.getCode());
-        if (webHook == null) {
-            throw new EntityDoesNotExistsException(WebHook.class, postData.getCode());
-        }
 
         ScriptInstance scriptInstance = null;
         if (!StringUtils.isBlank(postData.getScriptInstanceCode())) {
@@ -174,40 +180,8 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         if (postData.getParams() != null) {
             webHook.getWebhookParams().putAll(postData.getParams());
         }
-
-        webHook = webHookService.update(webHook);
-
+        
         return webHook;
-    }
-
-    public void remove(String notificationCode) throws MeveoApiException, BusinessException {
-        if (!StringUtils.isBlank(notificationCode)) {
-            WebHook webHook = webHookService.findByCode(notificationCode);
-
-            if (webHook == null) {
-                throw new EntityDoesNotExistsException(WebHook.class, notificationCode);
-            }
-
-            webHookService.remove(webHook);
-        } else {
-            missingParameters.add("code");
-
-            handleMissingParameters();
-        }
-    }
-
-    @Override
-    public WebHook createOrUpdate(WebHookDto postData) throws MeveoApiException, BusinessException {
-        if (webHookService.findByCode(postData.getCode()) == null) {
-            return create(postData);
-        } else {
-            return update(postData);
-        }
-    }
-
-	@Override
-	public WebHookDto toDto(WebHook entity) {
-		return new WebHookDto(entity);
 	}
 
 	@Override
@@ -242,13 +216,13 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         webHook.setParams(dto.getScriptParams());
         webHook.setElFilter(dto.getElFilter());
         webHook.setCounterTemplate(counterTemplate);
-        
+
         if (!StringUtils.isBlank(dto.getHttpProtocol())) {
             webHook.setHttpProtocol(dto.getHttpProtocol());
         } else {
             webHook.setHttpProtocol(HttpProtocol.HTTP);
         }
-        
+
         webHook.setHost(dto.getHost());
         webHook.setPort(dto.getPort());
         webHook.setPage(dto.getPage());
@@ -261,19 +235,13 @@ public class WebHookApi extends BaseCrudApi<WebHook, WebHookDto> {
         if (dto.getParams() != null) {
             webHook.getWebhookParams().putAll(dto.getParams());
         }
-        
+
 		return webHook;
 	}
 
 	@Override
 	public IPersistenceService<WebHook> getPersistenceService() {
 		return webHookService;
-	}
-
-	@Override
-	public boolean exists(WebHookDto dto) {
-		var entity = webHookService.findByCode(dto.getCode());
-		return entity != null;
 	}
 	
 	@Override

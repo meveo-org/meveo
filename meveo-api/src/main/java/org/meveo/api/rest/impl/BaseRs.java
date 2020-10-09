@@ -2,6 +2,7 @@ package org.meveo.api.rest.impl;
 
 import io.swagger.annotations.ApiOperation;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.ValidationException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -126,14 +127,15 @@ public abstract class BaseRs implements IBaseRs {
      * @param status Status dto to update
      */
     protected void processException(Exception e, ActionStatus status) {
-    	
+    	boolean unkwownException = true;
+
         if (e instanceof MeveoApiException) {
             status.setErrorCode(((MeveoApiException) e).getErrorCode());
             status.setStatus(ActionStatusEnum.FAIL);
             status.setMessage(e.getMessage());
+            unkwownException = false;
 
         } else {
-            log.warn("Failed to execute API", e);
 
             String message = e.getMessage();
             
@@ -148,6 +150,7 @@ public abstract class BaseRs implements IBaseRs {
                     message = cause.getMessage();
 
                     if (cause instanceof SQLException || cause instanceof BusinessException || cause instanceof ConstraintViolationException) {
+                        unkwownException = false;
 
                         if (cause instanceof ConstraintViolationException) {
                             ConstraintViolationException cve = (ConstraintViolationException) (cause);
@@ -165,6 +168,7 @@ public abstract class BaseRs implements IBaseRs {
                     }
                     
                     if(cause instanceof IllegalArgumentException) {
+                    	unkwownException = false;
                     	errorCode = MeveoApiErrorCodeEnum.INVALID_PARAMETER;
                     	break;
                     }
@@ -172,9 +176,19 @@ public abstract class BaseRs implements IBaseRs {
                     cause = cause.getCause();
                 }
             }
-            status.setErrorCode(errorCode);
+            
+            if(e instanceof ValidationException) {
+            	unkwownException = false;
+            	errorCode = MeveoApiErrorCodeEnum.INVALID_PARAMETER;
+            }
+            
             status.setStatus(ActionStatusEnum.FAIL);
+            status.setErrorCode(errorCode);
             status.setMessage(message);
+        }
+        
+        if(unkwownException) {
+            log.warn("Failed to execute API", e);
         }
 
         handleErrorStatus(status);

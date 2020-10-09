@@ -391,6 +391,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 queryBuilder.append(" AND m.disabled = 1 ");
             }
         }
+        
+        if(StringUtils.isNoBlank(filters.getCode())) {
+        	queryBuilder.append(" AND code like '%:code%' ");
+        	parameters.put("code", filters.getCode());
+        }
 
         if(filters.getDownloaded() != null){
             if(!filters.getDownloaded()) {
@@ -591,9 +596,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
         }
 
+        // Update module files
         if(meveoModule.getModuleDependencies() != null) {
             meveoModule.getModuleDependencies().clear();
         }
+        
         Set<String> moduleFiles = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleFiles())) {
             for (String moduleFile : entity.getModuleFiles()) {
@@ -604,6 +611,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         if(meveoModule.getModuleFiles() != null) {
             meveoModule.getModuleFiles().clear();
         }
+        
+        if (CollectionUtils.isNotEmpty(moduleFiles)) {
+            for (String moduleFile : moduleFiles) {
+                meveoModule.getModuleFiles().add(moduleFile);
+            }
+        }
+        
         Set<MeveoModuleItem> moduleItems = new HashSet<>();
         if (CollectionUtils.isNotEmpty(entity.getModuleItems())) {
             for (MeveoModuleItem meveoModuleItem : entity.getModuleItems()) {
@@ -638,11 +652,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 meveoModule.getModuleItems().add(meveoModuleItem);
             }
         }
-        if (CollectionUtils.isNotEmpty(moduleFiles)) {
-            for (String moduleFile : moduleFiles) {
-                meveoModule.getModuleFiles().add(moduleFile);
-            }
-        }
+
         if (CollectionUtils.isNotEmpty(moduleDependencies)) {
             for (MeveoModuleDependency moduleDependency : moduleDependencies) {
                 meveoModule.getModuleDependencies().add(moduleDependency);

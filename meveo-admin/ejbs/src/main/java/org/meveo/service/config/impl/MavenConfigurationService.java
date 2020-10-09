@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,6 +57,7 @@ import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
 import org.meveo.service.aether.ConsoleRepositoryListener;
 import org.meveo.service.aether.ManualRepositorySystemFactory;
@@ -119,6 +121,9 @@ public class MavenConfigurationService implements Serializable {
 
 	@Resource
 	private TimerService timerService;
+	
+	@Inject
+	private CurrentUserProvider currentUserProvider;
 
 	private javax.ejb.Timer ejbTimer;
 
@@ -213,13 +218,8 @@ public class MavenConfigurationService implements Serializable {
 			updatedBuffer.clear();
 			deletedBuffer.clear();
 
-			log.info("User passed to the timer : " + user);
+			currentUserProvider.reestablishAuthentication(user);
 
-			MeveoUser meveoUser = currentUser.get();
-			log.info("User in timer : " + meveoUser);
-			meveoUser.loadUser(user);
-
-			log.info("User in timer (2) : " + currentUser.get());
 			generatePom(message.toString(), meveoRepository.get());
 		}
 	}
@@ -232,6 +232,11 @@ public class MavenConfigurationService implements Serializable {
 		model.setArtifactId("meveo-application");
 		model.setVersion("1.0.0");
 		model.setModelVersion("4.0.0");
+		
+		Properties properties = new Properties();
+		properties.setProperty("maven.compiler.target", "11");
+		properties.setProperty("maven.compiler.source", "11");
+		model.setProperties(properties);
 
 		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
 		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
