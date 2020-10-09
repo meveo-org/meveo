@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * Custom action.
  *
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.12
  */
 @XmlRootElement(name = "EntityCustomAction")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -75,6 +75,16 @@ public class EntityCustomActionDto extends BaseEntityDto {
     private String guiPosition;
 
     /**
+     * GUI only. Whether to show this action in CEI list.
+     */
+	private Boolean applicableToEntityList = false;
+
+	/**
+	 * GUI only, Whether to show this action in CEI detail.
+	 */
+	private Boolean applicableToEntityInstance = true;
+
+    /**
      * Instantiates a new entity custom action dto.
      */
     public EntityCustomActionDto() {
@@ -95,6 +105,8 @@ public class EntityCustomActionDto extends BaseEntityDto {
         this.label = action.getLabel();
         this.labelsTranslated = LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(action.getLabelI18n());
         this.guiPosition = action.getGuiPosition();
+        this.applicableToEntityList = action.getApplicableToEntityList();
+        this.applicableToEntityInstance = action.getApplicableToEntityInstance();
 
         this.setScript(new ScriptInstanceDto(action.getScript(), action.getScript().getScript()));
     }
@@ -251,4 +263,20 @@ public class EntityCustomActionDto extends BaseEntityDto {
     public void setLabelsTranslated(List<LanguageDescriptionDto> labelsTranslated) {
         this.labelsTranslated = labelsTranslated;
     }
+
+	public Boolean getApplicableToEntityList() {
+		return applicableToEntityList;
+	}
+
+	public void setApplicableToEntityList(Boolean applicableToEntityList) {
+		this.applicableToEntityList = applicableToEntityList;
+	}
+
+	public Boolean getApplicableToEntityInstance() {
+		return applicableToEntityInstance;
+	}
+
+	public void setApplicableToEntityInstance(Boolean applicableToEntityInstance) {
+		this.applicableToEntityInstance = applicableToEntityInstance;
+	}
 }

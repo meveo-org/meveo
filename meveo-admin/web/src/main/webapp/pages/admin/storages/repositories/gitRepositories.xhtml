@@ -16,7 +16,7 @@
             </p:breadCrumb>
         </h:form>
 
-        <hftl:searchPanel label="#{messages['gitRepositories.search']}" backingBean="#{gitRepositoryListBean}" columns="3">
+        <hftl:searchPanel label="#{messages['gitRepositories.search']}" backingBean="#{gitRepositoryListBean}" columns="3" exportToCsv="true" exportToJson="true" exportToXml="true">
             <hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
         </hftl:searchPanel>
 

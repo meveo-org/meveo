@@ -911,6 +911,7 @@ public class CustomTableCreatorService implements Serializable {
 				break;
 			case STRING:
 			case TEXT_AREA:
+			case LONG_TEXT:
 			case LIST:
 				column.setDefaultValue(cft.getDefaultValue());
 				break;
@@ -971,6 +972,8 @@ public class CustomTableCreatorService implements Serializable {
 			return "text";
 		case BOOLEAN:
 			return "int";
+		case LONG_TEXT:
+			return "text";
 
 		default:
 			break;

@@ -36,7 +36,7 @@
             </p:inputText>
         </c:if>
     </c:if>
-    <c:if test="#{(cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA || cft.fieldType eq CustomFieldTypeEnum.EMBEDDED_ENTITY)}">
+    <c:if test="#{(cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA || cft.fieldType eq CustomFieldTypeEnum.EMBEDDED_ENTITY || cft.fieldType eq CustomFieldTypeEnum.LONG_TEXT)}">
         <c:if test="#{! edit}">
             <h:outputText value="#{field}" />
         </c:if>
@@ -94,7 +94,7 @@
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
         <c:if test="#{! edit}">
-            <h:outputText value="#{field.code}" />
+            <h:outputText value="#{field.class.name == 'java.lang.String' ? field : field.code}" />
         </c:if>
         <c:if test="#{edit}">
             <p:autoComplete value="#{field}" required="#{cft.valueRequired}" size="30" maxlength="60" dropdown="true" placeholder="#{placeholder}" label="#{label}"

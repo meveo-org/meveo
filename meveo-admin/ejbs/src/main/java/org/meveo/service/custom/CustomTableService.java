@@ -889,7 +889,7 @@ public class CustomTableService extends NativePersistenceService {
 	@Override
 	public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet, PaginationConfiguration config) {
 		PaginationConfiguration paginationConfiguration = new PaginationConfiguration(config);
-
+		
 		// Only use SQL filters
 		if (config != null && config.getFilters() != null) {
 			final Map<String, Object> sqlFilters = config.getFilters().entrySet().stream().filter(stringObjectEntry -> sqlCftFilter(cet, stringObjectEntry.getKey()))
@@ -902,7 +902,13 @@ public class CustomTableService extends NativePersistenceService {
 			List<String> sqlFetchFields = config.getFetchFields().stream().filter(s -> sqlCftFilter(cet, s)).collect(Collectors.toList());
 			paginationConfiguration.setFetchFields(sqlFetchFields);
 		}
-
+		
+		if(cet.getSuperTemplate() != null) {
+			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
+			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(cet.getSuperTemplate()));
+			paginationConfiguration.setSuperTypeFields(parentCfts.keySet());
+		}
+		
 		final List<Map<String, Object>> data = super.list(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), paginationConfiguration);
 		if (cet.getCode().startsWith(CustomEntityTemplate.AUDIT_PREFIX)) {
 			return data;
