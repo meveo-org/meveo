@@ -39,8 +39,7 @@
 
 		<hftl:searchPanel
 			label="#{customEntityInstanceListBean.customEntityTemplate.name} #{messages['customEntityInstance.search']}"
-			backingBean="#{customEntityInstanceListBean}" renderNewButton="false"
-			exportToCsv="true">
+			backingBean="#{customEntityInstanceListBean}" renderNewButton="false">
 
 			<c:if
 				test="#{customEntityInstanceListBean.customEntityTemplate.storedIn(DBStorageType.SQL)}">
@@ -258,6 +257,17 @@
 									rendered="#{field.fieldType eq CustomFieldTypeEnum.TEXT_AREA and entity[field.code] == null}">
 								</h:outputText>
 
+								<!--  Long Text -->
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] != null}">
+								</h:outputText>
+
+								<h:outputText value="#{entity[field.code]}"
+									styleClass="field-value"
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.LONG_TEXT and entity[field.code] == null}">
+								</h:outputText>
+
 								<h:outputText
 									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] != null}"
 									value="#{entity[field.code]}" styleClass="field-value">
@@ -267,16 +277,9 @@
 								</h:outputText>
 
 								<h:outputText
-									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] == null and entity[field.code] != null}"
-									value="#{entity[field.code]}" styleClass="field-value">
-									<f:converter binding="#{entityReferenceConverter}" />
-									<f:attribute name="field" value="#{field}" />
-									<f:attribute name="repository" value="#{bean.repository}" />
-								</h:outputText>
-
-								<h:outputText
-									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] == null and entity[field.code] == null}"
-									value="Choose a #{field.code}" styleClass="field-value">
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.ENTITY and entity[field.code] == null}"
+									value="Choose a field #{field.fieldType}"
+									styleClass="field-value">
 								</h:outputText>
 
 								<h:outputText
@@ -285,13 +288,8 @@
 									styleClass="field-value" />
 
 								<h:outputText
-									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] == null and entity[field.code] != null}"
-									value="#{entity[field.code]}" converter="jsonConverter"
-									styleClass="field-value" />
-
-								<h:outputText
-									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] == null and entity[field.code] == null}"
-									value="Enter the #{field.code}" styleClass="field-value" />
+									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] == null}"
+									value="Enter the #{field.fieldType}" styleClass="field-value" />
 							</p:column>
 						</c:forEach>
 
@@ -339,6 +337,16 @@
 						</p:column>
 					</p:dataTable>
 					<h:panelGroup id="customActionButton">
+						<p:commandButton value="#{messages['commons.deleteMultiple']}"
+							immediate="true"
+							action="#{customEntityInstanceListBean.deleteMany()}"
+							icon="ui-icon-trash" update="@form">
+							<p:confirm header="#{messages['commons.confirmationHeader']}"
+								message="#{messages['commons.confirmDelete']}"
+								icon="ui-icon-alert" />
+							<f:ajax render="@all" />
+						</p:commandButton>
+
 						<c:set var="customActionsInList"
 							value="#{customFieldDataEntryBean.getCustomActionsInList(customEntityInstanceBean.entity)}"
 							scope="request" />
@@ -390,6 +398,7 @@
 			<p:commandButton value="No" type="button"
 				styleClass="ui-confirmdialog-no" icon="pi pi-times" />
 		</p:confirmDialog>
+
 	</ui:define>
 
 </ui:composition>

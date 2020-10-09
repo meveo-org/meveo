@@ -655,7 +655,8 @@ public class CustomFieldValue implements Serializable {
         case STRING:
         case LIST:
         case TEXT_AREA:
-        case EMBEDDED_ENTITY:	
+        case LONG_TEXT:
+        case EMBEDDED_ENTITY:
             stringValue = (String) value;
 
             break;
