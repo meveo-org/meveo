@@ -14,7 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 
 /**
  * The Class SqlConfiguration.

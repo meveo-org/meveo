@@ -1,4 +1,4 @@
-package org.meveo.util;
+package org.meveo.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

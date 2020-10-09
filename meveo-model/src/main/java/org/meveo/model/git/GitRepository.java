@@ -24,7 +24,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

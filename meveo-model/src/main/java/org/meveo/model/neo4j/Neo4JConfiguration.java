@@ -28,7 +28,7 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
-import org.meveo.util.PasswordUtils;
+import org.meveo.security.PasswordUtils;
 
 /**
  * Configuration used to access a Neo4j repository
