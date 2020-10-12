@@ -10,13 +10,16 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.CreatedAfterTx;
+import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
@@ -46,6 +49,26 @@ public class CustomEntityTemplateObserver {
 		log.debug("CET onCreated observer={}", cet);
 		if (cet.isAudited()) {
 			createAuditTable(repositoryService.findDefaultRepository().getCode(), CustomEntityTemplate.AUDIT_PREFIX + SQLStorageConfiguration.getDbTablename(cet));
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onCetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @UpdatedAfterTx CustomEntityTemplate cet) {
+
+		log.debug("CET onUpdated observer={}", cet);
+		SqlConfiguration sqlConfiguration = repositoryService.findDefaultRepository().getSqlConfiguration();
+		String tableName = CustomEntityTemplate.AUDIT_PREFIX + SQLStorageConfiguration.getDbTablename(cet);
+		String schema = StringUtils.isBlank(sqlConfiguration.getSchema()) ? "public" : sqlConfiguration.getSchema();
+		String sqlConnCode = repositoryService.findDefaultRepository().getSqlConfigurationCode();
+		boolean isTableExists = customTableCreatorService.isTableExists(sqlConnCode, schema, tableName);
+
+		if (cet.isAudited() && !isTableExists) {
+			createAuditTable(sqlConnCode, tableName);
+
+		} else {
+			if (isTableExists) {
+				customTableCreatorService.removeTable(sqlConnCode, tableName);
+			}
 		}
 	}
 
