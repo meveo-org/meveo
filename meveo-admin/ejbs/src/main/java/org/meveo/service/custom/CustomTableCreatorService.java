@@ -1090,4 +1090,11 @@ public class CustomTableCreatorService implements Serializable {
 		}
 		return database;
 	}
+	
+	public boolean isTableExists(String sqlConfigurationCode, String schema, String tableName) {
+
+		return (Boolean) getEntityManager(sqlConfigurationCode)
+				.createNativeQuery("SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_schema = :tableSchema AND table_name = :tableName)")
+				.setParameter("tableSchema", schema).setParameter("tableName", tableName).getSingleResult();
+	}
 }
