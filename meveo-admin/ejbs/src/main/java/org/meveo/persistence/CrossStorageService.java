@@ -67,6 +67,7 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -76,6 +77,7 @@ import org.meveo.persistence.graphql.GraphQLQueryBuilder;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -660,8 +662,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCet(cet);
 
 		// Create referenced entities and set UUIDs in the values
-		Map<String, Object> entityValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
-		entityValues = createEntityReferences(repository, entityValues, cet);
+		Map<String, Object> tmpValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
+		Map<String, Object> entityValues = createEntityReferences(repository, tmpValues, cet);
 		customFieldInstanceService.setCfValues(cei, cet.getCode(), entityValues);
 
 		String uuid = null;
@@ -669,16 +671,48 @@ public class CrossStorageService implements CustomPersistenceService {
 		// First check if data exist, in order to synchronize UUID across all storages
 		String foundId = null;
 		
+		List<String> secretFields = customFieldTemplates.values()
+			.stream()
+			.filter(cft -> cft.getFieldType() == CustomFieldTypeEnum.SECRET)
+			.filter(cft -> cei.get(cft.getCode()) != null)
+			.map(CustomFieldTemplate::getCode)
+			.collect(Collectors.toList());
+		
 		try {
 			foundId = findEntityId(repository, cei);
 			if (foundId != null) {
 				cei.setUuid(foundId);
+				
+				// Handle secret fields
+				if(!secretFields.isEmpty()) {
+					var foundCei = CEIUtils.pojoToCei(find(repository, cet, foundId, false));
+					String oldCeiHash = CEIUtils.getHash(foundCei, customFieldTemplates);
+					secretFields.forEach(secretField -> {
+						// Secret field has not changed, decrypt it so it will be correctly re-encrypted
+						if(cei.get(secretField).equals(foundCei.get(secretField))) {
+							String decryptedValue = PasswordUtils.decryptNoSecret(oldCeiHash, cei.get(secretField));
+							cei.getCfValues().setValue(secretField, decryptedValue);
+							entityValues.put(secretField, decryptedValue);
+						}
+					});
+				}
 			}
 		} catch (IllegalArgumentException e) {
-			//It's no problem if we can't retrieve record using values - we consider it does not exist
+			// It's no problem if we can't retrieve record using values - we consider it does not exist
 		}
 		
-		boolean created = foundId == null;
+		// Encrypt secret fields
+		if(!secretFields.isEmpty()) {
+			String ceiHash = CEIUtils.getHash(cei, customFieldTemplates);
+			secretFields.forEach(secretField -> {
+				String secretValue = cei.get(secretField);
+				if(!secretValue.startsWith("🔒")) {	// Value is already encrypted
+					String encryptedValue = PasswordUtils.encryptNoSecret(ceiHash, secretValue);
+					cei.getCfValues().setValue(secretField, encryptedValue);
+					entityValues.put(secretField, encryptedValue);
+				}
+			});
+		}
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
