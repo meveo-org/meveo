@@ -1162,7 +1162,7 @@ public class Neo4jService implements CustomPersistenceService {
                 // Validate that value is valid (min/max, regexp). When
                 // value is a list or a map, check separately each value
                 if (fieldValue != null
-                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
+                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
                         cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
                         cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION || cft.getFieldType() == CustomFieldTypeEnum.LIST)) {
                     List valuesToCheck = new ArrayList<>();

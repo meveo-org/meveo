@@ -1806,6 +1806,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		case TEXT_AREA:
         case LONG_TEXT:
 		case LIST:
+		case SECRET:
 		case STRING:
 			return new ArrayList<String>();
 		case LONG:
