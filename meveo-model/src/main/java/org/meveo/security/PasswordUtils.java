@@ -117,12 +117,13 @@ public class PasswordUtils {
 	 */
 	public static String decryptNoSecret(String salt, String encrypted) {
 		if(encrypted.startsWith(SECRET_PREFIX)) {	// Don't include this special char when decrypting
-			encrypted = encrypted.substring(1);
+			encrypted = encrypted.substring(SECRET_PREFIX.length());
 		}
 		
 		try {
 			Cipher cipher = initCipherNoSecret(salt, Cipher.DECRYPT_MODE);
-			byte[] original = cipher.doFinal(Base64.getDecoder().decode(encrypted));
+			byte[] decodedBytes = Base64.getDecoder().decode(encrypted);
+			byte[] original = cipher.doFinal(decodedBytes);
 			byte[] originalWithoutIv = Arrays.copyOfRange(original, 16, original.length);
 			return new String(originalWithoutIv);
 		} catch (Exception e) {
