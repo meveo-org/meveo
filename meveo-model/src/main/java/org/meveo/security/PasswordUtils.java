@@ -29,6 +29,7 @@ public class PasswordUtils {
 	private static String secretKeyType = "AES";
 	private static byte[] ivCode = new byte[16];
 	private static String secretKey = System.getProperty("meveo.security.secret", "NoDefaultKey");
+	private static String SECRET_PREFIX = new String("🔒");
 	
 	/**
 	 * Generate a salt from the given values
@@ -100,7 +101,7 @@ public class PasswordUtils {
 			Cipher cipher = initCipherNoSecret(salt, Cipher.ENCRYPT_MODE);
 			byte[] encrypted = cipher.doFinal(value.getBytes());
 			byte[] cipherWithIv = addIVToCipher(encrypted);
-			return Base64.getEncoder().encodeToString(cipherWithIv);
+			return SECRET_PREFIX + Base64.getEncoder().encodeToString(cipherWithIv); // We use "␎" to retrieve whether a string is encoded
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -115,6 +116,10 @@ public class PasswordUtils {
 	 * @throws Exception if error occurs
 	 */
 	public static String decryptNoSecret(String salt, String encrypted) {
+		if(encrypted.startsWith(SECRET_PREFIX)) {	// Don't include this special char when decrypting
+			encrypted = encrypted.substring(1);
+		}
+		
 		try {
 			Cipher cipher = initCipherNoSecret(salt, Cipher.DECRYPT_MODE);
 			byte[] original = cipher.doFinal(Base64.getDecoder().decode(encrypted));
