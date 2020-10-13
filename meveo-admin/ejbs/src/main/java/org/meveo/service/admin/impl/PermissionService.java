@@ -72,6 +72,13 @@ public class PermissionService extends PersistenceService<Permission> {
         }
 
     }
+    
+    public void removeIfPresent(String permission) throws BusinessException {
+    	Permission permissionEntity = this.findByPermission(permission);
+    	if(permissionEntity != null) {
+    		remove(permissionEntity);
+    	}
+    }
 
     public Permission createIfAbsent(String permission, String... rolesToAddTo) throws BusinessException {
         
