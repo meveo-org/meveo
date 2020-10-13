@@ -323,6 +323,15 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	public String getModifyPermission() {
 		return CustomEntityTemplate.getModifyPermission(code);
 	}
+	
+	/**
+	 * Gets the decrypt permission.
+	 *
+	 * @return the decrypt permission
+	 */
+	public String getDecrpytPermission() {
+		return CustomEntityTemplate.getDecryptPermission(code);
+	}
 
 	@Override
 	public int compareTo(CustomEntityTemplate cet1) {
@@ -347,6 +356,16 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 */
 	public static String getModifyPermission(String code) {
 		return "CE_" + code + "-modify";
+	}
+	
+	/**
+	 * Gets the decrypt permission.
+	 *
+	 * @param code the code
+	 * @return the decrypt permission
+	 */
+	public static String getDecryptPermission(String code) {
+		return "CE_" + code + "-decrypt";
 	}
 
 	/**

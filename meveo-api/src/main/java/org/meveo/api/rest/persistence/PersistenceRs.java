@@ -38,6 +38,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.NotFoundException;
@@ -81,6 +82,8 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -126,6 +129,10 @@ public class PersistenceRs {
     
     @Inject
     private CrossStorageApi crossStorageApi;
+    
+    @Inject
+    @CurrentUser
+    private MeveoUser currentUser;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -196,9 +203,14 @@ public class PersistenceRs {
     		@HeaderParam("See-Decrypted") boolean seeDecrypted) throws EntityDoesNotExistsException, IOException {
     	
     	final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+    	
         if (customEntityTemplate == null) {
             throw new NotFoundException("Template " + cetCode + " does not exists");
         }
+        
+    	if(!currentUser.hasRole(customEntityTemplate.getReadPermission())) {
+    		throw new ForbiddenException();
+    	}
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
         
@@ -211,8 +223,7 @@ public class PersistenceRs {
         convertFiles(customEntityTemplate, values, base64Encode);
         values = serializeJpaEntities(values);
         
-        if(seeDecrypted) {
-        	//TODO: Check if user has corresponding role
+        if(seeDecrypted && currentUser.hasRole(customEntityTemplate.getDecrpytPermission())) {
         	var cei = CEIUtils.fromMap(values, customEntityTemplate);
         	var hash = CEIUtils.getHash(cei, cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo()));
         	for(var entry : values.entrySet()) {

@@ -184,6 +184,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
+            permissionService.createIfAbsent(cet.getDecrpytPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getReadPermission(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
 
             /* If cet is a primitive type, create custom field of corresponding type */
@@ -351,11 +352,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         customFieldsCache.removeCustomEntityTemplate(cet);
+        
+        // Remove permissions
+        permissionService.removeIfPresent(cet.getModifyPermission());
+        permissionService.removeIfPresent(cet.getDecrpytPermission());
+        permissionService.removeIfPresent(cet.getReadPermission());
 
-//        if(getEntityManager().contains(cet)) {
-        	super.remove(cet);
-//        }
-
+    	super.remove(cet);
     }
 
     /**

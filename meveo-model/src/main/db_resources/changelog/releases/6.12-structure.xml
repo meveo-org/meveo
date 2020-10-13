@@ -40,5 +40,15 @@
 		    <column name="ran" type="${type.boolean}" defaultValue="0"/>
     	</createTable>
 	</changeSet>
+	
+	<changeSet id="Cascade drop role_permission" author="Clément Bareth">
+		<dropAllForeignKeyConstraints baseTableName="adm_role_permission" />
+		<addForeignKeyConstraint constraintName="fk_role_adm_role_permission"
+			baseColumnNames="role_id" baseTableName="adm_role_permission"
+			referencedColumnNames="id" referencedTableName="adm_role" onDelete="CASCADE"/>
+		<addForeignKeyConstraint constraintName="fk_permission_adm_role_permission"
+			baseColumnNames="permission_id" baseTableName="adm_role_permission"
+			referencedColumnNames="id" referencedTableName="adm_permission" onDelete="CASCADE"/>
+	</changeSet>
 
 </databaseChangeLog>
