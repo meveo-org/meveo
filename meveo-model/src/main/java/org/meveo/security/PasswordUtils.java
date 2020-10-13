@@ -86,6 +86,57 @@ public class PasswordUtils {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	/**
+	 * Encrypt the given value with AES 
+	 * 
+	 * @param salt the salt to use during encryption
+	 * @param value the value to encrypt
+	 * @return the encrypted value
+	 * @throws Exception if error occurs
+	 */
+	public static String encryptNoSecret(String salt, String value) {
+		try {
+			Cipher cipher = initCipherNoSecret(salt, Cipher.ENCRYPT_MODE);
+			byte[] encrypted = cipher.doFinal(value.getBytes());
+			byte[] cipherWithIv = addIVToCipher(encrypted);
+			return Base64.getEncoder().encodeToString(cipherWithIv);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Encrypt the given value with AES 
+	 * 
+	 * @param salt the salt used for the encryption
+	 * @param encrypted the encrypted value to decrypt
+	 * @return the decrypted value
+	 * @throws Exception if error occurs
+	 */
+	public static String decryptNoSecret(String salt, String encrypted) {
+		try {
+			Cipher cipher = initCipherNoSecret(salt, Cipher.DECRYPT_MODE);
+			byte[] original = cipher.doFinal(Base64.getDecoder().decode(encrypted));
+			byte[] originalWithoutIv = Arrays.copyOfRange(original, 16, original.length);
+			return new String(originalWithoutIv);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static Cipher initCipherNoSecret(String salt, int mode) throws Exception {
+		SecretKeyFactory factory = SecretKeyFactory.getInstance(factoryInstance);
+		KeySpec spec = new PBEKeySpec("NoSecret".toCharArray(), salt.getBytes(), 65536, 256);
+		SecretKey tmp = factory.generateSecret(spec);
+		SecretKeySpec skeySpec = new SecretKeySpec(tmp.getEncoded(), secretKeyType);
+		Cipher cipher = Cipher.getInstance(cipherInstance);
+		// Generating random IV
+		SecureRandom random = new SecureRandom();
+		random.nextBytes(ivCode);
+		cipher.init(mode, skeySpec, new IvParameterSpec(ivCode));
+		return cipher;
+	}
 
 	private static Cipher initCipher(String salt, int mode) throws Exception {
 		SecretKeyFactory factory = SecretKeyFactory.getInstance(factoryInstance);
