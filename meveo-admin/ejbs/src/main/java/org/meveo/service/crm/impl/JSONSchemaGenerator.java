@@ -252,6 +252,7 @@ public class JSONSchemaGenerator {
 			case EMBEDDED_ENTITY:
 			case TEXT_AREA:
 			case LONG_TEXT:
+			case SECRET:
 			case STRING:
 				result = createStringSchema(field);
 				break;
@@ -329,6 +330,7 @@ public class JSONSchemaGenerator {
 		// field.getStorageType());
 		case TEXT_AREA:
 		case LONG_TEXT:
+		case SECRET:
 		case STRING:
 			result = createStringSchema(field);
 			break;
@@ -391,6 +393,7 @@ public class JSONSchemaGenerator {
 			break;
 //			case CHILD_ENTITY:  TODO: handle this case
 //				throw new IllegalStateException("Child entity type of field supports only list of entities: field = " + field + ", storageType = " + field.getStorageType());
+		case SECRET:
 		case TEXT_AREA:
 		case STRING:
 			valueBuilder = createStringSchema(field);
