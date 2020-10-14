@@ -118,6 +118,9 @@ public class PasswordUtils {
 	public static String decryptNoSecret(String salt, String encrypted) {
 		if(encrypted.startsWith(SECRET_PREFIX)) {	// Don't include this special char when decrypting
 			encrypted = encrypted.substring(SECRET_PREFIX.length());
+		} else {
+			// Consider the string is not encrypted
+			return encrypted;
 		}
 		
 		try {
