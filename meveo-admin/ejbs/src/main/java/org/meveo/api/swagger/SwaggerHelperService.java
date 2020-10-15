@@ -69,6 +69,7 @@ public class SwaggerHelperService {
 		Property result = new ObjectProperty();
 
 		switch (cft.getFieldType()) {
+		case SECRET:
 		case STRING:
 			result = new StringProperty();
 			break;

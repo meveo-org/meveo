@@ -17,18 +17,42 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.security.PasswordUtils;
 
 /**
  * Utilitary class for manipulating {@link CustomEntityInstance}
  * 
  * @author clement.bareth
  * @since 6.8.0
- * @version 6.8.0
+ * @version 6.12.0
  */
 public class CEIUtils {
+	
+	/**
+	 * @param cei  The entity to hash
+	 * @param cfts Custom fields of the entity template
+	 * @return a hash of the cei based on the uuid and the clear fields
+	 */
+	public static String getHash(CustomEntityInstance cei, Map<String, CustomFieldTemplate> cfts) {
+		List<Object> objectsToHash = new ArrayList<>();
+		if(cei.getUuid() == null) {
+			throw new IllegalArgumentException("Can't hash a CEI without uuid");
+		}
+		objectsToHash.add(cei.getUuid());
+		
+		cei.getCfValuesAsValues().forEach((key, value) -> {
+			if(value != null && cfts.get(key) != null && cfts.get(key).getFieldType() != CustomFieldTypeEnum.SECRET) {
+				objectsToHash.add(value);
+			}
+		});
+		
+		return PasswordUtils.getSalt(objectsToHash.toArray());
+	}
 	
 	public static CustomEntityInstance fromMap(Map<String, Object> map, CustomEntityTemplate cet) {
 		var cei = pojoToCei(map);

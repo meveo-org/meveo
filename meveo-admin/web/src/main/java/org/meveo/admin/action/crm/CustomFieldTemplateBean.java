@@ -377,7 +377,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 */
     public void updateDefaultValues() {
 
-        if (entity.getFieldType() == CustomFieldTypeEnum.STRING && entity.getMaxValue() == null) {
+        if ((entity.getFieldType() == CustomFieldTypeEnum.STRING || entity.getFieldType() == CustomFieldTypeEnum.SECRET) && entity.getMaxValue() == null) {
             entity.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
         }
         if (entity.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {

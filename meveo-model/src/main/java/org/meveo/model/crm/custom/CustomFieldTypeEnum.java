@@ -9,9 +9,15 @@ import org.meveo.model.crm.EntityReferenceWrapper;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.12.0
  */
 public enum CustomFieldTypeEnum {
+	
+	/**
+	 * Secret value, stored encrypted
+	 */
+	SECRET(false, true, String.class),
+	
     /**
      * String value
      */
