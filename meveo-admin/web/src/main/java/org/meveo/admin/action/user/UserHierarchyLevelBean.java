@@ -527,7 +527,8 @@ public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
 		}
 		showUserGroupDetail = true;
 		isEdit = true;
-
+		rootNode = null;
+		
 		return null;
 	}
 
