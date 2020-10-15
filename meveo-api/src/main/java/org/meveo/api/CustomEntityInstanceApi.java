@@ -19,6 +19,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -290,8 +291,8 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		this.remove(dto.getCetCode(), dto.getCode());
 	}
 
-	public List<String> statesOfCEI(String cetCode, String uuid) throws EntityDoesNotExistsException {
-		List<String> statesOfCEI = customEntityInstanceService.statesOfCEI(cetCode, uuid);
+	public List<String> statesOfCEI(String cetCode, String cftCode, String uuid) throws EntityDoesNotExistsException, ELException, BusinessException {
+		List<String> statesOfCEI = customEntityInstanceService.statesOfCEI(cetCode, cftCode, uuid);
 		return statesOfCEI;
 	}
 }

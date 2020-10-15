@@ -115,12 +115,13 @@ public interface CustomEntityInstanceRs extends IBaseRs {
 	 * List states available of a given CEI
 	 *
 	 * @param customEntityTemplateCode The custom entity template's code
+	 * @param customFieldTemplateCode The custom field template's code
 	 * @param uuid The custom entity instance's uuid
 	 * @return A list of states available of a given CEI
 	 */
 	@GET
-	@Path("/states/{customEntityTemplateCode}/{uuid}")
+	@Path("/states/{customEntityTemplateCode}/{customFieldTemplateCode}/{uuid}")
 	@ApiOperation(value = "List states available of a given CEI")
-	GetStatesResponse listStatesOfCei(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode,
+	GetStatesResponse listStatesOfCei(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, @PathParam("customFieldTemplateCode") @ApiParam("Code of the custom field template") String customFieldTemplateCode,
 									  @PathParam("uuid") @ApiParam("Uuid of custom entity instance") String uuid);
 }

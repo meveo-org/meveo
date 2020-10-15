@@ -25,4 +25,8 @@
 		<sql>UPDATE crm_custom_action SET applicable_to_entity_list=0, applicable_to_entity_instance=1;</sql>
 	</changeSet>
 
+	<changeSet author="Phu Bach" id="Github#102">
+		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
+	</changeSet>
+
 </databaseChangeLog>
