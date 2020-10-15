@@ -190,7 +190,8 @@ public interface ModuleRs extends IBaseRs {
 	MeveoModuleDto removeItemFromModule(
 			@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
 			@PathParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, 
-			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType
+			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType,
+			@QueryParam("appliesTo") @ApiParam("Applies to expression") String appliesTo
 		) throws EntityDoesNotExistsException, BusinessException;
 	
 	/**
@@ -207,7 +208,8 @@ public interface ModuleRs extends IBaseRs {
 	MeveoModuleDto addItemToModule(
 			@PathParam("code") @ApiParam("Code of the module to modify") String moduleCode,
 			@PathParam("itemCode") @ApiParam("Code of the item to remove") String itemCode, 
-			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType
+			@PathParam("itemType") @ApiParam("Type of the item to remove") String itemType,
+			@QueryParam("appliesTo") @ApiParam("Applies to expression") String appliesTo
 		) throws EntityDoesNotExistsException, BusinessException;
 
 	/**
