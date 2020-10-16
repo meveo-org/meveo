@@ -243,6 +243,7 @@ public class CustomField {
                 return doubleValue == null;
             case LONG:
                 return longValue == null;
+            case SECRET:
             case LIST:
             case STRING:
             case TEXT_AREA:

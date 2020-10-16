@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -253,6 +255,10 @@ public class GroupedCustomField implements Serializable {
 
     public Collection<CustomFieldTemplate> getFields() {
         return fields;
+    }
+    
+    public Map<String, CustomFieldTemplate> getFieldsByCode() {
+    	return fields.stream().collect(Collectors.toMap(e -> e.getCode(), e -> e));
     }
 
     @Override

@@ -38,6 +38,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.NotFoundException;
@@ -73,6 +74,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
@@ -80,6 +82,9 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.storage.RepositoryService;
@@ -124,6 +129,10 @@ public class PersistenceRs {
     
     @Inject
     private CrossStorageApi crossStorageApi;
+    
+    @Inject
+    @CurrentUser
+    private MeveoUser currentUser;
 
     @PathParam("repository")
     private String repositoryCode;
@@ -175,15 +184,33 @@ public class PersistenceRs {
         return Response.noContent().build();
     }
 
+    /**
+     * @param base64Encode
+     * @param cetCode
+     * @param uuid
+     * @param seeDecrypted
+     * @return
+     * @throws EntityDoesNotExistsException
+     * @throws IOException
+     */
     @GET
     @Path("/{cetCode}/{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Get persistence")
-    public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, @PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid) throws EntityDoesNotExistsException, IOException {
+    public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode, 
+    		@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, 
+    		@PathParam("uuid") @ApiParam("uuid") String uuid,
+    		@HeaderParam("See-Decrypted") boolean seeDecrypted) throws EntityDoesNotExistsException, IOException {
+    	
     	final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
+    	
         if (customEntityTemplate == null) {
             throw new NotFoundException("Template " + cetCode + " does not exists");
         }
+        
+    	if(!currentUser.hasRole(customEntityTemplate.getReadPermission())) {
+    		throw new ForbiddenException();
+    	}
 
         final Repository repository = repositoryService.findByCode(repositoryCode);
         
@@ -195,6 +222,19 @@ public class PersistenceRs {
         
         convertFiles(customEntityTemplate, values, base64Encode);
         values = serializeJpaEntities(values);
+        
+        if(seeDecrypted && currentUser.hasRole(customEntityTemplate.getDecrpytPermission())) {
+        	var cei = CEIUtils.fromMap(values, customEntityTemplate);
+        	var hash = CEIUtils.getHash(cei, cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo()));
+        	for(var entry : values.entrySet()) {
+        		if(entry.getValue() instanceof String) {
+        			String strVal = (String) entry.getValue();
+        			if(strVal.startsWith("🔒")) {
+        				entry.setValue(PasswordUtils.decryptNoSecret(hash, strVal));
+        			}
+        		}
+        	}
+        }
         
         return values;
     }

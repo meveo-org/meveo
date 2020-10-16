@@ -471,7 +471,7 @@ public class CustomTableCreatorService implements Serializable {
 
 		String dbFieldname = cft.getDbFieldname();
 
-		if (cft.getFieldType() == CustomFieldTypeEnum.STRING && (cft.getMaxValue() == null || cft.getMaxValue() < 1)) {
+		if ((cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.SECRET) && (cft.getMaxValue() == null || cft.getMaxValue() < 1)) {
 			cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
 		}
 
@@ -642,7 +642,7 @@ public class CustomTableCreatorService implements Serializable {
 						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
 						addDefaultValueChange.setDefaultValueNumeric(cft.getDefaultValue());
-					} else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
+					} else if (cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST) {
 						addDefaultValueChange.setDefaultValue(cft.getDefaultValue());
 					} else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
 						addDefaultValueChange.setColumnDataType("int");
@@ -909,6 +909,7 @@ public class CustomTableCreatorService implements Serializable {
 					column.setDefaultValueNumeric("0");
 				}
 				break;
+			case SECRET:
 			case STRING:
 			case TEXT_AREA:
 			case LONG_TEXT:
@@ -958,6 +959,7 @@ public class CustomTableCreatorService implements Serializable {
 			return "numeric(23, 12)";
 		case LONG:
 			return "bigint";
+		case SECRET:
 		case BINARY:
 		case EXPRESSION:
 		case MULTI_VALUE:

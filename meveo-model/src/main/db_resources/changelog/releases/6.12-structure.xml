@@ -50,6 +50,7 @@
 			baseColumnNames="permission_id" baseTableName="adm_role_permission"
 			referencedColumnNames="id" referencedTableName="adm_permission" onDelete="CASCADE"/>
 	</changeSet>
+<<<<<<< HEAD
 	
 	<changeSet id="Add transaction type" author="Clément Bareth">
 		<addColumn tableName="meveo_script_instance">
@@ -58,5 +59,7 @@
 			</column>
 		</addColumn>
 	</changeSet>
+=======
+>>>>>>> refs/remotes/origin/master
 
 </databaseChangeLog>

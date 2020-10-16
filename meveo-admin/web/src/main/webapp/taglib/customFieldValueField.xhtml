@@ -19,7 +19,7 @@
         disabled - is field non-editable
         hasInheritedValue - if value is set in parent CF entity
  -->
-
+ 
 <ui:composition>
     <h:outputText value="#{''}" />
     <c:if test="#{empty(cols)}">
@@ -31,8 +31,38 @@
     <c:if test="#{empty(hasInheritedValue)}">
         <c:set var="hasInheritedValue" value="false" />
     </c:if>
+    
     <o:importConstants type="org.meveo.model.crm.custom.CustomFieldTypeEnum" />
     <o:importConstants type="org.meveo.model.crm.custom.CustomFieldStorageTypeEnum" />
+    <o:importFunctions type="org.meveo.security.PasswordUtils" var="pwd" />
+    <o:importFunctions type="org.meveo.model.persistence.CEIUtils" var="ceiUtils" />
+    
+    <c:set var="hash" value="#{ceiUtils:getHash(entity, customFieldDataEntryBean.getGroupedFieldTemplates(entity).fieldsByCode)}"/>
+    
+    <c:if test="#{cc.attrs.cft.fieldType eq CustomFieldTypeEnum.SECRET}">
+    	<h:panelGroup id="panel_#{cc.attrs.cft.code}">
+    		<c:if test="#{customEntityInstanceBean.isDisplayedInClear(cc.attrs.cft)}">
+    			<c:set var="encryptedValue" value="#{field.stringValue}"/>
+    			<c:set target="#{field}" property="stringValue" value="#{pwd:decryptNoSecret(customEntityInstanceBean.hash, field.stringValue)}" />
+    			<h:inputText styleClass="field-value" value="#{field.stringValue}" readonly="#{!edit or disabled}" size="30" />
+	    		<p:commandButton icon="ui-icon-key" title="Hide" 
+	    			update="panel_#{cc.attrs.cft.code}" 
+	    			action="#{customEntityInstanceBean.setDisplayedInClear(cc.attrs.cft, false)}"/>
+    		</c:if>
+
+      		<c:if test="#{not customEntityInstanceBean.isDisplayedInClear(cc.attrs.cft)}">
+		    	<h:inputSecret autocomplete="off" readonly="#{!edit or disabled}"
+		    			id="secret_#{cc.attrs.cft.code}"
+						value="#{field.stringValue}" redisplay="true"
+						required="#{cft.valueRequired}" size="30"
+						label="#{cft.description}"
+						maxlength="#{cft.maxValue}" />
+                <p:commandButton icon="ui-icon-lightbulb" title="Show" update="panel_#{cc.attrs.cft.code}"
+                    rendered="#{currentUser.hasRole(entity.cet.decrpytPermission)}"
+					action="#{customEntityInstanceBean.setDisplayedInClear(cc.attrs.cft, true)}"/>
+			</c:if>
+		</h:panelGroup>
+    </c:if>
 
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.STRING}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
@@ -146,4 +176,5 @@
         </p:selectOneMenu>
     </c:if>
 </ui:composition>
+
 </html>
