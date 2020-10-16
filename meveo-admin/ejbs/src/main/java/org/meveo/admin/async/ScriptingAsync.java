@@ -49,8 +49,8 @@ public class ScriptingAsync {
 
         ScriptInterface script = null;
         try {
-            script = scriptInstanceService.getScriptInstance(scriptCode);
-            script.execute(context);
+            /*script = */scriptInstanceService.execute(scriptCode, context);//getScriptInstance(scriptCode);
+//            script.execute(context);
             if (context.containsKey(Script.JOB_RESULT_NB_OK)) {
                 result.setNbItemsCorrectlyProcessed(convert(context.get(Script.JOB_RESULT_NB_OK)));
             } else {

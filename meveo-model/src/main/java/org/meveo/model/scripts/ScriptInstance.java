@@ -64,7 +64,7 @@ import org.meveo.model.security.Role;
 public class ScriptInstance extends CustomScript {
 
 	private static final long serialVersionUID = -7691357496569390167L;
-
+	
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "adm_script_exec_role", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> executionRoles;

@@ -96,6 +96,12 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 		return functionService.getExecutionEngine(function.getCode(), context);
 	}
 	
+	@Override
+	public Map<String, Object> execute(String code, Map<String, Object> context) throws BusinessException {
+		FunctionService<?, ScriptInterface> functionService = getFunctionService(code);
+		return functionService.execute(code, context);
+	}
+
 	@SuppressWarnings("unchecked")
 	public FunctionService<?, ScriptInterface> getFunctionService(Long functionId) {
 		

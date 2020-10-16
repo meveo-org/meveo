@@ -274,11 +274,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 		} catch (Throwable e) {
 			throw new ScriptExecutionException(engine.getClass().getName(), "init", e);
 		}
-        try {
-			engine.execute(context);
-		} catch (Throwable e) {
-			throw new ScriptExecutionException(engine.getClass().getName(), "execute", e);
-		}
+        
+        executeEngine(engine, context);
+
         try {
 			engine.finalize(context);
 		} catch (Throwable e) {
@@ -292,7 +290,15 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 		}
         
     }
-
+    
+    protected void executeEngine(E engine, Map<String, Object> context) throws ScriptExecutionException{
+        try {
+			engine.execute(context);
+		} catch (Throwable e) {
+			throw new ScriptExecutionException(engine.getClass().getName(), "execute", e);
+		}
+    }
+    
     protected Map<String, Object> buildResultMap(E engine, Map<String, Object> context) {
 		return context;
 	}
