@@ -61,7 +61,9 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.shared.DateUtils;
+import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
@@ -160,6 +162,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	@Inject
 	private RepositoryService repositoryService;
+
+	@Inject
+	private CrossStorageService crossStorageService;
 
 	private ICustomFieldEntity entity;
 
@@ -1684,6 +1689,17 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		// Init fields of CEI
 		Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
+		if (cei.getUuid() != null) {
+			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
+			try {
+				values = crossStorageService.find(repositoryService.findDefaultRepository(), customEntityTemplate, cei.getUuid(), true);
+				if (values != null) {
+					values.remove("uuid");
+				}
+			} catch (EntityDoesNotExistsException e) {
+				log.error(e.getMessage());
+			}
+		}
 		CustomFieldValues customFieldValues = CETUtils.initCustomFieldValues(values, fields.values());
 		cei.setCfValues(customFieldValues);
 
@@ -2137,23 +2153,25 @@ public class CustomFieldDataEntryBean implements Serializable {
 		Object value = null;
 		if (childEntityValue != null && childEntityValue.getValuesByCode() != null && isStoreTable(entityClazz)) {
 			try {
-				CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(childEntityValue.getValuesByCode().get("classnameCode").get(0).getStringValue());
-				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
-				Map<String, Object> childEntity = customTableService.findById("default", customEntityTemplate, childEntityValue.getValuesByCode().get("uuid").get(0).getStringValue());
-				if (childEntity != null) {
-					value = childEntity.get(fieldCode);
-					if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
-						if ((Integer) value == 1) {
-							return true;
-						} else {
-							return false;
+				CustomEntityInstance customEntityInstance = (CustomEntityInstance) childEntityValue.getEntity();
+				if (customEntityInstance != null) {
+					CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityInstance.getCetCode());
+					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
+					Map<String, Object> childEntity = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, customEntityInstance.getUuid());
+					if (childEntity != null) {
+						value = childEntity.get(fieldCode);
+						if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
+							if ((Integer) value == 1) {
+								return true;
+							} else {
+								return false;
+							}
 						}
 					}
 				}
 			} catch (EntityDoesNotExistsException e) {
 				log.error(e.getMessage());
 			}
-
 		}
 		return value;
 	}
