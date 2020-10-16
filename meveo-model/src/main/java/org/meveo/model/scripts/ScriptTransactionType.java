@@ -13,14 +13,34 @@ package org.meveo.model.scripts;
 public enum ScriptTransactionType {
 	
 	/** UserTransaction will be injected in script context */
-	MANUAL,
+	MANUAL("Manual"),
 	
 	/** A new transaction will be started */
-	NEW,
+	NEW("New transaction"),
 	
 	/** Caller transaction will be used */
-	SAME,
+	SAME("Same transaction"),
 	
 	/** Will fail if called in transactional context */
-	NONE
+	NONE("No transaction");
+	
+	/** Label of the enum value*/
+	private String label;
+
+	/**
+	 * Instantiates a new ScriptTransactionType
+	 *
+	 * @param label
+	 */
+	private ScriptTransactionType(String label) {
+		this.label = label;
+	}
+
+	/**
+	 * @return the {@link #label}
+	 */
+	public String getLabel() {
+		return label;
+	}
+	
 }
