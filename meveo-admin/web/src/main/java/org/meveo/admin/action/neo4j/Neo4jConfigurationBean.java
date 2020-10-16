@@ -50,16 +50,20 @@ public class Neo4jConfigurationBean extends BaseBean<Neo4JConfiguration> {
 	 * Test connection to database
 	 */
 	public void execute() {
-		if(!entity.isTransient()) {
-			var conn = neo4jConnectionProvider.getSession(entity.getCode());
-			if(conn != null) {
-				messages.info("Connection success");
-				conn.close();
+		try {
+			if(!entity.isTransient()) {
+				var conn = neo4jConnectionProvider.getSession(entity.getCode());
+				if(conn != null) {
+					conn.close();
+					messages.info("Connection success");
+				} else {
+					messages.error("Can't connect to database");
+				}
 			} else {
-				messages.error("Can't connect to database");
+				messages.error("Can't test connection in creation mode");
 			}
-		} else {
-			messages.error("Can't test connection in creation mode");
+		} catch (Exception e) {
+			messages.error("Can't connect to database:", e.getMessage());
 		}
 	}
 }

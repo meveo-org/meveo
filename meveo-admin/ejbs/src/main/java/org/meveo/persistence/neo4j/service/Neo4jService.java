@@ -336,6 +336,7 @@ public class Neo4jService implements CustomPersistenceService {
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
             if (cet.getPrePersistScript() != null) {
+            	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
                 scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
             }
 
@@ -658,10 +659,13 @@ public class Neo4jService implements CustomPersistenceService {
 
         /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
         if (customRelationshipTemplate.getStartNode().getPrePersistScript() != null) {
-            scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
+        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
+        	scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
         }
+        
         if (customRelationshipTemplate.getEndNode().getPrePersistScript() != null) {
-            scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
+        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
+        	scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
         }
 
         /* Recuperation of the custom fields of the CRT */
