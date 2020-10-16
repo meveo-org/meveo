@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
@@ -102,6 +103,7 @@ public class PermissionService extends PersistenceService<Permission> {
                 roleService.create(role);
             }
 
+            Hibernate.initialize(role.getPermissions());
             if (!role.getPermissions().contains(permissionEntity)) {
                 role.getPermissions().add(permissionEntity);
                 roleService.update(role);
