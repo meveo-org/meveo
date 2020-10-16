@@ -238,6 +238,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		scriptInstance.setScript(dto.getScript());
 		scriptInstance.setSamples(dto.getSamples());
 		scriptInstance.setGenerateOutputs(dto.getGenerateOutputs());
+		scriptInstance.setTransactionType(dto.getTransactionType());
 
 		if (dto.getCategory() != null) {
 			scriptInstance.setCategory(fcService.findByCode(dto.getCategory()));
