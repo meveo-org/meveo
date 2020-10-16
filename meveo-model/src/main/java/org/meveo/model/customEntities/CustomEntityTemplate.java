@@ -43,6 +43,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
@@ -113,10 +114,11 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 
 	/**
 	 * Script to execute before persisting the entity
+	 * @deprecated Will be removed in future releases
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "pre_persist_script")
-	private ScriptInstance prePersistScript;
+	private ScriptInstance prePersistScript;	//TODO: Remove the property
 
 	/**
 	 * Custom Entity Category
@@ -135,20 +137,47 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Type(type = "numeric_boolean")
 	@Column(name = "audited")
 	private boolean audited = false;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "cr_ev_list_script")
+	private ScriptInstance crudEventListenerScript;
+	
+	@Transient
+	private transient CrudEventListenerScript<CustomEntity> crudEventListener;
 
 	@Transient
 	private boolean hasReferenceJpaEntity = false;
 	
 	@Transient
 	private boolean isInDraft = false;
+	
+	/**
+	 * @return the {@link #crudEventListenerScript}
+	 */
+	public ScriptInstance getCrudEventListenerScript() {
+		return crudEventListenerScript;
+	}
 
-//	void setCustomEntityCategory(CustomEntityCategory customEntityCategory, boolean isAdd) {
-//		
-//		this.customEntityCategory = customEntityCategory;
-//		if (customEntityCategory != null && isAdd) {
-//			customEntityCategory.addCustomEntityTemplate(this, false);
-//		}
-//	}
+	/**
+	 * @param crudEventListenerScript the crudEventListenerScript to set
+	 */
+	public void setCrudEventListenerScript(ScriptInstance crudEventListenerScript) {
+		this.crudEventListenerScript = crudEventListenerScript;
+	}
+
+	/**
+	 * @return the {@link #crudEventListener}
+	 */
+	public CrudEventListenerScript<CustomEntity> getCrudEventListener() {
+		return crudEventListener;
+	}
+
+	/**
+	 * @param crudEventListener the crudEventListener to set
+	 */
+	public void setCrudEventListener(CrudEventListenerScript<CustomEntity> crudEventListener) {
+		this.crudEventListener = crudEventListener;
+	}
 
 	/**
 	 * Sets the custom Entity Category.
@@ -156,7 +185,6 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * @param customEntityCategory the new custom Entity Category
 	 */
 	public void setCustomEntityCategory(CustomEntityCategory customEntityCategory) {
-//		setCustomEntityCategory(customEntityCategory);
 		this.customEntityCategory = customEntityCategory;
 	}
 
@@ -247,8 +275,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Sets the list of storages where the custom fields can be stored.
 	 *
-	 * @param availableStorages the new list of storages where the custom fields can
-	 *                          be stored
+	 * @param availableStorages the new list of storages where the custom fields can be stored
 	 */
 	public void setAvailableStorages(List<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
@@ -257,8 +284,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Gets the script to execute before persisting the entity.
 	 *
+	 * @deprecated Will be removed in future releases
 	 * @return the script to execute before persisting the entity
 	 */
+	@Deprecated
 	public ScriptInstance getPrePersistScript() {
 		return prePersistScript;
 	}
@@ -266,9 +295,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * Sets the script to execute before persisting the entity.
 	 *
-	 * @param prePersistScript the new script to execute before persisting the
-	 *                         entity
+	 * @deprecated Will be removed in future releases
+	 * @param prePersistScript the new script to execute before persisting the entity
 	 */
+	@Deprecated
 	public void setPrePersistScript(ScriptInstance prePersistScript) {
 		this.prePersistScript = prePersistScript;
 	}

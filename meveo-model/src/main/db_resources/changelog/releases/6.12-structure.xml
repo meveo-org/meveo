@@ -58,5 +58,13 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="Add crud event listener to CET" author="Clément Bareth">
+		<addColumn tableName="cust_cet">
+			<column name="cr_ev_list_script" type="bigint">
+				<constraints foreignKeyName="fk_cr_ev_list_script" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

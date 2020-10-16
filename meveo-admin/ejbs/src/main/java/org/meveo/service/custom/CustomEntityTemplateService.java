@@ -21,6 +21,8 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,11 +54,13 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
+import org.meveo.model.customEntities.CrudEventListenerScript;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
@@ -72,6 +76,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -87,50 +92,16 @@ import com.google.common.collect.Lists;
 @Stateless
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
 
-    @Inject
-    private CustomFieldTemplateService customFieldTemplateService;
+    private final static String CLASSES_DIR = "/classes";
     
-    @Inject
-    private SqlConfigurationService sqlConfigurationService;
-
-    @Inject
-    private PermissionService permissionService;
-
-    @Inject
-    private CustomFieldsCacheContainerProvider customFieldsCache;
-
-    @Inject
-    private ElasticClient elasticClient;
-
-    @Inject
-    private ParamBeanFactory paramBeanFactory;
-
-    @Inject
-    private CustomTableCreatorService customTableCreatorService;
-
-    @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
-
-    @Inject
-    private Neo4jService neo4jService;
-    
-    @Inject
-    private CustomEntityCategoryService customEntityCategoryService;
-
-    @Inject
-    private EntityCustomActionService entityCustomActionService;
-
-    @Inject
-    @MeveoRepository
-    private GitRepository meveoRepository;
-
     private static boolean useCETCache = true;
 
-    private final static String CLASSES_DIR = "/classes";
-
-    @PostConstruct
-    private void init() {
-        useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
+    /**
+     * @param currentUser the current meveo user
+     * @return the directory where the classes are stored
+     */
+    public static File getClassesDir(MeveoUser currentUser) {
+        return new File(getClassesDirectory(currentUser));
     }
 
     /**
@@ -142,26 +113,61 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return rootDir + CLASSES_DIR;
     }
 
-    public static File getClassesDir(MeveoUser currentUser) {
-        return new File(getClassesDirectory(currentUser));
-    }
-    
     /**
-     * @param cet The parent template
-     * @return the sub-templates of the given template
+     * Converts to {@linkplain LinkedList} of {@linkplain ImmutableList} object.
+     *
+     * @param listOfValues list of values to be converted
+     * @return the converted values
      */
-    public List<CustomEntityTemplate> getSubTemplates(CustomEntityTemplate cet) {
-    	/* CustomEntityTemplate result = (CustomEntityTemplate) getEntityManager()
-    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate cet WHERE cet.id = :id")
-    			.setParameter("id", cet.getId())
-    			.getSingleResult();
-		return result.getSubTemplates();*/ 
-    	return getEntityManager()
-			.createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
-			.setParameter("id", cet.getId())
-			.getResultList();
-    	
+    private static List<ImmutableList<String>> makeListofImmutable(Collection<Collection<String>> listOfValues) {
+
+        List<ImmutableList<String>> converted = new LinkedList<>();
+        listOfValues.forEach(array -> {
+            converted.add(ImmutableList.copyOf(array));
+        });
+
+        return converted;
     }
+
+    @Inject
+    private CustomEntityCategoryService customEntityCategoryService;
+
+    @Inject
+    private CustomEntityInstanceService customEntityInstanceService;
+
+    @Inject
+    private CustomFieldsCacheContainerProvider customFieldsCache;
+
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
+
+    @Inject
+    private ElasticClient elasticClient;
+    
+    @Inject
+    private EntityCustomActionService entityCustomActionService;
+
+    @Inject
+    @MeveoRepository
+    private GitRepository meveoRepository;
+
+    @Inject
+    private Neo4jService neo4jService;
+
+    @Inject
+    private ParamBeanFactory paramBeanFactory;
+
+    @Inject
+    private PermissionService permissionService;
+
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
+    
+    @Inject
+    private SqlConfigurationService sqlConfigurationService;
     
     @Override
     public void create(CustomEntityTemplate cet) throws BusinessException {
@@ -169,6 +175,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+        
+        checkCrudEventListenerScript(cet);
         
 		ParamBean paramBean = paramBeanFactory.getInstance();
                 
@@ -202,60 +210,406 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
     }
 
-    private void createPrimitiveCft(CustomEntityTemplate cet) throws BusinessException {
-        // Define CFT
-        final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
-        CustomEntityTemplateUtils.turnIntoPrimitive(cet, customFieldTemplate);
-        // Create CFT
-        customFieldTemplateService.create(customFieldTemplate);
+    /**
+     * A generic method that returns a filtered list of ICustomFieldEntity given an entity class and code.
+     *
+     * @param entityClass - class of an entity. eg. org.meveo.catalog.OfferTemplate
+     * @param entityCode  - code of entity
+     * @return customer field entity
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
+        ICustomFieldEntity result = null;
+        QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
+        queryBuilder.addCriterion("code", "=", entityCode, true);
+        List<ICustomFieldEntity> entities = (List<ICustomFieldEntity>) queryBuilder.getQuery(getEntityManager()).getResultList();
+        if (entities != null && !entities.isEmpty()) {
+            result = entities.get(0);
+        }
+
+        return result;
     }
 
+    /**
+     * Find a custom entity template that uses a given custom table as implementation
+     *
+     * @param codeOrDbTablename Custom entity code or a corresponding database table name
+     * @return A custom entity template
+     */
+    public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
+
+    	CustomEntityTemplate cet = null;
+    	if(useCETCache) {
+    		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    	}
+    	
+		if (cet == null) {
+			cet = findByCode(codeOrDbTablename);
+			if (cet != null) {
+				return cet;
+			}
+		}
+        return findByDbTablename(codeOrDbTablename);
+    }
+    
+    /**
+     * Find a custom entity template that uses a given custom table as implementation
+     *
+     * @param dbTablename Database table name
+     * @return A custom entity template
+     */
+    public CustomEntityTemplate findByDbTablename(String dbTablename) {
+
+        List<CustomEntityTemplate> cets = listCustomTableTemplates();
+
+        for (CustomEntityTemplate cet : cets) {
+            if (SQLStorageConfiguration.getDbTablename(cet).equalsIgnoreCase(dbTablename)) {
+                return cet;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get a list of custom entity templates for cache
+     *
+     * @return A list of custom entity templates
+     */
+    public List<CustomEntityTemplate> getCETForCache() {
+        return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForCache", CustomEntityTemplate.class).getResultList();
+    }
+
+    /**
+     * Get a list of custom entity templates for Configuration
+     *
+     * @return A list of custom entity templates
+     */
+    public List<CustomEntityTemplate> getCETForConfiguration() {
+        return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
+    }
+
+    /**
+     * @return a list of custom entity templates that have sub-templates
+     */
+    public List<CustomEntityTemplate> getCETsWithSubTemplates() {
+        String query = new StringBuffer()
+                .append("SELECT DISTINCT cet from CustomEntityTemplate cet ")
+                .append("LEFT JOIN FETCH cet.subTemplates")
+                .toString();
+
+        return getEntityManager().createQuery(query, CustomEntityTemplate.class).getResultList();
+    }
+
+    /**
+     * 
+     * @param cetCode code of the custom entity template
+     * @return the json scema of the custom entity template
+     * @throws IOException if a file can't be written / read
+     */
+    @SuppressWarnings("unchecked")
+	public String getJsonSchemaContent(String cetCode) throws IOException {
+
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
+        File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
+        byte[] mapData = Files.readAllBytes(file.toPath());
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
+        
+        // Replace references in allOf
+        List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
+        allOf.forEach(item -> {
+    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
+        });
+
+        Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
+        if (items != null) {
+            for (Map.Entry<String, Object> item : items.entrySet()) {
+                Map<String, Object> values = (Map<String, Object>) item.getValue();
+                if (values.containsKey("$ref")) {
+                    String ref = (String) values.get("$ref");
+                    if (ref != null) {
+                        values.put("$ref", ref.replace("./", ""));
+                    }
+                } else {
+                    if (values.get("type") != null && values.get("type").equals("array")) {
+                        Map<String, Object> value = (Map<String, Object>) values.get("items");
+                        if (value.containsKey("$ref")) {
+                            String ref = (String) value.get("$ref");
+                            if (ref != null) {
+                                value.put("$ref", ref.replace("./", ""));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return JacksonUtil.toStringPrettyPrinted(jsonMap);
+    }
+
+    /**
+     * Find the primitive type of a given CustomEntityTemplate
+     *
+     * @param code Code of the CustomEntityTemplate to find primitive type
+     * @return the primitive type of the CustomEntityTemplate or null if it does not have one or is not a CustomEntityTemplate
+     */
+    public PrimitiveTypeEnum getPrimitiveType(String code) {
+        try {
+            return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
+                    .setParameter("code", code)
+                    .getSingleResult();
+        } catch (NoResultException ignored) {
+            return null;
+        }
+    }
+
+
+    /**
+     * @param cet The parent template
+     * @return the sub-templates of the given template
+     */
+    public List<CustomEntityTemplate> getSubTemplates(CustomEntityTemplate cet) {
+    	/* CustomEntityTemplate result = (CustomEntityTemplate) getEntityManager()
+    			.createQuery("SELECT subTemplates FROM CustomEntityTemplate cet WHERE cet.id = :id")
+    			.setParameter("id", cet.getId())
+    			.getSingleResult();
+		return result.getSubTemplates();*/ 
+    	return getEntityManager()
+			.createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
+			.setParameter("id", cet.getId())
+			.getResultList();
+    	
+    }
+
+    /**
+     * @param cet the custom entity template
+     * @return whether the given template has a reference to a jpa entity in one of its fields
+     */
+    public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+		if (cfts.size() > 0) {
+			Optional<CustomFieldTemplate> opt = cfts.values().stream()
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
+			if (opt.isPresent()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+    /**
+     * List custom entity templates, optionally filtering by an active status. Custom entity templates will be looked up in cache or retrieved from DB.
+     *
+     * @param active Custom entity template's status. Or any if null
+     * @return A list of custom entity templates
+     */
     @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    @Asynchronous
-    protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
-        /* Primitive entity and type management */
-        if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity() && cet.getNeo4JStorageConfiguration().getPrimitiveType() != null) {
-            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-            CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
+    public List<CustomEntityTemplate> list(Boolean active) {
 
-            if (valueCft == null) {
-                createPrimitiveCft(cet);
-            } else {
-                boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
-                boolean maxValueChanged = !valueCft.getMaxValue().equals(cet.getNeo4JStorageConfiguration().getMaxValue());
-                boolean shouldUpdate = typeChanged || maxValueChanged;
-                if (shouldUpdate) {
-                    flush();
-                }
+        if (useCETCache && (active == null || active)) {
 
-                if (typeChanged) {
-                    valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
-                }
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
-                if (maxValueChanged) {
-                    valueCft.setMaxValue(cet.getNeo4JStorageConfiguration().getMaxValue());
-                }
-
-                if (shouldUpdate) {
-                    customFieldTemplateService.update(valueCft);
+            // Populate cache if record is not found in cache
+            if (cets.isEmpty()) {
+                cets = super.list(active);
+                if (cets != null) {
+                    cets.forEach((cet) -> customFieldsCache.addUpdateCustomEntityTemplate(cet));
                 }
             }
+
+            return cets;
+
         } else {
-            if (cet.getNeo4JStorageConfiguration() != null) {
-                cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
-                cet.getNeo4JStorageConfiguration().setMaxValue(null);
-            }
+            return super.list(active);
         }
     }
 
     @Override
+    public List<CustomEntityTemplate> list(PaginationConfiguration config) {
+
+        if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
+                || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
+            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
+
+            // Populate cache if record is not found in cache
+            if (cets.isEmpty()) {
+                cets = super.list(config);
+                if (cets != null) {
+                    cets.forEach((cet) -> customFieldsCache.addUpdateCustomEntityTemplate(cet));
+                }
+            }
+
+            return cets;
+
+        } else {
+            return super.list(config);
+        }
+    }
+
+    /**
+     * Get a list of custom entity templates that use custom tables as implementation
+     *
+     * @return A list of custom entity templates
+     */
+    public List<CustomEntityTemplate> listCustomTableTemplates() {
+
+        if (useCETCache) {
+            List<CustomEntityTemplate> cets = new ArrayList<>();
+            for (CustomEntityTemplate customEntityTemplate : customFieldsCache.getCustomEntityTemplates()) {
+                if (customEntityTemplate.getSqlStorageConfiguration() != null && customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
+                    cets.add(customEntityTemplate);
+                }
+            }
+            return cets;
+
+        } else {
+            return super.list(new PaginationConfiguration(MapUtils.putAll(new HashMap<>(), new Object[]{"sqlStorageConfiguration.storeAsTable", true})));
+        }
+    }
+
+    /**
+     * Computes the cartesian product all {@linkplain CustomFieldTemplate} sample
+     * values.
+     *
+     * @param cetCode                 {@link CustomEntityTemplate} code
+     * @param paginationConfiguration page information
+     * @return list of list of string of sample values.
+     */
+    public List<Map<String, String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
+
+        CustomEntityTemplate cet = findByCode(cetCode);
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+        Collection<Collection<String>> listOfValues = new HashSet<>();
+        for (Entry<String, CustomFieldTemplate> es : cfts.entrySet()) {
+            List<String> sampleValues = es.getValue().getSamples().stream().map(e -> es.getKey() + "|" + e).collect(Collectors.toList());
+            listOfValues.add(sampleValues);
+        }
+
+        List<ImmutableList<String>> immutableElements = makeListofImmutable(listOfValues);
+
+        List<List<String>> cartesianValues = Lists.cartesianProduct(immutableElements);
+
+        return convertListToMap(cartesianValues);
+    }
+    
+	/**
+	 * @return the list of custom entity templates from database
+	 */
+    public List<CustomEntityTemplate> listNoCache() {
+        return super.list((Boolean) null);
+    }
+
+    /**
+     * Instantiate the crud event listener for the given cet
+     * @param cet The cet to load the listener
+     */
+    @SuppressWarnings("unchecked")
+	public CrudEventListenerScript<CustomEntity> loadCrudEventListener(CustomEntityTemplate cet) {
+    	if(cet.getCrudEventListener() == null && cet.getCrudEventListenerScript() != null) {
+    		var listener = (CrudEventListenerScript<CustomEntity>) scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
+    		cet.setCrudEventListener(listener);
+    	}
+    	return cet.getCrudEventListener();
+    }
+
+    @Override
+    public void remove(CustomEntityTemplate cet) throws BusinessException {
+
+        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+
+        Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
+
+        for (CustomFieldTemplate cft : fields.values()) {
+        	// Don't remove super-template cfts
+        	if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
+        		customFieldTemplateService.remove(cft);
+        	}
+        }
+
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+
+        } else if (cet.getSqlStorageConfiguration() != null) {
+            customEntityInstanceService.removeByCet(cet.getCode());
+        }
+
+        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.removeCet(cet);
+            neo4jService.removeUUIDIndexes(cet);
+        }
+
+        for (EntityCustomAction entityCustomAction : customActionMap.values()) {
+            entityCustomActionService.remove(entityCustomAction.getId());
+        }
+
+        customFieldsCache.removeCustomEntityTemplate(cet);
+        
+        // Remove permissions
+        permissionService.removeIfPresent(cet.getModifyPermission());
+        permissionService.removeIfPresent(cet.getDecrpytPermission());
+        permissionService.removeIfPresent(cet.getReadPermission());
+
+    	super.remove(cet);
+    }
+
+    /**
+     * retrieve Custom Entity Templates given by categoryId then remove it so that we can remove it in the cache
+     *
+     * @param categoryId if of the category
+     * @throws BusinessException the the CETs can't be removed
+     */
+    public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+                remove(entityTemplate);
+            }
+        }
+    }
+
+	/**
+	 * Remove the given CET in a new transaction
+	 * 
+	 * @see #remove(CustomEntityTemplate)
+	 * @param cet the CET to remove
+	 * @throws BusinessException if CET can't be removed
+	 */
+	@Transactional(TxType.REQUIRES_NEW)
+    public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
+    	remove(cet);
+    }
+	
+	/**
+     * Remove the relation toward the category of the attached CETs
+     *
+     * @param categoryId Category id
+	 * @throws BusinessException if a relation can't be removed
+     */
+    public void resetCategoryCETsByCategoryId(Long categoryId) throws BusinessException {
+        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
+        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
+        if (CollectionUtils.isNotEmpty(results)) {
+            for (CustomEntityTemplate entityTemplate : results) {
+                entityTemplate.setCustomEntityCategory(null);
+                update(entityTemplate);
+            }
+        }
+    }
+	
+	@Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
         CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
         
     	if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
+    	
+    	checkCrudEventListenerScript(cet);
     	
         ParamBean paramBean = paramBeanFactory.getInstance();
 
@@ -315,289 +669,69 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return cetUpdated;
     }
+
+	/**
+	 * Create the given category and attach the given CET to it
+	 * 
+	 * @param cet The CET to update
+	 * @param customEntityCategory The category to create
+	 * @return the updated CET
+	 * @throws BusinessException if the category can't be created
+	 */
+    public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
+		customEntityCategoryService.create(customEntityCategory);
+		cet.setCustomEntityCategory(customEntityCategory);
+		return update(cet);
+	}
     
-    @Transactional(TxType.REQUIRES_NEW)
-    public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
-    	remove(cet);
-    }
-
     @Override
-    public void remove(CustomEntityTemplate cet) throws BusinessException {
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @Asynchronous
+    protected void afterUpdate(CustomEntityTemplate cet) throws BusinessException {
+        /* Primitive entity and type management */
+        if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity() && cet.getNeo4JStorageConfiguration().getPrimitiveType() != null) {
+            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            CustomFieldTemplate valueCft = cfts.get(CustomEntityTemplateUtils.PRIMITIVE_CFT_VALUE);
 
-        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            if (valueCft == null) {
+                createPrimitiveCft(cet);
+            } else {
+                boolean typeChanged = valueCft.getFieldType() != cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType();
+                boolean maxValueChanged = !valueCft.getMaxValue().equals(cet.getNeo4JStorageConfiguration().getMaxValue());
+                boolean shouldUpdate = typeChanged || maxValueChanged;
+                if (shouldUpdate) {
+                    flush();
+                }
 
-        Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
+                if (typeChanged) {
+                    valueCft.setFieldType(cet.getNeo4JStorageConfiguration().getPrimitiveType().getCftType());
+                }
 
-        for (CustomFieldTemplate cft : fields.values()) {
-        	// Don't remove super-template cfts
-        	if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
-        		customFieldTemplateService.remove(cft);
-        	}
-        }
+                if (maxValueChanged) {
+                    valueCft.setMaxValue(cet.getNeo4JStorageConfiguration().getMaxValue());
+                }
 
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
-
-        } else if (cet.getSqlStorageConfiguration() != null) {
-            customEntityInstanceService.removeByCet(cet.getCode());
-        }
-
-        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.removeCet(cet);
-            neo4jService.removeUUIDIndexes(cet);
-        }
-
-        for (EntityCustomAction entityCustomAction : customActionMap.values()) {
-            entityCustomActionService.remove(entityCustomAction.getId());
-        }
-
-        customFieldsCache.removeCustomEntityTemplate(cet);
-        
-        // Remove permissions
-        permissionService.removeIfPresent(cet.getModifyPermission());
-        permissionService.removeIfPresent(cet.getDecrpytPermission());
-        permissionService.removeIfPresent(cet.getReadPermission());
-
-    	super.remove(cet);
-    }
-
-    /**
-     * List custom entity templates, optionally filtering by an active status. Custom entity templates will be looked up in cache or retrieved from DB.
-     *
-     * @param active Custom entity template's status. Or any if null
-     * @return A list of custom entity templates
-     */
-    @Override
-    public List<CustomEntityTemplate> list(Boolean active) {
-
-        if (useCETCache && (active == null || active)) {
-
-            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
-
-            // Populate cache if record is not found in cache
-            if (cets.isEmpty()) {
-                cets = super.list(active);
-                if (cets != null) {
-                    cets.forEach((cet) -> customFieldsCache.addUpdateCustomEntityTemplate(cet));
+                if (shouldUpdate) {
+                    customFieldTemplateService.update(valueCft);
                 }
             }
-
-            return cets;
-
         } else {
-            return super.list(active);
-        }
-    }
-
-    public List<CustomEntityTemplate> listNoCache() {
-        return super.list((Boolean) null);
-    }
-
-    @Override
-    public List<CustomEntityTemplate> list(PaginationConfiguration config) {
-
-        if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
-                || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
-            List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
-
-            // Populate cache if record is not found in cache
-            if (cets.isEmpty()) {
-                cets = super.list(config);
-                if (cets != null) {
-                    cets.forEach((cet) -> customFieldsCache.addUpdateCustomEntityTemplate(cet));
-                }
+            if (cet.getNeo4JStorageConfiguration() != null) {
+                cet.getNeo4JStorageConfiguration().setPrimitiveType(null);
+                cet.getNeo4JStorageConfiguration().setMaxValue(null);
             }
-
-            return cets;
-
-        } else {
-            return super.list(config);
         }
     }
-
-    public List<CustomEntityTemplate> getCETsWithSubTemplates() {
-        String query = new StringBuffer()
-                .append("SELECT DISTINCT cet from CustomEntityTemplate cet ")
-                .append("LEFT JOIN FETCH cet.subTemplates")
-                .toString();
-
-        return getEntityManager().createQuery(query, CustomEntityTemplate.class).getResultList();
-    }
-
-
-    /**
-     * Get a list of custom entity templates for cache
-     *
-     * @return A list of custom entity templates
-     */
-    public List<CustomEntityTemplate> getCETForCache() {
-        return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForCache", CustomEntityTemplate.class).getResultList();
-    }
-
-    /**
-     * A generic method that returns a filtered list of ICustomFieldEntity given an entity class and code.
-     *
-     * @param entityClass - class of an entity. eg. org.meveo.catalog.OfferTemplate
-     * @param entityCode  - code of entity
-     * @return customer field entity
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
-        ICustomFieldEntity result = null;
-        QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
-        queryBuilder.addCriterion("code", "=", entityCode, true);
-        List<ICustomFieldEntity> entities = (List<ICustomFieldEntity>) queryBuilder.getQuery(getEntityManager()).getResultList();
-        if (entities != null && !entities.isEmpty()) {
-            result = entities.get(0);
-        }
-
-        return result;
-    }
-
-    /**
-     * Get a list of custom entity templates for Configuration
-     *
-     * @return A list of custom entity templates
-     */
-    public List<CustomEntityTemplate> getCETForConfiguration() {
-        return getEntityManager().createNamedQuery("CustomEntityTemplate.getCETForConfiguration", CustomEntityTemplate.class).getResultList();
-    }
-
-    /**
-     * Find the primitive type of a given CustomEntityTemplate
-     *
-     * @param code Code of the CustomEntityTemplate to find primitive type
-     * @return the primitive type of the CustomEntityTemplate or null if it does not have one or is not a CustomEntityTemplate
-     */
-    public PrimitiveTypeEnum getPrimitiveType(String code) {
-        try {
-            return getEntityManager().createNamedQuery("CustomEntityTemplate.PrimitiveType", PrimitiveTypeEnum.class)
-                    .setParameter("code", code)
-                    .getSingleResult();
-        } catch (NoResultException ignored) {
-            return null;
-        }
-    }
-
-    /**
-     * Get a list of custom entity templates that use custom tables as implementation
-     *
-     * @return A list of custom entity templates
-     */
-    public List<CustomEntityTemplate> listCustomTableTemplates() {
-
-        if (useCETCache) {
-            List<CustomEntityTemplate> cets = new ArrayList<>();
-            for (CustomEntityTemplate customEntityTemplate : customFieldsCache.getCustomEntityTemplates()) {
-                if (customEntityTemplate.getSqlStorageConfiguration() != null && customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
-                    cets.add(customEntityTemplate);
-                }
-            }
-            return cets;
-
-        } else {
-            return super.list(new PaginationConfiguration(MapUtils.putAll(new HashMap<>(), new Object[]{"sqlStorageConfiguration.storeAsTable", true})));
-        }
-    }
-
-    /**
-     * Find a custom entity template that uses a given custom table as implementation
-     *
-     * @param codeOrDbTablename Custom entity code or a corresponding database table name
-     * @return A custom entity template
-     */
-    public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
-
-    	CustomEntityTemplate cet = null;
-    	if(useCETCache) {
-    		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    
+    private void checkCrudEventListenerScript(CustomEntityTemplate cet) throws IllegalArgumentException {
+    	if(cet.getCrudEventListener() != null) {
+	    	var listener = scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
+	    	if(!(listener instanceof CrudEventListenerScript)) {
+	    		throw new IllegalArgumentException("The crud event listener script should implements the following interface: " + CrudEventListenerScript.class);
+	    	}
     	}
-    	
-		if (cet == null) {
-			cet = findByCode(codeOrDbTablename);
-			if (cet != null) {
-				return cet;
-			}
-		}
-        return findByDbTablename(codeOrDbTablename);
     }
-
-    /**
-     * Find a custom entity template that uses a given custom table as implementation
-     *
-     * @param dbTablename Database table name
-     * @return A custom entity template
-     */
-    public CustomEntityTemplate findByDbTablename(String dbTablename) {
-
-        List<CustomEntityTemplate> cets = listCustomTableTemplates();
-
-        for (CustomEntityTemplate cet : cets) {
-            if (SQLStorageConfiguration.getDbTablename(cet).equalsIgnoreCase(dbTablename)) {
-                return cet;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * retrieve Custom Entity Templates given by categoryId then remove it so that we can remove it in the cache
-     *
-     * @param categoryId
-     */
-    public void removeCETsByCategoryId(Long categoryId) throws BusinessException {
-    	
-        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
-        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
-        if (CollectionUtils.isNotEmpty(results)) {
-            for (CustomEntityTemplate entityTemplate : results) {
-                remove(entityTemplate);
-            }
-        }
-    }
-
-    /**
-     * update cet base on category id
-     *
-     * @param categoryId Cateogry id
-     */
-    public void resetCategoryCETsByCategoryId(Long categoryId) throws BusinessException {
-        TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
-        List<CustomEntityTemplate> results = query.setParameter("id", categoryId).getResultList();
-        if (CollectionUtils.isNotEmpty(results)) {
-            for (CustomEntityTemplate entityTemplate : results) {
-                entityTemplate.setCustomEntityCategory(null);
-                update(entityTemplate);
-            }
-        }
-    }
-
-    /**
-     * Computes the cartesian product all {@linkplain CustomFieldTemplate} sample
-     * values.
-     *
-     * @param cetCode                 {@link CustomEntityTemplate} code
-     * @param paginationConfiguration page information
-     * @return list of list of string of sample values.
-     */
-    public List<Map<String, String>> listExamples(String cetCode, PaginationConfiguration paginationConfiguration) {
-
-        CustomEntityTemplate cet = findByCode(cetCode);
-        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
-        Collection<Collection<String>> listOfValues = new HashSet<>();
-        for (Entry<String, CustomFieldTemplate> es : cfts.entrySet()) {
-            List<String> sampleValues = es.getValue().getSamples().stream().map(e -> es.getKey() + "|" + e).collect(Collectors.toList());
-            listOfValues.add(sampleValues);
-        }
-
-        List<ImmutableList<String>> immutableElements = makeListofImmutable(listOfValues);
-
-        List<List<String>> cartesianValues = Lists.cartesianProduct(immutableElements);
-
-        return convertListToMap(cartesianValues);
-    }
-
+    
     private List<Map<String, String>> convertListToMap(List<List<String>> cartesianValues) {
 
         List<Map<String, String>> result = new ArrayList<>();
@@ -614,94 +748,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return result;
     }
-
-    /**
-     * Converts to {@linkplain LinkedList} of {@linkplain ImmutableList} object.
-     *
-     * @param listOfValues list of values to be converted
-     * @return the converted values
-     */
-    private static List<ImmutableList<String>> makeListofImmutable(Collection<Collection<String>> listOfValues) {
-
-        List<ImmutableList<String>> converted = new LinkedList<>();
-        listOfValues.forEach(array -> {
-            converted.add(ImmutableList.copyOf(array));
-        });
-
-        return converted;
+    
+    private void createPrimitiveCft(CustomEntityTemplate cet) throws BusinessException {
+        // Define CFT
+        final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
+        CustomEntityTemplateUtils.turnIntoPrimitive(cet, customFieldTemplate);
+        // Create CFT
+        customFieldTemplateService.create(customFieldTemplate);
     }
     
-	public boolean hasReferenceJpaEntity(String cetCode) {
-        CustomEntityTemplate cet = findByCode(cetCode);
-        return hasReferenceJpaEntity(cet);
-	}
-	
-	public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
-
-		if (cfts.size() > 0) {
-			Optional<CustomFieldTemplate> opt = cfts.values().stream()
-					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
-			if (opt.isPresent()) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-	
-	public String requestSchema(String code) {
-		
-//		CustomEntityTemplate cet = findByCode(code);
-//		jsonSchemaGenerator.buildSchema("ontology", jsonSchemaGenerator.processorOf(entityTemplate), allRefs)
-		return null;
-	}
-
-	public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
-
-		customEntityCategoryService.create(customEntityCategory);
-		cet.setCustomEntityCategory(customEntityCategory);
-		return update(cet);
-	}
-
-    @SuppressWarnings("unchecked")
-	public String getJsonSchemaContent(String cetCode) throws IOException {
-
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
-        File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
-        byte[] mapData = Files.readAllBytes(file.toPath());
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
-        
-        // Replace references in allOf
-        List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
-        allOf.forEach(item -> {
-    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
-        });
-
-        Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
-        if (items != null) {
-            for (Map.Entry<String, Object> item : items.entrySet()) {
-                Map<String, Object> values = (Map<String, Object>) item.getValue();
-                if (values.containsKey("$ref")) {
-                    String ref = (String) values.get("$ref");
-                    if (ref != null) {
-                        values.put("$ref", ref.replace("./", ""));
-                    }
-                } else {
-                    if (values.get("type") != null && values.get("type").equals("array")) {
-                        Map<String, Object> value = (Map<String, Object>) values.get("items");
-                        if (value.containsKey("$ref")) {
-                            String ref = (String) value.get("$ref");
-                            if (ref != null) {
-                                value.put("$ref", ref.replace("./", ""));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return JacksonUtil.toStringPrettyPrinted(jsonMap);
+    @PostConstruct
+    private void init() {
+        useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
     }
 }
