@@ -755,7 +755,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// SQL Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-			Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, false);
+			Map<String, Object> sqlValues = filterValues(ceiAfterPreEvents.getCfValuesAsValues(), cet, DBStorageType.SQL, false);
 
 			if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
 				CustomEntityInstance sqlCei = new CustomEntityInstance();
@@ -1267,8 +1267,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		if(listener != null) {
 			var cetClass =  listener.getEntityClass();
-			cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
-			listener.preRemove(cetClassInstance);
+			try {
+				var values = find(repository, cet, uuid, false);
+				cei = CEIUtils.fromMap(values, cet);
+				cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
+				listener.preRemove(cetClassInstance);
+			} catch (EntityDoesNotExistsException e) {
+				e.printStackTrace();
+			}
 		}
 
 		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
