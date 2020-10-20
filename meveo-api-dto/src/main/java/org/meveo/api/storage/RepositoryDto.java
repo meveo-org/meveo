@@ -60,6 +60,9 @@ public class RepositoryDto extends BusinessEntityDto {
 	@ApiModelProperty("Whether to delete the children of the repository")
 	private Boolean forceDelete;
 
+	@ApiModelProperty("User hierarchy level")
+	private String userHierarchyLevelCode;
+
 	public RepositoryDto() {
 
 	}
@@ -136,5 +139,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setSqlConfigurationCode(String sqlConfigurationCode) {
 		this.sqlConfigurationCode = sqlConfigurationCode;
+	}
+
+	public String getUserHierarchyLevelCode() {
+		return userHierarchyLevelCode;
+	}
+
+	public void setUserHierarchyLevelCode(String userHierarchyLevelCode) {
+		this.userHierarchyLevelCode = userHierarchyLevelCode;
 	}
 }

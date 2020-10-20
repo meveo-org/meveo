@@ -18,6 +18,7 @@ import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
@@ -38,136 +39,139 @@ import org.slf4j.Logger;
 @ViewScoped
 public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepositoryDto> {
 
-    private static final long serialVersionUID = 8661265102557481231L;
+	private static final long serialVersionUID = 8661265102557481231L;
 
-    @Inject
-    private GitRepositoryService gitRepositoryService;
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 
-    @Inject
-    private GitRepositoryApi gitRepositoryApi;
+	@Inject
+	private GitRepositoryApi gitRepositoryApi;
 
-    @Inject
-    private Logger log;
+	@Inject
+	private Logger log;
 
-    @Inject
-    private GitClient gitClient;
-    
-    @Inject //TODO: test that solution
-    private EntityPermissionBean entityPermissionBean;
-    
-    private String username;
+	@Inject
+	private GitClient gitClient;
 
-    private String password;
+	@Inject // TODO: test that solution
+	private EntityPermissionBean entityPermissionBean;
 
-    private String branch;
+	private String username;
 
-    public GitRepositoryBean() {
-        super(GitRepository.class);
-    }
+	private String password;
 
-    @ActionMethod
-    public String saveOrUpdateGit() throws BusinessException, ELException {
-        if (entity.getId() == null && entity.getRemoteOrigin() != null) {
-            gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
-        }
-        String result = saveOrUpdate(false);
-        if (result == null) {
-            FacesContext.getCurrentInstance().validationFailed();
-        }
-        
-        entityPermissionBean.save();
-        
-        return result;
-    }
+	private String branch;
 
-    public void pushRemote() {
-        try {
-            gitClient.push(entity, this.getUsername(), this.getPassword());
-            initEntity(entity.getId());
-            messages.info(new BundleKey("messages", "gitRepositories.push.successful"));
-        } catch (Exception e) {
-        	log.error("Failed to push", e);
-            messages.error(new BundleKey("messages", "gitRepositories.push.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-        }
-    }
+	public GitRepositoryBean() {
+		super(GitRepository.class);
+	}
 
-    public void pullRemote() {
-        try {
-            gitClient.pull(entity, this.getUsername(), this.getPassword());
-            initEntity(entity.getId());
-            messages.info(new BundleKey("messages", "gitRepositories.pull.successful"));
-        } catch (Exception e) {
-        	log.error("Failed to pull", e);
-            messages.error(new BundleKey("messages", "gitRepositories.pull.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-        }
-    }
+	@ActionMethod
+	public String saveOrUpdateGit() throws BusinessException, ELException {
 
-    public String importZip(FileUploadEvent event) {
-        UploadedFile file = event.getFile();
-        String filename = file.getFileName();
-        try {
-            InputStream inputStream = file.getInputstream();
-            GitRepositoryDto dto = gitRepositoryApi.toDto(entity);
-            gitRepositoryApi.importZip(inputStream, dto, isEdit());
-            messages.info(new BundleKey("messages", "importZip.successfull"), filename);
-        } catch (Exception e) {
-            messages.error(new BundleKey("messages","importZip.error"), filename, e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-        }
-        return getEditViewName();
-    }
+		if (entity.getId() == null && entity.getRemoteOrigin() != null) {
+			gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+		}
 
-    public StreamedContent exportZip() {
-        String filename = entity.getCode();
-        branch = branch != null ? branch : entity.getCurrentBranch();
-        try {
-            byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), branch);
-            InputStream is = new ByteArrayInputStream(exportZip);
-            return new DefaultStreamedContent(is, "application/octet-stream", filename + "-" + branch + ".zip");
-        } catch (Exception e) {
-            messages.error(new BundleKey("messages","exportZip.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-        }
-        return null;
-    }
+		String result = saveOrUpdate(false);
 
-    @Override
-    protected String getListViewName() {
-        return "gitRepositories";
-    }
+		if (result == null) {
+			FacesContext.getCurrentInstance().validationFailed();
+		}
 
-    @Override
-    public BaseCrudApi<GitRepository, GitRepositoryDto> getBaseCrudApi() {
-        return gitRepositoryApi;
-    }
+		entityPermissionBean.save();
 
-    @Override
-    protected IPersistenceService<GitRepository> getPersistenceService() {
-        return gitRepositoryService;
-    }
+		return result;
+	}
 
-    public String getUsername() {
-        if (username == null && entity.getDefaultRemoteUsername() != null) {
-            username = entity.getDefaultRemoteUsername();
-        }
-        return username;
-    }
+	public void pushRemote() {
+		try {
+			gitClient.push(entity, this.getUsername(), this.getPassword());
+			initEntity(entity.getId());
+			messages.info(new BundleKey("messages", "gitRepositories.push.successful"));
+		} catch (Exception e) {
+			log.error("Failed to push", e);
+			messages.error(new BundleKey("messages", "gitRepositories.push.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public void pullRemote() {
+		try {
+			gitClient.pull(entity, this.getUsername(), this.getPassword());
+			initEntity(entity.getId());
+			messages.info(new BundleKey("messages", "gitRepositories.pull.successful"));
+		} catch (Exception e) {
+			log.error("Failed to pull", e);
+			messages.error(new BundleKey("messages", "gitRepositories.pull.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public String importZip(FileUploadEvent event) {
+		UploadedFile file = event.getFile();
+		String filename = file.getFileName();
+		try {
+			InputStream inputStream = file.getInputstream();
+			GitRepositoryDto dto = gitRepositoryApi.toDto(entity);
+			gitRepositoryApi.importZip(inputStream, dto, isEdit());
+			messages.info(new BundleKey("messages", "importZip.successfull"), filename);
+		} catch (Exception e) {
+			messages.error(new BundleKey("messages", "importZip.error"), filename, e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}
+		return getEditViewName();
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public StreamedContent exportZip() {
+		String filename = entity.getCode();
+		branch = branch != null ? branch : entity.getCurrentBranch();
+		try {
+			byte[] exportZip = gitRepositoryApi.exportZip(entity.getCode(), branch);
+			InputStream is = new ByteArrayInputStream(exportZip);
+			return new DefaultStreamedContent(is, "application/octet-stream", filename + "-" + branch + ".zip");
+		} catch (Exception e) {
+			messages.error(new BundleKey("messages", "exportZip.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}
+		return null;
+	}
 
-    public String getBranch() {
-        return branch;
-    }
+	@Override
+	protected String getListViewName() {
+		return "gitRepositories";
+	}
 
-    public void setBranch(String branch) {
-        this.branch = branch;
-    }
+	@Override
+	public BaseCrudApi<GitRepository, GitRepositoryDto> getBaseCrudApi() {
+		return gitRepositoryApi;
+	}
+
+	@Override
+	protected IPersistenceService<GitRepository> getPersistenceService() {
+		return gitRepositoryService;
+	}
+
+	public String getUsername() {
+		if (username == null && entity.getDefaultRemoteUsername() != null) {
+			username = entity.getDefaultRemoteUsername();
+		}
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getBranch() {
+		return branch;
+	}
+
+	public void setBranch(String branch) {
+		this.branch = branch;
+	}
 }

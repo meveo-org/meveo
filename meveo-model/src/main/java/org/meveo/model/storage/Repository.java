@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 
@@ -56,7 +57,10 @@ public class Repository extends BusinessEntity {
 
 	@NotNull
 	@Column(name = "path", length = 255)
-	private String path;
+	private String path;    @ManyToOne
+	
+    @JoinColumn(name="user_hierarchy_level_id")
+    private UserHierarchyLevel userHierarchyLevel;
 
 	public Repository getParentRepository() {
 		return parentRepository;
@@ -109,6 +113,14 @@ public class Repository extends BusinessEntity {
 	public String getSqlConfigurationCode() {
 
 		return sqlConfiguration == null ? SqlConfiguration.DEFAULT_SQL_CONNECTION : sqlConfiguration.getCode();
+	}
+
+	public UserHierarchyLevel getUserHierarchyLevel() {
+		return userHierarchyLevel;
+	}
+
+	public void setUserHierarchyLevel(UserHierarchyLevel userHierarchyLevel) {
+		this.userHierarchyLevel = userHierarchyLevel;
 	}
 
 }
