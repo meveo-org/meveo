@@ -84,6 +84,7 @@ public class PermissionService extends PersistenceService<Permission> {
     public Permission createIfAbsent(String permission, String... rolesToAddTo) throws BusinessException {
         
         // Create permission if does not exist yet
+    	boolean created = false;
         Permission permissionEntity = findByPermission(permission);
         if (permissionEntity == null) {
             permissionEntity = new Permission();
@@ -91,6 +92,7 @@ public class PermissionService extends PersistenceService<Permission> {
             permissionEntity.setPermission(permission);
             this.create(permissionEntity);
             this.flush();
+            created = true;
         }
 
         // Add to a role, creating role first if does not exist yet
@@ -103,8 +105,8 @@ public class PermissionService extends PersistenceService<Permission> {
                 roleService.create(role);
             }
 
-            Hibernate.initialize(role.getPermissions());
-            if (!role.getPermissions().contains(permissionEntity)) {
+            // Hibernate.initialize(role.getPermissions());
+            if (created || !role.getPermissions().contains(permissionEntity)) {
                 role.getPermissions().add(permissionEntity);
                 roleService.update(role);
             }
