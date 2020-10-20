@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
@@ -29,34 +30,35 @@ import org.slf4j.Logger;
 public class CypherHelper {
 
     @Inject
-    private Neo4jConnectionProvider neo4jSessionFactory;
+    private CrossStorageTransaction crossStorageTransaction;
     
     @Inject
     private Logger log;
 
-    public <T> T execute(
+    @SuppressWarnings("javadoc")
+	public <T> T execute(
             String neo4jConfiguration,
             String request,
             Map<String, Object> parameters,
             CypherResultTransformer<T> resultAction,
             CypherExceptionHandler cypherExceptionHandler
     ){
-        Transaction transaction = null;
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
+    			
+        try {
+        	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+
             final StatementResult result = transaction.run(request, parameters);
 
             if(resultAction != null){
                 return resultAction.execute(transaction, result);
+                
             } else {
             	result.consume();
                 transaction.success();
             }
 
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.failure();
-            }
+        	crossStorageTransaction.rollbackTransaction();
             
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
@@ -64,10 +66,6 @@ public class CypherHelper {
             	log.error("Error executing query \n{}\nwith parameters {}", request, parameters, e);
             }
             
-        } finally {
-            if (transaction != null) {
-                transaction.close();
-            }
         }
 
         return null;
@@ -85,29 +83,27 @@ public class CypherHelper {
         execute(neo4jConfiguration, request, parameters, null, null);
     }
 
-    public void update(
+    @SuppressWarnings("javadoc")
+	public void update(
             String neo4jConfiguration,
             String request,
             Map<String, Object> parameters,
             CypherExceptionHandler cypherExceptionHandler
     ){
-        Transaction transaction = null;
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
+    	
+        try {
+        	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+
             StatementResult run = transaction.run(request, parameters);
             run.consume();
             transaction.success();
+            
         } catch (Exception e) {
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
             }
-            if (transaction != null) {
-                transaction.failure();
-            }
-        } finally {
-            if (transaction != null) {
-                transaction.close();
-            }
+            
+            crossStorageTransaction.rollbackTransaction();
         }
     }
 

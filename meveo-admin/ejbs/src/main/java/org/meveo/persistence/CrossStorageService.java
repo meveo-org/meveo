@@ -29,23 +29,17 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
-import javax.transaction.Status;
 import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -95,13 +89,16 @@ import org.slf4j.Logger;
  * @author clement.bareth
  * @version 6.11.0
  */
-@Stateless
-@LocalBean
-@TransactionManagement(TransactionManagementType.BEAN)
+// @Stateless
+// @LocalBean
+// @TransactionManagement(TransactionManagementType.BEAN)
 public class CrossStorageService implements CustomPersistenceService {
 
-	@Resource
-	private UserTransaction transaction;
+//	@Resource
+//	private UserTransaction transaction;
+	
+	@Inject
+	private CrossStorageTransaction transaction;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
@@ -249,7 +246,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		selectFields.removeAll(values.keySet());
 
 		try {
-			transaction.begin();
+			// transaction.begin();
+			transaction.beginTransaction(repository);
 
 			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 				List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
@@ -281,12 +279,10 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 
-			transaction.commit();
+			transaction.commitTransaction(repository);
 		} catch (Exception e) {
 			
-			try {
-				transaction.rollback();
-			} catch (IllegalStateException | SecurityException | SystemException e1) {}
+			transaction.rollbackTransaction();
 
 			if(e instanceof EntityDoesNotExistsException) {
 				throw (EntityDoesNotExistsException) e;
@@ -640,6 +636,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = cache.getCustomEntityTemplate(ceiToSave.getCetCode());
+		if(cet == null) {
+			throw new IllegalArgumentException("CET with code " + ceiToSave.getCetCode() + " does not exist");
+		}
 				
 		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(cet);
 		
@@ -728,7 +727,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityInstance ceiAfterPreEvents = cei;
 		
 		try {
-			transaction.begin();
+			// transaction.begin();
+			transaction.beginTransaction(repository);
 			
 			if(cetClassInstance != null) {
 				if(foundId != null) {
@@ -790,17 +790,13 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 			
-			transaction.commit();
+			transaction.commitTransaction(repository);
 			
 		} catch (Exception e) {
 			
-			try {
-				transaction.rollback();
-			} catch (Exception e1) {
-				throw new RuntimeException(e1);
-			}
-			
 			log.error("Can't create or update data", e);
+			
+			transaction.rollbackTransaction();
 			
 			if(e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -1265,41 +1261,52 @@ public class CrossStorageService implements CustomPersistenceService {
 		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
 		CustomEntity cetClassInstance = null;
 		
-		if(listener != null) {
-			var cetClass =  listener.getEntityClass();
-			try {
-				var values = find(repository, cet, uuid, false);
-				cei = CEIUtils.fromMap(values, cet);
-				cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
-				listener.preRemove(cetClassInstance);
-			} catch (EntityDoesNotExistsException e) {
-				e.printStackTrace();
-			}
-		}
-
-		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-				customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
-			} else {
-				final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-				customEntityInstanceService.remove(customEntityInstance);
-			}
-		}
-
-		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
-		}
-
-		fileSystemService.delete(repository, cet, uuid);
+		transaction.beginTransaction(repository);
 		
-		if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
-			customEntityInstanceDelete.fire(cei);
+		try {
+			if(listener != null) {
+				var cetClass =  listener.getEntityClass();
+				try {
+					var values = find(repository, cet, uuid, false);
+					cei = CEIUtils.fromMap(values, cet);
+					cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
+					listener.preRemove(cetClassInstance);
+				} catch (EntityDoesNotExistsException e) {
+					e.printStackTrace();
+				}
+			}
+	
+			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+					customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
+				} else {
+					final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+					customEntityInstanceService.remove(customEntityInstance);
+				}
+			}
+	
+			if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+				neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
+			}
+	
+			fileSystemService.delete(repository, cet, uuid);
+			
+			if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
+				customEntityInstanceDelete.fire(cei);
+			}
+			
+			if(cetClassInstance != null) {
+				listener.postRemove(cetClassInstance);
+			}
+			
+			transaction.commitTransaction(repository);
+		
+		} catch(Exception e) {
+			transaction.rollbackTransaction();
+			throw e;
 		}
 		
-		if(cetClassInstance != null) {
-			listener.postRemove(cetClassInstance);
-		}
 	}
 
 	/**
@@ -1547,13 +1554,11 @@ public class CrossStorageService implements CustomPersistenceService {
 								
 				// Check if target is not JPA entity
 				try {
-					transaction.begin();
+					var session = transaction.getHibernateSession(repository.getSqlConfigurationCode());
 					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 					values.put(
 						entry.getKey(), 
-						customEntityInstanceService
-							.getEntityManager()
-							.find(clazz, entry.getValue())
+						session.find(clazz, entry.getValue())
 					);
 					continue;
 					
@@ -1563,14 +1568,6 @@ public class CrossStorageService implements CustomPersistenceService {
 				} catch(Exception e) {
 					log.error("Cannot find referenced entity {}", e.getMessage());
 					throw new RuntimeException(e);
-				
-				} finally {
-					try {
-						transaction.commit();
-				
-					} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
-						throw new RuntimeException(e);
-					}
 				}
 				
 				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());

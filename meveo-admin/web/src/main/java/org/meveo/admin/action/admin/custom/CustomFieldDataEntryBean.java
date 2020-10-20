@@ -118,28 +118,28 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private Map<String, CustomFieldValueHolder> fieldsValues = new HashMap<String, CustomFieldValueHolder>();
 
 	@Inject
-	private CustomFieldInstanceService customFieldInstanceService;
+	private transient CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
+	private transient CustomFieldTemplateService customFieldTemplateService;
 
 	@Inject
 	private ResourceBundle resourceMessages;
 
 	@Inject
-	private EntityCustomActionService entityActionScriptService;
+	private transient EntityCustomActionService entityActionScriptService;
 
 	@Inject
-	private ScriptInstanceService scriptInstanceService;
+	private transient ScriptInstanceService scriptInstanceService;
 
 	@Inject
-	private CustomEntityInstanceService customEntityInstanceService;
+	private transient CustomEntityInstanceService customEntityInstanceService;
 
 	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
+	private transient CustomEntityTemplateService customEntityTemplateService;
 
 	@Inject
-	private CustomTableService customTableService;
+	private transient CustomTableService customTableService;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
