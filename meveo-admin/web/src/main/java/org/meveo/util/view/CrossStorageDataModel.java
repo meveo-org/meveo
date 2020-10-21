@@ -15,6 +15,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
@@ -45,9 +46,9 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	protected abstract Repository getRepository();
 
 	protected abstract CustomEntityTemplate getCustomEntityTemplate();
-
+	
 	@Override
-	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
 
 		PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(loadingFilters), null, getListFieldsToFetchImpl(), sortField,
 				sortOrder);
@@ -164,7 +165,7 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	 * @param filters the filters
 	 * @return the search criteria
 	 */
-	protected Map<String, Object> getSearchCriteria(Map<String, Object> filters) {
+	protected Map<String, Object> getSearchCriteria(Map<String, FilterMeta> filters) {
 		return getSearchCriteria();
 	}
 

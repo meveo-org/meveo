@@ -65,7 +65,7 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -400,7 +400,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 			try {
 				log.debug("Applying patch via uploaded file with name={}", patchFile.getFileName());
 				moduleReleases = new ObjectMapper().configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true).enable(SerializationFeature.INDENT_OUTPUT)
-						.readValue(patchFile.getContents(), new TypeReference<List<ModuleReleaseDto>>() {
+						.readValue(patchFile.getContent(), new TypeReference<List<ModuleReleaseDto>>() {
 						});
 
 				meveoModulePatchApi.uploadAndApplyPatch(moduleReleases);
@@ -451,7 +451,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	public void importData(FileUploadEvent event) throws IOException, BusinessException, MeveoApiException {
 
 		String contentType = event.getFile().getContentType();
-		InputStream inputStream = event.getFile().getInputstream();
+		InputStream inputStream = event.getFile().getInputStream();
 		String fileName = event.getFile().getFileName();
 
 		switch (contentType.trim()) {

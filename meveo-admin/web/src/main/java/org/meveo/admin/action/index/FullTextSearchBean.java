@@ -19,6 +19,7 @@ import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.index.ElasticSearchClassInfo;
 import org.meveo.util.view.ESBasedDataModel;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
 
@@ -68,8 +69,8 @@ public class FullTextSearchBean implements Serializable {
                 private static final long serialVersionUID = -1514374110345615089L;
 
                 @Override
-                protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
-                    return (String) filters.get(ESBasedDataModel.FILTER_FULL_TEXT);
+                protected String getFullTextSearchValue(Map<String, FilterMeta> loadingFilters) {
+                    return null; //(String) filters.get(ESBasedDataModel.FILTER_FULL_TEXT);
                 }
 
                 @Override

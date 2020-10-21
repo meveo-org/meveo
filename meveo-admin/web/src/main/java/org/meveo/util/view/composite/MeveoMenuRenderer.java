@@ -204,7 +204,8 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
                     command = menuitem.isAjax() ? buildAjaxRequest(context, menu, (AjaxSource) menuitem, (UIForm) form, params) : buildNonAjaxRequest(context, menu, form, menuClientId, params, true);
                 } 
                 else {
-                    command = menuitem.isAjax() ? buildAjaxRequest(context, (AjaxSource) menuitem, (UIForm) form) : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem).getClientId(context), true);
+                    Map<String,List<String>> params = menuitem.getParams();
+                    command = menuitem.isAjax() ? buildAjaxRequest(context, (UIComponent) menuitem, (AjaxSource) menuitem, (UIForm) form, params) : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem).getClientId(context), true);
                 }
 
                 onclick = (onclick == null) ? command : onclick + ";" + command;

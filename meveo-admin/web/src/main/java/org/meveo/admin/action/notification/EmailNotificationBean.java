@@ -4,13 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
@@ -18,17 +17,15 @@ import org.meveo.admin.exception.RejectedImportException;
 import org.meveo.commons.utils.CsvBuilder;
 import org.meveo.commons.utils.CsvReader;
 import org.meveo.commons.utils.ParamBeanFactory;
-import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.model.notification.StrategyImportTypeEnum;
-import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.EmailNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 /**
  * Standard backing bean for {@link EmailNotification} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -104,7 +101,7 @@ public class EmailNotificationBean extends BaseNotificationBean<EmailNotificatio
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
         String existingEntitiesCSV = paramBeanFactory.getInstance().getProperty("existingEntities.csv.dir", "existingEntitiesCSV");
         File dir = new File(paramBeanFactory.getChrootDir() + File.separator + existingEntitiesCSV);
