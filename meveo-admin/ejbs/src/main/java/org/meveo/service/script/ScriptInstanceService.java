@@ -31,6 +31,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
@@ -284,10 +285,16 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
 	@Override
 	protected void executeEngine(ScriptInterface engine, Map<String, Object> context) throws ScriptExecutionException {
-		ScriptTransactionType txType = getEntityManager()
+		ScriptTransactionType txType;
+		
+		try {
+			txType = getEntityManager()
 				.createQuery("SELECT transactionType FROM ScriptInstance WHERE code = :code", ScriptTransactionType.class)
 				.setParameter("code", engine.getClass().getName())
 				.getSingleResult();
+		} catch (NoResultException e) {
+			txType = ScriptTransactionType.SAME;
+		}
 		
 		switch(txType) {
 			case MANUAL:

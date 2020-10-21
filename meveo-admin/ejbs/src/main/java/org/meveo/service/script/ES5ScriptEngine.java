@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
@@ -15,6 +16,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.EjbUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.graalvm.polyglot.Context;
 
 /**
  * Created by Hien Bach on 4/5/2019.
@@ -40,22 +42,23 @@ public class ES5ScriptEngine implements ScriptInterface {
     	
         try {
         	scriptExecution = CompletableFuture.runAsync(() -> {
-				try {
-		            jsEngine = new ScriptEngineManager().getEngineByName("graal.js");
-		            Bindings bindings = jsEngine.createBindings();
-		            bindings.put("polyglot.js.allowAllAccess", true);
-		            bindings.putAll(methodContext);
+				try (Context context = Context.newBuilder("js")
+	                          .allowAllAccess(true)
+	                          .build()) {
+					 
+		            var jsBindings = context.getBindings("js");
+		            jsBindings.putMember("polyglot.js.allowAllAccess", true);
+		            methodContext.forEach(jsBindings::putMember);
+		            jsBindings.putMember("methodContext", methodContext);
+		            jsBindings.putMember("JAVA_CTX", new JavaCtx());
 		            
-		            bindings.put("methodContext", methodContext);
-		            bindings.put("JAVA_CTX", new JavaCtx());
-		            
-		            ScriptContext scriptContext = new SimpleScriptContext();
-		            scriptContext.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
-		            jsEngine.setContext(scriptContext);
-		            
-					jsEngine.eval(script);
-				} catch (ScriptException e) {
-		        	LOG.error("Error executing script", e);
+//		            ScriptContext scriptContext = new SimpleScriptContext();
+//		            scriptContext.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
+//		            jsEngine.setContext(scriptContext);
+//		            
+//					jsEngine.eval(script);
+		            context.eval("js", script);
+		            context.close();
 				}
 			});
         	

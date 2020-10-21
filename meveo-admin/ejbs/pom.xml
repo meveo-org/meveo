@@ -555,15 +555,24 @@
 			<version>1.0.4</version>
 		</dependency>
 		<dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>graal-sdk</artifactId>
+            <version>20.2.0</version>
+        </dependency>
+		<dependency>
 			<groupId>org.graalvm.js</groupId>
 			<artifactId>js</artifactId>
-			<version>19.2.0.1</version>
+			<version>20.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.graalvm.js</groupId>
 			<artifactId>js-scriptengine</artifactId>
-			<version>19.2.0.1</version>
-			<scope>runtime</scope>
+			<version>20.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.graalvm.truffle</groupId>
+			<artifactId>truffle-api</artifactId>
+			<version>20.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
