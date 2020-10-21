@@ -73,8 +73,13 @@ public class CrossStorageTransaction {
 			throw new RuntimeException(e);
 		}
 		
-		getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
-		getHibernateSession(repository.getSqlConfigurationCode());
+		if(repository.getNeo4jConfiguration() != null) {
+			getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
+		}
+		
+		if(repository.getSqlConfiguration() != null) {
+			getHibernateSession(repository.getSqlConfigurationCode());
+		}
 	}
 	
 	public org.hibernate.Session getHibernateSession(String repository) {
@@ -100,9 +105,11 @@ public class CrossStorageTransaction {
 		stackedCalls--;
 		
 		if(stackedCalls == 0) {
-			InternalTransaction neo4jTx = (InternalTransaction) neo4jTransactions.get(repository.getNeo4jConfiguration().getCode());
-			neo4jTx.success();
-			neo4jTx.close();
+			if(repository.getNeo4jConfiguration() != null) {
+				InternalTransaction neo4jTx = (InternalTransaction) neo4jTransactions.get(repository.getNeo4jConfiguration().getCode());
+				neo4jTx.success();
+				neo4jTx.close();
+			}
 			
 			try {
 				if(userTx != null) {
