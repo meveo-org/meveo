@@ -59,6 +59,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
@@ -156,7 +157,7 @@ public class Neo4jService implements CustomPersistenceService {
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
-
+    
     /**
      * Remove all data concerned with the CET
      *
@@ -185,7 +186,11 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+            	try {
+            		neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+            	} catch (Exception e) {
+            		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repositoryCode, e);
+            	}
             }
         }
     }
@@ -224,7 +229,7 @@ public class Neo4jService implements CustomPersistenceService {
     public List<String> getRepositoriesCode(){
 
         return emWrapper.getEntityManager()
-                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+                .createQuery("SELECT c.code from Neo4JConfiguration c WHERE c.disabled = false", String.class)
                 .getResultList();
     }
 

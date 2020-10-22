@@ -8,9 +8,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
 import javax.transaction.HeuristicMixedException;
@@ -26,6 +24,7 @@ import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.neo4j.driver.internal.InternalTransaction;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Transaction;
+import org.slf4j.Logger;
 
 /**
  * Bean that handles the transactions for the cross storage
@@ -44,6 +43,9 @@ public class CrossStorageTransaction {
 	
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
+	
+	@Inject
+	private Logger log;
 	
 	private Map<String, Session> neo4jSessions = new HashMap<>();
 	private Map<String, Transaction> neo4jTransactions = new HashMap<>();
@@ -101,6 +103,14 @@ public class CrossStorageTransaction {
 		return neo4jTransactions.computeIfAbsent(repository, code -> session.beginTransaction());
 	}
 	
+	public Transaction getUserManagedTx(String repository) {
+		Session session = neo4jSessions.computeIfAbsent(repository, neo4jConnectionProvider::getSession);
+		if(session == null) {
+			throw new RuntimeException("Can't get session for repository " + repository);
+		}
+		return session.beginTransaction();
+	}
+	
 	public void commitTransaction(Repository repository) {
 		stackedCalls--;
 		
@@ -145,17 +155,17 @@ public class CrossStorageTransaction {
 	
 	@PreDestroy
 	private void preDestroy() {
-		neo4jTransactions.values().forEach(s -> s.close());
-		neo4jSessions.values().forEach(Session::close);
-		hibernateSessions.values().forEach(s -> s.close());
-		neo4jTransactions.clear();
-		
 		try {
+			neo4jTransactions.values().forEach(s -> s.close());
+			neo4jSessions.values().forEach(Session::close);
+			hibernateSessions.values().forEach(s -> s.close());
+			neo4jTransactions.clear();
+			
 			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
 				userTx.commit();
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			log.error("Error destroying {}", this, e);
 		}
 	
 	}

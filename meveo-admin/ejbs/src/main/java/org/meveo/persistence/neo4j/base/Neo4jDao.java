@@ -144,11 +144,15 @@ public class Neo4jDao {
         		.append("DROP CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
 
-        cypherHelper.update(
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
         		neo4jConfiguration,
         		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property)
+        		null,
+        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
+        		tx
     		);
+        }
     }
 
 	/**
@@ -163,11 +167,15 @@ public class Neo4jDao {
         		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
 
-        cypherHelper.update(
-        		neo4jConfiguration,
-        		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property)
-    		);
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	        		neo4jConfiguration,
+	        		query.toString(),
+	        		null,
+	        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
+	        		tx
+	    		);
+        }
     }
 
     /**
@@ -180,11 +188,15 @@ public class Neo4jDao {
     public void createIndex(String neo4jConfiguration, String label, String property) {
         StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
 
-        cypherHelper.update(
-    		neo4jConfiguration,
-    		createIndexQuery.toString(),
-    		e -> LOGGER.debug("Index on {}({}) already exists", label, property)
-		);
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	    		neo4jConfiguration,
+	    		createIndexQuery.toString(),
+	    		null,
+	    		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
+	    		tx
+			);
+        }
     }
 
     /**
@@ -196,12 +208,16 @@ public class Neo4jDao {
 	 */
     public void removeIndex(String neo4jConfiguration, String label, String property){
         StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
-
-        cypherHelper.update(
-    		neo4jConfiguration,
-    		dropIndex.toString(),
-    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property)
-		);
+        
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	    		neo4jConfiguration,
+	    		dropIndex.toString(),
+	    		null,
+	    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property),
+	    		tx
+    		);
+        }
     }
 
     /**
@@ -432,9 +448,9 @@ public class Neo4jDao {
     public void updateIDL(String neo4jConfiguration, String idl) {
     	LOGGER.info("Updating IDL for repository {}", neo4jConfiguration);
     	
-        try {
-            var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
+        try {
             transaction.run("call graphql.idl('" + idl + "')");
             transaction.success();
             
@@ -1016,7 +1032,7 @@ public class Neo4jDao {
     			neo4JConfiguration, 
     			detachDeleteQuery, 
     			ImmutableMap.of("uuid", sourceNodeUuid), 
-    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e), null
 		);
     }
     
@@ -1051,7 +1067,7 @@ public class Neo4jDao {
     			neo4JConfiguration,
     			detachDeleteQuery,
     			arguments,
-    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e), null
 		);
     }
 

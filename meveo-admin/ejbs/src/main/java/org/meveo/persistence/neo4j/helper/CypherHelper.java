@@ -43,9 +43,10 @@ public class CypherHelper {
             CypherResultTransformer<T> resultAction,
             CypherExceptionHandler cypherExceptionHandler
     ){
+    	
+    	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
     			
         try {
-        	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
             final StatementResult result = transaction.run(request, parameters);
 
@@ -58,12 +59,12 @@ public class CypherHelper {
             }
 
         } catch (Exception e) {
-        	crossStorageTransaction.rollbackTransaction();
             
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
-            }else {
+            } else {
             	log.error("Error executing query \n{}\nwith parameters {}", request, parameters, e);
+            	crossStorageTransaction.rollbackTransaction();
             }
             
         }
@@ -88,12 +89,15 @@ public class CypherHelper {
             String neo4jConfiguration,
             String request,
             Map<String, Object> parameters,
-            CypherExceptionHandler cypherExceptionHandler
+            CypherExceptionHandler cypherExceptionHandler, 
+            Transaction transaction
     ){
     	
-        try {
-        	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+    	if(transaction == null) {
+    		transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+    	}
 
+        try {
             StatementResult run = transaction.run(request, parameters);
             run.consume();
             transaction.success();
@@ -101,21 +105,22 @@ public class CypherHelper {
         } catch (Exception e) {
             if(cypherExceptionHandler != null){
                 cypherExceptionHandler.handle(e);
+            } else {
+	            log.error("Can't run update query", e);
+	            crossStorageTransaction.rollbackTransaction();
             }
-            
-            crossStorageTransaction.rollbackTransaction();
         }
     }
 
     public void update(String neo4jConfiguration,  String request){
-        update(neo4jConfiguration, request, null, null);
+        update(neo4jConfiguration, request, null, null, null);
     }
     
     public void update(String neo4jConfiguration,  String request, Map<String, Object> parameters){
-        update(neo4jConfiguration, request, parameters, null);
+        update(neo4jConfiguration, request, parameters, null, null);
     }
     
     public void update(String neo4jConfiguration,  String request, CypherExceptionHandler cypherExceptionHandler){
-        update(neo4jConfiguration, request, null, cypherExceptionHandler);
+        update(neo4jConfiguration, request, null, cypherExceptionHandler, null);
     }
 }
