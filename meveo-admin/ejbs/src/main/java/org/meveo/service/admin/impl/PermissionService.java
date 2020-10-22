@@ -91,7 +91,6 @@ public class PermissionService extends PersistenceService<Permission> {
             permissionEntity.setName(permission);
             permissionEntity.setPermission(permission);
             this.create(permissionEntity);
-            this.flush();
             created = true;
         }
 
