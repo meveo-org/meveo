@@ -480,7 +480,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             String tmpFolder = ModuleUtil.getTmpRootPath(currentUser.getProviderCode());
             String dest = tmpFolder + File.separator + filename;
             log.debug("output original module picture file to {}", dest);
-            in = event.getFile().getInputStream();
+            in = event.getFile().getInputstream();
             BufferedImage src = ImageIO.read(in);
             ImageIO.write(src, formatname, new File(dest));
             messages.info(new BundleKey("messages", "meveoModule.uploadPictureSuccess"), originFilename);

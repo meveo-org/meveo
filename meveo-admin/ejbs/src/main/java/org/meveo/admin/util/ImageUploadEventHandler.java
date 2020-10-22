@@ -15,7 +15,7 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.catalog.IImageUpload;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * @author Edward P. Legaspi
@@ -54,7 +54,7 @@ public class ImageUploadEventHandler<T extends IEntity> {
         if (uploadedFile == null) {
             return null;
         }
-        String filename = saveToFile(entity, uploadedFile.getInputStream(), uploadedFile.getFileName());
+        String filename = saveToFile(entity, uploadedFile.getInputstream(), uploadedFile.getFileName());
         return filename;
     }
 

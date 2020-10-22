@@ -36,7 +36,7 @@ import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.InstantMessagingNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * Standard backing bean for {@link InstantMessagingNotification} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in
@@ -161,7 +161,7 @@ public class InstantMessagingNotificationBean extends BaseBean<InstantMessagingN
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
 
         ParamBean paramBean = paramBeanFactory.getInstance();

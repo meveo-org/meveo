@@ -26,7 +26,6 @@ import java.util.Map;
 import org.elasticsearch.action.search.SearchResponse;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.service.index.ElasticClient;
-import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
@@ -110,9 +109,9 @@ public abstract class ESBasedDataModel extends LazyDataModel<Map<String, Object>
     private Integer rowCount;
 
     private Integer rowIndex;
-    
-	@Override
-    public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
+
+    @Override
+    public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
 
         PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(), getFullTextSearchValue(loadingFilters), null, sortField,
             sortOrder);
@@ -279,8 +278,8 @@ public abstract class ESBasedDataModel extends LazyDataModel<Map<String, Object>
      * @param loadingFilters Datatable filters
      * @return fullText search value
      */
-    protected String getFullTextSearchValue(Map<String, FilterMeta> loadingFilters) {
-        return null; //(String) loadingFilters.get(ESBasedDataModel.FILTER_PE_FULL_TEXT);
+    protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
+        return (String) loadingFilters.get(ESBasedDataModel.FILTER_PE_FULL_TEXT);
     }
 
     /**

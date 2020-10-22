@@ -35,7 +35,7 @@ import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.notification.WebHookService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * Standard backing bean for {@link WebHook} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create,
@@ -188,7 +188,7 @@ public class WebHookBean extends BaseNotificationBean<WebHook> {
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
 
         String existingEntitiesCSV = paramBeanFactory.getInstance().getProperty("existingEntities.csv.dir", "existingEntitiesCSV");

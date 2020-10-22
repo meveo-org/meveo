@@ -78,7 +78,7 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create, edit,
@@ -492,7 +492,7 @@ public class UserBean extends CustomFieldBean<User> {
         log.debug("upload file={},autoUnziped {}", filename, autoUnzipped);
         // FIXME: use resource bundle
         try {
-            InputStream fileInputStream = file.getInputStream();
+            InputStream fileInputStream = file.getInputstream();
             if (this.isAutoUnzipped()) {
                 if (!filename.endsWith(ZIP_FILE_EXTENSION)) {
                     messages.info(filename + " isn't a valid zip file!");
@@ -514,7 +514,7 @@ public class UserBean extends CustomFieldBean<User> {
         if (file != null) {
             log.debug("upload file={}", file);
             try {
-                copyFile(FilenameUtils.getName(file.getFileName()), file.getInputStream());
+                copyFile(FilenameUtils.getName(file.getFileName()), file.getInputstream());
 
                 messages.info(file.getFileName() + " is uploaded to " + ((selectedFolder != null) ? selectedFolder : "Home"));
             } catch (IOException e) {

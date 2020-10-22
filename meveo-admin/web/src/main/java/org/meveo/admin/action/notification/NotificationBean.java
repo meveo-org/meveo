@@ -41,7 +41,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.ScriptNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -147,7 +147,7 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
 
         ParamBean paramBean = paramBeanFactory.getInstance();

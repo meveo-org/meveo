@@ -44,7 +44,7 @@ import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * @author Clement Bareth
@@ -156,7 +156,7 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setInputStream(uploadedBinaryFile.getInputStream());
+		params.setInputStream(uploadedBinaryFile.getInputstream());
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());

@@ -30,7 +30,6 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.index.ElasticClient;
-import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
     private Integer rowIndex;
 
     @Override
-    public List<T> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
+    public List<T> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
 
         if (StringUtils.isBlank(sortField) && !StringUtils.isBlank(getDefaultSortImpl())) {
             sortField = getDefaultSortImpl();
@@ -242,7 +241,7 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
      * @param filters the filters
      * @return the search criteria
      */
-    protected Map<String, Object> getSearchCriteria(Map<String, FilterMeta> filters) {
+    protected Map<String, Object> getSearchCriteria(Map<String, Object> filters) {
         return getSearchCriteria();
     }
 
@@ -299,10 +298,10 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
      * @param loadingFilters Datatable filters
      * @return fullText search value
      */
-    protected String getFullTextSearchValue(Map<String, FilterMeta> loadingFilters) {
-        /* if (loadingFilters != null) {
+    protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
+        if (loadingFilters != null) {
             return (String) loadingFilters.get(ESBasedDataModel.FILTER_PE_FULL_TEXT);
-        } */
+        }
         return null;
     }
 

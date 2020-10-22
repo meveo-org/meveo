@@ -36,7 +36,7 @@ import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.notification.JobTriggerService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 
 /**
  * @author Wassim Drira
@@ -141,7 +141,7 @@ public class JobTriggerBean extends BaseNotificationBean<JobTrigger> {
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
 
         ParamBean paramBean = paramBeanFactory.getInstance();

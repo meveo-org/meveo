@@ -20,17 +20,8 @@
 package org.meveo.admin.action;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -57,12 +48,7 @@ import org.meveo.admin.util.ImageUploadEventHandler;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.ApiService;
-import org.meveo.api.ApiUtils;
-import org.meveo.api.ApiVersionedService;
-import org.meveo.api.BaseCrudApi;
-import org.meveo.api.CustomFieldTemplateApi;
-import org.meveo.api.EntityCustomActionApi;
+import org.meveo.api.*;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.exception.MeveoApiException;
@@ -105,10 +91,9 @@ import org.primefaces.PrimeFaces;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.data.PageEvent;
-import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
-import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1026,7 +1011,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                 }
 
                 @Override
-                protected String getFullTextSearchValue(Map<String, FilterMeta> loadingFilters) {
+                protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
                     String fullTextValue = super.getFullTextSearchValue(loadingFilters);
                     if (fullTextValue == null) {
                         return (String) filters.get(ESBasedDataModel.FILTER_FULL_TEXT);

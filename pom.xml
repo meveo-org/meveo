@@ -183,7 +183,7 @@
 			<dependency>
 				<groupId>org.primefaces.extensions</groupId>
 				<artifactId>primefaces-extensions</artifactId>
-				<version>8.0.4</version>
+				<version>7.0</version>
 			</dependency>
 			<dependency>
 				<groupId>org.primefaces.extensions</groupId>
@@ -193,7 +193,7 @@
 			<dependency>
 				<groupId>org.primefaces</groupId>
 				<artifactId>primefaces</artifactId>
-				<version>8.0</version>
+				<version>7.0</version>
 			</dependency>
 			<dependency>
 				<groupId>org.reflections</groupId>
@@ -326,7 +326,7 @@
 			<dependency>
 				<groupId>com.lapis.jsfexporter</groupId>
 				<artifactId>export-source-primefaces</artifactId>
-				<version>1.0.3.Final</version>
+				<version>1.0.2.Final</version>
 			</dependency>
 			<dependency>
 				<groupId>org.elasticsearch</groupId>

@@ -27,7 +27,6 @@ import javax.inject.Named;
 
 import org.meveo.model.admin.User;
 import org.meveo.util.view.LazyDataModelWSize;
-import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -49,7 +48,7 @@ public class UserListBean extends UserBean {
 				private static final long serialVersionUID = 1L;
 
 				@Override
-				public List<User> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
+				public List<User> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
 
 					List<User> entities = null;
 					entities = userService.listUsersInMM(Arrays.asList("marketingManager", "CUSTOMER_CARE_USER"));
