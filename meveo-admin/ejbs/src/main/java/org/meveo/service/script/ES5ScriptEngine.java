@@ -52,13 +52,7 @@ public class ES5ScriptEngine implements ScriptInterface {
 		            jsBindings.putMember("methodContext", methodContext);
 		            jsBindings.putMember("JAVA_CTX", new JavaCtx());
 		            
-//		            ScriptContext scriptContext = new SimpleScriptContext();
-//		            scriptContext.setBindings(bindings, ScriptContext.GLOBAL_SCOPE);
-//		            jsEngine.setContext(scriptContext);
-//		            
-//					jsEngine.eval(script);
 		            context.eval("js", script);
-		            context.close();
 				}
 			});
         	
