@@ -375,7 +375,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		return create(sqlConnectionCode, cei, returnId, false, null, true);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		return create(sqlConnectionCode, cei, returnId, false, cfts.values(), true);
 	}
 
 	/**
