@@ -170,6 +170,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private SqlConfigurationService sqlConfigurationService;
     
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
     	
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
