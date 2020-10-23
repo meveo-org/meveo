@@ -60,6 +60,7 @@ import org.hibernate.query.NativeQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -148,6 +149,9 @@ public class NativePersistenceService extends BaseService {
 	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
+    
 	/**
 	 * Return an entity manager for a current provider
 	 * @param sqlConfigurationCode Code of the sql configuration used to init the entity manager
@@ -689,12 +693,13 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Updates a {@linkplain CustomEntityInstance} in the database given a uuid.
 	 *
-	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the
-	 *            field uuid.
+	 * @param sqlConnectionCode Code of the configuration where to make the update
+	 * @param cei               the {@link CustomEntityInstance}. The cf values must contain the field uuid.
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-		update(sqlConnectionCode, cei, false, null, false);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		update(sqlConnectionCode, cei, false, cfts.values(), false);
 	}
 
 	/**
