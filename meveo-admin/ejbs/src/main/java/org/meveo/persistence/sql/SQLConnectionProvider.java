@@ -206,14 +206,10 @@ public class SQLConnectionProvider {
 		configurationMap.put(entity.getCode(), entity);
 
 		SessionFactory oldSessionFactory = SESSION_FACTORY_MAP.get(entity.getCode());
-		if (oldSessionFactory != null && oldSessionFactory.isOpen()) {
+		if (!entity.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION) && oldSessionFactory != null && oldSessionFactory.isOpen()) {
 			oldSessionFactory.close();
 		}
 
-		// SESSION_FACTORY_MAP.put(entity.getCode(),
-		// buildSessionFactory(entity.getCode()));
-		// so that the session factory will get reinitialize the next time a new session
-		// is requested
 		SESSION_FACTORY_MAP.remove(entity.getCode());
 	}
 
