@@ -18,7 +18,9 @@ public enum NotificationEventTypeEnum {
     FILE_RENAME,
     FILE_DELETE,
     COUNTER_DEDUCED,
-    END_OF_TERM;
+    END_OF_TERM,
+    INSTALL,
+    POST_INSTALL;
     public String getLabel() {
         return this.getClass().getSimpleName() + "." + this.name();
     }

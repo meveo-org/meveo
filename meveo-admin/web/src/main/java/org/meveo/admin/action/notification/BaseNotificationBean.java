@@ -7,6 +7,7 @@ import org.meveo.model.NotifiableEntity;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.billing.CounterPeriod;
 import org.meveo.model.mediation.MeveoFtpFile;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.notification.InboundRequest;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
@@ -87,7 +88,9 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
         }
 
         List<NotificationEventTypeEnum> events = new ArrayList<NotificationEventTypeEnum>();
-        if (hasObservableEntity(clazz)) {
+        if (clazzStr.equals(MeveoModule.class.getName())) {
+            events.addAll(Arrays.asList(NotificationEventTypeEnum.INSTALL, NotificationEventTypeEnum.POST_INSTALL));
+        } else if (hasObservableEntity(clazz)) {
             events.addAll(Arrays.asList(NotificationEventTypeEnum.CREATED, NotificationEventTypeEnum.UPDATED, NotificationEventTypeEnum.REMOVED, NotificationEventTypeEnum.DISABLED,
                 NotificationEventTypeEnum.ENABLED));
             if (clazzStr.equals(org.meveo.model.admin.User.class.getName())) {

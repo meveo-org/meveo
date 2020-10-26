@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
@@ -21,10 +22,7 @@ import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.*;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.DatePeriod;
-import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.VersionedEntity;
+import org.meveo.model.*;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -94,6 +92,14 @@ public class MeveoModuleItemInstaller {
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+
+	@Inject
+	@ModuleInstall
+	private Event<MeveoModule> install;
+
+	@Inject
+	@ModulePostInstall
+	private Event<MeveoModule> postInstall;
     
     /**
      * Uninstall the module and disables it items
@@ -260,6 +266,7 @@ public class MeveoModuleItemInstaller {
     }
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+    	install.fire(meveoModule);
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -292,7 +299,7 @@ public class MeveoModuleItemInstaller {
 	            }
 	            
 	            result.setInstalledModule(meveoModule);
-            
+	            postInstall.fire(meveoModule);
         	} catch(Exception e) {
             	throw new ModuleInstallFail(meveoModule, result, e);
             }
