@@ -276,7 +276,7 @@ A completely configured file is available for reference link:standalone.xml[here
 
 * Open the Server tab by clicking Window / Show View / Other and filter for server.
 * Select servers, a new tab should open.
-* Right click on the server panel, select New / Server and select Wildfly 15.
+* Right click on the server panel, select New / Server and select Wildfly 18.
 * Click Next, select Create a new runtime.
 * Click Next, and browse the directory where you installed Wildfly - WILDFLY_HOME.
 * In the Configuration file field select standalone-full.xml. This is the one we modified earlier.
