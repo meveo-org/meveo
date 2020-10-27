@@ -73,7 +73,7 @@ public class EntityManagerProvider {
      * @return Entity manager
      */
     @Produces
-//    @RequestScoped
+    @RequestScoped
     @MeveoJpa
     public EntityManagerWrapper getEntityManager() {
         String providerCode = currentUserProvider.getCurrentUserProviderCode();
