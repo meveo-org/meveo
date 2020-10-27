@@ -49,6 +49,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -56,6 +57,7 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
@@ -103,6 +105,12 @@ public class StartupListener {
 	
     @Inject
     private Instance<MeveoInitializer> initializers;
+    
+    @Inject
+    private Neo4jConfigurationService neo4jConfigurationService;
+    
+    @Inject
+    private Neo4jConnectionProvider neo4jConnectionProvider;
     
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -243,6 +251,21 @@ public class StartupListener {
 			
 		} catch (NoSuchAlgorithmException e1) {
 			throw new RuntimeException(e1);
+		}
+		
+		// Test neo4j connections
+		var neo4jConfs = neo4jConfigurationService.listActive();
+		for(var neo4jConf : neo4jConfs) {
+			try {
+				var neo4jSession = neo4jConnectionProvider.getSession(neo4jConf.getCode());
+				neo4jSession.close();
+			} catch (Exception e) {
+				try {
+					neo4jConfigurationService.disable(neo4jConf.getId());
+				} catch (BusinessException e1) {
+					log.error("Failed to disable {}", neo4jConf, e1);
+				}
+			}
 		}
 				
 	    for(MeveoInitializer initializer : initializers) {

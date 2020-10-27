@@ -276,7 +276,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         try {
-			boolean withNewCategory = false;
 			if (dto.getCustomEntityCategoryCode() != null) {
 				if (StringUtils.isBlank(dto.getCustomEntityCategoryCode())) {
 					cet.setCustomEntityCategory(null);
@@ -284,21 +283,17 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 				} else {
 					CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
 					if (customEntityCategory == null) {
-						withNewCategory = true;
 						customEntityCategory = new CustomEntityCategory();
 						customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 						customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-						cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
-	
-					} else {
-						cet.setCustomEntityCategory(customEntityCategory);
+						customEntityCategoryService.create(customEntityCategory);
 					}
+						
+					cet.setCustomEntityCategory(customEntityCategory);
 				}
 			}
 	
-			if (!withNewCategory) {
-				cet = customEntityTemplateService.update(cet);
-			}
+			cet = customEntityTemplateService.update(cet);
 	
 	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
         

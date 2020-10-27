@@ -28,7 +28,6 @@ public class PasswordUtils {
 	private static String cipherInstance = "AES/CBC/PKCS5PADDING";
 	private static String secretKeyType = "AES";
 	private static byte[] ivCode = new byte[16];
-	private static String secretKey = System.getProperty("meveo.security.secret", "NoDefaultKey");
 	private static String SECRET_PREFIX = new String("🔒");
 	
 	/**
@@ -148,6 +147,8 @@ public class PasswordUtils {
 	}
 
 	private static Cipher initCipher(String salt, int mode) throws Exception {
+		String secretKey = System.getProperty("meveo.security.secret", "NoDefaultKey");
+
 		SecretKeyFactory factory = SecretKeyFactory.getInstance(factoryInstance);
 		KeySpec spec = new PBEKeySpec(secretKey.toCharArray(), salt.getBytes(), 65536, 256);
 		SecretKey tmp = factory.generateSecret(spec);

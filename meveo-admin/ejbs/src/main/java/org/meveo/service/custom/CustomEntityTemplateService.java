@@ -170,6 +170,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private SqlConfigurationService sqlConfigurationService;
     
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
     	
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
@@ -670,20 +671,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         return cetUpdated;
     }
 
-	/**
-	 * Create the given category and attach the given CET to it
-	 * 
-	 * @param cet The CET to update
-	 * @param customEntityCategory The category to create
-	 * @return the updated CET
-	 * @throws BusinessException if the category can't be created
-	 */
-    public CustomEntityTemplate updateWithNewCategory(CustomEntityTemplate cet, CustomEntityCategory customEntityCategory) throws BusinessException {
-		customEntityCategoryService.create(customEntityCategory);
-		cet.setCustomEntityCategory(customEntityCategory);
-		return update(cet);
-	}
-    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     @Asynchronous

@@ -60,7 +60,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	private CustomizedEntityService customizedEntityService;
 
 	@Inject
-	protected CrossStorageService crossStorageService;
+	protected transient CrossStorageService crossStorageService;
 
 	@Inject
 	protected CustomEntityInstanceService customEntityInstanceService;

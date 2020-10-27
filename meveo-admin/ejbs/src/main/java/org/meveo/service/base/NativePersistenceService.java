@@ -60,6 +60,7 @@ import org.hibernate.query.NativeQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -82,6 +83,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -147,6 +149,12 @@ public class NativePersistenceService extends BaseService {
 
 	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
+	
+    @Inject
+    private CrossStorageTransaction crossStorageTransaction;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
 
 	/**
 	 * Return an entity manager for a current provider
@@ -207,34 +215,33 @@ public class NativePersistenceService extends BaseService {
 				tableName = "\"" + tableName + "\"";
 			}
 
-			try (Session session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-				StringBuilder selectQuery = new StringBuilder();
+			StringBuilder selectQuery = new StringBuilder();
 
-				selectQuery.append("SELECT ");
+			selectQuery.append("SELECT ");
 
-				if (selectFields == null) {
-					selectQuery.append("*");
-				} else if (selectFields.isEmpty()) {
-					selectQuery.append("uuid");
-				} else {
-					for (String field : selectFields) {
-						if (PostgresReserverdKeywords.isReserved(field)) {
-							field = "\"" + field.toLowerCase() + "\"";
-						}
-						selectQuery.append(field).append(", ");
+			if (selectFields == null) {
+				selectQuery.append("*");
+			} else if (selectFields.isEmpty()) {
+				selectQuery.append("uuid");
+			} else {
+				for (String field : selectFields) {
+					if (PostgresReserverdKeywords.isReserved(field)) {
+						field = "\"" + field.toLowerCase() + "\"";
 					}
-					selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
+					selectQuery.append(field).append(", ");
 				}
-
-				NativeQuery query = session.createSQLQuery(selectQuery + " FROM {h-schema}" + tableName + " e WHERE uuid=:uuid");
-				query.setParameter("uuid", uuid);
-				query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
-
-				Map<String, Object> values = (Map<String, Object>) query.uniqueResult();
-
-				return values;
+				selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
 			}
+
+			NativeQuery query = session.createSQLQuery(selectQuery + " FROM {h-schema}" + tableName + " e WHERE uuid=:uuid");
+			query.setParameter("uuid", uuid);
+			query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
+
+			Map<String, Object> values = (Map<String, Object>) query.uniqueResult();
+
+			return values;
 
 		} catch (Exception e) {
 			log.error("Failed to retrieve values from table by uuid {}/{}", tableName, uuid, e);
@@ -308,7 +315,8 @@ public class NativePersistenceService extends BaseService {
 		QueryBuilder builder = new QueryBuilder();
 		builder.setSqlString(q.toString());
 		
-		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(session, true);
 		queryParamers.forEach((k, v) -> query.setParameter(k, v));
 		
 		try {
@@ -367,7 +375,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		return create(sqlConnectionCode, cei, returnId, false, null, true);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		return create(sqlConnectionCode, cei, returnId, false, cfts.values(), true);
 	}
 
 	/**
@@ -501,67 +510,66 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-				hibernateSession.doWork(connection -> {
+			hibernateSession.doWork(connection -> {
 
-					setSchema(sqlConnectionCode, connection);
+				setSchema(sqlConnectionCode, connection);
 
-					try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
-						int parameterIndex = 1;
-						for (String fieldName : values.keySet()) {
-							Object fieldValue = values.get(fieldName);
-							if (fieldValue == null) {
-								continue;
-							}
-
-							setParameterValue(ps, parameterIndex++, fieldValue);
-						}
-
-						ps.executeUpdate();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
-						}
-					}
-				});
-
-				// Find the identifier of the last inserted record
-				if (returnId) {
-					if (uuid != null) {
-						return (String) uuid;
-					}
-
-					Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
-
+					int parameterIndex = 1;
 					for (String fieldName : values.keySet()) {
 						Object fieldValue = values.get(fieldName);
 						if (fieldValue == null) {
 							continue;
 						}
 
-						// Serialize list values
-						if (fieldValue instanceof Collection) {
-							fieldValue = JacksonUtil.toString(fieldValue);
-						} else if (fieldValue instanceof Map) {
-							fieldValue = JacksonUtil.toString(fieldValue);
-						} else if (fieldValue instanceof File) {
-							fieldValue = ((File) fieldValue).getAbsolutePath();
-						} else if (fieldValue instanceof EntityReferenceWrapper) {
-							fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
-						}
-
-						query.setParameter(fieldName, fieldValue);
+						setParameterValue(ps, parameterIndex++, fieldValue);
 					}
 
-					uuid = query.getSingleResult();
-					values.put(FIELD_ID, uuid);
-
-					return (String) uuid;
-
-				} else {
-					return null;
+					ps.executeUpdate();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
 				}
+			});
+
+			// Find the identifier of the last inserted record
+			if (returnId) {
+				if (uuid != null) {
+					return (String) uuid;
+				}
+
+				Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
+
+				for (String fieldName : values.keySet()) {
+					Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
+						continue;
+					}
+
+					// Serialize list values
+					if (fieldValue instanceof Collection) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof Map) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof File) {
+						fieldValue = ((File) fieldValue).getAbsolutePath();
+					} else if (fieldValue instanceof EntityReferenceWrapper) {
+						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
+					}
+
+					query.setParameter(fieldName, fieldValue);
+				}
+
+				uuid = query.getSingleResult();
+				values.put(FIELD_ID, uuid);
+
+				return (String) uuid;
+
+			} else {
+				return null;
 			}
 
 		} catch (Exception e) {
@@ -619,82 +627,82 @@ public class NativePersistenceService extends BaseService {
 
 		sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-			hibernateSession.doWork(new org.hibernate.jdbc.Work() {
+		hibernateSession.doWork(new org.hibernate.jdbc.Work() {
 
-				@Override
-				public void execute(Connection connection) throws SQLException {
+			@Override
+			public void execute(Connection connection) throws SQLException {
 
-					setSchema(sqlConnectionCode, connection);
+				setSchema(sqlConnectionCode, connection);
 
-					try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
+				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
 
-						Object fieldValue = null;
-						int i = 1;
-						int itemsProcessed = 0;
-						for (Map<String, Object> value : values) {
+					Object fieldValue = null;
+					int i = 1;
+					int itemsProcessed = 0;
+					for (Map<String, Object> value : values) {
 
-							i = 1;
-							for (String fieldName : fieldNames) {
-								fieldValue = value.get(fieldName);
+						i = 1;
+						for (String fieldName : fieldNames) {
+							fieldValue = value.get(fieldName);
 
-								if (fieldValue == null) {
-									preparedStatement.setNull(i, Types.NULL);
-								} else if (fieldValue instanceof String) {
-									preparedStatement.setString(i, (String) fieldValue);
-								} else if (fieldValue instanceof Long) {
-									preparedStatement.setLong(i, (Long) fieldValue);
-								} else if (fieldValue instanceof Double) {
-									preparedStatement.setDouble(i, (Double) fieldValue);
-								} else if (fieldValue instanceof BigInteger) {
-									preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
-								} else if (fieldValue instanceof Integer) {
-									preparedStatement.setInt(i, (Integer) fieldValue);
-								} else if (fieldValue instanceof BigDecimal) {
-									preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
-								} else if (fieldValue instanceof Date) {
-									preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
-								} else if (fieldValue instanceof Collection) {
-									preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
-								} else {
-									log.error("Unhandled field type {}", fieldValue.getClass());
-								}
-
-								i++;
+							if (fieldValue == null) {
+								preparedStatement.setNull(i, Types.NULL);
+							} else if (fieldValue instanceof String) {
+								preparedStatement.setString(i, (String) fieldValue);
+							} else if (fieldValue instanceof Long) {
+								preparedStatement.setLong(i, (Long) fieldValue);
+							} else if (fieldValue instanceof Double) {
+								preparedStatement.setDouble(i, (Double) fieldValue);
+							} else if (fieldValue instanceof BigInteger) {
+								preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
+							} else if (fieldValue instanceof Integer) {
+								preparedStatement.setInt(i, (Integer) fieldValue);
+							} else if (fieldValue instanceof BigDecimal) {
+								preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
+							} else if (fieldValue instanceof Date) {
+								preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
+							} else if (fieldValue instanceof Collection) {
+								preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
+							} else {
+								log.error("Unhandled field type {}", fieldValue.getClass());
 							}
 
-							preparedStatement.addBatch();
-
-							// Batch size: 20
-							if (itemsProcessed % 500 == 0) {
-								preparedStatement.executeBatch();
-							}
-							itemsProcessed++;
-						}
-						preparedStatement.executeBatch();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
+							i++;
 						}
 
-					} catch (SQLException e) {
-						log.error("Failed to bulk insert with sql {}\n", sql, e);
-						throw e;
+						preparedStatement.addBatch();
+
+						// Batch size: 20
+						if (itemsProcessed % 500 == 0) {
+							preparedStatement.executeBatch();
+						}
+						itemsProcessed++;
 					}
+					preparedStatement.executeBatch();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
+
+				} catch (SQLException e) {
+					log.error("Failed to bulk insert with sql {}\n", sql, e);
+					throw e;
 				}
-			});
-		}
+			}
+		});
 	}
 
 	/**
 	 * Updates a {@linkplain CustomEntityInstance} in the database given a uuid.
 	 *
-	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the
-	 *            field uuid.
+	 * @param sqlConnectionCode Code of the configuration where to make the update
+	 * @param cei               the {@link CustomEntityInstance}. The cf values must contain the field uuid.
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-		update(sqlConnectionCode, cei, false, null, false);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		update(sqlConnectionCode, cei, false, cfts.values(), false);
 	}
 
 	/**
@@ -790,31 +798,31 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
 
-			try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-				hibernateSession.doWork(connection -> {
+			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-					setSchema(sqlConnectionCode, connection);
+			hibernateSession.doWork(connection -> {
 
-					try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-						int parameterIndex = 1;
-						for (String fieldName : values.keySet()) {
-							Object fieldValue = values.get(fieldName);
-							if (fieldValue != null && fieldName != "uuid") {
-								setParameterValue(ps, parameterIndex++, fieldValue);
-							}
+				setSchema(sqlConnectionCode, connection);
+
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+					int parameterIndex = 1;
+					for (String fieldName : values.keySet()) {
+						Object fieldValue = values.get(fieldName);
+						if (fieldValue != null && fieldName != "uuid") {
+							setParameterValue(ps, parameterIndex++, fieldValue);
 						}
-
-						ps.executeUpdate();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
-						}
-
-					} catch (Exception e) {
-						log.error("Native SQL update failed: {}", e.getMessage());
 					}
-				});
-			}
+
+					ps.executeUpdate();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
+
+				} catch (Exception e) {
+					log.error("Native SQL update failed: {}", e.getMessage());
+				}
+			});
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
@@ -1467,10 +1475,10 @@ public class NativePersistenceService extends BaseService {
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
 		
-		try (var session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
-			NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
-			return query.list();
-		}
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+
+		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
+		return query.list();
 	}
 	
 	/**
@@ -1500,24 +1508,22 @@ public class NativePersistenceService extends BaseService {
 	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		try (Session session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
-			EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-			Query query = queryBuilder.getNativeCountQuery(entityManager);
-			Object count = query.getSingleResult();
+		Query query = queryBuilder.getNativeCountQuery(session);
+		Object count = query.getSingleResult();
+		
+		if (count instanceof Long) {
+			return (Long) count;
 			
-			if (count instanceof Long) {
-				return (Long) count;
-				
-			} else if (count instanceof BigDecimal) {
-				return ((BigDecimal) count).longValue();
-				
-			} else if (count instanceof Integer) {
-				return ((Integer) count).longValue();
-				
-			} else {
-				return Long.valueOf(count.toString());
-			}
+		} else if (count instanceof BigDecimal) {
+			return ((BigDecimal) count).longValue();
+			
+		} else if (count instanceof Integer) {
+			return ((Integer) count).longValue();
+			
+		} else {
+			return Long.valueOf(count.toString());
 		}
 	}
 

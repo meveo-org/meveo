@@ -47,7 +47,7 @@ public class GenericEntityPickerBean extends BaseBean<IEntity> {
     private CustomEntityTemplateService customEntityTemplateService;
 
     @Inject
-    private CrossStorageService crossStorageService;
+    private transient CrossStorageService crossStorageService;
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;

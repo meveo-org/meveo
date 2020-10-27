@@ -60,8 +60,7 @@ public class Role extends BaseEntity {
     @NotNull
     private String description;
 
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<Permission> permissions = new HashSet<Permission>();
 

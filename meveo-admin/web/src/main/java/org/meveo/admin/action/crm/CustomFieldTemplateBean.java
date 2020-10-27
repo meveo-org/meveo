@@ -686,6 +686,11 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public Long getCetId(String entityClazz) {
         if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomFieldTemplate.retrieveCetCode(entityClazz));
+            if(cet == null) {
+            	log.error("Can't rerieve cet for {}", entityClazz);
+            	return null;
+            }
+            
             return cet.getId();
         }
         

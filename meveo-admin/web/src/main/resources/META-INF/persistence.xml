@@ -23,6 +23,8 @@
             <property name="hibernate.discriminator.ignore_explicit_for_joined" value="true" />
             <property name="hibernate.ejb.event.flush" value="org.meveo.jpa.event.FlushEventListener" /> <!-- Needed for ES -->
             <property name="hibernate.jpa.compliance.global_id_generators" value="false"/>
+<!--             <property name="hibernate.generate_statistics" value="true"/> -->
+<!--             <property name="hibernate.jmx.enabled" value="true"/> -->
 <!-- 			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property> -->
 <!-- 			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/> -->
         </properties>
@@ -50,6 +52,8 @@
             <property name="hibernate.discriminator.ignore_explicit_for_joined" value="true" />
             <property name="hibernate.ejb.event.flush" value="org.meveo.jpa.event.FlushEventListener" /> <!-- Needed for ES -->
             <property name="hibernate.jpa.compliance.global_id_generators" value="false"/>
+<!--             <property name="hibernate.generate_statistics" value="true"/> -->
+<!--             <property name="hibernate.jmx.enabled" value="true"/> -->
 <!-- 			<property name="hibernate.persister.resolver" value="org.hibernate.util.CustomPersisterClassResolver"></property> -->
 <!-- 			<property name="hibernate.transaction.factory_class" value="org.hibernate.transaction.JTATransactionFactory"/> -->
         </properties>
