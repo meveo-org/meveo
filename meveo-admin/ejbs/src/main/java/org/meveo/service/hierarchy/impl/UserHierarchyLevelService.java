@@ -42,7 +42,7 @@ public class UserHierarchyLevelService extends PersistenceService<UserHierarchyL
 
     @SuppressWarnings("unchecked")
     public List<UserHierarchyLevel> findRoots() {
-        Query query = getEntityManager().createQuery("from " + UserHierarchyLevel.class.getSimpleName() + " where parentLevel.id IS NULL");
+        Query query = getEntityManager().createQuery("SELECT l FROM " + UserHierarchyLevel.class.getSimpleName() + " l WHERE l.parentLevel.id IS NULL");
         if (query.getResultList().size() == 0) {
             return null;
         }

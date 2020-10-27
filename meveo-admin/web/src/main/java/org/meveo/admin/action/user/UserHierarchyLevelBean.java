@@ -103,6 +103,7 @@ public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
 				}
 			}
 		}
+		
 		return rootNode;
 	}
 
@@ -287,11 +288,12 @@ public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
 	}
 
 	public void removeUserHierarchyLevel() {
+		
 		UserHierarchyLevel userHierarchyLevel = (UserHierarchyLevel) selectedNode.getData();
 		if (userHierarchyLevel != null) {
 			try {
-				userHierarchyLevelService.remove(userHierarchyLevel.getId());
 				selectedNode.getParent().getChildren().remove(selectedNode);
+				userHierarchyLevelService.remove(userHierarchyLevel.getId());
 				selectedNode = null;
 				showUserGroupDetail = false;
 				initEntity();
@@ -420,6 +422,8 @@ public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
 	// Recursive function to create tree
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private TreeNode createTree(HierarchyLevel userHierarchyLevel, TreeNode rootNode) {
+		
+		userHierarchyLevelService.refresh(userHierarchyLevel);
 		TreeNode newNode = new SortedTreeNode(userHierarchyLevel, rootNode);
 		newNode.setExpanded(true);
 		if (userHierarchyLevel.getChildLevels() != null) {
