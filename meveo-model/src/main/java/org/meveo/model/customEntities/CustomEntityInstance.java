@@ -161,7 +161,7 @@ public class CustomEntityInstance extends BusinessCFEntity {
 	}
 	
 	public <T> T get(String key) {
-		return (T) this.getCfValues().getValue(key);
+		return (T) this.getCfValuesAsValues().get(key);
 	}
 
 	public CustomFieldValues getCfValuesOldNullSafe() {
