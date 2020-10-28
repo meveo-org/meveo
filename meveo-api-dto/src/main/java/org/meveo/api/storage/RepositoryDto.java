@@ -15,7 +15,7 @@ import io.swagger.annotations.ApiModelProperty;
  * {@link BinaryStorageConfiguration} on where to save a file.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.12
  */
 @ApiModel
 public class RepositoryDto extends BusinessEntityDto {
@@ -80,6 +80,9 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		if (e.getSqlConfiguration() != null) {
 			sqlConfigurationCode = e.getSqlConfiguration().getCode();
+		}
+		if(e.getUserHierarchyLevel().getCode() != null) {
+			userHierarchyLevelCode = e.getUserHierarchyLevel().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();

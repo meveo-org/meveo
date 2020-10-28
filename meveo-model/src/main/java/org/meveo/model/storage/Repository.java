@@ -22,7 +22,7 @@ import org.meveo.model.sql.SqlConfiguration;
  * Storage for logical repository separation.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.12
  * @since 6.3.0
  */
 @Entity
@@ -57,8 +57,9 @@ public class Repository extends BusinessEntity {
 
 	@NotNull
 	@Column(name = "path", length = 255)
-	private String path;    @ManyToOne
+	private String path;    
 	
+	@ManyToOne
     @JoinColumn(name="user_hierarchy_level_id")
     private UserHierarchyLevel userHierarchyLevel;
 

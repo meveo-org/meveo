@@ -423,7 +423,7 @@ public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private TreeNode createTree(HierarchyLevel userHierarchyLevel, TreeNode rootNode) {
 		
-		userHierarchyLevelService.refresh(userHierarchyLevel);
+		userHierarchyLevel = userHierarchyLevelService.findById(userHierarchyLevel.getId());
 		TreeNode newNode = new SortedTreeNode(userHierarchyLevel, rootNode);
 		newNode.setExpanded(true);
 		if (userHierarchyLevel.getChildLevels() != null) {

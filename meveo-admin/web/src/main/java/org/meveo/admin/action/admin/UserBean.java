@@ -869,4 +869,10 @@ public class UserBean extends CustomFieldBean<User> {
 
 		return Long.parseLong(paramBeanFactory.getInstance().getProperty("meveo.fileUpload.limitInMb", "50")) * 1000000;
 	}
+	
+	public void clearUserHierarchyLevel() {
+		entity.setUserLevel(null);
+		userGroupSelectedNode = null;
+		userGroupRootNode = null;
+	}
 }
