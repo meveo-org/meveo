@@ -16,10 +16,22 @@
 
 package org.meveo.model.git;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Size;
+
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
@@ -27,12 +39,6 @@ import org.meveo.model.ObservableEntity;
 import org.meveo.security.PasswordUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import javax.persistence.*;
-import javax.validation.constraints.Size;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Entity reprensenting a git repository hosted in the meveo instance, or anywhere in remote
@@ -50,7 +56,9 @@ import java.util.List;
 @ModuleItemOrder(999)
 public class GitRepository extends BusinessEntity {
 
-    /**
+	private static final long serialVersionUID = 236460904554093588L;
+
+	/**
      * Roles that allows a user to make pull, fetch and clone actions
      */
     @Column(name = "reading_roles", columnDefinition = "TEXT")

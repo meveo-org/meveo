@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 
@@ -21,7 +22,7 @@ import org.meveo.model.sql.SqlConfiguration;
  * Storage for logical repository separation.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.12
  * @since 6.3.0
  */
 @Entity
@@ -56,7 +57,11 @@ public class Repository extends BusinessEntity {
 
 	@NotNull
 	@Column(name = "path", length = 255)
-	private String path;
+	private String path;    
+	
+	@ManyToOne
+    @JoinColumn(name="user_hierarchy_level_id")
+    private UserHierarchyLevel userHierarchyLevel;
 
 	public Repository getParentRepository() {
 		return parentRepository;
@@ -109,6 +114,14 @@ public class Repository extends BusinessEntity {
 	public String getSqlConfigurationCode() {
 
 		return sqlConfiguration == null ? SqlConfiguration.DEFAULT_SQL_CONNECTION : sqlConfiguration.getCode();
+	}
+
+	public UserHierarchyLevel getUserHierarchyLevel() {
+		return userHierarchyLevel;
+	}
+
+	public void setUserHierarchyLevel(UserHierarchyLevel userHierarchyLevel) {
+		this.userHierarchyLevel = userHierarchyLevel;
 	}
 
 }
