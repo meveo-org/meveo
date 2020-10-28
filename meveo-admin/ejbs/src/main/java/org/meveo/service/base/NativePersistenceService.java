@@ -52,6 +52,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
@@ -839,54 +841,54 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Update field value in a table
 	 *
-	 * @param tableName Table name to update
-	 * @param uuid      Record identifier
-	 * @param fieldName Field to update
-	 * @param value     New value
+	 * @param sqlConnectionCode Code of the sql repository
+	 * @param tableName         Table name to update
+	 * @param uuid              Record identifier
+	 * @param fieldName         Field to update
+	 * @param value             New value
 	 * @throws BusinessException General exception
 	 */
+	@Transactional(value = TxType.SUPPORTS)
 	public void updateValue(String sqlConnectionCode, String tableName, String uuid, String fieldName, Object value) throws BusinessException {
-		// Serialize collections
-		if (value instanceof Collection) {
-			value = JacksonUtil.toString(value);
-		}
+		var finalValue = value instanceof Collection ? value = JacksonUtil.toString(value) : value;
 
 		String cetCode = tableName;
-		if (PostgresReserverdKeywords.isReserved(tableName)) {
-			tableName = "\"" + tableName + "\"";
-		}
-
-		if (PostgresReserverdKeywords.isReserved(fieldName)) {
-			fieldName = "\"" + fieldName.toLowerCase() + "\"";
-		}
+		var finalTableName = PostgresReserverdKeywords.isReserved(tableName) ? "\"" + tableName + "\"" : tableName;
+		var finalFieldName = PostgresReserverdKeywords.isReserved(fieldName) ? "\"" + fieldName.toLowerCase() + "\"" : fieldName;
 		
 		StringBuilder sql = new StringBuilder();
+		if (finalValue == null) {
+			sql.append("update " + finalTableName + " set " + finalFieldName + "= null where uuid = ?");
+		} else {
+			sql.append("update " + finalTableName + " set " + finalFieldName + "= ? where uuid = ?");
+		}
 		
 		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
-		
-		try {
-			if (value == null) {
-				sql.append("update " + tableName + " set " + fieldName + "= null where uuid=:uuid");
-				session.createNativeQuery(sql.toString())
-					.setParameter("uuid", uuid)
-					.executeUpdate();
-			} else {
-				sql.append("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid");
-				session.createNativeQuery(sql.toString())
-					.setParameter(fieldName, value)
-					.setParameter("uuid", uuid)
-					.executeUpdate();
+		session.doWork(connection -> {
+			try (var statement = connection.prepareStatement(sql.toString())){
+				
+				if(finalValue == null) {
+					statement.setString(1, uuid);
+				} else {
+					setParameterValue(statement, 1, finalValue);
+					statement.setString(2, uuid);
+				}
+				
+				statement.executeUpdate();
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					connection.commit();
+				}
+				
+				CustomTableRecord record = new CustomTableRecord();
+				record.setUuid(uuid);
+				record.setCetCode(cetCode);
+				customTableRecordUpdate.fire(record);
+
+			} catch (Exception e) {
+				log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
+				throw e;
 			}
-
-			CustomTableRecord record = new CustomTableRecord();
-			record.setUuid(uuid);
-			record.setCetCode(cetCode);
-			customTableRecordUpdate.fire(record);
-
-		} catch (Exception e) {
-			log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
-			throw e;
-		}
+		});
 	}
 
 	/**
