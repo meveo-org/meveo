@@ -862,17 +862,17 @@ public class NativePersistenceService extends BaseService {
 		
 		StringBuilder sql = new StringBuilder();
 		
+		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		
 		try {
 			if (value == null) {
 				sql.append("update " + tableName + " set " + fieldName + "= null where uuid=:uuid");
-				getEntityManager(sqlConnectionCode)
-					.createNativeQuery(sql.toString())
+				session.createNativeQuery(sql.toString())
 					.setParameter("uuid", uuid)
 					.executeUpdate();
 			} else {
 				sql.append("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid");
-				getEntityManager(sqlConnectionCode)
-					.createNativeQuery(sql.toString())
+				session.createNativeQuery(sql.toString())
 					.setParameter(fieldName, value)
 					.setParameter("uuid", uuid)
 					.executeUpdate();
