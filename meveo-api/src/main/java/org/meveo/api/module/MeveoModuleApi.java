@@ -172,7 +172,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
 		if (meveoModule == null) {

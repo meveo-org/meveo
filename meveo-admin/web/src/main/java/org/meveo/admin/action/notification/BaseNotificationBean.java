@@ -88,9 +88,7 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
         }
 
         List<NotificationEventTypeEnum> events = new ArrayList<NotificationEventTypeEnum>();
-        if (clazzStr.equals(MeveoModule.class.getName())) {
-            events.addAll(Arrays.asList(NotificationEventTypeEnum.INSTALL, NotificationEventTypeEnum.POST_INSTALL));
-        } else if (hasObservableEntity(clazz)) {
+        if (hasObservableEntity(clazz)) {
             events.addAll(Arrays.asList(NotificationEventTypeEnum.CREATED, NotificationEventTypeEnum.UPDATED, NotificationEventTypeEnum.REMOVED, NotificationEventTypeEnum.DISABLED,
                 NotificationEventTypeEnum.ENABLED));
             if (clazzStr.equals(org.meveo.model.admin.User.class.getName())) {
@@ -99,6 +97,8 @@ public abstract class BaseNotificationBean<T extends Notification>  extends Upda
                 events.add(NotificationEventTypeEnum.INBOUND_REQ);
             } else if (clazzStr.equals(CounterPeriod.class.getName())) {
                 events.add(NotificationEventTypeEnum.COUNTER_DEDUCED);
+            } else if (clazzStr.equals(MeveoModule.class.getName())) {
+                events.addAll(Arrays.asList(NotificationEventTypeEnum.INSTALL, NotificationEventTypeEnum.POST_INSTALL));
             }
         } else if (hasNotificableEntity(clazz)) {
             if (clazzStr.equals(MeveoFtpFile.class.getName())) {

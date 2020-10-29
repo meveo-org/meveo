@@ -95,11 +95,11 @@ public class MeveoModuleItemInstaller {
 
 	@Inject
 	@ModuleInstall
-	private Event<MeveoModule> install;
+	private Event<MeveoModule> installEvent;
 
 	@Inject
 	@ModulePostInstall
-	private Event<MeveoModule> postInstall;
+	private Event<MeveoModule> postInstallEvent;
     
     /**
      * Uninstall the module and disables it items
@@ -266,7 +266,7 @@ public class MeveoModuleItemInstaller {
     }
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
-    	install.fire(meveoModule);
+    	installEvent.fire(meveoModule);
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -299,7 +299,7 @@ public class MeveoModuleItemInstaller {
 	            }
 	            
 	            result.setInstalledModule(meveoModule);
-	            postInstall.fire(meveoModule);
+	            postInstallEvent.fire(meveoModule);
         	} catch(Exception e) {
             	throw new ModuleInstallFail(meveoModule, result, e);
             }
