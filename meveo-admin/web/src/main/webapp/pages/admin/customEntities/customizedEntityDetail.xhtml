@@ -80,13 +80,13 @@
                         <h:panelGroup>
                             <hftl:decorateFormField style="display: none" field="prePersistScript" componentWidth="50" label="#{messages['BusinessEntity.prepersitScript']}">
                                 <p:autoComplete  value="#{customEntityTemplateBean.entity.prePersistScript}" var="script" size = "85" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
-                                    <hftl:objectConverter />
+									<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
                                 </p:autoComplete>
                             </hftl:decorateFormField>
                             <hftl:decorateFormField field="crudEventListenerScript" componentWidth="50" label="CRUD Listener script">
                                 <p:autoComplete value="#{customEntityTemplateBean.entity.crudEventListenerScript}" var="script" size = "85" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
-                                    <hftl:objectConverter />
-                                </p:autoComplete>
+									<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
+								</p:autoComplete>
                             </hftl:decorateFormField>
                         </h:panelGroup>
                     </h:panelGrid>

@@ -300,6 +300,8 @@ public class EndpointServlet extends HttpServlet {
         String contentType = response.getContentType();
         if (!StringUtils.isBlank(contentType)) {
             servletResponse.setContentType(contentType);
+        } else if(!StringUtils.isBlank(endpointExecution.getEndpoint().getContentType())){
+        	servletResponse.setContentType(endpointExecution.getEndpoint().getContentType());
         }
 
         // Buffer size

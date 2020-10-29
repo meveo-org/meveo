@@ -1342,7 +1342,14 @@ public class CustomFieldValue implements Serializable {
         } else if (value instanceof EntityReferenceWrapper) {
             setEntityReferenceValue((EntityReferenceWrapper) value);
 
-        } else if (value instanceof Map) {
+        } else if(value instanceof CustomEntity) {
+        	var ce = (CustomEntity) value;
+        	EntityReferenceWrapper erw = new EntityReferenceWrapper();
+        	erw.setUuid(ce.getUuid());
+        	erw.setClassname(ce.getCetCode());
+        	setEntityReferenceValue(erw);
+        	
+    	} else if (value instanceof Map) {
             setMapValue((Map) value);
 
         } else if (value instanceof List) {

@@ -18,6 +18,14 @@
  */
 package org.meveo.service.hierarchy.impl;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.ejb.Stateless;
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ExistsRelatedEntityException;
@@ -27,90 +35,115 @@ import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.service.base.PersistenceService;
 
-import javax.ejb.Stateless;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * User Hierarchy Level service implementation.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.12
  */
 @Stateless
 public class UserHierarchyLevelService extends PersistenceService<UserHierarchyLevel> {
 
-    @SuppressWarnings("unchecked")
-    public List<UserHierarchyLevel> findRoots() {
-        Query query = getEntityManager().createQuery("from " + UserHierarchyLevel.class.getSimpleName() + " where parentLevel.id IS NULL");
-        if (query.getResultList().size() == 0) {
-            return null;
-        }
+	@SuppressWarnings("unchecked")
+	public List<UserHierarchyLevel> findRoots() {
+		Query query = getEntityManager().createQuery("SELECT l FROM " + UserHierarchyLevel.class.getSimpleName() + " l WHERE l.parentLevel.id IS NULL");
+		if (query.getResultList().size() == 0) {
+			return null;
+		}
 
-        return query.getResultList();
-    }
+		return query.getResultList();
+	}
 
-    public UserHierarchyLevel findByCode(String code) {
-        UserHierarchyLevel userHierarchyLevel = null;
-        if (StringUtils.isBlank(code)) {
-            return null;
-        }
-        try {
-            Query query = getEntityManager().createQuery("from " + UserHierarchyLevel.class.getSimpleName() + " uhl where uhl.code =:code ");
-            query.setParameter("code", code);
-            userHierarchyLevel = (UserHierarchyLevel) query.getSingleResult();
-        } catch (Exception e) {
-            return null;
-        }
-        return userHierarchyLevel;
-    }
+	public UserHierarchyLevel findByCode(String code) {
+		UserHierarchyLevel userHierarchyLevel = null;
+		if (StringUtils.isBlank(code)) {
+			return null;
+		}
+		try {
+			Query query = getEntityManager().createQuery("from " + UserHierarchyLevel.class.getSimpleName() + " uhl where uhl.code =:code ");
+			query.setParameter("code", code);
+			userHierarchyLevel = (UserHierarchyLevel) query.getSingleResult();
+		} catch (Exception e) {
+			return null;
+		}
+		return userHierarchyLevel;
+	}
 
-    public UserHierarchyLevel findByCode(String code, List<String> fetchFields) {
-        QueryBuilder qb = new QueryBuilder(UserHierarchyLevel.class, "u", fetchFields);
+	public UserHierarchyLevel findByCode(String code, List<String> fetchFields) {
+		QueryBuilder qb = new QueryBuilder(UserHierarchyLevel.class, "u", fetchFields);
 
-        qb.addCriterion("u.code", "=", code, true);
+		qb.addCriterion("u.code", "=", code, true);
 
-        try {
-            return (UserHierarchyLevel) qb.getQuery(getEntityManager()).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-    }
+		try {
+			return (UserHierarchyLevel) qb.getQuery(getEntityManager()).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 
-    public Boolean canDeleteUserHierarchyLevel(Long id) {
-        List<Boolean> hasUsersInSubNodes = new ArrayList<>();
-        userGroupLevelInSubNode(id, hasUsersInSubNodes);
-        if (hasUsersInSubNodes.contains(Boolean.TRUE)) {
-            return false;
-        }
-        return true;
-    }
+	public Boolean canDeleteUserHierarchyLevel(Long id) {
+		List<Boolean> hasUsersInSubNodes = new ArrayList<>();
+		userGroupLevelInSubNode(id, hasUsersInSubNodes);
+		if (hasUsersInSubNodes.contains(Boolean.TRUE)) {
+			return false;
+		}
+		return true;
+	}
 
-    @SuppressWarnings("rawtypes")
-    private void userGroupLevelInSubNode(Long id, List<Boolean> booleanList) {
-        List<String> fieldsFetch = Arrays.asList("childLevels", "users");
+	@SuppressWarnings("rawtypes")
+	public void userGroupLevelInSubNode(Long id, List<Boolean> booleanList) {
+		List<String> fieldsFetch = Arrays.asList("childLevels", "users");
 
-        UserHierarchyLevel userHierarchyLevel = findById(id, fieldsFetch);
-        if (userHierarchyLevel != null && CollectionUtils.isNotEmpty(userHierarchyLevel.getUsers())) {
-            booleanList.add(Boolean.TRUE);
-        } else {
-            booleanList.add(Boolean.FALSE);
-        }
+		UserHierarchyLevel userHierarchyLevel = findById(id, fieldsFetch);
+		if (userHierarchyLevel != null && CollectionUtils.isNotEmpty(userHierarchyLevel.getUsers())) {
+			booleanList.add(Boolean.TRUE);
+		} else {
+			booleanList.add(Boolean.FALSE);
+		}
 
-        if (userHierarchyLevel != null && CollectionUtils.isNotEmpty(userHierarchyLevel.getChildLevels())) {
-            for (HierarchyLevel child : userHierarchyLevel.getChildLevels()) {
-                userGroupLevelInSubNode(child.getId(), booleanList);
-            }
-        }
-    }
+		if (userHierarchyLevel != null && CollectionUtils.isNotEmpty(userHierarchyLevel.getChildLevels())) {
+			for (HierarchyLevel child : userHierarchyLevel.getChildLevels()) {
+				userGroupLevelInSubNode(child.getId(), booleanList);
+			}
+		}
+	}
 
-    @Override
-    public void remove(UserHierarchyLevel entity) throws BusinessException {
+	@Override
+	public void remove(UserHierarchyLevel entity) throws BusinessException {
 
-        if (!canDeleteUserHierarchyLevel(entity.getId())) {
-            throw new ExistsRelatedEntityException();
-        }
+		if (!canDeleteUserHierarchyLevel(entity.getId())) {
+			throw new ExistsRelatedEntityException();
+		}
 
-        super.remove(entity);
-    }
+		super.remove(entity);
+	}
+
+	public boolean isInHierarchy(UserHierarchyLevel hayStack, UserHierarchyLevel pin) {
+
+		if (hayStack.equals(pin)) {
+			return true;
+		}
+		
+		hayStack = findById(hayStack.getId(), true);
+		pin = findById(pin.getId(), true);
+
+		List<UserHierarchyLevel> hayStacks = buildHierarchy(hayStack);
+		return hayStacks.contains(pin);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public List<UserHierarchyLevel> buildHierarchy(UserHierarchyLevel rootNode) {
+
+		List<UserHierarchyLevel> result = new ArrayList<UserHierarchyLevel>();
+
+		result.add(rootNode);
+		if (rootNode.getChildLevels() != null) {
+			for (HierarchyLevel uhl : rootNode.getChildLevels()) {
+				result.addAll(buildHierarchy((UserHierarchyLevel) uhl));
+			}
+		}
+
+		return result;
+	}
+
 }

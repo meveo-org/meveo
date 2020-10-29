@@ -168,7 +168,9 @@ public class SQLConnectionProvider {
 			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
 			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
 			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
-			
+			config.setProperty("hibernate.generate_statistics", "true");
+			config.setProperty("hibernate.jmx.enabled", "true");
+	
 			if(sqlConfiguration.getClearPassword() == null) {
 				String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
 				var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());

@@ -29,6 +29,6 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Notification](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
-[Module](https://github.com/meveo-org/meveo/tree/master/meveo-api/src/main/java/org/meveo/api/module)
+[Module](./meveo-api/src/main/java/org/meveo/api/module)
 
 [Security](./meveo-model/src/main/java/org/meveo/security/README.md)

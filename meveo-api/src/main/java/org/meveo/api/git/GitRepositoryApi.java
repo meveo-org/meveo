@@ -229,15 +229,16 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         return entity;
     }
 
-    private void updateEntity(GitRepositoryDto dto, GitRepository entity) {
-        entity.setReadingRoles(dto.getReadingRoles());
-        entity.setWritingRoles(dto.getWritingRoles());
-        entity.setDefaultRemoteUsername(dto.getRemoteUsername());
-        entity.setDefaultRemotePassword(dto.getRemotePasswordEncrypted());
-        entity.setClearDefaultRemotePassword(dto.getRemotePassword());
-        entity.setDescription(dto.getDescription());
-        entity.setMeveoRepository(dto.isMeveoRepository());
-    }
+	private void updateEntity(GitRepositoryDto dto, GitRepository entity) {
+		
+		entity.setReadingRoles(dto.getReadingRoles());
+		entity.setWritingRoles(dto.getWritingRoles());
+		entity.setDefaultRemoteUsername(dto.getRemoteUsername());
+		entity.setDefaultRemotePassword(dto.getRemotePasswordEncrypted());
+		entity.setClearDefaultRemotePassword(dto.getRemotePassword());
+		entity.setDescription(dto.getDescription());
+		entity.setMeveoRepository(dto.isMeveoRepository());
+	}
 
 	@Override
 	public void remove(GitRepositoryDto dto) throws MeveoApiException, BusinessException {
