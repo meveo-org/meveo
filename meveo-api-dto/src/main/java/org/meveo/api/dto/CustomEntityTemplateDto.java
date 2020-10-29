@@ -76,6 +76,10 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
     @XmlAttribute()
     @ApiModelProperty("Code of the pre-persist script instance")
     private String prePersistScripCode;
+    
+    /** Code of the crud event listener script instance */
+    @ApiModelProperty("Code of the crud event listener script instance")
+    private String crudEventListenerScript;
 
     /** Category the CET belgongs to */
     @XmlAttribute()
@@ -115,7 +119,21 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
         return availableStorages;
     }
 
-    public void setAvailableStorages(List<DBStorageType> availableStorages) {
+    /**
+	 * @return the {@link #crudEventListenerScript}
+	 */
+	public String getCrudEventListenerScript() {
+		return crudEventListenerScript;
+	}
+
+	/**
+	 * @param crudEventListenerScript the crudEventListenerScript to set
+	 */
+	public void setCrudEventListenerScript(String crudEventListenerScript) {
+		this.crudEventListenerScript = crudEventListenerScript;
+	}
+
+	public void setAvailableStorages(List<DBStorageType> availableStorages) {
         this.availableStorages = availableStorages;
     }
     

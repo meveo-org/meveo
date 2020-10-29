@@ -16,20 +16,29 @@
 
 package org.meveo.model.git;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Size;
+
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.security.PasswordUtils;
 
-import javax.persistence.*;
-import javax.validation.constraints.Size;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Entity reprensenting a git repository hosted in the meveo instance, or anywhere in remote
@@ -47,7 +56,9 @@ import java.util.List;
 @ModuleItemOrder(999)
 public class GitRepository extends BusinessEntity {
 
-    /**
+	private static final long serialVersionUID = 236460904554093588L;
+
+	/**
      * Roles that allows a user to make pull, fetch and clone actions
      */
     @Column(name = "reading_roles", columnDefinition = "TEXT")
@@ -94,6 +105,24 @@ public class GitRepository extends BusinessEntity {
 
     @Transient
     private List<String> branches;
+    
+    @Transient
+    private String clearDefaultRemotePassword;
+    
+    @PrePersist
+    @PreUpdate
+    protected void prePersist() {
+    	if(defaultRemoteUsername == null) {
+    		this.defaultRemotePassword = null;
+    	} else if(clearDefaultRemotePassword != null) {
+    		this.defaultRemotePassword = PasswordUtils.encrypt(getSalt(), clearDefaultRemotePassword);
+    	}
+    }
+    
+    @JsonIgnore
+    public String getSalt() {
+    	return PasswordUtils.getSalt(getRemoteOrigin(), getCode());
+    }
 
     public List<String> getBranches() {
         return branches;
@@ -154,8 +183,22 @@ public class GitRepository extends BusinessEntity {
     public String getDefaultRemotePassword() {
         return defaultRemotePassword;
     }
+    
+    /**
+	 * @return the {@link #clearDefaultRemotePassword}
+	 */
+	public String getClearDefaultRemotePassword() {
+		return clearDefaultRemotePassword;
+	}
 
-    public void setDefaultRemotePassword(String defaultRemotePassword) {
+	/**
+	 * @param clearDefaultRemotePassword the clearDefaultRemotePassword to set
+	 */
+	public void setClearDefaultRemotePassword(String clearDefaultRemotePassword) {
+		this.clearDefaultRemotePassword = clearDefaultRemotePassword;
+	}
+
+	public void setDefaultRemotePassword(String defaultRemotePassword) {
         this.defaultRemotePassword = defaultRemotePassword;
     }
 

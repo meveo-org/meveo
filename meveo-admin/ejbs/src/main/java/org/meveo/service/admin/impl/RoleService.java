@@ -75,13 +75,17 @@ public class RoleService extends PersistenceService<Role> {
     @Override
     public Role update(Role role) throws BusinessException {
         role = super.update(role);
-        currentUserProvider.invalidateRoleToPermissionMapping();
-
         clusterEventPublisher.publishEvent(role, CrudActionEnum.update);
         return role;
     }
 
     @Override
+	protected void postUpdate(Role entity) {
+		super.postUpdate(entity);
+        currentUserProvider.invalidateRoleToPermissionMapping();
+	}
+
+	@Override
     public void remove(Role role) throws BusinessException {
         super.remove(role);
 

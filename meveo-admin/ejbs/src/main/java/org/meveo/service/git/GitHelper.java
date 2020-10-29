@@ -26,6 +26,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.git.GitRepository;
 import org.meveo.security.MeveoUser;
+import org.meveo.security.PasswordUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -100,7 +101,8 @@ public class GitHelper {
 
         } else if (gitRepository.hasCredentials()) {
             // Use configured / default credentials as fallback
-            return new UsernamePasswordCredentialsProvider(gitRepository.getDefaultRemoteUsername(), gitRepository.getDefaultRemotePassword());
+            String pwd = PasswordUtils.decrypt(gitRepository.getSalt(), gitRepository.getDefaultRemotePassword());
+			return new UsernamePasswordCredentialsProvider(gitRepository.getDefaultRemoteUsername(), pwd);
 
         } else if(gitRepository.isMeveoRepository()){
             // If repository is hosted in meveo instance, we can use the token the current user is logged in with

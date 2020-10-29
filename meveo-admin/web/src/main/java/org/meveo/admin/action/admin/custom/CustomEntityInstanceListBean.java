@@ -10,7 +10,9 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -165,8 +167,26 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		}
 	}
 
+	@Override
+	@ActionMethod
+	public void deleteMany() throws Exception {
+		repository = repository == null ? repositoryService.findByCode(repositoryCode) : repository;
+		String cetCode = StringUtils.isBlank(customEntityTemplateCode) ? entity.getCetCode() : customEntityTemplateCode;
+		if (selectedValues == null || selectedValues.isEmpty()) {
+			messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
+			return;
+		}
+
+		for (Map<String, Object> cei: selectedValues) {
+			crossStorageService.remove(repository, customEntityTemplateService.findByCode(cetCode), (String) cei.get("uuid"));
+		}
+		messages.info(new BundleKey("messages", "delete.entitities.successful"));
+	}
+
 	public List<Repository> listRepositories() {
-		return repositoryService.listByCet(customEntityTemplate);
+		List<Repository> result = repositoryService.listByCetByUserLevel(customEntityTemplate);
+		
+		return result;
 	}
 
 	public List<Map<String, Object>> getSelectedValues() {

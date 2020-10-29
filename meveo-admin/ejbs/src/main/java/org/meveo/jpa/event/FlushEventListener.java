@@ -20,7 +20,9 @@ public class FlushEventListener implements org.hibernate.event.spi.FlushEventLis
 	public void onFlush(FlushEvent event) throws HibernateException {
 		ElasticClient elasticClient = (ElasticClient) EjbUtils.getServiceInterface("ElasticClient");
         try {
-			elasticClient.flushChanges();
+        	if(elasticClient != null) {
+        		elasticClient.flushChanges();
+        	}
 		} catch (BusinessException e) {
 			throw new RuntimeException(e);
 		}		

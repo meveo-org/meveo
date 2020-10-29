@@ -504,7 +504,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 	}
 
-	private void postUpdate(E entity) {
+	protected void postUpdate(E entity) {
 
 		// Update entity in Elastic Search. ICustomFieldEntity is updated
 		// partially, as entity itself does not have Custom field values

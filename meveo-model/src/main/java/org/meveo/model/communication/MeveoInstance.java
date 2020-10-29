@@ -28,7 +28,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -38,6 +41,9 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.User;
+import org.meveo.security.PasswordUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Cacheable
@@ -151,15 +157,40 @@ public class MeveoInstance extends BusinessEntity {
     @Size(max = 60)
     private String authUsername;
     
-    @Column(name = "auth_password", length = 60)
-    @Size(max = 60)
+    @Column(name = "auth_password")
     private String authPassword;
+
+    @Transient
+    private String clearPassword;
     
     public MeveoInstance() {
 
     }
-
+    
+    @PrePersist
+    @PreUpdate
+    protected void prePersist() {
+    	if(this.clearPassword != null) {
+    		String salt = getSalt();
+    		this.authPassword = PasswordUtils.encrypt(salt, this.clearPassword);
+    	}
+    }
+    
     /**
+	 * @return the {@link #clearPassword}
+	 */
+	public String getClearPassword() {
+		return clearPassword;
+	}
+
+	/**
+	 * @param clearPassword the clearPassword to set
+	 */
+	public void setClearPassword(String clearPassword) {
+		this.clearPassword = clearPassword;
+	}
+
+	/**
      * @return the productName
      */
     public String getProductName() {
@@ -517,5 +548,10 @@ public class MeveoInstance extends BusinessEntity {
 
     public void setAuthPassword(String authPassword) {
         this.authPassword = authPassword;
+    }
+    
+    @JsonIgnore
+    public String getSalt() {
+    	return PasswordUtils.getSalt(getCode(), getUrl());
     }
 }
