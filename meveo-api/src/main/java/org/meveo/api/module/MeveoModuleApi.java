@@ -164,6 +164,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     @Inject
     private CrossStorageService crossStorageService;
 
+    @Inject
+	private ModuleReleaseApi moduleReleaseApi;
+
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
 		if (!initalized) {
@@ -176,6 +179,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
+		}
+
+		if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
+			for (MeveoModuleDependency dependency: meveoModule.getModuleDependencies()) {
+				MeveoModule module = meveoModuleService.findByCode(dependency.getCode());
+				if (module == null) {
+					throw new EntityDoesNotExistsException(MeveoModule.class.getSimpleName(), dependency.getCode());
+				}
+				if (module.isDownloaded()) {
+					MeveoModuleDto dto = MeveoModuleUtils.moduleSourceToDto(module);
+					meveoModuleItemInstaller.install(module, dto, onDuplicate);
+				}
+			}
 		}
 		
 		try {
@@ -1101,7 +1117,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	 * @return zip file as byte array
 	 * @throws Exception exception.
 	 */
-	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules) throws Exception {
+	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules, ExportFormat exportFormat) throws Exception {
 
 		Logger log = LoggerFactory.getLogger(FileUtils.class);
 		log.info("Creating zip file for {}", exportFile);
@@ -1121,28 +1137,51 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 			// Add files contained in modules
 			for (MeveoModule meveoModule : meveoModules) {
-				for (String pathFile : meveoModule.getModuleFiles()) {
-					String path = pathFile.startsWith("/") ? pathFile.substring(1) : pathFile;
-					int lastIndexOf = path.lastIndexOf("/");
-					
-					// Handle windows-like paths
-					if(lastIndexOf == -1) {
-						path = pathFile.startsWith("\\") ? pathFile.substring(1) : pathFile;
-						lastIndexOf = path.lastIndexOf("\\");
-					}
-					
-					String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
-					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-					File file = new File(chrootDir, pathFile);
-					if (!file.exists()) {
-						log.error("File does not exists {}", file);
-						continue;
-					}
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
+					for (String pathFile : meveoModule.getModuleFiles()) {
+						String path = pathFile.startsWith("/") ? pathFile.substring(1) : pathFile;
+						int lastIndexOf = path.lastIndexOf("/");
 
-					if (file.isDirectory()) {
-						addDirectoryToZip(file, zos, baseDir);
-					} else {
-						addToZipFile(file, zos, baseDir);
+						// Handle windows-like paths
+						if (lastIndexOf == -1) {
+							path = pathFile.startsWith("\\") ? pathFile.substring(1) : pathFile;
+							lastIndexOf = path.lastIndexOf("\\");
+						}
+
+						String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
+						String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+						File file = new File(chrootDir, pathFile);
+						if (!file.exists()) {
+							log.error("File does not exists {}", file);
+							continue;
+						}
+
+						if (file.isDirectory()) {
+							addDirectoryToZip(file, zos, baseDir);
+						} else {
+							addToZipFile(file, zos, baseDir);
+						}
+					}
+				}
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
+					for (MeveoModuleDependency moduleDependency: meveoModule.getModuleDependencies()) {
+						MeveoModule module = meveoModuleService.findByCode(moduleDependency.getCode());
+						if (module.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
+							List<String> modulesCode = new ArrayList<>();
+							modulesCode.add(moduleDependency.getCode());
+							File moduleFile = meveoModuleApi.exportModules(modulesCode, exportFormat);
+							addToZipFile(moduleFile, zos, null);
+						} else if (CollectionUtils.isNotEmpty(module.getReleases())){
+							for (ModuleRelease moduleRelease: module.getReleases()) {
+								if (moduleRelease.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
+									List<ModuleRelease> moduleReleases = new ArrayList<>();
+									moduleReleases.add(moduleRelease);
+									File moduleReleaseFile = moduleReleaseApi.exportEntities(exportFormat, moduleReleases);
+									addToZipFile(moduleReleaseFile, zos, null);
+								}
+							}
+						}
+
 					}
 				}
 			}
@@ -1179,8 +1218,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		// Write data as zip if one module contains files
 		boolean hasFiles = meveoModules.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleFiles()));
-		if (hasFiles) {
-			byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules);
+		boolean hasDependencies = meveoModules.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleDependencies()));
+		if (hasFiles || hasDependencies) {
+			byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules, exportFormat);
 			fileZip = new File(fileName + ".zip");
 			opStream = new FileOutputStream(fileZip);
 			opStream.write(filedata);

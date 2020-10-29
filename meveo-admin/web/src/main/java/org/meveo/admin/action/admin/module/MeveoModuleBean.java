@@ -23,21 +23,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.faces.application.FacesMessage;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -57,8 +51,10 @@ import org.meveo.api.module.MeveoModulePatchApi;
 import org.meveo.api.module.ModuleReleaseApi;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -336,19 +332,29 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 			throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
 		}
 
+		if (moduleReleaseExport.getModuleSource() != null) {
+			ModuleReleaseDto moduleReleaseDto = JacksonUtil.fromString(moduleReleaseExport.getModuleSource(), ModuleReleaseDto.class);
+			if (CollectionUtils.isNotEmpty(moduleReleaseDto.getModuleDependencies())) {
+				moduleReleaseExport.getModuleDependencies().clear();
+				for (ModuleDependencyDto dependencyDto: moduleReleaseDto.getModuleDependencies()) {
+					MeveoModuleDependency meveoModuleDependency = new MeveoModuleDependency(dependencyDto.getCode(), dependencyDto.getDescription(), dependencyDto.getCurrentVersion());
+					moduleReleaseExport.getModuleDependencies().add(meveoModuleDependency);
+				}
+			}
+		}
 		DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
 		List<ModuleRelease> moduleReleases = new ArrayList<>();
 		moduleReleases.add(moduleReleaseExport);
 		File exportFile = moduleReleaseApi.exportEntities(this.getExportFormat(), moduleReleases);
 
-		if (CollectionUtils.isNotEmpty(moduleReleaseExport.getModuleFiles())) {
+		if (CollectionUtils.isNotEmpty(moduleReleaseExport.getModuleFiles()) || CollectionUtils.isNotEmpty(moduleReleaseExport.getModuleDependencies())) {
 			try {
 				String exportName = exportFile.getName();
 				String[] moduleName = exportName.split("\\.");
 				String fileName = moduleName[0];
 				for (int i = 0; i < moduleReleases.size(); i++) {
-					if (CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleFiles())) {
-						byte[] filedata = moduleReleaseApi.createZipFile(exportFile.getAbsolutePath(), moduleReleases);
+					if (CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleFiles()) || CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleDependencies())) {
+						byte[] filedata = moduleReleaseApi.createZipFile(exportFile.getAbsolutePath(), moduleReleases, this.getExportFormat());
 						InputStream is = new ByteArrayInputStream(filedata);
 						return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
 					}

@@ -68,6 +68,7 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -112,6 +113,12 @@ public class ModuleReleaseApi {
 	
 	@Inject
 	private MeveoModulePatchApi modulePatchApi;
+
+	@Inject
+	private MeveoModuleApi moduleApi;
+
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	@Inject
 	@CurrentUser
@@ -340,7 +347,7 @@ public class ModuleReleaseApi {
 	 * @return zip file as byte array
 	 * @throws Exception exception.
 	 */
-	public byte[] createZipFile(String exportFile, List<ModuleRelease> meveoModules) throws Exception {
+	public byte[] createZipFile(String exportFile, List<ModuleRelease> meveoModules, ExportFormat exportFormat) throws Exception {
 
 		Logger log = LoggerFactory.getLogger(FileUtils.class);
 		log.info("Creating zip file for {}", exportFile);
@@ -360,21 +367,44 @@ public class ModuleReleaseApi {
 
 			// Add files contained in modules
 			for (ModuleRelease meveoModule : meveoModules) {
-				for (String pathFile : meveoModule.getModuleFiles()) {
-					String path = pathFile.startsWith(File.separator) ? pathFile.substring(1) : pathFile;
-					int lastIndexOf = path.lastIndexOf(File.separator);
-					String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
-					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-					File file = new File(chrootDir, pathFile);
-					if (!file.exists()) {
-						log.error("File does not exists {}", file);
-						continue;
-					}
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleFiles())) {
+					for (String pathFile : meveoModule.getModuleFiles()) {
+						String path = pathFile.startsWith(File.separator) ? pathFile.substring(1) : pathFile;
+						int lastIndexOf = path.lastIndexOf(File.separator);
+						String baseDir = lastIndexOf > -1 ? path.substring(0, lastIndexOf) : null;
+						String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+						File file = new File(chrootDir, pathFile);
+						if (!file.exists()) {
+							log.error("File does not exists {}", file);
+							continue;
+						}
 
-					if (file.isDirectory()) {
-						addDirectoryToZip(file, zos, baseDir);
-					} else {
-						addToZipFile(file, zos, baseDir);
+						if (file.isDirectory()) {
+							addDirectoryToZip(file, zos, baseDir);
+						} else {
+							addToZipFile(file, zos, baseDir);
+						}
+					}
+				}
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
+					for (MeveoModuleDependency moduleDependency: meveoModule.getModuleDependencies()) {
+						MeveoModule module = meveoModuleService.findByCode(moduleDependency.getCode());
+						if (module.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
+							List<String> moduleDependencies = new ArrayList<>();
+							moduleDependencies.add(moduleDependency.getCode());
+							File moduleFile = moduleApi.exportModules(moduleDependencies, exportFormat);
+							addToZipFile(moduleFile, zos, null);
+						} else if (CollectionUtils.isNotEmpty(module.getReleases())) {
+							for (ModuleRelease moduleRelease: module.getReleases()) {
+								if (moduleRelease.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
+									List<ModuleRelease> moduleReleases = new ArrayList<>();
+									moduleReleases.add(moduleRelease);
+									File moduleReleaseFile = exportEntities(exportFormat, moduleReleases);
+									addToZipFile(moduleReleaseFile, zos, null);
+								}
+							}
+
+						}
 					}
 				}
 			}
