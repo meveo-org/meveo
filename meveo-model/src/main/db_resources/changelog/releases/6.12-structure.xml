@@ -76,4 +76,8 @@
 			referencedColumnNames="id" referencedTableName="hierarchy_entity" />
 	</changeSet>
 
+	<changeSet author="Phu Bach" id="Github#102">
+		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
+	</changeSet>
+
 </databaseChangeLog>
