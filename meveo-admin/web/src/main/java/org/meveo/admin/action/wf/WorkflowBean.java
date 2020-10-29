@@ -40,6 +40,7 @@ import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.elresolver.ELException;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -159,6 +160,11 @@ public class WorkflowBean extends BaseBean<Workflow> {
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
         if ((oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) || (oldWFType != null && !entity.getWfType().equals(oldWFType))) {
+            Workflow workflow = workflowService.findByCetCodeAndWFType(entity.getCetCode(), entity.getWfType());
+            if (workflow != null) {
+                messages.error(new BundleKey("messages", "workflow.uniqueField.error"));
+                return null;
+            }
             List<WFTransition> wfTransitions = entity.getTransitions();
             if (CollectionUtils.isNotEmpty(wfTransitions)) {
                 for (WFTransition wfTransition: wfTransitions) {
@@ -177,7 +183,17 @@ public class WorkflowBean extends BaseBean<Workflow> {
             }
             entity.setTransitions(new ArrayList<>());
         }
-        super.saveOrUpdate(killConversation);
+        try {
+            String message = entity.isTransient() ? "save.successful" : "update.successful";
+            saveOrUpdate(entity);
+            messages.info(new BundleKey("messages", message));
+            if (killConversation) {
+                endConversation();
+            }
+        } catch (EntityAlreadyExistsException e) {
+            messages.error(new BundleKey("messages", "workflow.uniqueField.error"));
+            return null;
+        }
         return "workflowDetail";
     }
 

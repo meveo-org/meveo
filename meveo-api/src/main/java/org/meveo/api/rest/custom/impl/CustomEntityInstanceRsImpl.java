@@ -10,6 +10,7 @@ import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.response.CustomEntityInstanceResponseDto;
 import org.meveo.api.dto.response.CustomEntityInstancesResponseDto;
+import org.meveo.api.dto.response.GetStatesResponse;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.CustomEntityInstanceRs;
 import org.meveo.api.rest.impl.BaseRs;
@@ -114,6 +115,17 @@ public class CustomEntityInstanceRsImpl extends BaseRs implements CustomEntityIn
             processException(e, result);
         }
 
+        return result;
+    }
+
+    @Override
+    public GetStatesResponse listStatesOfCei(String customEntityTemplateCode,String customFieldTemplateCode, String uuid) {
+        GetStatesResponse result = new GetStatesResponse();
+        try {
+            result.setStates(customEntityInstanceApi.statesOfCEI(customEntityTemplateCode, customFieldTemplateCode, uuid));
+        } catch (Exception e) {
+            processException(e, result.getActionStatus());
+        }
         return result;
     }
 }

@@ -75,7 +75,7 @@
                 </p:commandButton>
             </p:column>
 
-            <c:if test="#{edit and !disabled}">
+            <c:if test="#{edit and !disabled and !(cft.storageType == 'SINGLE' and not empty field.childEntityValuesForGUI)}">
                 <f:facet name="footer">
                     <p:commandButton value="#{messages['commons.addNew']}"
                         update=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm #{messagesId}"
@@ -199,12 +199,12 @@
                     </f:facet>
                     <h:outputText value="#{mapValue['uuid']}"/>
                 </p:column>
-                <p:column rendered="#{customFieldDataEntryBean.fieldName != null}">
+                <p:columns value="#{cft.childEntityFieldsAsList}" var="fieldCode">
                     <f:facet name="header">
-                        <h:outputText value="#{customFieldDataEntryBean.fieldName}" />
+                        <h:outputText value="#{customFieldDataEntryBean.getChildEntityField(cft, fieldCode).description}" />
                     </f:facet>
-                    <h:outputText value="#{mapValue[customFieldDataEntryBean.fieldName]}" />
-                </p:column>
+                    <h:outputText value="#{mapValue[fn:toLowerCase(fieldCode)]}" />
+                </p:columns>
                 <f:facet name="footer">
                     <p:commandButton value="#{messages['action.attach']}" process="@this :#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" partialSubmit="true"
                                      partialSubmitFilter=":not([name*='omitFromSubmit'])" update="#{messagesId} :#{clientGuiId}:childEntityTable"
