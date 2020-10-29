@@ -9,6 +9,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.meveo.cache.NotificationCacheContainerProvider;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -75,8 +76,17 @@ public class GenericNotificationService extends BusinessService<Notification> {
                     notifications.forEach((notification) -> notificationCacheContainerProvider.addNotificationToCache(notification));
                 }
             }
+            List<Notification> notificationList = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(notifications)) {
+                for (Notification notification : notifications) {
+                    notification = findById(notification.getId());
+                    if (notification.getEventTypeFilter().equals(eventType)) {
+                        notificationList.add(notification);
+                    }
+                }
+            }
 
-            return notifications;
+            return notificationList;
 
         } else {
             return getApplicableNotificationsNoCache(eventType, entityOrEvent);
