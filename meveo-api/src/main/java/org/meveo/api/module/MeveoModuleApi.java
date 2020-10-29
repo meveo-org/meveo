@@ -705,7 +705,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
 						EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-						entityCustomActionDto.getScript().setScript(null); // Don't serialize the script
 						itemDto = entityCustomActionDto;
 
 					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {

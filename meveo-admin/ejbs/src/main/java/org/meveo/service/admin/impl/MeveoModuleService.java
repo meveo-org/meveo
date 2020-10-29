@@ -424,35 +424,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
 
 
-	/**
-	 * Observer when an entity that extends a BusinessEntity is deleted which is
-	 * annotated by MeveoModuleItem.
-	 *
-	 * @param be BusinessEntity
-	 * @throws BusinessException
-	 */
-	public void onMeveoModuleItemDelete(@Observes @Removed BusinessEntity be) throws BusinessException {
-		if (be.getClass().isAnnotationPresent(ModuleItem.class)) {
-			QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "i");
-			qb = qb.addCriterion("itemCode", "=", be.getCode(), true);
-			qb = qb.addCriterion("itemClass", "=", be.getClass().getName(), true);
-
-			try {
-				Long count = qb.count(getEntityManager());
-
-				// need to do the check when uninstalling
-				if (count > 0) {
-					Query query = getEntityManager().createNamedQuery("MeveoModuleItem.delete");
-					query = query.setParameter("itemCode", be.getCode());
-					query = query.setParameter("itemClass", be.getClass().getName());
-					query.executeUpdate();
-				}
-			} catch (NoResultException e) {
-
-			}
-		}
-	}
-
 	@SuppressWarnings("unchecked")
 	public void onCftCreated(@Observes @Created CustomFieldTemplate cft) throws BusinessException {
 		String cetCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());

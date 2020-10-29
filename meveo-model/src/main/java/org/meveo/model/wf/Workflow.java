@@ -41,7 +41,7 @@ import org.meveo.model.ModuleItemOrder;
 @ModuleItem("Workflow")
 @ModuleItemOrder(207)
 @ExportIdentifier({ "code"})
-@Table(name = "wf_workflow", uniqueConstraints = @UniqueConstraint(columnNames = {"code" }))
+@Table(name = "wf_workflow", uniqueConstraints = {@UniqueConstraint(columnNames = {"code"}),@UniqueConstraint(columnNames = {"cet_code", "wf_type"})})
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "wf_workflow_seq"), })
 public class Workflow extends BusinessEntity {
 

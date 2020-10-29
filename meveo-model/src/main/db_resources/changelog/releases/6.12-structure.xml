@@ -66,5 +66,18 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="GH#209 Associate userHierarchyLevel to git repository" author="Edward P. Legaspi">
+		<addColumn tableName="storage_repository">
+			<column name="user_hierarchy_level_id" type="bigint" />
+		</addColumn>
+		<addForeignKeyConstraint constraintName="fk_storage_repository_user_level"
+			baseColumnNames="user_hierarchy_level_id" baseTableName="storage_repository"
+			referencedColumnNames="id" referencedTableName="hierarchy_entity" />
+	</changeSet>
+
+	<changeSet author="Phu Bach" id="Github#102">
+		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
+	</changeSet>
 
 </databaseChangeLog>

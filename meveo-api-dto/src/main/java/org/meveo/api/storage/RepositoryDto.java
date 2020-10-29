@@ -15,7 +15,7 @@ import io.swagger.annotations.ApiModelProperty;
  * {@link BinaryStorageConfiguration} on where to save a file.
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @version 6.12
  */
 @ApiModel
 public class RepositoryDto extends BusinessEntityDto {
@@ -60,6 +60,9 @@ public class RepositoryDto extends BusinessEntityDto {
 	@ApiModelProperty("Whether to delete the children of the repository")
 	private Boolean forceDelete;
 
+	@ApiModelProperty("User hierarchy level")
+	private String userHierarchyLevelCode;
+
 	public RepositoryDto() {
 
 	}
@@ -77,6 +80,9 @@ public class RepositoryDto extends BusinessEntityDto {
 		}
 		if (e.getSqlConfiguration() != null) {
 			sqlConfigurationCode = e.getSqlConfiguration().getCode();
+		}
+		if(e.getUserHierarchyLevel().getCode() != null) {
+			userHierarchyLevelCode = e.getUserHierarchyLevel().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
 		path = e.getPath();
@@ -136,5 +142,13 @@ public class RepositoryDto extends BusinessEntityDto {
 
 	public void setSqlConfigurationCode(String sqlConfigurationCode) {
 		this.sqlConfigurationCode = sqlConfigurationCode;
+	}
+
+	public String getUserHierarchyLevelCode() {
+		return userHierarchyLevelCode;
+	}
+
+	public void setUserHierarchyLevelCode(String userHierarchyLevelCode) {
+		this.userHierarchyLevelCode = userHierarchyLevelCode;
 	}
 }

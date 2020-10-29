@@ -55,6 +55,9 @@
 						</p:selectOneMenu>
 					</hftl:decorateFormField>
 					<hftl:formField label="#{messages['BusinessEntity.description']}" field="description"  />
+					<p:outputPanel id="auditedPanel">
+						<hftl:formField label="#{messages['customizedEntities.audited']}" id="audited" field="audited" rendered="#{customEntityTemplateBean.showAuditedField() == true}" />
+					</p:outputPanel>
 				</h:panelGrid>
 				<!-- Module -->
 				<h:panelGrid columns = "1" width="100%">

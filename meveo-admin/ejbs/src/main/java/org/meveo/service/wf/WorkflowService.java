@@ -34,6 +34,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -43,6 +44,7 @@ import org.meveo.admin.wf.WorkflowTypeClass;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
+import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
@@ -96,9 +98,13 @@ public class WorkflowService extends BusinessService<Workflow> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Workflow> findByCetCodeAndWFType (String cetCode, String wfType) {
-        return (List<Workflow>) getEntityManager().createQuery("from " + Workflow.class.getSimpleName() + " where cetCode=:cetCode and wfType=:wfType ")
-                .setParameter("cetCode", cetCode).setParameter("wfType", wfType).getResultList();
+    public Workflow findByCetCodeAndWFType (String cetCode, String wfType) {
+        try {
+            return (Workflow) getEntityManager().createQuery("from " + Workflow.class.getSimpleName() + " where cetCode=:cetCode and wfType=:wfType ")
+                    .setParameter("cetCode", cetCode).setParameter("wfType", wfType).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -372,6 +378,15 @@ public class WorkflowService extends BusinessService<Workflow> {
         }
 
         update(entity);
+    }
+
+    @Override
+    public void create(Workflow entity) throws BusinessException {
+        Workflow workflow = findByCetCodeAndWFType(entity.getCetCode(), entity.getWfType());
+        if (workflow != null) {
+           throw new EntityAlreadyExistsException("Custom entity and workflow type already exists");
+        }
+        super.create(entity);
     }
 
     @Override

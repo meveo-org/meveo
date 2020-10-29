@@ -60,7 +60,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
 
     /** Script to execute. */
     @ApiModelProperty("Script instance information")
-    private ScriptInstanceDto script;
+    private String script;
 
     /**
      * Where action should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;action:&lt;action relative position in tab&gt;
@@ -108,7 +108,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
         this.applicableToEntityList = action.getApplicableToEntityList();
         this.applicableToEntityInstance = action.getApplicableToEntityInstance();
 
-        this.setScript(new ScriptInstanceDto(action.getScript(), action.getScript().getScript()));
+        this.setScript(action.getScript().getCode());
     }
 
     /**
@@ -206,7 +206,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
      *
      * @return the script
      */
-    public ScriptInstanceDto getScript() {
+    public String getScript() {
         return script;
     }
 
@@ -215,7 +215,7 @@ public class EntityCustomActionDto extends BaseEntityDto {
      *
      * @param script the new script
      */
-    public void setScript(ScriptInstanceDto script) {
+    public void setScript(String script) {
         this.script = script;
     }
 

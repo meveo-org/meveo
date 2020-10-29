@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
@@ -21,10 +22,7 @@ import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.*;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.DatePeriod;
-import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.VersionedEntity;
+import org.meveo.model.*;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -94,6 +92,14 @@ public class MeveoModuleItemInstaller {
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+
+	@Inject
+	@ModuleInstall
+	private Event<MeveoModule> installEvent;
+
+	@Inject
+	@ModulePostInstall
+	private Event<MeveoModule> postInstallEvent;
     
     /**
      * Uninstall the module and disables it items
@@ -243,7 +249,8 @@ public class MeveoModuleItemInstaller {
         } else {
             MeveoModule moduleUpdated = module;
             module.setInstalled(false);
-            
+            // moduleUpdated.getModuleItems().clear();
+
             /* In case the module is uninstalled because of installation failure
                and that the module is not inserted in db we should not update its persistent state */
             module = meveoModuleService.reattach(module);
@@ -251,15 +258,16 @@ public class MeveoModuleItemInstaller {
             	moduleUpdated = meveoModuleService.update(module);
             }
             
-            meveoModuleService.getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
-            	.setParameter("meveoModule", module)
-            	.executeUpdate();
+//            meveoModuleService.getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
+//            	.setParameter("meveoModule", module)
+//            	.executeUpdate();
             
 			return moduleUpdated;
         }
     }
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+    	installEvent.fire(meveoModule);
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -292,7 +300,7 @@ public class MeveoModuleItemInstaller {
 	            }
 	            
 	            result.setInstalledModule(meveoModule);
-            
+	            postInstallEvent.fire(meveoModule);
         	} catch(Exception e) {
             	throw new ModuleInstallFail(meveoModule, result, e);
             }

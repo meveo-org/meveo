@@ -754,13 +754,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         scriptInstanceError.setMessage(diagnostic.getMessage(Locale.getDefault()));
                         scriptInstanceError.setLineNumber(diagnostic.getLineNumber());
                         scriptInstanceError.setColumnNumber(diagnostic.getColumnNumber());
-                        scriptInstanceError.setSourceFile(diagnostic.getSource().toString());
-                        // scriptInstanceError.setScript(scriptInstance);
+                        if(diagnostic.getSource() != null) {
+                        	scriptInstanceError.setSourceFile(diagnostic.getSource().toString());
+                        } else {
+                        	scriptInstanceError.setSourceFile("No source file");
+                        }
+                        
                         scriptErrors.add(scriptInstanceError);
-                        // scriptInstanceErrorService.create(scriptInstanceError,
-                        // scriptInstance.getAuditable().getCreator());
-                        log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), scriptCode, diagnostic.getLineNumber(), diagnostic.getColumnNumber(),
-                                diagnostic.getMessage(Locale.getDefault()));
+                        log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), scriptCode, diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getMessage(Locale.getDefault()));
                     }
                 }
                 return scriptErrors;
