@@ -249,7 +249,8 @@ public class MeveoModuleItemInstaller {
         } else {
             MeveoModule moduleUpdated = module;
             module.setInstalled(false);
-            
+            // moduleUpdated.getModuleItems().clear();
+
             /* In case the module is uninstalled because of installation failure
                and that the module is not inserted in db we should not update its persistent state */
             module = meveoModuleService.reattach(module);
@@ -257,9 +258,9 @@ public class MeveoModuleItemInstaller {
             	moduleUpdated = meveoModuleService.update(module);
             }
             
-            meveoModuleService.getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
-            	.setParameter("meveoModule", module)
-            	.executeUpdate();
+//            meveoModuleService.getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
+//            	.setParameter("meveoModule", module)
+//            	.executeUpdate();
             
 			return moduleUpdated;
         }
