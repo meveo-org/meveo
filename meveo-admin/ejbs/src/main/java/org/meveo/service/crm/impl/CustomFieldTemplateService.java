@@ -276,7 +276,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         checkIdentifierTypeAndUniqueness(cft);
 
         //  if CFT is of type STRING
-        if (cft.getFieldType() == CustomFieldTypeEnum.STRING &&(cft.getMaxValue()== null || cft.getMaxValue() == 0)) {
+        if ((cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.SECRET) && (cft.getMaxValue()== null || cft.getMaxValue() == 0)) {
             cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
         }
 

@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Resource;
-import javax.ejb.EJBContext;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -17,13 +15,9 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
-import javax.transaction.TransactionSynchronizationRegistry;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.ftp.event.FileDelete;
-import org.meveo.admin.ftp.event.FileDownload;
-import org.meveo.admin.ftp.event.FileRename;
-import org.meveo.admin.ftp.event.FileUpload;
+import org.meveo.admin.ftp.event.*;
 import org.meveo.audit.logging.annotations.MeveoAudit;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -48,8 +42,11 @@ import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
+import org.meveo.model.ModuleInstall;
+import org.meveo.model.ModulePostInstall;
 import org.meveo.model.admin.User;
 import org.meveo.model.mediation.MeveoFtpFile;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.notification.EmailNotification;
 import org.meveo.model.notification.InboundRequest;
 import org.meveo.model.notification.InstantMessagingNotification;
@@ -444,5 +441,13 @@ public class DefaultObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void commit(@Observes(during = TransactionPhase.AFTER_SUCCESS) CommitEvent commitEvent) throws BusinessException {
 		checkEvent(NotificationEventTypeEnum.CREATED, commitEvent);
+	}
+
+	public void moduleInstall(@Observes @ModuleInstall MeveoModule meveoModule) throws BusinessException {
+		checkEvent(NotificationEventTypeEnum.INSTALL, meveoModule);
+	}
+
+	public void modulePostInstall(@Observes @ModulePostInstall MeveoModule meveoModule) throws BusinessException {
+		checkEvent(NotificationEventTypeEnum.POST_INSTALL, meveoModule);
 	}
 }

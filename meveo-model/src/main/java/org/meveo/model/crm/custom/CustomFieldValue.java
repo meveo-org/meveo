@@ -653,6 +653,7 @@ public class CustomFieldValue implements Serializable {
             break;
 
         case STRING:
+        case SECRET:
         case LIST:
         case TEXT_AREA:
         case LONG_TEXT:
@@ -926,6 +927,7 @@ public class CustomFieldValue implements Serializable {
                     return longValue.toString();
                 }
                 break;
+            case SECRET:
             case STRING:
             case LIST:
             case TEXT_AREA:
@@ -1032,7 +1034,7 @@ public class CustomFieldValue implements Serializable {
                 itemClass = Double.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY || cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
                 itemClass = EntityReferenceWrapper.class;
-            } else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
+            } else if (cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
                 itemClass = String.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                 itemClass = Long.class;
@@ -1340,7 +1342,14 @@ public class CustomFieldValue implements Serializable {
         } else if (value instanceof EntityReferenceWrapper) {
             setEntityReferenceValue((EntityReferenceWrapper) value);
 
-        } else if (value instanceof Map) {
+        } else if(value instanceof CustomEntity) {
+        	var ce = (CustomEntity) value;
+        	EntityReferenceWrapper erw = new EntityReferenceWrapper();
+        	erw.setUuid(ce.getUuid());
+        	erw.setClassname(ce.getCetCode());
+        	setEntityReferenceValue(erw);
+        	
+    	} else if (value instanceof Map) {
             setMapValue((Map) value);
 
         } else if (value instanceof List) {

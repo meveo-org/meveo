@@ -1,11 +1,12 @@
-# Cross storage API
+# Persistence
 
 - [1. Persisting an entity](#1-persisting-an-entity)
 - [2. Find an entity](#2-find-an-entity)
-  - [2.1. By UUID](#21-by-uuid)
-  - [2.2. By values](#22-by-values)
+	- [2.1. By UUID](#21-by-uuid)
+	- [2.2. By values](#22-by-values)
 - [3. List entities](#3-list-entities)
 - [4. Remove an entity](#4-remove-an-entity)
+- [5. CREATE, UPDATE, DELETE events](#5-create-update-delete-events)
 
 ## 1. Persisting an entity
 
@@ -133,4 +134,148 @@ crossStorageApi.remove(defaultRepo, uuid, MyCet.class);
 // or crossStorageApi.remove(defaultRepo, uuid, "MyCet");
 
 System.out.println("Removed MyCet instance: " + uuid);
+```
+
+## 5. CREATE, UPDATE, DELETE events
+
+Despite it is possible to observe CREATE, UPDATE, DELETE events on custom entities instances using the meveo notifications, it is also possible to link a script to the custom entity template. This script will contain several methods (desribed below) called at the right moment during the persistence process.
+
+The attribute of `CustomEntityTemplate` that represents this link is `crudEventListenerScript`. The listener script must implement the `CrudEventListenerScript` interface. It can be instantiated by calling  `CustomEntityTemplateService#loadCrudEventListener` which sets the `CustomEntityTemplate#crudEventListener` transient property.
+
+The `CrudEventListenerScript` interface contains the following method defintions:
+
+- `getEntityClass() : Class<T>` - should return the class of the custom entity being listened
+- `prePersist(T entity)` - called just before entity persistence
+- `preUpdate(T entity)` - called just before entity update
+- `preRemove(T entity)` - called just before entity removal
+- `postUpdate(T entity)` - called just after entity persistence but before transaction commit
+- `prePersist(T entity)` - called just after entity update but before transaction commit
+- `postRemove(T entity)` - called just after entity removal but before transaction commit
+
+*Note: In any of these methods, if an unhandled exception is raised, the transaction will be rollbacked.*
+
+**Example:**
+
+```java
+package org.meveo.script;
+
+import org.meveo.service.script.Script;
+import org.meveo.service.storage.RepositoryService;
+
+import java.util.List;
+
+import org.meveo.api.persistence.CrossStorageApi;
+import org.meveo.model.customEntities.CrudCetTest;
+import org.meveo.model.customEntities.CrudEventListenerScript;
+
+public class ListenerScript extends Script implements CrudEventListenerScript<CrudCetTest> {
+
+	private CrossStorageApi crossStorageApi;
+	private RepositoryService rService;
+
+	public ListenerScript() {
+		crossStorageApi = getCDIBean(CrossStorageApi.class);
+		rService = getCDIBean(RepositoryService.class);
+	}
+
+	public Class<CrudCetTest> getEntityClass() {
+		return CrudCetTest.class;
+	}
+
+	/**
+	 * Called just before entity persistence
+	 * 
+	 * @param entity entity being persisted
+	 */
+	public void prePersist(CrudCetTest entity) {
+		entity.setComputedValue("computed" + entity.getValue());
+	}
+
+	/**
+	 * Called just before entity update
+	 * 
+	 * @param entity entity being updated
+	 */
+	public void preUpdate(CrudCetTest entity) {
+		entity.setComputedValue("computedUpdated" + entity.getValue());
+	}
+
+	/**
+	 * Called just before entity removal
+	 * 
+	 * @param entity entity being removed
+	 */
+	public void preRemove(CrudCetTest entity) {
+		if (entity.getValue().contains("generated")) {
+			CrudCetTest mainEntity = crossStorageApi.find(rService.findDefaultRepository(), CrudCetTest.class)
+					.by("value", "main")
+					.getResult();
+
+			if (mainEntity != null) {
+				throw new IllegalArgumentException("Can't remove the generated data if main data exists !");
+			}
+		}
+	}
+
+	/**
+	 * Called just after entity persistence
+	 * 
+	 * @param entity persisted entity
+	 */
+	public void postPersist(CrudCetTest entity) {
+		if(!entity.getValue().contains("generated")) {
+			CrudCetTest generatedEntity = new CrudCetTest();
+			generatedEntity.setValue("generated");
+
+			try {
+				crossStorageApi.createOrUpdate(rService.findDefaultRepository(), generatedEntity);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	/**
+	 * Called just after entity update
+	 * 
+	 * @param entity updated entity
+	 */
+	public void postUpdate(CrudCetTest entity) {
+		if(!entity.getValue().contains("generated")) {
+			CrudCetTest generatedEntity = crossStorageApi.find(rService.findDefaultRepository(), CrudCetTest.class)
+				.by("value", "generated")
+				.getResult();
+
+			generatedEntity.setValue("updatedgenerated");
+
+			try {
+				crossStorageApi.createOrUpdate(rService.findDefaultRepository(), generatedEntity);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	/**
+	 * Called just after entity removal
+	 * 
+	 * @param entity removed entity
+	 */
+	public void postRemove(CrudCetTest entity) {
+		if(!entity.getValue().contains("generated")) {
+			List<CrudCetTest> generatedEntities = crossStorageApi.find(rService.findDefaultRepository(), CrudCetTest.class)
+				.getResults();
+
+			try {
+				
+				for(var generatedEntity : generatedEntities) {
+					crossStorageApi.remove(rService.findDefaultRepository(), generatedEntity.getUuid(), CrudCetTest.class);
+				}
+
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+}
 ```

@@ -77,9 +77,11 @@ public class ScriptingJob extends Job {
         scriptCF.setFieldType(CustomFieldTypeEnum.ENTITY);
         scriptCF.setEntityClazz(ScriptInstance.class.getName());
         scriptCF.setValueRequired(true);
+        scriptCF.setPersisted(true);
         result.put("ScriptingJob_script", scriptCF);
 
         CustomFieldTemplate variablesCF = new CustomFieldTemplate();
+        variablesCF.setPersisted(true);
         variablesCF.setCode("ScriptingJob_variables");
         variablesCF.setAppliesTo("JOB_ScriptingJob");
         variablesCF.setActive(true);

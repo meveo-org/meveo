@@ -276,7 +276,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         try {
-			boolean withNewCategory = false;
 			if (dto.getCustomEntityCategoryCode() != null) {
 				if (StringUtils.isBlank(dto.getCustomEntityCategoryCode())) {
 					cet.setCustomEntityCategory(null);
@@ -284,21 +283,17 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 				} else {
 					CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
 					if (customEntityCategory == null) {
-						withNewCategory = true;
 						customEntityCategory = new CustomEntityCategory();
 						customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 						customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-						cet = customEntityTemplateService.updateWithNewCategory(cet, customEntityCategory);
-	
-					} else {
-						cet.setCustomEntityCategory(customEntityCategory);
+						customEntityCategoryService.create(customEntityCategory);
 					}
+						
+					cet.setCustomEntityCategory(customEntityCategory);
 				}
 			}
 	
-			if (!withNewCategory) {
-				cet = customEntityTemplateService.update(cet);
-			}
+			cet = customEntityTemplateService.update(cet);
 	
 	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
         
@@ -649,6 +644,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
         cet.setAudited(dto.isAudited());
+        
+        if(dto.getCrudEventListenerScript() != null) {
+        	var crudListenerScript = scriptInstanceService.findByCode(dto.getCrudEventListenerScript());
+        	cet.setCrudEventListenerScript(crudListenerScript);
+        	if(crudListenerScript == null) {
+        		throw new IllegalArgumentException("Script " + dto.getCrudEventListenerScript() + " does not exists");
+        	}
+        }
 
         // sql configuration
 		if (dto.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration() != null) {
@@ -774,6 +777,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         if(cet.getPrePersistScript() != null) {
             dto.setPrePersistScripCode(cet.getPrePersistScript().getCode());
+        }
+        
+        if(cet.getCrudEventListenerScript() != null) {
+        	dto.setCrudEventListenerScript(cet.getCrudEventListenerScript().getCode());
         }
 
         if (cetFields != null) {

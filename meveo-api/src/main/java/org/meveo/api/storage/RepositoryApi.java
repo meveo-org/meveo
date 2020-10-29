@@ -9,18 +9,19 @@ import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
-import org.meveo.api.dto.dwh.MeasurableQuantityDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.BinaryStorageConfigurationService;
 import org.meveo.service.storage.RepositoryService;
@@ -47,6 +48,9 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+    
+    @Inject
+    private UserHierarchyLevelService userHierarchyLevelService;
 
 	@Override
 	public RepositoryDto toDto(Repository entity) {
@@ -144,6 +148,13 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 
 		if (source.getDataSeparationType() != null && !StringUtils.isBlank(source.getDataSeparationType())) {
 			target.setDataSeparationType(source.getDataSeparationType());
+		}
+		
+		if (!StringUtils.isBlank(source.getUserHierarchyLevelCode())) {
+			UserHierarchyLevel userLevel = userHierarchyLevelService.findByCode(source.getUserHierarchyLevelCode());
+			if (userLevel != null) {
+				target.setUserHierarchyLevel(userLevel);
+			}
 		}
 
 		return target;

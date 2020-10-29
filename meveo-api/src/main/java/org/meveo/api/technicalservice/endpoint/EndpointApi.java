@@ -674,6 +674,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (returnValue instanceof Map) {
 			((Map<?, ?>) returnValue).remove("response");
 			((Map<?, ?>) returnValue).remove("request");
+			((Map<?, ?>) returnValue).remove("userTx");
 		}
 
 		final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);

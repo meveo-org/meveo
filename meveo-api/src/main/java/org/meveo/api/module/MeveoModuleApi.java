@@ -689,7 +689,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
 						EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-						entityCustomActionDto.getScript().setScript(null); // Don't serialize the script
 						itemDto = entityCustomActionDto;
 
 					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
@@ -795,7 +794,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModuleDto addToModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+	public MeveoModuleDto addToModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
@@ -807,7 +806,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		moduleItem.setAppliesTo(appliesTo);
 		meveoModuleService.loadModuleItem(moduleItem);
+		
+		if(moduleItem.getItemEntity() == null) {
+			throw new BusinessException("Failed to load entity for module item " + moduleItem);
+		}
 
 		module.addModuleItem(moduleItem);
 
@@ -823,7 +827,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
@@ -838,6 +842,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		moduleItem.setAppliesTo(appliesTo);
 		meveoModuleService.loadModuleItem(moduleItem);
 		
 		module.removeItem(moduleItem);

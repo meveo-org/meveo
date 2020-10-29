@@ -184,7 +184,9 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	}
 
 	public List<Repository> listRepositories() {
-		return repositoryService.listByCet(customEntityTemplate);
+		List<Repository> result = repositoryService.listByCetByUserLevel(customEntityTemplate);
+		
+		return result;
 	}
 
 	public List<Map<String, Object>> getSelectedValues() {

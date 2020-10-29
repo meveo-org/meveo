@@ -65,7 +65,6 @@
     </c:if>
 
     <c:forEach items="#{customFieldDataEntryBean.getGroupedFieldTemplates(entity).children}" var="cfTab" varStatus="cfTabStatus">
-
         <c:set var="tabLabel" value="#{cfTab.data eq 'Custom fields'? defaultTabLabel: cfTab.data.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" ></c:set>
         <c:set var="renderTab" value="#{cfTab.hasVisibleCustomFields(entity, cfValueHolder)}" />
 
@@ -82,7 +81,9 @@
 
             <c:if test="#{!renderForm}">
                 <h:panelGroup id="#{prefix}_panel_group_#{cfTabStatus.index}">
-                    <hftl:customFieldFormOrPanel cfTag="#{cfTab}" entity="#{entity}" cft="#{cft}" edit="#{edit}" messagesId="#{messagesId}" datePattern="#{datePattern}"
+                    <hftl:customFieldFormOrPanel cfTab="#{cfTab}" entity="#{entity}" 
+                    	cft="#{cft}" edit="#{edit}" messagesId="#{messagesId}" 
+                    	datePattern="#{datePattern}"
                         dateTimePattern="#{dateTimePattern}" prefix="#{prefix}_panel_#{cfTabStatus.index}" />
                 </h:panelGroup>
             </c:if>

@@ -16,13 +16,11 @@
 
 package org.meveo.api.utils;
 
-import org.apache.commons.io.IOUtils;
-
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
+import org.apache.commons.io.IOUtils;
+import org.graalvm.polyglot.Context;
 
 public class JSONata {
 
@@ -32,16 +30,21 @@ public class JSONata {
             final String jsonata = IOUtils.toString(jsonataFile, StandardCharsets.UTF_8);
             final InputStream jsonataRunnerFile = JSONata.class.getResourceAsStream("/jsonata/jsonata.execute.js");
             final String jsonataRunner = IOUtils.toString(jsonataRunnerFile, StandardCharsets.UTF_8);
+            
+			try (Context context = Context.newBuilder("js")
+                    .allowAllAccess(true)
+                    .build()) {
+			 
+		          var jsBindings = context.getBindings("js");
+		          jsBindings.putMember("polyglot.js.allowAllAccess", true);
+		          
+		          context.eval("js", jsonata);
+		          context.eval("js", jsonataRunner);
+		          var runJsonataFn = context.getBindings("js").getMember("runJsonata");
+		          var result = runJsonataFn.execute(data, expression);
+		          return result.asString();
+			}
 
-            ScriptEngineManager factory = new ScriptEngineManager();
-            ScriptEngine engine = factory.getEngineByName("JavaScript");
-            Invocable inv = (Invocable) engine;
-
-            engine.eval(jsonata);
-            engine.eval(jsonataRunner);
-
-            final Object runJsonata = inv.invokeFunction("runJsonata", data, expression);
-            return runJsonata.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

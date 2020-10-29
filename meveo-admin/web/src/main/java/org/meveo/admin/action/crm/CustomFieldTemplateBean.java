@@ -396,7 +396,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 */
     public void updateDefaultValues() {
 
-        if (entity.getFieldType() == CustomFieldTypeEnum.STRING && entity.getMaxValue() == null) {
+        if ((entity.getFieldType() == CustomFieldTypeEnum.STRING || entity.getFieldType() == CustomFieldTypeEnum.SECRET) && entity.getMaxValue() == null) {
             entity.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
         }
         if (entity.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
@@ -705,6 +705,11 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public Long getCetId(String entityClazz) {
         if (entityClazz.startsWith(CustomEntityTemplate.class.getName())) {
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomFieldTemplate.retrieveCetCode(entityClazz));
+            if(cet == null) {
+            	log.error("Can't rerieve cet for {}", entityClazz);
+            	return null;
+            }
+            
             return cet.getId();
         }
         

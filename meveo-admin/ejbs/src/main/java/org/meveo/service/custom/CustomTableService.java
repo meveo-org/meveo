@@ -41,11 +41,12 @@ import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.MapUtils;
 import org.elasticsearch.action.search.SearchResponse;
@@ -92,7 +93,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.6.0
  */
-@Stateless
+// @Stateless
 public class CustomTableService extends NativePersistenceService {
 
     /**
@@ -106,8 +107,8 @@ public class CustomTableService extends NativePersistenceService {
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
-    @EJB
-    private CustomTableService customTableService;
+    @Inject
+    private Instance<CustomTableService> customTableService;
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
@@ -120,7 +121,7 @@ public class CustomTableService extends NativePersistenceService {
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;
-
+    
 	/**
 	 * Inserts an instance of {@linkplain CustomEntityInstance} into the database.
 	 *
@@ -158,7 +159,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @param cei transient {@link CustomEntityInstance}
 	 * @throws BusinessException failed creating the entity
 	 */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(TxType.REQUIRES_NEW)
 	public void createInNewTx(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
 
 		create(sqlConnectionCode, cet, cei);
@@ -172,7 +173,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @param values map of <String, Object>
 	 * @throws BusinessException
 	 */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(TxType.REQUIRES_NEW)
 	public void createInNewTx(String sqlConnectionCode, CustomEntityTemplate cet, boolean updateES, List<Map<String, Object>> values) throws BusinessException {
 
 		List<CustomEntityInstance> ceis = new ArrayList<>();
@@ -195,7 +196,7 @@ public class CustomTableService extends NativePersistenceService {
      * @param updateES should Elastic search be updated during record creation. If false, ES population must be done outside this call
      * @throws BusinessException General exception
      */
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(TxType.REQUIRES_NEW)
 	public void createInNewTx(String sqlConnectionCode, CustomEntityTemplate cet, List<CustomEntityInstance> ceis, boolean updateES) throws BusinessException {
 
 		// Insert record to db, with ID returned, but flush to ES after the values are
@@ -542,7 +543,7 @@ public class CustomTableService extends NativePersistenceService {
 
         // Delete current data first if in override mode
         if (!append) {
-            customTableService.remove(sqlConnectionCode, (CustomEntityTemplate) customModelObject);
+            remove(sqlConnectionCode, (CustomEntityTemplate) customModelObject);
         }
 
         // By default will update ES immediately. If more than 100 records are being updated, ES will be updated in batch way - reconstructed from a table
@@ -561,7 +562,7 @@ public class CustomTableService extends NativePersistenceService {
                 if (importedLines >= 1000) {
 
                     valuesPartial = convertValues(valuesPartial, cfts, false);
-                    customTableService.createInNewTx(sqlConnectionCode, cet, updateESImediately, valuesPartial);
+                    customTableService.get().createInNewTx(sqlConnectionCode, cet, updateESImediately, valuesPartial);
 
                     valuesPartial.clear();
                     importedLines = 0;
@@ -575,7 +576,7 @@ public class CustomTableService extends NativePersistenceService {
 
             // Save to DB remaining records
             valuesPartial = convertValues(valuesPartial, cfts, false);
-            customTableService.createInNewTx(sqlConnectionCode, cet, updateESImediately, valuesPartial);
+            customTableService.get().createInNewTx(sqlConnectionCode, cet, updateESImediately, valuesPartial);
 
             // Repopulate ES index
             if (!updateESImediately) {
@@ -644,7 +645,7 @@ public class CustomTableService extends NativePersistenceService {
 		values = convertValues(values, cfts, false);
 		values = replaceEntityReferences(sqlConnectionCode, fields, values, entityReferencesCache);
         final CustomEntityTemplate cet = customEntityTemplateService.findByCodeOrDbTablename(ceis.get(0).getTableName());
-        customTableService.createInNewTx(sqlConnectionCode, cet, false, values);
+        customTableService.get().createInNewTx(sqlConnectionCode, cet, false, values);
 	}
 
 	private List<Map<String, Object>> replaceEntityReferences(String sqlConnectionCode, List<CustomFieldTemplate> fields, List<Map<String, Object>> oldvalues, Map<String, Map<String, String>> entityReferencesCache) throws BusinessException {
@@ -1035,11 +1036,11 @@ public class CustomTableService extends NativePersistenceService {
                 	modifiableMap.put(field.getKey(), ((int) field.getValue()) == 1);
                 } else if(field.getValue() instanceof BigInteger) {
                 	modifiableMap.put(field.getKey(), ((BigInteger) field.getValue()).longValue());
-            	} else if(field.getValue() instanceof String && (
-            			cft.getFieldType().equals(CustomFieldTypeEnum.EMBEDDED_ENTITY) || cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY)
-        			)) {
+            	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.EMBEDDED_ENTITY)) {
                     modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
-            	} else {
+            	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY)) {
+                    modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
+                } else {
                 	modifiableMap.put(field.getKey(), field.getValue());
                 }
                 
@@ -1065,7 +1066,7 @@ public class CustomTableService extends NativePersistenceService {
     	CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
     	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
     	
-    	List<Map<String, Object>> entities = customTableService.list(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), pagination);
+    	List<Map<String, Object>> entities = list(sqlConnectionCode, SQLStorageConfiguration.getDbTablename(cet), pagination);
     	
     	cfts.values().forEach(cft -> entities.forEach(entity -> {
             Object property = entity.get(cft.getDbFieldname());
@@ -1073,7 +1074,7 @@ public class CustomTableService extends NativePersistenceService {
                 // Fetch entity reference
                 if(cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
                     String propertyTableName = SQLStorageConfiguration.getCetDbTablename(cft.getEntityClazzCetCode());
-                    property = customTableService.findById(sqlConnectionCode, propertyTableName, (String) property);
+                    property = findById(sqlConnectionCode, propertyTableName, (String) property);
                 }
 
                 // Replace db field names to cft name

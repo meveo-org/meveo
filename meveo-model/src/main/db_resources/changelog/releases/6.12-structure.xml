@@ -24,5 +24,60 @@
 		</addColumn>
 		<sql>UPDATE crm_custom_action SET applicable_to_entity_list=0, applicable_to_entity_instance=1;</sql>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="Increase auth_password length">
+	    <modifyDataType
+	        columnName="auth_password"
+	        newDataType="varchar(255)"
+	        tableName="com_meveo_instance"/>
+	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="Create patch_execution table">
+    	<createTable tableName="patch_execution">
+    		<column name="name" type="varchar(255)">
+    			<constraints primaryKey="true" primaryKeyName="pk_patch_execution"/>
+    		</column>
+		    <column name="ran" type="${type.boolean}" defaultValue="0"/>
+    	</createTable>
+	</changeSet>
+	
+	<changeSet id="Cascade drop role_permission" author="Clément Bareth">
+		<dropAllForeignKeyConstraints baseTableName="adm_role_permission" />
+		<addForeignKeyConstraint constraintName="fk_role_adm_role_permission"
+			baseColumnNames="role_id" baseTableName="adm_role_permission"
+			referencedColumnNames="id" referencedTableName="adm_role" onDelete="CASCADE"/>
+		<addForeignKeyConstraint constraintName="fk_permission_adm_role_permission"
+			baseColumnNames="permission_id" baseTableName="adm_role_permission"
+			referencedColumnNames="id" referencedTableName="adm_permission" onDelete="CASCADE"/>
+	</changeSet>
+	
+	<changeSet id="Add transaction type" author="Clément Bareth">
+		<addColumn tableName="meveo_script_instance">
+			<column name="tx_type" defaultValue="SAME" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Add crud event listener to CET" author="Clément Bareth">
+		<addColumn tableName="cust_cet">
+			<column name="cr_ev_list_script" type="bigint">
+				<constraints foreignKeyName="fk_cr_ev_list_script" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="GH#209 Associate userHierarchyLevel to git repository" author="Edward P. Legaspi">
+		<addColumn tableName="storage_repository">
+			<column name="user_hierarchy_level_id" type="bigint" />
+		</addColumn>
+		<addForeignKeyConstraint constraintName="fk_storage_repository_user_level"
+			baseColumnNames="user_hierarchy_level_id" baseTableName="storage_repository"
+			referencedColumnNames="id" referencedTableName="hierarchy_entity" />
+	</changeSet>
+
+	<changeSet author="Phu Bach" id="Github#102">
+		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
+	</changeSet>
 
 </databaseChangeLog>

@@ -29,12 +29,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.LocalBean;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
@@ -42,9 +39,7 @@ import javax.persistence.PersistenceException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
-import javax.transaction.Status;
 import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -58,6 +53,7 @@ import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
@@ -67,6 +63,7 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -76,6 +73,7 @@ import org.meveo.persistence.graphql.GraphQLQueryBuilder;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -91,13 +89,16 @@ import org.slf4j.Logger;
  * @author clement.bareth
  * @version 6.11.0
  */
-@Stateless
-@LocalBean
-@TransactionManagement(TransactionManagementType.BEAN)
+// @Stateless
+// @LocalBean
+// @TransactionManagement(TransactionManagementType.BEAN)
 public class CrossStorageService implements CustomPersistenceService {
 
-	@Resource
-	private UserTransaction transaction;
+//	@Resource
+//	private UserTransaction transaction;
+	
+	@Inject
+	private CrossStorageTransaction transaction;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
@@ -245,7 +246,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		selectFields.removeAll(values.keySet());
 
 		try {
-			transaction.begin();
+			// transaction.begin();
+			transaction.beginTransaction(repository);
 
 			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 				List<String> sqlFields = filterFields(selectFields, cet, DBStorageType.SQL);
@@ -277,12 +279,10 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 
-			transaction.commit();
+			transaction.commitTransaction(repository);
 		} catch (Exception e) {
 			
-			try {
-				transaction.rollback();
-			} catch (IllegalStateException | SecurityException | SystemException e1) {}
+			transaction.rollbackTransaction();
 
 			if(e instanceof EntityDoesNotExistsException) {
 				throw (EntityDoesNotExistsException) e;
@@ -636,6 +636,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet = cache.getCustomEntityTemplate(ceiToSave.getCetCode());
+		if(cet == null) {
+			throw new IllegalArgumentException("CET with code " + ceiToSave.getCetCode() + " does not exist");
+		}
 				
 		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(cet);
 		
@@ -660,74 +663,140 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCet(cet);
 
 		// Create referenced entities and set UUIDs in the values
-		Map<String, Object> entityValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
-		entityValues = createEntityReferences(repository, entityValues, cet);
+		Map<String, Object> tmpValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
+		Map<String, Object> entityValues = createEntityReferences(repository, tmpValues, cet);
 		customFieldInstanceService.setCfValues(cei, cet.getCode(), entityValues);
 
 		String uuid = null;
 
 		// First check if data exist, in order to synchronize UUID across all storages
-		String foundId = null;
+		String foundId;
+		
+		List<String> secretFields = customFieldTemplates.values()
+			.stream()
+			.filter(cft -> cft.getFieldType() == CustomFieldTypeEnum.SECRET)
+			.filter(cft -> cei.get(cft.getCode()) != null)
+			.map(CustomFieldTemplate::getCode)
+			.collect(Collectors.toList());
 		
 		try {
 			foundId = findEntityId(repository, cei);
-			if (foundId != null) {
-				cei.setUuid(foundId);
-			}
 		} catch (IllegalArgumentException e) {
-			//It's no problem if we can't retrieve record using values - we consider it does not exist
+			// It's no problem if we can't retrieve record using values - we consider it does not exist
+			foundId = null;
 		}
 		
-		boolean created = foundId == null;
+		if (foundId != null) {
+			cei.setUuid(foundId);
+			// Handle secret fields
+			if(!secretFields.isEmpty()) {
+				var foundCei = CEIUtils.pojoToCei(find(repository, cet, foundId, false));
+				String oldCeiHash = CEIUtils.getHash(foundCei, customFieldTemplates);
+				secretFields.forEach(secretField -> {
+					// Secret field has not changed, decrypt it so it will be correctly re-encrypted
+					if(cei.get(secretField).equals(foundCei.get(secretField))) {
+						String decryptedValue = PasswordUtils.decryptNoSecret(oldCeiHash, cei.get(secretField));
+						cei.getCfValues().setValue(secretField, decryptedValue);
+						entityValues.put(secretField, decryptedValue);
+					}
+				});
+			}
+		}
+		
+		// Encrypt secret fields
+		if(!secretFields.isEmpty()) {
+			String ceiHash = CEIUtils.getHash(cei, customFieldTemplates);
+			secretFields.forEach(secretField -> {
+				String secretValue = cei.get(secretField);
+				if(!secretValue.startsWith("🔒")) {	// Value is already encrypted
+					String encryptedValue = PasswordUtils.encryptNoSecret(ceiHash, secretValue);
+					cei.getCfValues().setValue(secretField, encryptedValue);
+					entityValues.put(secretField, encryptedValue);
+				}
+			});
+		}
+		
+		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
+		CustomEntity cetClassInstance = null;
+		
+		if(listener != null) {
+			var cetClass =  listener.getEntityClass();
+			cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
+		}
+		
+		CustomEntityInstance ceiAfterPreEvents = cei;
+		
+		try {
+			// transaction.begin();
+			transaction.beginTransaction(repository);
+			
+			if(cetClassInstance != null) {
+				if(foundId != null) {
+					listener.preUpdate(cetClassInstance);
+				} else {
+					listener.prePersist(cetClassInstance);
+				}
+				
+				ceiAfterPreEvents = CEIUtils.pojoToCei(cetClassInstance);	// Handle case where entity was modified
+				ceiAfterPreEvents.setCet(cei.getCet());
+			}
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			uuid = createOrUpdateNeo4J(repository, cei, customFieldTemplates, persistedEntities);
+			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities);
 			if (foundId == null) {
-				cei.setUuid(uuid);
+				ceiAfterPreEvents.setUuid(uuid);
+			}
+		}
+
+		// SQL Storage
+		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+			Map<String, Object> sqlValues = filterValues(ceiAfterPreEvents.getCfValuesAsValues(), cet, DBStorageType.SQL, false);
+
+			if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				CustomEntityInstance sqlCei = new CustomEntityInstance();
+				sqlCei.setCet(cet);
+				sqlCei.setUuid(ceiAfterPreEvents.getUuid());
+				sqlCei.setCode(ceiAfterPreEvents.getCode());
+				sqlCei.setCetCode(ceiAfterPreEvents.getCetCode());
+				sqlCei.setDescription(ceiAfterPreEvents.getDescription());
+				customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
+
+				// Update binaries stored in SQL
+				List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
+
+				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql);
+
+				} else {
+					uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
+				}
+
+				persistedEntities.add(new EntityRef(uuid, cet.getCode()));
 			}
 		}
 
 		try {
-			transaction.begin();
-
-			// SQL Storage
-			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-				Map<String, Object> sqlValues = filterValues(entityValues, cet, DBStorageType.SQL, false);
-
-				if (!sqlValues.isEmpty() || !cet.getSqlStorageConfiguration().isStoreAsTable()) {
-					CustomEntityInstance sqlCei = new CustomEntityInstance();
-					sqlCei.setCet(cet);
-					sqlCei.setUuid(cei.getUuid());
-					sqlCei.setCode(cei.getCode());
-					sqlCei.setCetCode(cei.getCetCode());
-					sqlCei.setDescription(cei.getDescription());
-					customFieldInstanceService.setCfValues(sqlCei, cet.getCode(), sqlValues);
-
-					// Update binaries stored in SQL
-					List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
-
-					if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-						uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql);
-
-					} else {
-						uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
-					}
-
-					persistedEntities.add(new EntityRef(uuid, cet.getCode()));
+			
+			if(cetClassInstance != null) {
+				if(foundId != null) {
+					listener.postUpdate(cetClassInstance);
+				} else {
+					listener.postPersist(cetClassInstance);
 				}
 			}
-
-			transaction.commit();
+			
+			transaction.commitTransaction(repository);
+			
 		} catch (Exception e) {
 			
-			try {
-				transaction.rollback();
-			} catch (Exception e1) {
-
-			}
+			log.error("Can't create or update data", e);
 			
-			log.error("Can't create or update data in SQL", e);
+			transaction.rollbackTransaction();
 			
 			if(e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -737,7 +806,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		if(uuid == null) {
-			throw new PersistenceException("Failed to save " + cei);
+			throw new PersistenceException("Failed to save " + ceiAfterPreEvents);
 		}
 
 		return new PersistenceActionResult(persistedEntities, uuid);
@@ -925,10 +994,10 @@ public class CrossStorageService implements CustomPersistenceService {
 						existingBinariesField);
 
 			}
-
-			customEntityInstanceUpdate.fire(cei);
+			
+			customEntityInstanceUpdate.fire(cei);	//TODO: Remove
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
-			customEntityInstanceUpdatedAfterTx.fire(cei);
+			customEntityInstanceUpdatedAfterTx.fire(cei);	//TODO: Remove
 
 		} else {
 			customEntityInstanceCreate.fire(cei);
@@ -1183,31 +1252,61 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (uuid == null) {
 			throw new IllegalArgumentException("Cannot remove entity by UUID without uuid");
 		}
-
-		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
-				customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
-			} else {
-				final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-				customEntityInstanceService.remove(customEntityInstance);
-			}
-		}
-
-		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
-		}
-
-		fileSystemService.delete(repository, cet, uuid);
 		
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCet(cet);
 		cei.setCetCode(cet.getCode());
 		cei.setUuid(uuid);
 		
-		if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
-			customEntityInstanceDelete.fire(cei);
+		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
+		CustomEntity cetClassInstance = null;
+		
+		transaction.beginTransaction(repository);
+		
+		try {
+			if(listener != null) {
+				var cetClass =  listener.getEntityClass();
+				try {
+					var values = find(repository, cet, uuid, false);
+					cei = CEIUtils.fromMap(values, cet);
+					cetClassInstance = CEIUtils.ceiToPojo(cei, cetClass);
+					listener.preRemove(cetClassInstance);
+				} catch (EntityDoesNotExistsException e) {
+					e.printStackTrace();
+				}
+			}
+	
+			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+					customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
+				} else {
+					final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
+					customEntityInstanceService.remove(customEntityInstance);
+				}
+			}
+	
+			if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+				neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
+			}
+	
+			fileSystemService.delete(repository, cet, uuid);
+			
+			if (!(cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
+				customEntityInstanceDelete.fire(cei);
+			}
+			
+			if(cetClassInstance != null) {
+				listener.postRemove(cetClassInstance);
+			}
+			
+			transaction.commitTransaction(repository);
+		
+		} catch(Exception e) {
+			transaction.rollbackTransaction();
+			throw e;
 		}
+		
 	}
 
 	/**
@@ -1455,30 +1554,20 @@ public class CrossStorageService implements CustomPersistenceService {
 								
 				// Check if target is not JPA entity
 				try {
-					transaction.begin();
+					var session = transaction.getHibernateSession(repository.getSqlConfigurationCode());
 					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 					values.put(
 						entry.getKey(), 
-						customEntityInstanceService
-							.getEntityManager()
-							.find(clazz, entry.getValue())
+						session.find(clazz, entry.getValue())
 					);
 					continue;
 					
 				} catch (ClassNotFoundException e) {
-					log.warn("Missing CFT class {}", e.getMessage());
+					//NOOP
 				
 				} catch(Exception e) {
 					log.error("Cannot find referenced entity {}", e.getMessage());
 					throw new RuntimeException(e);
-				
-				} finally {
-					try {
-						transaction.commit();
-				
-					} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
-						throw new RuntimeException(e);
-					}
 				}
 				
 				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());

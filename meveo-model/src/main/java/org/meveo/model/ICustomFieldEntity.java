@@ -72,6 +72,10 @@ public interface ICustomFieldEntity {
 	 * @return map of values with key being custom field code.
 	 */
 	default Map<String, Object> getCfValuesAsValues(DBStorageType filterType, Collection<CustomFieldTemplate> cfts, boolean removeNullValues) {
+		if(cfts == null) {
+			throw new IllegalArgumentException("Argument 'cfts' can't be null");
+		}
+		
 		CustomFieldValues cfValues = getCfValues();
 
 		if (cfValues == null || cfValues.getValuesByCode() == null) {

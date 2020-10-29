@@ -74,6 +74,9 @@ public class GitRepositoryDto extends BusinessEntityDto {
 	 */
 	@ApiModelProperty("Remote password to use when making action with distant repository")
 	private String remotePassword;
+	
+	@ApiModelProperty("Encrypted remote password")
+	private String remotePasswordEncrypted;
 
 	/**
 	 * Whether the remote repository is hosted in a meveo instance
@@ -164,4 +167,19 @@ public class GitRepositoryDto extends BusinessEntityDto {
 	public void setCurrentBranch(String currentBranch) {
 		this.currentBranch = currentBranch;
 	}
+
+	/**
+	 * @return the {@link #remotePasswordEncrypted}
+	 */
+	public String getRemotePasswordEncrypted() {
+		return remotePasswordEncrypted;
+	}
+
+	/**
+	 * @param remotePasswordEncrypted the remotePasswordEncrypted to set
+	 */
+	public void setRemotePasswordEncrypted(String remotePasswordEncrypted) {
+		this.remotePasswordEncrypted = remotePasswordEncrypted;
+	}
+	
 }

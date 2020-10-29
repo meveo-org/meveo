@@ -8,15 +8,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.ScriptTransactionType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * The Class CustomScriptDto.
  *
+ * @author Clément Bareth | clement.bareth@gmail.com
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.5.0
+ * @version 6.12.0
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class CustomScriptDto extends FunctionDto {
@@ -27,6 +29,9 @@ public abstract class CustomScriptDto extends FunctionDto {
 	/** The type. */
 	@XmlElement
 	private ScriptSourceTypeEnum type = ScriptSourceTypeEnum.JAVA;
+	
+	/** The transaction management for executing the script */
+	private ScriptTransactionType transactionType = ScriptTransactionType.SAME;
 
 	/** The script. */
 	@XmlElement(required = true)
@@ -39,25 +44,25 @@ public abstract class CustomScriptDto extends FunctionDto {
 
 	}
 
-	/**
-	 * Instantiates a new custom script dto.
-	 *
-	 * @param code        the code
-	 * @param description the description
-	 * @param type        the type
-	 * @param script      the script
-	 */
-	public CustomScriptDto(String code, String description, ScriptSourceTypeEnum type, String script) {
-
-		this.type = type;
-		this.script = script;
-	}
-
 	public CustomScriptDto(CustomScript e, String script) {
-
 		super(e);
 		this.type = e.getSourceTypeEnum();
 		this.script = script;
+        this.transactionType = e.getTransactionType();
+	}
+
+	/**
+	 * @return the {@link #transactionType}
+	 */
+	public ScriptTransactionType getTransactionType() {
+		return transactionType;
+	}
+
+	/**
+	 * @param transactionType the transactionType to set
+	 */
+	public void setTransactionType(ScriptTransactionType transactionType) {
+		this.transactionType = transactionType;
 	}
 
 	/**
