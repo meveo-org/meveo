@@ -287,7 +287,26 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
             getEntity().setStorages(storagesDM.getTarget());
         }
 
-        return super.saveOrUpdate(killConversation);
+        String message = entity.isTransient() ? "save.successful" : "update.successful";
+
+        try {
+            entity = saveOrUpdate(entity);
+            messages.info(new BundleKey("messages", message));
+            if (killConversation) {
+                endConversation();
+            }
+
+        } catch (Exception e){
+            if (e.getCause() instanceof IllegalArgumentException) {
+                messages.error(new BundleKey("messages", "message.ontology.code.error"));
+                return null;
+            } else {
+                messages.error("Entity can't be saved. Please retry.");
+                log.error("Can't update entity", e);
+            }
+        }
+
+        return back();
     }
 
     @Override
