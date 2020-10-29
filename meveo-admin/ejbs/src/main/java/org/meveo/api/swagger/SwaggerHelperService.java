@@ -69,6 +69,7 @@ public class SwaggerHelperService {
 		Property result = new ObjectProperty();
 
 		switch (cft.getFieldType()) {
+		case SECRET:
 		case STRING:
 			result = new StringProperty();
 			break;
@@ -90,6 +91,9 @@ public class SwaggerHelperService {
 			break;
 		case TEXT_AREA:
 			result.setName(CustomFieldTypeEnum.TEXT_AREA.name());
+			break;
+		case LONG_TEXT:
+			result.setName(CustomFieldTypeEnum.LONG_TEXT.name());
 			break;
 		case CHILD_ENTITY:
 			result.setName(CustomFieldTypeEnum.CHILD_ENTITY.name());

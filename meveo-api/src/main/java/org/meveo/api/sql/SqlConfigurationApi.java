@@ -112,7 +112,7 @@ public class SqlConfigurationApi extends BaseCrudApi<SqlConfiguration, SqlConfig
 		target.setDescription(source.getDescription());
 		target.setDialect(source.getDialect());
 		target.setDriverClass(source.getDriverClass());
-		target.setPassword(source.getPassword());
+		target.setClearPassword(source.getPassword());
 		target.setUrl(source.getUrl());
 		target.setUsername(source.getUsername());
 

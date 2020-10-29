@@ -20,6 +20,7 @@ package org.meveo.admin.util.pagination;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,17 @@ public class PaginationConfiguration implements Serializable {
     private SortOrder ordering;
 
     private String graphQlQuery;
-
+    
+    /**
+     * Super type of the data to query
+     */
+    private String superType;
+    
+    /**
+     * Fields that belongs to the super type
+     */
+    private Collection<String> superTypeFields;
+    
     /**
      *
      * @param sortField Field to sort by
@@ -268,4 +279,33 @@ public class PaginationConfiguration implements Serializable {
 
 		return filters;
 	}
+
+	/**
+	 * @return the {@link #superType}
+	 */
+	public String getSuperType() {
+		return superType;
+	}
+
+	/**
+	 * @param superType the superType to set
+	 */
+	public void setSuperType(String superType) {
+		this.superType = superType;
+	}
+
+	/**
+	 * @return the {@link #superTypeFields}
+	 */
+	public Collection<String> getSuperTypeFields() {
+		return superTypeFields;
+	}
+
+	/**
+	 * @param superTypeFields the superTypeFields to set
+	 */
+	public void setSuperTypeFields(Collection<String> superTypeFields) {
+		this.superTypeFields = superTypeFields;
+	}
+	
 }

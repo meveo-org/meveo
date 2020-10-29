@@ -2,6 +2,7 @@ package org.meveo.persistence.sql;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +20,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
@@ -165,16 +167,56 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 		// get all cet
 		List<CustomEntityTemplate> cets = new ArrayList<>(customEntityTemplateService.listNoCache());
 		
+		Map<String, Boolean> jpaReferenceMatrix = new HashMap<>();
+		
 		// Sort cet by references
 		Collections.sort(cets, (c1, c2) -> {
 			Map<String, CustomFieldTemplate> cftsC1 = customFieldTemplateService.findByAppliesToNoCache(c1.getAppliesTo());
-			boolean c1RefersC2 = cftsC1.values().stream().anyMatch(cft -> c2.getCode().equals(cft.getEntityClazzCetCode()));
+			Map<String, CustomFieldTemplate> cftsC2 = customFieldTemplateService.findByAppliesToNoCache(c2.getAppliesTo());
+
+			// Put cets with no references in top of the list
+			var c1HasReferences = cftsC1.values()
+				.stream()
+				.anyMatch(cft -> cft.getFieldType() == CustomFieldTypeEnum.ENTITY);
+			
+			if(c1HasReferences) {
+				jpaReferenceMatrix.computeIfAbsent(c1.getCode(), k -> cftsC1.values()
+					.stream()
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY))
+					.anyMatch(e -> customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())));
+			}
+			
+			var c2HasReferences = cftsC2.values()
+				.stream()
+				.anyMatch(cft -> cft.getFieldType() == CustomFieldTypeEnum.ENTITY);
+			
+			if(c2HasReferences) {
+				jpaReferenceMatrix.computeIfAbsent(c2.getCode(), k -> cftsC2.values()
+					.stream()
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY))
+					.anyMatch(e -> customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())));
+			}
+			
+			if(!c1HasReferences && !c2HasReferences) {
+				return 0;
+			} else if(c1HasReferences && !c2HasReferences) {
+				return 1;
+			} else if(!c1HasReferences && c2HasReferences) {
+				return -1;
+			}
+			
+			boolean c1RefersC2 = cftsC1.values()
+					.stream()
+					.anyMatch(cft -> c2.getCode().equals(cft.getEntityClazzCetCode()));
+			
 			if(c1RefersC2) {
 				return 1;
 			}
 			
-			Map<String, CustomFieldTemplate> cftsC2 = customFieldTemplateService.findByAppliesToNoCache(c2.getAppliesTo());
-			boolean c2RefersC1 = cftsC2.values().stream().anyMatch(cft -> c1.getCode().equals(cft.getEntityClazzCetCode()));
+			boolean c2RefersC1 = cftsC2.values()
+					.stream()
+					.anyMatch(cft -> c1.getCode().equals(cft.getEntityClazzCetCode()));
+			
 			if(c2RefersC1) {
 				return -1;
 			}
@@ -182,17 +224,41 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 			return 0;
 		});
 		
+		List<String> skippedCets = new ArrayList<>();
 		for (CustomEntityTemplate cet : cets) {
+			if(!cet.isStoreAsTable()) {
+				continue;
+			}
+			
+			// Skip CET if it has a reference to a JPA entity
+			if(!entity.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION) && 
+					jpaReferenceMatrix.getOrDefault(cet.getCode(), false)) {
+				skippedCets.add(cet.getCode());
+				continue;
+			}
+			
+			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
+			
+			// Skip CET if it has reference to a skipped entity
+			boolean skip = cfts.values()
+				.stream()
+				.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY))
+				.anyMatch(e -> skippedCets.contains(e.getEntityClazzCetCode()));
+			if(skip) {
+				skippedCets.add(cet.getCode());
+				continue;
+			}
 			
 			String tableName = SQLStorageConfiguration.getCetDbTablename(cet.getCode());
-			customTableCreatorService.createTable(cet);
-			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
+			customTableCreatorService.createTable(entity.getCode(), cet);
 
 			try {
 				Thread.sleep(250);
 				for (Entry<String, CustomFieldTemplate> cftEntry : cfts.entrySet()) {
-					customTableCreatorService.addField(entity.getCode(), tableName, cftEntry.getValue());
-					Thread.sleep(250);
+					if(cftEntry.getValue().isSqlStorage()) {
+						customTableCreatorService.addField(entity.getCode(), tableName, cftEntry.getValue());
+						Thread.sleep(250);
+					}
 				}
 			} catch (InterruptedException e) {
 				log.error("Interrupted creating table for {}", cet);

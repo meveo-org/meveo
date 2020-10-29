@@ -113,14 +113,14 @@ public class GraphQLService {
     	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
 
         final List<String> neo4jConfigurations = entityManagerWrapper.getEntityManager()
-                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+                .createQuery("SELECT c.code from Neo4JConfiguration c WHERE disabled = false", String.class)
                 .getResultList();
 
         for (String neo4jConfiguration : neo4jConfigurations) {
             List<String> missingEntities = validateIdl(idl);
             if (CollectionUtils.isEmpty(missingEntities)) {
                 neo4jDao.updateIDL(neo4jConfiguration, idl);
-            } else{
+            } else {
                 log.error("Cannot update IDL, missing entities : {}", missingEntities);
             }
         }
@@ -464,8 +464,10 @@ public class GraphQLService {
                     case CHILD_ENTITY:
                     case EMBEDDED_ENTITY:
                     case LIST:
+                    case SECRET:
                     case STRING:
                     case TEXT_AREA:
+                    case LONG_TEXT:
                     default:
                         graphQLField.setFieldType("String");
                         break;

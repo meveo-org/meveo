@@ -93,7 +93,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @author akadid abdelmounaim
- * @lastModifiedVersion 6.8.0
+ * @lastModifiedVersion 6.12
  */
 @Named
 @ViewScoped
@@ -120,28 +120,28 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private Map<String, CustomFieldValueHolder> fieldsValues = new HashMap<String, CustomFieldValueHolder>();
 
 	@Inject
-	private CustomFieldInstanceService customFieldInstanceService;
+	private transient CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
+	private transient CustomFieldTemplateService customFieldTemplateService;
 
 	@Inject
 	private ResourceBundle resourceMessages;
 
 	@Inject
-	private EntityCustomActionService entityActionScriptService;
+	private transient EntityCustomActionService entityActionScriptService;
 
 	@Inject
-	private ScriptInstanceService scriptInstanceService;
+	private transient ScriptInstanceService scriptInstanceService;
 
 	@Inject
-	private CustomEntityInstanceService customEntityInstanceService;
+	private transient CustomEntityInstanceService customEntityInstanceService;
 
 	@Inject
-	private CustomEntityTemplateService customEntityTemplateService;
+	private transient CustomEntityTemplateService customEntityTemplateService;
 
 	@Inject
-	private CustomTableService customTableService;
+	private transient CustomTableService customTableService;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
@@ -260,6 +260,19 @@ public class CustomFieldDataEntryBean implements Serializable {
 		return groupedFieldTemplates.get(entity.getUuid());
 	}
 
+
+	public List<EntityCustomAction> getCustomActionsInDetail(IEntity entity) {
+
+		List<EntityCustomAction> customActions = getCustomActions(entity);
+		return customActions.stream().filter(e -> e.getApplicableToEntityInstance()).collect(Collectors.toList());
+	}
+	
+	public List<EntityCustomAction> getCustomActionsInList(IEntity entity) {
+
+		List<EntityCustomAction> customActions = getCustomActions(entity);
+		return customActions.stream().filter(e -> e.getApplicableToEntityList()).collect(Collectors.toList());
+	}
+	
 	/**
 	 * Get a list of actions applicable for an entity. If needed, load them.
 	 *

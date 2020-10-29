@@ -29,7 +29,7 @@ import org.meveo.persistence.CrossStorageService;
  * @version 6.11.0
  * @since 6.8.0
  */
-@Stateless
+// @Stateless
 public class CrossStorageApi{
 
 	@Inject

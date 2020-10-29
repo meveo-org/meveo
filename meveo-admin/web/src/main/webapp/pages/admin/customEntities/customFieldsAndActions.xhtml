@@ -363,10 +363,9 @@
 							hideEffect="slide" />
 
 						<p:remoteCommand id="remoteDeleteActionButton"
-							actionListener="#{entityCustomActionBean.deleteInlist}"
+							actionListener="#{entityCustomActionBean.delete}"
 							action="#{customEntityTemplateBean.refreshFields}"
-							name="actionsDoDelete"
-							oncomplete="handleDeleteComplete(xhr,status,args)" update="@form" />
+							name="actionsDoDelete" update="@form" />
 						<p:tooltip for="deleteActionlink"
 							value="#{messages['commons.delete']}" showEffect="slide"
 							hideEffect="slide" />
@@ -1035,9 +1034,11 @@
 					<hftl:formLanguageFields
 						label="#{messages['customizedEntities.actionLabel']}"
 						field="label" required="true" size="50" maxlength="50"
-						componentWidth="100" />
+						componentWidth="100" />	
+					<hftl:formField label="#{messages['customizedEntities.applicableToEntityList']}" field="applicableToEntityList" />
+					<hftl:formField label="#{messages['customizedEntities.applicableToEntityInstance']}" field="applicableToEntityInstance" />					
 				</h:panelGroup>
-
+				
 				<h:panelGroup>
 					<hftl:formField label="#{messages['BusinessEntity.description']}"
 						field="description" useConverter="false" maxlength="50"
@@ -1047,7 +1048,7 @@
 						label="#{messages['customizedEntities.actionApplicableOnEl']}"
 						field="applicableOnEl" componentWidth="50" textArea="true"
 						maxlength="2000" rows="1" />
-
+					
 					<hftl:formField id="script"
 						label="#{messages['customizedEntities.actionScript']}"
 						field="script" valueLabelField="code" newLine="true"
@@ -1104,10 +1105,12 @@
 								edit="true" rendered="#{entityCustomActionBean.canUserUpdateEntity()}"
 								resetAction="#{entityCustomActionBean.resetFormEntity()}" includeViewParams="true"/>
 				<p:commandButton icon="ui-icon-trash" value="#{messages['commons.delete']}"
-								 action="#{entityCustomActionBean.deleteWithBack}" immediate="true" update="@form"
+								 actionListener="#{customEntityTemplateBean.refreshFields}"
+								 action="#{entityCustomActionBean.delete}" immediate="true" update=":fieldsForm:fields"
 								 rendered="#{entityCustomActionBean.entity.id!=null and entityCustomActionBean.canUserUpdateEntity()}">
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 							   message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert"/>
+					<f:ajax render="@all"/>
 				</p:commandButton>
 				<!--</hf:formButtons>-->
 			</ui:define>

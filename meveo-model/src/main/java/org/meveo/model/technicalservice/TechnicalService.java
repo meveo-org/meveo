@@ -36,6 +36,8 @@ import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
 import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * The Class TechnicalService.
  *
@@ -57,6 +59,7 @@ public class TechnicalService extends Function {
      */
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @MapKey(name = "name")
+    @JsonIgnore
     private Map<String, Description> descriptions;
     
     /**

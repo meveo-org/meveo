@@ -32,9 +32,9 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.12
  **/
-
 @Stateless
 public class EntityCustomActionApi extends BaseApi {
 
@@ -192,20 +192,6 @@ public class EntityCustomActionApi extends BaseApi {
             if (!isUpdate) {
                 missingParameters.add("script");
             }
-
-        } else {
-            // If script was passed, code is needed if script source was not passed.
-            if (StringUtils.isBlank(dto.getScript().getCode()) && StringUtils.isBlank(dto.getScript().getScript())) {
-                missingParameters.add("script.code");
-
-                // Otherwise code is calculated from script source by combining package and classname
-            } else if (!StringUtils.isBlank(dto.getScript().getScript())) {
-                String fullClassname = ScriptInstanceService.getFullClassname(dto.getScript().getScript());
-                if (!StringUtils.isBlank(dto.getScript().getCode()) && !dto.getScript().getCode().equals(fullClassname)) {
-                    throw new BusinessApiException("The code and the canonical script class name must be identical");
-                }
-                dto.getScript().setCode(fullClassname);
-            }
         }
 
         handleMissingParameters();
@@ -245,19 +231,20 @@ public class EntityCustomActionApi extends BaseApi {
 
         if (dto.getScript() != null) {
             // Extract script associated with an action
-            ScriptInstance scriptInstance = null;
-
-            // Should create it or update script only if it has full information only
-            if (!dto.getScript().isCodeOnly()) {
-                scriptInstanceApi.createOrUpdate(dto.getScript());
-            }
-
-            scriptInstance = scriptInstanceService.findByCode(dto.getScript().getCode());
+            ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getScript());
             if (scriptInstance == null) {
-                throw new EntityDoesNotExistsException(ScriptInstance.class, dto.getScript().getCode());
+                throw new EntityDoesNotExistsException(ScriptInstance.class, dto.getScript());
             }
             action.setScript(scriptInstance);
         }
+        
+		if (dto.getApplicableToEntityList() != null) {
+			action.setApplicableToEntityList(dto.getApplicableToEntityList());
+		}
+
+		if (dto.getApplicableToEntityInstance() != null) {
+			action.setApplicableToEntityInstance(dto.getApplicableToEntityInstance());
+		}
     }
 
     @SuppressWarnings("rawtypes")

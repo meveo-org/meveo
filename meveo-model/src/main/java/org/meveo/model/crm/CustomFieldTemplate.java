@@ -345,7 +345,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
      */
     @Column(name = "display_format", length = 20)
     @Size(max = 20)
-    private String displayFormat;
+    private String displayFormat = "dd-M-yyyy hh:mm:ss";
 
 	/**
 	 * List of content types
@@ -967,7 +967,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
                 return Double.parseDouble(defaultValue);
             } else if (fieldType == CustomFieldTypeEnum.LONG) {
                 return Long.parseLong(defaultValue);
-            } else if (fieldType == CustomFieldTypeEnum.STRING || fieldType == CustomFieldTypeEnum.LIST || fieldType == CustomFieldTypeEnum.TEXT_AREA) {
+            } else if (fieldType == CustomFieldTypeEnum.STRING || fieldType == CustomFieldTypeEnum.LIST || fieldType == CustomFieldTypeEnum.TEXT_AREA || fieldType == CustomFieldTypeEnum.LONG_TEXT) {
                 return defaultValue;
             } else if (fieldType == CustomFieldTypeEnum.DATE) {
                 return DateUtils.parseDateWithPattern(defaultValue, DateUtils.DATE_TIME_PATTERN);
@@ -1804,7 +1804,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 			return new ArrayList<Double>();
 		case EXPRESSION:
 		case TEXT_AREA:
+        case LONG_TEXT:
 		case LIST:
+		case SECRET:
 		case STRING:
 			return new ArrayList<String>();
 		case LONG:

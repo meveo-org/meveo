@@ -10,7 +10,9 @@ import javax.inject.Named;
 import javax.naming.NamingException;
 import javax.persistence.Table;
 
+import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -21,15 +23,18 @@ import org.meveo.model.storage.Repository;
 import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.util.Faces;
 import org.primefaces.model.LazyDataModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.12
  */
 @Named
 @ViewScoped
 public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
+	private Logger log = LoggerFactory.getLogger(CustomEntityInstanceListBean.class);
 	private static final long serialVersionUID = 2227098775326177111L;
 
 	private List<CustomFieldTemplate> customFieldTemplateList = new ArrayList<>();
@@ -136,26 +141,52 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	public void executeCustomAction(List<Map<String, Object>> selectedValues, EntityCustomAction action) {
 		try {
-			for (Map<String, Object> entity : selectedValues) {
-				CustomEntityInstance customEntityInstance = new CustomEntityInstance();
-				if (!customEntityTemplate.isStoreAsTable()) {
-					customEntityInstance = customEntityInstanceService.findByUuid(customEntityTemplate.getCode(), entity.get("uuid").toString());
-				} else {
-					customEntityInstance.setCet(customEntityTemplate);
-					customEntityInstance.setCetCode(customEntityTemplate.getCode());
-					customEntityInstance.setUuid((String) entity.get("uuid"));
-					customEntityInstance.setCode((String) entity.get("code"));
-					customEntityInstance.setDescription((String) entity.get("description"));
-					customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entity);
+			if (selectedValues != null && !selectedValues.isEmpty()) {
+				for (Map<String, Object> entity : selectedValues) {
+					CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+					if (!customEntityTemplate.isStoreAsTable()) {
+						customEntityInstance = customEntityInstanceService.findByUuid(customEntityTemplate.getCode(), entity.get("uuid").toString());
+					} else {
+						customEntityInstance.setCet(customEntityTemplate);
+						customEntityInstance.setCetCode(customEntityTemplate.getCode());
+						customEntityInstance.setUuid((String) entity.get("uuid"));
+						customEntityInstance.setCode((String) entity.get("code"));
+						customEntityInstance.setDescription((String) entity.get("description"));
+						customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entity);
+					}
+					customFieldDataEntryBean.executeCustomAction(customEntityInstance, action, null);
 				}
-				customFieldDataEntryBean.executeCustomAction(customEntityInstance, action, null);
+				setSelectedValues(null);
+
+			} else {
+				customFieldDataEntryBean.executeCustomAction(null, action, null);
 			}
-			setSelectedValues(null);
-		} catch (BusinessException e) {}
+
+		} catch (BusinessException e) {
+			log.error("Fail executing script with error {}", e.getMessage());
+		}
+	}
+
+	@Override
+	@ActionMethod
+	public void deleteMany() throws Exception {
+		repository = repository == null ? repositoryService.findByCode(repositoryCode) : repository;
+		String cetCode = StringUtils.isBlank(customEntityTemplateCode) ? entity.getCetCode() : customEntityTemplateCode;
+		if (selectedValues == null || selectedValues.isEmpty()) {
+			messages.info(new BundleKey("messages", "delete.entitities.noSelection"));
+			return;
+		}
+
+		for (Map<String, Object> cei: selectedValues) {
+			crossStorageService.remove(repository, customEntityTemplateService.findByCode(cetCode), (String) cei.get("uuid"));
+		}
+		messages.info(new BundleKey("messages", "delete.entitities.successful"));
 	}
 
 	public List<Repository> listRepositories() {
-		return repositoryService.listByCet(customEntityTemplate);
+		List<Repository> result = repositoryService.listByCetByUserLevel(customEntityTemplate);
+		
+		return result;
 	}
 
 	public List<Map<String, Object>> getSelectedValues() {
@@ -200,6 +231,5 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 		filters.values().removeIf(StringUtils::isBlank);
 		return filters;
 	}
-	
-	
+
 }

@@ -243,9 +243,11 @@ public class CustomField {
                 return doubleValue == null;
             case LONG:
                 return longValue == null;
+            case SECRET:
             case LIST:
             case STRING:
             case TEXT_AREA:
+            case LONG_TEXT:
             case EMBEDDED_ENTITY:	
                 return stringValue == null;
             case BOOLEAN:

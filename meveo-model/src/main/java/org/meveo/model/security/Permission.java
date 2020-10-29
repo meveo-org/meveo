@@ -131,22 +131,27 @@ public class Permission implements IEntity<Long>, Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((permission == null) ? 0 : permission.hashCode());
+		return result;
+	}
 
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (!(obj instanceof Permission)) {
-            return false;
-        }
-
-        Permission other = (Permission) obj;
-
-        if (getId() != null && other.getId() != null && getId().equals(other.getId())) {
-             return true;
-        }
-
-        return StringUtils.compare(this.getPermission(), other.getPermission()) == 0;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Permission other = (Permission) obj;
+		if (permission == null) {
+			if (other.permission != null)
+				return false;
+		} else if (!permission.equals(other.permission))
+			return false;
+		return true;
+	}
 }

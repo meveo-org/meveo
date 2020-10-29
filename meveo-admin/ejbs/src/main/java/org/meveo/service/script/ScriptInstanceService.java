@@ -31,11 +31,14 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
+import javax.persistence.NoResultException;
 
+import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -44,6 +47,7 @@ import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
+import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
 
 /**
@@ -57,6 +61,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
 	@Inject
 	private MavenDependencyService mdService;
+	
+	@Inject
+	private ScriptInstanceExecutor scriptExecutor;
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
@@ -276,9 +283,33 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         return scriptInterfaces;
     }
 
-//    @Override
-//    public ScriptInstance update(ScriptInstance executable) throws BusinessException {
-//        // executable = refreshOrRetrieve(executable);
-//        return super.update(executable);
-//    }
+	@Override
+	protected void executeEngine(ScriptInterface engine, Map<String, Object> context) throws ScriptExecutionException {
+		ScriptTransactionType txType;
+		
+		try {
+			txType = getEntityManager()
+				.createQuery("SELECT transactionType FROM ScriptInstance WHERE code = :code", ScriptTransactionType.class)
+				.setParameter("code", engine.getClass().getName())
+				.getSingleResult();
+		} catch (NoResultException e) {
+			txType = ScriptTransactionType.SAME;
+		}
+		
+		switch(txType) {
+			case MANUAL:
+				scriptExecutor.executeManualTx(engine, context);
+				break;
+			case NEW:
+				scriptExecutor.executeInNewTx(engine, context);
+				break;
+			case NONE:
+				scriptExecutor.executeNoTx(engine, context);
+				break;
+			case SAME:
+			default: 
+				super.executeEngine(engine, context);
+		}
+	}
+
 }

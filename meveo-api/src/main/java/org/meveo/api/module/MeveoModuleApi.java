@@ -671,10 +671,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					BaseEntityDto itemDto = null;
 
 					if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
-						// we will only add a cft if it's not a field of a cet
+						// we will only add a cft if it's not a field of a cet contained in the module
 						if (!StringUtils.isBlank(item.getAppliesTo())) {
 							String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
-							if (customEntityTemplateService.findByCode(cetCode) == null) {
+							
+							boolean isCetInModule = moduleItems.stream()
+									.filter(moduleItem -> moduleItem.getItemClass().equals(CustomEntityTemplate.class.getName()))
+									.anyMatch(moduleItem -> moduleItem.getItemCode().equals(cetCode));
+							
+							if (!isCetInModule) {
 								itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
 							}
 
@@ -684,7 +689,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
 						EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-						entityCustomActionDto.getScript().setScript(null); // Don't serialize the script
 						itemDto = entityCustomActionDto;
 
 					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
@@ -790,7 +794,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModuleDto addToModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+	public MeveoModuleDto addToModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
@@ -802,7 +806,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		moduleItem.setAppliesTo(appliesTo);
 		meveoModuleService.loadModuleItem(moduleItem);
+		
+		if(moduleItem.getItemEntity() == null) {
+			throw new BusinessException("Failed to load entity for module item " + moduleItem);
+		}
 
 		module.addModuleItem(moduleItem);
 
@@ -818,7 +827,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType) throws EntityDoesNotExistsException, BusinessException {
+	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
 		final MeveoModule module = meveoModuleService.findByCode(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
@@ -833,6 +842,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setMeveoModule(module);
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
+		moduleItem.setAppliesTo(appliesTo);
 		meveoModuleService.loadModuleItem(moduleItem);
 		
 		module.removeItem(moduleItem);

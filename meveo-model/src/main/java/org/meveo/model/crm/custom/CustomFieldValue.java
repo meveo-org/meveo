@@ -2,7 +2,6 @@ package org.meveo.model.crm.custom;
 
 import java.io.File;
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -26,9 +25,11 @@ import org.meveo.commons.utils.CustomInstantSerializer;
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.slf4j.Logger;
@@ -430,7 +431,34 @@ public class CustomFieldValue implements Serializable {
             for (Object listItem : listValue) {
                 listEntityValue.add(new EntityReferenceWrapper((BusinessEntity) listItem));
             }
-        } else {
+        } else if(CustomEntity.class.isAssignableFrom(itemClass)) {
+        	listEntityValue = new ArrayList<>(); 
+        	listMapValue = new ArrayList<>();
+            for (Object listItem : listValue) {
+            	CustomEntity customEntity = (CustomEntity) listItem;
+            	if(customEntity.getUuid() != null) {
+	            	EntityReferenceWrapper efw = new EntityReferenceWrapper();
+	            	efw.setUuid(customEntity.getUuid());
+	            	efw.setClassnameCode(customEntity.getCetCode());
+	            	efw.setClassname(listItem.getClass().getName());
+	                listEntityValue.add(efw);
+            	} else {
+            		Map<String, Object> mapValue = CEIUtils.pojoToCei(customEntity)
+        					.getCfValuesAsValues();
+            		listMapValue.add(mapValue);
+            	}
+            }
+            
+            if(listEntityValue.isEmpty()) {
+            	listEntityValue = null;
+            }
+            
+            if(listMapValue.isEmpty()) {
+            	listMapValue = null;
+            }
+        }
+        
+        else {
     	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
         }
     }
@@ -625,9 +653,11 @@ public class CustomFieldValue implements Serializable {
             break;
 
         case STRING:
+        case SECRET:
         case LIST:
         case TEXT_AREA:
-        case EMBEDDED_ENTITY:	
+        case LONG_TEXT:
+        case EMBEDDED_ENTITY:
             stringValue = (String) value;
 
             break;
@@ -897,6 +927,7 @@ public class CustomFieldValue implements Serializable {
                     return longValue.toString();
                 }
                 break;
+            case SECRET:
             case STRING:
             case LIST:
             case TEXT_AREA:
@@ -1003,7 +1034,7 @@ public class CustomFieldValue implements Serializable {
                 itemClass = Double.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY || cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
                 itemClass = EntityReferenceWrapper.class;
-            } else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
+            } else if (cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
                 itemClass = String.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                 itemClass = Long.class;
@@ -1311,7 +1342,14 @@ public class CustomFieldValue implements Serializable {
         } else if (value instanceof EntityReferenceWrapper) {
             setEntityReferenceValue((EntityReferenceWrapper) value);
 
-        } else if (value instanceof Map) {
+        } else if(value instanceof CustomEntity) {
+        	var ce = (CustomEntity) value;
+        	EntityReferenceWrapper erw = new EntityReferenceWrapper();
+        	erw.setUuid(ce.getUuid());
+        	erw.setClassname(ce.getCetCode());
+        	setEntityReferenceValue(erw);
+        	
+    	} else if (value instanceof Map) {
             setMapValue((Map) value);
 
         } else if (value instanceof List) {

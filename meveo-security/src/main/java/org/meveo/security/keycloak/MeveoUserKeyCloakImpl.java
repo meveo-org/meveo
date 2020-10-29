@@ -1,6 +1,7 @@
 package org.meveo.security.keycloak;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,8 +51,15 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
      * @param roleToPermissionMapping Role to permission mapping
      */
     @SuppressWarnings("rawtypes")
-    public MeveoUserKeyCloakImpl(SessionContext securityContext, String forcedUserName, String forcedProvider, Set<String> additionalRoles,
-            Map<String, Set<String>> roleToPermissionMapping) {
+    public MeveoUserKeyCloakImpl(
+    		SessionContext securityContext, 
+    		String forcedUserName, 
+    		String forcedProvider, 
+    		Set<String> additionalRoles,
+            Map<String, Set<String>> roleToPermissionMapping,
+            Map<String, List<String>> whiteList, 
+            Map<String, List<String>> blackList
+        ) {
 
         if (securityContext.getCallerPrincipal() instanceof KeycloakPrincipal) {
             KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) securityContext.getCallerPrincipal();
@@ -114,6 +122,9 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
                 this.roles.addAll(roleToPermissionMapping.get(roleName));
             }
         }
+        
+        this.whiteList = whiteList;
+        this.blackList = blackList;
     }
 
     @Override

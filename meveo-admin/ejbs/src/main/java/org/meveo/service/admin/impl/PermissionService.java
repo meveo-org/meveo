@@ -23,10 +23,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
@@ -72,17 +75,26 @@ public class PermissionService extends PersistenceService<Permission> {
         }
 
     }
+    
+    public void removeIfPresent(String permission) throws BusinessException {
+    	Permission permissionEntity = this.findByPermission(permission);
+    	if(permissionEntity != null) {
+    		remove(permissionEntity);
+    	}
+    }
 
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Permission createIfAbsent(String permission, String... rolesToAddTo) throws BusinessException {
         
         // Create permission if does not exist yet
+    	boolean created = false;
         Permission permissionEntity = findByPermission(permission);
         if (permissionEntity == null) {
             permissionEntity = new Permission();
             permissionEntity.setName(permission);
             permissionEntity.setPermission(permission);
             this.create(permissionEntity);
-            this.flush();
+            created = true;
         }
 
         // Add to a role, creating role first if does not exist yet
@@ -95,9 +107,14 @@ public class PermissionService extends PersistenceService<Permission> {
                 roleService.create(role);
             }
 
-            if (!role.getPermissions().contains(permissionEntity)) {
-                role.getPermissions().add(permissionEntity);
-                roleService.update(role);
+            try {
+	            if (created || !role.getPermissions().contains(permissionEntity)) {
+	                role.getPermissions().add(permissionEntity);
+	                roleService.updateNoMerge(role);
+	            }
+            } catch (Exception e) {
+            	log.error("Can't add permission {} to role {}", permission, role.getName());
+            	throw e;
             }
         }
 

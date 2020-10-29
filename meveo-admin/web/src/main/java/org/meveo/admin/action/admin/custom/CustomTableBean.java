@@ -73,7 +73,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 	private static final long serialVersionUID = -2748591950645172132L;
 
 	@Inject
-	private CustomTableService customTableService;
+	private transient CustomTableService customTableService;
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;

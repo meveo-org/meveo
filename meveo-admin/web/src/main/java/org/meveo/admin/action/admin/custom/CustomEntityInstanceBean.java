@@ -27,6 +27,7 @@ import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
@@ -59,7 +60,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	private CustomizedEntityService customizedEntityService;
 
 	@Inject
-	protected CrossStorageService crossStorageService;
+	protected transient CrossStorageService crossStorageService;
 
 	@Inject
 	protected CustomEntityInstanceService customEntityInstanceService;
@@ -78,23 +79,49 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
+	
+	private Map<String, Boolean> secretToDisplayInClear = new HashMap<>();
 
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
 	protected CustomEntityTemplate customEntityTemplate;
-	private Repository repository;
+	protected Repository repository;
 
 	protected String customEntityTemplateCode;
 	protected String customTableName;
 	private String uuid;
+	private String hash;
 
 	@Inject
 	@Cookie(name = "repository")
-	private String repositoryCode;
+	protected String repositoryCode;
 
 	private Map<String, CustomFieldTemplate> customFieldTemplates;
 
 	public CustomEntityInstanceBean() {
 		super(CustomEntityInstance.class);
+	}
+	
+	/**
+	 * @param cft the scret cft
+	 * @return whether the given secret cft should be displayed in clear on GUI
+	 */
+	public boolean isDisplayedInClear(CustomFieldTemplate cft) {
+		return secretToDisplayInClear.getOrDefault(cft.getCode(), false);
+	}
+	
+	/**
+	 * @param cft the scret cft
+	 * @param value whether the given secret cft should be displayed in clear on GUI
+	 */
+	public void setDisplayedInClear(CustomFieldTemplate cft, boolean value) {
+		secretToDisplayInClear.put(cft.getCode(), value);
+	}
+	
+	/**
+	 * @return the initial hash of the CEI before it was modified
+	 */
+	public String getHash() {
+		return hash;
 	}
 
 	@Override
@@ -131,6 +158,10 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			} catch (Exception e) {
 				log.error(e.getMessage());
 			}
+		}
+		
+		if(entity.getCfValuesAsValues() != null && customFieldTemplates != null) {
+			hash = CEIUtils.getHash(entity, customFieldTemplates);
 		}
 
 		return entity;
@@ -270,8 +301,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					return wrapper.getCode();
 				}
 
-				BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
-				return cei.getCode();
+				if(ceiMap.getValue() instanceof BusinessEntity) {
+					BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
+					return cei.getCode();
+				} else {
+					return ceiMap.getValue().toString();
+				}
 			}
 		}
 

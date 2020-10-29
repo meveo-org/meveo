@@ -182,7 +182,7 @@
 		</p:button>
 
 		<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(cc.attrs.backingBean.entity)}">
-			<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActions(cc.attrs.backingBean.entity)}">
+			<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActionsInDetail(cc.attrs.backingBean.entity)}">
 				<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customFieldDataEntryBean.executeCustomAction(cc.attrs.backingBean.entity, customAction, null)}"
 								 process="@this #{cc.attrs.submitPartialProcess!=null?cc.attrs.submitPartialProcess:'@form'}" partialSubmit="#{cc.attrs.submitPartialProcess !=null}"
 								 partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" update="@form"
@@ -272,7 +272,7 @@
 						<p:inputText value="#{mapValues['key']}" size="30" maxlength="100"/>
 					</p:column>
 					<p:column headerText="#{messages['commons.value']}">
-						<p:inputText value="#{mapValues['value']}" size="40" maxlength="100"/>
+						<p:inputText value="#{mapValues['value']}" size="40" maxlength="1024"/>
 					</p:column>
 					<f:facet name="footer">
 						<p:commandButton value="#{messages['action.execute']}" process="@form @parent" partialSubmit="true"

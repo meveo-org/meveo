@@ -109,6 +109,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
         if(scriptInstance.getCategory() != null) {
         	super.setCategory(scriptInstance.getCategory().getCode());
         }
+
     }
 
 

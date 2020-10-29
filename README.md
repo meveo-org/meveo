@@ -21,13 +21,14 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ## Technical documentation
 
-[Persistence](https://github.com/meveo-org/meveo/tree/master/meveo-api/src/main/java/org/meveo/api/persistence)
+[Persistence](./meveo-api/src/main/java/org/meveo/api/persistence)
+
+[Function](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
 
 [Endpoint](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
 
 [Notification](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
-[Module](https://github.com/meveo-org/meveo/tree/master/meveo-api/src/main/java/org/meveo/api/module)
+[Module](./meveo-api/src/main/java/org/meveo/api/module)
 
-
-
+[Security](./meveo-model/src/main/java/org/meveo/security/README.md)

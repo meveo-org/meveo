@@ -9,9 +9,15 @@ import org.meveo.model.crm.EntityReferenceWrapper;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.9.0
+ * @version 6.12.0
  */
 public enum CustomFieldTypeEnum {
+	
+	/**
+	 * Secret value, stored encrypted
+	 */
+	SECRET(false, true, String.class),
+	
     /**
      * String value
      */
@@ -76,7 +82,12 @@ public enum CustomFieldTypeEnum {
 	/**
 	 * Binary type value - only the path is stored
 	 */
-	BINARY(true, true, String.class);
+	BINARY(true, true, String.class),
+
+    /**
+     * LONG_TEXT value
+     */
+    LONG_TEXT(false, true, String.class);
 
     /**
      * Is value stored in a serialized form in DB

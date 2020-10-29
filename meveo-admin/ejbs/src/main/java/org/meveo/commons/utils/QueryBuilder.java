@@ -99,7 +99,13 @@ public class QueryBuilder {
         }
         if(params != null) {
 	        for (Map.Entry<String, Object> e : params.entrySet()) {
-	            result.setParameter(e.getKey(), e.getValue());
+	        	
+	        	if(e.getValue() instanceof Boolean) {
+	        		boolean bool = (boolean) e.getValue();
+	        		result.setParameter(e.getKey(), bool ? 1 : 0);
+	        	} else {
+	        		result.setParameter(e.getKey(), e.getValue());
+	        	}
 	        }
         }
 

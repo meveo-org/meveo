@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
@@ -39,6 +38,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.neo4j.NonUniqueResult;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
@@ -62,7 +62,6 @@ import com.google.common.collect.ImmutableMap;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
  */
-@Stateless
 public class Neo4jDao {
 
     private static final String FIELD_KEYS = "fieldKeys";
@@ -73,9 +72,6 @@ public class Neo4jDao {
     public static final String NODE_ID = "NODE_ID";
 
     Logger LOGGER = LoggerFactory.getLogger(Neo4jDao.class);
-
-    @Inject
-    private Neo4jConnectionProvider neo4jSessionFactory;
 
     @Inject
     @Updated
@@ -92,6 +88,9 @@ public class Neo4jDao {
     @Inject
     @Created
     private Event<Neo4jEntity> nodeCreatedEvent;
+    
+    @Inject
+    private CrossStorageTransaction crossStorageTransaction;
 
     @Inject
     private CypherHelper cypherHelper;
@@ -145,11 +144,15 @@ public class Neo4jDao {
         		.append("DROP CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
 
-        cypherHelper.update(
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
         		neo4jConfiguration,
         		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property)
+        		null,
+        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
+        		tx
     		);
+        }
     }
 
 	/**
@@ -164,11 +167,15 @@ public class Neo4jDao {
         		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
 
-        cypherHelper.update(
-        		neo4jConfiguration,
-        		query.toString(),
-        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property)
-    		);
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	        		neo4jConfiguration,
+	        		query.toString(),
+	        		null,
+	        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
+	        		tx
+	    		);
+        }
     }
 
     /**
@@ -181,11 +188,15 @@ public class Neo4jDao {
     public void createIndex(String neo4jConfiguration, String label, String property) {
         StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
 
-        cypherHelper.update(
-    		neo4jConfiguration,
-    		createIndexQuery.toString(),
-    		e -> LOGGER.debug("Index on {}({}) already exists", label, property)
-		);
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	    		neo4jConfiguration,
+	    		createIndexQuery.toString(),
+	    		null,
+	    		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
+	    		tx
+			);
+        }
     }
 
     /**
@@ -197,12 +208,16 @@ public class Neo4jDao {
 	 */
     public void removeIndex(String neo4jConfiguration, String label, String property){
         StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
-
-        cypherHelper.update(
-    		neo4jConfiguration,
-    		dropIndex.toString(),
-    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property)
-		);
+        
+        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+	        cypherHelper.update(
+	    		neo4jConfiguration,
+	    		dropIndex.toString(),
+	    		null,
+	    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property),
+	    		tx
+    		);
+        }
     }
 
     /**
@@ -233,14 +248,14 @@ public class Neo4jDao {
                 queryBuilder.toString(),
                 Collections.singletonMap("id", uuid),
                 (transaction, result) -> {
-                    final Record single = result.single();
-                    final Node deletedNode = single.get(0).asNode();
-                    if(deletedNode != null){
+                    final List<Record> records = result.list();
+                    if(!records.isEmpty()){
+                        final Node deletedNode = records.get(0).get(0).asNode();
                         LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
                         transaction.success();
                     } else {
                         LOGGER.error("Node with uuid {} not deleted", uuid);
-                        transaction.failure();
+                        crossStorageTransaction.rollbackTransaction();
                     }
                     return null;
                 },
@@ -310,18 +325,16 @@ public class Neo4jDao {
         values.put("relationLabel", relationLabel);
         values.put("targetLabel", targetLabel);
 
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
-             Transaction transaction = session.beginTransaction()) {
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        
+        StrSubstitutor sub = new StrSubstitutor(values);
+        String statement = sub.replace(Neo4JRequests.findRelationIdByTargetId);
 
-            StrSubstitutor sub = new StrSubstitutor(values);
-            String statement = sub.replace(Neo4JRequests.findRelationIdByTargetId);
+        final List<Record> result = transaction.run(statement, Collections.singletonMap(NODE_ID, targetUuid)).list();
 
-            final List<Record> result = transaction.run(statement, Collections.singletonMap(NODE_ID, targetUuid)).list();
-
-            return result.stream()
-                    .map(record -> record.get(0).asString())
-                    .collect(Collectors.toList());
-        }
+        return result.stream()
+                .map(record -> record.get(0).asString())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -339,19 +352,15 @@ public class Neo4jDao {
         values.put("relationLabel", relationLabel);
         values.put("sourceLabel", sourceLabel);
 
-        try (
-                Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
-                Transaction transaction = session.beginTransaction()
-        ) {
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
-            StrSubstitutor sub = new StrSubstitutor(values);
-            String statement = sub.replace(Neo4JRequests.findSourceNodeByRelationId);
+        StrSubstitutor sub = new StrSubstitutor(values);
+        String statement = sub.replace(Neo4JRequests.findSourceNodeByRelationId);
 
-            return transaction.run(statement, Collections.singletonMap(NODE_ID, relationUUID))
-                    .single()
-                    .get(0)
-                    .asString();
-        }
+        return transaction.run(statement, Collections.singletonMap(NODE_ID, relationUUID))
+                .single()
+                .get(0)
+                .asString();
     }
 
     /**
@@ -394,41 +403,30 @@ public class Neo4jDao {
 
         query.append(" }");
 
-        Transaction transaction = null;
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
-            final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
 
-			List<Record> records = result.list();
-			int size = records.size();
-			if (size == 1) {
-				return records.get(0).get(0).asMap();
+		List<Record> records = result.list();
+		int size = records.size();
+		if (size == 1) {
+			return records.get(0).get(0).asMap();
 
-			} else {
-				if (size != 0) {
-					throw new NonUniqueResult(records);
-				}
-				
-				return new HashMap<>();
+		} else {
+			if (size != 0) {
+				throw new NonUniqueResult(records);
 			}
-
-        } finally {
-            if (transaction != null) {
-                transaction.close();
-            }
-        }
-
+			
+			return new HashMap<>();
+		}
     }
 
     public String findNodeId(String neo4jConfiguration, String code, Map<String, Object> fieldsKeys){
-        Transaction transaction = null;
-
         final Map<String, Object> values = new HashMap<>();
         values.put(FIELD_KEYS, Values.value(fieldsKeys));
         values.put(CET_CODE, code);
 
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            transaction = session.beginTransaction();
+        try {
+            var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
             StrSubstitutor sub = new StrSubstitutor(values);
             String statement = sub.replace(Neo4JRequests.findNodeId);
@@ -438,45 +436,27 @@ public class Neo4jDao {
 
             return result.get(0).asString();
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.failure();
-            }
             
             if(!(e instanceof NoSuchRecordException)) {
 	            LOGGER.error("Cannot find id of node with label {} and key values {} for repository {} : {}", code, fieldsKeys, neo4jConfiguration, e);
             }
             
             return null;
-        } finally {
-            if (transaction != null) {
-                transaction.close();
-            }
         }
     }
 
     public void updateIDL(String neo4jConfiguration, String idl) {
-        Transaction transaction = null;
     	LOGGER.info("Updating IDL for repository {}", neo4jConfiguration);
     	
-        try (Session session = neo4jSessionFactory.getSession(neo4jConfiguration)){
-            if(session != null) {
-                transaction = session.beginTransaction();
-                transaction.run("call graphql.idl('" + idl + "')");
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
-                transaction.success();
-                transaction.close();
-                
-            	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
-            } else {
-                LOGGER.warn("Repository {} not found", neo4jConfiguration);
-            }
+        try {
+            transaction.run("call graphql.idl('" + idl + "')");
+            transaction.success();
             
+        	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.failure();
-                transaction.close();
-            }
-
+        	crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
             throw e;
         }
@@ -492,8 +472,7 @@ public class Neo4jDao {
 
         StringBuilder statement = new StringBuilder("call graphql.execute($query,$variables,$operationName)");
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         try {
             // Execute query and parse results
@@ -506,13 +485,9 @@ public class Neo4jDao {
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
-            transaction.failure();
+        	crossStorageTransaction.rollbackTransaction();
             LOGGER.error("[{}] Error while executing a GraphQL query : {}", neo4JConfiguration, query,  e);
             return null;
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
     }
@@ -589,8 +564,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         Node node = null;
 
@@ -608,13 +582,9 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            transaction.failure();
+            crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Error while merging Neo4J nodes.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues, e);
             throw new RuntimeException(e);
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
         if (node != null) {
@@ -661,8 +631,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
         
         Map<String, Object> fieldValues = new HashMap<>(fields);
         if(uuid == null) {
@@ -681,12 +650,8 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            transaction.failure();
+            crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Error while creating a Neo4J node", e);
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
         if (node != null) {
@@ -723,8 +688,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         Node node = null;
 
@@ -735,12 +699,8 @@ public class Neo4jDao {
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            transaction.failure();
+            crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
         if (node != null) {
@@ -762,8 +722,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         try {
             // Execute query and parse results
@@ -781,12 +740,8 @@ public class Neo4jDao {
 
             return ids;
         } catch (Exception e) {
-            transaction.failure();
+            crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Error while executing UniqueConstraint {}", uniqueConstraint, e);
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
         return Collections.emptySet();
@@ -813,8 +768,7 @@ public class Neo4jDao {
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.createRelationship);
         // Begin transaction
-        Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
         Relationship relationship = null;
 
         try {
@@ -827,12 +781,8 @@ public class Neo4jDao {
 
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            transaction.failure();
+            crossStorageTransaction.rollbackTransaction();
             LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
-        } finally {
-            // End session and transaction
-            transaction.close();
-            session.close();
         }
 
         if (relationship != null) {
@@ -1082,7 +1032,7 @@ public class Neo4jDao {
     			neo4JConfiguration, 
     			detachDeleteQuery, 
     			ImmutableMap.of("uuid", sourceNodeUuid), 
-    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e), null
 		);
     }
     
@@ -1117,7 +1067,7 @@ public class Neo4jDao {
     			neo4JConfiguration,
     			detachDeleteQuery,
     			arguments,
-    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e)
+    			e -> LOGGER.error("Error deleting target {} nodes of outgoing relationships with type {} from node {} ({})", targetNodeLabel, relationshipType, sourceNodeUuid, sourceNodeLabel, e), null
 		);
     }
 

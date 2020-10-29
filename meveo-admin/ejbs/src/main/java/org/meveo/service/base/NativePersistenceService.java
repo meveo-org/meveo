@@ -52,6 +52,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
@@ -60,6 +62,7 @@ import org.hibernate.query.NativeQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -82,6 +85,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -147,6 +151,12 @@ public class NativePersistenceService extends BaseService {
 
 	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
+	
+    @Inject
+    private CrossStorageTransaction crossStorageTransaction;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider cache;
 
 	/**
 	 * Return an entity manager for a current provider
@@ -207,34 +217,33 @@ public class NativePersistenceService extends BaseService {
 				tableName = "\"" + tableName + "\"";
 			}
 
-			try (Session session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-				StringBuilder selectQuery = new StringBuilder();
+			StringBuilder selectQuery = new StringBuilder();
 
-				selectQuery.append("SELECT ");
+			selectQuery.append("SELECT ");
 
-				if (selectFields == null) {
-					selectQuery.append("*");
-				} else if (selectFields.isEmpty()) {
-					selectQuery.append("uuid");
-				} else {
-					for (String field : selectFields) {
-						if (PostgresReserverdKeywords.isReserved(field)) {
-							field = "\"" + field.toLowerCase() + "\"";
-						}
-						selectQuery.append(field).append(", ");
+			if (selectFields == null) {
+				selectQuery.append("*");
+			} else if (selectFields.isEmpty()) {
+				selectQuery.append("uuid");
+			} else {
+				for (String field : selectFields) {
+					if (PostgresReserverdKeywords.isReserved(field)) {
+						field = "\"" + field.toLowerCase() + "\"";
 					}
-					selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
+					selectQuery.append(field).append(", ");
 				}
-
-				NativeQuery query = session.createSQLQuery(selectQuery + " FROM {h-schema}" + tableName + " e WHERE uuid=:uuid");
-				query.setParameter("uuid", uuid);
-				query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
-
-				Map<String, Object> values = (Map<String, Object>) query.uniqueResult();
-
-				return values;
+				selectQuery.delete(selectQuery.length() - 2, selectQuery.length());
 			}
+
+			NativeQuery query = session.createSQLQuery(selectQuery + " FROM {h-schema}" + tableName + " e WHERE uuid=:uuid");
+			query.setParameter("uuid", uuid);
+			query.setResultTransformer(AliasToEntityOrderedMapResultTransformer.INSTANCE);
+
+			Map<String, Object> values = (Map<String, Object>) query.uniqueResult();
+
+			return values;
 
 		} catch (Exception e) {
 			log.error("Failed to retrieve values from table by uuid {}/{}", tableName, uuid, e);
@@ -308,7 +317,8 @@ public class NativePersistenceService extends BaseService {
 		QueryBuilder builder = new QueryBuilder();
 		builder.setSqlString(q.toString());
 		
-		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(getEntityManager(sqlConnectionCode), true);
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(session, true);
 		queryParamers.forEach((k, v) -> query.setParameter(k, v));
 		
 		try {
@@ -367,7 +377,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		return create(sqlConnectionCode, cei, returnId, false, null, true);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		return create(sqlConnectionCode, cei, returnId, false, cfts.values(), true);
 	}
 
 	/**
@@ -501,67 +512,66 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-				hibernateSession.doWork(connection -> {
+			hibernateSession.doWork(connection -> {
 
-					setSchema(sqlConnectionCode, connection);
+				setSchema(sqlConnectionCode, connection);
 
-					try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 
-						int parameterIndex = 1;
-						for (String fieldName : values.keySet()) {
-							Object fieldValue = values.get(fieldName);
-							if (fieldValue == null) {
-								continue;
-							}
-
-							setParameterValue(ps, parameterIndex++, fieldValue);
-						}
-
-						ps.executeUpdate();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
-						}
-					}
-				});
-
-				// Find the identifier of the last inserted record
-				if (returnId) {
-					if (uuid != null) {
-						return (String) uuid;
-					}
-
-					Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
-
+					int parameterIndex = 1;
 					for (String fieldName : values.keySet()) {
 						Object fieldValue = values.get(fieldName);
 						if (fieldValue == null) {
 							continue;
 						}
 
-						// Serialize list values
-						if (fieldValue instanceof Collection) {
-							fieldValue = JacksonUtil.toString(fieldValue);
-						} else if (fieldValue instanceof Map) {
-							fieldValue = JacksonUtil.toString(fieldValue);
-						} else if (fieldValue instanceof File) {
-							fieldValue = ((File) fieldValue).getAbsolutePath();
-						} else if (fieldValue instanceof EntityReferenceWrapper) {
-							fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
-						}
-
-						query.setParameter(fieldName, fieldValue);
+						setParameterValue(ps, parameterIndex++, fieldValue);
 					}
 
-					uuid = query.getSingleResult();
-					values.put(FIELD_ID, uuid);
-
-					return (String) uuid;
-
-				} else {
-					return null;
+					ps.executeUpdate();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
 				}
+			});
+
+			// Find the identifier of the last inserted record
+			if (returnId) {
+				if (uuid != null) {
+					return (String) uuid;
+				}
+
+				Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
+
+				for (String fieldName : values.keySet()) {
+					Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
+						continue;
+					}
+
+					// Serialize list values
+					if (fieldValue instanceof Collection) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof Map) {
+						fieldValue = JacksonUtil.toString(fieldValue);
+					} else if (fieldValue instanceof File) {
+						fieldValue = ((File) fieldValue).getAbsolutePath();
+					} else if (fieldValue instanceof EntityReferenceWrapper) {
+						fieldValue = ((EntityReferenceWrapper) fieldValue).getUuid();
+					}
+
+					query.setParameter(fieldName, fieldValue);
+				}
+
+				uuid = query.getSingleResult();
+				values.put(FIELD_ID, uuid);
+
+				return (String) uuid;
+
+			} else {
+				return null;
 			}
 
 		} catch (Exception e) {
@@ -619,82 +629,82 @@ public class NativePersistenceService extends BaseService {
 
 		sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-			hibernateSession.doWork(new org.hibernate.jdbc.Work() {
+		hibernateSession.doWork(new org.hibernate.jdbc.Work() {
 
-				@Override
-				public void execute(Connection connection) throws SQLException {
+			@Override
+			public void execute(Connection connection) throws SQLException {
 
-					setSchema(sqlConnectionCode, connection);
+				setSchema(sqlConnectionCode, connection);
 
-					try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
+				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
 
-						Object fieldValue = null;
-						int i = 1;
-						int itemsProcessed = 0;
-						for (Map<String, Object> value : values) {
+					Object fieldValue = null;
+					int i = 1;
+					int itemsProcessed = 0;
+					for (Map<String, Object> value : values) {
 
-							i = 1;
-							for (String fieldName : fieldNames) {
-								fieldValue = value.get(fieldName);
+						i = 1;
+						for (String fieldName : fieldNames) {
+							fieldValue = value.get(fieldName);
 
-								if (fieldValue == null) {
-									preparedStatement.setNull(i, Types.NULL);
-								} else if (fieldValue instanceof String) {
-									preparedStatement.setString(i, (String) fieldValue);
-								} else if (fieldValue instanceof Long) {
-									preparedStatement.setLong(i, (Long) fieldValue);
-								} else if (fieldValue instanceof Double) {
-									preparedStatement.setDouble(i, (Double) fieldValue);
-								} else if (fieldValue instanceof BigInteger) {
-									preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
-								} else if (fieldValue instanceof Integer) {
-									preparedStatement.setInt(i, (Integer) fieldValue);
-								} else if (fieldValue instanceof BigDecimal) {
-									preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
-								} else if (fieldValue instanceof Date) {
-									preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
-								} else if (fieldValue instanceof Collection) {
-									preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
-								} else {
-									log.error("Unhandled field type {}", fieldValue.getClass());
-								}
-
-								i++;
+							if (fieldValue == null) {
+								preparedStatement.setNull(i, Types.NULL);
+							} else if (fieldValue instanceof String) {
+								preparedStatement.setString(i, (String) fieldValue);
+							} else if (fieldValue instanceof Long) {
+								preparedStatement.setLong(i, (Long) fieldValue);
+							} else if (fieldValue instanceof Double) {
+								preparedStatement.setDouble(i, (Double) fieldValue);
+							} else if (fieldValue instanceof BigInteger) {
+								preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
+							} else if (fieldValue instanceof Integer) {
+								preparedStatement.setInt(i, (Integer) fieldValue);
+							} else if (fieldValue instanceof BigDecimal) {
+								preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
+							} else if (fieldValue instanceof Date) {
+								preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
+							} else if (fieldValue instanceof Collection) {
+								preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
+							} else {
+								log.error("Unhandled field type {}", fieldValue.getClass());
 							}
 
-							preparedStatement.addBatch();
-
-							// Batch size: 20
-							if (itemsProcessed % 500 == 0) {
-								preparedStatement.executeBatch();
-							}
-							itemsProcessed++;
-						}
-						preparedStatement.executeBatch();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
+							i++;
 						}
 
-					} catch (SQLException e) {
-						log.error("Failed to bulk insert with sql {}\n", sql, e);
-						throw e;
+						preparedStatement.addBatch();
+
+						// Batch size: 20
+						if (itemsProcessed % 500 == 0) {
+							preparedStatement.executeBatch();
+						}
+						itemsProcessed++;
 					}
+					preparedStatement.executeBatch();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
+
+				} catch (SQLException e) {
+					log.error("Failed to bulk insert with sql {}\n", sql, e);
+					throw e;
 				}
-			});
-		}
+			}
+		});
 	}
 
 	/**
 	 * Updates a {@linkplain CustomEntityInstance} in the database given a uuid.
 	 *
-	 * @param cei the {@link CustomEntityInstance}. The cf values must contain the
-	 *            field uuid.
+	 * @param sqlConnectionCode Code of the configuration where to make the update
+	 * @param cei               the {@link CustomEntityInstance}. The cf values must contain the field uuid.
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-		update(sqlConnectionCode, cei, false, null, false);
+		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		update(sqlConnectionCode, cei, false, cfts.values(), false);
 	}
 
 	/**
@@ -790,31 +800,31 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
 
-			try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 
-				hibernateSession.doWork(connection -> {
+			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-					setSchema(sqlConnectionCode, connection);
+			hibernateSession.doWork(connection -> {
 
-					try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-						int parameterIndex = 1;
-						for (String fieldName : values.keySet()) {
-							Object fieldValue = values.get(fieldName);
-							if (fieldValue != null && fieldName != "uuid") {
-								setParameterValue(ps, parameterIndex++, fieldValue);
-							}
+				setSchema(sqlConnectionCode, connection);
+
+				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+					int parameterIndex = 1;
+					for (String fieldName : values.keySet()) {
+						Object fieldValue = values.get(fieldName);
+						if (fieldValue != null && fieldName != "uuid") {
+							setParameterValue(ps, parameterIndex++, fieldValue);
 						}
-
-						ps.executeUpdate();
-						if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-							connection.commit();
-						}
-
-					} catch (Exception e) {
-						log.error("Native SQL update failed: {}", e.getMessage());
 					}
-				});
-			}
+
+					ps.executeUpdate();
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						connection.commit();
+					}
+
+				} catch (Exception e) {
+					log.error("Native SQL update failed: {}", e.getMessage());
+				}
+			});
 
 			CustomTableRecord record = new CustomTableRecord();
 			record.setUuid((String) values.get(FIELD_ID));
@@ -831,54 +841,54 @@ public class NativePersistenceService extends BaseService {
 	/**
 	 * Update field value in a table
 	 *
-	 * @param tableName Table name to update
-	 * @param uuid      Record identifier
-	 * @param fieldName Field to update
-	 * @param value     New value
+	 * @param sqlConnectionCode Code of the sql repository
+	 * @param tableName         Table name to update
+	 * @param uuid              Record identifier
+	 * @param fieldName         Field to update
+	 * @param value             New value
 	 * @throws BusinessException General exception
 	 */
+	@Transactional(value = TxType.SUPPORTS)
 	public void updateValue(String sqlConnectionCode, String tableName, String uuid, String fieldName, Object value) throws BusinessException {
-		// Serialize collections
-		if (value instanceof Collection) {
-			value = JacksonUtil.toString(value);
-		}
+		var finalValue = value instanceof Collection ? value = JacksonUtil.toString(value) : value;
 
 		String cetCode = tableName;
-		if (PostgresReserverdKeywords.isReserved(tableName)) {
-			tableName = "\"" + tableName + "\"";
-		}
-
-		if (PostgresReserverdKeywords.isReserved(fieldName)) {
-			fieldName = "\"" + fieldName.toLowerCase() + "\"";
-		}
+		var finalTableName = PostgresReserverdKeywords.isReserved(tableName) ? "\"" + tableName + "\"" : tableName;
+		var finalFieldName = PostgresReserverdKeywords.isReserved(fieldName) ? "\"" + fieldName.toLowerCase() + "\"" : fieldName;
 		
 		StringBuilder sql = new StringBuilder();
-		
-		try {
-			if (value == null) {
-				sql.append("update " + tableName + " set " + fieldName + "= null where uuid=:uuid");
-				getEntityManager(sqlConnectionCode)
-					.createNativeQuery(sql.toString())
-					.setParameter("uuid", uuid)
-					.executeUpdate();
-			} else {
-				sql.append("update " + tableName + " set " + fieldName + "= :" + fieldName + " where uuid=:uuid");
-				getEntityManager(sqlConnectionCode)
-					.createNativeQuery(sql.toString())
-					.setParameter(fieldName, value)
-					.setParameter("uuid", uuid)
-					.executeUpdate();
-			}
-
-			CustomTableRecord record = new CustomTableRecord();
-			record.setUuid(uuid);
-			record.setCetCode(cetCode);
-			customTableRecordUpdate.fire(record);
-
-		} catch (Exception e) {
-			log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
-			throw e;
+		if (finalValue == null) {
+			sql.append("update " + finalTableName + " set " + finalFieldName + "= null where uuid = ?");
+		} else {
+			sql.append("update " + finalTableName + " set " + finalFieldName + "= ? where uuid = ?");
 		}
+		
+		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		session.doWork(connection -> {
+			try (var statement = connection.prepareStatement(sql.toString())){
+				
+				if(finalValue == null) {
+					statement.setString(1, uuid);
+				} else {
+					setParameterValue(statement, 1, finalValue);
+					statement.setString(2, uuid);
+				}
+				
+				statement.executeUpdate();
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					connection.commit();
+				}
+				
+				CustomTableRecord record = new CustomTableRecord();
+				record.setUuid(uuid);
+				record.setCetCode(cetCode);
+				customTableRecordUpdate.fire(record);
+
+			} catch (Exception e) {
+				log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
+				throw e;
+			}
+		});
 	}
 
 	/**
@@ -1182,22 +1192,50 @@ public class NativePersistenceService extends BaseService {
 		if (PostgresReserverdKeywords.isReserved(tableName)) {
 			tableName = "\"" + tableName + "\"" ;
 		}
+		
+		String superType = config != null ? config.getSuperType() : null;
+		if(superType != null) {
+			if (PostgresReserverdKeywords.isReserved(superType)) {
+				superType = "\"" + superType + "\"" ;
+			}
+		}
 
-		// If no fetch fields are defined, return everyinthing
+		// If no fetch fields are defined, return everything
 		if (config == null || config.getFetchFields() == null) {
-			startQuery = "select * from {h-schema}" + tableName + " a ";
-
+			if(superType != null) {
+				startQuery = "select a.*";
+				
+				// Declaratively fetch super-type fields
+				if(config.getSuperTypeFields() != null) {
+					for(var superTypeField : config.getSuperTypeFields()) {
+						startQuery += ", b." + superTypeField + " ";
+					}
+				} else {
+					startQuery += ", b.*";
+				}
+				
+				startQuery += "from {h-schema}" + tableName + " a ";
+				startQuery += " INNER JOIN " + superType + " b ON a.uuid = b.uuid";
+			} else {
+				startQuery = "select * from {h-schema}" + tableName + " a ";
+			}
 		} else if (config.getFetchFields().isEmpty()) {
 			// If fetch fields are empty, only return UUID
-			startQuery = "select uuid from {h-schema}" + tableName + " a ";
+			startQuery = "select a.uuid from {h-schema}" + tableName + " a ";
+			if(superType != null) {
+				startQuery += " INNER JOIN " + superType + " b ON a.uuid = b.uuid"; 
+			}
 		} else {
-			StringBuilder builder = new StringBuilder("select uuid, "); // Always return UUID
+			StringBuilder builder = new StringBuilder("select a.uuid, "); // Always return UUID
 			config.getFetchFields().forEach(s -> builder.append(s).append(", "));
 			builder.delete(builder.length() - 2, builder.length());
 			startQuery = builder.append(" from {h-schema}").append(tableName).append(" a ").toString();
+			if(superType != null) {
+				startQuery += " INNER JOIN " + superType + " b ON a.uuid = b.uuid"; 
+			}
 		}
 
-		QueryBuilder queryBuilder = new QueryBuilder(startQuery, "a");
+		QueryBuilder queryBuilder = new QueryBuilder(startQuery, null);
 
 		if (config == null) {
 			return queryBuilder;
@@ -1231,13 +1269,13 @@ public class NativePersistenceService extends BaseService {
 				if ("fromRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion("a." + fieldName, " >= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " >= ", rationalNumber, true);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion("a." + fieldName, " >= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " >= ", filterValue, true);
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+						queryBuilder.addCriterionDateRangeFromTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					}  else if (filterValue instanceof Instant) {
-						queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Instant) filterValue);
+						queryBuilder.addCriterionDateRangeFromTruncatedToDay(fieldName, (Instant) filterValue);
 					}
 
 					// if ranged search - field value in between from - to values. Specifies "to"
@@ -1245,13 +1283,13 @@ public class NativePersistenceService extends BaseService {
 				} else if ("toRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion("a." + fieldName, " <= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, true);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " <= ", filterValue, true);
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+						queryBuilder.addCriterionDateRangeToTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					} else if (filterValue instanceof Instant) {
-						queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Instant) filterValue);
+						queryBuilder.addCriterionDateRangeToTruncatedToDay(fieldName, (Instant) filterValue);
 					}
 
 					// Value is in field value (list)
@@ -1265,21 +1303,21 @@ public class NativePersistenceService extends BaseService {
 					boolean isNot = "not-inList".equals(condition);
 
 					if (filterValue instanceof String) {
-						queryBuilder.addSql("a." + fieldName + (isNot ? " NOT " : "") + " IN (" + filterValue + ")");
+						queryBuilder.addSql(fieldName + (isNot ? " NOT " : "") + " IN (" + filterValue + ")");
 					} else if (filterValue instanceof Collection) {
 						String paramName = queryBuilder.convertFieldToParam(fieldName);
-						queryBuilder.addSqlCriterion("a." + fieldName + (isNot ? " NOT " : "") + " IN (:" + paramName + ")", paramName, filterValue);
+						queryBuilder.addSqlCriterion(fieldName + (isNot ? " NOT " : "") + " IN (:" + paramName + ")", paramName, filterValue);
 					}
 
 					// The value is in between two field values
 				} else if ("minmaxRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion("a." + fieldName, " <= ", rationalNumber, false);
-						queryBuilder.addCriterion("a." + fieldName2, " >= ", rationalNumber, false);
+						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, false);
+						queryBuilder.addCriterion(fieldName2, " >= ", rationalNumber, false);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, false);
-						queryBuilder.addCriterion("a." + fieldName2, " >= ", filterValue, false);
+						queryBuilder.addCriterion(fieldName, " <= ", filterValue, false);
+						queryBuilder.addCriterion(fieldName2, " >= ", filterValue, false);
 					}
 					if (filterValue instanceof Date) {
 						Date value = (Date) filterValue;
@@ -1290,8 +1328,8 @@ public class NativePersistenceService extends BaseService {
 						int date = c.get(Calendar.DATE);
 						c.set(year, month, date, 0, 0, 0);
 						value = c.getTime();
-						queryBuilder.addCriterion("a." + fieldName, "<=", value, false);
-						queryBuilder.addCriterion("a." + fieldName2, ">=", value, false);
+						queryBuilder.addCriterion(fieldName, "<=", value, false);
+						queryBuilder.addCriterion(fieldName2, ">=", value, false);
 					}
 
 					// The value is in between two field values with either them being optional
@@ -1330,7 +1368,7 @@ public class NativePersistenceService extends BaseService {
 					if (filterValue instanceof String) {
 						String filterString = (String) filterValue;
 						for (String field : fields) {
-							queryBuilder.addCriterionWildcard("a." + field, filterString, true);
+							queryBuilder.addCriterionWildcard(field, filterString, true);
 						}
 					}
 					queryBuilder.endOrClause();
@@ -1341,7 +1379,7 @@ public class NativePersistenceService extends BaseService {
 				} else if (PersistenceService.SEARCH_WILDCARD_OR.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) {
-						queryBuilder.addSql("a." + field + " like '%" + filterValue + "%'");
+						queryBuilder.addSql(field + " like '%" + filterValue + "%'");
 					}
 					queryBuilder.endOrClause();
 
@@ -1365,10 +1403,10 @@ public class NativePersistenceService extends BaseService {
 
 				} else {
 					if (filterValue instanceof String && PersistenceService.SEARCH_IS_NULL.equals(filterValue)) {
-						queryBuilder.addSql("a." + fieldName + " is null ");
+						queryBuilder.addSql(fieldName + " is null ");
 
 					} else if (filterValue instanceof String && PersistenceService.SEARCH_IS_NOT_NULL.equals(filterValue)) {
-						queryBuilder.addSql("a." + fieldName + " is not null ");
+						queryBuilder.addSql(fieldName + " is not null ");
 
 					} else if (filterValue instanceof String) {
 
@@ -1376,33 +1414,30 @@ public class NativePersistenceService extends BaseService {
 						String filterString = (String) filterValue;
 						boolean wildcard = (filterString.indexOf("*") != -1);
 						if (wildcard) {
-							queryBuilder.addCriterionWildcard("a." + fieldName, filterString, true, "ne".equals(condition));
+							queryBuilder.addCriterionWildcard(fieldName, filterString, true, "ne".equals(condition));
 						} else {
-							queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
+							queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
 						}
 
 					} else if (filterValue instanceof Date) {
-						queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
+						queryBuilder.addCriterionDateTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 
 					} else if (filterValue instanceof Instant) {
-						queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Instant) filterValue);
+						queryBuilder.addCriterionDateTruncatedToDay(fieldName, (Instant) filterValue);
 
-					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
-
-					} else if (filterValue instanceof Boolean) {
-						queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " not is" : " is ", filterValue, true);
+					} else if (filterValue instanceof Number || filterValue instanceof Boolean) {
+						queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
 
 					} else if (filterValue instanceof Enum) {
 						if (filterValue instanceof IdentifiableEnum) {
 							String enumIdKey = new StringBuilder(fieldName).append("Id").toString();
-							queryBuilder.addCriterion("a." + enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
+							queryBuilder.addCriterion(enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
 						} else {
-							queryBuilder.addCriterionEnum("a." + fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
+							queryBuilder.addCriterionEnum(fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
 						}
 
 					} else if (filterValue instanceof List) {
-						queryBuilder.addSqlCriterion("a." + fieldName + ("ne".equals(condition) ? " not in  " : " in ") + ":" + fieldName, fieldName, filterValue);
+						queryBuilder.addSqlCriterion(fieldName + ("ne".equals(condition) ? " not in  " : " in ") + ":" + fieldName, fieldName, filterValue);
 					}
 				}
 			}
@@ -1442,12 +1477,12 @@ public class NativePersistenceService extends BaseService {
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
 		
-		try (var session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
-			NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
-			return query.list();
-		}
-	}
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
+		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
+		return query.list();
+	}
+	
 	/**
 	 * Load and return the list of the records IN A Object[] format from database
 	 * according to sorting and paging information in
@@ -1475,24 +1510,22 @@ public class NativePersistenceService extends BaseService {
 	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		try (Session session = sqlConnectionProvider.getSession(sqlConnectionCode)) {
-			EntityManager entityManager = session.getEntityManagerFactory().createEntityManager();
+		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
-			Query query = queryBuilder.getNativeCountQuery(entityManager);
-			Object count = query.getSingleResult();
+		Query query = queryBuilder.getNativeCountQuery(session);
+		Object count = query.getSingleResult();
+		
+		if (count instanceof Long) {
+			return (Long) count;
 			
-			if (count instanceof Long) {
-				return (Long) count;
-				
-			} else if (count instanceof BigDecimal) {
-				return ((BigDecimal) count).longValue();
-				
-			} else if (count instanceof Integer) {
-				return ((Integer) count).longValue();
-				
-			} else {
-				return Long.valueOf(count.toString());
-			}
+		} else if (count instanceof BigDecimal) {
+			return ((BigDecimal) count).longValue();
+			
+		} else if (count instanceof Integer) {
+			return ((Integer) count).longValue();
+			
+		} else {
+			return Long.valueOf(count.toString());
 		}
 	}
 

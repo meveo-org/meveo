@@ -6,6 +6,7 @@ import javax.inject.Named;
 
 import org.meveo.admin.action.BaseBean;
 import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 
@@ -22,6 +23,9 @@ public class Neo4jConfigurationBean extends BaseBean<Neo4JConfiguration> {
 
 	@Inject
 	private Neo4jConfigurationService neo4jConfigurationService;
+	
+	@Inject
+	private Neo4jConnectionProvider neo4jConnectionProvider;
 
 	public Neo4jConfigurationBean() {
 		super(Neo4JConfiguration.class);
@@ -40,5 +44,26 @@ public class Neo4jConfigurationBean extends BaseBean<Neo4JConfiguration> {
 	@Override
 	public String getEditViewName() {
 		return "neo4jConfigurationDetail";
+	}
+	
+	/**
+	 * Test connection to database
+	 */
+	public void execute() {
+		try {
+			if(!entity.isTransient()) {
+				var conn = neo4jConnectionProvider.getSession(entity.getCode());
+				if(conn != null) {
+					conn.close();
+					messages.info("Connection success");
+				} else {
+					messages.error("Can't connect to database");
+				}
+			} else {
+				messages.error("Can't test connection in creation mode");
+			}
+		} catch (Exception e) {
+			messages.error("Can't connect to database:", e.getMessage());
+		}
 	}
 }

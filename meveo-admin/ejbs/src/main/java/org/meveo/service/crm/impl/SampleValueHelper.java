@@ -207,7 +207,7 @@ public class SampleValueHelper {
                                         Object value = entry.getValue();
                                         CustomFieldTemplate cft = customFieldTemplates.get(entry.getKey());
                                         try {
-                                            if (cft.getFieldType() == CustomFieldTypeEnum.STRING) {
+                                            if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.SECRET) {
                                                 String converted = (String) value;
                                             } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                                                 Long converted = (Long) value;

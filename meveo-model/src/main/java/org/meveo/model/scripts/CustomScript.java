@@ -36,6 +36,7 @@ public abstract class CustomScript extends Function {
 
 	private static final long serialVersionUID = 8176170199770220430L;
 
+	/** Script type */
 	public static final String TYPE = "Script";
 
 	@Column(name = "script", nullable = false, columnDefinition = "TEXT")
@@ -45,6 +46,10 @@ public abstract class CustomScript extends Function {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "src_type")
 	private ScriptSourceTypeEnum sourceTypeEnum = ScriptSourceTypeEnum.JAVA;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "tx_type")
+	private ScriptTransactionType transactionType = ScriptTransactionType.SAME;
 
 	@Transient
 	private List<ScriptInstanceError> scriptErrors = new ArrayList<>();
@@ -78,6 +83,20 @@ public abstract class CustomScript extends Function {
 	@JoinTable(name = "meveo_script_outputs", joinColumns = @JoinColumn(name = "meveo_script_instance_id"))
 	@Column(name = "script_output")
 	private Set<String> scriptOutputs;
+	
+	/**
+	 * @return the {@link #transactionType}
+	 */
+	public ScriptTransactionType getTransactionType() {
+		return transactionType;
+	}
+
+	/**
+	 * @param transactionType the transactionType to set
+	 */
+	public void setTransactionType(ScriptTransactionType transactionType) {
+		this.transactionType = transactionType;
+	}
 
 	/**
 	 * @return the script

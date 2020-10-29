@@ -59,6 +59,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
@@ -156,7 +157,7 @@ public class Neo4jService implements CustomPersistenceService {
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
-
+    
     /**
      * Remove all data concerned with the CET
      *
@@ -185,7 +186,11 @@ public class Neo4jService implements CustomPersistenceService {
 
         for (String repositoryCode : getRepositoriesCode()) {
             for (String label : labels) {
-                neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+            	try {
+            		neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+            	} catch (Exception e) {
+            		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repositoryCode, e);
+            	}
             }
         }
     }
@@ -224,7 +229,7 @@ public class Neo4jService implements CustomPersistenceService {
     public List<String> getRepositoriesCode(){
 
         return emWrapper.getEntityManager()
-                .createQuery("SELECT c.code from Neo4JConfiguration c", String.class)
+                .createQuery("SELECT c.code from Neo4JConfiguration c WHERE c.disabled = false", String.class)
                 .getResultList();
     }
 
@@ -336,6 +341,7 @@ public class Neo4jService implements CustomPersistenceService {
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
             if (cet.getPrePersistScript() != null) {
+            	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
                 scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
             }
 
@@ -445,7 +451,12 @@ public class Neo4jService implements CustomPersistenceService {
 
                     if (relatedPersistedEntities != null) {
                         String relationshipName = Optional.ofNullable(entityReference.getRelationshipName())
-                                .orElseThrow(() -> new BusinessException("Relationship name must be provided !"));
+                        		.orElseGet(() -> entityReference.getRelationship() != null ? entityReference.getRelationship().getName() : null);
+                        
+                        if(relationshipName == null) {
+                        	throw new BusinessException(entityReference.getAppliesTo() + "#" + entityReference.getCode() + ": Relationship name must be provided !");
+                        }
+                        
                         for (EntityRef entityRef : relatedPersistedEntities) {
                             relationshipsToCreate.put(entityRef, relationshipName);
                         }
@@ -653,10 +664,13 @@ public class Neo4jService implements CustomPersistenceService {
 
         /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
         if (customRelationshipTemplate.getStartNode().getPrePersistScript() != null) {
-            scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
+        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
+        	scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
         }
+        
         if (customRelationshipTemplate.getEndNode().getPrePersistScript() != null) {
-            scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
+        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
+        	scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
         }
 
         /* Recuperation of the custom fields of the CRT */
@@ -1157,7 +1171,7 @@ public class Neo4jService implements CustomPersistenceService {
                 // Validate that value is valid (min/max, regexp). When
                 // value is a list or a map, check separately each value
                 if (fieldValue != null
-                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
+                        && (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.DOUBLE ||
                         cft.getFieldType() == CustomFieldTypeEnum.LONG || cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN ||
                         cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION || cft.getFieldType() == CustomFieldTypeEnum.LIST)) {
                     List valuesToCheck = new ArrayList<>();

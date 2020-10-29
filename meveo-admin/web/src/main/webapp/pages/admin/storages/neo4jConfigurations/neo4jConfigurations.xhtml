@@ -28,11 +28,10 @@
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['neo4jConfiguration.url']}" field="neo4jUrl" />
 			<hftl:column label="#{messages['neo4jConfiguration.login']}" field="neo4jLogin" />
-			<hftl:column label="#{messages['neo4jConfiguration.password']}" field="neo4jPassword" />
 
 			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationManagement')}" />
 		</hftl:dataList>
-
+		
 	</ui:define>
 
 </ui:composition>

@@ -18,24 +18,46 @@
  */
 package org.meveo.admin.listener;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.List;
+
 import javax.annotation.PostConstruct;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
@@ -76,7 +98,21 @@ public class StartupListener {
 	
 	@Inject
 	private GitClient gitClient;
-
+	
+	@Inject
+	@CurrentUser
+	private Instance<MeveoUser> appInitUser;
+	
+    @Inject
+    private Instance<MeveoInitializer> initializers;
+    
+    @Inject
+    private Neo4jConfigurationService neo4jConfigurationService;
+    
+    @Inject
+    private Neo4jConnectionProvider neo4jConnectionProvider;
+    
+	@SuppressWarnings("unchecked")
 	@PostConstruct
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
 	public void init() {
@@ -115,10 +151,10 @@ public class StartupListener {
 			GitRepository meveoRepo = gitRepositoryService.findByCode("Meveo");
 			if (meveoRepo == null) {
 				try {
-					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR, //
-							false, //
-							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(), //
-							GitRepositoryService.MEVEO_DIR.getDefaultRemotePassword());
+					meveoRepo = gitRepositoryService.create(GitRepositoryService.MEVEO_DIR,
+							false,
+							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
+							GitRepositoryService.MEVEO_DIR.getClearDefaultRemotePassword());
 
 					log.info("Created Meveo GIT repository");
 
@@ -137,6 +173,37 @@ public class StartupListener {
 				} catch (BusinessException e) {
 					log.error("Cannot create Meveo Git folder", e);
 				}
+			}
+			
+			// Generate .gitignore file
+			List<String> ignoredFiles = List.of(
+					".classpath",
+					".project",
+					".settings/*",
+					".vscode/*",
+					"target/*"
+			);
+			
+			File gitRepo = GitHelper.getRepositoryDir(appInitUser.get(), meveoRepo.getCode());
+			File gitIgnoreFile = new File(gitRepo, ".gitignore");
+			
+			try {
+				List<String> actualIgnoredFiles = gitIgnoreFile.exists() ? Files.readAllLines(gitIgnoreFile.toPath()) : List.of();
+				Collection<String> missingEntries = CollectionUtils.subtract(ignoredFiles, actualIgnoredFiles);
+				try (
+						FileWriter fw = new FileWriter(gitIgnoreFile, true);
+						BufferedWriter output = new BufferedWriter(fw);
+					) {
+					for(String missingEntry : missingEntries) {
+						output.append(missingEntry);
+						output.newLine();
+					}
+				}
+				gitClient.commitFiles(meveoRepo, List.of(gitIgnoreFile), "Update .gitignore");
+			} catch (IOException e1) {
+				log.error("Can't read / write .gitignore file");
+			} catch (BusinessException e) {
+				log.error("Can't commit .gitignore file", e);
 			}
 
 			// Create default pom file
@@ -159,7 +226,55 @@ public class StartupListener {
 			log.info("Thank you for running Meveo Community code.");
 		});
 		
-		session.flush();	
+		session.flush();
+		
+		try {
+			// Set-up secret key
+			String secret = System.getProperty("meveo.security.secret");
+			if(secret == null) {
+				var paramBean = ParamBean.getInstance("meveo-security.properties");
+				secret = paramBean.getProperty("meveo.security.secret", null);
+				if(secret == null) {
+					KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+					SecureRandom secureRandom = new SecureRandom();
+					int keyBitSize = 256;
+					keyGenerator.init(keyBitSize, secureRandom);
+					SecretKey secretKey = keyGenerator.generateKey();
+					byte[] encodedKey = Base64.getEncoder().encode(secretKey.getEncoded());
+					var randomSecret = 	new String(encodedKey, StandardCharsets.UTF_8);
+					paramBean.setProperty("meveo.security.secret", randomSecret);
+					paramBean.saveProperties();
+					secret = randomSecret;
+				}
+				System.setProperty("meveo.security.secret", secret);
+			}
+			
+		} catch (NoSuchAlgorithmException e1) {
+			throw new RuntimeException(e1);
+		}
+		
+		// Test neo4j connections
+		var neo4jConfs = neo4jConfigurationService.listActive();
+		for(var neo4jConf : neo4jConfs) {
+			try {
+				var neo4jSession = neo4jConnectionProvider.getSession(neo4jConf.getCode());
+				neo4jSession.close();
+			} catch (Exception e) {
+				try {
+					neo4jConfigurationService.disable(neo4jConf.getId());
+				} catch (BusinessException e1) {
+					log.error("Failed to disable {}", neo4jConf, e1);
+				}
+			}
+		}
+				
+	    for(MeveoInitializer initializer : initializers) {
+	    	try {
+	    		initializer.init();
+	    	} catch (Exception e) {
+	    		log.error("Error during execution of {}", initializer.getClass(), e);
+	    	}
+	    }
 	}
 
 	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {
