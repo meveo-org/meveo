@@ -164,7 +164,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private RepositoryService repositoryService;
 
 	@Inject
-	private CrossStorageService crossStorageService;
+	private transient CrossStorageService crossStorageService;
 
 	private ICustomFieldEntity entity;
 
