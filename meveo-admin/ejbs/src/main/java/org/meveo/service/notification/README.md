@@ -10,9 +10,20 @@ When an event is triggered,  an object, described in the following table, is att
 | Logged In | Not applicable | Fired when a user successfully loggedin | The user entity |
 | Processed | TBD | | |
 | Removed | Any Observable  entity | Fired when an entity is deleted from database (but before transaction is commited) | The deleted entity |
-| Terminated | Not implemented yet | | |
 | Updated | Any Observable  entity | Fired when an entity is updated in database (but before transaction is commited) | The entity updated|
-
+| Enabled | Any Observable entity | Fired when an entity is enabled | The entity enabled |
+| Install | MeveoModule entity | Fired while the module is being installed | The module being installed |
+| Post install | MeveoModule entity |Fired after the module is installed | The module being installed |
+| File upload | MeveoFtpFile | Fired when a file is uploaded to the meveo server | The MeveoFtpFile being uploaded |
+| File download | MeveoFtpFile | Fired when a file is downloaded from the meveo server | The MeveoFtpFile being downloaded |
+| File rename | MeveoFtpFile | Fired when a file is renamed in the meveo server | The MeveoFtpFile being renamed |
+| File delete | MeveoFtpFile | Fired when a file is deleted in the meveo server | The MeveoFtpFile being deleted |
+| Terminated | Not implemented yet | | |
+| Rejected | Not implemented yet | | |
+| Rejected CDR | Not implemented yet | | |
+| Low balance | Not implemented yet | | |
+| Counter deduce | Not implemented yet | | |
+| End of term | Not implemented yet | | |
 
 Notification allow to perform some action, e.g send a message, when some event is triggered
 e.g. when an entity is created.
