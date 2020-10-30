@@ -332,16 +332,6 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 			throw new BusinessException(getClass().getSimpleName() + " is not using a base crud api");
 		}
 
-		if (moduleReleaseExport.getModuleSource() != null) {
-			ModuleReleaseDto moduleReleaseDto = JacksonUtil.fromString(moduleReleaseExport.getModuleSource(), ModuleReleaseDto.class);
-			if (CollectionUtils.isNotEmpty(moduleReleaseDto.getModuleDependencies())) {
-				moduleReleaseExport.getModuleDependencies().clear();
-				for (ModuleDependencyDto dependencyDto: moduleReleaseDto.getModuleDependencies()) {
-					MeveoModuleDependency meveoModuleDependency = new MeveoModuleDependency(dependencyDto.getCode(), dependencyDto.getDescription(), dependencyDto.getCurrentVersion());
-					moduleReleaseExport.getModuleDependencies().add(meveoModuleDependency);
-				}
-			}
-		}
 		DefaultStreamedContent defaultStreamedContent = new DefaultStreamedContent();
 		List<ModuleRelease> moduleReleases = new ArrayList<>();
 		moduleReleases.add(moduleReleaseExport);

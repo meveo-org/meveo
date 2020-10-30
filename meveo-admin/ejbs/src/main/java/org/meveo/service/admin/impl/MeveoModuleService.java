@@ -61,7 +61,6 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -751,21 +750,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 file.delete();
             }
         }
-    }
-
-    public void updateModuleDependencyDto(MeveoModule meveoModule) {
-        MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
-        if (CollectionUtils.isNotEmpty(moduleDto.getModuleDependencies())) {
-            moduleDto.getModuleDependencies().clear();
-        }
-        if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
-            for (MeveoModuleDependency meveoModuleDependency: meveoModule.getModuleDependencies()) {
-                ModuleDependencyDto moduleDependencyDto = new ModuleDependencyDto(meveoModuleDependency.getCode(), meveoModuleDependency.getDescription(), meveoModuleDependency.getCurrentVersion());
-                moduleDto.getModuleDependencies().add(moduleDependencyDto);
-            }
-        }
-        meveoModule.setModuleSource(JacksonUtil.toString(moduleDto));
-        getEntityManager().merge(meveoModule);
     }
 
     @Override

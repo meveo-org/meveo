@@ -930,6 +930,44 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@Override
+	public void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
+		File[] files = file.listFiles();
+		getFileImport().clear();
+
+		List<MeveoModuleDto> meveoModuleDtos = new ArrayList<>();
+		for (File fileFromZip : files) {
+			getFileImport().add(fileFromZip);
+			if (fileFromZip.getName().endsWith(".json")) {
+				FileInputStream inputStream = new FileInputStream(fileFromZip);
+				meveoModuleDtos.addAll(getModules(inputStream));
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(meveoModuleDtos)) {
+			for (MeveoModuleDto meveoModuleDto: meveoModuleDtos) {
+				if (CollectionUtils.isNotEmpty(meveoModuleDto.getModuleDependencies())) {
+					for (ModuleDependencyDto moduleDependencyDto: meveoModuleDto.getModuleDependencies()) {
+						for (MeveoModuleDto moduleDto: meveoModuleDtos) {
+							if (moduleDependencyDto.getCode().equals(moduleDto.getCode())) {
+								List<MeveoModuleDto> moduleDtos = new ArrayList<>();
+								moduleDtos.add(moduleDto);
+								importJSON(moduleDtos, overwrite);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		for (File importFile : files) {
+			if (importFile.getName().endsWith(".json")) {
+				FileInputStream inputStream = new FileInputStream(importFile);
+				importJSON(inputStream, overwrite);
+			}
+		}
+	}
+
+	@Override
 	public void importJSON(InputStream json, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		List<MeveoModuleDto> modules = getModules(json);
 

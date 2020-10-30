@@ -388,7 +388,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		}
 	}
 
-	private void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
+	public void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 		File[] files = file.listFiles();
 		fileImport.clear();
 
