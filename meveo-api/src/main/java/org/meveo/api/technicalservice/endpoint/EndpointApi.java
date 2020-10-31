@@ -665,8 +665,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				log.warn("[Endpoint {}] Variable {} cannot be extracted from context", endpoint.getCode(),
 						endpoint.getReturnedVariableName());
 			}
+		} else {
+			return "";
 		}
-
+		
 		if (!shouldSerialize) {
 			return returnValue.toString();
 		}
@@ -681,9 +683,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
 			return serializedResult;
 		}
-
+		
 		return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
-
 	}
 
 	/**

@@ -18,7 +18,9 @@ package org.meveo.api.rest.technicalservice;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +32,16 @@ import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
@@ -71,6 +76,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * @version 6.10
  */
 @WebServlet("/rest/*")
+@MultipartConfig
 public class EndpointServlet extends HttpServlet {
 
     private static final long serialVersionUID = -8425320629325242067L;
@@ -103,19 +109,36 @@ public class EndpointServlet extends HttpServlet {
     @Override
 	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
-        String requestBody = StringUtils.readBuffer(req.getReader());
-
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
-
-        if (!StringUtils.isBlank(requestBody) && contentType != null) {
-            if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
-                parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
-            } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
-                XmlMapper xmlMapper = new XmlMapper();
-                parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
-            }
+        
+        if(contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
+        	Collection<Part> parts = req.getParts();
+        	for(var part : parts) {
+        		Object partValue;
+		        if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_JSON)) {
+		        	partValue = JacksonUtil.read(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
+		        } else if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_XML)) {
+		            XmlMapper xmlMapper = new XmlMapper();
+		            partValue = xmlMapper.readValue(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
+		        } else if(part.getSubmittedFileName() != null) {
+		        	partValue = part.getInputStream();
+		        } else {
+		        	partValue = IOUtils.toString(part.getInputStream(), StandardCharsets.UTF_8);
+		        }
+		        parameters.put(part.getName(), partValue);
+        	}
+        	
+        } else { 
+            String requestBody = StringUtils.readBuffer(req.getReader());
+        	if (!StringUtils.isBlank(requestBody) && contentType != null) {
+		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
+		            parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
+		        } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
+		            XmlMapper xmlMapper = new XmlMapper();
+		            parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
+		        }
+        	}
         }
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
