@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -177,13 +178,14 @@ public class OntologyObserver {
 
     /**
      * When a {@link CustomEntityTemplate} is created, create the corresponding JSON Schema and commit it in the meveo directory
-     *
+     * <br>
+     * Note : must run in the current transaction, otherwise scripts relying on it will fail to compile
+     * 
      * @param cet The created {@link CustomEntityTemplate}
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if the json schema file already exists
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void cetCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityTemplate cet) throws IOException, BusinessException {
+    public void cetCreated(@Observes @Created CustomEntityTemplate cet) throws IOException, BusinessException {
     	hasChange.set(true);
 
         List<File> commitFiles = new ArrayList<>();
@@ -203,13 +205,39 @@ public class OntologyObserver {
 
         final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
         
-        
         File javaFile = new File(cetDir, cet.getCode() + ".java");
         FileUtils.write(javaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
         commitFiles.add(javaFile);
 
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom entity template " + cet.getCode());
     }
+    
+    /**
+     * Removes the files created by {@link #cetCreated(CustomEntityTemplate)} if the transaction fails
+     * 
+     * @see #cetCreated(CustomEntityTemplate)
+     * @param cet The CET which failed to get created
+     * @throws BusinessException if error occurs
+     */
+    public void cetCreationFailure(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created CustomEntityTemplate cet) throws BusinessException {
+        List<File> commitFiles = new ArrayList<>();
+        final File cetDir = cetCompiler.getCetDir();
+        if (!cetDir.exists()) {
+            return;
+        }
+        File schemaFile = new File(cetDir, cet.getCode() + ".json");
+        if(schemaFile.exists()) {
+        	schemaFile.delete();
+        }
+        commitFiles.add(schemaFile);
+        File javaFile = new File(cetDir, cet.getCode() + ".java");
+        if(javaFile.exists()) {
+        	javaFile.delete();
+        }
+        commitFiles.add(javaFile);
+        gitClient.commitFiles(meveoRepository, commitFiles, "Revert creation of custom entity template " + cet.getCode());
+    }
+    
 
     /**
      * When a {@link CustomEntityTemplate} is updated, update the corresponding JSON Schema and commit it in the meveo directory
@@ -373,14 +401,15 @@ public class OntologyObserver {
 
     /**
      * When a {@link CustomFieldTemplate} is created, update the corresponding JSON Schema of the related CET / CFT
-     * and commit it in the meveo directory
+     * and commit it in the meveo directory.
+     * 
+     * Note : must run in the current transaction, otherwise scripts relying on it will fail to compile
      *
      * @param cft The created {@link CustomFieldTemplate}
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void cftCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomFieldTemplate cft) throws IOException, BusinessException {
+    public void cftCreated(@Observes @Created CustomFieldTemplate cft) throws IOException, BusinessException {
         if(cft.isInDraft()) {
         	return;
         }

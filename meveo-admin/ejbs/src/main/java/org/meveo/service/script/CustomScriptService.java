@@ -97,6 +97,7 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
@@ -141,6 +142,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private MavenConfigurationService mavenConfigurationService;
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallCtx;
     
     private RepositorySystem defaultRepositorySystem;
 
@@ -208,7 +212,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             log.error("Error committing script", e);
         }
 
-        compileScript(script, false);
+        // Don't compile script during module installation, will be compiled after
+        if(!moduleInstallCtx.isActive()) {
+        	compileScript(script, false);
+        }
     }
 
     @Override

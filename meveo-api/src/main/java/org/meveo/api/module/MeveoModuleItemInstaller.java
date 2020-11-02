@@ -59,6 +59,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -115,6 +116,9 @@ public class MeveoModuleItemInstaller {
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	private ModuleInstallationContext installCtx;
 
 	@Inject
 	@ModuleInstall
@@ -291,6 +295,7 @@ public class MeveoModuleItemInstaller {
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
+    	installCtx.begin();
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -324,6 +329,7 @@ public class MeveoModuleItemInstaller {
 	            
 	            result.setInstalledModule(meveoModule);
 	            postInstallEvent.fire(meveoModule);
+	            installCtx.end();
         	} catch(Exception e) {
             	throw new ModuleInstallFail(meveoModule, result, e);
             }
