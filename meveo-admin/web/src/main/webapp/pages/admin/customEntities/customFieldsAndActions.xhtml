@@ -559,7 +559,7 @@
 								label="#{messages['customFieldTemplate.fieldType']}"
 								field="fieldType" required="true" componentWidth="30"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
-								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat"
+								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat storageType"
 								onEventComplete="PF('cftDialog').initPosition()"
 								rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
 								
@@ -578,18 +578,20 @@
 									<f:attribute name="GenericEnumConverter.enumType"
 										value="CustomFieldTypeEnum" />
 									<p:ajax
-										update="listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields"
+										update="listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields storageType"
 										listener="#{customFieldTemplateBean.updateDefaultValues}"
 										event="change" />
 								</p:selectOneMenu>
 							</hftl:decorateFormField>
 						</h:panelGroup>
-						<hftl:formField
-							label="#{messages['customFieldTemplate.storageType']}"
-							field="storageType" required="true" componentWidth="30"
-							actionListenerBean="#{customFieldTemplateBean}" allowEdit="false"
-							listenerUpdate="defaultValueField mapKeyTypeField matrixColumns"
-							actionListenerMethod="updateDefaultValues" />
+						<h:panelGroup id="storageType">
+							<hftl:formField
+								label="#{messages['customFieldTemplate.storageType']}"
+								field="storageType" required="true" componentWidth="30"
+								actionListenerBean="#{customFieldTemplateBean}" allowEdit="false"
+								listenerUpdate="defaultValueField mapKeyTypeField matrixColumns storageType"
+								actionListenerMethod="updateDefaultValues" />
+						</h:panelGroup>
 						<h:panelGroup id="mapKeyTypeField">
 							<hftl:formField
 								label="#{messages['customFieldTemplate.mapKeyType']}"
@@ -683,8 +685,8 @@
 							value="#{customFieldTemplateBean.entity.matrixColumns}"
 							var="matrixColumn" style="width: 850px"
 							sortBy="#{matrixColumn.columnUse}">
-							<p:ajax event="cellEdit" update=":cftForm:matrixColumns"
-								partialSubmit="true" />
+							<!--<p:ajax event="cellEdit" update=":cftForm:matrixColumns"-->
+								<!--partialSubmit="true" />-->
 							<p:headerRow>
 		                                <p:column
 									colspan="#{customFieldTemplateBean.edit?5:4}">
