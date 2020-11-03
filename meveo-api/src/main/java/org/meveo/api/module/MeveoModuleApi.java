@@ -87,11 +87,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleDependency;
-import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.model.module.ModuleRelease;
-import org.meveo.model.module.ModuleReleaseItem;
+import org.meveo.model.module.*;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.persistence.CrossStorageService;
@@ -1010,9 +1006,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					moduleRelease.setModuleFiles(moduleFiles);
 				}
 				if (CollectionUtils.isNotEmpty(module.getModuleDependencies())) {
-					List<MeveoModuleDependency> dependencies = new ArrayList<>();
+					List<ModuleReleaseDependency> dependencies = new ArrayList<>();
 					for (MeveoModuleDependency moduleDependency : module.getModuleDependencies()) {
-						dependencies.add(moduleDependency);
+						ModuleReleaseDependency dependency = new ModuleReleaseDependency(moduleDependency.getCode(), moduleDependency.getDescription(), moduleDependency.getCurrentVersion());
+						dependencies.add(dependency);
+						dependency.setModuleRelease(moduleRelease);
 					}
 					moduleRelease.setModuleDependencies(dependencies);
 				}
@@ -1046,7 +1044,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					}
 					if (CollectionUtils.isNotEmpty(module.getModuleDependencies())) {
 						for (MeveoModuleDependency dependency : module.getModuleDependencies()) {
-							moduleReleaseDto.addModuleDependency(dependency);
+							ModuleReleaseDependency moduleReleaseDependency = new ModuleReleaseDependency(dependency.getCode(), dependency.getDescription(), dependency.getCurrentVersion());
+							moduleReleaseDto.addModuleDependency(moduleReleaseDependency);
 						}
 					}
 					moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));

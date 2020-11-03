@@ -15,7 +15,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.ScriptInstanceDto;
-import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.ModuleLicenseEnum;
 import org.meveo.model.module.ModuleRelease;
 
@@ -24,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.meveo.model.module.ModuleReleaseDependency;
 
 /**
  * A module is a collection of objects that can be classes, scripts,
@@ -355,7 +355,7 @@ public class ModuleReleaseDto {
 	/**
 	 * Adds the module dependency.
 	 */
-	public void addModuleDependency(MeveoModuleDependency dependency) {
+	public void addModuleDependency(ModuleReleaseDependency dependency) {
 		ModuleDependencyDto moduleDependencyDto = new ModuleDependencyDto(dependency.getCode(),dependency.getDescription(),dependency.getCurrentVersion());
 		if (!moduleDependencies.contains(moduleDependencyDto)) {
 			moduleDependencies.add(moduleDependencyDto);

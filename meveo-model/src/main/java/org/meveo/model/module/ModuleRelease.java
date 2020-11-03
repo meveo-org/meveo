@@ -101,9 +101,9 @@ public class ModuleRelease extends BaseEntity implements Serializable {
     @Column(name = "is_in_draft")
     private boolean isInDraft = true;
 
-    @OneToMany(mappedBy = "meveoModule", cascade = { CascadeType.ALL }, orphanRemoval = true)
+    @OneToMany(mappedBy = "moduleRelease", cascade = { CascadeType.ALL }, orphanRemoval = true)
     @LazyCollection(LazyCollectionOption.FALSE)
-    private List<MeveoModuleDependency> moduleDependencies = new ArrayList<>();
+    private List<ModuleReleaseDependency> moduleDependencies = new ArrayList<>();
 
     public List<ModuleReleaseItem> getModuleItems() {
         return moduleItems;
@@ -213,11 +213,11 @@ public class ModuleRelease extends BaseEntity implements Serializable {
 		this.description = description;
 	}
 
-    public List<MeveoModuleDependency> getModuleDependencies() {
+    public List<ModuleReleaseDependency> getModuleDependencies() {
         return moduleDependencies;
     }
 
-    public void setModuleDependencies(List<MeveoModuleDependency> moduleDependencies) {
+    public void setModuleDependencies(List<ModuleReleaseDependency> moduleDependencies) {
         this.moduleDependencies = moduleDependencies;
     }
 

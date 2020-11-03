@@ -80,4 +80,28 @@
 		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
 	</changeSet>
 
+	<changeSet author="Phu Bach" id="Github#220">
+		<createTable tableName="module_release_dependency">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="module_release_dependency_pkey" />
+			</column>
+			<column name="version" type="int4" />
+			<column name="code" type="varchar(255)" />
+			<column name="description" type="varchar(255)" />
+			<column name="current_version" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="module_release_id" type="bigint" />
+		</createTable>
+		<createSequence
+				sequenceName="module_release_dependency_seq" startValue="1" />
+		<addForeignKeyConstraint
+				baseColumnNames="module_release_id" baseTableName="module_release_dependency"
+				constraintName="fk_module_release_dependency_meveo_module"
+				deferrable="false" initiallyDeferred="false" onDelete="NO ACTION"
+				onUpdate="NO ACTION" referencedColumnNames="id"
+				referencedTableName="meveo_module_release" />
+	</changeSet>
+
 </databaseChangeLog>

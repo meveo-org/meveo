@@ -48,8 +48,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -78,22 +76,12 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
-import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleDependency;
-import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.model.module.MeveoModulePatch;
-import org.meveo.model.module.ModuleRelease;
-import org.meveo.model.module.ModuleReleaseItem;
+import org.meveo.model.module.*;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.security.PasswordUtils;
-import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
-import org.meveo.service.script.ConcreteFunctionService;
-import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -487,9 +475,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             moduleRelease.setModuleFiles(moduleFiles);
         }
         if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
-            List<MeveoModuleDependency> dependencies = new ArrayList<>();
+            List<ModuleReleaseDependency> dependencies = new ArrayList<>();
             for (MeveoModuleDependency moduleDependency : entity.getModuleDependencies()) {
-                dependencies.add(moduleDependency);
+                ModuleReleaseDependency dependency = new ModuleReleaseDependency(moduleDependency.getCode(), moduleDependency.getDescription(), moduleDependency.getCurrentVersion());
+                dependencies.add(dependency);
+                dependency.setModuleRelease(moduleRelease);
             }
             moduleRelease.setModuleDependencies(dependencies);
         }
@@ -524,7 +514,8 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
             if (CollectionUtils.isNotEmpty(entity.getModuleDependencies())) {
                 for (MeveoModuleDependency dependency : entity.getModuleDependencies()) {
-                    moduleReleaseDto.addModuleDependency(dependency);
+                    ModuleReleaseDependency moduleReleaseDependency = new ModuleReleaseDependency(dependency.getCode(), dependency.getDescription(), dependency.getCurrentVersion());
+                    moduleReleaseDto.addModuleDependency(moduleReleaseDependency);
                 }
             }
             moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
@@ -670,7 +661,8 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                     }
                     if (CollectionUtils.isNotEmpty(moduleRelease.getModuleDependencies())) {
                         Set<MeveoModuleDependency> dependencies = new HashSet<>();
-                        for (MeveoModuleDependency moduleDependency : moduleRelease.getModuleDependencies()) {
+                        for (ModuleReleaseDependency dependency : moduleRelease.getModuleDependencies()) {
+                            MeveoModuleDependency moduleDependency = new MeveoModuleDependency(dependency.getCode(), dependency.getDescription(), dependency.getCurrentVersion());
                             dependencies.add(moduleDependency);
                         }
                         module.setModuleDependencies(dependencies);

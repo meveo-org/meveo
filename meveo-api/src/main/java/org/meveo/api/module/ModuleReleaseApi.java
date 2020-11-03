@@ -62,10 +62,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
-import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleDependency;
-import org.meveo.model.module.ModuleRelease;
-import org.meveo.model.module.ModuleReleaseItem;
+import org.meveo.model.module.*;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -204,9 +201,9 @@ public class ModuleReleaseApi {
 			}
 		}
 
-		List<MeveoModuleDependency> dependencies = module.getModuleDependencies();
+		List<ModuleReleaseDependency> dependencies = module.getModuleDependencies();
 		if (dependencies != null) {
-			for (MeveoModuleDependency moduleDependency : dependencies) {
+			for (ModuleReleaseDependency moduleDependency : dependencies) {
 				moduleReleaseDto.addModuleDependency(moduleDependency);
 			}
 		}
@@ -387,7 +384,7 @@ public class ModuleReleaseApi {
 					}
 				}
 				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
-					for (MeveoModuleDependency moduleDependency: meveoModule.getModuleDependencies()) {
+					for (ModuleReleaseDependency moduleDependency: meveoModule.getModuleDependencies()) {
 						MeveoModule module = meveoModuleService.findByCode(moduleDependency.getCode());
 						if (module.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
 							List<String> moduleDependencies = new ArrayList<>();
