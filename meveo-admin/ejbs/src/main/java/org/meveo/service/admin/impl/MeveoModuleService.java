@@ -543,12 +543,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		return true;
 	}
 
-    @Override
-    public MeveoModule update(MeveoModule entity) throws BusinessException {
-	    MeveoModule meveoModule = updateModule(entity);
-        return super.update(meveoModule);
-    }
-
     public MeveoModule mergeModule(MeveoModule entity) {
 	    MeveoModule meveoModule = updateModule(entity);
 	    return getEntityManager().merge(meveoModule);

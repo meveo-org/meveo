@@ -50,3 +50,41 @@ Currently, the way workflow are applied is different: transitions have names and
 ### Additional Available Service
 - A service that returns a list of states for a given CET.
 - A service that returns the target states from a origin state of a given CEI where applicationEL evaluates to true.
+
+## List of Services
+
+### Get the Available States of a given CEI
+
+API: /customEntityInstance/states/{customEntityTemplateCode}/{customFieldTemplateCode}/{uuid}
+
+This API returns the list of states available for a given CEI. To build this list EL must be evaluated for all transitions with current status as origin.
+
+It has 2 parameters : CEI's uuid and CFT code.
+It loads the CEI, then evaluate all the transition rules whose origin is the state (the value of the CFT in the CEI) and return the list of target states for all those transition whose rule evaluated to true.
+
+
+We need to evaluate every transition of the workflow base on the CEI.
+
+For example, you have:
+A CEI with code='xxx',
+
+2 transitions:
+NEW -> ACTIVE, with EL event.code='xxx',
+NEW -> REJECTED, with EL event.code='yyy'
+
+Then only the ACTIVE state should be returned.
+
+The association should be inverted : it is not the CET that own a list of WF, it is a WF that is associated to a couple (CET,CFT) where the CFT is a list of String (that will play the roles of state).
+
+Example :
+A CET "project" is created with the following CFT
+
+name, String
+createDate, Date
+description, String
+status, List of String (NEW,ONGOING,CLOSED) with default value NEW
+
+The a workflow is created with code "Projet_cycle", we need to choose a CET in a drop list (not a script). For example, we select "Person", then it list me in another dropdown all the CFT of Person that have type List of String and a default value, we choose "status".
+Then we can create the transitions and the actions.
+
+When we update a CEI of type "Person" then in the beforeUpdate method meveo will check if the "status" value has changed, if yes then it will check if a WF exist for this CET and CFT then apply it like written in the description of the ticket.

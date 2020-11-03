@@ -176,7 +176,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 	@ApiOperation("Retrieve one repository by code")
 	@Produces(MediaType.APPLICATION_JSON)
 	public GitRepositoryDto find(@PathParam("code") @ApiParam("Code of the repository") String code) throws MeveoApiException, EntityDoesNotExistsException {
-		return gitRepositoryApi.find(code);
+		return gitRepositoryApi.findWithMeta(code);
 	}
 
 	/**
@@ -277,7 +277,8 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 	@POST
 	@Path("/repositories/{code}/branches/{branch}/checkout")
 	@ApiOperation("Checkout a branch")
-	public void checkout(@PathParam("code") @ApiParam("Code of the repository") String code, @PathParam("branch") @ApiParam("Name of the branch to checkout") String branch,
+	public void checkout(@PathParam("code") @ApiParam("Code of the repository") String code, 
+			@PathParam("branch") @ApiParam("Name of the branch to checkout") String branch,
 			@QueryParam("create") @ApiParam("Whether to create branch if it does not exist") boolean createBranch) throws BusinessException {
 		final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
 		gitClient.checkout(repository, branch, createBranch);

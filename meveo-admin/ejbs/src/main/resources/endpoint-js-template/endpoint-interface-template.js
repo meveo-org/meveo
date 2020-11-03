@@ -14,40 +14,32 @@ function mapProperties(parameters) {
 		return requestParameters;
 	};
 }
-
 /**
- * Traverse schema.properties and extracts the values
- * from the parameters object. It only traverses the top-level
- * properties it does not check child nodes
+ * Traverse schema and refSchemas and extracts their keys.
  *
- * @param {*} parameters an object that contains the parameter values
  * @param {*} schema the schema object that holds the properties that will be
  * extracted from the parameters
+ * @param {*} refSchemas the list of parent schemas that are referenced in the
+ * schema
  * @returns an object with only the parameter values that are defined
  * in the schema properties
  */
-function buildRequestParameters(parameters, schema) {
-	if (schema) {
-		const keys = Object.keys(schema.properties);
-		return keys.reduce(mapProperties(parameters), {});
+function getSchemaKeys(schema, refSchemas) {
+	const hasParentSchema = !!schema.allOf && schema.allOf.length > 0;
+	const keys = Object.keys(schema.properties);
+	if (hasParentSchema) {
+		return schema.allOf.reduce(
+			(allKeys, schemaId) => {
+				const parentSchema = refSchemas.find(
+					(refSchema) => refSchema.id === schemaId["$ref"]
+				);
+				return [...allKeys, ...getSchemaKeys(parentSchema, refSchemas)];
+			},
+			[...keys]
+		);
 	}
-	return null;
+	return keys;
 }
-
-/**
- * Generate a normalized string made up of capital letters
- * with no spaces and special characters
- *
- * @param {*} text string to be normalized
- * @returns normalized string
- */
-function normalize(text) {
-	return (text || "")
-		.toUpperCase()
-		.replace(/\s+/g, "_")
-		.replace(/[^ -~]+/g, "");
-}
-
 /**
  * Retrieves the custom config object from the config.js file on the root of
  * the app if specified
@@ -62,7 +54,43 @@ function buildEndpointConfig(endpoint, parameters) {
 	const endpointConfig = getEndpointConfig({ endpoint, parameters });
 	return endpointConfig || {};
 }
-
+/**
+ * Traverse schema.properties and extracts the values
+ * from the parameters object. It only traverses the top-level
+ * properties it does not check child nodes
+ *
+ * @param {*} parameters an object that contains the parameter values
+ * @param {*} endpoint the endpoint object
+ * @returns an object with only the parameter values that are defined
+ * in the schema properties
+ */
+function buildRequestParameters(parameters, endpoint) {
+	const { requestSchema, refSchemas } = endpoint;
+	if (requestSchema) {
+		const keys = getSchemaKeys(requestSchema, refSchemas);
+		const endpointConfig = buildEndpointConfig(endpoint, parameters);
+		const { decorateProperties } = endpointConfig;
+		const props = keys.reduce(mapProperties(parameters), {});
+		const properties = !!decorateProperties
+			? decorateProperties(props, parameters, endpoint)
+			: props;
+		return properties;
+	}
+	return null;
+}
+/**
+ * Generate a normalized string made up of capital letters
+ * with no spaces and special characters
+ *
+ * @param {*} text string to be normalized
+ * @returns normalized string
+ */
+function normalize(text) {
+	return (text || "")
+		.toUpperCase()
+		.replace(/\s+/g, "_")
+		.replace(/[^ -~]+/g, "");
+}
 /**
  * Generate the api URL using the base endpoint URL and then appending
  * any included path parameters
@@ -76,9 +104,7 @@ function buildApiUrl(endpoint, parameters) {
 	const endpointConfig = buildEndpointConfig(endpoint, parameters);
 	const { OVERRIDE_URL } = endpointConfig;
 	const hasPathParameters = !!pathParameters && pathParameters.length > 0;
-
 	let apiUrl = endpointUrl;
-
 	if (!OVERRIDE_URL && hasPathParameters) {
 		const parameterMap = pathParameters.reduce(mapProperties(parameters), {});
 		const pathParams =
@@ -91,10 +117,8 @@ function buildApiUrl(endpoint, parameters) {
 			apiUrl = `${endpointUrl}/${pathParams}`;
 		}
 	}
-
 	return OVERRIDE_URL || apiUrl;
 }
-
 /**
  * The base class for Requests
  *
@@ -104,7 +128,6 @@ class ApiRequest {
 	constructor(endpoint) {
 		this.endpoint = endpoint;
 	}
-
 	/**
 	 * Builds an Http Request header based on the user defined headers of the default headers
 	 *
@@ -124,13 +147,11 @@ class ApiRequest {
 		if (!noAuth) {
 			appendHeaders.Authorization = `Bearer ${token}`;
 		}
-
 		Object.keys(appendHeaders).forEach(function(key) {
 			headers.append(key, appendHeaders[key]);
 		});
 		return headers;
 	}
-
 	/**
 	 * The main method for calling a fetch request to the API
 	 *
@@ -163,7 +184,6 @@ class ApiRequest {
 			});
 	}
 }
-
 /**
  * The ApiRequest for GET requests
  *
@@ -174,7 +194,6 @@ class GetRequest extends ApiRequest {
 	constructor(endpoint) {
 		super(endpoint);
 	}
-
 	/**
 	 * Concrete implementation of the executeRequest interface specifically for Http GET requests
 	 *
@@ -182,11 +201,10 @@ class GetRequest extends ApiRequest {
 	 * @memberof GetRequest
 	 */
 	executeRequest(parameters) {
-		const { name, mock, requestSchema, pathParameters } = this.endpoint;
-		const requestParameters = buildRequestParameters(parameters, requestSchema);
+		const { mock } = this.endpoint;
+		const requestParameters = buildRequestParameters(parameters, this.endpoint);
 		const parameterKeys = Object.keys(requestParameters || {});
 		const hasParameters = requestParameters && parameterKeys.length > 0;
-
 		const apiUrl = buildApiUrl(this.endpoint, parameters);
 		const requestUrl = new URL(apiUrl);
 		if (hasParameters) {
@@ -194,17 +212,14 @@ class GetRequest extends ApiRequest {
 				requestUrl.searchParams.append(key, requestParameters[key]);
 			});
 		}
-
 		if (mock) {
 			requestUrl.searchParams.append("mock", true);
 		}
-
 		const headers = this.buildHeaders(parameters);
 		const options = { method: "GET", headers };
 		this.callApi(requestUrl, options);
 	}
 }
-
 /**
  * The ApiRequest for POST requests
  *
@@ -214,7 +229,6 @@ class PostRequest extends ApiRequest {
 	constructor(endpoint) {
 		super(endpoint);
 	}
-
 	/**
 	 * Concrete implementation of the executeRequest interface specifically for Http POST requests
 	 *
@@ -222,9 +236,8 @@ class PostRequest extends ApiRequest {
 	 * @memberof PostRequest
 	 */
 	executeRequest(parameters) {
-		const { name, mock, endpointUrl, requestSchema } = this.endpoint;
-		const requestParameters = buildRequestParameters(parameters, requestSchema);
-
+		const { mock } = this.endpoint;
+		const requestParameters = buildRequestParameters(parameters, this.endpoint);
 		const apiUrl = buildApiUrl(this.endpoint, parameters);
 		const requestUrl = new URL(apiUrl);
 		if (mock) {
@@ -239,7 +252,6 @@ class PostRequest extends ApiRequest {
 		this.callApi(requestUrl, options);
 	}
 }
-
 /**
  * The ApiRequest for DELETE requests
  *
@@ -249,7 +261,6 @@ class DeleteRequest extends ApiRequest {
 	constructor(endpoint) {
 		super(endpoint);
 	}
-
 	/**
 	 * Concrete implementation of the executeRequest interface specifically for Http DELETE requests
 	 *
@@ -257,11 +268,10 @@ class DeleteRequest extends ApiRequest {
 	 * @memberof DeleteRequest
 	 */
 	executeRequest(parameters) {
-		const { name, mock, endpointUrl, requestSchema } = this.endpoint;
-		const requestParameters = buildRequestParameters(parameters, requestSchema);
+		const { mock } = this.endpoint;
+		const requestParameters = buildRequestParameters(parameters, this.endpoint);
 		const parameterKeys = Object.keys(requestParameters || {});
 		const hasParameters = requestParameters && parameterKeys.length > 0;
-
 		const apiUrl = buildApiUrl(this.endpoint, parameters);
 		const requestUrl = new URL(apiUrl);
 		if (hasParameters) {
@@ -269,17 +279,14 @@ class DeleteRequest extends ApiRequest {
 				requestUrl.searchParams.append(key, requestParameters[key]);
 			});
 		}
-
 		if (mock) {
 			requestUrl.searchParams.append("mock", true);
 		}
-
 		const headers = this.buildHeaders(parameters);
 		const options = { method: "DELETE", headers };
 		this.callApi(requestUrl, options);
 	}
 }
-
 /**
  * The ApiRequest for PUT requests
  *
@@ -289,7 +296,6 @@ class PutRequest extends ApiRequest {
 	constructor(endpoint) {
 		super(endpoint);
 	}
-
 	/**
 	 * Concrete implementation of the executeRequest interface specifically for Http PUT requests
 	 *
@@ -297,9 +303,8 @@ class PutRequest extends ApiRequest {
 	 * @memberof PutRequest
 	 */
 	executeRequest(parameters) {
-		const { name, mock, endpointUrl, requestSchema } = this.endpoint;
-		const requestParameters = buildRequestParameters(parameters, requestSchema);
-
+		const { mock } = this.endpoint;
+		const requestParameters = buildRequestParameters(parameters, this.endpoint);
 		const apiUrl = buildApiUrl(this.endpoint, parameters);
 		const requestUrl = new URL(apiUrl);
 		if (mock) {
@@ -314,14 +319,12 @@ class PutRequest extends ApiRequest {
 		this.callApi(requestUrl, options);
 	}
 }
-
 const REQUEST_TYPE = {
 	GET: GetRequest,
 	POST: PostRequest,
 	DELETE: DeleteRequest,
 	PUT: PutRequest,
 };
-
 /**
  * The base class for endpoint interface classes.  To use it, create a subclass and initialize
  * the name and Http method of the endpoint via constructor.
@@ -338,7 +341,6 @@ export default class EndpointInterface {
 		this.errorEvent = `${eventName}_ERROR`;
 		this.method = method;
 	}
-
 	/**
 	 * The main method to call an API.
 	 *
@@ -365,6 +367,7 @@ export default class EndpointInterface {
 			errorEvent,
 			mockResult,
 			requestSchema,
+			refSchemas,
 			pathParameters,
 		} = this;
 		// Register event listeners
@@ -377,7 +380,6 @@ export default class EndpointInterface {
 		const parameters = params || {};
 		const endpointConfig = buildEndpointConfig(this, parameters);
 		const { USE_MOCK = false } = endpointConfig;
-
 		if (USE_MOCK === "OFFLINE") {
 			component.dispatchEvent(
 				new CustomEvent(successEvent, {
@@ -395,6 +397,7 @@ export default class EndpointInterface {
 				successEvent,
 				errorEvent,
 				requestSchema,
+				refSchemas,
 				pathParameters,
 			});
 			endpointRequest.executeRequest(parameters);
@@ -408,6 +411,7 @@ export default class EndpointInterface {
 					successEvent,
 					errorEvent,
 					requestSchema,
+					refSchemas,
 					pathParameters,
 				});
 				endpointRequest.executeRequest(parameters);

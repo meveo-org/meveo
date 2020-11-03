@@ -205,6 +205,24 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         
         return toDto(repository);
     }
+    
+	/**
+	 * Retrieve a git repository with branch informations
+	 * 
+	 * @param code Code of the repository
+	 * @return the repository
+	 * @throws MeveoApiException            Any other exception is wrapped to MeveoApiException
+	 * @throws EntityDoesNotExistsException Entity was not found
+	 */
+    public GitRepositoryDto findWithMeta(String code) throws MeveoApiException, EntityDoesNotExistsException {
+    	final GitRepository repository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+        if(repository == null) {
+        	throw new EntityDoesNotExistsException(GitRepository.class, code);
+        }
+        
+        gitRepositoryService.setBranchInformation(repository);
+        return toDto(repository);
+    }
 
     @Override
     public GitRepository createOrUpdate(GitRepositoryDto dtoData) throws MeveoApiException, BusinessException {

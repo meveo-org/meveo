@@ -233,7 +233,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         return entity;
     }
 
-    private GitRepository setBranchInformation(GitRepository repository) {
+    public GitRepository setBranchInformation(GitRepository repository) {
         // Set branches information if not null
         if (repository != null) {
             try {

@@ -25,15 +25,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.annotation.Priority;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
-import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
@@ -42,6 +47,8 @@ import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.model.ModulePostInstall;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.FunctionServiceFor;
 import org.meveo.model.scripts.MavenDependency;
@@ -309,6 +316,28 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			case SAME:
 			default: 
 				super.executeEngine(engine, context);
+		}
+	}
+	
+	/**
+	 * Compile the scripts the has been installed with the module
+	 * 
+	 * @param module installed module
+	 * @throws InvalidScriptException if one of the script can't be compiled
+	 */
+	public void postModuleInstall(@ModulePostInstall MeveoModule module) throws InvalidScriptException {
+		var scripts = module.getModuleItems().stream()
+			.filter(item -> item.getItemClass().equals(ScriptInstance.class.getName()))
+			.map(item -> findByCode(item.getItemCode()))
+			.collect(Collectors.toList());
+		
+		scripts.forEach(script -> compileScript(script, false));
+		
+		// Throw exception if a script fails to compile
+		for(var script : scripts) {
+			if(script.getError()) {
+				throw new InvalidScriptException(script.getCode(), script.getCode());
+			}
 		}
 	}
 

@@ -17,18 +17,34 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Debugging](https://github.com/meveo-org/meveo/blob/master/documentation/DEBUGGING.md)
 
-## [User Guide](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
+## User Guide
+
+- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
 
 ## Technical documentation
 
-[Persistence](./meveo-api/src/main/java/org/meveo/api/persistence)
+### System
 
-[Function](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
+- [Security](./meveo-model/src/main/java/org/meveo/security/README.md)
 
-[Endpoint](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+### Configuration
 
-[Notification](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
+- [Module](./meveo-api/src/main/java/org/meveo/api/module)
+- [Module](./meveo-admin/ejbs/src/main/java/org/meveo/service/module)
+- [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
 
-[Module](./meveo-api/src/main/java/org/meveo/api/module)
+### Execution
 
-[Security](./meveo-model/src/main/java/org/meveo/security/README.md)
+### Ontology
+
+- [Base API](./meveo-admin/ejbs/src/main/java/org/meveo/api/base/sql)
+- [Persistence](./meveo-api/src/main/java/org/meveo/api/persistence)
+- [Custom Entity](./meveo-admin/ejbs/src/main/java/org/meveo/service/custom)
+
+### Services
+
+- [Function](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
+- [Endpoint](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+- [Notification](./meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
+
+### Reporting

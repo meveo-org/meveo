@@ -543,6 +543,15 @@ public class GitClient {
         keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
+        	if(createBranch) {
+        		// Don't create branch if already exist
+        		createBranch = git.branchList().call()
+	                .stream()
+	                .map(Ref::getName)
+	                .map(Repository::shortenRefName)
+	                .noneMatch(branch::equals);
+        	}
+        	
             if(!git.getRepository().getBranch().equals(branch)) {
                 git.checkout().setCreateBranch(createBranch).setName(branch).call();
                 gitRepository.setCurrentBranch(branch);

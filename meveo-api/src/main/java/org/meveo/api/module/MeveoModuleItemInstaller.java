@@ -1,6 +1,11 @@
 package org.meveo.api.module;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -15,14 +20,32 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
-import org.meveo.api.*;
-import org.meveo.api.dto.*;
+import org.meveo.api.ApiService;
+import org.meveo.api.ApiUtils;
+import org.meveo.api.ApiVersionedService;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.CustomFieldTemplateApi;
+import org.meveo.api.EntityCustomActionApi;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityInstanceDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
-import org.meveo.api.exception.*;
+import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.EntityAlreadyExistsException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.model.*;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ModuleInstall;
+import org.meveo.model.ModuleItemOrder;
+import org.meveo.model.ModulePostInstall;
+import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -36,6 +59,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -92,6 +116,9 @@ public class MeveoModuleItemInstaller {
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	private ModuleInstallationContext installCtx;
 
 	@Inject
 	@ModuleInstall
@@ -268,6 +295,7 @@ public class MeveoModuleItemInstaller {
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
+    	installCtx.begin();
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -301,6 +329,7 @@ public class MeveoModuleItemInstaller {
 	            
 	            result.setInstalledModule(meveoModule);
 	            postInstallEvent.fire(meveoModule);
+	            installCtx.end();
         	} catch(Exception e) {
             	throw new ModuleInstallFail(meveoModule, result, e);
             }
@@ -671,6 +700,18 @@ public class MeveoModuleItemInstaller {
 						moduleDto.getModuleItems().add(cftModuleItem);
 
 						cet.getFields().remove(cftData);
+						moduleItemDto.setDtoData(cet);
+					}
+					
+					// Also put entity custom action outside of the cet
+					for(var actionDto : List.copyOf(cet.getActions())) {
+						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+						cftModuleItem.setDtoClassName(EntityCustomActionDto.class.getName());
+						cftModuleItem.setDtoData(actionDto);
+						actionDto.setAppliesTo("CE_" + cet.getCode());
+						moduleDto.getModuleItems().add(cftModuleItem);
+
+						cet.getActions().remove(actionDto);
 						moduleItemDto.setDtoData(cet);
 					}
 				}
