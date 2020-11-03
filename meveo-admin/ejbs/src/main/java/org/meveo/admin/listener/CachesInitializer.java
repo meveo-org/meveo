@@ -61,7 +61,8 @@ public class CachesInitializer {
                 .addSingleFileStore()
                 .purgeOnStartup(false);
 
-        String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, "/tmp/meveo/infinispan");
+        var defaultCacheLocation = "/tmp/" + paramBean.getProperty("meveo.moduleName", "meveo") + "/infinispan";
+        String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, defaultCacheLocation);
         if (!StringUtils.isEmpty(cacheLocation)) {
             confBuilder.location(cacheLocation);
         }
