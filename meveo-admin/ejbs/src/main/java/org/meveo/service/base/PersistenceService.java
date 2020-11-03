@@ -493,7 +493,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		return entity;
 	}
 
-	public void updateNoMerge(E entity) throws BusinessException {
+	public E updateNoMerge(E entity) throws BusinessException {
 
 		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
@@ -502,6 +502,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		postUpdate(entity);
 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		
+		return entity;
 	}
 
 	protected void postUpdate(E entity) {

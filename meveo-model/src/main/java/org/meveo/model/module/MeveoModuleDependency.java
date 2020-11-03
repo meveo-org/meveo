@@ -16,6 +16,8 @@ import org.meveo.model.BusinessEntity;
 @Table(name = "meveo_module_dependency")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "meveo_module_dependency_seq")})
+@NamedQueries({ 
+	@NamedQuery(name = "MeveoModuleDependency.findByCodeAndVersion", query = "SELECT m from MeveoModuleDependency m WHERE m.code=:moduleCode AND m.currentVersion=:currentVersion") })
 public class MeveoModuleDependency extends BaseEntity {
 
     private static final long serialVersionUID = 1L;

@@ -48,8 +48,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -85,16 +83,10 @@ import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.security.PasswordUtils;
-import org.meveo.service.base.PersistenceService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
-import org.meveo.service.script.ConcreteFunctionService;
-import org.meveo.service.script.module.ModuleScriptInterface;
-import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.util.EntityCustomizationUtils;
 
 /**
@@ -105,9 +97,6 @@ import org.meveo.util.EntityCustomizationUtils;
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
-
-    @Inject
-    private ModuleScriptService moduleScriptService;
 
     @Inject
     private MeveoInstanceService meveoInstanceService;

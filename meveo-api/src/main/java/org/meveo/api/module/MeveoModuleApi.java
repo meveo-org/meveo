@@ -476,6 +476,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
 		}
 		
+		if(meveoModuleService.hasDependencies(meveoModule)) {
+			throw new BusinessException("Unable to uninstall a referenced module.");
+		}
+
 		return meveoModuleItemInstaller.uninstall(meveoModule, remove);
 	}
 
