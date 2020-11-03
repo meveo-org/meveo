@@ -176,11 +176,12 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     
 
     @Override
-	public void updateNoMerge(T entity) throws BusinessException {
+	public T updateNoMerge(T entity) throws BusinessException {
     	validateAndSetCode(entity);
         beforeUpdateOrCreate(entity);
         super.updateNoMerge(entity);       
         publish(entity, CrudActionEnum.update);
+        return entity;
 	}
 
 	@Override
