@@ -29,6 +29,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ### Configuration
 
+- [System settings](./meveo-admin/ejbs/src/main/java/org/meveo/admin/configuration)
 - [Module](./meveo-api/src/main/java/org/meveo/api/module)
 - [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
 
