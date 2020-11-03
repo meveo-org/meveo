@@ -552,7 +552,7 @@
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<version>1.0.4</version>
+			<version>1.7.5</version>
 		</dependency>
 		<dependency>
             <groupId>org.graalvm.sdk</groupId>
