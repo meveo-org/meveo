@@ -21,7 +21,6 @@ import javax.transaction.UserTransaction;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.sql.SQLConnectionProvider;
-import org.neo4j.driver.internal.InternalTransaction;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
@@ -116,7 +115,7 @@ public class CrossStorageTransaction {
 		
 		if(stackedCalls == 0) {
 			if(repository.getNeo4jConfiguration() != null) {
-				InternalTransaction neo4jTx = (InternalTransaction) neo4jTransactions.get(repository.getNeo4jConfiguration().getCode());
+				Transaction neo4jTx = neo4jTransactions.get(repository.getNeo4jConfiguration().getCode());
 				neo4jTx.success();
 				neo4jTx.close();
 			}
