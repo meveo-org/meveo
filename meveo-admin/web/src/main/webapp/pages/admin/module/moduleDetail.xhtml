@@ -185,9 +185,9 @@
 					</p:column>
 					<f:facet name="footer" layout="block">
 						<p:commandButton value="#{messages['meveoModuleDependency.add']}"
-							actionListener="#{meveoModuleBean.initializePatch}"
 							oncomplete="PF('dlg_searchModulePopup').show()"
-							icon="ui-icon-add" rendered="#{meveoModuleBean.entity.isInDraft and (!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed)}"/>
+							icon="ui-icon-add"
+							rendered="#{meveoModuleBean.entity.isInDraft and (!meveoModuleBean.entity.downloaded or meveoModuleBean.entity.installed)}" />
 					</f:facet>
 				</p:dataTable>
 

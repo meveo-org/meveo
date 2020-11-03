@@ -20,7 +20,12 @@
 package org.meveo.service.admin.impl;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -33,7 +38,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ImageUploadEventHandler;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -49,8 +53,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.BusinessService;
@@ -58,7 +62,6 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
@@ -377,10 +380,28 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
 		return sortedList;
 	}
+	
+	public boolean hasDependencies(T module) throws BusinessException {
+		// check if this module is a parent
+		TypedQuery<MeveoModuleDependency> moduleDependencyResult = getEntityManager().createNamedQuery("MeveoModuleDependency.findByCodeAndVersion", MeveoModuleDependency.class);
+		moduleDependencyResult.setParameter("moduleCode", module.getCode()) //
+				.setParameter("currentVersion", module.getCurrentVersion());
+		try {
+			return moduleDependencyResult.getSingleResult() != null;
+			
+		} catch (NoResultException e) {
+			return false;
+		}
+	}
 
     @SuppressWarnings("unchecked")
     @Override
     public void remove(T module) throws BusinessException {
+
+		if(hasDependencies(module)) {
+			throw new BusinessException("Unable to delete a referenced module.");
+		}
+    	
         // If module was downloaded, remove all submodules as well
         if (module.isDownloaded() && module.getModuleItems() != null) {
 
