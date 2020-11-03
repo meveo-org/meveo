@@ -61,6 +61,7 @@ import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -162,6 +163,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Inject
 	@UpdatedAfterTx
 	protected Event<BaseEntity> entityUpdatedAfterTxEventProducer;
+	
+	@Inject
+	@RemovedAfterTx
+	protected Event<BaseEntity> entityRemovedAfterTxEventProducer;
 
 	@Inject
 	@Disabled
@@ -377,13 +382,19 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
 	@Override
 	public void remove(E entity) throws BusinessException {
+		
 		log.debug("start of remove {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 		entity = findById((Long) entity.getId());
 		if (entity != null) {
-			getEntityManager().remove(entity);
 
 			if (entity instanceof BaseEntity && (entity.getClass().isAnnotationPresent(ObservableEntity.class) || entity.getClass().isAnnotationPresent(ModuleItem.class))) {
 				entityRemovedEventProducer.fire((BaseEntity) entity);
+			}
+			
+			getEntityManager().remove(entity);
+
+			if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+				entityRemovedAfterTxEventProducer.fire((BaseEntity) entity);
 			}
 
 			// Remove entity from Elastic Search

@@ -97,7 +97,7 @@
 						<hftl:decorateFormField componentWidth="100%" label="#{messages['customEntityTemplate.availableStorages']}">
 							<p:pickList id="pickList" value="#{customEntityTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
                                 <o:converter converterId="omnifaces.ListConverter" list="#{customEntityTemplateBean.storageTypesList}" />
-                                <p:ajax event="transfer" listener="#{customEntityTemplateBean.onChangeAvailableStorages()}" update=":cetForm:persistences" />
+                                <p:ajax event="transfer" listener="#{customEntityTemplateBean.onChangeAvailableStorages()}" update=":cetForm:persistences :cetForm:auditedPanel" />
 							</p:pickList>
 						</hftl:decorateFormField>
 					</h:panelGroup>
