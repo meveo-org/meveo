@@ -557,7 +557,7 @@
 						<h:panelGroup id="fieldTypeId">
 							<hftl:formField
 								label="#{messages['customFieldTemplate.fieldType']}"
-								field="fieldType" required="true" componentWidth="30"
+								field="fieldType" required="true" componentWidth="30" actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
 								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat storageType"
 								onEventComplete="PF('cftDialog').initPosition()"

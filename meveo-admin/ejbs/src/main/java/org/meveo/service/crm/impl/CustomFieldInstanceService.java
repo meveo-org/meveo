@@ -513,7 +513,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         
         // Handle serialized map values
-        if(cft.getStorageType() == CustomFieldStorageTypeEnum.MAP && value instanceof String) {
+        if((cft.getStorageType() == CustomFieldStorageTypeEnum.MAP || cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) && value instanceof String) {
         	value = JacksonUtil.fromString((String) value, Map.class);
         }
 
