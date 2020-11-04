@@ -285,7 +285,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         	checkDateFormat(cft);
         }
 
-		super.create(cft);
+		customFieldsCache.addUpdateCustomFieldTemplate(cft);
+
+		try {
+			super.create(cft);
+		} catch (Exception e) {
+			customFieldsCache.removeCustomFieldTemplate(cft);
+			throw e;
+		}
 
 		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
@@ -310,7 +317,6 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
         }
 
-		customFieldsCache.addUpdateCustomFieldTemplate(cft);
 		elasticClient.updateCFMapping(cft);
 	}
 
