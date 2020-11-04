@@ -587,7 +587,7 @@
 						<h:panelGroup id="storageType">
 							<hftl:formField
 								label="#{messages['customFieldTemplate.storageType']}"
-								field="storageType" required="true" componentWidth="30"
+								field="storageType" required="true" componentWidth="30" disabled="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.MULTI_VALUE}"
 								actionListenerBean="#{customFieldTemplateBean}" allowEdit="false"
 								listenerUpdate="defaultValueField mapKeyTypeField matrixColumns storageType"
 								actionListenerMethod="updateDefaultValues" />
