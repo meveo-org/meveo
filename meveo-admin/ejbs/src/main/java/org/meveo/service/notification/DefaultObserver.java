@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.ftp.event.*;
 import org.meveo.audit.logging.annotations.MeveoAudit;
+import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.event.CFEndPeriodEvent;
@@ -119,6 +120,9 @@ public class DefaultObserver {
 	@Inject
 	@CurrentUser
 	protected MeveoUser currentUser;
+	
+	@Inject
+	private ParamBeanFactory paramBeanFactory;
 
 	private boolean matchExpression(String expression, Object entityOrEvent) throws BusinessException, ELException {
 		Boolean result = true;
@@ -144,9 +148,12 @@ public class DefaultObserver {
 			Map<Object, Object> userMap = new HashMap<>();
 			userMap.put("event", entityOrEvent);
 			userMap.put("manager", manager);
+			
 			for (Map.Entry<String, String> entry : params.entrySet()) {
 				context.put(entry.getKey(), MeveoValueExpressionWrapper.evaluateExpression(entry.getValue(), userMap, Object.class));
 			}
+			
+			context.put(Script.APP_BASE_URL, paramBeanFactory.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo"));
 
 			if (afterTx) {
 				concreteFunctionService.postCommit(function.getCode(), context);

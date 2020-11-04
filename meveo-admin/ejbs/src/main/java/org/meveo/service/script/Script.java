@@ -14,6 +14,11 @@ import org.meveo.commons.utils.EjbUtils;
 public abstract class Script implements ScriptInterface {
 
 	/**
+	 * Base URL of the application. Maps to app setting with key meveo.admin.baseUrl.
+	 */
+	public static String APP_BASE_URL = "APP_BASE_URL";
+	
+	/**
 	 * Current provider/tenant
 	 */
 	public static String CONTEXT_APP_PROVIDER = "CONTEXT_APP_PROVIDER";
