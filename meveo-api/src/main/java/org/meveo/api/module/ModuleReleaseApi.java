@@ -344,7 +344,7 @@ public class ModuleReleaseApi {
 	 * @return zip file as byte array
 	 * @throws Exception exception.
 	 */
-	public byte[] createZipFile(String exportFile, List<ModuleRelease> meveoModules, ExportFormat exportFormat) throws Exception {
+	public byte[] createZipFile(String exportFile, List<ModuleRelease> meveoModules, ExportFormat exportFormat, boolean exportDependency) throws Exception {
 
 		Logger log = LoggerFactory.getLogger(FileUtils.class);
 		log.info("Creating zip file for {}", exportFile);
@@ -383,13 +383,13 @@ public class ModuleReleaseApi {
 						}
 					}
 				}
-				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies()) && exportDependency) {
 					for (ModuleReleaseDependency moduleDependency: meveoModule.getModuleDependencies()) {
 						MeveoModule module = meveoModuleService.findByCode(moduleDependency.getCode());
 						if (module.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
 							List<String> moduleDependencies = new ArrayList<>();
 							moduleDependencies.add(moduleDependency.getCode());
-							File moduleFile = moduleApi.exportModules(moduleDependencies, exportFormat);
+							File moduleFile = moduleApi.exportModules(moduleDependencies, exportFormat, true);
 							addToZipFile(moduleFile, zos, null);
 						} else if (CollectionUtils.isNotEmpty(module.getReleases())) {
 							for (ModuleRelease moduleRelease: module.getReleases()) {

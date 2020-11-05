@@ -183,9 +183,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				if (module == null) {
 					throw new EntityDoesNotExistsException(MeveoModule.class.getSimpleName(), dependency.getCode());
 				}
-				if (module.isDownloaded()) {
-					MeveoModuleDto dto = MeveoModuleUtils.moduleSourceToDto(module);
-					meveoModuleItemInstaller.install(module, dto, onDuplicate);
+				if (!module.isInstalled()) {
+					if (module.getCurrentVersion().equals(dependency.getCurrentVersion())) {
+						MeveoModuleDto dto = MeveoModuleUtils.moduleSourceToDto(module);
+						meveoModuleItemInstaller.install(module, dto, onDuplicate);
+					} else {
+						throw new EntityDoesNotExistsException("Module dependency " + dependency.getCode() + " with version " + dependency.getCurrentVersion() + " cannot be installed because different version of module already exists.");
+					}
 				}
 			}
 		}
@@ -945,9 +949,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					for (ModuleDependencyDto moduleDependencyDto: meveoModuleDto.getModuleDependencies()) {
 						for (MeveoModuleDto moduleDto: meveoModuleDtos) {
 							if (moduleDependencyDto.getCode().equals(moduleDto.getCode())) {
-								List<MeveoModuleDto> moduleDtos = new ArrayList<>();
-								moduleDtos.add(moduleDto);
-								importJSON(moduleDtos, overwrite);
+								MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
+								if (meveoModule != null) {
+									if (meveoModule.isInstalled() && !meveoModule.getCurrentVersion().equals(moduleDto.getCurrentVersion())) {
+										throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ moduleDto.getCode() + " with version " + moduleDto.getCurrentVersion() +" doesn't exists locally.");
+									}
+								} else {
+									List<MeveoModuleDto> moduleDtos = new ArrayList<>();
+									moduleDtos.add(moduleDto);
+									importJSON(moduleDtos, overwrite);
+								}
 							}
 						}
 					}
@@ -1153,7 +1164,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	 * @return zip file as byte array
 	 * @throws Exception exception.
 	 */
-	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules, ExportFormat exportFormat) throws Exception {
+	public byte[] createZipFile(String exportFile, List<MeveoModule> meveoModules, ExportFormat exportFormat, boolean exportDependency) throws Exception {
 
 		Logger log = LoggerFactory.getLogger(FileUtils.class);
 		log.info("Creating zip file for {}", exportFile);
@@ -1199,13 +1210,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 						}
 					}
 				}
-				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies())) {
+				if (CollectionUtils.isNotEmpty(meveoModule.getModuleDependencies()) && exportDependency) {
 					for (MeveoModuleDependency moduleDependency: meveoModule.getModuleDependencies()) {
 						MeveoModule module = meveoModuleService.findByCode(moduleDependency.getCode());
 						if (module.getCurrentVersion().equals(moduleDependency.getCurrentVersion())) {
 							List<String> modulesCode = new ArrayList<>();
 							modulesCode.add(moduleDependency.getCode());
-							File moduleFile = meveoModuleApi.exportModules(modulesCode, exportFormat);
+							File moduleFile = meveoModuleApi.exportModules(modulesCode, exportFormat, true);
 							addToZipFile(moduleFile, zos, null);
 						} else if (CollectionUtils.isNotEmpty(module.getReleases())){
 							for (ModuleRelease moduleRelease: module.getReleases()) {
@@ -1233,7 +1244,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public File exportModules(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
+	public File exportModules(List<String> modulesCode, ExportFormat exportFormat, boolean exportDependency) throws Exception {
 
 		List<MeveoModule> meveoModules = new ArrayList<>();
 		if (modulesCode != null) {
@@ -1252,11 +1263,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		String[] data = exportName.split("\\.");
 		String fileName = data[0];
 
-		// Write data as zip if one module contains files
+		// Write data as zip if one module contains files or dependencies
 		boolean hasFiles = meveoModules.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleFiles()));
 		boolean hasDependencies = meveoModules.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleDependencies()));
-		if (hasFiles || hasDependencies) {
-			byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules, exportFormat);
+		if (hasFiles || (hasDependencies && exportDependency)) {
+			byte[] filedata = createZipFile(exportFile.getAbsolutePath(), meveoModules, exportFormat, exportDependency);
 			fileZip = new File(fileName + ".zip");
 			opStream = new FileOutputStream(fileZip);
 			opStream.write(filedata);

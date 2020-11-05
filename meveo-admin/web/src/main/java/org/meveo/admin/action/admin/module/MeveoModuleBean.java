@@ -107,6 +107,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	private String selectedFolder;
 	private String selectedFileName;
 	private boolean currentDirEmpty;
+	private boolean exportDependency;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -241,6 +242,14 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		this.currentDirEmpty = currentDirEmpty;
 	}
 
+	public boolean isExportDependency() {
+		return exportDependency;
+	}
+
+	public void setExportDependency(boolean exportDependency) {
+		this.exportDependency = exportDependency;
+	}
+
 	public String getFileType(String fileName) {
 		if (fileName != null && fileName.endsWith(".zip")) {
 			return "zip";
@@ -275,7 +284,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		List<String> modulesCodes = getSelectedEntities().stream().map(MeveoModule::getCode).collect(Collectors.toList());
 
 		try {
-			File exportFile = meveoModuleApi.exportModules(modulesCodes, getExportFormat());
+			File exportFile = meveoModuleApi.exportModules(modulesCodes, getExportFormat(), exportDependency);
 			defaultStreamedContent.setContentEncoding("UTF-8");
 			defaultStreamedContent.setStream(new FileInputStream(exportFile));
 			defaultStreamedContent.setName(exportFile.getName());
@@ -337,14 +346,16 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		moduleReleases.add(moduleReleaseExport);
 		File exportFile = moduleReleaseApi.exportEntities(this.getExportFormat(), moduleReleases);
 
-		if (CollectionUtils.isNotEmpty(moduleReleaseExport.getModuleFiles()) || CollectionUtils.isNotEmpty(moduleReleaseExport.getModuleDependencies())) {
+		boolean hasFiles = moduleReleases.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleFiles()));
+		boolean hasDependencies = moduleReleases.stream().anyMatch(module -> CollectionUtils.isNotEmpty(module.getModuleDependencies()));
+		if (hasFiles || (hasDependencies && exportDependency)) {
 			try {
 				String exportName = exportFile.getName();
 				String[] moduleName = exportName.split("\\.");
 				String fileName = moduleName[0];
 				for (int i = 0; i < moduleReleases.size(); i++) {
-					if (CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleFiles()) || CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleDependencies())) {
-						byte[] filedata = moduleReleaseApi.createZipFile(exportFile.getAbsolutePath(), moduleReleases, this.getExportFormat());
+					if (CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleFiles()) || (CollectionUtils.isNotEmpty(moduleReleases.get(i).getModuleDependencies()) && exportDependency)) {
+						byte[] filedata = moduleReleaseApi.createZipFile(exportFile.getAbsolutePath(), moduleReleases, this.getExportFormat(), exportDependency);
 						InputStream is = new ByteArrayInputStream(filedata);
 						return new DefaultStreamedContent(is, "application/octet-stream", fileName + ".zip");
 					}

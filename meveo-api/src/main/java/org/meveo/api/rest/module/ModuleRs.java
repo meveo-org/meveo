@@ -274,7 +274,7 @@ public interface ModuleRs extends IBaseRs {
 	@GET
 	@Path("/export")
 	@ApiOperation(value = "Export to a file")
-	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat) throws Exception;
+	File export(@QueryParam("modulesCode") @ApiParam("List of the code meveo module") List<String> modulesCode,@QueryParam("exportFormat") @ApiParam("Format of file") ExportFormat exportFormat, @ApiParam("Whether to export module dependencies") @QueryParam("exportDependency")  boolean exportDependency) throws Exception;
 
 	/**
 	 * Release a Meveo module

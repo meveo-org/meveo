@@ -69,6 +69,10 @@
 		<c:set var="deleteManyButton" value="false" />
 	</c:if>
 
+	<c:if test="${empty exportSelection}">
+		<c:set var="exportSelection" value="false" />
+	</c:if>
+
 	<c:if test="${empty exportButton}">
 		<c:set var="exportButton" value="false" />
 	</c:if>
@@ -207,11 +211,11 @@
 						fileName="data" pageOnly="false" skipComponents="true"
 						selectionOnly="#{backingBean.selectedEntities.size()>0}" />
 				</p:commandButton>
-<!-- 				<p:commandButton value="#{messages['commons.exportSelection']}" -->
-<!-- 					type="button" rendered="#{backingBean.getBaseCrudApi() != null}" -->
-<!-- 					onclick="PF('exportSelectionDialog').show()" /> -->
+ 				<p:commandButton value="#{messages['commons.exportSelection']}"
+ 					type="button" rendered="#{exportSelection and backingBean.getBaseCrudApi() != null}"
+ 					onclick="PF('exportSelectionDialog').show()" />
 				<p:commandButton id="buttonSelectionExportJson"
-					rendered="#{backingBean.getBaseCrudApi() != null}"
+					rendered="#{!exportSelection and backingBean.getBaseCrudApi() != null}"
 					value="#{messages['commons.exportSelection']}" ajax="false"
 					onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
 					<p:fileDownload id="exportFileDownload"
@@ -359,19 +363,26 @@
 				widgetVar="exportSelectionDialog" modal="true" closeOnEscape="true"
 				rendered="#{backingBean.getBaseCrudApi() != null}">
 				<hftl:decorateFormField fieldId="exportFormat" label="Format"
-					layout="block">
+					layout="block" rendered="#{backingBean != meveoModuleListBean}">
 					<p:selectOneMenu id="exportFormat" name="exporFormat"
 						value="#{backingBean.exportFormat}">
 						<f:selectItems value="#{backingBean.exportFormats}" />
 						<p:ajax event="valueChange" update="exportFormat" />
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
+				<hftl:decorateFormField fieldId="#{formId}_exportDependency"
+										componentWidth="100" rendered="#{backingBean == meveoModuleListBean}">
+					<p:selectBooleanCheckbox immediate="true" id="#{formId}_exportDependency"
+											 value="#{meveoModuleListBean.exportDependency}" itemLabel="Export Module Dependencies">
+						<p:ajax event="valueChange" update=":#{formId}_exportDependency" />
+					</p:selectBooleanCheckbox>
+				</hftl:decorateFormField>
 				<div class="clearLeft">
 					<p:commandButton id="buttonSelectionExport"
-						value="#{messages['action.export']}" ajax="false"
+						value="#{messages['action.export']}" ajax="false" immediate="true"
 						onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
 						<p:fileDownload id="exportFileDownload"
-							value="#{backingBean.export()}" />
+							value="#{backingBean == meveoModuleListBean ? backingBean.exportJson() : backingBean.export()}" />
 					</p:commandButton>
 				</div>
 			</p:dialog>

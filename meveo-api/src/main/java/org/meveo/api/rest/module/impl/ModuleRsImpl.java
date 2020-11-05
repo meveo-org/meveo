@@ -239,8 +239,8 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public File export(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
-    	return moduleApi.exportModules(modulesCode, exportFormat);
+    public File export(List<String> modulesCode, ExportFormat exportFormat, boolean exportDependency) throws Exception {
+    	return moduleApi.exportModules(modulesCode, exportFormat, exportDependency);
     }
 
     @Override

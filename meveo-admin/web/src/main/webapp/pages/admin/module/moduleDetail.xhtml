@@ -414,6 +414,7 @@
                 </div>
             </h:form>
         </p:dialog>
+		<p:remoteCommand name="closeExportDialog" oncomplete="PF('exportSelectionDialog').hide()" />
         <p:dialog resizable="false" header="#{messages['commons.exportSelection']}" id="exportModuleDialog" styleClass="confirm-dialog" widgetVar="exportModuleDialog" modal="true" closeOnEscape="true">
             <h:form id="exportForm">
                 <hftl:decorateFormField fieldId="exportFormat" label="Format" layout = "block">
@@ -422,10 +423,15 @@
                         <p:ajax event="valueChange" update="exportFormat"/>
                     </p:selectOneMenu>
                 </hftl:decorateFormField>
+				<hftl:decorateFormField fieldId="exportDependency" componentWidth="100">
+					<p:selectBooleanCheckbox id="exportDependency"
+											 value="#{meveoModuleBean.exportDependency}" itemLabel="Export Module Dependencies">
+						<p:ajax event="change" update="exportDependency" />
+					</p:selectBooleanCheckbox>
+				</hftl:decorateFormField>
                 <div class="clearLeft">
                     <p:commandButton id="buttonSelectionExport" value="#{messages['action.export']}" ajax="false" onclick="PrimeFaces.monitorDownload(null, closeExportModuleDialog)">
                         <p:fileDownload id="exportFileDownload" value="#{meveoModuleBean.exportReleaseModule()}" />
-						<f:ajax render="@all"/>
                     </p:commandButton>
                 </div>
             </h:form>
