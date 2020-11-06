@@ -115,7 +115,10 @@ public class CrossStorageTransaction {
 		
 		if(stackedCalls == 0) {
 			if(repository.getNeo4jConfiguration() != null) {
-				Transaction neo4jTx = neo4jTransactions.get(repository.getNeo4jConfiguration().getCode());
+				Transaction neo4jTx = neo4jTransactions.remove(repository.getNeo4jConfiguration().getCode());
+				if(neo4jTx == null) {
+					throw new IllegalStateException("No running transaction for " + repository.getCode());
+				}
 				neo4jTx.success();
 				neo4jTx.close();
 			}
