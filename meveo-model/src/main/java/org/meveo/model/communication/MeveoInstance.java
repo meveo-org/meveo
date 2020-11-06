@@ -170,10 +170,7 @@ public class MeveoInstance extends BusinessEntity {
     @PrePersist
     @PreUpdate
     protected void prePersist() {
-    	if(this.clearPassword != null) {
-    		String salt = getSalt();
-    		this.authPassword = PasswordUtils.encrypt(salt, this.clearPassword);
-    	}
+
     }
     
     /**
@@ -187,7 +184,10 @@ public class MeveoInstance extends BusinessEntity {
 	 * @param clearPassword the clearPassword to set
 	 */
 	public void setClearPassword(String clearPassword) {
-		this.clearPassword = clearPassword;
+    	if(this.clearPassword != null) {
+    		String salt = getSalt();
+    		this.authPassword = PasswordUtils.encrypt(salt, this.clearPassword);
+    	}
 	}
 
 	/**
