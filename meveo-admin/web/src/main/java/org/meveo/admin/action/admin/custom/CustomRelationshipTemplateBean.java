@@ -679,4 +679,8 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         arrayList.addAll(availableStoragesDM.getTarget());
         return arrayList;
     }
+    
+    public boolean showAuditedField() {
+		return getAvailableStoragesDM().getTarget().contains(DBStorageType.SQL);
+	}
 }
