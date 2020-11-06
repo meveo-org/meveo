@@ -80,4 +80,13 @@
 		<addUniqueConstraint columnNames="cet_code, wf_type" constraintName="uk_wf_workflow" deferrable="false" disabled="false" initiallyDeferred="false" tableName="wf_workflow" />
 	</changeSet>
 
+	<changeSet author="Phu Bach" id="Github#244">
+		<addColumn tableName="git_repository">
+			<column name="default_branch" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="is_locked" defaultValue="0" type="${type.boolean}"/>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

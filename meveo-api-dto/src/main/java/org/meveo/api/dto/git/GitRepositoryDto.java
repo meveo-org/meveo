@@ -84,6 +84,12 @@ public class GitRepositoryDto extends BusinessEntityDto {
 	@ApiModelProperty("Whether the remote repository is hosted in a meveo instance")
 	private boolean meveoRepository;
 
+	@ApiModelProperty("Default branch")
+	private String defaultBranch = "master";
+
+	@ApiModelProperty("Whether the default branch is checkout")
+	private boolean locked;
+
 	@JsonIgnore
 	@ApiModelProperty("Current branch")
 	private String currentBranch;
@@ -181,5 +187,20 @@ public class GitRepositoryDto extends BusinessEntityDto {
 	public void setRemotePasswordEncrypted(String remotePasswordEncrypted) {
 		this.remotePasswordEncrypted = remotePasswordEncrypted;
 	}
-	
+
+	public String getDefaultBranch() {
+		return defaultBranch;
+	}
+
+	public void setDefaultBranch(String defaultBranch) {
+		this.defaultBranch = defaultBranch;
+	}
+
+	public boolean isLocked() {
+		return locked;
+	}
+
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
 }

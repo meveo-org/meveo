@@ -100,6 +100,13 @@ public class GitRepository extends BusinessEntity {
     @Type(type = "numeric_boolean")
     private boolean meveoRepository;
 
+    @Column(name = "default_branch")
+    private String defaultBranch = "master";
+
+    @Column(name = "is_locked")
+    @Type(type = "numeric_boolean")
+    private boolean locked;
+
     @Transient
     private String currentBranch;
 
@@ -208,5 +215,21 @@ public class GitRepository extends BusinessEntity {
 
     public boolean hasCredentials(){
         return !StringUtils.isBlank(this.defaultRemoteUsername) && !StringUtils.isBlank(this.defaultRemotePassword);
+    }
+
+    public String getDefaultBranch() {
+        return defaultBranch;
+    }
+
+    public void setDefaultBranch(String defaultBranch) {
+        this.defaultBranch = defaultBranch;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }

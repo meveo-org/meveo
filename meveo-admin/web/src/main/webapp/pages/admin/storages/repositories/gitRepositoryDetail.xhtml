@@ -31,11 +31,14 @@
 		<hftl:formPanel formId="formGitRepository"
 			label="#{messages['menu.gitRepositories']}"
 			backingBean="#{gitRepositoryBean}" showFormButtons="false">
-			<h:panelGrid columns="3">
+			<h:panelGrid columns="4">
 				<hftl:formField label="#{messages['businessEntity.code']}"
 					field="code" required="true" allowEdit="false" />
 				<hftl:formField label="#{messages['businessEntity.description']}"
 					field="description" />
+				<hftl:formField label="#{messages['gitRepositories.defaultBranch']}"
+								field="defaultBranch" />
+				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
 			</h:panelGrid>
 			<h:panelGrid columns="1">
 				<hftl:formField maxlength="255" allowEdit="false"

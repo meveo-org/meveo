@@ -168,6 +168,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         dto.setMeveoRepository(entity.isMeveoRepository());
         dto.setCurrentBranch(entity.getCurrentBranch());
         dto.setBranches(entity.getBranches());
+        dto.setLocked(entity.isLocked());
         return dto;
     }
 
@@ -256,6 +257,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 		entity.setClearDefaultRemotePassword(dto.getRemotePassword());
 		entity.setDescription(dto.getDescription());
 		entity.setMeveoRepository(dto.isMeveoRepository());
+		entity.setLocked(dto.isLocked());
 	}
 
 	@Override

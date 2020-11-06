@@ -538,6 +538,10 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
+        if (!gitRepository.getDefaultBranch().equals(branch) && gitRepository.isLocked()) {
+            throw new BusinessException("Cannot checkout branch " + branch + " because it is blocked.");
+        }
+
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
 
         keyLock.lock(gitRepository.getCode());
