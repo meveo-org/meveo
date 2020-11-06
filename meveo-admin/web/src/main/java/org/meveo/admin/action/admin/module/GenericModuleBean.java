@@ -332,12 +332,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             	BaseCrudApi crudApi = (BaseCrudApi) api;
             	crudApi.addToModule(itemEntity, entity);
             }
-            
-            try {
-                entity = (T) meveoModuleService.update(entity);
-            } catch (BusinessException e) {
-                log.error(e.getMessage());
-            }
         }
     }
 
@@ -424,7 +418,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
         if(api instanceof BaseCrudApi) {
         	BaseCrudApi crudApi = (BaseCrudApi) api;
         	crudApi.removeFromModule(item.getItemEntity(), entity);
-        	meveoModuleService.update(entity);
         }
         
     }
