@@ -520,7 +520,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public void remove(CustomEntityTemplate cet) throws BusinessException {
 
-        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
 
         Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
