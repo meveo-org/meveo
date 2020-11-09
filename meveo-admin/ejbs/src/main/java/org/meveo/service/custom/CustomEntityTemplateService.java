@@ -310,7 +310,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @SuppressWarnings("unchecked")
 	public String getJsonSchemaContent(String cetCode) throws IOException {
 
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "org/meveo/model/customEntities");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
