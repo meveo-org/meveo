@@ -30,16 +30,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJBException;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -49,10 +43,8 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
-import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -140,14 +132,6 @@ public class CrossStorageService implements CustomPersistenceService {
     @Inject
     @Created
     private Event<CustomEntityInstance> customEntityInstanceCreate;
-    
-    @Inject
-    @UpdatedAfterTx
-    private Event<CustomEntityInstance> customEntityInstanceUpdatedAfterTx;
-    
-    @Inject
-    @CreatedAfterTx
-    private Event<CustomEntityInstance> customEntityInstanceCreatedAfterTx;
     
     @Inject
     @Removed
@@ -995,13 +979,10 @@ public class CrossStorageService implements CustomPersistenceService {
 
 			}
 			
-			customEntityInstanceUpdate.fire(cei);	//TODO: Remove
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
-			customEntityInstanceUpdatedAfterTx.fire(cei);	//TODO: Remove
+			customEntityInstanceUpdate.fire(cei);
 
 		} else {
-			customEntityInstanceCreate.fire(cei);
-			
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			cei.setUuid(uuid);
 
@@ -1015,7 +996,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 			
-			customEntityInstanceCreatedAfterTx.fire(cei);
+			customEntityInstanceCreate.fire(cei);
 		}
 
 		return cei.getUuid();

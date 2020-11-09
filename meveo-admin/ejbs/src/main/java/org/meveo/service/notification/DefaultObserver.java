@@ -310,23 +310,20 @@ public class DefaultObserver {
 		return result;
 	}
 	
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onEntityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @RemovedAfterTx BaseEntity e) throws BusinessException {
-		log.debug("Defaut observer : Entity {} with id {} after tx removed", e.getClass().getName(), e.getId());
-		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
-	}
-
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onEntityCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx BaseEntity e) throws BusinessException {
-		log.debug("Defaut observer : Entity {} with id {} after tx created", e.getClass().getName(), e.getId());
-		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
-	}
-
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onEntityUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @UpdatedAfterTx BaseEntity e) throws BusinessException {
-		log.debug("Defaut observer : Entity {} with id {} after tx updated", e.getClass().getName(), e.getId());
-		checkEvent(NotificationEventTypeEnum.UPDATED, e, true);
-	}
+//	public void onEntityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @RemovedAfterTx BaseEntity e) throws BusinessException {
+//		log.debug("Defaut observer : Entity {} with id {} after tx removed", e.getClass().getName(), e.getId());
+//		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
+//	}
+//
+//	public void onEntityCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx BaseEntity e) throws BusinessException {
+//		log.debug("Defaut observer : Entity {} with id {} after tx created", e.getClass().getName(), e.getId());
+//		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
+//	}
+//
+//	public void onEntityUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @UpdatedAfterTx BaseEntity e) throws BusinessException {
+//		log.debug("Defaut observer : Entity {} with id {} after tx updated", e.getClass().getName(), e.getId());
+//		checkEvent(NotificationEventTypeEnum.UPDATED, e, true);
+//	}
 	
 	public void onEntityCreate(@Observes @Created BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} created", e.getClass().getName(), e.getId());
