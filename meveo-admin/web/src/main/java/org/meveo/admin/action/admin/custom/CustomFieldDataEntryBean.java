@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,7 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
@@ -259,7 +261,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		return groupedFieldTemplates.get(entity.getUuid());
 	}
-
 
 	public List<EntityCustomAction> getCustomActionsInDetail(IEntity entity) {
 
@@ -1168,8 +1169,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 							newValuesByCode.put(cft.getCode(), new ArrayList<>());
 						}
 						newValuesByCode.get(cft.getCode()).add(cfValue);
-
-						saveChildEntities(entity, cfValue, cft, isSaveEntity);
 					}
 				}
 			}
@@ -1238,14 +1237,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		CustomEntityInstance cei = (CustomEntityInstance) mainEntityValueHolder.getSelectedChildEntity().getEntity();
 		if (!validateCustomFields(cei)) {
-			return;
-		}
-
-		// check that CEI code is unique
-		CustomEntityInstance ceiSameCode = customEntityInstanceService.findByCodeByCet(cei.getCetCode(), cei.getCode());
-		if ((cei.isTransient() && ceiSameCode != null) || (!cei.isTransient() && cei.getId().longValue() != ceiSameCode.getId().longValue())) {
-			messages.error(new BundleKey("messages", "commons.uniqueField.code"));
-			FacesContext.getCurrentInstance().validationFailed();
 			return;
 		}
 
@@ -1366,15 +1357,24 @@ public class CustomFieldDataEntryBean implements Serializable {
 				customFieldValue.setEntityReferenceValue(new EntityReferenceWrapper(customFieldValue.getEntityReferenceValueForGUI()));
 			}
 
-			// Convert CustomFieldValueHolder object to EntityReferenceWrapper- ONLY LIST
-			// storage type field
+		// Convert CustomFieldValueHolder object to EntityReferenceWrapper- ONLY LISTstorage type field
 		} else if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
 
-			List<Object> listValue = new ArrayList<Object>();
-			for (CustomFieldValueHolder childEntityValueHolder : customFieldValue.getChildEntityValuesForGUI()) {
-				listValue.add(new EntityReferenceWrapper((BusinessEntity) childEntityValueHolder.getEntity()));
+			if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+				List<Object> listValue = new ArrayList<Object>();
+				for (CustomFieldValueHolder childEntityValueHolder : customFieldValue.getChildEntityValuesForGUI()) {
+					ICustomFieldEntity cei = childEntityValueHolder.getEntity();
+					cei.getCfValuesNullSafe().getValuesByCode().putAll(childEntityValueHolder.getValuesByCode());
+					listValue.add(cei.getCfValuesAsValues());
+				}
+				customFieldValue.setListValue(listValue);
+				
+			} else if(cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+				CustomFieldValueHolder childEntityValueHolder = customFieldValue.getChildEntityValuesForGUI().get(0);
+				ICustomFieldEntity cei = childEntityValueHolder.getEntity();
+				cei.getCfValuesNullSafe().getValuesByCode().putAll(childEntityValueHolder.getValuesByCode());
+				customFieldValue.setMapValue(cei.getCfValuesAsValues());
 			}
-			customFieldValue.setListValue(listValue);
 
 			// Populate customFieldValue.listValue from mapValuesForGUI field
 		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
@@ -1449,72 +1449,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 		}
 	}
 
-	private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition)
-			throws BusinessException, ELException {
-		saveChildEntities(mainEntity, customFieldValue, childEntityFieldDefinition, true);
-	}
-	
-	/**
-	 * Save child entities to DB as Custom entity instance object along with its
-	 * custom fields.
-	 *
-	 * @param mainEntity                 Entity of which child entity type field is
-	 *                                   being saved
-	 * @param customFieldValue           Value to serialize
-	 * @param childEntityFieldDefinition Custom field template
-	 * @throws BusinessException
-	 */
-	private void saveChildEntities(ICustomFieldEntity mainEntity, CustomFieldValue customFieldValue, CustomFieldTemplate childEntityFieldDefinition, boolean isSaveEntity)
-			throws BusinessException, ELException {
-		if (childEntityFieldDefinition.getFieldType() != CustomFieldTypeEnum.CHILD_ENTITY) {
-			return;
-		}
-
-		// Find current child entities, so the ones no longer referenced shall be
-		// removed
-		List<CustomEntityInstance> previousChildEntities = customEntityInstanceService
-				.findChildEntities(CustomFieldTemplate.retrieveCetCode(childEntityFieldDefinition.getEntityClazz()), mainEntity.getUuid());
-
-		for (CustomFieldValueHolder childEntityValueHolder : customFieldValue.getChildEntityValuesForGUI()) {
-
-			CustomEntityInstance cei = (CustomEntityInstance) childEntityValueHolder.getEntity();
-			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
-			if (customEntityTemplate.isStoreAsTable() && childEntityValueHolder.getValuesByCode() != null) {
-				cei.getCfValuesNullSafe().getValuesByCode().putAll(childEntityValueHolder.getValuesByCode());
-				try {
-					Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, cei.getUuid());
-					if (objectMap == null) {
-						customTableService.create("default", customEntityTemplate, cei);
-					} else {
-						customTableService.update("default", customEntityTemplate, cei);
-					}
-					previousChildEntities.remove(cei);
-				} catch (EntityDoesNotExistsException e) {
-					log.error(e.getMessage());
-				}
-			} else {
-				boolean isNewEntity = cei.isTransient();
-				if (isNewEntity) {
-					customEntityInstanceService.create(cei);
-					saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
-
-				} else {
-					if (childEntityValueHolder.isUpdated()) {
-						cei = customEntityInstanceService.update(cei);
-						saveCustomFieldsToEntity(cei, isNewEntity, isSaveEntity);
-					}
-					previousChildEntities.remove(cei);
-				}
-			}
-		}
-
-		// Remove child entities that are no longer referenced along with its custom
-		// field values
-		for (CustomEntityInstance ceiNolongerReferenced : previousChildEntities) {
-			customEntityInstanceService.remove(ceiNolongerReferenced);
-		}
-	}
-
 	/**
 	 * Deserialize map, list and entity reference values to adapt them for GUI data
 	 * entry. See CustomFieldValue.xxxGUI fields for transformation description
@@ -1532,6 +1466,10 @@ public class CustomFieldDataEntryBean implements Serializable {
 			// Populate childEntityValuesForGUI field - ONLY LIST storage is supported
 			List<CustomFieldValueHolder> cheHolderList = new ArrayList<>();
 
+			String childCetCode = cft.getEntityClazzCetCode();
+			var cet = customEntityTemplateService.findByCode(childCetCode);
+			var childFields = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(childCetCode));
+			
 			if (customFieldValue.getListValue() != null) {
 				for (Object listItem : customFieldValue.getListValue()) {
 					EntityReferenceWrapper entityReferenceWrapper = null;
@@ -1546,16 +1484,28 @@ public class CustomFieldDataEntryBean implements Serializable {
 						String entityCode = (String) values.get("code");
 						Long entityId = (Long) values.getOrDefault("id", null);
 
-						entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), (String) values.get("classnameCode"), entityCode, entityId);
-
-						childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
+						String classnameCode = (String) values.get("classnameCode");
+						if(classnameCode != null) {
+							entityReferenceWrapper = new EntityReferenceWrapper(CustomEntityInstance.class.getName(), classnameCode, entityCode, entityId);
+							childEntityValueHolder = initCustomFieldValueHolderFromMap(entityReferenceWrapper, values);
+						} else {
+							var childCei = CEIUtils.fromMap(values, cet);
+							childCei.setUuid(UUID.randomUUID().toString());
+							childEntityValueHolder = new CustomFieldValueHolder(childFields, childCei.getCfValues().getValuesByCode(), childCei);
+						}
 					}
 
 					if (childEntityValueHolder != null) {
 						cheHolderList.add(childEntityValueHolder);
 					}
 				}
+			} else if(customFieldValue.getMapValue() != null) {
+				var childCei = CEIUtils.fromMap(customFieldValue.getMapValue(), cet);
+				childCei.setUuid(UUID.randomUUID().toString());
+				CustomFieldValueHolder childEntityValueHolder = new CustomFieldValueHolder(childFields, childCei.getCfValues().getValuesByCode(), childCei);
+				cheHolderList.add(childEntityValueHolder);
 			}
+			
 			customFieldValue.setChildEntityValuesForGUI(cheHolderList);
 
 		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {

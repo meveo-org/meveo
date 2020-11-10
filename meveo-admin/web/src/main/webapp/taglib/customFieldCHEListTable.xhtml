@@ -82,16 +82,6 @@
                         actionListener="#{customFieldDataEntryBean.newChildEntity(cfValueHolder, field, cft)}" oncomplete="PF('#{fieldPrefix}childEntityDialogWidget').show()">
                         <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_childEntityForm" />
                     </p:commandButton>
-                    <p:commandButton value="#{messages['commons.attachNew']}"
-                        update=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm #{messagesId}"
-                        actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidget').show()" rendered="#{!customFieldDataEntryBean.isStoreTable(cft.entityClazz)}">
-                        <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityForm" />
-                    </p:commandButton>
-                    <p:commandButton value="#{messages['commons.attachNew']}"
-                                     update=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable #{messagesId}"
-                                     actionListener="#{customFieldDataEntryBean.initializeCustomEntityTemplateCode(cft.entityClazz)}" oncomplete="PF('#{fieldPrefix}attachChildEntityDialogWidgetForTable').show()" rendered="#{customFieldDataEntryBean.isStoreTable(cft.entityClazz)}">
-                        <p:resetInput target=":#{clientGuiId}:#{fieldPrefix}dlg_attachChildEntityFormForTable" />
-                    </p:commandButton>
                 </f:facet>
             </c:if>
         </p:dataTable>

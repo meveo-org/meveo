@@ -1039,7 +1039,7 @@ public class CustomTableService extends NativePersistenceService {
             	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.EMBEDDED_ENTITY)) {
                     modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
             	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY)) {
-                    modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), List.class));
+                    modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
                 } else {
                 	modifiableMap.put(field.getKey(), field.getValue());
                 }

@@ -237,33 +237,16 @@ public class CustomFieldInstanceService extends BaseService {
             try {
                 List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
                 entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet, m)).collect(Collectors.toList());
-                if (!entities.isEmpty() && customEntityTemplateCode != null) {
-                    CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
-                    Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
-                    if (customFieldTemplates != null && !customFieldTemplates.isEmpty()) {
-                        for (CustomFieldTemplate customFieldTemplate : customFieldTemplates.values()) {
-                            if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && customFieldTemplate.getEntityClazz() != null && customFieldTemplate.getEntityClazz().equals(classNameAndCode)) {
-                                List<BusinessEntity> businessEntities = new ArrayList<>();
-                                for (BusinessEntity businessEntity : entities) {
-                                    if (businessEntity.getId() == null && ((CustomEntityInstance) businessEntity).getUuid() != null) {
-                                        if (businessEntity.getCode() == null) {
-                                            businessEntity.setCode(((CustomEntityInstance) businessEntity).getUuid());
-                                        }
-                                        ((CustomEntityInstance) businessEntity).setCetCode(cetCode);
-                                        businessEntities.add(businessEntity);
-                                    }
-                                }
-                                if (!businessEntities.isEmpty()) {
-                                    entities = businessEntities;
-                                }
-                            }
-                        }
-                    }
-                }
             } catch (EntityDoesNotExistsException e) {
                 log.error("Missing entity", e);
             }
         }
+        
+        // Set code = uuid for entities with no codes
+        entities.stream()
+        	.filter(e -> e instanceof CustomEntityInstance)
+        	.filter(e -> e.getCode() == null)
+        	.forEach(e -> e.setCode(((CustomEntityInstance) e).getUuid()));
 
         return entities;
     }
