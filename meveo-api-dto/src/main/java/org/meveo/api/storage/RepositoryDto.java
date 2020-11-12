@@ -81,7 +81,7 @@ public class RepositoryDto extends BusinessEntityDto {
 		if (e.getSqlConfiguration() != null) {
 			sqlConfigurationCode = e.getSqlConfiguration().getCode();
 		}
-		if(e.getUserHierarchyLevel().getCode() != null) {
+		if(e.getUserHierarchyLevel() != null && e.getUserHierarchyLevel().getCode() != null) {
 			userHierarchyLevelCode = e.getUserHierarchyLevel().getCode();
 		}
 		dataSeparationType = e.getDataSeparationType();
