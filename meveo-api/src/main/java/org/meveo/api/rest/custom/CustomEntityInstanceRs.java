@@ -16,6 +16,7 @@ import org.meveo.api.dto.response.CustomEntityInstanceResponseDto;
 import org.meveo.api.dto.response.CustomEntityInstancesResponseDto;
 import org.meveo.api.dto.response.GetStatesResponse;
 import org.meveo.api.rest.IBaseRs;
+import org.meveo.api.rest.persistence.PersistenceRs;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
 import io.swagger.annotations.Api;
@@ -24,14 +25,15 @@ import io.swagger.annotations.ApiParam;
 
 /**
  * API for managing {@link CustomEntityInstance}.
- * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
+ * @deprecated Use {@link PersistenceRs} instead  with endpoint /{repository}/persistence.
  **/
 @Path("/customEntityInstance")
 @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Api("CustomEntityInstanceRs")
+@Deprecated(since = "6.13")
 public interface CustomEntityInstanceRs extends IBaseRs {
 
 	/**

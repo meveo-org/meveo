@@ -30,16 +30,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJBException;
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -1627,6 +1621,53 @@ public class CrossStorageService implements CustomPersistenceService {
 		});
 		 
 		return map;
+	}
+	
+	public boolean checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException {
+		Map<String, Set<String>> map = customEntityInstanceService.getValueCetCodeAndWfTypeFromWF();
+		if (entity.getCet().isStoreAsTable()) {
+			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), entity.getCet(), entity.getUuid());
+			if (values != null) {
+				if (map.isEmpty()) {
+					return true;
+				}
+				for (String key : values.keySet()) {
+					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
+						if (values.get(key).equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
+							continue;
+						} else {
+							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
+								continue;
+							} else {
+								return false;
+							}
+						}
+					}
+				}
+			}
+		} else {
+			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(entity.getCetCode(), entity.getUuid());
+			if (customEntityInstance != null && customEntityInstance.getCfValues() != null) {
+				if (map.isEmpty()) {
+					return true;
+				}
+				for (String key : customEntityInstance.getCfValues().getValuesByCode().keySet()) {
+					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
+						if (customEntityInstance.getCfValues().getValuesByCode().get(key).get(0).getStringValue()
+								.equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
+							continue;
+						} else {
+							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
+								continue;
+							} else {
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 }
