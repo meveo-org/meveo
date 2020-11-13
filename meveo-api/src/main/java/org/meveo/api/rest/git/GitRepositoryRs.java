@@ -103,8 +103,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 			@QueryParam("password") @ApiParam("Password to connect to remote") String password, @QueryParam("branch") @ApiParam("Branch to checkout") String branch)
 			throws MeveoApiException, BusinessException {
 		gitRepositoryApi.create(postData, true, username, password);
+		checkout(postData.getCode(), postData.getDefaultBranch(), false);
 		if (branch != null) {
-			checkout(postData.getCode(), branch, true);
+			if (!postData.getDefaultBranch().equals(branch)) {
+				checkout(postData.getCode(), branch, true);
+			}
 			if (postData.getRemoteOrigin() != null) {
 				pull(postData.getCode(), username, password);
 			}
@@ -131,8 +134,11 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 		}
 
 		gitRepositoryApi.create(postData, false, username, password);
+		checkout(postData.getCode(), postData.getDefaultBranch(), false);
 		if (branch != null) {
-			checkout(postData.getCode(), branch, true);
+			if (!postData.getDefaultBranch().equals(branch)) {
+				checkout(postData.getCode(), branch, true);
+			}
 			if (postData.getRemoteOrigin() != null) {
 				pull(code, username, password);
 			}

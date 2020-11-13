@@ -71,6 +71,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 		if (entity.getId() == null && entity.getRemoteOrigin() != null) {
 			gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+			gitClient.checkout(entity, entity.getDefaultBranch(), false);
 		}
 
 		String result = saveOrUpdate(false);
