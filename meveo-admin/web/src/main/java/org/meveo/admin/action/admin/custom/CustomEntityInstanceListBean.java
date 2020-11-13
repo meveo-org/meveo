@@ -145,6 +145,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 				for (Map<String, Object> entity : selectedValues) {
 					CustomEntityInstance customEntityInstance = new CustomEntityInstance();
 					if (!customEntityTemplate.isStoreAsTable()) {
+						// no need to use csService here as it's storeAsTable=false
 						customEntityInstance = customEntityInstanceService.findByUuid(customEntityTemplate.getCode(), entity.get("uuid").toString());
 					} else {
 						customEntityInstance.setCet(customEntityTemplate);

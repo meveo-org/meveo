@@ -19,6 +19,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.rest.persistence.PersistenceRs;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -31,8 +32,10 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 /**
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.10
+ * @version 6.13
+ * @deprecated Use {@link PersistenceRs} instead.
  **/
+@Deprecated(since = "6.13")
 @Stateless
 public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, CustomEntityInstanceDto> {
 
