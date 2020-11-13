@@ -138,12 +138,13 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @throws org.meveo.admin.exception.BusinessException Any execution exception
      */
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, Object> execute(String scriptCode, Map<String, Object> context) throws BusinessException {
     	if(scriptCode == null) {
     		throw new IllegalArgumentException("Script code should not be null");
     	}
     	
-        ScriptInstance scriptInstance = findByCode(scriptCode);
+        ScriptInstance scriptInstance = findByCode(scriptCode, List.of("executionRoles"));
         
         if(scriptInstance == null) {
     		throw new ElementNotFoundException( scriptCode, "ScriptInstance");

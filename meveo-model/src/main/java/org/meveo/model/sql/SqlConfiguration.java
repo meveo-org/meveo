@@ -67,15 +67,6 @@ public class SqlConfiguration extends BusinessEntity {
 	@Transient
 	private String clearPassword;
 	
-	@PreUpdate
-	@PrePersist
-	protected void prePersist() {
-		if(clearPassword != null) {
-			String salt = PasswordUtils.getSalt(getCode(), getUrl());
-			this.password = PasswordUtils.encrypt(salt, clearPassword);
-		}
-	}
-	
 	/**
 	 * @return the {@link #clearPassword}
 	 */
@@ -87,7 +78,10 @@ public class SqlConfiguration extends BusinessEntity {
 	 * @param clearPassword the clearPassword to set
 	 */
 	public void setClearPassword(String clearPassword) {
-		this.clearPassword = clearPassword;
+		if(clearPassword != null) {
+			String salt = PasswordUtils.getSalt(getCode(), getUrl());
+			this.password = PasswordUtils.encrypt(salt, clearPassword);
+		}
 	}
 
 	/**

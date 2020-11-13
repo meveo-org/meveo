@@ -114,6 +114,11 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     @ApiModelProperty("Name of graphQl type")
     private String graphQlTypeName;
     
+    /**
+     * Whether this entity is audited or not
+     */
+	private boolean audited = false;
+    
     public CustomRelationshipTemplateDto() {
     	super();
     }
@@ -292,6 +297,7 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
         dto.setAvailableStorages(crt.getAvailableStorages());
         dto.setStartNodeCode(crt.getStartNode().getCode());
         dto.setEndNodeCode(crt.getEndNode().getCode());
+        dto.setAudited(crt.isAudited());
         return dto;
     }
 
@@ -334,5 +340,13 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
     public String toString() {
         return "CustomRelationshipTemplateDto [code=" + code + ", name=" + name + ", description=" + description + ", fields=" + fields + "]";
     }
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
+	}
 
 }

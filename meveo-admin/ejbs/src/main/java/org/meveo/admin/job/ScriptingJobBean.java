@@ -19,7 +19,6 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 
-@Stateless
 public class ScriptingJobBean {
 
     @Inject
@@ -38,8 +37,6 @@ public class ScriptingJobBean {
     @CurrentUser
     protected MeveoUser currentUser;
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void init(JobExecutionResultImpl result, String scriptCode, Map<String, Object> context) throws BusinessException {
         ScriptInterface script = null;
         try {
@@ -51,8 +48,6 @@ public class ScriptingJobBean {
         }
     }
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void execute(JobExecutionResultImpl result, String scriptCode, Map<String, Object> context) throws BusinessException {
         MeveoUser lastCurrentUser = currentUser.unProxy();
         Future<String> future = scriptingAsync.launchAndForget(result, scriptCode, context, lastCurrentUser);
@@ -71,8 +66,6 @@ public class ScriptingJobBean {
 
     }
 
-    @JpaAmpNewTx
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void finalize(JobExecutionResultImpl result, String scriptCode, Map<String, Object> context) throws BusinessException {
         ScriptInterface script = null;
         try {

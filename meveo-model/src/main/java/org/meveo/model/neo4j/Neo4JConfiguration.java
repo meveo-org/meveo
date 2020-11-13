@@ -70,15 +70,6 @@ public class Neo4JConfiguration extends BusinessEntity {
 	@Transient
 	private String clearPassword;
 	
-    @PrePersist
-    @PreUpdate
-    public void prePersist() {
-    	if(clearPassword != null) {
-    		String salt = PasswordUtils.getSalt(getId(), getCode());
-    		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
-    	}
-    }
-
 	public String getNeo4jUrl() {
 		return neo4jUrl;
 	}
@@ -114,7 +105,10 @@ public class Neo4JConfiguration extends BusinessEntity {
 	 * @param clearPassword the clearPassword to set
 	 */
 	public void setClearPassword(String clearPassword) {
-		this.clearPassword = clearPassword;
+    	if(clearPassword != null) {
+    		String salt = PasswordUtils.getSalt(getId(), getCode());
+    		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
+    	}
 	}
 	
 }

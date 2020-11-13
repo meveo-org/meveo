@@ -13,12 +13,15 @@ import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
@@ -47,6 +50,9 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	@Inject
 	private EndpointService endpointService;
+	
+	@Inject
+	private EndpointApi endpointApi;
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
@@ -256,8 +262,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	}
 
 	@Override
+	@Transactional
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
-
 		if (CollectionUtils.isNotEmpty(parameterMappings)) {
 			final List<TSParameterMapping> entityParameterMappings = new ArrayList<>(entity.getParametersMappingNullSafe());
 			parameterMappings.stream().filter(e -> entityParameterMappings.stream().noneMatch(f -> e.equals(f)))
@@ -305,8 +311,24 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		if (isError) {
 			return null;
 		}
+		
+		var dto = endpointApi.toDto(entity);
+		try {
+			endpointApi.createOrUpdate(dto);
 
-		return super.saveOrUpdate(killConversation);
+			if (entity.isTransient()) {
+				entity = endpointService.findByCode(dto.getCode());
+				setObjectId(entity.getId());
+			}
+
+		} catch (MeveoApiException e) {
+			messages.error("Entity can't be saved. Please retry.");
+			throw new BusinessException(e);
+		}
+		String message = entity.isTransient() ? "save.successful" : "update.successful";
+        messages.info(new BundleKey("messages", message));
+
+		return "technicalServiceEndpoints";
 	}
 
 	@Override

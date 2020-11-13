@@ -156,47 +156,6 @@ public class EndpointService extends BusinessService<Endpoint> {
 	}
 
 	/**
-	 * Update an endpoint.
-	 *
-	 * @param entity Endpoint to update
-	 * @return the updated endpoint
-	 */
-	@Override
-	public Endpoint update(Endpoint entity) throws BusinessException {
-
-//		Endpoint endpoint = findById(entity.getId());
-//		String oldEndpointPermission = getEndpointPermission(endpoint);
-//
-//		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, oldEndpointPermission);
-//
-//		// Create client if not exitsts
-//		keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
-//
-//		String endpointPermission = getEndpointPermission(entity);
-//
-//		// Create endpoint permission and add it to Execute_All_Endpoints composite
-//		keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT, endpointPermission, EXECUTE_ALL_ENDPOINTS);
-//
-//		KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-//		List<String> roles = keycloakAdminClientService.getCompositeRolesByRealmClientId(keycloakConfig.getClientId(),
-//				keycloakConfig.getRealm());
-//		for (String compositeRole : roles) {
-//			if (!compositeRole.equals(EXECUTE_ALL_ENDPOINTS)) {
-//				keycloakAdminClientService.removeRoleInCompositeRole(oldEndpointPermission, compositeRole);
-//			}
-//		}
-//
-//		for (String compositeRole : entity.getRoles()) {
-//			keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-//					endpointPermission, compositeRole);
-//		}
-
-		entity = super.update(entity);
-
-		return entity;
-	}
-
-	/**
 	 * Checks if an endpoint interface is already created and pushed in git
 	 * repository.
 	 * 

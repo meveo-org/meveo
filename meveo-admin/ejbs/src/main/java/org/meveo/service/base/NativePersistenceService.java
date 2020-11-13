@@ -100,7 +100,7 @@ import org.meveo.util.MeveoParamBean;
  *
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.8.0
+ * @version 6.12
  */
 public class NativePersistenceService extends BaseService {
 
@@ -1815,7 +1815,7 @@ public class NativePersistenceService extends BaseService {
 			
 		} else if (value instanceof LocalDateTime) {
 			LocalDateTime date = LocalDateTime.parse(value.toString());
-			ps.setDate(parameterIndex, java.sql.Date.valueOf(date.toLocalDate()));
+			ps.setTimestamp(parameterIndex, Timestamp.valueOf(date));
 			
 		} else if (value instanceof LocalDate) {
 			LocalDate date = LocalDate.parse(value.toString());
@@ -1855,7 +1855,6 @@ public class NativePersistenceService extends BaseService {
 	 * @return Converted values with db field name as a key and field value as
 	 *         value.
 	 */
-    @SuppressWarnings("rawtypes")
     public List<Map<String, Object>> convertValues(List<Map<String, Object>> values, Map<String, CustomFieldTemplate> fields, boolean discardNull) throws ValidationException {
 
         if (values == null) {

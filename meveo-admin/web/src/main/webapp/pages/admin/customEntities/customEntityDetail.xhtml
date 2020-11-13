@@ -79,7 +79,7 @@
 						<p:column
 							headerText="#{messages['customEntityInstance.audited.eventDate']}">
 							<h:outputText value="#{entity['event_date']}">
-								<f:convertDateTime pattern="#{paramBean.dateFormat}" />
+								<f:convertDateTime pattern="#{paramBean.dateTimeFormat}" />
 							</h:outputText>
 						</p:column>
 						<p:column

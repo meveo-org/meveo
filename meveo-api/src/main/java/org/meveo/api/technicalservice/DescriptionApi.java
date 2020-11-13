@@ -141,7 +141,7 @@ public class DescriptionApi {
         
         description.setInherited(dto.isInherited());
         description.setService(technicalService);
-        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesTo(appliesTo);
+        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
         description.setInput(dto.isInput());
         description.setOutput(dto.isOutput());
         description.setName(dto.getName());

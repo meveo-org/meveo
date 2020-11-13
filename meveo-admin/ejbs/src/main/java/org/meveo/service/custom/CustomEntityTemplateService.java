@@ -310,7 +310,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @SuppressWarnings("unchecked")
 	public String getJsonSchemaContent(String cetCode) throws IOException {
 
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/custom/entities");
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/org/meveo/model/customEntities");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -520,7 +520,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public void remove(CustomEntityTemplate cet) throws BusinessException {
 
-        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
 
         Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 

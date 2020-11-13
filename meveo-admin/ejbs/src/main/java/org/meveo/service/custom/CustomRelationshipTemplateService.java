@@ -45,13 +45,14 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 
 /**
  * Class used for persisting CustomRelationshipTemplate entities
  * @author Clément Bareth
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.6.0
+ * @version 6.12
  */
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
@@ -70,6 +71,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Resource(lookup = "java:jboss/infinispan/cache/meveo/unique-crt")
     private Cache<String, Boolean> uniqueRelations;
+    
+    @Inject
+    private RepositoryService repositoryService;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -165,7 +169,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         }
 
         if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-            customTableCreatorService.removeTable(null, SQLStorageConfiguration.getDbTablename(crt));
+            customTableCreatorService.removeTable(repositoryService.findDefaultRepository().getCode(), SQLStorageConfiguration.getDbTablename(crt));
         }
 
         customFieldsCache.removeCustomRelationshipTemplate(crt);

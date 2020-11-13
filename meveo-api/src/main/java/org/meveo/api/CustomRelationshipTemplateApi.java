@@ -33,7 +33,7 @@ import com.google.gson.reflect.TypeToken;
 /**
  * @author Rachid AITYAAZZA
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.10
+ * @version 6.12
  **/
 @Stateless
 public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshipTemplate, CustomRelationshipTemplateDto> {
@@ -44,7 +44,6 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 	public CustomRelationshipTemplateApi() {
 		super(CustomRelationshipTemplate.class, CustomRelationshipTemplateDto.class);
 	}
-
 
 	@Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
@@ -85,8 +84,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     		String endNodeKeyCodes = gson.toJson(dto.getEndNodeKeys(), itemType);
             crt.setEndNodeKey(endNodeKeyCodes);
     	}
-	    
-        
+    	crt.setAudited(dto.isAudited());
     }
 
     public void createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {

@@ -45,8 +45,11 @@
                     <hftl:formField label="#{messages['customizedRelationships.name']}" field="name" required="true" />
                     <hftl:formField label="#{messages['BusinessEntity.description']}" field="description" />
                 </h:panelGrid>
-                <h:panelGrid columns="1">
-                 <hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
+                <h:panelGrid columns="2">
+                 	<hftl:formField label="Unique" field="unique" isMessage="true" componentWidth="8" />
+                 	<p:outputPanel id="auditedPanel">
+						<hftl:formField label="#{messages['customizedEntities.audited']}" id="audited" field="audited" rendered="#{customRelationshipTemplateBean.showAuditedField() == true}" />
+					</p:outputPanel>
                 </h:panelGrid>
                 <h:panelGrid columns="3" rendered="#{customRelationshipTemplateBean.entity.id == null}">
                     <hftl:decorateFormField field = "startNode" fieldId="startNode" componentWidth="150" label="#{messages['customizedRelationships.startEntity']}">
@@ -72,13 +75,14 @@
                         <h:outputText id="endNodeLabel" value="#{customRelationshipTemplateBean.entity.endNode.name}" styleClass="field-value"/>
                     </hftl:decorateFormField>
                 </h:panelGrid >
+                
 
                 <h:panelGrid columns="3" >
                     <h:panelGroup id="availableStorages">
                         <hftl:decorateFormField componentWidth="100%" label="#{messages['customRelationshipTemplate.availableStoragesDM']}">
                             <p:pickList id="pickList" value="#{customRelationshipTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
                                 <o:converter converterId="omnifaces.ListConverter" list="#{customRelationshipTemplateBean.storageTypesList}" />
-                                <p:ajax event="transfer" listener="#{customRelationshipTemplateBean.onChangeAvailableStorages()}" update=":crtForm:group" />
+                                <p:ajax event="transfer" listener="#{customRelationshipTemplateBean.onChangeAvailableStorages()}" update=":crtForm:group :crtForm:auditedPanel" />
                             </p:pickList>
                         </hftl:decorateFormField>
                     </h:panelGroup>

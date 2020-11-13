@@ -116,16 +116,6 @@ public class GitRepository extends BusinessEntity {
     @Transient
     private String clearDefaultRemotePassword;
     
-    @PrePersist
-    @PreUpdate
-    protected void prePersist() {
-    	if(defaultRemoteUsername == null) {
-    		this.defaultRemotePassword = null;
-    	} else if(clearDefaultRemotePassword != null) {
-    		this.defaultRemotePassword = PasswordUtils.encrypt(getSalt(), clearDefaultRemotePassword);
-    	}
-    }
-    
     @JsonIgnore
     public String getSalt() {
     	return PasswordUtils.getSalt(getRemoteOrigin(), getCode());
@@ -202,7 +192,11 @@ public class GitRepository extends BusinessEntity {
 	 * @param clearDefaultRemotePassword the clearDefaultRemotePassword to set
 	 */
 	public void setClearDefaultRemotePassword(String clearDefaultRemotePassword) {
-		this.clearDefaultRemotePassword = clearDefaultRemotePassword;
+    	if(defaultRemoteUsername == null) {
+    		this.defaultRemotePassword = null;
+    	} else if(clearDefaultRemotePassword != null) {
+    		this.defaultRemotePassword = PasswordUtils.encrypt(getSalt(), clearDefaultRemotePassword);
+    	}
 	}
 
 	public void setDefaultRemotePassword(String defaultRemotePassword) {

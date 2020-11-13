@@ -146,6 +146,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
      */
     @Column(name = "graphql_type")
     private String graphQlTypeName;
+    
+	@Type(type = "numeric_boolean")
+	@Column(name = "audited")
+	private boolean audited = false;
 
     /**
 	 * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type.
@@ -172,6 +176,11 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     public List<DBStorageType> getAvailableStorages() {
 		return availableStorages != null ? availableStorages : new ArrayList<>();
 	}
+    
+    public void addStorage(DBStorageType e) {
+    	availableStorages = getAvailableStorages();
+    	availableStorages.add(e);
+    }
 
 	/**
 	 * Sets the available storages.
@@ -495,6 +504,14 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 		}
 
 		return appliesTo.substring(4);
+	}
+
+	public boolean isAudited() {
+		return audited;
+	}
+
+	public void setAudited(boolean audited) {
+		this.audited = audited;
 	}
 
 }
