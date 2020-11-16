@@ -47,7 +47,7 @@ import org.meveo.model.scripts.ScriptInstance;
  * @version 6.12
  */
 @Entity
-@ModuleItem(value = "EntityCustomAction", path = "entitycustomactions")
+@ModuleItem(value = "EntityCustomAction", path = "entityCustomActions")
 @ModuleItemOrder(70)
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })

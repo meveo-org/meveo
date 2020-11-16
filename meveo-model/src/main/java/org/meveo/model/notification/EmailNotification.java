@@ -40,7 +40,7 @@ import org.meveo.model.admin.User;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "EmailNotification", path = "emailnotifications")
+@ModuleItem(value = "EmailNotification", path = "emailNotifications")
 @ModuleItemOrder(203)
 @Table(name="adm_notif_email")
 public class EmailNotification extends Notification {

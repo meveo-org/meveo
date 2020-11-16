@@ -45,7 +45,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "TimerEntity", path = "timerentitys")
+@ModuleItem(value = "TimerEntity", path = "timerEntities")
 @ModuleItemOrder(101)
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_timer", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))

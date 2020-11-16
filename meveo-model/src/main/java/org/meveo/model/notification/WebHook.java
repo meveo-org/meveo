@@ -27,7 +27,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "WebHook", path = "webhooks")
+@ModuleItem(value = "WebHook", path = "webHooks")
 @ModuleItemOrder(201)
 @Table(name = "adm_notif_webhooks")
 public class WebHook extends Notification {

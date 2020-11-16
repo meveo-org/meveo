@@ -28,7 +28,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "MeasurableQuantity", path = "measurablequantitys")
+@ModuleItem(value = "MeasurableQuantity", path = "measurableQuantities")
 @ModuleItemOrder(206)
 @Cacheable
 @ExportIdentifier({ "code"})

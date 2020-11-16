@@ -62,7 +62,7 @@ import org.meveo.model.scripts.ScriptInstance;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "CustomEntityTemplate", path ="customentitytemplates")
+@ModuleItem(value = "CustomEntityTemplate", path ="customEntityTemplates")
 @ModuleItemOrder(10)
 @Cacheable
 @ExportIdentifier({ "code" })

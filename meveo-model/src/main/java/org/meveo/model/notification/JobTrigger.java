@@ -22,7 +22,7 @@ import org.meveo.model.jobs.JobInstance;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem(value = "JobTrigger", path = "jobtriggers")
+@ModuleItem(value = "JobTrigger", path = "jobTriggers")
 @ModuleItemOrder(103)
 @Table(name="adm_notif_job")
 public class JobTrigger extends Notification {
