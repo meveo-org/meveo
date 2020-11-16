@@ -47,7 +47,7 @@ import org.meveo.model.security.Role;
  */
 @Entity
 @Cacheable
-@ModuleItem("Chart")
+@ModuleItem(value = "Chart", path = "charts")
 @ModuleItemOrder(205)
 @ExportIdentifier({ "code"})
 @Table(name = "dwh_chart", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))

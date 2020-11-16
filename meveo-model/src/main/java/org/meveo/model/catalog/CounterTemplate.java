@@ -39,7 +39,7 @@ import java.math.BigDecimal;
  * @lastModifiedVersion 6.9.0
  */
 @Entity
-@ModuleItem("CounterTemplate")
+@ModuleItem(value = "CounterTemplate", path = "countertemplates")
 @ModuleItemOrder(208)
 @Cacheable
 @ObservableEntity

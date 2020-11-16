@@ -54,7 +54,7 @@ import org.meveo.model.persistence.DBStorageType;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("CustomRelationshipTemplate")
+@ModuleItem(value = "CustomRelationshipTemplate", path = "customrelationshiptemplates")
 @ModuleItemOrder(11)
 @ExportIdentifier({ "code"})
 @Table(name = "CUST_CRT", uniqueConstraints = @UniqueConstraint(columnNames = {"code"}))

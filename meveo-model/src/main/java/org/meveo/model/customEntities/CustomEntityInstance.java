@@ -51,7 +51,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Entity
 @ObservableEntity
 @Cacheable
-@ModuleItem("CustomEntityInstance")
+@ModuleItem(value = "CustomEntityInstance", path = "customentityinstances")
 @ModuleItemOrder(50)
 @CustomFieldEntity(cftCodePrefix = "CE", cftCodeFields = "cetCode")
 @ExportIdentifier({ "code", "cetCode" })

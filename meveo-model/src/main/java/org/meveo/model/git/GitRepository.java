@@ -52,7 +52,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
         parameters = {
                 @Parameter(name = "sequence_name", value = "git_storage_repository_seq")
         })
-@ModuleItem("GitRepository")
+@ModuleItem(value = "GitRepository", path = "gitrepositorys")
 @ModuleItemOrder(999)
 public class GitRepository extends BusinessEntity {
 

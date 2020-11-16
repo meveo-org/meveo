@@ -12,5 +12,7 @@ import java.lang.annotation.Target;
 public @interface ModuleItem {
 
     String value();
+    
+    String path();
 
 }

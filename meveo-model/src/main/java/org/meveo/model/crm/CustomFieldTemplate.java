@@ -90,7 +90,7 @@ import org.meveo.model.shared.DateUtils;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("CustomFieldTemplate")
+@ModuleItem(value = "CustomFieldTemplate", path = "customfieldtemplates")
 @ModuleItemOrder(20)
 @Cacheable
 @ExportIdentifier({ "code", "appliesTo" })

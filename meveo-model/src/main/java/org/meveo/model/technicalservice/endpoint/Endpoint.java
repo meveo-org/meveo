@@ -66,7 +66,7 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId") })
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
-@ModuleItem("Endpoint")
+@ModuleItem(value = "Endpoint", path = "endpoints")
 @ModuleItemOrder(80)
 @ObservableEntity
 public class Endpoint extends BusinessEntity {

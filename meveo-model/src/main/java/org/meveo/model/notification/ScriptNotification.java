@@ -11,7 +11,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("ScriptNotification")
+@ModuleItem(value = "ScriptNotification", path = "scriptnotifications")
 @ModuleItemOrder(200)
 @Table(name = "adm_script_notification")
 public class ScriptNotification extends Notification {

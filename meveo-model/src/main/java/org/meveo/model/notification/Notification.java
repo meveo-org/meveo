@@ -42,7 +42,7 @@ import org.meveo.validation.constraint.classname.ClassName;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("Notification")
+@ModuleItem(value = "Notification", path = "notifications")
 @ModuleItemOrder(204)
 @ExportIdentifier({ "code" })
 @Table(name = "adm_notification", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))

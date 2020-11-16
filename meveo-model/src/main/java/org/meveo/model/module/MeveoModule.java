@@ -51,7 +51,7 @@ import org.meveo.model.scripts.ScriptInstance;
  */
 @Entity
 @ObservableEntity
-@ModuleItem("Module")
+@ModuleItem(value = "Module", path = "modules")
 @ModuleItemOrder(300)
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_module", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
