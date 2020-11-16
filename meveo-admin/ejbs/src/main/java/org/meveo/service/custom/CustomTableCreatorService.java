@@ -42,7 +42,6 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
-import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
@@ -109,9 +108,6 @@ public class CustomTableCreatorService implements Serializable {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
-	
-	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;

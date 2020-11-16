@@ -55,6 +55,7 @@ import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
+import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.DetailedSecuredEntity;
 import org.meveo.model.admin.SecuredEntity;
@@ -121,6 +122,9 @@ public class UserBean extends CustomFieldBean<User> {
 
 	@Inject
 	private MeveoModuleBean meveoModuleBean;
+	
+	@Inject
+	private KeycloakAdminClientService keycloakAdminClientService;
 
 	private String selectedFolder;
 
@@ -874,5 +878,9 @@ public class UserBean extends CustomFieldBean<User> {
 		entity.setUserLevel(null);
 		userGroupSelectedNode = null;
 		userGroupRootNode = null;
+	}
+	
+	public String getChangePasswordUrl() {
+		return keycloakAdminClientService.getChangePasswordUrl();
 	}
 }

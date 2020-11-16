@@ -25,9 +25,8 @@
 								<li><h:commandLink id="logout"
 										action="#{authenticationProvider.logout}"
 										value="#{messages['menutop.logout']}" /></li>
-								<li><h:link outcome="/index.html"
-										value="#{messages['menutop.changePassword']}" rendered=""
-										styleClass="headerLink" immediate="true" /></li>
+								<li><h:outputLink value="#{userBean.changePasswordUrl}"
+										target="_blank" styleClass="headerLink">#{messages['menutop.changePassword']}</h:outputLink></li>
 							</ul>
 						</c:if></li>
 					<li><a href="#" id="menu2"><i class="fa fa-2x fa-question"></i></a>
