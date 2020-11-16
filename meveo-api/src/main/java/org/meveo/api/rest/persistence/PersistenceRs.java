@@ -56,6 +56,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
@@ -78,6 +79,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
@@ -139,6 +141,12 @@ public class PersistenceRs {
 
 	@Inject
 	private UserService userService;
+	
+	@Inject
+	private CrossStorageTransaction crossStorageTx;
+	
+	@Inject
+	private Logger log;
 
 	@PathParam("repository")
 	private String repositoryCode;
@@ -275,7 +283,7 @@ public class PersistenceRs {
 		
 		crossStorageService.update(repository, cei);
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -360,6 +368,23 @@ public class PersistenceRs {
 		}
 
 		return persist(dtos);
+	}
+	
+	@POST
+	@Path("/gzip")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void persistGzip(@GZIP List<PersistenceDto> dtos) throws EntityDoesNotExistsException, CyclicDependencyException, IOException {
+		var repository = repositoryService.findByCode(repositoryCode);
+		if(repository == null) {
+			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
+		}
+		
+		for(var i = 0; i < dtos.size(); i += 10) {
+			crossStorageTx.beginTransaction(repository);
+			persist(dtos.subList(i, i + 9));
+			crossStorageTx.commitTransaction(repository);
+		}
+			
 	}
 
 	@POST
