@@ -231,6 +231,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (isOverwritesJavaClass(fullClassName)) {
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
+        
+		compileScript(script, true);
+		if (script.getError() != null && script.isError()) {
+			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
+		}
     }
 
     @Override
