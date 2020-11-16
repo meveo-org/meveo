@@ -379,9 +379,11 @@ public class PersistenceRs {
 			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
 		}
 		
-		for(var i = 0; i < dtos.size(); i += 10) {
+		var size = dtos.size();
+		for(var i = 0; i < size; i += 10) {
 			crossStorageTx.beginTransaction(repository);
-			persist(dtos.subList(i, i + 9));
+			var toIndex = Math.min(i + 9, size - 1);
+			persist(dtos.subList(i, toIndex));
 			crossStorageTx.commitTransaction(repository);
 		}
 			
