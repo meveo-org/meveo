@@ -195,7 +195,7 @@
             <hf:formButtons backingBean="#{scriptInstanceBean}" 
            					edit="#{scriptInstanceBean.edit}" 
            					ajaxSubmit="true"
-           					submitUpdate="@form:scriptErrors :growl"
+           					submitUpdate="@form :growl"
                 			execute="#{scriptInstanceBean.entity.id != null and !scriptInstanceBean.entity.error}"
                 			executeLabel="#{messages['action.execute']}" showAddModuleButton="true" killConversationOnSave="false"/>
         </hftl:formPanel>

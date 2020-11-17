@@ -48,7 +48,6 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ScriptInstanceDto;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -413,28 +412,27 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		}
 
 		// Manage entity
-		// super.saveOrUpdate(false);
+		super.saveOrUpdate(false);
 	
-		var dto = scriptInstanceApi.toDto(entity);
-		try {
-			scriptInstanceApi.createOrUpdate(dto);
-
-			if (entity.isTransient()) {
-				entity = scriptInstanceService.findByCode(dto.getCode());
-				setObjectId(entity.getId());
-			}
-
-		} catch (MeveoApiException e) {
-			messages.error("Entity can't be saved. Please retry.");
-			throw new BusinessException(e);
-		}
-		String message = entity.isTransient() ? "save.successful" : "update.successful";
-        messages.info(new BundleKey("messages", message));
+//		var dto = scriptInstanceApi.toDto(entity);
+//		try {
+//			scriptInstanceApi.createOrUpdate(dto);
+//
+//			if (entity.isTransient()) {
+//				entity = scriptInstanceService.findByCode(dto.getCode());
+//				setObjectId(entity.getId());
+//			}
+//
+//		} catch (MeveoApiException e) {
+//			messages.error("Entity can't be saved. Please retry.");
+//			throw new BusinessException(e);
+//		}
+//		String message = entity.isTransient() ? "save.successful" : "update.successful";
+//        messages.info(new BundleKey("messages", message));
 
 		String result = "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
-		return result;
+		return "";
 	}
-
 
     @Override
     public String deleteWithBack() throws BusinessException {
@@ -442,14 +440,14 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
         return super.deleteWithBack();
     }
 
-
 	@ActionMethod
 	@JpaAmpNewTx
 	public String execute() {
 		scriptInstanceService.test(entity.getCode(), null);
 		endConversation();
         messages.info(new BundleKey("messages", "info.entity.executed"));
-		return "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&";
+		//return "scriptInstanceDetail.xhtml?faces-redirect=true&objectId=" + getObjectId() + "&edit=true&";
+        return "";
 	}
 
 	@Override
