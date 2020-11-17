@@ -835,7 +835,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	private boolean hasReferenceJpaEntity(CustomEntityTemplateDto cetDto) {
 		if (cetDto.getFields() != null) {
 			Optional<CustomFieldTemplateDto> opt = cetDto.getFields().stream()
-					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
+					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY))
+					.filter(e -> !e.getEntityClazzCetCode().equals(cetDto.getCode()))	// Exclude self-references 
+					.filter(e -> customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode()))		
+					.findAny();
 			if (opt.isPresent()) {
 				return true;
 			}
