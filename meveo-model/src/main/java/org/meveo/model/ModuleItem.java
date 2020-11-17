@@ -11,6 +11,8 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface ModuleItem {
 
-    String value();
+	String value();
+
+	String path();
 
 }

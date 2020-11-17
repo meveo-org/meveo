@@ -42,7 +42,7 @@ import org.meveo.model.annotation.ImportOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("CustomEntityCategory")
+@ModuleItem(value = "CustomEntityCategory", path = "customEntityCategories")
 @ModuleItemOrder(0)
 @Cacheable
 @ImportOrder(1)

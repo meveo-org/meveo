@@ -26,7 +26,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.10
  */
 @Entity
-@ModuleItem("WebNotification")
+@ModuleItem(value = "WebNotification", path = "webNotifications")
 @ModuleItemOrder(204)
 @Table(name = "adm_notif_webnotification")
 public class WebNotification extends Notification {

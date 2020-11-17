@@ -18,7 +18,7 @@ import javax.persistence.Table;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("CustomEntityReference")
+@ModuleItem(value = "CustomEntityReference", path = "customEntityReferences")
 @ModuleItemOrder(30)
 @Cacheable
 @Table(name = "cet_ref")

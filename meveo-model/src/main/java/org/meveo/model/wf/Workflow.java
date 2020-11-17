@@ -38,7 +38,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("Workflow")
+@ModuleItem(value = "Workflow", path = "workFlows")
 @ModuleItemOrder(207)
 @ExportIdentifier({ "code"})
 @Table(name = "wf_workflow", uniqueConstraints = {@UniqueConstraint(columnNames = {"code"}),@UniqueConstraint(columnNames = {"cet_code", "wf_type"})})

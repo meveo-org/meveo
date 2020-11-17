@@ -45,7 +45,7 @@ import org.meveo.model.ModuleItemOrder;
  * @lastModifiedVersion 6.9.0
  **/
 @Entity
-@ModuleItem("Filter")
+@ModuleItem(value = "Filter", path = "filters")
 @ModuleItemOrder(202)
 @Cacheable
 @ExportIdentifier({ "code"})

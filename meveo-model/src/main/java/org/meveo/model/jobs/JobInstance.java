@@ -56,7 +56,7 @@ import org.meveo.model.ModuleItemOrder;
  * @version 6.9.0
  */
 @Entity
-@ModuleItem("JobInstance")
+@ModuleItem(value = "JobInstance", path = "jobInstances")
 @ModuleItemOrder(102)
 @CustomFieldEntity(cftCodePrefix = "JOB", cftCodeFields = "jobTemplate")
 @ExportIdentifier({ "code" })

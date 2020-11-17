@@ -47,7 +47,7 @@ import org.meveo.model.security.Role;
  * @version 6.10
  */
 @Entity
-@ModuleItem("ScriptInstance")
+@ModuleItem(value = "ScriptInstance", path = "scriptInstances")
 @ModuleItemOrder(60)
 @ObservableEntity
 @Table(name = "meveo_script_instance")
