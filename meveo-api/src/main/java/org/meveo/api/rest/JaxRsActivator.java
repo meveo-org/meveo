@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.jboss.resteasy.plugins.interceptors.encoding.GZIPDecodingInterceptor;
+import org.jboss.resteasy.plugins.interceptors.encoding.GZIPEncodingInterceptor;
 import org.meveo.api.rest.cache.CacheRs;
 import org.meveo.api.rest.custom.impl.CustomTableRsImpl;
 import org.meveo.api.rest.custom.impl.CustomTableRsRelationImpl;
@@ -51,6 +53,8 @@ public class JaxRsActivator extends Application {
 			resources.add(GraphQLRs.class);
 			resources.add(CacheRs.class);
             resources.add(SseManager.class);
+            resources.add(GZIPDecodingInterceptor.class);
+            resources.add(GZIPEncodingInterceptor.class);
 		}
 
 
