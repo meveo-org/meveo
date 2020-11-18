@@ -79,7 +79,6 @@ public class GenericNotificationService extends BusinessService<Notification> {
             List<Notification> notificationList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(notifications)) {
                 for (Notification notification : notifications) {
-                    notification = findById(notification.getId());
                     if (notification.getEventTypeFilter().equals(eventType)) {
                         notificationList.add(notification);
                     }
