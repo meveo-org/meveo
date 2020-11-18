@@ -19,7 +19,7 @@ import org.meveo.model.storage.Repository;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @lastModifiedVersion 6.4.0
+ * @lastModifiedVersion 6.13
  */
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
@@ -84,7 +84,7 @@ public class RepositoryRsImpl extends BaseCrudRs<Repository, RepositoryDto> impl
 	public RepositoriesResponseDto list() {
 		RepositoriesResponseDto result = new RepositoriesResponseDto();
 		try {
-			result.setRepositories(repositoryApi.findAll());
+			result.setRepositories(repositoryApi.filterByUser());
 
 		} catch (Exception e) {
 			processException(e, result.getActionStatus());

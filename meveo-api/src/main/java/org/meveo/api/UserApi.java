@@ -49,9 +49,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
- * @author Edward P. Legaspi
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @author Clement Bareth
- * @lastModifiedVersion 6.4.0
+ * @lastModifiedVersion 6.13
  */
 @Stateless
 @Interceptors(SecuredBusinessEntityMethodInterceptor.class)
@@ -133,14 +133,6 @@ public class UserApi extends BaseApi {
             Set<Role> roles = extractRoles(postData.getRoles());
             List<SecuredEntity> securedEntities = extractSecuredEntities(postData.getSecuredEntities());
 
-            UserHierarchyLevel userHierarchyLevel = null;
-            if (!StringUtils.isBlank(postData.getUserLevel())) {
-                userHierarchyLevel = userHierarchyLevelService.findByCode(postData.getUserLevel());
-                if (userHierarchyLevel == null) {
-                    throw new EntityDoesNotExistsException(UserHierarchyLevel.class, postData.getUserLevel());
-                }
-            }
-
             User user = new User();
             user.setUserName(postData.getUsername().toUpperCase());
             user.setEmail((postData.getEmail()));
@@ -153,6 +145,15 @@ public class UserApi extends BaseApi {
             user.setSshPublicKey(postData.getSshPublicKey());
             user.setSshPrivateKey(postData.getSshPrivateKey());
 
+            UserHierarchyLevel userHierarchyLevel = null;
+            if (!StringUtils.isBlank(postData.getUserLevel())) {
+                userHierarchyLevel = userHierarchyLevelService.findByCode(postData.getUserLevel());
+                if (userHierarchyLevel == null) {
+                    throw new EntityDoesNotExistsException(UserHierarchyLevel.class, postData.getUserLevel());
+                }
+                user.setUserLevel(userHierarchyLevel);
+            }
+            
             userService.create(user);
         }
 
@@ -208,13 +209,19 @@ public class UserApi extends BaseApi {
             securedEntities.addAll(extractSecuredEntities(postData.getSecuredEntities()));
         }
 
-        UserHierarchyLevel userHierarchyLevel = null;
-        if (!StringUtils.isBlank(postData.getUserLevel())) {
-            userHierarchyLevel = userHierarchyLevelService.findByCode(postData.getUserLevel());
-            if (userHierarchyLevel == null) {
-                throw new EntityDoesNotExistsException(UserHierarchyLevel.class, postData.getUserLevel());
-            }
-        }
+        
+		if (postData.getUserLevel() != null) {
+			if (!StringUtils.isBlank(postData.getUserLevel())) {
+				UserHierarchyLevel userHierarchyLevel = userHierarchyLevelService.findByCode(postData.getUserLevel());
+				if (userHierarchyLevel == null) {
+					throw new EntityDoesNotExistsException(UserHierarchyLevel.class, postData.getUserLevel());
+				}
+				user.setUserLevel(userHierarchyLevel);
+				
+			} else {
+				user.setUserLevel(null);
+			}
+		}
 
         user.setUserName(postData.getUsername());
         if (!StringUtils.isBlank(postData.getEmail())) {
