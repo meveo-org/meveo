@@ -2,6 +2,7 @@
     <deployment>
         <exclusions>
             <module name="org.jboss.resteasy.resteasy-jackson-provider"/>
+            <module name="org.eclipse.jgit-5.0.2.201807311906-r.jar"/>
         </exclusions>
         <dependencies>
             <module name="org.jboss.resteasy.resteasy-jackson2-provider" services="import"/>

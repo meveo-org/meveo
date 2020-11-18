@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +33,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.event.qualifier.Created;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.security.DefaultPermission;
@@ -232,7 +235,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.create(entity);
         return entity;
     }
-
+    
     public GitRepository setBranchInformation(GitRepository repository) {
         // Set branches information if not null
         if (repository != null) {
@@ -248,6 +251,18 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         }
 
         return repository;
+    }
+    
+    // ------------------------------- Observers ---------------------------------------------
+    
+    /**
+     * Removes the files on hard drive when creation fails
+     * 
+     * @param repo the repository
+     * @throws BusinessException if the files can't be removed
+     */
+    public void onCreationFailed(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created GitRepository repo) throws BusinessException {
+    	gitClient.remove(repo);
     }
 
 }
