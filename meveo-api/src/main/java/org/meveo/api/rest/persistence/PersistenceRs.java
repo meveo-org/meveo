@@ -103,7 +103,7 @@ import io.swagger.annotations.ApiParam;
 /**
  * @author Clement Bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.12
+ * @lastModifiedVersion 6.13
  */
 @Path("/{repository}/persistence")
 @Api("PersistenceRs")
@@ -628,11 +628,11 @@ public class PersistenceRs {
 		}
 		
 		User user = userService.findByUsername(currentUser.getUserName());
-		if (user.getUserLevel() != null && repository.getUserHierarchyLevel() != null) {
-			if (!userHierarchyLevelService.isInHierarchy(repository.getUserHierarchyLevel(), user.getUserLevel())) {
-				throw new ClientErrorException("User level does not have access to the repository.", Response.Status.FORBIDDEN);
-			}
+		if (user.getUserLevel() != null && repository.getUserHierarchyLevel() != null
+				&& !userHierarchyLevelService.isInHierarchy(repository.getUserHierarchyLevel(), user.getUserLevel())) {
+			throw new ClientErrorException("User level does not have access to the repository.", Response.Status.FORBIDDEN);
 		}
+		
 
 		return true;
 	}
