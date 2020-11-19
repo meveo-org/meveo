@@ -374,19 +374,19 @@ public class PersistenceRs {
 	@Path("/gzip")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void persistGzip(@GZIP List<PersistenceDto> dtos) throws EntityDoesNotExistsException, CyclicDependencyException, IOException {
+		var chunksSize = 100;
 		var repository = repositoryService.findByCode(repositoryCode);
 		if(repository == null) {
 			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
 		}
 		
 		var size = dtos.size();
-		for(var i = 0; i < size; i += 10) {
+		for(var i = 0; i < size; i += chunksSize) {
 			crossStorageTx.beginTransaction(repository);
-			var toIndex = Math.min(i + 9, size - 1);
+			var toIndex = Math.min(i + chunksSize - 1, size - 1);
 			persist(dtos.subList(i, toIndex));
 			crossStorageTx.commitTransaction(repository);
 		}
-			
 	}
 
 	@POST

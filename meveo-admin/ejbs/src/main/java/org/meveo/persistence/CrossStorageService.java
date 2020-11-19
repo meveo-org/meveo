@@ -624,12 +624,6 @@ public class CrossStorageService implements CustomPersistenceService {
 			throw new IllegalArgumentException("CET with code " + ceiToSave.getCetCode() + " does not exist");
 		}
 				
-		boolean hasReferenceJpaEntity = customEntityTemplateService.hasReferenceJpaEntity(cet);
-		
-		if (hasReferenceJpaEntity && !repository.getSqlConfigurationCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-			throw new IllegalArgumentException("CET with JPA reference entity cannot be save in a non-default SqlConfiguration.");
-		}
-
 		Set<EntityRef> persistedEntities = new HashSet<>();
 
 		// Initialize the CEI that will be manipulated
