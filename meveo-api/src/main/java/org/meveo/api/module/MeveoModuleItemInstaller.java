@@ -704,15 +704,17 @@ public class MeveoModuleItemInstaller {
 					}
 					
 					// Also put entity custom action outside of the cet
-					for(var actionDto : List.copyOf(cet.getActions())) {
-						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
-						cftModuleItem.setDtoClassName(EntityCustomActionDto.class.getName());
-						cftModuleItem.setDtoData(actionDto);
-						actionDto.setAppliesTo("CE_" + cet.getCode());
-						moduleDto.getModuleItems().add(cftModuleItem);
+					if (cet.getActions() != null) {
+						for (var actionDto : List.copyOf(cet.getActions())) {
+							MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+							cftModuleItem.setDtoClassName(EntityCustomActionDto.class.getName());
+							cftModuleItem.setDtoData(actionDto);
+							actionDto.setAppliesTo("CE_" + cet.getCode());
+							moduleDto.getModuleItems().add(cftModuleItem);
 
-						cet.getActions().remove(actionDto);
-						moduleItemDto.setDtoData(cet);
+							cet.getActions().remove(actionDto);
+							moduleItemDto.setDtoData(cet);
+						}
 					}
 				}
 			}
