@@ -13,10 +13,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
@@ -24,7 +23,6 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarInterval;
@@ -110,20 +108,23 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	}
     }
 
-    @SuppressWarnings("unchecked")
-    public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {
-        QueryBuilder qb = new QueryBuilder(CustomFieldTemplate.class, "c", null);
-        qb.addCriterion("appliesTo", "=", appliesTo, true);
-        qb.addBooleanCriterion("unique", true);
-        try {
-            return (List<CustomFieldTemplate> ) qb.getQuery(getEntityManager()).getResultList();
-        } catch (NoResultException e) {
-            return null;
-        } catch (Exception e) {
-        	log.error("Failed to retrieve custom field templates", e);
-        	return null;
-        }
-    }
+	@SuppressWarnings("unchecked")
+	public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {
+
+		Query q = getEntityManager().createNamedQuery("CustomFieldTemplate.getCftUniqueFieldsByApplies") //
+				.setParameter("appliesTo", appliesTo);
+
+		try {
+			return q.getResultList();
+
+		} catch (NoResultException e) {
+			return null;
+
+		} catch (Exception e) {
+			log.error("Failed to retrieve custom field templates", e);
+			return null;
+		}
+	}
 
     /**
      * Find a list of custom field templates corresponding to a given entity
@@ -254,14 +255,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         try {
             return getEntityManager()
-            		// .createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class)
-            		.createQuery("FROM CustomFieldTemplate where code=:code and appliesTo=:appliesTo", CustomFieldTemplate.class)
+            		.createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class)
+//            		.createQuery("FROM CustomFieldTemplate where code=:code and appliesTo=:appliesTo", CustomFieldTemplate.class)
             		.setParameter("code", code)
             		.setParameter("appliesTo", appliesTo)
             		.getSingleResult();
             
         } catch (NoResultException e) {
             return null;
+            
         } catch (Exception e) {
         	log.error("Failed to retrieve custom field template", e);
         	return null;

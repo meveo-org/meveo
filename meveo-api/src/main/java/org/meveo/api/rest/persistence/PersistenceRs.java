@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -380,6 +381,7 @@ public class PersistenceRs {
 			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
 		}
 		
+		long start = System.nanoTime();
 		var size = dtos.size();
 		for(var i = 0; i < size; i += chunksSize) {
 			crossStorageTx.beginTransaction(repository);
@@ -387,6 +389,12 @@ public class PersistenceRs {
 			persist(dtos.subList(i, toIndex));
 			crossStorageTx.commitTransaction(repository);
 		}
+		
+		long end = System.nanoTime();
+
+	    // execution time
+	    long execution = end - start;
+	    System.out.println("Execution time: " + TimeUnit.MINUTES.convert(execution, TimeUnit.NANOSECONDS) + " mins");
 	}
 
 	@POST
