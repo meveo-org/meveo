@@ -214,7 +214,7 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         }
 
         CustomFieldTemplate cfDuplicate = customFieldTemplateService.findByCodeAndAppliesTo(entity.getCode(), entity.getAppliesTo());
-        if (cfDuplicate != null && !cfDuplicate.getId().equals(entity.getId())) {
+        if (cfDuplicate != null && cfDuplicate.getId() != null && !cfDuplicate.getId().equals(entity.getId())) {
             messages.error(new BundleKey("messages", "customFieldTemplate.alreadyExists"));
             return null;
         }
