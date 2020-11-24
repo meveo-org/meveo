@@ -657,7 +657,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     
 	public boolean isReferenceJpaEntity(String clazz) {
 
-		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCode(clazz);
+		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCodeOrDbTablename(clazz);
 		if (referenceCet == null) {
 			try {
 				Class.forName(clazz);
