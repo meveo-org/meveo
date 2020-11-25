@@ -48,6 +48,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -95,6 +96,9 @@ import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -157,8 +161,9 @@ public class PersistenceRs {
 	@Path("/{cetCode}/list")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation("List data for a given CET")
-	public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+	public Response list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
+			@QueryParam("withCount") @ApiParam("If true returns the count of entities") Boolean withCount,
 			@ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 		if (customEntityTemplate == null) {
@@ -179,7 +184,18 @@ public class PersistenceRs {
 			convertFiles(customEntityTemplate, values, base64Encode);
 		}
 
-		return data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
+		List<Map<String, Object>> entities = data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
+		
+		if (withCount != null && withCount) {
+			PersistenceListResult result = new PersistenceListResult();
+			result.setCount(entities.size());
+			result.setResult(entities);
+
+			return Response.ok(result).build();
+
+		} else {
+			return Response.ok(entities).build();
+		}
 	}
 
 	@DELETE
