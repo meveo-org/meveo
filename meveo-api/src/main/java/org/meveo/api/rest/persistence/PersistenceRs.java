@@ -78,6 +78,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.CrossStorageTransaction;
@@ -91,14 +92,13 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -151,6 +151,12 @@ public class PersistenceRs {
 	
 	@Inject
 	private Logger log;
+	
+	@Inject
+	private CustomEntityInstanceService customEntityInstanceService;
+	
+	@Inject
+	private CustomTableService customTableService;
 
 	@PathParam("repository")
 	private String repositoryCode;
@@ -187,8 +193,17 @@ public class PersistenceRs {
 		List<Map<String, Object>> entities = data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
 		
 		if (withCount != null && withCount) {
+			Long totalCount = 0L;
+			
+			if (customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
+				totalCount = customTableService.count(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(customEntityTemplate), paginationConfiguration);
+						
+			} else {
+				totalCount = customEntityInstanceService.count(paginationConfiguration);
+			}
+			
 			PersistenceListResult result = new PersistenceListResult();
-			result.setCount(entities.size());
+			result.setCount(totalCount.intValue());
 			result.setResult(entities);
 
 			return Response.ok(result).build();
