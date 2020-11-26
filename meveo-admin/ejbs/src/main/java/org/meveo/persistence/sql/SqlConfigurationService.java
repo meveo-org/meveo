@@ -68,9 +68,10 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	 */
 	public String getSchema(String sqlConfigurationCode) {
 		String sql = "SELECT schema FROM " + SqlConfiguration.class.getName() + " WHERE code =:code";
-		return getEntityManager().createQuery(sql, String.class)
-			.setParameter("code", sqlConfigurationCode)
-			.getSingleResult();
+		return getEntityManager().createQuery(sql, String.class) //
+				.setParameter("code", sqlConfigurationCode) //
+				.setHint("org.hibernate.cacheable", true) //
+				.getSingleResult();
 	}
 
 	@Override
