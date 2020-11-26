@@ -399,9 +399,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         if ((entity.getFieldType() == CustomFieldTypeEnum.STRING || entity.getFieldType() == CustomFieldTypeEnum.SECRET) && entity.getMaxValue() == null) {
             entity.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
         }
-        if (entity.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
-            entity.setStorageType(CustomFieldStorageTypeEnum.LIST);
-            entity.setVersionable(false);
+        if (entity.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY && entity.getStorageType() != CustomFieldStorageTypeEnum.LIST && entity.getStorageType() != CustomFieldStorageTypeEnum.SINGLE) {
+			entity.setStorageType(CustomFieldStorageTypeEnum.LIST);
+			entity.setVersionable(false);
         }
         if (entity.getStorageType() == CustomFieldStorageTypeEnum.MAP && entity.getMapKeyType() == null) {
             entity.setMapKeyType(CustomFieldMapKeyEnum.STRING);
