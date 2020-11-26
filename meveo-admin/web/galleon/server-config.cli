@@ -1,0 +1,6 @@
+# Data source
+# /subsystem=datasources/data-source=ExampleDS:remove
+/subsystem=datasources/data-source=MeveoAdminDatasource:add(jndi-name="java:jboss/datasources/MeveoAdminDatasource",                 \
+                                            connection-url="jdbc:postgresql://localhost:5432/meveo",       \
+                                            driver-name="postgresql", user-name="postgres", password="meveo" )
+/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql, driver-module-name=org.postgresql.jdbc, driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)                                            

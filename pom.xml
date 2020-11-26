@@ -13,7 +13,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.jakarta>8.0.0</version.jakarta>
 		<version.keycloak>10.0.2</version.keycloak>
-		<version.wildfly>18.0.1.Final</version.wildfly>
+		<version.wildfly>21.0.0.Final</version.wildfly>
 		<dbtype>generic</dbtype>
 		<releaseOption />
 		<jackson.version>2.9.10</jackson.version>
