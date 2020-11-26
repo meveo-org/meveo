@@ -21,6 +21,7 @@ package org.meveo.service.base;
 
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.Session;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
@@ -45,25 +46,27 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @param code Code to match
      * @return A single entity matching code
      */
-    public P findByCode(String code) {
+    @SuppressWarnings("unchecked")
+	public P findByCode(String code) {
 
         if (code == null) {
             return null;
         }
 
-        TypedQuery<P> query = getEntityManager().createQuery("select be from " + entityClass.getName() + " be where upper(code)=:code", entityClass)
-            .setParameter("code", code.toUpperCase()).setMaxResults(1);
+//        TypedQuery<P> query = getEntityManager().createQuery("select be from " + entityClass.getName() + " be where upper(code)=:code", entityClass)
+//            .setParameter("code", code.toUpperCase()).setMaxResults(1);
+		return (P) getEntityManager().unwrap(Session.class).byNaturalId(entityClass.getName()).using("code", code).load();
 
         // if (entityClass.isAnnotationPresent(Cacheable.class)) {
         // query.setHint("org.hibernate.cacheable", true);
         // }
 
-        try {
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
-            return null;
-        }
+//        try {
+//            return query.getSingleResult();
+//        } catch (NoResultException e) {
+//            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+//            return null;
+//        }
     }
 
     /**
