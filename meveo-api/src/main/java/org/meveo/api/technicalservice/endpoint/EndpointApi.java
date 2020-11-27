@@ -524,16 +524,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	public Endpoint fromDto(EndpointDto endpointDto, Endpoint endpoint) throws EntityDoesNotExistsException  {
 
+		boolean create = false;
 		if (endpoint == null) {
 			endpoint = new Endpoint();
-
-			// Parameters mappings
-			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
-			endpoint.setParametersMapping(tsParameterMappings);
-
-			// Path parameters
-			List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-			endpoint.setPathParameters(endpointPathParameters);
+			create = true;
 		}
 
 		// Code
@@ -570,6 +564,16 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			} catch (ElementNotFoundException e) {
 				throw new EntityDoesNotExistsException("endpoint's serviceCode is not linked to a function : " + e.getLocalizedMessage());
 			}
+		}
+		
+		if(create) { 
+			// Parameters mappings
+			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
+			endpoint.setParametersMapping(tsParameterMappings);
+
+			// Path parameters
+			List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+			endpoint.setPathParameters(endpointPathParameters);
 		}
 
 		endpoint.setSerializeResult(endpointDto.isSerializeResult());
@@ -624,9 +628,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
 			tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
 			tsParameterMapping.setValueRequired(parameterMappingDto.getValueRequired());
-			tsParameterMapping.setMultivalued(isParameterMultivalued(endpoint, tsParameterMapping));
 			EndpointParameter endpointParameter = buildEndpointParameter(endpoint,parameterMappingDto.getServiceParameter());
 			tsParameterMapping.setEndpointParameter(endpointParameter);
+			tsParameterMapping.setMultivalued(isParameterMultivalued(endpoint, tsParameterMapping));
 			tsParameterMappings.add(tsParameterMapping);
 		}
 		return tsParameterMappings;
