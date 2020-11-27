@@ -18,10 +18,6 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Debugging](https://github.com/meveo-org/meveo/blob/master/documentation/DEBUGGING.md)
 
-## User Guide
-
-- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
-
 ## Technical documentation
 
 ### System
@@ -49,3 +45,8 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Notification](./meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
 ### Reporting
+
+
+## User Guide
+
+- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
