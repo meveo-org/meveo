@@ -17,6 +17,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -25,6 +26,7 @@ import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 
@@ -141,6 +143,10 @@ public class JSONSchemaIntoJavaClassParser {
                     FieldDeclaration fd = new FieldDeclaration();
                     VariableDeclarator vd = new VariableDeclarator();
                     vd.setName(code);
+					if (values.containsKey("nullable") && !Boolean.parseBoolean(values.get("nullable").toString())) {
+						fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+					}
+                    
                     if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
                             compilationUnit.addImport("java.util.List");
