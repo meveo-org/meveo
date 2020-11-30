@@ -145,6 +145,7 @@ public class JSONSchemaIntoJavaClassParser {
                     vd.setName(code);
 					if (values.containsKey("nullable") && !Boolean.parseBoolean(values.get("nullable").toString())) {
 						fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+						compilationUnit.addImport(JsonProperty.class);
 					}
                     
                     if (values.get("type") != null) {
