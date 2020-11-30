@@ -243,6 +243,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	CustomEntityTemplate cet = null;
     	if(useCETCache) {
     		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    		if(cet != null) {
+    			return cet;
+    		}
     	}
     	
 		if (cet == null) {
@@ -251,6 +254,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 				return cet;
 			}
 		}
+		
         return findByDbTablename(codeOrDbTablename);
     }
     
