@@ -32,8 +32,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
@@ -75,7 +73,6 @@ import org.slf4j.Logger;
  * 
  */
 @Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 @DependsOn("CachesInitializer")
 public class CustomFieldsCacheContainerProvider implements Serializable {
 
@@ -532,8 +529,8 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
 
         Map<String, CustomFieldTemplate> cfMaps;
-        Lock lock = cacheLock.readLock();
-        lock.lock();
+//        Lock lock = cacheLock.readLock();
+//        lock.lock();
         try {
             cfMaps = cftsByAppliesTo.get(key);
             if(cfMaps == null) {
@@ -546,7 +543,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             	}
             }
         } finally {
-            lock.unlock();
+//            lock.unlock();
         }
         if(cfMaps == null || cfMaps.isEmpty()) {
             cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);

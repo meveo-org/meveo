@@ -58,6 +58,9 @@ public class EndpointParameter implements Serializable {
 		this.endpoint = endpoint;
 	}
 
+	/**
+	 * @return Mapped input of the function described by the endpoint
+	 */
 	public String getParameter() {
 		return parameter;
 	}

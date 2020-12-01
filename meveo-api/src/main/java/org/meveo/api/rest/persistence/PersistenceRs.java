@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -77,6 +79,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.CrossStorageTransaction;
@@ -90,7 +93,9 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
@@ -103,7 +108,7 @@ import io.swagger.annotations.ApiParam;
 /**
  * @author Clement Bareth
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
- * @lastModifiedVersion 6.12
+ * @lastModifiedVersion 6.13
  */
 @Path("/{repository}/persistence")
 @Api("PersistenceRs")
@@ -147,6 +152,12 @@ public class PersistenceRs {
 	
 	@Inject
 	private Logger log;
+	
+	@Inject
+	private CustomEntityInstanceService customEntityInstanceService;
+	
+	@Inject
+	private CustomTableService customTableService;
 
 	@PathParam("repository")
 	private String repositoryCode;
@@ -157,8 +168,9 @@ public class PersistenceRs {
 	@Path("/{cetCode}/list")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation("List data for a given CET")
-	public List<Map<String, Object>> list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+	public Response list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
+			@QueryParam("withCount") @ApiParam("If true returns the count of entities") Boolean withCount,
 			@ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 		if (customEntityTemplate == null) {
@@ -179,7 +191,27 @@ public class PersistenceRs {
 			convertFiles(customEntityTemplate, values, base64Encode);
 		}
 
-		return data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
+		List<Map<String, Object>> entities = data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
+		
+		if (withCount != null && withCount) {
+			Long totalCount = 0L;
+			
+			if (customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
+				totalCount = customTableService.count(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(customEntityTemplate), paginationConfiguration);
+						
+			} else {
+				totalCount = customEntityInstanceService.count(paginationConfiguration);
+			}
+			
+			PersistenceListResult result = new PersistenceListResult();
+			result.setCount(totalCount.intValue());
+			result.setResult(entities);
+
+			return Response.ok(result).build();
+
+		} else {
+			return Response.ok(entities).build();
+		}
 	}
 
 	@DELETE
@@ -374,19 +406,26 @@ public class PersistenceRs {
 	@Path("/gzip")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public void persistGzip(@GZIP List<PersistenceDto> dtos) throws EntityDoesNotExistsException, CyclicDependencyException, IOException {
+		var chunksSize = 100;
 		var repository = repositoryService.findByCode(repositoryCode);
 		if(repository == null) {
 			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
 		}
 		
+		long start = System.nanoTime();
 		var size = dtos.size();
-		for(var i = 0; i < size; i += 10) {
+		for(var i = 0; i < size; i += chunksSize) {
 			crossStorageTx.beginTransaction(repository);
-			var toIndex = Math.min(i + 9, size - 1);
+			var toIndex = Math.min(i + chunksSize - 1, size - 1);
 			persist(dtos.subList(i, toIndex));
 			crossStorageTx.commitTransaction(repository);
 		}
-			
+		
+		long end = System.nanoTime();
+
+	    // execution time
+	    long execution = end - start;
+	    System.out.println("Execution time: " + TimeUnit.MINUTES.convert(execution, TimeUnit.NANOSECONDS) + " mins");
 	}
 
 	@POST
@@ -628,11 +667,11 @@ public class PersistenceRs {
 		}
 		
 		User user = userService.findByUsername(currentUser.getUserName());
-		if (user.getUserLevel() != null && repository.getUserHierarchyLevel() != null) {
-			if (!userHierarchyLevelService.isInHierarchy(repository.getUserHierarchyLevel(), user.getUserLevel())) {
-				throw new ClientErrorException("User level does not have access to the repository.", Response.Status.FORBIDDEN);
-			}
+		if (user.getUserLevel() != null && repository.getUserHierarchyLevel() != null
+				&& !userHierarchyLevelService.isInHierarchy(repository.getUserHierarchyLevel(), user.getUserLevel())) {
+			throw new ClientErrorException("User level does not have access to the repository.", Response.Status.FORBIDDEN);
 		}
+		
 
 		return true;
 	}

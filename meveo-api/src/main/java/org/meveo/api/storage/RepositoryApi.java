@@ -14,12 +14,14 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.utils.DtoUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.exceptions.EntityDoesNotExistsException;
+import org.meveo.model.admin.User;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
@@ -28,7 +30,7 @@ import org.meveo.service.storage.RepositoryService;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.10
+ * @version 6.13
  */
 @Stateless
 public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
@@ -51,6 +53,9 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
     
     @Inject
     private UserHierarchyLevelService userHierarchyLevelService;
+    
+    @Inject
+    private UserService userService;
 
 	@Override
 	public RepositoryDto toDto(Repository entity) {
@@ -244,5 +249,22 @@ public class RepositoryApi extends BaseCrudApi<Repository, RepositoryDto> {
 		if(entity != null) {
 			repositoryService.remove(entity);
 		}
+	}
+
+	public List<RepositoryDto> filterByUser() {
+
+		List<RepositoryDto> result = new ArrayList<>();
+		User user = userService.findByUsername(currentUser.getUserName());
+		if (user.getUserLevel() != null) {
+			List<Repository> userRepos = userService.findAssignedRepositories(user.getUserLevel());
+			if (userRepos != null) {
+				userRepos.stream().forEach(e -> result.add(new RepositoryDto(e)));
+			}
+
+		} else {
+			result.add(new RepositoryDto(repositoryService.findDefaultRepository()));
+		}
+
+		return result;
 	}
 }

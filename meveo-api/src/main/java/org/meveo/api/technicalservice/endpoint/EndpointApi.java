@@ -268,8 +268,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					} else if (arrValue.length == 1) {
 						parameterValue = arrValue[0];
 					} else {
-						throw new IllegalArgumentException(
-								"Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + " should not be multivalued");
 					}
 				} else if (parameterValue instanceof Collection) {
 					@SuppressWarnings("rawtypes")
@@ -436,21 +435,40 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
-				endpointDto.getParameterMappings().stream().filter(e -> finalEndpoint.getParametersMappingNullSafe()
-						.stream()
-						.noneMatch(f -> e.getParameterName().contentEquals(f.getParameterName())
-								&& e.getServiceParameter().contentEquals(f.getEndpointParameter().getParameter())))
-						.forEach(g -> {
-							TSParameterMapping tsParameterMapping = new TSParameterMapping();
-							tsParameterMapping.setEndpointParameter(
-									buildEndpointParameter(finalEndpoint, g.getServiceParameter()));
-							tsParameterMapping.setDefaultValue(g.getDefaultValue());
-							tsParameterMapping.setMultivalued(g.getMultivalued());
-							tsParameterMapping.setParameterName(g.getParameterName());
-							tsParameterMapping.setValueRequired(g.getValueRequired());
-							finalEndpoint.addParametersMapping(tsParameterMapping);
-						});
+				
+				// Update existing parameters
+				for(var paramDto : endpointDto.getParameterMappings()) {
+					var paramToUpdate = endpoint.getParametersMappingNullSafe()
+							.stream()
+							.filter(param -> param.getParameterName().equals(paramDto.getParameterName()))
+							.findFirst();
+					paramToUpdate.ifPresent(param -> {
+						param.setEndpointParameter(buildEndpointParameter(finalEndpoint, paramDto.getServiceParameter()));
+						param.setDefaultValue(paramDto.getDefaultValue());
+						param.setMultivalued(paramDto.getMultivalued());
+						param.setParameterName(paramDto.getParameterName());
+						param.setValueRequired(paramDto.getValueRequired());
+					});
+				}
+				
+				// Add new parameters
+				endpointDto.getParameterMappings()
+					.stream()
+					.filter(
+							e -> finalEndpoint.getParametersMappingNullSafe().stream()
+									.noneMatch(f -> e.getParameterName().contentEquals(f.getParameterName())
+											&& e.getServiceParameter().contentEquals(f.getEndpointParameter().getParameter()))
+					).forEach(g -> {
+						TSParameterMapping tsParameterMapping = new TSParameterMapping();
+						tsParameterMapping.setEndpointParameter(buildEndpointParameter(finalEndpoint, g.getServiceParameter()));
+						tsParameterMapping.setDefaultValue(g.getDefaultValue());
+						tsParameterMapping.setMultivalued(g.getMultivalued());
+						tsParameterMapping.setParameterName(g.getParameterName());
+						tsParameterMapping.setValueRequired(g.getValueRequired());
+						finalEndpoint.addParametersMapping(tsParameterMapping);
+					});
 
+				// Delete removed parameters
 				List<TSParameterMapping> toRemove = new ArrayList<TSParameterMapping>();
 				endpoint.getParametersMappingNullSafe().stream().filter(e -> endpointDto.getParameterMappings().stream()
 						.noneMatch(f -> f.getParameterName().contentEquals(e.getParameterName())
@@ -491,6 +509,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			mappingDto.setValueRequired(tsParameterMapping.isValueRequired());
 			mappingDto.setParameterName(tsParameterMapping.getParameterName());
 			mappingDto.setServiceParameter(tsParameterMapping.getEndpointParameter().getParameter());
+			mappingDto.setMultivalued(isParameterMultivalued(endpoint, tsParameterMapping));
 			mappingDtos.add(mappingDto);
 		}
 		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
@@ -505,16 +524,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	public Endpoint fromDto(EndpointDto endpointDto, Endpoint endpoint) throws EntityDoesNotExistsException  {
 
+		boolean create = false;
 		if (endpoint == null) {
 			endpoint = new Endpoint();
-
-			// Parameters mappings
-			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
-			endpoint.setParametersMapping(tsParameterMappings);
-
-			// Path parameters
-			List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
-			endpoint.setPathParameters(endpointPathParameters);
+			create = true;
 		}
 
 		// Code
@@ -552,12 +565,49 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				throw new EntityDoesNotExistsException("endpoint's serviceCode is not linked to a function : " + e.getLocalizedMessage());
 			}
 		}
+		
+		if(create) { 
+			// Parameters mappings
+			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
+			endpoint.setParametersMapping(tsParameterMappings);
+
+			// Path parameters
+			List<EndpointPathParameter> endpointPathParameters = getEndpointPathParameters(endpointDto, endpoint);
+			endpoint.setPathParameters(endpointPathParameters);
+		}
 
 		endpoint.setSerializeResult(endpointDto.isSerializeResult());
 
 		endpoint.setContentType(endpointDto.getContentType());
 
 		return endpoint;
+	}
+	
+	/**
+	 * To determine if the endpoint parameter is multivalued, check the corresponding input's type
+	 * @param e the parameter
+	 * @return whether the parameter is multivaluedn according to its type
+	 */
+	private static boolean isParameterMultivalued(Endpoint endpoint, TSParameterMapping parameter) {
+		// Retrieve function's input
+		var functionsInputs = endpoint.getService().getInputs();
+		var mappedInput = functionsInputs.stream()
+				.filter(input -> input.getName().equals(parameter.getEndpointParameter().getParameter()))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Parameter " + parameter.getParameterName() + " of endpoint " + endpoint.getCode() + " does not corresponds to any input of function " + endpoint.getService().getCode()));
+		
+		// This part could be more precise if we had the full class of the input, instead of just the type name
+		if(mappedInput.getType().startsWith("Set")) {
+			return true;
+		} else if(mappedInput.getType().startsWith("List")) {
+			return true;
+		} else if(mappedInput.getType().startsWith("Collection")) {
+			return true;
+		} else if(mappedInput.getType().endsWith("[]")) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
@@ -578,9 +628,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			tsParameterMapping.setDefaultValue(parameterMappingDto.getDefaultValue());
 			tsParameterMapping.setParameterName(parameterMappingDto.getParameterName());
 			tsParameterMapping.setValueRequired(parameterMappingDto.getValueRequired());
-			EndpointParameter endpointParameter = buildEndpointParameter(endpoint,
-					parameterMappingDto.getServiceParameter());
+			EndpointParameter endpointParameter = buildEndpointParameter(endpoint,parameterMappingDto.getServiceParameter());
 			tsParameterMapping.setEndpointParameter(endpointParameter);
+			tsParameterMapping.setMultivalued(isParameterMultivalued(endpoint, tsParameterMapping));
 			tsParameterMappings.add(tsParameterMapping);
 		}
 		return tsParameterMappings;
@@ -717,5 +767,5 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public void remove(EndpointDto dto) throws MeveoApiException, BusinessException {
 		this.delete(dto.getCode());
 	}
-
+	
 }

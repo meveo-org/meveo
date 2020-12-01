@@ -279,7 +279,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         
                         if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
                         	// If value is a map or a custom entity instance, convert into target class
-                        	if(classAndValue.getValue() instanceof Map) {
+                        	if(classAndValue.getValue() instanceof Map || classAndValue.getValue() instanceof Collection) {
                         		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
                         	} else if(classAndValue.getValue() instanceof CustomEntityInstance) {

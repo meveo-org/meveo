@@ -39,7 +39,7 @@ import org.meveo.service.base.PersistenceService;
  * User Hierarchy Level service implementation.
  * 
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.12
+ * @version 6.13
  */
 @Stateless
 public class UserHierarchyLevelService extends PersistenceService<UserHierarchyLevel> {
@@ -134,7 +134,7 @@ public class UserHierarchyLevelService extends PersistenceService<UserHierarchyL
 	@SuppressWarnings("rawtypes")
 	public List<UserHierarchyLevel> buildHierarchy(UserHierarchyLevel rootNode) {
 
-		List<UserHierarchyLevel> result = new ArrayList<UserHierarchyLevel>();
+		List<UserHierarchyLevel> result = new ArrayList<>();
 
 		result.add(rootNode);
 		if (rootNode.getChildLevels() != null) {

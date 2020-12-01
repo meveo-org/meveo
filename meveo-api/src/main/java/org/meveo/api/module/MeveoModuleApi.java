@@ -183,10 +183,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		} catch (ModuleInstallFail e) {
     		log.warn("Failed to install module {}, uninstalling items", meveoModule);
     		
-    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
-    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
-    		}
-    		
+//    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
+//    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
+//    		}
+//    		
     		throw e.getException();
 		}
 	}

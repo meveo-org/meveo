@@ -42,6 +42,7 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -67,6 +68,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.synchronization.KeyLock;
+import org.slf4j.Logger;
 
 /**
  * Git client class to manipulate repositories
@@ -105,6 +107,9 @@ public class GitClient {
 
     @Inject
     private KeyLock keyLock;
+    
+    @Inject
+    private Logger log;
 
     /**
      * Remove the corresponding git repository from file system
@@ -610,7 +615,12 @@ public class GitClient {
 
                 return successful;
 
-            } catch (GitAPIException e) {
+            }  catch (JGitInternalException e) {
+            	log.warn("Cannot merge {} into {}", from, to, e);
+            	git.rebase().setOperation(RebaseCommand.Operation.ABORT).call();
+            	return false;
+            	
+            }  catch (GitAPIException e) {
                 throw new BusinessException("Cannot merge " + from + " into " + to, e);
             } finally {
                 git.checkout().setCreateBranch(false).setName(previousBranch).call();

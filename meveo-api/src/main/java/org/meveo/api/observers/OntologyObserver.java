@@ -62,6 +62,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -71,6 +72,7 @@ import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
 import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -135,6 +137,9 @@ public class OntologyObserver {
     
     @Inject
     private GraphQLService graphQlService;
+    
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
     
@@ -236,6 +241,11 @@ public class OntologyObserver {
         }
         commitFiles.add(javaFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Revert creation of custom entity template " + cet.getCode());
+    
+        // Remove table and sequence on failure
+        if(cet.isStoreAsTable()) {
+        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+        }
     }
     
 

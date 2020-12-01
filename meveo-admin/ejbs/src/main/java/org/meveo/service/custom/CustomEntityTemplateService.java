@@ -220,7 +220,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
-        ICustomFieldEntity result = null;
+        
+    	ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
         queryBuilder.addCriterion("code", "=", entityCode, true);
         List<ICustomFieldEntity> entities = (List<ICustomFieldEntity>) queryBuilder.getQuery(getEntityManager()).getResultList();
@@ -242,6 +243,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	CustomEntityTemplate cet = null;
     	if(useCETCache) {
     		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+    		if(cet != null) {
+    			return cet;
+    		}
     	}
     	
 		if (cet == null) {
@@ -250,6 +254,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 				return cet;
 			}
 		}
+		
         return findByDbTablename(codeOrDbTablename);
     }
     

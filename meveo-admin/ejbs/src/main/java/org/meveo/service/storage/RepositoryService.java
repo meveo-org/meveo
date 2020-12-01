@@ -1,9 +1,12 @@
 package org.meveo.service.storage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.Query;
 
 import org.elasticsearch.repositories.RepositoryException;
 import org.meveo.admin.exception.BusinessException;
@@ -22,7 +25,7 @@ import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
  * Persistence layer for {@link Repository}
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.12
+ * @version 6.13
  * @since 6.4.0
  */
 @Stateless
@@ -173,6 +176,21 @@ public class RepositoryService extends BusinessService<Repository> {
 		}
 
 		return qb.getQuery(getEntityManager()).getResultList();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Repository> findByUserHierarchyLevels(List<UserHierarchyLevel> userLevels) {
+
+		List<Repository> result = new ArrayList<>();
+		QueryBuilder qb = new QueryBuilder(Repository.class, "r");
+		if (userLevels != null) {
+			List<Long> userLevelIds = userLevels.stream().map(UserHierarchyLevel::getId).collect(Collectors.toList());
+			qb.setSqlString("FROM " + Repository.class.getSimpleName() + " r WHERE r.userHierarchyLevel.id IN :userLevelIds");
+			Query q = qb.getQuery(getEntityManager()).setParameter("userLevelIds", userLevelIds);
+			result.addAll((List<Repository>) q.getResultList());
+		}
+
+		return result;
 	}
 
 }

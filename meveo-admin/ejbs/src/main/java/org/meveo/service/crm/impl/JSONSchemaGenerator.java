@@ -581,8 +581,13 @@ public class JSONSchemaGenerator {
 
 			@Override
 			ObjectSchema.Builder createJsonSchemaBuilder(String schemaLocation, Set<String> allRefs) {
-				return (ObjectSchema.Builder) ObjectSchema.builder().requiresObject(true).id(entityTemplate.getCode()).title(entityTemplate.getName())
-						.description(entityTemplate.getDescription()).storages(buildDBStorageType(entityTemplate.getAvailableStorages())).schemaLocation(schemaLocation);
+				return (ObjectSchema.Builder) ObjectSchema.builder() //
+						.requiresObject(true) //
+						.id(entityTemplate.getCode()) //
+						.title(entityTemplate.getName()) //
+						.description(entityTemplate.getDescription()) //
+						.storages(buildDBStorageType(entityTemplate.getAvailableStorages())) //
+						.schemaLocation(schemaLocation);
 			}
 
 			@Override

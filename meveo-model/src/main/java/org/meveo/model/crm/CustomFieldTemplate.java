@@ -100,16 +100,14 @@ import org.meveo.model.shared.DateUtils;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })
 @NamedQueries({
-        @NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
-        @NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
-        @NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", 
-	        query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", 
-	        hints = {
-//	                @QueryHint(name = "org.hibernate.cacheable", value = "true") 
-	                }
-	        ),
-        @NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
-                @QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
+				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
+		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
+				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
+				@QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
 
     private static final long serialVersionUID = -1403961759495272885L;

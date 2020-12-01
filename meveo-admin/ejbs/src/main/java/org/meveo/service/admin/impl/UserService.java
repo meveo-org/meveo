@@ -18,15 +18,14 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -36,22 +35,34 @@ import org.meveo.admin.exception.UsernameAlreadyExistsException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.FilteredQueryBuilder;
 import org.meveo.commons.utils.QueryBuilder;
-import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.admin.User;
 import org.meveo.model.filter.Filter;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.security.DefaultPermission;
 import org.meveo.model.security.Role;
+import org.meveo.model.storage.Repository;
 import org.meveo.security.permission.RequirePermission;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
+import org.meveo.service.storage.RepositoryService;
 
 /**
  * User service implementation.
+ * 
+ * @author Edward P. Legaspi | edward.legaspi@manaty.net
+ * @version 6.13
  */
 @Stateless
 @DeclareRoles({ "userManagement", "userSelfManagement" })
 public class UserService extends PersistenceService<User> {
 
     static User systemUser = null;
+    
+    @Inject
+    private UserHierarchyLevelService userHierarchyLevelService;
+    
+    @Inject
+    private RepositoryService repositoryService;
 
     @Override
 	@RequirePermission(oneOf = { DefaultPermission.USER_MANAGEMENT, DefaultPermission.USER_SELF_MANAGEMENT })
@@ -265,5 +276,11 @@ public class UserService extends PersistenceService<User> {
         }
         
         return result;
+    }
+    
+    public List<Repository> findAssignedRepositories(UserHierarchyLevel rootNode) {
+    	
+    	List<UserHierarchyLevel> userLevels = userHierarchyLevelService.buildHierarchy(rootNode);
+    	return repositoryService.findByUserHierarchyLevels(userLevels);
     }
 }
