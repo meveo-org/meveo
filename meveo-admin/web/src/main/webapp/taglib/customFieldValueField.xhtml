@@ -108,6 +108,10 @@
         </c:if>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.DATE}">
+    	<c:if test="#{cft.displayFormat != null}">
+        	<c:set var="datePattern" value="#{cft.displayFormat}" />
+        	<c:set var="dateTimePattern" value="#{cft.displayFormat}" />
+    	</c:if>
         <h:outputText value="#{field.dateValue}" styleClass="field-value" rendered="#{! edit or disabled}">
             <f:convertDateTime type="date" pattern="#{datePattern}" />
         </h:outputText>
