@@ -262,5 +262,4 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     public void onCreationFailed(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created GitRepository repo) throws BusinessException {
     	gitClient.remove(repo);
     }
-
 }

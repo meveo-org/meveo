@@ -74,6 +74,7 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.module.MeveoModule;
@@ -85,6 +86,8 @@ import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.communication.impl.MeveoInstanceService;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -109,6 +112,12 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private JobExecutionService jobExecutionService;
+    
+    @Inject
+    private GitRepositoryService gitRepositoryService;
+    
+    @Inject
+    private GitClient gitClient;
 
     /**
      * Add missing dependencies of each module item
@@ -751,5 +760,35 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     public List<String> getLazyLoadedProperties() {
     	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+    }
+    
+    /**
+     * Create a GitRepository when a MeveoModule is created
+     * 
+     * @param meveoModule meveo module created
+     * @throws BusinessException business exception
+     */
+    public void onMeveoModuleCreated(@Observes @Created MeveoModule meveoModule) throws BusinessException {
+    	var repo = new GitRepository();
+    	repo.setCode(meveoModule.getCode());
+    	repo.setDescription(meveoModule.getDescription());
+    	this.gitRepositoryService.create(repo);
+    	this.gitClient.checkout(repo, meveoModule.getCurrentVersion(), true);
+    	meveoModule.setGitRepository(repo);
+    }
+    
+    /**
+     * Remove the GitRepository corresponding to the meveo module deleted
+     * 
+     * @param meveoModule meveo module removed
+     * @throws BusinessException business exception
+     */
+    public void onMeveoModuleRemoved (@Observes @Removed MeveoModule meveoModule) throws BusinessException {
+    	if (meveoModule.getGitRepository() != null) {
+    		var repo = meveoModule.getGitRepository();
+    		if  (repo.getId() != null) {
+    			this.gitRepositoryService.remove(repo.getId());
+    		}
+    	}
     }
 }
