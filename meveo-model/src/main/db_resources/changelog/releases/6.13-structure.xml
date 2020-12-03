@@ -24,5 +24,13 @@
 			<column name="is_locked" defaultValue="0" type="${type.boolean}"/>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet author="Arthur Grenier" id="Github#256">
+		<addColumn tableName="meveo_module">
+			<column name="git_repository_id" type="bigint" />
+		</addColumn>
+		<addForeignKeyConstraint constraintName="fk_git_repository" referencedTableName="git_repository" 
+		baseColumnNames="git_repository_id" baseTableName="meveo_module" referencedColumnNames="id"/>
+	</changeSet>
 
 </databaseChangeLog>

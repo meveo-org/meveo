@@ -39,6 +39,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**
@@ -88,6 +89,10 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "git_repository_id")
+    private GitRepository gitRepository;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "module_license", nullable = false)
@@ -204,6 +209,14 @@ public class MeveoModule extends BusinessEntity implements Serializable {
 
     public ScriptInstance getScript() {
         return script;
+    }
+    
+    public void setGitRepository(GitRepository gitRepository) {
+    	this.gitRepository = gitRepository;
+    }
+    
+    public GitRepository getGitRepository() {
+    	return this.gitRepository;
     }
 
     public void setModuleSource(String moduleSource) {
