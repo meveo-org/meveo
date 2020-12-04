@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
@@ -276,9 +277,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					if (!tsParameterMapping.isMultivalued() && colValue.size() == 1) {
 						parameterValue = colValue.iterator().next();
 					} else if (!tsParameterMapping.isMultivalued()) {
-						throw new IllegalArgumentException(
-								"Parameter " + tsParameterMapping.getParameterName() + "should not be multivalued");
+						throw new IllegalArgumentException("Parameter " + tsParameterMapping.getParameterName() + " should not be multivalued");
+					} else {
+						parameterValue = convertItemsIntoCorrectType(endpoint, tsParameterMapping, colValue);
 					}
+					
 				}
 			}
 			String paramName = tsParameterMapping.getEndpointParameter().toString();
@@ -581,6 +584,44 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpoint.setContentType(endpointDto.getContentType());
 
 		return endpoint;
+	}
+	
+	/**
+	 * Convert item types of collection into the correct type
+	 * 
+	 * @param endpoint endpoint being executed
+	 * @param parameter parameter definition
+	 * @param value value being passed to endpoint script
+	 * @return the converted collection
+	 */
+	private static Collection<?> convertItemsIntoCorrectType(Endpoint endpoint, TSParameterMapping parameter, Collection<?> value) {
+		var functionsInputs = endpoint.getService().getInputs();
+		var mappedInput = functionsInputs.stream()
+				.filter(input -> input.getName().equals(parameter.getEndpointParameter().getParameter()))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Parameter " + parameter.getParameterName() + " of endpoint " + endpoint.getCode() + " does not corresponds to any input of function " + endpoint.getService().getCode()));
+		
+		// Determine collection items type
+		var matcher = Pattern.compile("(.*)<(.*)>").matcher(mappedInput.getType());
+		if(matcher.find()) {
+			var itemType = matcher.group(2);
+			
+			// Integer to Long conversion
+			if(itemType.equals("Long")) {
+				return value.stream()
+						.map(item -> {
+							if(item instanceof Long) {
+								return item;
+							} else if(item instanceof Integer) {
+								return ((Integer) item).longValue();
+							} else {
+								return Long.valueOf(item.toString());
+							}
+						}).collect(Collectors.toList());
+			}
+		}
+		
+		return value;
 	}
 	
 	/**
