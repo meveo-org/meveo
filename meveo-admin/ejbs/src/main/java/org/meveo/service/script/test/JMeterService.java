@@ -26,7 +26,9 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,7 +38,12 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.keycloak.admin.client.Keycloak;
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.plugins.interceptors.encoding.AcceptEncodingGZIPFilter;
+import org.jboss.resteasy.plugins.interceptors.encoding.GZIPDecodingInterceptor;
+import org.jboss.resteasy.plugins.interceptors.encoding.GZIPEncodingInterceptor;
+import org.keycloak.representations.AccessTokenResponse;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Function;
 import org.meveo.service.script.DefaultFunctionService;
@@ -75,8 +82,6 @@ public class JMeterService {
     @Context
     private SecurityContext sc;
 
-    private Keycloak keycloak;
-
     @PostConstruct
     private void init() {
         if (JMETER_BIN_FOLDER == null) {
@@ -87,7 +92,6 @@ public class JMeterService {
             LOG.warn("Jmeter test server is not set, function test functionnality will therefore not be available.");
         }
         
-        keycloak = Keycloak.getInstance(serverUrl, realm, userName, password, clientId, clientSecret);
     }
 
     public TestResult executeTest(String functionCode) throws IOException {
@@ -126,6 +130,39 @@ public class JMeterService {
 
         File jmxFile = File.createTempFile(functionCode, ".jmx");
 
+		ResteasyClient client = new ResteasyClientBuilder()
+				.register(AcceptEncodingGZIPFilter.class)
+                .register(GZIPDecodingInterceptor.class)
+                .register(GZIPEncodingInterceptor.class)
+				.build();
+		
+		String accessTokenString;
+		
+		try {
+			var target = client.target(serverUrl +"/realms/" + realm + "/protocol/openid-connect/token");
+		
+			Form form = new Form();
+			form.param("client_id", clientId);
+			form.param("username", userName);
+			form.param("password", password);
+			form.param("grant_type", "password");
+			form.param("client_secret", clientSecret);
+			
+			try(var response = target.request("application/json")
+					.header("Content-Type", "application/x-www-form-urlencoded")
+					.post(Entity.form(form))) {
+			
+				accessTokenString = response.readEntity(AccessTokenResponse.class).getToken();
+			}
+			
+		} finally {
+			client.close();
+		}
+		
+        if(accessTokenString == null) {
+        	throw new NullPointerException("Cannot obtain access token for user " + userName);
+        }
+        
         String testSuiteString = function.getTestSuite();
 
         // Activate functional test mode to get full data to be saved
@@ -137,12 +174,6 @@ public class JMeterService {
         FileWriter writer = new FileWriter(jmxFile);
         writer.write(testSuiteString);
         writer.close();
-        
-        final String accessTokenString = keycloak.tokenManager().getAccessTokenString();
-
-        if(accessTokenString == null) {
-        	throw new NullPointerException("Cannot obtain access token for user " + userName);
-        }
         
         // Execute test
         File jtlFile = File.createTempFile(functionCode, ".xml");
