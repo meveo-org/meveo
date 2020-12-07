@@ -111,8 +111,8 @@ public class EndpointServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
-        
-        if(contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
+
+        if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
         	Collection<Part> parts = req.getParts();
         	for(var part : parts) {
         		Object partValue;
@@ -128,8 +128,8 @@ public class EndpointServlet extends HttpServlet {
 		        }
 		        parameters.put(part.getName(), partValue);
         	}
-        	
-        } else { 
+
+        } else {
             String requestBody = StringUtils.readBuffer(req.getReader());
         	if (!StringUtils.isBlank(requestBody) && contentType != null) {
 		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
