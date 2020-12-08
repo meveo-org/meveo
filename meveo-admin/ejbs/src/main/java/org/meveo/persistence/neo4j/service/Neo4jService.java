@@ -124,9 +124,6 @@ public class Neo4jService implements CustomPersistenceService {
     private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     @Inject
-    private Neo4jConnectionProvider neo4jSessionFactory;
-
-    @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
@@ -154,6 +151,9 @@ public class Neo4jService implements CustomPersistenceService {
     @Inject
     @ApplicationProvider
     protected Provider appProvider;
+    
+    @Inject
+    private CrossStorageTransaction crossStorageTransaction;
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
@@ -774,8 +774,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -795,9 +794,6 @@ public class Neo4jService implements CustomPersistenceService {
             log.error(e.getMessage());
             transaction.failure();
 
-        } finally {
-            transaction.close();    // Close Neo4J transaction
-            session.close();        // Close Neo4J session
         }
 
         List<String> relationUuids = new ArrayList<>();
@@ -851,8 +847,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -869,13 +864,8 @@ public class Neo4jService implements CustomPersistenceService {
             transaction.success();  // Commit transaction
 
         } catch (Exception e) {
-
             log.error(e.getMessage());
             transaction.failure();
-
-        } finally {
-            transaction.close();    // Close Neo4J transaction
-            session.close();        // Close Neo4J session
         }
 
         List<String> relationUuids = new ArrayList<>();
@@ -954,8 +944,7 @@ public class Neo4jService implements CustomPersistenceService {
         parametersValues.putAll(startNodeConvertedValues);
         parametersValues.putAll(endNodeConvertedValues);
 
-        final Session session = neo4jSessionFactory.getSession(neo4JConfiguration);
-        final Transaction transaction = session.beginTransaction();
+        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
 
         // Try to find the id of the source node
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
@@ -1008,11 +997,6 @@ public class Neo4jService implements CustomPersistenceService {
             log.error("Transaction for persisting entity with code {} and fields {} was rolled back : {}", cetCode, startNodeValues, e.getMessage());
             throw new BusinessException(e);
 
-        } finally {
-
-            session.close();
-            transaction.close();
-
         }
 
         if (startNode != null) {
@@ -1050,9 +1034,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         String deleteStatement = getStatement(new StrSubstitutor(valuesMap), Neo4JRequests.deleteCet);
 
-        /* Start transaction */
-        Session session = neo4jSessionFactory.getSession(neo4jConfiguration);
-        Transaction transaction = session.beginTransaction();
+        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
 
         InternalNode internalNode = null;
 
@@ -1078,27 +1060,12 @@ public class Neo4jService implements CustomPersistenceService {
             transaction.failure();
             throw new BusinessException(e);
 
-        } finally {
-
-            /* End transaction */
-            session.close();
-            transaction.close();
-
         }
 
         if (internalNode != null) {
             nodeRemovedEvent.fire(new Neo4jEntity(internalNode, neo4jConfiguration));    // Fire notification
         }
 
-    }
-
-    public String callNeo4jWithStatement(StringBuffer statement, Map<String, Object> values) {
-        StrSubstitutor sub = new StrSubstitutor(values);
-        String resolvedStatement = sub.replace(statement);
-        log.info("resolvedStatement : {}", resolvedStatement);
-        resolvedStatement = resolvedStatement.replace('"', '\'');
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), "{\"statements\":[{\"statement\":\"" + resolvedStatement + "\"}]}");
-        return response.readEntity(String.class);
     }
 
     public Response callNeo4jRest(String baseurl, String url, String username, String password, String body) {
@@ -1327,112 +1294,6 @@ public class Neo4jService implements CustomPersistenceService {
 
         return convertedFields;
 
-    }
-
-
-
-    public String executeQuery(String query, Map<String, Object> valuesMap) {
-        if (query != null) {
-            StrSubstitutor sub = new StrSubstitutor(valuesMap);
-            String resolvedStatement = sub.replace(query);
-            resolvedStatement = resolvedStatement.replace('"', '\'');
-            log.info("executeQuery resolvedStatement : {}", resolvedStatement);
-            String neo4jQuery = "{\"query\" : \"" + resolvedStatement + "\"}";
-            return getNeo4jData(neo4jQuery, true);
-        }
-        return null;
-    }
-
-    public void mergeNodes(String cetCode, Long originNodeId, Long targetNodeId) {
-        Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("cetCode", cetCode);
-        valuesMap.put("originNodeId", originNodeId);
-        valuesMap.put("targetNodeId", targetNodeId);
-        StrSubstitutor sub = new StrSubstitutor(valuesMap);
-
-        String resolvedOutGoingRelStatement = sub.replace(Neo4JRequests.mergeOutGoingRelStatement);
-        log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedOutGoingRelStatement);
-        String statement = "{\"statements\":[{\"statement\":\"" + resolvedOutGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), statement);
-        String result = response.readEntity(String.class);
-        log.info("mergeNodes OutGoingRelStatement result={}", result);
-
-        String resolvedInGoingRelStatement = sub.replace(Neo4JRequests.mergeInGoingRelStatement);
-        log.info("mergeNodes resolvedOutGoingRelStatement:{}", resolvedInGoingRelStatement);
-        String inGoingsReltatement = "{\"statements\":[{\"statement\":\"" + resolvedInGoingRelStatement + "\",\"resultDataContents\":[\"row\"]}]}";
-        Response inGoingsRelResponse = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/transaction/flush", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), inGoingsReltatement);
-        String inGoingsRelResult = inGoingsRelResponse.readEntity(String.class);
-        log.info("mergeNodes InGoingRelStatement result={}", inGoingsRelResult);
-
-    }
-
-    public String getNeo4jData(String query, boolean getOnlyFirstElement) {
-        StringBuffer result;
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/cypher", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), query);
-        String jsonResult = response.readEntity(String.class);
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        Neo4jQueryResultDto iepSearchResultDTO = gson.fromJson(jsonResult, Neo4jQueryResultDto.class);
-        if (iepSearchResultDTO != null && iepSearchResultDTO.getData() != null && iepSearchResultDTO.getData().size() > 0) {
-            result = new StringBuffer();
-            if (getOnlyFirstElement) {
-                return iepSearchResultDTO.getData() != null && iepSearchResultDTO.getData().size() > 0 && iepSearchResultDTO.getData().get(0).size() > 0 ? iepSearchResultDTO.getData().get(0).get(0) : null;
-            }
-            String sep = "";
-            for (List<String> item : iepSearchResultDTO.getData()) {
-                result.append(sep).append(item.get(0));
-                if (item.size() > 1) {
-                    result.append("(").append(item.get(1)).append(")");
-                }
-                sep = ", ";
-            }
-            return result.toString();
-        }
-
-        return null;
-    }
-
-    public List<String> getNeo4jResult(String query) {
-        query = "{\"query\" : \"" + query + "\"}";
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/cypher", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), query);
-        String jsonResult = response.readEntity(String.class);
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        Neo4jQueryResultDto iepSearchResultDTO = gson.fromJson(jsonResult, Neo4jQueryResultDto.class);
-        return iepSearchResultDTO != null && iepSearchResultDTO.getData() != null && !iepSearchResultDTO.getData().isEmpty() ? iepSearchResultDTO.getData().get(0) : new ArrayList<>();
-    }
-
-    public String getNeo4jRowData(String jsonResult) {
-        log.info("getNeo4jRowData jsonResult={}", jsonResult);
-        StringBuilder result = new StringBuilder();
-        try {
-            GsonBuilder builder = new GsonBuilder();
-            Gson gson = builder.create();
-            SearchResultDTO searchResultDTO = gson.fromJson(jsonResult, SearchResultDTO.class);
-            String sep = "";
-            for (Result searchResult : searchResultDTO.getResults()) {
-                for (Datum data : searchResult.getData()) {
-                    if (data.getRow() != null) {
-                        for (String row : data.getRow()) {
-                            result.append(sep).append(row);
-                            sep = "|";
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("getNeo4jRowData error", e);
-        }
-        return result.toString();
-    }
-
-    public Neo4jQueryResultDto getNeo4jData(String query) {
-        query = "{\"query\" : \"" + query + "\"}";
-        Response response = callNeo4jRest(neo4jSessionFactory.getRestUrl(), "/db/data/cypher", neo4jSessionFactory.getNeo4jLogin(), neo4jSessionFactory.getNeo4jPassword(), query);
-        String jsonResult = response.readEntity(String.class);
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
-        return gson.fromJson(jsonResult, Neo4jQueryResultDto.class);
     }
 
     @Override
