@@ -32,6 +32,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -52,6 +53,9 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
     @Inject
     private CustomFieldsCacheContainerProvider cacheContainerProvider;
+    
+	@Inject
+	private CrossStorageTransaction crossStorageTx;
     
     private T storageService;
 
@@ -81,6 +85,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
         while (iterator.hasNext()) {
 
+        	crossStorageTx.beginTransaction(repository);
+        	
             for (ItemToPersist itemToPersist : iterator.next()) {
                 PersistenceActionResult result;
 
@@ -162,7 +168,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                 	//LOGGER.warn("No persistence result from {}", itemToPersist);
                 }
             }
-
+            
+            crossStorageTx.commitTransaction(repository);
         }
 
         return persistedItems;

@@ -64,7 +64,6 @@ public class CrossStorageTransaction {
 	}
 
 	public void beginTransaction(Repository repository) {
-
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION && stackedCalls == 0) {
 				userTx.begin();

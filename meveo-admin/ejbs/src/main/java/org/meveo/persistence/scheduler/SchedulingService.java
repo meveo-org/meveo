@@ -21,6 +21,8 @@ import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 
+import com.google.common.collect.Lists;
+
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,7 +59,10 @@ public class SchedulingService {
 
         /* Initial targets only are considered as leafs */
         leafNodes.addAll(targetsNoSourcesNodes);
-        atomicPersistencePlan.addEntities(leafNodes);
+        
+        /* To improve performance by having smaller transactions, split leaf nodes in chunks */
+        List<List<ItemToPersist>> chunks = Lists.partition(List.copyOf(leafNodes), 1);
+        chunks.forEach(chunk -> atomicPersistencePlan.addEntities(Set.copyOf(chunk)));
 
         /* Enforce unity on node name name */
         final Comparator<ItemToPersist> codeComparator = Comparator.comparing(ItemToPersist::getName);

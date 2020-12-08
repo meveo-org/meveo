@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -405,42 +407,28 @@ public class PersistenceRs {
 	@POST
 	@Path("/gzip")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public void persistGzip(@GZIP List<PersistenceDto> dtos) throws EntityDoesNotExistsException, CyclicDependencyException, IOException {
-		var chunksSize = 100;
+	public void persistGzip(@GZIP List<PersistenceDto> dtos) throws EntityDoesNotExistsException, CyclicDependencyException, IOException, BusinessApiException, BusinessException, ELException {
 		var repository = repositoryService.findByCode(repositoryCode);
 		if(repository == null) {
 			throw new NotFoundException("Repository " + repositoryCode + " does not exist");
 		}
+		hasAccessToRepository(repository);
 		
-		long start = System.nanoTime();
-		var size = dtos.size();
-		for(var i = 0; i < size; i += chunksSize) {
-			crossStorageTx.beginTransaction(repository);
-			var toIndex = Math.min(i + chunksSize - 1, size - 1);
-			persist(dtos.subList(i, toIndex));
-			crossStorageTx.commitTransaction(repository);
-		}
-		
-		long end = System.nanoTime();
-
-	    // execution time
-	    long execution = end - start;
-	    System.out.println("Execution time: " + TimeUnit.MINUTES.convert(execution, TimeUnit.NANOSECONDS) + " mins");
-	}
-
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Persist many entities")
-	public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException, EntityDoesNotExistsException {
-
 		// Deserialize binaries
 		for (PersistenceDto dto : dtos) {
 			decodeBase64Files(dto);
 		}
-
-		final Repository repository = repositoryService.findByCode(repositoryCode);
-		hasAccessToRepository(repository);
 		
+		AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
+		scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
+	}
+
+	/**
+	 * @param dtos
+	 * @return
+	 * @throws CyclicDependencyException
+	 */
+	private AtomicPersistencePlan getSchedule(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 		/* Extract the entities */
 		final List<Entity> entities = dtos.stream().filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY))
 				.map(persistenceDto -> new Entity.Builder().type(persistenceDto.getType()).name(persistenceDto.getName()).properties(persistenceDto.getProperties()).build())
@@ -462,6 +450,17 @@ public class PersistenceRs {
 		List<EntityOrRelation> entityOrRelations = new ArrayList<>(entities);
 		entityOrRelations.addAll(relations);
 		AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityOrRelations);
+		return atomicPersistencePlan;
+	}
+
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Persist many entities")
+	public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException, EntityDoesNotExistsException {
+		final Repository repository = repositoryService.findByCode(repositoryCode);
+		hasAccessToRepository(repository);
+		
+		AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
 
 		try {
 
