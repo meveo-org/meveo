@@ -1175,8 +1175,8 @@ public class Neo4jService implements CustomPersistenceService {
                     	// Validate STRING type
                     	else if (cft.getFieldType() == CustomFieldTypeEnum.STRING && !"null".equals(valueToCheck)) {
                             String stringValue;
-                            if (valueToCheck instanceof Integer) {
-                                stringValue = ((Integer) valueToCheck).toString();
+                            if (valueToCheck instanceof Number) {
+                                stringValue = valueToCheck.toString();
                             } else if (valueToCheck instanceof Map) {
                                 String mapToJson = JacksonUtil.toString(valueToCheck);
                                 convertedFields.put(cft.getCode(), mapToJson);
@@ -1215,8 +1215,8 @@ public class Neo4jService implements CustomPersistenceService {
                         // Validate LONG type
                         else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                             Long longValue;
-                            if (valueToCheck instanceof Integer) {
-                                longValue = ((Integer) valueToCheck).longValue();
+                            if (valueToCheck instanceof Number) {
+                                longValue = ((Number) valueToCheck).longValue();
                             } else if (valueToCheck instanceof String) {
                                 longValue = Long.parseLong((String) valueToCheck);
                             } else {
@@ -1240,8 +1240,8 @@ public class Neo4jService implements CustomPersistenceService {
                     	// Validate DOUBLE type
                         else if (cft.getFieldType() == CustomFieldTypeEnum.DOUBLE) {
                             Double doubleValue;
-                            if (valueToCheck instanceof Integer) {
-                                doubleValue = ((Integer) valueToCheck).doubleValue();
+                            if (valueToCheck instanceof Number) {
+                                doubleValue = ((Number) valueToCheck).doubleValue();
                             } else if (valueToCheck instanceof String) {
                                 doubleValue = Double.parseDouble((String) valueToCheck);
 
