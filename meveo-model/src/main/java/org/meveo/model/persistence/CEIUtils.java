@@ -6,11 +6,12 @@ package org.meveo.model.persistence;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.Entity;
@@ -179,19 +180,32 @@ public class CEIUtils {
 	public static <T> T deserialize(Map<String, Object> value, Class<T> clazz) throws RuntimeException {
 		try {
 			T instance = clazz.getDeclaredConstructor().newInstance();
-			for(var entry : value.entrySet()) {
+			for (var entry : value.entrySet()) {
 				var setter = findSetter(entry.getKey(), clazz);
+
+				Object lazyInitInstance = null;
 				try {
 					setter.invoke(instance, entry.getValue());
+
 				} catch (IllegalArgumentException e) {
-					Object lazyInitInstance = setter.getParameters()[0]
-							.getType()
-							.getDeclaredConstructor()
-							.newInstance();
-					setIdField(lazyInitInstance, entry.getValue());
-					setter.invoke(instance, lazyInitInstance);
+					try {
+						lazyInitInstance = setter.getParameters()[0] //
+								.getType() //
+								.getDeclaredConstructor() //
+								.newInstance();
+						setIdField(lazyInitInstance, entry.getValue());
+						setter.invoke(instance, lazyInitInstance);
+
+					} catch (NoSuchMethodException nm) {
+						// convert to factory if there are more types in this group
+						if (setter.getParameters()[0].getType().isAssignableFrom(Instant.class)) {
+							Instant val = ((Timestamp) entry.getValue()).toInstant();
+							setter.invoke(instance, val);
+						}
+					}
 				}
 			}
+
 			return instance;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 			throw new RuntimeException(e);
