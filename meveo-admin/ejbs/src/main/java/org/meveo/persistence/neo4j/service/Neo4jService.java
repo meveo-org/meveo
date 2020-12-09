@@ -802,7 +802,7 @@ public class Neo4jService implements CustomPersistenceService {
                 relationUuids.add(relationship.get(MEVEO_UUID).asString());
             }
 
-            if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
+            if (relationship.containsKey("update_date") || relationship.containsKey("updateDate")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
             } else {
                 edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
@@ -874,7 +874,7 @@ public class Neo4jService implements CustomPersistenceService {
                 relationUuids.add(relationship.get(MEVEO_UUID).asString());
             }
 
-            if (relationship.containsKey("update_date")) {  // Check if relationship contains the "update_date" key
+            if (relationship.containsKey("update_date") || relationship.containsKey("updateDate")) {  // Check if relationship contains the "update_date" key
                 edgeUpdatedEvent.fire(relationship);        // Fire update event if contains the key
             } else {
                 edgeCreatedEvent.fire(relationship);        // Fire creation event if does not contains the key
