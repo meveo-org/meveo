@@ -133,6 +133,9 @@ public class CrossStorageTransaction {
 	}
 	
 	public void rollbackTransaction() {
+		var rollBackException = new Exception("Transaction rolled back");
+		log.warn("Transaction rolled back : ", rollBackException);
+		
 		stackedCalls--;
 		
 		neo4jTransactions.values().forEach(Transaction::failure);

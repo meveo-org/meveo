@@ -287,7 +287,6 @@ public class Neo4jDao {
                         transaction.success();
                     } else {
                         LOGGER.error("Node with id {} not deleted", id);
-                        transaction.failure();
                     }
                     return null;
                 },
@@ -879,7 +878,6 @@ public class Neo4jDao {
                         transaction.success();
                     } else {
                         LOGGER.error("Properties of node {} and {} not merged and node {} not removed", secondNodeId, firstNodeId, secondNodeId);
-                        transaction.failure();
                     }
                     return null;
                 },

@@ -790,10 +790,8 @@ public class Neo4jService implements CustomPersistenceService {
             transaction.success();  // Commit transaction
 
         } catch (Exception e) {
-
-            log.error(e.getMessage());
+            log.error("Failed to save relationship", e);
             transaction.failure();
-
         }
 
         List<String> relationUuids = new ArrayList<>();
@@ -864,7 +862,7 @@ public class Neo4jService implements CustomPersistenceService {
             transaction.success();  // Commit transaction
 
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("Failed to save relationship", e);
             transaction.failure();
         }
 
@@ -994,7 +992,7 @@ public class Neo4jService implements CustomPersistenceService {
         } catch (Exception e) {
 
             transaction.failure();
-            log.error("Transaction for persisting entity with code {} and fields {} was rolled back : {}", cetCode, startNodeValues, e.getMessage());
+            log.error("Transaction for persisting entity with code {} and fields {} was rolled back", cetCode, startNodeValues, e);
             throw new BusinessException(e);
 
         }
@@ -1056,7 +1054,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         } catch (Exception e) {
 
-            log.error("Cannot delete node with code {} and values {} : {}", cetCode, values, e.getMessage());
+            log.error("Cannot delete node with code {} and values {}", cetCode, values, e);
             transaction.failure();
             throw new BusinessException(e);
 
