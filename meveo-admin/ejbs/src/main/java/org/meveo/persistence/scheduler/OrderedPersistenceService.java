@@ -85,9 +85,10 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
         while (iterator.hasNext()) {
 
-        	crossStorageTx.beginTransaction(repository);
-        	
             for (ItemToPersist itemToPersist : iterator.next()) {
+            	
+            	crossStorageTx.beginTransaction(repository);
+
                 PersistenceActionResult result;
 
                 if (itemToPersist instanceof SourceEntityToPersist) {
@@ -162,6 +163,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                     }
                 }
                 
+                crossStorageTx.commitTransaction(repository);
+                
                 if(result != null) {
                 	persistedItems.add(new PersistedItem(itemToPersist, result.getBaseEntityUuid()));
                 } else {
@@ -169,7 +172,6 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                 }
             }
             
-            crossStorageTx.commitTransaction(repository);
         }
 
         return persistedItems;
