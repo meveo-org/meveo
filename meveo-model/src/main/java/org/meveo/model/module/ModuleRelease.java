@@ -243,13 +243,11 @@ public class ModuleRelease extends BaseEntity implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
 		ModuleRelease other = (ModuleRelease) obj;
+		if (other == null) {
+			return false;
+		}
+
 		if (code == null) {
 			if (other.code != null)
 				return false;
