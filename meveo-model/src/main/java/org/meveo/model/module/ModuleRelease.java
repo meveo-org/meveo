@@ -228,4 +228,53 @@ public class ModuleRelease extends BaseEntity implements Serializable {
     public void setInDraft(boolean inDraft) {
         isInDraft = inDraft;
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((code == null) ? 0 : code.hashCode());
+		result = prime * result + ((currentVersion == null) ? 0 : currentVersion.hashCode());
+		result = prime * result + ((meveoModule == null) ? 0 : meveoModule.hashCode());
+		result = prime * result + ((meveoVersionBase == null) ? 0 : meveoVersionBase.hashCode());
+		result = prime * result + ((meveoVersionCeiling == null) ? 0 : meveoVersionCeiling.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ModuleRelease other = (ModuleRelease) obj;
+		if (code == null) {
+			if (other.code != null)
+				return false;
+		} else if (!code.equals(other.code))
+			return false;
+		if (currentVersion == null) {
+			if (other.currentVersion != null)
+				return false;
+		} else if (!currentVersion.equals(other.currentVersion))
+			return false;
+		if (meveoModule == null) {
+			if (other.meveoModule != null)
+				return false;
+		} else if (!meveoModule.equals(other.meveoModule))
+			return false;
+		if (meveoVersionBase == null) {
+			if (other.meveoVersionBase != null)
+				return false;
+		} else if (!meveoVersionBase.equals(other.meveoVersionBase))
+			return false;
+		if (meveoVersionCeiling == null) {
+			if (other.meveoVersionCeiling != null)
+				return false;
+		} else if (!meveoVersionCeiling.equals(other.meveoVersionCeiling))
+			return false;
+		return true;
+	}
 }

@@ -412,7 +412,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
 			Map<String, Object> result = null;
-			if(!dontFilterOnNeo4J) {
+			if (!dontFilterOnNeo4J && repository.getNeo4jConfiguration() != null) {
 				result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
 			}
 			
