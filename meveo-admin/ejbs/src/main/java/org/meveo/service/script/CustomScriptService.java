@@ -234,6 +234,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         
 		compileScript(script, true);
 		if (script.getError() != null && script.isError()) {
+			log.error("Failed compiling script with error={}", script.getScriptErrors());
 			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
 		}
     }

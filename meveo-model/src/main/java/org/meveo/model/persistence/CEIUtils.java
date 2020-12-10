@@ -18,6 +18,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -157,6 +158,17 @@ public class CEIUtils {
 			});
 	}
 	
+	private static void setUUIDField(Object object, String value) {
+		var setter = findSetter("uuid", object.getClass());
+		if (setter != null) {
+			try {
+				setter.invoke(object, value);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+
+			}
+		}
+	}
+	
 	private static Object getIdValue(Object object) {
 		return ReflectionUtils.getAllFields(new ArrayList<>(),object.getClass())
 				.stream()
@@ -174,7 +186,7 @@ public class CEIUtils {
 	
 	/**
 	 * @param value
-	 * @return
+	 * @return 
 	 * @throws RuntimeException
 	 */
 	public static <T> T deserialize(Map<String, Object> value, Class<T> clazz) throws RuntimeException {
@@ -184,23 +196,35 @@ public class CEIUtils {
 				var setter = findSetter(entry.getKey(), clazz);
 
 				Object lazyInitInstance = null;
-				try {
-					setter.invoke(instance, entry.getValue());
 
-				} catch (IllegalArgumentException e) {
+				Class<?> paramType = setter.getParameters()[0].getType();
+
+				// if type extends CustomField set the UUID
+				if (CustomEntity.class.isAssignableFrom(paramType)) {
+					lazyInitInstance = paramType //
+							.getDeclaredConstructor() //
+							.newInstance();
+					setUUIDField(lazyInitInstance, (String) entry.getValue());
+					setter.invoke(instance, lazyInitInstance);
+
+				} else {
 					try {
-						lazyInitInstance = setter.getParameters()[0] //
-								.getType() //
-								.getDeclaredConstructor() //
-								.newInstance();
-						setIdField(lazyInitInstance, entry.getValue());
-						setter.invoke(instance, lazyInitInstance);
+						setter.invoke(instance, entry.getValue());
 
-					} catch (NoSuchMethodException nm) {
-						// convert to factory if there are more types in this group
-						if (setter.getParameters()[0].getType().isAssignableFrom(Instant.class)) {
-							Instant val = ((Timestamp) entry.getValue()).toInstant();
-							setter.invoke(instance, val);
+					} catch (IllegalArgumentException e) {
+						try {
+							lazyInitInstance = paramType //
+									.getDeclaredConstructor() //
+									.newInstance();
+							setIdField(lazyInitInstance, entry.getValue());
+							setter.invoke(instance, lazyInitInstance);
+
+						} catch (NoSuchMethodException nm) {
+							// convert to factory if there are more types in this group
+							if (setter.getParameters()[0].getType().isAssignableFrom(Instant.class)) {
+								Instant val = ((Timestamp) entry.getValue()).toInstant();
+								setter.invoke(instance, val);
+							}
 						}
 					}
 				}
@@ -211,7 +235,7 @@ public class CEIUtils {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private static Method findSetter(String fieldName, Class<?> clazz) {
 		return Stream.of(clazz.getMethods())
 			.filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase()))
