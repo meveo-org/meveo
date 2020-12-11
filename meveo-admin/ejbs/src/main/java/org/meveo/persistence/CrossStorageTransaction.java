@@ -132,9 +132,8 @@ public class CrossStorageTransaction {
 		}
 	}
 	
-	public void rollbackTransaction() {
-		var rollBackException = new Exception("Transaction rolled back");
-		log.warn("Transaction rolled back : ", rollBackException);
+	public void rollbackTransaction(Exception exception) {
+		log.warn("Transaction rolled back : ", exception);
 		
 		stackedCalls--;
 		

@@ -64,7 +64,7 @@ public class CypherHelper {
                 cypherExceptionHandler.handle(e);
             } else {
             	log.error("Error executing query \n{}\nwith parameters {}", request, parameters, e);
-            	crossStorageTransaction.rollbackTransaction();
+            	crossStorageTransaction.rollbackTransaction(e);
             }
             
         }
@@ -107,7 +107,7 @@ public class CypherHelper {
                 cypherExceptionHandler.handle(e);
             } else {
 	            log.error("Can't run update query", e);
-	            crossStorageTransaction.rollbackTransaction();
+	            crossStorageTransaction.rollbackTransaction(e);
             }
         }
     }

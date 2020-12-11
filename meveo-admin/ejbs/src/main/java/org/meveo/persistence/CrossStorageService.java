@@ -266,7 +266,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			transaction.commitTransaction(repository);
 		} catch (Exception e) {
 			
-			transaction.rollbackTransaction();
+			transaction.rollbackTransaction(e);
 
 			if(e instanceof EntityDoesNotExistsException) {
 				throw (EntityDoesNotExistsException) e;
@@ -779,7 +779,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			
 			log.error("Can't create or update data", e);
 			
-			transaction.rollbackTransaction();
+			transaction.rollbackTransaction(e);
 			
 			if(e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -1310,7 +1310,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			transaction.commitTransaction(repository);
 		
 		} catch(Exception e) {
-			transaction.rollbackTransaction();
+			transaction.rollbackTransaction(e);
 			throw e;
 		}
 		

@@ -254,8 +254,7 @@ public class Neo4jDao {
                         LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
                         transaction.success();
                     } else {
-                        LOGGER.error("Node with uuid {} not deleted", uuid);
-                        crossStorageTransaction.rollbackTransaction();
+                        crossStorageTransaction.rollbackTransaction(new Exception("Node with uuid " + uuid + " not deleted"));
                     }
                     return null;
                 },
@@ -455,7 +454,7 @@ public class Neo4jDao {
             
         	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
         } catch (Exception e) {
-        	crossStorageTransaction.rollbackTransaction();
+        	crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
             throw e;
         }
@@ -484,7 +483,7 @@ public class Neo4jDao {
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
-        	crossStorageTransaction.rollbackTransaction();
+        	crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("[{}] Error while executing a GraphQL query : {}", neo4JConfiguration, query,  e);
             return null;
         }
@@ -581,7 +580,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction();
+            crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Error while merging Neo4J nodes.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues, e);
             throw new RuntimeException(e);
         }
@@ -649,7 +648,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction();
+            crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Error while creating a Neo4J node", e);
         }
 
@@ -698,7 +697,7 @@ public class Neo4jDao {
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction();
+            crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
         }
 
@@ -739,7 +738,7 @@ public class Neo4jDao {
 
             return ids;
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction();
+            crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Error while executing UniqueConstraint {}", uniqueConstraint, e);
         }
 
@@ -780,7 +779,7 @@ public class Neo4jDao {
 
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction();
+            crossStorageTransaction.rollbackTransaction(e);
             LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
         }
 
