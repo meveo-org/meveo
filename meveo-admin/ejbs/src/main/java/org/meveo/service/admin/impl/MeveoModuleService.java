@@ -286,14 +286,52 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
         qb.addCriterion("itemCode", "=", code, true);
         qb.addCriterion("itemClass", "=", className, true);
-
         try {
             return (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
             return null;
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    public List<MeveoModuleItem> findModuleItem(String code, String className, String appliesTo) {
+    	List<MeveoModuleItem> res;
+    	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
+    	qb.addCriterion("item_code", "=", code, true);
+    	qb.addCriterion("itemClass", "=", className, true);
+    	qb.addCriterion("appliesTo", "=", appliesTo, true);
+    	
+    	try {
+    		res = (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
+    	} catch (NoResultException e) {
+    		res = null;
+    	}
+    	
+    	return res;
+    }
 
+    
+    /**
+     * Add module item with differentiate if appliesTo is null or not
+     * 
+     * @param meveoModuleItem Module item
+     */
+    public void addModuleItem(MeveoModuleItem meveoModuleItem) {
+    	List<MeveoModuleItem> testEmptyModule;
+    	MeveoModule module = meveoModuleItem.getMeveoModule();
+    	if (meveoModuleItem.getAppliesTo() == null) {
+    		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
+    	}else {
+    		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
+    	}
+    	if (testEmptyModule.isEmpty()) {
+    		module.getModuleItems().add(meveoModuleItem);
+    		meveoModuleItem.setMeveoModule(module);
+    	}else {
+    		throw new IllegalArgumentException("Impossible to add more than one ModuleItem");
+    	}
+    }
+    
     /**
      * Check whether the given item is a child of an other active module
      *

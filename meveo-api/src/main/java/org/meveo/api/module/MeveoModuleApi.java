@@ -817,7 +817,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new BusinessException("Failed to load entity for module item " + moduleItem);
 		}
 
-		module.addModuleItem(moduleItem);
+		meveoModuleService.addModuleItem(moduleItem);
 
         var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
         if(api instanceof BaseCrudApi) {
