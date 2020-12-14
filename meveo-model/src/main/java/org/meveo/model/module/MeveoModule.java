@@ -144,12 +144,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     public void setModuleItems(Set<MeveoModuleItem> moduleItems) {
         this.moduleItems = moduleItems;
     }
-
-    public void addModuleItem(MeveoModuleItem moduleItem) {
-        this.moduleItems.add(moduleItem);
-        moduleItem.setMeveoModule(this);
-    }
-
+    
     public void removeItem(MeveoModuleItem item) {
         this.moduleItems.remove(item);
         item.setMeveoModule(null);
