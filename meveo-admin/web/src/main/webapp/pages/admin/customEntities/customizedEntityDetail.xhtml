@@ -81,7 +81,7 @@
                         </h:panelGroup>
                         <!-- Pre-persist script -->
                         <h:panelGroup>
-                            <hftl:decorateFormField style="display: none" field="prePersistScript" componentWidth="50" label="#{messages['BusinessEntity.prepersitScript']}">
+                            <hftl:decorateFormField field="prePersistScript" componentWidth="50" label="#{messages['BusinessEntity.prepersitScript']}">
                                 <p:autoComplete  value="#{customEntityTemplateBean.entity.prePersistScript}" var="script" size = "85" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
 									<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
                                 </p:autoComplete>
