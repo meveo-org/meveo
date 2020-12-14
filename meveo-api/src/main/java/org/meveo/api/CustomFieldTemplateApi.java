@@ -29,6 +29,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.SampleValueHelper;
@@ -44,9 +45,9 @@ import org.meveo.util.EntityCustomizationUtils;
  * @version 6.8.0
  **/
 @Stateless
-public class CustomFieldTemplateApi extends BaseApi {
-
-    @Inject
+public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, CustomFieldTemplateDto> {
+	
+	@Inject
     private CalendarService calendarService;
 
     @Inject
@@ -65,6 +66,16 @@ public class CustomFieldTemplateApi extends BaseApi {
     private CustomFieldsCacheContainerProvider cache;
     
     private String displayFormat;
+
+    /**
+     * Super base API service
+     * 
+     * @param jpaClass
+     * @param dtoClass
+     */
+    public CustomFieldTemplateApi() {
+		super(CustomFieldTemplate.class, CustomFieldTemplateDto.class);
+	}
 
     /**
 	 * Creates a new CustomFieldTemplate using the given data.
@@ -277,7 +288,7 @@ public class CustomFieldTemplateApi extends BaseApi {
         }
         return new CustomFieldTemplateDto(cft);
     }
-
+    
     /**
      * Same as find method, only ignore EntityDoesNotExistException exception and return Null instead.
      * 
@@ -660,5 +671,41 @@ public class CustomFieldTemplateApi extends BaseApi {
 			}
 		}
 
+	}
+
+    /* (non-Javadoc)
+     * @see org.meveo.api.ApiService#find(java.lang.String)
+     */
+	@Override
+	public CustomFieldTemplateDto find(String code) throws EntityDoesNotExistsException, MissingParameterException,
+			InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		throw new UnsupportedOperationException("Use find(code, appliesTo) instead");
+	}
+
+    /* (non-Javadoc)
+     * @see org.meveo.api.ApiService#createOrUpdate(java.lang.String)
+     */
+	@Override
+	public CustomFieldTemplate createOrUpdate(CustomFieldTemplateDto dtoData)
+			throws MeveoApiException, BusinessException {
+		CustomFieldTemplate fieldTemplate = this.customFieldTemplateService.findByCodeAndAppliesTo(dtoData.getCode(), dtoData.getAppliesTo());
+		if (fieldTemplate == null) {
+			this.create(dtoData, dtoData.getAppliesTo());
+		} else {
+			this.update(dtoData, dtoData.getAppliesTo());
+		}
+		return fieldTemplate;
+	}
+
+	@Override
+	public CustomFieldTemplateDto toDto(CustomFieldTemplate entity) throws MeveoApiException {
+		CustomFieldTemplateDto dto = new CustomFieldTemplateDto(entity);
+		
+		return dto;
+	}
+
+	@Override
+	public IPersistenceService<CustomFieldTemplate> getPersistenceService() {
+		return this.customFieldTemplateService;
 	}
 }
