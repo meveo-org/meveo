@@ -328,7 +328,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		module.getModuleItems().add(meveoModuleItem);
     		meveoModuleItem.setMeveoModule(module);
     	}else {
-    		throw new IllegalArgumentException("Impossible to add more than one ModuleItem");
+    		throw new IllegalArgumentException(
+    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
+    			meveoModuleItem.getAppliesTo()+" ) already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
+    		);
     	}
     }
     
