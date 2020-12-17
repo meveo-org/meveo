@@ -306,7 +306,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     public List<MeveoModuleItem> findModuleItem(String code, String className, String appliesTo) {
     	List<MeveoModuleItem> res;
     	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
-    	qb.addCriterion("item_code", "=", code, true);
+    	qb.addCriterion("itemCode", "=", code, true);
     	qb.addCriterion("itemClass", "=", className, true);
     	qb.addCriterion("appliesTo", "=", appliesTo, true);
     	
@@ -326,6 +326,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @param meveoModuleItem Module item
      */
     public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
+    	// Check if the module already contains the module item
+    	if(module.getModuleItems().contains(meveoModuleItem)) {
+    		return;
+    	}
+    	
     	List<MeveoModuleItem> testEmptyModule;
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
