@@ -421,7 +421,7 @@ public class MeveoModuleItemInstaller {
 
 		            Class<? extends MeveoModule> moduleClazz = MeveoModule.class;
 		            moduleItem = new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null);
-		            meveoModuleService.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
 		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
                     CustomEntityInstance cei = new CustomEntityInstance();
@@ -441,7 +441,7 @@ public class MeveoModuleItemInstaller {
                     	customTableService.create(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
 					}
 					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
-					meveoModuleService.addModuleItem(moduleItem);
+					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
 	        		if(cftDto.getAppliesTo() == null) {
@@ -473,7 +473,7 @@ public class MeveoModuleItemInstaller {
 
 		            moduleItem = new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
 			                ((CustomFieldTemplateDto) dto).getAppliesTo(), null);
-		            meveoModuleService.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
 		        } else if (dto instanceof EntityCustomActionDto) {
 					EntityCustomActionDto ecaDto = (EntityCustomActionDto) dto;
@@ -503,7 +503,7 @@ public class MeveoModuleItemInstaller {
 		            }
 
 		            moduleItem = new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null);
-		            meveoModuleService.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 		        } else {
 
 					String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
@@ -561,7 +561,7 @@ public class MeveoModuleItemInstaller {
 							addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
 						}
 
-						meveoModuleService.addModuleItem(moduleItem);
+						meveoModuleService.addModuleItem(moduleItem, meveoModule);
 						if (skipped) {
 							meveoModuleService.loadModuleItem(moduleItem);
 							BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(entityClass, true);
@@ -751,7 +751,7 @@ public class MeveoModuleItemInstaller {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
-				meveoModuleService.addModuleItem(itemDto);
+				meveoModuleService.addModuleItem(itemDto, meveoModule);
 			}
 		}
 	}

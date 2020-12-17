@@ -288,7 +288,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 item.setAppliesTo(((CustomEntityInstance) itemEntity).getCetCode());
             }
             if (!entity.getModuleItems().contains(item)) {
-            	meveoModuleService.addModuleItem(item);
+            	meveoModuleService.addModuleItem(item, entity);
                 if (itemEntity instanceof CustomFieldTemplate) {
                     CustomFieldTemplate customFieldTemplate = (CustomFieldTemplate)itemEntity;
                     new DefaultTreeNode("item", item, getOrCreateNodeByAppliesTo(customFieldTemplate.getAppliesTo(), customFieldTemplate.getClass().getName()));
@@ -302,7 +302,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                         CustomFieldTemplate cft = entry.getValue();
                         MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
                         if (!entity.getModuleItems().contains(moduleItem)) {
-                        	meveoModuleService.addModuleItem(moduleItem);
+                        	meveoModuleService.addModuleItem(moduleItem, entity);
                             new DefaultTreeNode("item", moduleItem, getOrCreateNodeByAppliesTo(customEntityTemplate.getAppliesTo(), cft.getClass().getName()));
                         }
                     }
@@ -314,7 +314,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                         CustomFieldTemplate cft = entry.getValue();
                         MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
                         if (!entity.getModuleItems().contains(moduleItem)) {
-                        	meveoModuleService.addModuleItem(moduleItem);
+                        	meveoModuleService.addModuleItem(moduleItem, entity);
                             new  DefaultTreeNode("item", moduleItem, getOrCreateNodeByAppliesTo(customRelationshipTemplate.getAppliesTo(), cft.getClass().getName()));
                         }
                     }

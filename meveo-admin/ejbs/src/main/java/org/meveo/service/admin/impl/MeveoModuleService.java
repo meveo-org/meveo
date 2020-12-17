@@ -325,9 +325,8 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * 
      * @param meveoModuleItem Module item
      */
-    public void addModuleItem(MeveoModuleItem meveoModuleItem) {
+    public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
     	List<MeveoModuleItem> testEmptyModule;
-    	MeveoModule module = meveoModuleItem.getMeveoModule();
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {

@@ -529,7 +529,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         BusinessEntity businessEntity = (BusinessEntity) entity;
         MeveoModuleItem item = new MeveoModuleItem(businessEntity);
         if (!module.getModuleItems().contains(item)) {
-            meveoModuleService.addModuleItem(item);
+            meveoModuleService.addModuleItem(item, module);
             try {
                 if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
                     module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
