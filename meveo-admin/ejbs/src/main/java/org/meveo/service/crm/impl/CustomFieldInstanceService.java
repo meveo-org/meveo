@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
  * @author Wassim Drira
@@ -549,23 +551,38 @@ public class CustomFieldInstanceService extends BaseService {
         			}
         		}
         		
-        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
-    			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
-    			
-				if (customFieldTemplateService.isReferenceJpaEntity(entityReferenceWrapper.getClassnameCode())) {
-					if(value instanceof EntityReferenceWrapper) {
-						entityReferenceWrapper = (EntityReferenceWrapper) value;
+				if (customFieldTemplateService.isReferenceJpaEntity(cft.getEntityClazzCetCode())) {
+					
+					if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+						try {
+							var collectionValue = JacksonUtil.convert(value, new TypeReference<List<EntityReferenceWrapper>>() {});
+							cfValue = entity.getCfValuesNullSafe().setValue(cfCode, collectionValue, EntityReferenceWrapper.class);
+						} catch (Exception e) {
+							//FIXME: Handle these cases
+							log.warn("Unhandled data : {}", value.toString());
+						}
 						
-					} else if(value instanceof String) {
-						entityReferenceWrapper.setUuid((String) value);
-						
-					} else if (StringUtils.isNumeric(String.valueOf(value))) {
-						entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
-					}
+					} else {
+		        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+		    			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+		    			
+						if(value instanceof EntityReferenceWrapper) {
+							entityReferenceWrapper = (EntityReferenceWrapper) value;
+							
+						} else if(value instanceof String) {
+							entityReferenceWrapper.setUuid((String) value);
+							
+						} else if (StringUtils.isNumeric(String.valueOf(value))) {
+							entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
+						}
 
-					cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
+					}
 					
 				} else {
+					
+	        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+	    			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
 
 					if (value instanceof Map) {
 						Map<String, Object> valueAsMap = (Map<String, Object>) value;

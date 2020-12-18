@@ -7,6 +7,7 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @version 6.8.0
  **/
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EntityReferenceWrapper implements Serializable {
 
     private static final long serialVersionUID = -4756870628233941711L;
