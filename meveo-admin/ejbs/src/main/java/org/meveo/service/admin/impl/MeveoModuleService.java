@@ -337,13 +337,15 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	}else {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
-    	if (testEmptyModule.isEmpty()) {
+    	
+    	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
+    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		module.getModuleItems().add(meveoModuleItem);
     		meveoModuleItem.setMeveoModule(module);
     	}else {
     		throw new IllegalArgumentException(
     			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
-    			meveoModuleItem.getAppliesTo()+" ) already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
+    			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
     		);
     	}
     }
