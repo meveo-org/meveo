@@ -19,6 +19,7 @@ package org.meveo.admin.listener;
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
 import org.infinispan.configuration.cache.SingleFileStoreConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -35,7 +36,7 @@ import javax.naming.InitialContext;
 @Singleton
 public class CachesInitializer {
 
-    private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
+    // private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
 
     @Inject
     protected Logger log;
@@ -56,16 +57,8 @@ public class CachesInitializer {
     	
         log.info("Initializing ontology caches");
 
-        SingleFileStoreConfigurationBuilder confBuilder = new ConfigurationBuilder().persistence()
-                .passivation(true)
-                .addSingleFileStore()
-                .purgeOnStartup(false);
-
-        var defaultCacheLocation = "/tmp/" + paramBean.getProperty("meveo.moduleName", "meveo") + "/infinispan";
-        String cacheLocation = paramBean.getProperty(INFINISPAN_CACHE_LOCATION, defaultCacheLocation);
-        if (!StringUtils.isEmpty(cacheLocation)) {
-            confBuilder.location(cacheLocation);
-        }
+        PersistenceConfigurationBuilder confBuilder = new ConfigurationBuilder().persistence()
+                .passivation(false);
 
         Configuration configuration = confBuilder.build();
 
