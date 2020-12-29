@@ -156,7 +156,7 @@ public class MeveoModuleItem extends BaseEntity {
     @Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = super.hashCode();
+		int result = 0;
 		result = prime * result + ((appliesTo == null) ? 0 : appliesTo.hashCode());
 		result = prime * result + ((itemClass == null) ? 0 : itemClass.hashCode());
 		result = prime * result + ((itemCode == null) ? 0 : itemCode.hashCode());
