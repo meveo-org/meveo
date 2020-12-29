@@ -47,7 +47,13 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.spi.Context;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AnnotatedType;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanAttributes;
+import javax.enterprise.inject.spi.CDI;
+import javax.enterprise.inject.spi.InjectionTargetFactory;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -71,6 +77,11 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.jboss.weld.annotated.slim.backed.BackedAnnotatedType;
+import org.jboss.weld.bean.builtin.BeanManagerProxy;
+import org.jboss.weld.contexts.WeldCreationalContext;
+import org.jboss.weld.manager.BeanManagerImpl;
+import org.jboss.weld.resources.ClassTransformer;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -751,6 +762,26 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
                     ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript.getDeclaredConstructor()::newInstance);
                     log.debug("Compiled script {} added to compiled interface map", scriptCode);
+                    
+                    // Add the bean to CDI manager
+                    BeanManagerProxy managerProxy = (BeanManagerProxy) CDI.current().getBeanManager();
+                    BeanManagerImpl manager = managerProxy.unwrap();
+                    
+                    var classTransformer = ClassTransformer.instance(manager);
+                    
+                    AnnotatedType<ScriptInterface> oat = manager.createAnnotatedType(compiledScript);
+                    classTransformer.disposeBackedAnnotatedType(compiledScript, manager.getId(), null);
+                    
+                    BeanAttributes<ScriptInterface> oa = manager.createBeanAttributes(oat);
+                    InjectionTargetFactory<ScriptInterface> factory = manager.getInjectionTargetFactory(oat);
+                    Bean<ScriptInterface> bean = manager.createBean(oa, compiledScript, factory);
+                    //TODO: Add the bean to a shared map (replace map of class definitions ?)
+                    
+                    // Test execution
+//                    Context context = manager.getContext(bean.getScope());
+//					WeldCreationalContext<ScriptInterface> createCreationalContext = manager.createCreationalContext(bean);
+//					ScriptInterface compiledInterface = context.get(bean, createCreationalContext);
+//                    compiledInterface.execute(null);
                 }
 
                 return null;
