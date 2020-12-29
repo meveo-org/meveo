@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -71,7 +72,6 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
 		super.beforeUpdateOrCreate(script);
-        
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
         for(MavenDependency md : script.getMavenDependenciesNullSafe()) {
