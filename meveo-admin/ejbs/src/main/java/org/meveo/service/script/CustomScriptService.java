@@ -112,6 +112,8 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
+import jdk.jfr.Name;
+
 /**
  * @param <T> Script sub-type
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -214,7 +216,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Don't compile script during module installation, will be compiled after
         if(!moduleInstallCtx.isActive()) {
-        	compileScript(script, false);
+        	compileScript(script, false, true);
         }
     }
 
@@ -232,7 +234,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
         
-		compileScript(script, true);
+		compileScript(script, true, true);
 		if (script.getError() != null && script.isError()) {
 			log.error("Failed compiling with error={}", script.getScriptErrors());
 			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
@@ -507,7 +509,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             constructClassPath();
 
             for (T script : scripts) {
-                compileScript(script, false);
+                compileScript(script, false, false);
             }
         } catch (Exception e) {
             log.error("", e);
@@ -523,7 +525,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script == null) {
             clearCompiledScripts(scriptCode);
         } else {
-            compileScript(script, false);
+            compileScript(script, false, true);
         }
 
     }
@@ -539,8 +541,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void compileScript(T script, boolean testCompile) {
-    	
+    public void compileScript(T script, boolean testCompile, boolean overwrite) {
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -548,10 +549,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             source = readScriptFile(script);
         }
 
-        addScriptDependencies(script);
-
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
-
+        	addScriptDependencies(script);
+        
+        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile, overwrite);
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
     }
@@ -736,7 +736,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *                    overwrite existing compiled script cache.
      * @return A list of compilation errors if not compiled
      */
-    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile) {
+    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile, boolean overwrite) {
         if (sourceType == ScriptSourceTypeEnum.JAVA) {
             log.debug("Compile script {}", scriptCode);
 
@@ -745,7 +745,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     clearCompiledScripts(scriptCode);
                 }
 
-                Class<ScriptInterface> compiledScript = compileJavaSource(sourceCode);
+                Class<ScriptInterface> compiledScript;
+            	if(!overwrite) {
+            		try {
+            			compiledScript =  CharSequenceCompiler.getCompiledClass(scriptCode);
+            		} catch (ClassNotFoundException e) {
+            			compiledScript = compileJavaSource(sourceCode, testCompile);
+            		}
+            	} else {
+                    compiledScript = compileJavaSource(sourceCode, testCompile);
+            	}
 
                 if (!testCompile && isActive) {
 
@@ -802,12 +811,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @return Compiled class instance
      * @throws CharSequenceCompilerException char sequence compiler exception.
      */
-    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc, boolean isTestCompile) throws CharSequenceCompilerException, IOException {
         String fullClassName = getFullClassname(javaSrc);
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
@@ -851,7 +860,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
             
-            compileScript(script, false);
+            compileScript(script, false, false);
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
@@ -1035,7 +1044,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         // Scipt has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
-                        compileScript(script, false);
+                        compileScript(script, false, true);
                     }
                 }
             }

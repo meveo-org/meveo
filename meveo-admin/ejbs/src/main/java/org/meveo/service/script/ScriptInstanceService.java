@@ -176,7 +176,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         
         Class<ScriptInterface> compiledScript;
         try {
-        	compiledScript = compileJavaSource(javaSrc);
+        	compiledScript = compileJavaSource(javaSrc, true);
         } catch (Exception e) {
         	log.error("Can't compile script {} for test", scriptCode, e);
         	return;
@@ -328,7 +328,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			.map(item -> findByCode(item.getItemCode()))
 			.collect(Collectors.toList());
 		
-		scripts.forEach(script -> compileScript(script, false));
+		scripts.forEach(script -> compileScript(script, false, true));
 		
 		// Throw exception if a script fails to compile
 		for(var script : scripts) {
