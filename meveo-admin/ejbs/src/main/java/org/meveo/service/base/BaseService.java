@@ -21,6 +21,7 @@ package org.meveo.service.base;
 import java.util.Random;
 
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
@@ -46,6 +47,7 @@ public abstract class BaseService {
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	@Inject
+	@Default
 	private BeanManager beanManager;
 
     protected String generateRequestId() {

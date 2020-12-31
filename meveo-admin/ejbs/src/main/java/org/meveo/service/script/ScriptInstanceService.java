@@ -53,6 +53,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
+import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -176,14 +177,15 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         
         Class<ScriptInterface> compiledScript;
         try {
-        	compiledScript = compileJavaSource(javaSrc);
+        	compiledScript = compileJavaSource(javaSrc, true);
         } catch (Exception e) {
         	log.error("Can't compile script {} for test", scriptCode, e);
         	return;
         }
             
         try {
-            execute(compiledScript.newInstance(), context);
+        	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+            execute(MeveoBeanManager.getInstance().getInstance(bean), context);
         } catch (Exception e) {
             log.error("Script test execution failed", e);
         }
@@ -328,7 +330,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			.map(item -> findByCode(item.getItemCode()))
 			.collect(Collectors.toList());
 		
-		scripts.forEach(script -> compileScript(script, false));
+		scripts.forEach(script -> compileScript(script, false, true));
 		
 		// Throw exception if a script fails to compile
 		for(var script : scripts) {

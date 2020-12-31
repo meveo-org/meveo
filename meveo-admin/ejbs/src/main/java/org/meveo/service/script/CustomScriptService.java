@@ -49,11 +49,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.spi.Context;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.AnnotatedType;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanAttributes;
-import javax.enterprise.inject.spi.CDI;
-import javax.enterprise.inject.spi.InjectionTargetFactory;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -77,11 +72,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
-import org.jboss.weld.annotated.slim.backed.BackedAnnotatedType;
-import org.jboss.weld.bean.builtin.BeanManagerProxy;
 import org.jboss.weld.contexts.WeldCreationalContext;
-import org.jboss.weld.manager.BeanManagerImpl;
-import org.jboss.weld.resources.ClassTransformer;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -113,6 +104,7 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +114,8 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+
+import jdk.jfr.Name;
 
 /**
  * @param <T> Script sub-type
@@ -225,7 +219,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Don't compile script during module installation, will be compiled after
         if(!moduleInstallCtx.isActive()) {
-        	compileScript(script, false);
+        	compileScript(script, false, true);
         }
     }
 
@@ -243,7 +237,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
         
-		compileScript(script, true);
+		compileScript(script, true, true);
 		if (script.getError() != null && script.isError()) {
 			log.error("Failed compiling script with error={}", script.getScriptErrors());
 			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
@@ -518,7 +512,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             constructClassPath();
 
             for (T script : scripts) {
-                compileScript(script, false);
+                compileScript(script, false, false);
             }
         } catch (Exception e) {
             log.error("", e);
@@ -534,7 +528,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script == null) {
             clearCompiledScripts(scriptCode);
         } else {
-            compileScript(script, false);
+            compileScript(script, false, true);
         }
 
     }
@@ -550,8 +544,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void compileScript(T script, boolean testCompile) {
-    	
+    public void compileScript(T script, boolean testCompile, boolean overwrite) {
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -559,10 +552,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             source = readScriptFile(script);
         }
 
-        addScriptDependencies(script);
-
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
-
+        if(overwrite) {
+        	addScriptDependencies(script);
+	        // Need to reload dependent script otherwise injection will not work
+	        // XXX: Do the inverse ? (reload depending script)
+	        for(var importedScript : ((ScriptInstance) script).getImportScriptInstancesNullSafe()) {
+	        	ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), importedScript.getCode()));
+	        	MeveoBeanManager.getInstance().removeBean(importedScript.getCode());
+	        }
+        }
+        
+        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile, overwrite);
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
     }
@@ -747,7 +747,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *                    overwrite existing compiled script cache.
      * @return A list of compilation errors if not compiled
      */
-    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile) {
+    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile, boolean overwrite) {
         if (sourceType == ScriptSourceTypeEnum.JAVA) {
             log.debug("Compile script {}", scriptCode);
 
@@ -756,32 +756,29 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     clearCompiledScripts(scriptCode);
                 }
 
-                Class<ScriptInterface> compiledScript = compileJavaSource(sourceCode);
+                Class<ScriptInterface> compiledScript;
+            	if(!overwrite) {
+            		try {
+            			compiledScript =  CharSequenceCompiler.getCompiledClass(scriptCode);
+            		} catch (ClassNotFoundException e) {
+            			compiledScript = compileJavaSource(sourceCode, testCompile);
+            		}
+            	} else {
+                    compiledScript = compileJavaSource(sourceCode, testCompile);
+            	}
 
                 if (!testCompile && isActive) {
 
-                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript.getDeclaredConstructor()::newInstance);
+                	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+                    
+                    ALL_SCRIPT_INTERFACES.put(
+                    		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
+                    		() -> MeveoBeanManager.getInstance().getInstance(bean)
+            		);
+                    
+                    MeveoBeanManager.getInstance().addBean(bean);
+                    
                     log.debug("Compiled script {} added to compiled interface map", scriptCode);
-                    
-                    // Add the bean to CDI manager
-                    BeanManagerProxy managerProxy = (BeanManagerProxy) CDI.current().getBeanManager();
-                    BeanManagerImpl manager = managerProxy.unwrap();
-                    
-                    var classTransformer = ClassTransformer.instance(manager);
-                    
-                    AnnotatedType<ScriptInterface> oat = manager.createAnnotatedType(compiledScript);
-                    classTransformer.disposeBackedAnnotatedType(compiledScript, manager.getId(), null);
-                    
-                    BeanAttributes<ScriptInterface> oa = manager.createBeanAttributes(oat);
-                    InjectionTargetFactory<ScriptInterface> factory = manager.getInjectionTargetFactory(oat);
-                    Bean<ScriptInterface> bean = manager.createBean(oa, compiledScript, factory);
-                    //TODO: Add the bean to a shared map (replace map of class definitions ?)
-                    
-                    // Test execution
-//                    Context context = manager.getContext(bean.getScope());
-//					WeldCreationalContext<ScriptInterface> createCreationalContext = manager.createCreationalContext(bean);
-//					ScriptInterface compiledInterface = context.get(bean, createCreationalContext);
-//                    compiledInterface.execute(null);
                 }
 
                 return null;
@@ -833,12 +830,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @return Compiled class instance
      * @throws CharSequenceCompilerException char sequence compiler exception.
      */
-    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc, boolean isTestCompile) throws CharSequenceCompilerException, IOException {
         String fullClassName = getFullClassname(javaSrc);
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
@@ -882,7 +879,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
             
-            compileScript(script, false);
+            compileScript(script, false, false);
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
@@ -1066,7 +1063,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         // Scipt has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
-                        compileScript(script, false);
+                        compileScript(script, false, true);
                     }
                 }
             }
