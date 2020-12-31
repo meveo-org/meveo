@@ -6,10 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +29,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
@@ -86,12 +89,25 @@ public class CharSequenceCompiler<T> {
    
    private final ClassLoaderImpl classLoader;
    
+   private static URLClassLoader urlClassLoader;
+   
    static {
 	   compiler = ToolProvider.getSystemJavaCompiler();
 	   if (compiler == null) {
 		   throw new IllegalStateException("Cannot find the system Java compiler. Check that your class path includes tools.jar");
 	   }
 	   fileManager = compiler.getStandardFileManager(null, null, null);
+	   
+      try {
+	      URL[] urls = { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() };
+		  urlClassLoader = new URLClassLoader(urls, CharSequenceCompiler.class.getClassLoader());
+      } catch (MalformedURLException e) {
+    	  throw new RuntimeException(e);
+      }
+   }
+   
+   public static <T> Class<T> getCompiledClass(final String qualifiedName) throws ClassNotFoundException {
+	   return (Class<T>) urlClassLoader.loadClass(qualifiedName);
    }
 
    /**
@@ -111,7 +127,6 @@ public class CharSequenceCompiler<T> {
       
       // create our FileManager which chains to the default file manager and our ClassLoader
 	  javaFileManager = new FileManagerImpl(fileManager, classLoader);
-      
       this.options = new ArrayList<String>();
       if (options != null) { // make a save copy of input options
          for (String option : options) {
@@ -150,10 +165,11 @@ public class CharSequenceCompiler<T> {
    public synchronized Class<T> compile(final String qualifiedClassName,
          final CharSequence javaSource,
          final DiagnosticCollector<JavaFileObject> diagnosticsList,
+         final boolean isTestCompile,
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
 
-      Class<T> newClass = compile(qualifiedClassName, javaSource, diagnosticsList);
+      Class<T> newClass = compile(qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
       return castable(newClass, types);
    }
 
@@ -173,11 +189,18 @@ public class CharSequenceCompiler<T> {
    public synchronized Class<T> compile(
 		   final String qualifiedClassName,
            final CharSequence content,
-           final DiagnosticCollector<JavaFileObject> diagnosticsList)  throws CharSequenceCompilerException {
+           final DiagnosticCollector<JavaFileObject> diagnosticsList,
+           final boolean isTestCompile)  throws CharSequenceCompilerException {
 	   
 	   Set<String> classNames = Set.of(qualifiedClassName);
 
 	   File classesDirectory = CustomEntityTemplateService.getClassesDir(null);
+	   File outputDir;
+		try {
+			outputDir = !isTestCompile ? classesDirectory : Files.createTempDirectory("test-compile").toFile();
+		} catch (IOException e1) {
+			throw new RuntimeException("Cannot create temp directory", e1);
+		}
 
 	   if (!classesDirectory.exists()) {
 		   classesDirectory.mkdirs();
@@ -188,8 +211,7 @@ public class CharSequenceCompiler<T> {
 	   final String packageName = dotPos == -1 ? "" : qualifiedClassName.substring(0, dotPos);
 
 	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
-	   javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
-
+	   // javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
 	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/src/main/java/");
 
 	   // Set source directory
@@ -198,12 +220,15 @@ public class CharSequenceCompiler<T> {
 
 	   // Set output directory
 	   options.add("-d");
-	   options.add(classesDirectory.getAbsolutePath());
-
+	   options.add(outputDir.getAbsolutePath());
+	   
+	   File[] javaFiles = new File[] { new File("C:\\wildfly-18.0.1.Final\\bin\\meveodata\\default\\git\\Meveo\\src\\main\\java\\org\\meveo\\script\\DefaultScriptCDI2.java") };
+	   StandardJavaFileManager sjfm = compiler.getStandardFileManager(null, null, null); 
+	   
 	   // Get a CompliationTask from the compiler and compile the sources
 	   final CompilationTask task = compiler.getTask(
 			   null, 
-			   javaFileManager, 
+			   null, 
 			   diagnosticsList,
 			   options, 
 			   null, 
@@ -217,8 +242,21 @@ public class CharSequenceCompiler<T> {
 	   }
 
 	   try {
-		   Class<T> loadClass = loadClass(qualifiedClassName);
-		   return loadClass;
+		   URL[] urls = { outputDir.toURI().toURL() };
+
+		   if(isTestCompile) {
+			   // Use a temporary classLoader if compilation is test
+			   try (var tmpClassLoader = new URLClassLoader(urls, this.getClassLoader())) {
+				   return (Class<T>) tmpClassLoader.loadClass(qualifiedClassName);
+			   }
+		   } else {
+			   urlClassLoader.close(); // Close previous UrlClassLoader
+			   urlClassLoader = new URLClassLoader(urls, this.getClassLoader()); // Re-instantiate a new one
+			   return (Class<T>) urlClassLoader.loadClass(qualifiedClassName);
+		   }
+		   
+//		   Class<T> loadClass = loadClass(qualifiedClassName);
+//		   return loadClass;
 	   } catch (Exception e) {
 		   throw new CharSequenceCompilerException(classNames, e, diagnosticsList);
 	   }
@@ -243,7 +281,7 @@ public class CharSequenceCompiler<T> {
          throws ClassNotFoundException {
       return (Class<T>) classLoader.loadClass(qualifiedClassName);
    }
-
+   
    /**
     * Check that the &lt;var&gt;newClass&lt;/var&gt; is a subtype of all the type
     * parameters and throw a ClassCastException if not.
