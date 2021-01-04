@@ -98,4 +98,9 @@ public interface ScriptInstanceRs extends IBaseRs {
 	@Path("/createOrUpdate")
 	@ApiOperation(value = "Create or update script instance")
 	ScriptInstanceReponseDto createOrUpdate(@ApiParam("ScriptInstance information") ScriptInstanceDto postData);
+
+	@POST
+	@Path("/clear")
+	@ApiOperation(value = "Clear the compiled scripts")
+	void clear();
 }

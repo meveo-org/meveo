@@ -42,7 +42,7 @@ public class MeveoBeanResolver extends TypeSafeBeanResolver {
 			result = meveoBeanManager.getMeveoBeans().get(resolvable.getJavaClass().getName());
 			if(result == null || !result.iterator().hasNext()) {
 				ScriptInstance scriptInstance = scriptService.findByCode(resolvable.getJavaClass().getName());
-				scriptService.compileScript(scriptInstance, false, false);
+				scriptService.loadClassInCache(scriptInstance.getCode());
 				result = meveoBeanManager.getMeveoBeans().get(resolvable.getJavaClass().getName());
 			}
 		}

@@ -127,7 +127,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
     public void organizeImports() {
     	// Don't need to re-compile if compilation already has errors
     	if(entity.getScriptErrors() == null || entity.getScriptErrors().isEmpty()) {
-    		scriptInstanceService.compileScript(entity, true, true);
+    		scriptInstanceService.compileScript(entity, true);
     	}
     	
     	if(entity.getScriptErrors() == null) {
@@ -221,7 +221,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		}
 
 		if (entity.isError()) {
-			scriptInstanceService.compileScript(entity, true, true);
+			scriptInstanceService.compileScript(entity, true);
 		}
 	}
 
@@ -488,7 +488,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 			return;
 		}
 
-		scriptInstanceService.compileScript(entity, true, true);
+		scriptInstanceService.compileScript(entity, true);
 		if (!entity.isError()) {
 			messages.info(new BundleKey("messages", "scriptInstance.compilationSuccessfull"));
 			initEntity(entity.getId());

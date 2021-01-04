@@ -1243,6 +1243,7 @@ public class MeveoBeanManager implements WeldManager {
 		sharedBeans.removeIf(b -> b.getBeanClass().getName().equals(code));
         List<Bean<?>> beans = meveoBeans.computeIfAbsent(code, clazz -> new ArrayList<>());
 		beans.clear();
+		meveoBeanResolver.clear();
 		return beans;
 	}
 	
@@ -1286,7 +1287,10 @@ public class MeveoBeanManager implements WeldManager {
         var classTransformer = ClassTransformer.instance(beanManager);
         // Drop the type definition so we can reload it later if the script is re-compiled
         classTransformer.disposeBackedAnnotatedType(type, beanManager.getId(), null);
-
+        for(var field : oat.getFields()) {
+        	System.out.println("Field : " + field.getJavaMember().getName() + ", Type : " + field.getBaseType().getClass());
+        }
+        
         BeanAttributes<T> oa = createBeanAttributes(oat);
         InjectionTargetFactory<T> factory = getInjectionTargetFactory(oat);
         Bean<T> bean = createBean(oa, type, factory);

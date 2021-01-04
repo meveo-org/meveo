@@ -288,7 +288,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
         return scriptInterfaces;
     }
-
+    
 	@Override
 	protected void executeEngine(ScriptInterface engine, Map<String, Object> context) throws ScriptExecutionException {
 		ScriptTransactionType txType;
@@ -330,7 +330,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			.map(item -> findByCode(item.getItemCode()))
 			.collect(Collectors.toList());
 		
-		scripts.forEach(script -> compileScript(script, false, true));
+		scripts.forEach(script -> compileScript(script, false));
 		
 		// Throw exception if a script fails to compile
 		for(var script : scripts) {

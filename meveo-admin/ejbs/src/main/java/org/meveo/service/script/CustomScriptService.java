@@ -187,7 +187,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         return result;
     }
-
+    
     /**
      * If script file has been changed, commit the differences. <br>
      * Re-compile the script
@@ -219,7 +219,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Don't compile script during module installation, will be compiled after
         if(!moduleInstallCtx.isActive()) {
-        	compileScript(script, false, true);
+        	compileScript(script, false);
         }
     }
 
@@ -237,7 +237,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
         
-		compileScript(script, true, true);
+		compileScript(script, true);
 		if (script.getError() != null && script.isError()) {
 			log.error("Failed compiling script with error={}", script.getScriptErrors());
 			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
@@ -512,7 +512,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             constructClassPath();
 
             for (T script : scripts) {
-                compileScript(script, false, false);
+                loadClassInCache(script.getCode());
             }
         } catch (Exception e) {
             log.error("", e);
@@ -528,11 +528,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script == null) {
             clearCompiledScripts(scriptCode);
         } else {
-            compileScript(script, false, true);
+            compileScript(script, false);
         }
 
     }
-
+    
     /**
      * Compile script, a and update script entity status with compilation errors.
      * Successfully compiled script is added to a compiled script cache if active
@@ -544,7 +544,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void compileScript(T script, boolean testCompile, boolean overwrite) {
+    public void compileScript(T script, boolean testCompile) {
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -552,19 +552,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             source = readScriptFile(script);
         }
 
-        if(overwrite) {
-        	addScriptDependencies(script);
-	        // Need to reload dependent script otherwise injection will not work
-	        // XXX: Do the inverse ? (reload depending script)
-	        for(var importedScript : ((ScriptInstance) script).getImportScriptInstancesNullSafe()) {
-	        	ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), importedScript.getCode()));
-	        	MeveoBeanManager.getInstance().removeBean(importedScript.getCode());
-	        }
-        }
+    	addScriptDependencies(script);
         
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile, overwrite);
+        List<ScriptInstanceError> scriptErrors = compileScript(
+        		script.getCode(), 
+        		script.getSourceTypeEnum(), 
+        		source, 
+        		script.isActive(), 
+        		testCompile);
+        
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
+        
+        if(!testCompile && (scriptErrors == null || scriptErrors.isEmpty())) {
+        	clearCompiledScripts();
+        }
     }
 
     private void addScriptDependencies(T script) {
@@ -732,6 +734,27 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         script.setGetters(getters);
         script.setSetters(setters);
     }
+    
+    public void loadClassInCache(String scriptCode) {
+    	Class<ScriptInterface> compiledScript = null;
+    	try {
+    		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
+    	} catch (ClassNotFoundException e) {
+    		T script = findByCode(scriptCode);
+    		compileScript(script, false);
+    	}
+    	
+    	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+        
+        ALL_SCRIPT_INTERFACES.put(
+        		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
+        		() -> MeveoBeanManager.getInstance().getInstance(bean)
+		);
+        
+        MeveoBeanManager.getInstance().addBean(bean);
+        
+        log.debug("Compiled script {} added to compiled interface map", scriptCode);
+    }
 
 	/**
      * Compile script. DOES NOT update script entity status. Successfully compiled
@@ -747,7 +770,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      *                    overwrite existing compiled script cache.
      * @return A list of compilation errors if not compiled
      */
-    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile, boolean overwrite) {
+    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile) {
         if (sourceType == ScriptSourceTypeEnum.JAVA) {
             log.debug("Compile script {}", scriptCode);
 
@@ -757,29 +780,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 }
 
                 Class<ScriptInterface> compiledScript;
-            	if(!overwrite) {
-            		try {
-            			compiledScript =  CharSequenceCompiler.getCompiledClass(scriptCode);
-            		} catch (ClassNotFoundException e) {
-            			compiledScript = compileJavaSource(sourceCode, testCompile);
-            		}
-            	} else {
-                    compiledScript = compileJavaSource(sourceCode, testCompile);
-            	}
-
-                if (!testCompile && isActive) {
-
-                	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
-                    
-                    ALL_SCRIPT_INTERFACES.put(
-                    		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
-                    		() -> MeveoBeanManager.getInstance().getInstance(bean)
-            		);
-                    
-                    MeveoBeanManager.getInstance().addBean(bean);
-                    
-                    log.debug("Compiled script {} added to compiled interface map", scriptCode);
-                }
+                compiledScript = compileJavaSource(sourceCode, testCompile);
 
                 return null;
 
@@ -879,7 +880,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
             
-            compileScript(script, false, false);
+            //compileScript(script, false, false);
+            loadClassInCache(scriptCode);
+            
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
@@ -959,6 +962,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void clearCompiledScripts(String scriptCode) {
         super.clear(scriptCode);
         ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        MeveoBeanManager.getInstance().removeBean(scriptCode);
     }
 
     /**
@@ -966,6 +970,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     public void clearCompiledScripts() {
         ALL_SCRIPT_INTERFACES.clear();
+        for(var scriptToRemove : list()) {
+        	MeveoBeanManager.getInstance().removeBean(scriptToRemove.getCode());
+        }
     }
 
     @Override
@@ -1063,7 +1070,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         // Scipt has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
-                        compileScript(script, false, true);
+                        compileScript(script, false);
                     }
                 }
             }
