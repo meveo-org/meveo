@@ -1268,11 +1268,6 @@ public class MeveoBeanManager implements WeldManager {
         
         beansByTypeHolder.clear();
         beansByTypeHolder.get();
-        
-        for (var t : bean.getTypes()) {
-            var list = beansByType.get(t);
-            System.out.println(t.getTypeName() + " : " + list);
-        }
 	}
 	
 	/**
@@ -1287,9 +1282,6 @@ public class MeveoBeanManager implements WeldManager {
         var classTransformer = ClassTransformer.instance(beanManager);
         // Drop the type definition so we can reload it later if the script is re-compiled
         classTransformer.disposeBackedAnnotatedType(type, beanManager.getId(), null);
-        for(var field : oat.getFields()) {
-        	System.out.println("Field : " + field.getJavaMember().getName() + ", Type : " + field.getBaseType().getClass());
-        }
         
         BeanAttributes<T> oa = createBeanAttributes(oat);
         InjectionTargetFactory<T> factory = getInjectionTargetFactory(oat);
