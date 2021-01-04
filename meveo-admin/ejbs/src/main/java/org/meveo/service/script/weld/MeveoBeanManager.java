@@ -1253,7 +1253,7 @@ public class MeveoBeanManager implements WeldManager {
 	 * @param <T> type of the bean
 	 * @param bean the bean to add
 	 */
-	public <T> void addBean(Bean<T> bean) {
+	public synchronized <T> void addBean(Bean<T> bean) {
 		// Need to drop previous instance of bean
         List<Bean<?>> beans = removeBean(bean.getBeanClass().getName());
         beans.add(bean);
@@ -1277,7 +1277,7 @@ public class MeveoBeanManager implements WeldManager {
 	 * @param type Script class
 	 * @return a bean definition for the given type
 	 */
-	public <T> Bean<T> createBean(Class<T> type) {
+	public synchronized <T> Bean<T> createBean(Class<T> type) {
         AnnotatedType<T> oat = createAnnotatedType(type);
         var classTransformer = ClassTransformer.instance(beanManager);
         // Drop the type definition so we can reload it later if the script is re-compiled

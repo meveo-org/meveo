@@ -225,7 +225,7 @@ public class CharSequenceCompiler<T> {
 	   // Get a CompliationTask from the compiler and compile the sources
 	   final CompilationTask task = compiler.getTask(
 			   null, 
-			   null, 
+			   null, //XXX: Use a file manager to improve perfs ?
 			   diagnosticsList,
 			   options, 
 			   null, 
