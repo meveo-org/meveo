@@ -12,6 +12,10 @@ import org.meveo.api.dto.response.GetScriptInstanceResponseDto;
 import org.meveo.api.dto.response.ScriptInstanceReponseDto;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.ScriptInstanceRs;
+import org.meveo.cache.CacheKeyStr;
+import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
  * @author Edward P. Legaspi
@@ -22,6 +26,9 @@ public class ScriptInstanceRsImpl extends BaseRs implements ScriptInstanceRs {
 
     @Inject
     private ScriptInstanceApi scriptInstanceApi;
+    
+    @Inject
+    private ScriptInstanceService scriptService;
 
     @Override
     public ScriptInstanceReponseDto create(ScriptInstanceDto postData) {
@@ -91,6 +98,11 @@ public class ScriptInstanceRsImpl extends BaseRs implements ScriptInstanceRs {
 	@Override
 	public String getCodes() {
 		return scriptInstanceApi.getScriptCodesAsJSON();
+	}
+
+	@Override
+	public void clear() {
+    	scriptService.clearCompiledScripts();
 	}
 
 }

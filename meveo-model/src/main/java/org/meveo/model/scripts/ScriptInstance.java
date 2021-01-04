@@ -58,7 +58,8 @@ import org.meveo.model.security.Role;
 		@NamedQuery(name = "CustomScript.updateScript", query = "UPDATE ScriptInstance SET script = :script WHERE code = :code"),
 		@NamedQuery(name = "CustomScript.countScriptInstanceOnError", query = "select count (*) from ScriptInstance o where o.error=:isError "),
 		@NamedQuery(name = "CustomScript.getScriptInstanceOnError", query = "from ScriptInstance o where o.error=:isError "),
-		@NamedQuery(name = "CustomScript.getScriptInstanceByTypeActive", query = "from ScriptInstance o where o.sourceTypeEnum=:sourceTypeEnum and o.disabled = false") })
+		@NamedQuery(name = "CustomScript.getScriptInstanceByTypeActive", query = "from ScriptInstance o where o.sourceTypeEnum=:sourceTypeEnum and o.disabled = false")
+})
 @ImportOrder(4)
 @ExportIdentifier({ "code" })
 public class ScriptInstance extends CustomScript {
@@ -81,7 +82,7 @@ public class ScriptInstance extends CustomScript {
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "meveo_script_instance_script_instance", joinColumns = @JoinColumn(name = "script_instance_id"), inverseJoinColumns = @JoinColumn(name = "child_script_instance_id"))
 	private Set<ScriptInstance> importScriptInstances;
-
+	
 	public Set<Role> getExecutionRolesNullSafe() {
 		if (executionRoles == null) {
 			executionRoles = new HashSet<Role>();
@@ -145,7 +146,7 @@ public class ScriptInstance extends CustomScript {
 		}
 		return getImportScriptInstances();
 	}
-
+	
 	/**
 	 * @return the importScriptInstances
 	 */
