@@ -14,7 +14,6 @@ import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.infinispan.Cache;
@@ -30,10 +29,9 @@ import org.slf4j.Logger;
  * Provides cache related services (tracking running jobs) for job running related operations
  * 
  * @author Andrius Karpavicius
- * 
+ * @author Edward P. Legaspi
+ * @version 6.14
  */
-// @Singleton
-// @Lock(LockType.READ)
 @Singleton
 public class JobCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
 

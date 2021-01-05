@@ -98,9 +98,6 @@ public class MeveoModuleItemInstaller {
 
     @Inject
 	private CustomTableService customTableService;
-
-    @EJB
-    private MeveoModuleItemInstaller meveoModuleItemInstaller;
     
     @Inject
     private ConcreteFunctionService concreteFunctionService;
@@ -127,6 +124,9 @@ public class MeveoModuleItemInstaller {
 	@Inject
 	@ModulePostInstall
 	private Event<MeveoModule> postInstallEvent;
+	
+	@EJB
+	private MeveoModuleItemInstaller meveoModuleItemInstaller;
     
     /**
      * Uninstall the module and disables it items
@@ -515,7 +515,7 @@ public class MeveoModuleItemInstaller {
 							throw new IllegalArgumentException(moduleItemName + " is not a module item");
 						}
 
-						log.info("Installing item {} of module {}", dto, meveoModule);
+						log.info("Installing item {} of module with code={}", dto, meveoModule.getCode());
 
 						Object item = findItem(dto, entityClass);
 						if (item != null) {
@@ -725,8 +725,8 @@ public class MeveoModuleItemInstaller {
 			
 			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
 				try {
-					// var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
-					var subResult = unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
+					 var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
+//					var subResult = unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
 					result.merge(subResult);
 				} catch (Exception e) {
 					if (e instanceof EJBException) {
