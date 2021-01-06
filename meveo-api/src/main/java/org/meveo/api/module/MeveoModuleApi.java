@@ -1278,7 +1278,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 		for (MeveoModuleDto meveoModuleDto : modules) {
-			if (!meveoModuleDto.getModuleDependencies().isEmpty()) {
+			if (meveoModuleDto.getModuleDependencies() != null && !meveoModuleDto.getModuleDependencies().isEmpty()) {
 				if (!moduleCode.isEmpty()) {
 					for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
 						if (!moduleCode.contains(dependencyDto.getCode())) {
