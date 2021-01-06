@@ -109,6 +109,7 @@ public class MeveoBeanManager implements WeldManager {
 	private LazyValueHolder<Map<Type, ArrayList<Bean<?>>>> beansByTypeHolder;
 	private Map<String, List<Bean<?>>> meveoBeans = new HashMap<>();
 	private MeveoBeanResolver meveoBeanResolver;
+	private MeveoProxyProvider clientProxyProvider;
 	
 	public static MeveoBeanManager getInstance() {
 		if(INSTANCE == null) {
@@ -586,7 +587,7 @@ public class MeveoBeanManager implements WeldManager {
 	 * @see org.jboss.weld.manager.BeanManagerImpl#getClientProxyProvider()
 	 */
 	public ClientProxyProvider getClientProxyProvider() {
-		return beanManager.getClientProxyProvider();
+		return clientProxyProvider;
 	}
 
 	/**
@@ -1204,6 +1205,12 @@ public class MeveoBeanManager implements WeldManager {
             
             beanManager = BeanManagerImpl.newManager(manager, "MeveoBeanManager", services);
             beanManager.addAccessibleBeanManager(manager);
+            
+            clientProxyProvider = new MeveoProxyProvider(beanManager.getContextId());
+            
+            Field clientProxyProviderField = BeanManagerImpl.class.getDeclaredField("clientProxyProvider");
+            clientProxyProviderField.setAccessible(true);
+            clientProxyProviderField.set(beanManager, clientProxyProvider);
             
             Field enabledBeansField = BeanManagerImpl.class.getDeclaredField("enabledBeans");
             enabledBeansField.setAccessible(true);
