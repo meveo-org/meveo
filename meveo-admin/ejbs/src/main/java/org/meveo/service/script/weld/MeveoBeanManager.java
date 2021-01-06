@@ -1091,8 +1091,7 @@ public class MeveoBeanManager implements WeldManager {
 	 */
     @Override
     public <T> WeldInjectionTargetFactory<T> getInjectionTargetFactory(AnnotatedType<T> type) {
-        validateAnnotatedType(type);
-        return new MeveoInjectionTargetFactory<T>(type, this);
+        return beanManager.getInjectionTargetFactory(type);
     }
 
 	/**
