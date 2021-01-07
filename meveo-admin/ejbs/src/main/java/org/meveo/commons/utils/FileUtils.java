@@ -469,12 +469,17 @@ public final class FileUtils {
             File fileout = null;
             while ((entry = zis.getNextEntry()) != null) {
                 fileout = new File(targetFolder , entry.getName());
+				if (fileout.getName() != null && (fileout.getName().contains("/") || fileout.getName().contains("\\")))
+					logger.info("unzip to filename with separator in name " + fileout.getName() + " for entry " + entry.getName());
                 if (entry.isDirectory()) {
                     if (!fileout.exists()) {
                         fileout.mkdirs();
                     }
                     continue;
                 }
+				if (entry.getName() != null && (entry.getName().contains("/") || entry.getName().contains("\\")))
+					logger.info("zip entry name with separator " + entry.getName() );
+
                 if (!fileout.exists()) {
                     (new File(fileout.getParent())).mkdirs();
                 }
