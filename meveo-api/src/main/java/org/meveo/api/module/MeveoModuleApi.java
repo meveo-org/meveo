@@ -68,7 +68,6 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.exception.ActionForbiddenException;
@@ -1029,17 +1028,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					File fileToImport = new File(parentDir, moduleFile);
 
 					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-					String filePath = chrootDir + File.separator + moduleFile;
-					File fileFromModule = new File(filePath);
-					if (!fileFromModule.exists() && fileToImport.isDirectory()) {
-						fileFromModule.mkdirs();
+					File targetFile = new File(chrootDir , moduleFile);
+					if (!targetFile.exists() && fileToImport.isDirectory()) {
+						targetFile.mkdirs();
 					}
 
 					if (fileToImport.isDirectory()) {
-						copyFileFromFolder(filePath, fileToImport);
+						copyFileFromFolder(targetFile, fileToImport);
 					} else {
 						FileInputStream inputStream = new FileInputStream(fileToImport);
-						copyFile(filePath, inputStream);
+						copyFile(targetFile, inputStream);
 					}
 				}
 			}
@@ -1047,22 +1045,21 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 
-	public void copyFileFromFolder(String pathFile, File file) throws FileNotFoundException {
+	public void copyFileFromFolder(File targetFolder, File file) throws FileNotFoundException {
 		File[] files = file.listFiles();
 		if (files != null) {
 			for (File fileFromFolder : files) {
 				String name = fileFromFolder.getName();
 				String nameFileFromZip = name.split(".zip")[0];
-				String path = pathFile + "/" + nameFileFromZip;
+				File targetFile = new File( targetFolder , nameFileFromZip);
 				if (!fileFromFolder.isDirectory()) {
 					FileInputStream inputStream = new FileInputStream(fileFromFolder);
-					copyFile(path, inputStream);
+					copyFile(targetFile, inputStream);
 				} else {
-					File folder = new File(path);
-					if (!folder.exists()) {
-						folder.mkdir();
+					if (!targetFile.exists()) {
+						targetFile.mkdir();
 					}
-					copyFileFromFolder(path, fileFromFolder);
+					copyFileFromFolder(targetFile, fileFromFolder);
 				}
 			}
 		}
@@ -1073,11 +1070,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		super.importZip(fileName, inputStream, overwrite);
 	}
 
-	private void copyFile(String fileName, InputStream in) {
+	private void copyFile(File targetFile, InputStream in) {
 		try {
 
 			// write the inputStream to a FileOutputStream
-			OutputStream out = new FileOutputStream(new File(fileName));
+			OutputStream out = new FileOutputStream(targetFile);
 
 			int read = 0;
 			byte[] bytes = new byte[1024];
@@ -1155,9 +1152,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			return baos.toByteArray();
 
 		} finally {
-			IOUtils.closeQuietly(zos);
-			IOUtils.closeQuietly(cos);
-			IOUtils.closeQuietly(baos);
+			IOUtils.closeQuietly(zos, null);
+			IOUtils.closeQuietly(cos, null);
+			IOUtils.closeQuietly(baos, null);
 		}
 	}
 

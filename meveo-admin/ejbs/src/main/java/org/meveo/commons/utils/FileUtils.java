@@ -445,6 +445,16 @@ public final class FileUtils {
      * @throws Exception exception
      */
     public static void unzipFile(String folder, InputStream in) throws Exception {
+    	unzipFile(new File(folder), in);
+    }
+        /**
+         * unzip files into folder.
+         *
+         * @param folder folder name
+         * @param in input stream
+         * @throws Exception exception
+         */
+   public static void unzipFile(File targetFolder, InputStream in) throws Exception {
     	if(in == null) {
     		throw new IllegalArgumentException("Input stream can't be null");
     	}
@@ -458,7 +468,7 @@ public final class FileUtils {
             ZipEntry entry = null;
             File fileout = null;
             while ((entry = zis.getNextEntry()) != null) {
-                fileout = new File(folder + File.separator + entry.getName());
+                fileout = new File(targetFolder , entry.getName());
                 if (entry.isDirectory()) {
                     if (!fileout.exists()) {
                         fileout.mkdirs();
@@ -513,9 +523,9 @@ public final class FileUtils {
             return baos.toByteArray();
 
         } finally {
-            IOUtils.closeQuietly(zos);
-            IOUtils.closeQuietly(cos);
-            IOUtils.closeQuietly(baos);
+            IOUtils.closeQuietly(zos, null);
+            IOUtils.closeQuietly(cos, null);
+            IOUtils.closeQuietly(baos, null);
         }
     }
 

@@ -225,7 +225,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         String className = getClassName(script.getScript());
         if (className == null) {
-            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid"));
+            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid") + " " + script.getCode());
         }
         String fullClassName = getFullClassname(script.getScript());
         if (isOverwritesJavaClass(fullClassName)) {
@@ -234,8 +234,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         
 		compileScript(script, true);
 		if (script.getError() != null && script.isError()) {
-			log.error("Failed compiling script with error={}", script.getScriptErrors());
-			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
+			log.error("Failed compiling with error={}", script.getScriptErrors());
+			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
 		}
     }
 
@@ -621,7 +621,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 							return dependencyResult.getArtifactResults();
 							
 						} catch (DependencyResolutionException e2) {
-							log.error("Fail downloading dependencies {}", e1);
+							log.error("Fail downloading dependencies {}", e2);
 							return null; // TODO handle it
 						}
 
