@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.spi.Context;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
@@ -72,7 +71,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
-import org.jboss.weld.contexts.WeldCreationalContext;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -114,8 +112,6 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-
-import jdk.jfr.Name;
 
 /**
  * @param <T> Script sub-type
@@ -230,7 +226,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         String className = getClassName(script.getScript());
         if (className == null) {
-            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid"));
+            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid") + " " + script.getCode());
         }
         String fullClassName = getFullClassname(script.getScript());
         if (isOverwritesJavaClass(fullClassName)) {
@@ -239,8 +235,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         
 		compileScript(script, true);
 		if (script.getError() != null && script.isError()) {
-			log.error("Failed compiling script with error={}", script.getScriptErrors());
-			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
+			log.error("Failed compiling with error={}", script.getScriptErrors());
+			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
 		}
     }
 
@@ -634,7 +630,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 							return dependencyResult.getArtifactResults();
 							
 						} catch (DependencyResolutionException e2) {
-							log.error("Fail downloading dependencies {}", e1);
+							log.error("Fail downloading dependencies {}", e2);
 							return null; // TODO handle it
 						}
 
