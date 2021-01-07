@@ -1038,7 +1038,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					} else {
 						FileInputStream inputStream = new FileInputStream(fileToImport);
 						copyFile(targetFile, inputStream);
-						log.info("imported single module file " + targetFile.getPath());
 					}
 				}
 			}
@@ -1051,20 +1050,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (files != null) {
 			for (File fileFromFolder : files) {
 				String name = fileFromFolder.getName();
-				if (name != null && (name.contains("/") || name.contains("\\")))
-					log.info("file name with separator " + fileFromFolder.getPath() + " from file :" + file.getPath());
 				String nameFileFromZip = name.split(".zip")[0];
 				File targetFile = new File( targetFolder , nameFileFromZip);
 				if (!fileFromFolder.isDirectory()) {
 					FileInputStream inputStream = new FileInputStream(fileFromFolder);
 					copyFile(targetFile, inputStream);
-					log.info("imported single subfolder file " + targetFile.getPath() + " from name :" + name);
 				} else {
 					if (!targetFile.exists()) {
 						targetFile.mkdir();
 					}
 					copyFileFromFolder(targetFile, fileFromFolder);
-					log.info("imported subfolder " + targetFile.getPath() + " from name :" + name);
 				}
 			}
 		}
