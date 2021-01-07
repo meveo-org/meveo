@@ -466,19 +466,18 @@ public final class FileUtils {
     		) {
 
             ZipEntry entry = null;
-            File fileout = null;
             while ((entry = zis.getNextEntry()) != null) {
-                fileout = new File(targetFolder , entry.getName());
-				if (fileout.getName() != null && (fileout.getName().contains("/") || fileout.getName().contains("\\")))
-					logger.info("unzip to filename with separator in name " + fileout.getName() + " for entry " + entry.getName());
+               	File fileout = new File(targetFolder , entry.getName());
+                if (entry.getName() != null && (entry.getName().contains("\\"))) {
+					logger.info("fix zip entry name with separator " + entry.getName() );
+					fileout = new File(targetFolder , entry.getName().replace('\\', '/'));
+                }
                 if (entry.isDirectory()) {
                     if (!fileout.exists()) {
                         fileout.mkdirs();
                     }
                     continue;
                 }
-				if (entry.getName() != null && (entry.getName().contains("/") || entry.getName().contains("\\")))
-					logger.info("zip entry name with separator " + entry.getName() );
 
                 if (!fileout.exists()) {
                     (new File(fileout.getParent())).mkdirs();

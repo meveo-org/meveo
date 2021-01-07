@@ -379,14 +379,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			log.error("Error import zip file {}", fileName, e);
 		}
 
-		log.error("temoprary skip deletion of " + fileImport.toFile());
-//		if (fileImport != null) {
-//			try {
-//				org.apache.commons.io.FileUtils.deleteDirectory(fileImport.toFile());
-//			} catch (IOException e) {
-//				log.error("Can't delete temp folder {}", fileImport, e);
-//			}
-//		}
+		if (fileImport != null) {
+			try {
+				org.apache.commons.io.FileUtils.deleteDirectory(fileImport.toFile());
+			} catch (IOException e) {
+				log.error("Can't delete temp folder {}", fileImport, e);
+			}
+		}
 	}
 
 	private void buildFileList(File file, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
