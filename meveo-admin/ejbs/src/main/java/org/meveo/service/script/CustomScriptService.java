@@ -102,6 +102,7 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.maven.MavenClassLoader;
 import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -571,21 +572,30 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			ScriptInstance scriptInstance = (ScriptInstance) script;
 
 			if (scriptInstance.getMavenDependencies() != null && scriptInstance.getMavenDependencies().size() > 0) {
-				Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
-
-				synchronized (CLASSPATH_REFERENCE) {
-					mavenDependencies.stream().forEach(location -> {
-						if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-							addLibrary(location);
-							CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-						}
-					});
-				}
+				addMavenLibrariesToClassPath(scriptInstance.getMavenDependenciesNullSafe());
 			}
 		}
     }
 
-	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
+	/**
+	 * Add the given maven libraries to class path
+	 * 
+	 * @param mavenDependenciesList Denpendencies definitions
+	 */
+	public void addMavenLibrariesToClassPath(Collection<MavenDependency> mavenDependenciesList) {
+		Set<String> mavenDependencies = getMavenDependencies(mavenDependenciesList);
+
+		synchronized (CLASSPATH_REFERENCE) {
+			mavenDependencies.stream().forEach(location -> {
+				if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+					addLibrary(location);
+					CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+				}
+			});
+		}
+	}
+
+	private Set<String> getMavenDependencies(Collection<MavenDependency> mavenDependencies) {
 
 		Set<String> result = new HashSet<>();
 		List<String> repos = mavenConfigurationService.getMavenRepositories();
@@ -982,35 +992,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param location location of the jar file
      */
     public void addLibrary(String location) {
-        File file = new File(location);
-        
-        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        
-        if(systemClassLoader instanceof URLClassLoader) {
-			URLClassLoader classLoader = (URLClassLoader) systemClassLoader;
-	        Method method;
-	
-	        try {
-	            URL url = file.toURI().toURL();
-	            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-	            method.setAccessible(true);
-	            method.invoke(classLoader, url);
-	
-	        } catch (Exception e) {
-	            throw new RuntimeException(e);
-	        }
-	        
-        } else {
-	        try {
-	        	Method method = systemClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
-	            method.setAccessible(true);
-	            method.invoke(systemClassLoader, file.getAbsolutePath());
-	
-	        } catch (Exception e) {
-	        	log.warn("Libray {} not added to classpath", location);
-	        	log.warn("Can't access system class loader class, please restart JVM with the following options : --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED");
-	        }
-        }
+    	MavenClassLoader.addLibrary(location);
     }
 
     /**
