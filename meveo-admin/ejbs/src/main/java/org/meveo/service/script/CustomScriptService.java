@@ -970,7 +970,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param location location of the jar file
      */
     public void addLibrary(String location) {
-    	MavenClassLoader.addLibrary(location);
+    	MavenClassLoader.getInstance().addLibrary(location);
     }
 
     /**

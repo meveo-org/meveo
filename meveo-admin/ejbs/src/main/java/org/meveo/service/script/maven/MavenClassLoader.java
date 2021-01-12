@@ -8,46 +8,73 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import org.meveo.service.script.CharSequenceCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Class loader used to load maven libraries
  * 
  * @author clement.bareth
- * @since 
- * @version
+ * @since 6.14.0
+ * @version 6.14.0
  */
-public class MavenClassLoader {
+public class MavenClassLoader extends URLClassLoader {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MavenClassLoader.class);
+	private static final MavenClassLoader INSTANCE = new MavenClassLoader();
 	
-	private static final URLClassLoader urlClassLoader;
-	private static final Method addUrlMethod;
-	
-	static {
-		urlClassLoader = new URLClassLoader(new URL[] {}, MavenClassLoader.class.getClassLoader());
-		try {
-			addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-			addUrlMethod.setAccessible(true);
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException(e);
-		}
+	/**
+	 * @return an instance of the MavenClassLoader
+	 */
+	public static MavenClassLoader getInstance() {
+		return INSTANCE;
 	}
 	
-	public static Class<?> loadClass(String className) throws ClassNotFoundException {
-		return urlClassLoader.loadClass(className);
+	private MavenClassLoader() {
+		super(new URL[] {}, MavenClassLoader.class.getClassLoader());
+	}
+	
+	/**
+	 * Load a maven library class. <br>
+	 * Note : always use this method rather than {@link #loadClass(String)}, which should only be used internally
+	 
+	 * @param name Name of the class
+	 * @return the class
+	 * @throws ClassNotFoundException if the class can't be found
+	 */
+	public Class<?> loadExternalClass(String name) throws ClassNotFoundException {
+		return super.loadClass(name);
 	}
 
-	public static void addLibrary(String location) {
+	@Override
+	@Deprecated
+	public Class<?> loadClass(String name) throws ClassNotFoundException {
+		try {
+			return super.loadClass(name);
+		} catch (Exception e) {
+			// In case the library references a script or model class which is managed by Meveo
+			return CharSequenceCompiler.getCompiledClass(name);
+		}
+	}
+
+	/**
+	 * Add the jar at the given location to the class loader
+	 * 
+	 * @param location location of the library
+	 */
+	public void addLibrary(String location) {
         File file = new File(location);
 	
         try {
             URL url = file.toURI().toURL();
-            addUrlMethod.invoke(urlClassLoader, url);
+            super.addURL(url);
         } catch (Exception e) {
         	LOG.warn("Libray {} not added to classpath", location);
             throw new RuntimeException(e);
         }
         
 	}
+	
+	
 }
