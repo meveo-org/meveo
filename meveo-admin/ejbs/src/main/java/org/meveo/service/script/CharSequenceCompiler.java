@@ -29,12 +29,12 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.script.maven.MavenClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +100,8 @@ public class CharSequenceCompiler<T> {
 	   
       try {
 	      URL[] urls = { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() };
-		  urlClassLoader = new URLClassLoader(urls, CharSequenceCompiler.class.getClassLoader());
+	      ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
+		  urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
       } catch (MalformedURLException e) {
     	  throw new RuntimeException(e);
       }
@@ -246,7 +247,7 @@ public class CharSequenceCompiler<T> {
 
 		   if(isTestCompile) {
 			   // Use a temporary classLoader if compilation is test
-			   try (var tmpClassLoader = new URLClassLoader(urls, this.getClassLoader())) {
+			   try (var tmpClassLoader = new URLClassLoader(urls, classLoader)) {
 				   return (Class<T>) tmpClassLoader.loadClass(qualifiedClassName);
 			   }
 		   } else {
@@ -605,6 +606,14 @@ final class ClassLoaderImpl extends ClassLoader {
 			Class<?> c = Class.forName(qualifiedClassName);
 			return c;
 		} catch (ClassNotFoundException nf) {
+
+		}
+		
+		// Load classes defined in maven dependencies
+		try {
+			Class<?> c = MavenClassLoader.loadClass(qualifiedClassName);
+			return c;
+		} catch (ClassNotFoundException ignored) {
 
 		}
 
