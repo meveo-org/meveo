@@ -608,14 +608,7 @@ final class ClassLoaderImpl extends ClassLoader {
 		
 		// Load classes defined in maven dependencies
 		try {
-			Class<?> c = MavenClassLoader.loadClass(qualifiedClassName);
-			return c;
-		} catch (ClassNotFoundException ignored) {
-
-		}
-
-		try {
-			Class<?> c = ClassLoader.getSystemClassLoader().loadClass(qualifiedClassName);
+			Class<?> c = MavenClassLoader.getInstance().loadExternalClass(qualifiedClassName);
 			return c;
 		} catch (ClassNotFoundException ignored) {
 
