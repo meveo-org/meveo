@@ -222,14 +222,11 @@ public class CharSequenceCompiler<T> {
 	   // Set output directory
 	   options.add("-d");
 	   options.add(outputDir.getAbsolutePath());
-	   
-	   File[] javaFiles = new File[] { new File("C:\\wildfly-18.0.1.Final\\bin\\meveodata\\default\\git\\Meveo\\src\\main\\java\\org\\meveo\\script\\DefaultScriptCDI2.java") };
-	   StandardJavaFileManager sjfm = compiler.getStandardFileManager(null, null, null); 
-	   
+	      
 	   // Get a CompliationTask from the compiler and compile the sources
 	   final CompilationTask task = compiler.getTask(
 			   null, 
-			   null, 
+			   javaFileManager,
 			   diagnosticsList,
 			   options, 
 			   null, 
@@ -409,21 +406,6 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
    private URI uri(Location location, String packageName, String relativeName) {
       return CharSequenceCompiler.toURI(location.getName() + '/' + packageName + '/'
             + relativeName);
-   }
-
-   /**
-    * Create a JavaFileImpl for an output class file and store it in the
-    * classloader.
-    * 
-    * @see ForwardingJavaFileManager#getJavaFileForOutput(Location,
-    *      String, Kind,
-    *      FileObject)
-    */
-   @Override
-   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName, Kind kind, FileObject outputFile) throws IOException {
-      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
-      classLoader.add(qualifiedName, file);
-      return file;
    }
 
    @Override
