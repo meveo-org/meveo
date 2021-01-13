@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -584,21 +586,33 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	 * @param mavenDependenciesList Denpendencies definitions
 	 */
 	public void addMavenLibrariesToClassPath(Collection<MavenDependency> mavenDependenciesList) {
-		Set<String> mavenDependencies = getMavenDependencies(mavenDependenciesList);
+		MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
 
+		var dependenciesToResolve = mavenDependenciesList.stream()
+				.filter(Predicate.not(mavenClassLoader::isLibraryLoaded))
+				.collect(Collectors.toList());
+
+		Map<MavenDependency, Set<String>> resolvedDependencies = getMavenDependencies(dependenciesToResolve);
+				
 		synchronized (CLASSPATH_REFERENCE) {
-			mavenDependencies.stream().forEach(location -> {
-				if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-					addLibrary(location);
-					CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-				}
+			resolvedDependencies.forEach((lib, locations) -> {
+				locations.forEach(location -> {
+					if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+					}
+				});
+				
+				mavenClassLoader.addLibrary(lib, locations);
 			});
 		}
 	}
 
-	private Set<String> getMavenDependencies(Collection<MavenDependency> mavenDependencies) {
-
-		Set<String> result = new HashSet<>();
+	private Map<MavenDependency, Set<String>> getMavenDependencies(Collection<MavenDependency> mavenDependencies) {
+		if(mavenDependencies == null || mavenDependencies.isEmpty()) {
+			return Map.of();
+		}
+		
+		Map<MavenDependency, Set<String>> result = new HashMap<>();
 		List<String> repos = mavenConfigurationService.getMavenRepositories();
 		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
 
@@ -612,7 +626,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			log.debug("found {} repositories", remoteRepositories.size());
 
 			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
-				Set<ArtifactResult> artifacts = mavenDependencies.stream().map(e -> {
+				for(var e : mavenDependencies) {
+					log.info("Resolving artifacts for {}", e);
+					List<ArtifactResult> artifacts;
+					
 					DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
 					DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
 					Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
@@ -625,7 +642,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestLocal, classpathFlter);
 						DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
 						
-						return dependencyResult.getArtifactResults();
+						artifacts = dependencyResult.getArtifactResults();
 
 					} catch (DependencyResolutionException e1) {
 						
@@ -638,7 +655,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 							
 							DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
 							DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-							return dependencyResult.getArtifactResults();
+							artifacts = dependencyResult.getArtifactResults();
 							
 						} catch (DependencyResolutionException e2) {
 							log.error("Fail downloading dependencies {}", e2);
@@ -646,15 +663,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 						}
 
 					}
-				}).filter(Objects::nonNull)
-				.flatMap(Collection::stream)
-				.collect(Collectors.toSet());
+					
+					log.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
+					
+					Set<String> artifactLocations = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
+						return artifact.getArtifact().getFile().getPath();
+					}).collect(Collectors.toSet());
+					
+					result.put(e, artifactLocations);
+				}
 
-				log.debug("found {} artifacts", artifacts.size());
-
-				result = artifacts.stream().filter(Objects::nonNull).map(e -> {
-					return e.getArtifact().getFile().getPath();
-				}).collect(Collectors.toSet());
 			}
 		}
 
@@ -985,15 +1003,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
         return null;
-    }
-
-    /**
-     * Add a jar file to application class path
-     * 
-     * @param location location of the jar file
-     */
-    public void addLibrary(String location) {
-    	MavenClassLoader.getInstance().addLibrary(location);
     }
 
     /**
