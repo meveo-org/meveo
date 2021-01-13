@@ -331,6 +331,14 @@ This is another way to install the EGIT plugin in case for some reason that you 
 * In the m2e Catalog panel, enter "m2e-egit" in the Find field and hit enter.
 * Checked the m2e-egit feature and click ok.
 
+#### Init postgres database
+
+* Select file pom.xml in project meveo-model .
+* Select run as maven, and run with the following options :
+    * GOALS : liquibase dropAll liquibase:update
+    * Profiles : rebuild
+    * Attributes :  "db.url=jdbc:postgresql://localhost:5432/meveo"   "db.username=meveo" "db.password=meveo"
+    
 #### Deploying Meveo to Wildfly
 
 * Open the server tab once again.
