@@ -234,8 +234,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (isOverwritesJavaClass(fullClassName)) {
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
-        
-		compileScript(script, true, true);
+        if(!moduleInstallCtx.isActive()) {
+        	compileScript(script, true, true);
+        }
 		if (script.getError() != null && script.isError()) {
 			log.error("Failed compiling with error={}", script.getScriptErrors());
 			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
