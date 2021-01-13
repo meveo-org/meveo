@@ -4,10 +4,12 @@
 package org.meveo.service.script.maven;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.meveo.model.scripts.MavenDependency;
 import org.meveo.service.script.CharSequenceCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,8 @@ public class MavenClassLoader extends URLClassLoader {
 	public static MavenClassLoader getInstance() {
 		return INSTANCE;
 	}
+	
+	private Set<MavenDependency> loadedLibraries = new HashSet<>();
 	
 	private MavenClassLoader() {
 		super(new URL[] {}, MavenClassLoader.class.getClassLoader());
@@ -57,24 +61,33 @@ public class MavenClassLoader extends URLClassLoader {
 			return CharSequenceCompiler.getCompiledClass(name);
 		}
 	}
+	
+	/**
+	 * @param mavenDependency the library to check
+	 * @return whether the given library has been loaded
+	 */
+	public synchronized boolean isLibraryLoaded(MavenDependency mavenDependency) {
+		return loadedLibraries.contains(mavenDependency);
+	}
 
 	/**
 	 * Add the jar at the given location to the class loader
 	 * 
-	 * @param location location of the library
+	 * @param mavenDependency The maven dependency definition
+	 * @param locations locations of the artifacts
 	 */
-	public void addLibrary(String location) {
-        File file = new File(location);
-	
-        try {
-            URL url = file.toURI().toURL();
-            super.addURL(url);
-        } catch (Exception e) {
-        	LOG.warn("Libray {} not added to classpath", location);
-            throw new RuntimeException(e);
-        }
-        
+	public synchronized void addLibrary(MavenDependency mavenDependency, Set<String> locations) {
+		locations.forEach(location -> {
+	        try {
+		        File file = new File(location);
+	            URL url = file.toURI().toURL();
+	            super.addURL(url);
+	        } catch (Exception e) {
+	        	LOG.warn("Libray {} not added to classpath", location);
+	            throw new RuntimeException(e);
+	        }
+		});
+		loadedLibraries.add(mavenDependency);		
 	}
-	
 	
 }
