@@ -226,7 +226,7 @@ public class CharSequenceCompiler<T> {
 	   // Get a CompliationTask from the compiler and compile the sources
 	   final CompilationTask task = compiler.getTask(
 			   null, 
-			   null, //XXX: Use a file manager to improve perfs ?
+			   javaFileManager, //XXX: Use a file manager to improve perfs ?
 			   diagnosticsList,
 			   options, 
 			   null, 
@@ -406,21 +406,6 @@ final class FileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
    private URI uri(Location location, String packageName, String relativeName) {
       return CharSequenceCompiler.toURI(location.getName() + '/' + packageName + '/'
             + relativeName);
-   }
-
-   /**
-    * Create a JavaFileImpl for an output class file and store it in the
-    * classloader.
-    * 
-    * @see ForwardingJavaFileManager#getJavaFileForOutput(Location,
-    *      String, Kind,
-    *      FileObject)
-    */
-   @Override
-   public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName, Kind kind, FileObject outputFile) throws IOException {
-      JavaFileObject file = new JavaFileObjectImpl(qualifiedName, kind);
-      classLoader.add(qualifiedName, file);
-      return file;
    }
 
    @Override
