@@ -282,13 +282,6 @@ public class EndpointServlet extends HttpServlet {
             return;
         }
 
-        // Endpoint is called with wrong method
-        if (endpoint.getMethod() != endpointExecution.getMethod()) {
-            endpointExecution.getResp().setStatus(405);
-            endpointExecution.getResp().getWriter().print("Endpoint is not available for " + endpointExecution.getMethod() + " requests");
-            return;
-        }
-
         // If endpoint is synchronous, execute the script straight and return the response
         if (endpoint.isSynchronous()) {
             final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);

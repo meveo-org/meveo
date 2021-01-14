@@ -42,7 +42,7 @@ public class EndpointExecutionFactory {
         
         // Retrieve endpoint
 
-        final Endpoint endpoint = endpointCacheContainer.getEndpoint(pathInfo[1]);
+        final Endpoint endpoint = endpointCacheContainer.getEndpointForPath(req.getPathInfo(),req.getMethod());
 
         return new EndpointExecutionBuilder()
                 .setRequest(new EndpointRequest(req, endpoint))

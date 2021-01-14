@@ -19,6 +19,8 @@ package org.meveo.model.technicalservice.endpoint;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -74,6 +76,12 @@ public class Endpoint extends BusinessEntity {
 	private static final long serialVersionUID = 6561905332917884613L;
 	
 	public static final String ENDPOINT_INTERFACE_JS = "EndpointInterface";
+
+	public static final Pattern basePathPattern = Pattern.compile("[a-zA-Z0-9_\\-.]+");
+
+	public static final Pattern pathPattern = Pattern.compile("[a-zA-Z0-9_\\-./\\{\\}]+");
+
+	public static final Pattern pathParamPattern = Pattern.compile("\\{[a-zA-Z0-9_\\-./]+\\}");
 	
 	/** Whether endpoint is accessible without logging */
 	@Column(name = "secured", nullable = false)
@@ -145,6 +153,29 @@ public class Endpoint extends BusinessEntity {
 	 */
 	@Column(name = "content_type")
 	private String contentType;
+
+
+	@Column(name = "base_path")
+	private String basePath;
+
+	/**
+	 * The path in swagger form like /organizations/{orgId}/members/{memberId}
+	 * to be added to the base path to form the relative URL of the endpoint
+	 */
+	@Column(name = "path")
+	private String path;
+
+	@Transient
+	Pattern pathRegex;
+
+	public void setCode(String code){
+		Matcher matcher = basePathPattern.matcher(code);
+		if(matcher.matches()) {
+			this.code = code;
+		} else {
+			throw new RuntimeException("invalid code");
+		}
+	}
 
 	public String getContentType() {
 		return contentType;
@@ -240,12 +271,87 @@ public class Endpoint extends BusinessEntity {
 		this.isSecured = isSecured;
 	}
 
+	public String getBasePath() {
+		if(basePath==null){
+			basePath=code;
+			pathRegex=null;
+		}
+		return basePath;
+	}
+
+	public void setBasePath(String basePath) {
+		if(basePath == null){
+			this.basePath=code;
+			pathRegex=null;
+		} else {
+			/* check that the basepath is valid */
+			Matcher matcher = basePathPattern.matcher(basePath);
+			if(matcher.matches()) {
+				this.basePath = basePath;
+				pathRegex=null;
+			} else {
+				throw new RuntimeException("invalid basePath");
+			}
+		}
+	}
+
+	public String getPath() {
+		if(path==null){
+			String sep="";
+			final StringBuilder endpointPath = new StringBuilder("/");
+			if(pathParameters!=null) {
+				for(EndpointPathParameter endpointPathParameter:pathParameters){
+					endpointPath.append(sep).append("{").append(endpointPathParameter).append("}");
+					sep="/";
+				}
+			}
+			path = endpointPath.toString();
+			pathRegex=null;
+		}
+		return path;
+	}
+
+	public void setPath(String path) {
+		/* check that the path is valid */
+		if(path !=null) {
+			Matcher matcher=pathParamPattern.matcher(path);
+			int i=0;
+			while (matcher.find()) {
+				String param = matcher.group();
+				String paramName=param.substring(1,param.length()-1);
+				if(pathParameters.size()>i){
+					String actualParam=pathParameters.get(i).toString();
+					if(!paramName.equals(actualParam)){
+						throw new RuntimeException((i+1)+"th path param is expected to be " + pathParameters.get(i)+" while actual value is "+paramName);
+					}
+					i++;
+				} else {
+					throw new RuntimeException("unexpected param "+paramName);
+				}
+			}
+			if(pathParameters.size()>i){
+				throw new RuntimeException("missing param "+pathParameters.get(i));
+			}
+		}
+		this.path = path;
+		pathRegex=null;
+		getPath();
+	}
+
 	@Transient
+	/*
+	* returns the endpoint url relative to the meveo base url
+	 */
 	public String getEndpointUrl() {
-		final StringBuilder endpointUrl = new StringBuilder("/rest/" + code);
-		pathParameters
-				.forEach(endpointPathParameter -> endpointUrl.append("/{").append(endpointPathParameter).append("}"));
-		return endpointUrl.toString();
+		return "/rest/"+getBasePath()+getPath();
+	}
+
+	@Transient
+	public Pattern getPathRegex(){
+		if(pathRegex==null){
+			pathRegex=Pattern.compile(getBasePath()+getPath().replaceAll("\\{[a-zA-Z0-9_]+\\}","[^/]+"));
+		}
+		return pathRegex;
 	}
 
 	public void addPathParameter(EndpointPathParameter endpointPathParameter) {
