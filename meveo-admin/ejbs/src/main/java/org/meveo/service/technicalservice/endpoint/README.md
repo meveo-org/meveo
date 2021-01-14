@@ -18,9 +18,11 @@ The endpoint API is /api/rest/endpoint. It is implemented in the class org.meveo
 
 See class org.meveo.api.rest.technicalservice.EndpointServlet.
 
-The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with "/rest/", followed by the name of the endpoint, and the path parameter in the order defined in the configuration. An endpoint is accessible via the URL <meveoURL>/rest/<endpointCode>.
+The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with "/rest/", followed by the basePath of the endpoint (which is its code if not overriden), and the path parameter (wichi is just the ordered list of path parameters if not overridem).
+An endpoint is accessible via the URL <meveoURL>/rest/<endpoint.basePath><endpoint.path>.
 
-If the endpoint was defined as GET, the parameters must be passed as query parameters, and if itwas defined as POST the parameters must be passed as JSON in the body of the request.
+If the endpoint was defined as GET, the parameters must be passed as query parameters, 
+and if it was defined as POST or PUT the parameters must be passed as JSON in the body of the request.
 
 There are several headers that was defined to modify the default behavior of the endpoint: 
 
@@ -36,7 +38,7 @@ For the following examples, let’s consider that we have three setters defined,
 
 ### GET Synchronous endpoint
 
-We should first call the creation rest service with JSON: 
+We should first call the creation rest service `POST on /endpoint` with JSON: 
 
 ```
 {
@@ -73,6 +75,8 @@ We should first call the creation rest service with JSON:
 ```
 
 So, the endpoint generated will be accessible with GET method under /rest/get-synchronous-endpoint/Webdrone?creationDate=2011&headOffice=Dijon and the result will be returned once the script has been executed.
+
+Both basePath and path coulde
 
 ### POST Asynchronous endpoint
 
