@@ -64,10 +64,10 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  * Servlet that allows to execute technical services through configured endpoints.<br>
- * The first part of Uri after "/rest/" corresponds either to the code of the endpoint, or an id of a previous asynchronous execution.<br>
+ * The first part of Uri after "/rest/" corresponds either to the first part of the path of the endpoint, or an id of a previous asynchronous execution.<br>
  * The last part or the Uri corresponds to the path parameters of the endpoint.<br>
  * If the endpoint is configured as GET, it should be called via GET resquests and parameters should be in query.<br>
- * If the endpoint is configured as POST, it should be called via POST requests and parameters should be in body as a JSON map.<br>
+ * If the endpoint is configured as POST/PUT, it should be called via POST/PUT requests and parameters should be in body as a JSON map.<br>
  * Header "Keep-data" indicates we don't want to remove the execution result from cache.<br>
  * Header "Wait-For-Finish" indicates that we want to wait until one exuction finishes and get results after. (Otherwise returns status 102).<br>
  * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
@@ -109,6 +109,16 @@ public class EndpointServlet extends HttpServlet {
     @Override
 	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doPutPost(req, resp,EndpointHttpMethod.POST);
+    }
+
+    @Override
+    @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doPutPost(req, resp,EndpointHttpMethod.PUT);
+    }
+
+    protected void doPutPost(HttpServletRequest req, HttpServletResponse resp,EndpointHttpMethod method) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
 
@@ -160,6 +170,19 @@ public class EndpointServlet extends HttpServlet {
 
         doRequest(endpointExecution, false);
     }
+
+    @Override
+    @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                .setParameters(new HashMap<>(req.getParameterMap()))
+                .setMethod(EndpointHttpMethod.HEAD)
+                .createEndpointExecution();
+
+        doRequest(endpointExecution, false);
+    }
+
 
     private void doRequest(EndpointExecution endpointExecution, boolean cancel) throws IOException {
 
