@@ -57,6 +57,7 @@ public class EndpointCacheContainer {
 		List<Endpoint> allEndpoints=endpointService.list();
 		for(Endpoint endpoint:allEndpoints){
 			endpoint.getService();
+			endpoint.getService().getCode();
 			endpoint.getPathParametersNullSafe().forEach(e -> {});
 			endpoint.getParametersMappingNullSafe().forEach(e -> {});
 			endpointLoadingCache.put(endpoint.getCode(),endpoint);

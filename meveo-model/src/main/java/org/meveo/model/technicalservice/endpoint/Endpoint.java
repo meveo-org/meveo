@@ -23,9 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -349,7 +347,11 @@ public class Endpoint extends BusinessEntity {
 	@Transient
 	public Pattern getPathRegex(){
 		if(pathRegex==null){
-			pathRegex=Pattern.compile(getBasePath()+getPath().replaceAll("\\{[a-zA-Z0-9_]+\\}","[^/]+"));
+			String pattern = "/"+getBasePath()+getPath().replaceAll("\\{","(?<").replaceAll("\\}", ">[^/]+)");
+			if(pattern.endsWith("/")){
+				pattern+="?";
+			}
+			pathRegex=Pattern.compile(pattern);
 		}
 		return pathRegex;
 	}

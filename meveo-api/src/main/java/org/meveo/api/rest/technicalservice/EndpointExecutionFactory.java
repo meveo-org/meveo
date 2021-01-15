@@ -35,8 +35,7 @@ public class EndpointExecutionFactory {
 
         resp.setCharacterEncoding("UTF-8");
 
-        assert(req.getPathInfo().startsWith("rest/"));
-        String pathInfo = req.getPathInfo().substring(5);
+        String pathInfo = req.getPathInfo();
         if (pathInfo.length() == 0) {
             throw new ServletException("Incomplete URL");
         }

@@ -16,12 +16,14 @@
 package org.meveo.api.technicalservice.endpoint;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -222,10 +224,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
 
 
-		List<String> pathParameters = new ArrayList<>();
 		Matcher matcher=endpoint.getPathRegex().matcher(execution.getPathInfo());
-		while(matcher.find()){
-			pathParameters.add(matcher.group());
+		matcher.find();
+		for(EndpointPathParameter pathParameter: endpoint.getPathParametersNullSafe()){
+			try {
+				String val = matcher.group(pathParameter.toString());
+				parameterMap.put(pathParameter.toString(),val);
+			} catch(Exception e){
+				throw new IllegalArgumentException("cannot find param "+pathParameter+" in "+execution.getPathInfo());
+			}
 		}
 
 		// Set budget variables
@@ -233,33 +240,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
 		parameterMap.put(EndpointVariables.MAX_DELAY, execution.getDelayMax());
 		parameterMap.put(EndpointVariables.DELAY_UNIT, execution.getDelayUnit());
-
-		// Assign path parameters
-		List<String> missingPathParameters = new ArrayList<>();
-
-		if (endpoint.isCheckPathParams() && pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
-			throw new IllegalArgumentException("Path parameters does not match with endpoint.");
-		}
-
-		if (pathParameters.isEmpty() && !endpoint.getPathParametersNullSafe().isEmpty()) {
-			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream()
-					.map(EndpointPathParameter::toString).collect(Collectors.toList()));
-
-		} else {
-			for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
-				if (pathParameters.get(pathParameter.getPosition()) != null) {
-					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
-
-				} else {
-					missingPathParameters.add(pathParameter.toString());
-				}
-			}
-		}
-
-		if (!missingPathParameters.isEmpty()) {
-			throw new IllegalArgumentException("The following path parameters must be specified ["
-					+ String.join(",", missingPathParameters) + "]");
-		}
 
 		// Assign query or post parameters
 		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
@@ -489,7 +469,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			}
 
 		} else {
-			endpoint.getPathParametersNullSafe().clear();
+			endpoint.getParametersMappingNullSafe().clear();
 		}
 
 		endpointService.update(endpoint);
@@ -525,6 +505,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
 		endpointDto.setContentType(endpoint.getContentType());
+		endpointDto.setBasePath(endpoint.getBasePath());
+		endpointDto.setPath(endpoint.getPath());
 		return endpointDto;
 	}
 
@@ -590,6 +572,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpoint.setSerializeResult(endpointDto.isSerializeResult());
 
 		endpoint.setContentType(endpointDto.getContentType());
+
+		endpoint.setBasePath(endpointDto.getBasePath());
+
+		endpoint.setPath(endpointDto.getPath());
+
 
 		return endpoint;
 	}
@@ -755,7 +742,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
 		boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
 
-		Object returnValue = result;
+		Object returnValue = "";
 		if (returnedVarNameDefined) {
 			Object extractedValue = result.get(endpoint.getReturnedVariableName());
 			if (extractedValue != null) {
@@ -765,17 +752,17 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						endpoint.getReturnedVariableName());
 			}
 		} else {
-			return "";
-		}
+			Map<String,Object> serializableResult = new HashMap<String,Object>();
+			for(Entry<String,Object> entry:result.entrySet()){
+				if(entry.getValue() instanceof Serializable){
+					serializableResult.put(entry.getKey(), entry.getValue());
+				}
+			}
+			returnValue=serializableResult;
+		} 
 		
 		if (!shouldSerialize) {
 			return returnValue.toString();
-		}
-
-		if (returnValue instanceof Map) {
-			((Map<?, ?>) returnValue).remove("response");
-			((Map<?, ?>) returnValue).remove("request");
-			((Map<?, ?>) returnValue).remove("userTx");
 		}
 
 		final String serializedResult = JacksonUtil.toStringPrettyPrinted(returnValue);

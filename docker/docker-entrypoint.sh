@@ -179,6 +179,8 @@ fi
 
 WILDFLY_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
+    #allow to mount /opt/jboss/wildflyForHost and use it to create server adapter in IDE
+    #cp -r ${JBOSS_HOME}/{jboss-modules.jar,bin,cli,standalone,domain,modules}  /opt/jboss/wildflyForHost
     WILDFLY_OPTS="${WILDFLY_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi
 

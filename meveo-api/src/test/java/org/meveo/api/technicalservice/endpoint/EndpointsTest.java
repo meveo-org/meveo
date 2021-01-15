@@ -125,7 +125,7 @@ public class EndpointsTest {
         endpoint.setService(function);
 
         final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
-                .setPathInfo("rest/"+endpoint.getCode())
+                .setPathInfo("/"+endpoint.getCode())
                 .setDelayUnit(TimeUnit.SECONDS)
                 .setDelayValue(2L)
                 .createEndpointExecution();
@@ -162,7 +162,7 @@ public class EndpointsTest {
                 .setParameters(parameters)
                 .setBugetMax(32.0)
                 .setBudgetUnit("EUR")
-                .setPathInfo("rest/"+endpoint.getCode()+"/France")
+                .setPathInfo("/"+endpoint.getCode()+"/France")
                 .createEndpointExecution();
     }
 
