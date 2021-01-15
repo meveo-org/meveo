@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -189,7 +190,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
 		// Start endpoint script with timeout if one was set
-		if (execution.getDelayValue() != null) {
+		if (execution.getDelayMax() != null) {
 			try {
 				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
 					try {
@@ -198,7 +199,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						throw new RuntimeException(e);
 					}
 				});
-				return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+				return resultFuture.get(execution.getDelayMax(), execution.getDelayUnit());
 			} catch (TimeoutException e) {
 				return executionEngine.cancel();
 			}
@@ -219,12 +220,19 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 */
 	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
-		List<String> pathParameters = new ArrayList<>(
-				Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
+
+
+		List<String> pathParameters = new ArrayList<>();
+		Matcher matcher=endpoint.getPathRegex().matcher(execution.getPathInfo());
+		while(matcher.find()){
+			pathParameters.add(matcher.group());
+		}
 
 		// Set budget variables
-		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
+		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBudgetMax());
 		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
+		parameterMap.put(EndpointVariables.MAX_DELAY, execution.getDelayMax());
+		parameterMap.put(EndpointVariables.DELAY_UNIT, execution.getDelayUnit());
 
 		// Assign path parameters
 		List<String> missingPathParameters = new ArrayList<>();
@@ -626,7 +634,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	/**
 	 * To determine if the endpoint parameter is multivalued, check the corresponding input's type
-	 * @param e the parameter
+	 * @param parameter the parameter
 	 * @return whether the parameter is multivaluedn according to its type
 	 */
 	private static boolean isParameterMultivalued(Endpoint endpoint, TSParameterMapping parameter) {

@@ -108,7 +108,7 @@ public class EndpointsTest {
 
     /**
      * The goal is to test the timeout of an endpoint. A counter is incremented every second.
-     * We fix the tiemout to 2 seconds, so the counter should be 2
+     * We fix the timeout to 2 seconds, so the counter should be 2
      */
     @Test
     public void testTimeout() throws BusinessException, ExecutionException, InterruptedException {
@@ -125,7 +125,7 @@ public class EndpointsTest {
         endpoint.setService(function);
 
         final EndpointExecution endpointExecution = new EndpointExecutionBuilder()
-                .setPathInfo(new String[]{"rest", endpoint.getCode()})
+                .setPathInfo("rest/"+endpoint.getCode())
                 .setDelayUnit(TimeUnit.SECONDS)
                 .setDelayValue(2L)
                 .createEndpointExecution();
@@ -162,7 +162,7 @@ public class EndpointsTest {
                 .setParameters(parameters)
                 .setBugetMax(32.0)
                 .setBudgetUnit("EUR")
-                .setPathInfo(new String[]{"rest", endpoint.getCode(), "France"})
+                .setPathInfo("rest/"+endpoint.getCode()+"/France")
                 .createEndpointExecution();
     }
 

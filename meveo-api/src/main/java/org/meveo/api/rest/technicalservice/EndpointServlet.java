@@ -225,7 +225,8 @@ public class EndpointServlet extends HttpServlet {
         }
 
         try {
-            PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(endpointExecution.getFirstUriPart());
+            String uuidStr = endpointExecution.getPathInfo().split("/")[0];
+            PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(uuidStr);
             final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE) {
                 if (cancel) {
@@ -234,8 +235,8 @@ public class EndpointServlet extends HttpServlet {
 
                 // Wait for max delay if defined
                 long start = System.currentTimeMillis();
-                if (endpointExecution.getDelayValue() != null) {
-                    while (System.currentTimeMillis() - start < endpointExecution.getDelayUnit().toMillis(endpointExecution.getDelayValue())) {
+                if (endpointExecution.getDelayMax() != null) {
+                    while (System.currentTimeMillis() - start < endpointExecution.getDelayUnit().toMillis(endpointExecution.getDelayMax())) {
                         if (execResult.isDone()) {
                             break;
                         }
@@ -247,8 +248,8 @@ public class EndpointServlet extends HttpServlet {
                     EndpointResult endpointResult = execResult.get();
                     setReponse(endpointResult.getResult(), endpointExecution);
                     if (!endpointExecution.isKeep()) {
-                        log.info("Removing execution results with id {}", endpointExecution.getFirstUriPart());
-                        endpointCacheContainer.remove(endpointExecution.getFirstUriPart());
+                        log.info("Removing execution results with id {}", uuidStr);
+                        endpointCacheContainer.remove(uuidStr);
                     }
                 } else {
                     endpointExecution.getResp().getWriter().print("In progress");
@@ -273,11 +274,12 @@ public class EndpointServlet extends HttpServlet {
         // Endpoint does not exists
         if (endpoint == null) {
             endpointExecution.getResp().setStatus(404);    // Not found
+            String uuidStr = endpointExecution.getPathInfo().split("/")[0];
             try {
-                UUID uuid = UUID.fromString(endpointExecution.getFirstUriPart());
+                UUID uuid = UUID.fromString(uuidStr);
                 endpointExecution.getResp().getWriter().print("No results for execution id " + uuid.toString());
             } catch (IllegalArgumentException e) {
-                endpointExecution.getResp().getWriter().print("No endpoint for " + endpointExecution.getFirstUriPart() + " has been found");
+                endpointExecution.getResp().getWriter().print("No endpoint for " + uuidStr + " has been found");
             }
             return;
         }
@@ -292,7 +294,7 @@ public class EndpointServlet extends HttpServlet {
 
         // Execute the endpoint asynchronously
         final UUID id = UUID.randomUUID();
-        log.info("Added pending execution number {} for endpoint {}", id, endpointExecution.getFirstUriPart());
+        log.info("Added pending execution number {} for endpoint {}", id, endpoint.getCode());
         PendingResult execution = endpointApi.executeAsync(endpoint, endpointExecution);
 
         // Store the pending result
