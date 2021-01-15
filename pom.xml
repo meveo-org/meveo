@@ -558,6 +558,9 @@
 			<properties>
 				<db.driver>org.postgresql.Driver</db.driver>
 				<db.schema>public</db.schema>
+				<db.username>meveo</db.username>
+				<db.password>meveo</db.password>
+				<db.url>jdbc:postgresql://localhost:5432/meveo</db.url>
 			</properties>
 			<dependencies>
 				<!-- Dependency for liquibase plugin -->
@@ -577,32 +580,6 @@
 							<artifactId>postgresql</artifactId>
 						</exclusion>
 					</exclusions>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>dev-mysql</id>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>dev-mysql</value>
-				</property>
-			</activation>
-			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line: 
-					mvn -Ddb.schema=ten2 -->
-				<db.driver>org.mariadb.jdbc.Driver</db.driver>
-				<db.url>jdbc:mariadb://localhost:3306/meveo</db.url>
-				<db.username>root</db.username>
-				<db.password />
-			</properties>
-			<dependencies>
-				<!-- Dependency for liquibase plugin -->
-				<dependency>
-					<groupId>org.mariadb.jdbc</groupId>
-					<artifactId>mariadb-java-client</artifactId>
-					<version>1.5.4</version>
 				</dependency>
 			</dependencies>
 		</profile>
