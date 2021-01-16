@@ -176,11 +176,15 @@ public class Endpoint extends BusinessEntity {
 	}
 
 	public String getContentType() {
+		if(contentType==null){
+			contentType="application/json";
+		}
 		return contentType;
 	}
 
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+		getContentType();
 	}
 
 	public void setSerializeResult(boolean serializeResult) {

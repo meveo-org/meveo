@@ -126,7 +126,7 @@ public class SwaggerDocService {
 
 					if (samples != null && !samples.isEmpty()) {
 						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-						String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+						String mediaType = endpoint.getContentType();
 						if (inputExample != null) {
 							String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
 							bodyParameter.addExample(mediaType, inputExampleSerialized);
@@ -144,7 +144,7 @@ public class SwaggerDocService {
 
 		if ((!isHeadMethod) && (samples != null) && (!samples.isEmpty())) {
 			Object outputExample = samples.get(0).getOutputs();
-			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+			String mediaType = endpoint.getContentType();
 			response.example(mediaType, outputExample);
 		}
 
