@@ -65,15 +65,31 @@ public class SwaggerDocService {
 		Path path = new Path();
 
 		Operation operation = new Operation();
+		boolean isHeadMethod=false;
 
-		if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
-			path.setGet(operation);
+		switch(endpoint.getMethod()){
+			case DELETE:
+				path.setDelete(operation);
+				break;
+			case GET:
+				path.setGet(operation);
+				break;
+			case HEAD:
+				path.setHead(operation);
+				isHeadMethod=true;
+				break;
+			case POST:
+				path.setPost(operation);
+				break;
+			case PUT:
+				path.setPut(operation);
+				break;
+			default:
+				break;
 
-		} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
-			path.setPost(operation);
 		}
 
-		if (!Objects.isNull(endpoint.getPathParametersNullSafe())) {
+		if ((!isHeadMethod) && (!Objects.isNull(endpoint.getPathParametersNullSafe()))) {
 			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParametersNullSafe()) {
 				Parameter parameter = new PathParameter();
 				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
@@ -85,7 +101,7 @@ public class SwaggerDocService {
 
 		List<Sample> samples = endpoint.getService().getSamples();
 
-		if (!Objects.isNull(endpoint.getParametersMappingNullSafe())) {
+		if ((!isHeadMethod) && (!Objects.isNull(endpoint.getParametersMappingNullSafe()))) {
 			List<Parameter> operationParameter = new ArrayList<>();
 
 			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
@@ -126,7 +142,7 @@ public class SwaggerDocService {
 		Map<String, io.swagger.models.Response> responses = new HashMap<>();
 		io.swagger.models.Response response = new io.swagger.models.Response();
 
-		if (samples != null && !samples.isEmpty()) {
+		if ((!isHeadMethod) && (samples != null) && (!samples.isEmpty())) {
 			Object outputExample = samples.get(0).getOutputs();
 			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
 			response.example(mediaType, outputExample);
@@ -139,7 +155,7 @@ public class SwaggerDocService {
 		Swagger swagger = new Swagger();
 		swagger.setInfo(info);
 		swagger.setBasePath(baseUrl);
-		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
+		swagger.setSchemes(Arrays.asList(Scheme.HTTPS));
 		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
 		if (endpoint.getMethod() == EndpointHttpMethod.POST) {
 			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));
