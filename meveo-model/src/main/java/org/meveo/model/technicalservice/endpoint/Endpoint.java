@@ -341,7 +341,7 @@ public class Endpoint extends BusinessEntity {
 	* returns the endpoint url relative to the meveo base url
 	 */
 	public String getEndpointUrl() {
-		return "/rest/"+getBasePath()+getPath();
+		return getBasePath()+getPath();
 	}
 
 	@Transient
