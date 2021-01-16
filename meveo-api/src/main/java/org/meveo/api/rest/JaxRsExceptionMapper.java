@@ -48,7 +48,7 @@ public class JaxRsExceptionMapper implements ExceptionMapper<Exception> {
             } else if (e instanceof ValidationException || e instanceof JsonParseException || e instanceof JsonMappingException || e instanceof IllegalArgumentException) {
                 return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 
-            } else if (e instanceof EJBException) {
+            } else if (e instanceof EJBException && ((EJBException) e).getCausedByException() instanceof Exception) {
                 return toResponse(((EJBException) e).getCausedByException());
 
             } else if (e instanceof RollbackException && e.getCause() instanceof Exception) {

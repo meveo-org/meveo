@@ -89,7 +89,7 @@ public class SwaggerDocService {
 
 		}
 
-		if (!Objects.isNull(endpoint.getPathParametersNullSafe()) {
+		if (!Objects.isNull(endpoint.getPathParametersNullSafe())) {
 			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParametersNullSafe()) {
 				Parameter parameter = new PathParameter();
 				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
@@ -151,7 +151,7 @@ public class SwaggerDocService {
 		if(!isHeadMethod){
 			buildResponseSchema(endpoint, response);
 		}
-		
+
 		responses.put("" + HttpStatus.SC_OK, response);
 
 		Swagger swagger = new Swagger();
