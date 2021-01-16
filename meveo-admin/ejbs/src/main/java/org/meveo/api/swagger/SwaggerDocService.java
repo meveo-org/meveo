@@ -89,7 +89,7 @@ public class SwaggerDocService {
 
 		}
 
-		if ((!isHeadMethod) && (!Objects.isNull(endpoint.getPathParametersNullSafe()))) {
+		if (!Objects.isNull(endpoint.getPathParametersNullSafe()) {
 			for (EndpointPathParameter endpointPathParameter : endpoint.getPathParametersNullSafe()) {
 				Parameter parameter = new PathParameter();
 				parameter.setName(endpointPathParameter.getEndpointParameter().getParameter());
@@ -101,7 +101,7 @@ public class SwaggerDocService {
 
 		List<Sample> samples = endpoint.getService().getSamples();
 
-		if ((!isHeadMethod) && (!Objects.isNull(endpoint.getParametersMappingNullSafe()))) {
+		if (!Objects.isNull(endpoint.getParametersMappingNullSafe())) {
 			List<Parameter> operationParameter = new ArrayList<>();
 
 			for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
@@ -148,8 +148,10 @@ public class SwaggerDocService {
 			response.example(mediaType, outputExample);
 		}
 
-		buildResponseSchema(endpoint, response);
-
+		if(!isHeadMethod){
+			buildResponseSchema(endpoint, response);
+		}
+		
 		responses.put("" + HttpStatus.SC_OK, response);
 
 		Swagger swagger = new Swagger();
