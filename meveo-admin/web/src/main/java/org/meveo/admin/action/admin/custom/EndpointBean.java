@@ -70,6 +70,10 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	private List<String> returnedVariableNames;
 
 	private String endpointUrl;
+	
+	private String path;
+
+	private String basePath;
 
 	private String serviceCode;
 
@@ -224,12 +228,13 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	}
 
 	public String getEndpointUrl() {
-		endpointUrl = "/rest/" + entity.getCode();
+		/*endpointUrl = "/rest/" + entity.getCode();
 		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
 			pathParametersDL.getTarget()
 					.forEach(endpointPathParameter -> endpointUrl += "/{" + endpointPathParameter + "}");
 		}
-		return endpointUrl;
+		return endpointUrl;*/
+		return entity.getEndpointUrl();
 	}
 
 	public List<String> getReturnedVariableNames() {

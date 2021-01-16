@@ -197,6 +197,16 @@
 			</h:panelGroup>
 
 			<h:panelGrid id="endpointUrl" columns="1">
+				<hftl:decorateFormField field="basePath" fieldId="basePathId"
+					label="#{messages['endpoint.basePath']}">
+					<p:inputText id="basePathId" value="#{endpointBean.entity.basePath}"
+						size="50" readonly="false" />
+				</hftl:decorateFormField>
+				<hftl:decorateFormField field="path" fieldId="pathId"
+					label="#{messages['endpoint.path']}">
+					<p:inputText id="pathId" value="#{endpointBean.entity.path}"
+						size="100" readonly="false" />
+				</hftl:decorateFormField>
 				<hftl:decorateFormField field="endpointUrl" fieldId="endpointUrlId"
 					label="#{messages['endpoint.accessUrl']}">
 					<p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}"
