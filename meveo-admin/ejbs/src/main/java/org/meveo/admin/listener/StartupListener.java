@@ -40,6 +40,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.ParamBean;
@@ -204,6 +205,8 @@ public class StartupListener {
 				log.error("Can't read / write .gitignore file");
 			} catch (BusinessException e) {
 				log.error("Can't commit .gitignore file", e);
+			} catch(JGitInternalException e){
+				log.error("Can't commit .gitignore file, it is probably corrupted, you might want to delete it and restart meveo", e);
 			}
 
 			// Create default pom file
