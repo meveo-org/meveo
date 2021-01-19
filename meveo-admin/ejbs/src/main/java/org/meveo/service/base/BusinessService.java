@@ -26,7 +26,6 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
@@ -42,8 +41,6 @@ import javax.persistence.NonUniqueResultException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -227,15 +224,15 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
     	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
     	
-    	File file = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
     	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
-    	File removeFile = new File(file, path);
-    	if (removeFile.exists()) {
+    	File directoryToRemove = new File(gitDirectory, path);
+    	if (directoryToRemove.exists()) {
     		try {
-				FileUtils.deleteDirectory(removeFile);
-			} catch (IOException e) {
-				throw new BusinessException("Folder unsuccessful deleted : " + removeFile.getPath() + ". " + e.getMessage());
-			}
+    			FileUtils.deleteDirectory(directoryToRemove);
+    		} catch (IOException e) {
+    			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
+    		}
     	}
     }
     
@@ -250,10 +247,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
-    	File file = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
     	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	
-    	File newDir = new File (file, path);
+    	File newDir = new File (gitDirectory, path);
     	
     	newDir.mkdirs();
     	
@@ -272,17 +269,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws BusinessException 
      * @throws IOException BusinessException
      */
-    public void moveFilesToModule(P entity, MeveoModule module) throws BusinessException {
+    public void moveFilesToModule(P entity, MeveoModule module) throws BusinessException, IOException {
     	MeveoModule currentModule = findModuleOf(entity);
-    	removeFilesFromModule(entity, currentModule);
-    		
-    	if ((module != null)) {
-    		try {
-				addFilesToModule(entity, module);
-			} catch (IOException e) {
-				throw new BusinessException("Error when moving file to the new module: " + module.getCode() + ". " + e.getMessage());
-			}
-	    }
+    	if (currentModule != null) {
+    		removeFilesFromModule(entity, currentModule);
+    	}
+	    addFilesToModule(entity, module);
     }
 
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
