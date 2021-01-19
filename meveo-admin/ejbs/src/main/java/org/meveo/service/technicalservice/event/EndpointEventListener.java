@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -117,11 +118,19 @@ public class EndpointEventListener {
 	 * @return the result of {@link File#delete()} called on the script file
 	 * @throws BusinessException if the changes can't be commited
 	 */
-	public boolean removeESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) throws BusinessException {
+	public boolean removeESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint)
+			throws BusinessException {
 
 		File scriptFile = endpointService.getScriptFile(endpoint);
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
+		boolean flag = true;
+		if (scriptFile != null) {
+			File parentDir = scriptFile.getParentFile();
+			flag = scriptFile.delete();
+			parentDir.delete();
+			gitClient.commitFiles(meveoRepository, Arrays.asList(scriptFile, parentDir),
+					"Delete JS dir and script for endpoint " + endpoint.getCode());
+		}
 
-		return scriptFile.delete();
+		return flag;
 	}
 }
