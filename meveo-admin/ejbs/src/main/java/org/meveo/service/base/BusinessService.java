@@ -25,6 +25,7 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
@@ -35,6 +36,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.service.git.GitHelper;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
+
+import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
@@ -50,6 +53,9 @@ import java.util.List;
  * @param <P> extension of Business Entity.
  */
 public abstract class BusinessService<P extends BusinessEntity> extends PersistenceService<P> {
+	
+	@Inject
+	protected EntitySerializer businessEntitySerializer;
 	
     /**
      * Find entity by code - strict match.
@@ -186,26 +192,26 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @param entity for which you are looking for the module
      * @return MeveoModule, or null otherwise
      */
-    @SuppressWarnings({ "rawtypes", "deprecation" })
-	public MeveoModule findModuleOf(P entity){
+    @SuppressWarnings({ "rawtypes" })
+	public MeveoModule findModuleOf(P entity) {
     	MeveoModule module = null;
     	if (entity != null) {
     		if (entity instanceof CustomFieldTemplate) {
     			CustomFieldTemplate entityCtf = (CustomFieldTemplate) entity;
     			
 				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType AND m.applies_to = :applies_to");
-	    		q.setString("code", entityCtf.getCode());
-	    		q.setString("itemType", entityCtf.getClass().getName());
-	    		q.setString("applies_to", entityCtf.getAppliesTo());
+	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType AND m.appliesTo = :appliesTo");
+	    		q.setParameter("code", entityCtf.getCode());
+	    		q.setParameter("itemType", entityCtf.getClass().getName());
+	    		q.setParameter("appliesTo", entityCtf.getAppliesTo());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
     		}else {
 				Session session = this.getEntityManager().unwrap(Session.class);
 	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType");
-	    		q.setString("code", entity.getCode());
-	    		q.setString("itemType", entity.getClass().getName());
+	    		q.setParameter("code", entity.getCode());
+	    		q.setParameter("itemType", entity.getClass().getName());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
@@ -242,9 +248,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @param entity belonging to the module
      * @param module corresponding to the entity
      * @throws IOException BusinessException
+     * @throws BusinessException if serialization of entity fails
      */
-    public void addFilesToModule(P entity, MeveoModule module) throws IOException {
-    	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
+    public void addFilesToModule(P entity, MeveoModule module) throws IOException, BusinessException {
+    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
