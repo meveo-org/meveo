@@ -19,10 +19,12 @@
  */
 package org.meveo.service.base;
 
+import org.apache.commons.io.FileUtils;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.commons.utils.QueryBuilder;
@@ -30,6 +32,8 @@ import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.service.git.GitHelper;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import javax.persistence.NoResultException;
@@ -182,62 +186,80 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     /** 
      * Find which the module the entity belongs to 
 
-     * @param entity
+     * @param entity for which you are looking for the module
      * @return MeveoModule, or null otherwise
      */
     @SuppressWarnings({ "rawtypes", "deprecation" })
 	public MeveoModule findModuleOf(P entity){
     	MeveoModule module = null;
     	if (entity != null) {
-    		Session session = this.getEntityManager().unwrap(Session.class);
-    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.ItemType = :itemType");
-    		q.setString("code", entity.getCode());
-    		q.setString("itemType", entity.getClass().getName());
-    		module = (MeveoModule) q.getResultList().get(0);
-    	}
+    		if (entity instanceof CustomFieldTemplate) {
+    			CustomFieldTemplate entityCtf = (CustomFieldTemplate) entity;
+    			
+				Session session = this.getEntityManager().unwrap(Session.class);
+	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType AND m.applies_to = :applies_to");
+	    		q.setString("code", entityCtf.getCode());
+	    		q.setString("itemType", entityCtf.getClass().getName());
+	    		q.setString("applies_to", entityCtf.getAppliesTo());
+	    		if (!(q.getResultList().isEmpty())) {
+	    			module = (MeveoModule) q.getResultList().get(0);
+	    		}
+    		}else {
+				Session session = this.getEntityManager().unwrap(Session.class);
+	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType");
+	    		q.setString("code", entity.getCode());
+	    		q.setString("itemType", entity.getClass().getName());
+	    		if (!(q.getResultList().isEmpty())) {
+	    			module = (MeveoModule) q.getResultList().get(0);
+	    		}
+    		}
+		}
     	return module;
     }
     
     /**
      * Remove the entity that belongs to the module
      * 
-     * @param entity
-     * @param module
+     * @param entity belonging to the module
+     * @param module corresponding to the entity
+     * @throws BusinessException if the folder is not deleted
      */
-    public void removeFilesFromModule(P entity, MeveoModule module) {
-    	MeveoModuleDto meveoModuleDto = new MeveoModuleDto(module);
+    public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
     	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
-    	File fileToDelete = new File("..\\git\\"+meveoModuleDto.getCode()+"\\"+businessEntityDto.getClass().getAnnotation(ModuleItem.class).path()+"\\"+entity.getCode()+".json");
-
-    	fileToDelete.delete();
+    	
+    	File file = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
+    	File removeFile = new File(file, path);
+    	if (removeFile.exists()) {
+    		try {
+				FileUtils.deleteDirectory(removeFile);
+			} catch (IOException e) {
+				throw new BusinessException("Folder unsuccessful deleted : " + removeFile.getPath() + ". " + e.getMessage());
+			}
+    	}
     }
     
     /**
      * Create the entity in the dedicated module
      * 
-     * @param entity
-     * @param module
+     * @param entity belonging to the module
+     * @param module corresponding to the entity
+     * @throws IOException BusinessException
      */
-    public void addFilesToModule(P entity, MeveoModule module) {
-    	MeveoModuleDto meveoModuleDto = new MeveoModuleDto(module);
+    public void addFilesToModule(P entity, MeveoModule module) throws IOException {
     	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
-    	try {
-	    	File file = new File("..\\git\\"+meveoModuleDto.getCode()+"\\"+businessEntityDto.getClass().getAnnotation(ModuleItem.class).path()+"\\"+entity.getCode()+".json");
-	    	file.createNewFile();
-    	}catch(IOException e) {
-    		e.printStackTrace();
-    	}
+    	File file = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	
-    	try {
-    		Path path = Paths.get("..\\git\\"+meveoModuleDto.getCode()+"\\"+businessEntityDto.getClass().getAnnotation(ModuleItem.class).path()+"\\"+entity.getCode()+".json");
-    		byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-
-    		Files.write(path, strToBytes);
-    	}catch(IOException e) {
-    		e.printStackTrace();
-    	}
+    	File newDir = new File (file, path);
+    	
+    	newDir.mkdirs();
+    	
+    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+    	
+    	Files.write(newDir.toPath(), strToBytes);
     }
     
     /**
@@ -245,19 +267,22 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * Remove the files from old Module
      * Add the files to the new module
      * 
-     * @param entity
-     * @param module
+     * @param entity belonging to the module
+     * @param module corresponding to the entity
+     * @throws BusinessException 
+     * @throws IOException BusinessException
      */
-    public void moveFilesToModule(P entity, MeveoModule module) {
+    public void moveFilesToModule(P entity, MeveoModule module) throws BusinessException {
     	MeveoModule currentModule = findModuleOf(entity);
-    	if (currentModule != null) {
-    		removeFilesFromModule(entity, currentModule);
+    	removeFilesFromModule(entity, currentModule);
     		
-	    	if ((module != null)) {
-	    		addFilesToModule(entity, module);
-	    	}
-    	}
-    	
+    	if ((module != null)) {
+    		try {
+				addFilesToModule(entity, module);
+			} catch (IOException e) {
+				throw new BusinessException("Error when moving file to the new module: " + module.getCode() + ". " + e.getMessage());
+			}
+	    }
     }
 
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
