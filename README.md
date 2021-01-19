@@ -46,6 +46,10 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ### Reporting
 
+### Clustering
+Meveo can be deployed in a wildfly cluster to scale its capabilities.
+Infinispan cache can be replicated/distributed/scaterred among nodes.
+A JMS topic is used to [publish events](./meveo-admin/ejbs/src/main/java/org/meveo/event/monitoring) to the cluster nodes.
 
 ## User Guide
 

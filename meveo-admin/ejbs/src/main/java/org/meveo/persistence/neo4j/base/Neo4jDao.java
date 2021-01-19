@@ -721,11 +721,11 @@ public class Neo4jDao {
 
         // Begin transaction
         var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var params = convertParams(fields);
 
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            var params = convertParams(fields);
             final StatementResult result = transaction.run(resolvedStatement, params);
             Set<String> ids = result.list()
                     .stream()
@@ -738,8 +738,7 @@ public class Neo4jDao {
 
             return ids;
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction(e);
-            LOGGER.error("Error while executing UniqueConstraint {}", uniqueConstraint, e);
+            LOGGER.warn("Error while executing UniqueConstraint = {} with parameters = {}", uniqueConstraint, params, e);
         }
 
         return Collections.emptySet();

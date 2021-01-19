@@ -1,10 +1,31 @@
 #!/bin/bash
-if [ -f .env ]; then
-source .env
-else 
- echo ".env file not found"
- exit 1
+
+if ! [ -x "$(command -v dos2unix)" ]; then
+  echo 'Error: dos2unix is not installed.' >&2
+  apt-get update && apt-get install -y dos2unix
 fi
+
+if ! [ -x "$(command -v curl)" ]; then
+  echo 'Error: curl is not installed.' >&2
+  apt-get update && apt-get install -y curl
+fi
+
+if [ -f .env ]; then
+  dos2unix .env
+  source .env
+else
+  echo ".env file not found"
+  exit 1
+fi
+
+#replace the variables in nginx config
+sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" ./conf/nginx/nginx.conf ssl-renew.sh
+
+#change SERVER_NAME in scripts
+sed -i "s/SERVER_NAME/$SERVER_NAME/g" gitpull.sh dockerpull.sh ssl-renew.sh
+
+#change STACK_NAME in scripts
+sed -i "s/{{STACK_NAME}}/$STACK_NAME/g" ssl-renew.sh
 
 #check what is the local distribution
 if [ -f /etc/os-release ]; then
@@ -48,9 +69,6 @@ else
 fi
 
 
-#replace the variables in nginx config
-sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" ./conf/nginx/nginx.conf
-
 if [ ! -r /home/${SERVER_NAME}/conf/ssl/domain.key ] || [ ! -r /home/${SERVER_NAME}/conf/ssl/domain.crt ]
 then
    #certbot certonly --standalone
@@ -67,6 +85,7 @@ then
          fi
          apt-get install certbot python3-certbot-nginx
          certbot certonly --nginx -d $DOMAIN_NAME --non-interactive --agree-tos -m $ADMIN_EMAIL
+         kill $(ps aux | grep '[n]ginx' | awk '{print $2}')
       fi
       if [ -e /etc/letsencrypt/live/$DOMAIN_NAME/cert.pem ]
       then
@@ -88,3 +107,5 @@ then
      exit 1
 fi
 
+docker-compose up -d
+rm .env

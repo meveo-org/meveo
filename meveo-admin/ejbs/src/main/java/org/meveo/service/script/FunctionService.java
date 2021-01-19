@@ -456,6 +456,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 	}
 	
     public void compileScript(T script, boolean testCompile) {
+    	
 	}
 
 }

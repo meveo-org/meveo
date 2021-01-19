@@ -98,9 +98,6 @@ public class MeveoModuleItemInstaller {
 
     @Inject
 	private CustomTableService customTableService;
-
-    @EJB
-    private MeveoModuleItemInstaller meveoModuleItemInstaller;
     
     @Inject
     private ConcreteFunctionService concreteFunctionService;
@@ -127,6 +124,9 @@ public class MeveoModuleItemInstaller {
 	@Inject
 	@ModulePostInstall
 	private Event<MeveoModule> postInstallEvent;
+	
+	@EJB
+	private MeveoModuleItemInstaller meveoModuleItemInstaller;
     
     /**
      * Uninstall the module and disables it items
@@ -421,7 +421,7 @@ public class MeveoModuleItemInstaller {
 
 		            Class<? extends MeveoModule> moduleClazz = MeveoModule.class;
 		            moduleItem = new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null);
-		        	meveoModule.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
 		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
                     CustomEntityInstance cei = new CustomEntityInstance();
@@ -441,7 +441,7 @@ public class MeveoModuleItemInstaller {
                     	customTableService.create(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
 					}
 					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
-                    meveoModule.addModuleItem(moduleItem);
+					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
 	        		if(cftDto.getAppliesTo() == null) {
@@ -473,7 +473,7 @@ public class MeveoModuleItemInstaller {
 
 		            moduleItem = new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
 			                ((CustomFieldTemplateDto) dto).getAppliesTo(), null);
-		        	meveoModule.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
 		        } else if (dto instanceof EntityCustomActionDto) {
 					EntityCustomActionDto ecaDto = (EntityCustomActionDto) dto;
@@ -503,7 +503,7 @@ public class MeveoModuleItemInstaller {
 		            }
 
 		            moduleItem = new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null);
-		        	meveoModule.addModuleItem(moduleItem);
+		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 		        } else {
 
 					String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
@@ -515,7 +515,7 @@ public class MeveoModuleItemInstaller {
 							throw new IllegalArgumentException(moduleItemName + " is not a module item");
 						}
 
-						log.info("Installing item {} of module {}", dto, meveoModule);
+						log.info("Installing item {} of module with code={}", dto, meveoModule.getCode());
 
 						Object item = findItem(dto, entityClass);
 						if (item != null) {
@@ -561,7 +561,7 @@ public class MeveoModuleItemInstaller {
 							addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
 						}
 
-						meveoModule.addModuleItem(moduleItem);
+						meveoModuleService.addModuleItem(moduleItem, meveoModule);
 						if (skipped) {
 							meveoModuleService.loadModuleItem(moduleItem);
 							BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(entityClass, true);
@@ -725,8 +725,8 @@ public class MeveoModuleItemInstaller {
 			
 			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
 				try {
-					// var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
-					var subResult = unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
+					 var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
+//					var subResult = unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
 					result.merge(subResult);
 				} catch (Exception e) {
 					if (e instanceof EJBException) {
@@ -751,7 +751,7 @@ public class MeveoModuleItemInstaller {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
-				meveoModule.addModuleItem(itemDto);
+				meveoModuleService.addModuleItem(itemDto, meveoModule);
 			}
 		}
 	}

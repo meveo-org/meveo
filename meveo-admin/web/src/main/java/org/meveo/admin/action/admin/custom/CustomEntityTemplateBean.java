@@ -1286,7 +1286,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			MeveoModule module = meveoModuleService.findById(getMeveoModule().getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
-				module.addModuleItem(item);
+				meveoModuleService.addModuleItem(item, module);
 			} else {
 				messages.error(new BundleKey("messages", "customizedEntities.cetExisted.error"), businessEntity.getCode(), module.getCode());
 				return;
@@ -1296,7 +1296,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				CustomFieldTemplate cft = entry.getValue();
 				MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
 				if (!module.getModuleItems().contains(moduleItem)) {
-					module.addModuleItem(moduleItem);
+					meveoModuleService.addModuleItem(moduleItem, module);
 				}
 			}
 			try {

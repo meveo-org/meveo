@@ -154,30 +154,41 @@ public class MeveoModuleItem extends BaseEntity {
     }
 
     @Override
-    public int hashCode() {
-        int result = 31;
-        result += itemClass != null ? itemClass.hashCode() : 0;
-        result += itemCode != null ? itemCode.hashCode() : 0;
-        return result;
-    }
+	public int hashCode() {
+		final int prime = 31;
+		int result = 0;
+		result = prime * result + ((appliesTo == null) ? 0 : appliesTo.hashCode());
+		result = prime * result + ((itemClass == null) ? 0 : itemClass.hashCode());
+		result = prime * result + ((itemCode == null) ? 0 : itemCode.hashCode());
+		return result;
+	}
 
     @Override
-    public boolean equals(Object obj) {
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (getClass() != obj.getClass())
+			return false;
+		MeveoModuleItem other = (MeveoModuleItem) obj;
+		if (appliesTo == null) {
+			if (other.appliesTo != null)
+				return false;
+		} else if (!appliesTo.equals(other.appliesTo))
+			return false;
+		if (itemClass == null) {
+			if (other.itemClass != null)
+				return false;
+		} else if (!itemClass.equals(other.itemClass))
+			return false;
+		if (itemCode == null) {
+			if (other.itemCode != null)
+				return false;
+		} else if (!itemCode.equals(other.itemCode))
+			return false;
+		return true;
+	}
 
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (!(obj instanceof MeveoModuleItem)) {
-            return false;
-        }
-        
-        MeveoModuleItem other = (MeveoModuleItem) obj;
-
-        return itemClass.equals(other.getItemClass()) && itemCode.equals(other.getItemCode());
-    }
-
-    public BusinessEntity getItemEntity() {
+	public BusinessEntity getItemEntity() {
         return itemEntity;
     }
 

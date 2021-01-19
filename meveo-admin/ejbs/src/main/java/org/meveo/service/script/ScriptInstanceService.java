@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -52,6 +53,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
+import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -71,7 +73,6 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
 		super.beforeUpdateOrCreate(script);
-        
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
         for(MavenDependency md : script.getMavenDependenciesNullSafe()) {
@@ -176,14 +177,15 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         
         Class<ScriptInterface> compiledScript;
         try {
-        	compiledScript = compileJavaSource(javaSrc);
+        	compiledScript = compileJavaSource(javaSrc, true);
         } catch (Exception e) {
         	log.error("Can't compile script {} for test", scriptCode, e);
         	return;
         }
             
         try {
-            execute(compiledScript.newInstance(), context);
+        	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+            execute(MeveoBeanManager.getInstance().getInstance(bean), context);
         } catch (Exception e) {
             log.error("Script test execution failed", e);
         }
@@ -286,7 +288,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
         return scriptInterfaces;
     }
-
+    
 	@Override
 	protected void executeEngine(ScriptInterface engine, Map<String, Object> context) throws ScriptExecutionException {
 		ScriptTransactionType txType;

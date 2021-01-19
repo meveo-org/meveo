@@ -235,17 +235,17 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
         return jobInstance;
     }
-
+    
     private JobInstance updateJobInstance(JobInstance jobInstance) {
-        getEntityManager().clear();
-        JobInstance instance = findById(jobInstance.getId());
-
         List<JobExecutionResultImpl> jobExecutionResults = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(jobInstance.getExecutionResults())) {
             for (JobExecutionResultImpl job : jobInstance.getExecutionResults()) {
                 jobExecutionResults.add(job);
             }
         }
+        getEntityManager().clear();
+        JobInstance instance = findById(jobInstance.getId());
+
         instance.setJobCategoryEnum(jobInstance.getJobCategoryEnum());
         instance.setJobTemplate(jobInstance.getJobTemplate());
         instance.setCode(jobInstance.getCode());
@@ -266,6 +266,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
         return instance;
     }
+
 
     @Override
     public void remove(JobInstance jobInstance) throws BusinessException {

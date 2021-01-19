@@ -306,7 +306,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     public List<MeveoModuleItem> findModuleItem(String code, String className, String appliesTo) {
     	List<MeveoModuleItem> res;
     	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
-    	qb.addCriterion("item_code", "=", code, true);
+    	qb.addCriterion("itemCode", "=", code, true);
     	qb.addCriterion("itemClass", "=", className, true);
     	qb.addCriterion("appliesTo", "=", appliesTo, true);
     	
@@ -325,21 +325,27 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * 
      * @param meveoModuleItem Module item
      */
-    public void addModuleItem(MeveoModuleItem meveoModuleItem) {
+    public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
+    	// Check if the module already contains the module item
+    	if(module.getModuleItems().contains(meveoModuleItem)) {
+    		return;
+    	}
+    	
     	List<MeveoModuleItem> testEmptyModule;
-    	MeveoModule module = meveoModuleItem.getMeveoModule();
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
-    	if (testEmptyModule.isEmpty()) {
+    	
+    	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
+    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		module.getModuleItems().add(meveoModuleItem);
     		meveoModuleItem.setMeveoModule(module);
     	}else {
     		throw new IllegalArgumentException(
     			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
-    			meveoModuleItem.getAppliesTo()+" ) already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
+    			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
     		);
     	}
     }

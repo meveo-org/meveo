@@ -1344,7 +1344,7 @@ public class Neo4jService implements CustomPersistenceService {
     }
 
     @Asynchronous
-    private AsyncResult<Void> mergeNode(String configurationCode, CustomEntityTemplate customEntityTemplate, Node persistentNode, Node nodeToMerge) {
+    public AsyncResult<Void> mergeNode(String configurationCode, CustomEntityTemplate customEntityTemplate, Node persistentNode, Node nodeToMerge) {
         LOGGER.info("Merging node {} into node {}", nodeToMerge.get(MEVEO_UUID), persistentNode.get(MEVEO_UUID));
 
         final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, nodeToMerge.id(), customEntityTemplate.getCode());

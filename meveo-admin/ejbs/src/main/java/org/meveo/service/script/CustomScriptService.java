@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -102,6 +104,8 @@ import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.maven.MavenClassLoader;
+import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,7 +186,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         return result;
     }
-
+    
     /**
      * If script file has been changed, commit the differences. <br>
      * Re-compile the script
@@ -225,17 +229,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
         String className = getClassName(script.getScript());
         if (className == null) {
-            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid"));
+            throw new BusinessException(resourceMessages.getString("message.scriptInstance.sourceInvalid") + " " + script.getCode());
         }
         String fullClassName = getFullClassname(script.getScript());
         if (isOverwritesJavaClass(fullClassName)) {
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
-        
-		compileScript(script, true);
+        if(!moduleInstallCtx.isActive()) {
+        	compileScript(script, true);
+        }
 		if (script.getError() != null && script.isError()) {
-			log.error("Failed compiling script with error={}", script.getScriptErrors());
-			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed"));
+			log.error("Failed compiling with error={}", script.getScriptErrors());
+			throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
 		}
     }
 
@@ -507,7 +512,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             constructClassPath();
 
             for (T script : scripts) {
-                compileScript(script, false);
+                loadClassInCache(script.getCode());
             }
         } catch (Exception e) {
             log.error("", e);
@@ -527,7 +532,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
     }
-
+    
     /**
      * Compile script, a and update script entity status with compilation errors.
      * Successfully compiled script is added to a compiled script cache if active
@@ -540,7 +545,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void compileScript(T script, boolean testCompile) {
-    	
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -548,12 +552,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             source = readScriptFile(script);
         }
 
-        addScriptDependencies(script);
-
-        List<ScriptInstanceError> scriptErrors = compileScript(script.getCode(), script.getSourceTypeEnum(), source, script.isActive(), testCompile);
-
+    	addScriptDependencies(script);
+        
+        List<ScriptInstanceError> scriptErrors = compileScript(
+        		script.getCode(), 
+        		script.getSourceTypeEnum(), 
+        		source, 
+        		script.isActive(), 
+        		testCompile);
+        
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
+        
+        if(!testCompile && (scriptErrors == null || scriptErrors.isEmpty())) {
+        	clearCompiledScripts();
+        }
     }
 
     private void addScriptDependencies(T script) {
@@ -562,23 +575,44 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			ScriptInstance scriptInstance = (ScriptInstance) script;
 
 			if (scriptInstance.getMavenDependencies() != null && scriptInstance.getMavenDependencies().size() > 0) {
-				Set<String> mavenDependencies = getMavenDependencies(scriptInstance.getMavenDependenciesNullSafe());
-
-				synchronized (CLASSPATH_REFERENCE) {
-					mavenDependencies.stream().forEach(location -> {
-						if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-							addLibrary(location);
-							CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-						}
-					});
-				}
+				addMavenLibrariesToClassPath(scriptInstance.getMavenDependenciesNullSafe());
 			}
 		}
     }
 
-	private Set<String> getMavenDependencies(Set<MavenDependency> mavenDependencies) {
+	/**
+	 * Add the given maven libraries to class path
+	 * 
+	 * @param mavenDependenciesList Denpendencies definitions
+	 */
+	public void addMavenLibrariesToClassPath(Collection<MavenDependency> mavenDependenciesList) {
+		MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
 
-		Set<String> result = new HashSet<>();
+		var dependenciesToResolve = mavenDependenciesList.stream()
+				.filter(Predicate.not(mavenClassLoader::isLibraryLoaded))
+				.collect(Collectors.toList());
+
+		Map<MavenDependency, Set<String>> resolvedDependencies = getMavenDependencies(dependenciesToResolve);
+				
+		synchronized (CLASSPATH_REFERENCE) {
+			resolvedDependencies.forEach((lib, locations) -> {
+				locations.forEach(location -> {
+					if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+					}
+				});
+				
+				mavenClassLoader.addLibrary(lib, locations);
+			});
+		}
+	}
+
+	private Map<MavenDependency, Set<String>> getMavenDependencies(Collection<MavenDependency> mavenDependencies) {
+		if(mavenDependencies == null || mavenDependencies.isEmpty()) {
+			return Map.of();
+		}
+		
+		Map<MavenDependency, Set<String>> result = new HashMap<>();
 		List<String> repos = mavenConfigurationService.getMavenRepositories();
 		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
 
@@ -592,7 +626,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 			log.debug("found {} repositories", remoteRepositories.size());
 
 			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
-				Set<ArtifactResult> artifacts = mavenDependencies.stream().map(e -> {
+				for(var e : mavenDependencies) {
+					log.info("Resolving artifacts for {}", e);
+					List<ArtifactResult> artifacts;
+					
 					DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
 					DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
 					Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
@@ -605,7 +642,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestLocal, classpathFlter);
 						DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
 						
-						return dependencyResult.getArtifactResults();
+						artifacts = dependencyResult.getArtifactResults();
 
 					} catch (DependencyResolutionException e1) {
 						
@@ -618,23 +655,24 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 							
 							DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
 							DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-							return dependencyResult.getArtifactResults();
+							artifacts = dependencyResult.getArtifactResults();
 							
 						} catch (DependencyResolutionException e2) {
-							log.error("Fail downloading dependencies {}", e1);
+							log.error("Fail downloading dependencies {}", e2);
 							return null; // TODO handle it
 						}
 
 					}
-				}).filter(Objects::nonNull)
-				.flatMap(Collection::stream)
-				.collect(Collectors.toSet());
+					
+					log.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
+					
+					Set<String> artifactLocations = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
+						return artifact.getArtifact().getFile().getPath();
+					}).collect(Collectors.toSet());
+					
+					result.put(e, artifactLocations);
+				}
 
-				log.debug("found {} artifacts", artifacts.size());
-
-				result = artifacts.stream().filter(Objects::nonNull).map(e -> {
-					return e.getArtifact().getFile().getPath();
-				}).collect(Collectors.toSet());
 			}
 		}
 
@@ -721,6 +759,27 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         script.setGetters(getters);
         script.setSetters(setters);
     }
+    
+    public void loadClassInCache(String scriptCode) {
+    	Class<ScriptInterface> compiledScript = null;
+    	try {
+    		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
+    	} catch (ClassNotFoundException e) {
+    		T script = findByCode(scriptCode);
+    		compileScript(script, false);
+    	}
+    	
+    	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+        
+        ALL_SCRIPT_INTERFACES.put(
+        		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
+        		() -> MeveoBeanManager.getInstance().getInstance(bean)
+		);
+        
+        MeveoBeanManager.getInstance().addBean(bean);
+        
+        log.debug("Compiled script {} added to compiled interface map", scriptCode);
+    }
 
 	/**
      * Compile script. DOES NOT update script entity status. Successfully compiled
@@ -745,13 +804,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     clearCompiledScripts(scriptCode);
                 }
 
-                Class<ScriptInterface> compiledScript = compileJavaSource(sourceCode);
-
-                if (!testCompile && isActive) {
-
-                    ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), compiledScript.getDeclaredConstructor()::newInstance);
-                    log.debug("Compiled script {} added to compiled interface map", scriptCode);
-                }
+                Class<ScriptInterface> compiledScript;
+                compiledScript = compileJavaSource(sourceCode, testCompile);
 
                 return null;
 
@@ -802,12 +856,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @return Compiled class instance
      * @throws CharSequenceCompilerException char sequence compiler exception.
      */
-    protected Class<ScriptInterface> compileJavaSource(String javaSrc) throws CharSequenceCompilerException, IOException {
+    protected Class<ScriptInterface> compileJavaSource(String javaSrc, boolean isTestCompile) throws CharSequenceCompilerException, IOException {
         String fullClassName = getFullClassname(javaSrc);
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, ScriptInterface.class);
+        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
@@ -851,7 +905,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
             
-            compileScript(script, false);
+            //compileScript(script, false, false);
+            loadClassInCache(scriptCode);
+            
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
@@ -931,6 +987,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void clearCompiledScripts(String scriptCode) {
         super.clear(scriptCode);
         ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        MeveoBeanManager.getInstance().removeBean(scriptCode);
     }
 
     /**
@@ -938,48 +995,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     public void clearCompiledScripts() {
         ALL_SCRIPT_INTERFACES.clear();
+        for(var scriptToRemove : list()) {
+        	MeveoBeanManager.getInstance().removeBean(scriptToRemove.getCode());
+        }
     }
 
     @Override
     public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
         return null;
-    }
-
-    /**
-     * Add a jar file to application class path
-     * 
-     * @param location location of the jar file
-     */
-    public void addLibrary(String location) {
-        File file = new File(location);
-        
-        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        
-        if(systemClassLoader instanceof URLClassLoader) {
-			URLClassLoader classLoader = (URLClassLoader) systemClassLoader;
-	        Method method;
-	
-	        try {
-	            URL url = file.toURI().toURL();
-	            method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-	            method.setAccessible(true);
-	            method.invoke(classLoader, url);
-	
-	        } catch (Exception e) {
-	            throw new RuntimeException(e);
-	        }
-	        
-        } else {
-	        try {
-	        	Method method = systemClassLoader.getClass().getDeclaredMethod("appendToClassPathForInstrumentation", String.class);
-	            method.setAccessible(true);
-	            method.invoke(systemClassLoader, file.getAbsolutePath());
-	
-	        } catch (Exception e) {
-	        	log.warn("Libray {} not added to classpath", location);
-	        	log.warn("Can't access system class loader class, please restart JVM with the following options : --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED");
-	        }
-        }
     }
 
     /**
