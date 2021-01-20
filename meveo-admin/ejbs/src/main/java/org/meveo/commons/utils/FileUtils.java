@@ -42,7 +42,6 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -511,14 +510,12 @@ public final class FileUtils {
         Logger log = LoggerFactory.getLogger(FileUtils.class);
         log.info("Creating zip file for {}", sourceFolder);
 
-        ZipOutputStream zos = null;
-        ByteArrayOutputStream baos = null;
-        CheckedOutputStream cos = null;
-        try {
-            baos = new ByteArrayOutputStream();
-            cos = new CheckedOutputStream(baos, new CRC32());
-            zos = new ZipOutputStream(new BufferedOutputStream(cos));
-            File sourceFile = new File(sourceFolder);
+		try(
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			CheckedOutputStream cos = new CheckedOutputStream(baos, new CRC32());
+			ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) 
+		{
+			File sourceFile = new File(sourceFolder);
             for (File file : sourceFile.listFiles()) {
                 addToZipFile(file, zos, null);
             }
@@ -526,11 +523,7 @@ public final class FileUtils {
             zos.close();
             return baos.toByteArray();
 
-        } finally {
-            IOUtils.closeQuietly(zos, null);
-            IOUtils.closeQuietly(cos, null);
-            IOUtils.closeQuietly(baos, null);
-        }
+        } 
     }
 
     public static void addToZipFile(File source, ZipOutputStream zos, String basedir) throws Exception {

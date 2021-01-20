@@ -183,7 +183,10 @@ public class EndpointServlet extends HttpServlet {
             
             if (CollectionUtils.isNotEmpty(requiredParameters)) {
                 for (TSParameterMapping param : requiredParameters) {
-                    final String parameterName = param.getEndpointParameter().getParameter();
+                    String parameterName = param.getEndpointParameter().getParameter();
+                    // if there's an exposed parameter name :
+                    if (param.getParameterName() != null)
+                    	parameterName = param.getParameterName();
                 	if(!endpointExecution.getParameters().containsKey(parameterName)) {
 	                    endpointExecution.getResp().setStatus(400);
 						endpointExecution.getResp().getWriter().println("Parameter '" + parameterName + "' is missing");

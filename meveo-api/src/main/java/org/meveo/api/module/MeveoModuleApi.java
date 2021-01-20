@@ -50,7 +50,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -1105,15 +1104,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		Logger log = LoggerFactory.getLogger(FileUtils.class);
 		log.info("Creating zip file for {}", exportFile);
-
-		ZipOutputStream zos = null;
-		ByteArrayOutputStream baos = null;
-		CheckedOutputStream cos = null;
-
-		try {
-			baos = new ByteArrayOutputStream();
-			cos = new CheckedOutputStream(baos, new CRC32());
-			zos = new ZipOutputStream(new BufferedOutputStream(cos));
+		try(
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			CheckedOutputStream cos = new CheckedOutputStream(baos, new CRC32());
+			ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) {
 
 			// Add modules defintion file
 			File sourceFile = new File(exportFile);
@@ -1151,11 +1145,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			zos.close();
 			return baos.toByteArray();
 
-		} finally {
-			IOUtils.closeQuietly(zos, null);
-			IOUtils.closeQuietly(cos, null);
-			IOUtils.closeQuietly(baos, null);
-		}
+		} 
 	}
 
 	public File exportModules(List<String> modulesCode, ExportFormat exportFormat) throws Exception {
