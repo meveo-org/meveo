@@ -481,7 +481,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			}
 
 		} else {
-			endpoint.getPathParametersNullSafe().clear();
+			endpoint.getParametersMappingNullSafe().clear();
 		}
 
 		endpointService.update(endpoint);
