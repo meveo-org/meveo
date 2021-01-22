@@ -22,7 +22,7 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:searchPanel label="#{messages['enpoint.search']}" columns="3"
+		<hftl:searchPanel label="#{messages['endpoint.search']}" columns="3"
 			backingBean="#{endpointListBean}">
 			<hftl:searchField label="#{messages['endpoint.service']}"
 				field="code" />
@@ -32,11 +32,11 @@
 			addToModule="true" backingBean="#{endpointListBean}">
 			<hftl:column label="#{messages['endpoint.service']}" field="code"
 				width="10%" entityView="technicalServiceEndpointDetail" />
-			<hftl:column label="#{messages['enpoint.basePath']}"
+			<hftl:column label="#{messages['endpoint.basePath']}"
 					field="basePath" />
-			<hftl:column label="#{messages['enpoint.path']}"
+			<hftl:column label="#{messages['endpoint.path']}"
 				field="path" />			
-			<hftl:column label="#{messages['enpoint.synchronous']}"
+			<hftl:column label="#{messages['endpoint.synchronous']}"
 			field="synchronous" />
 			<hftl:column label="#{messages['endpoint.method']}" field="method" />
 			<hftl:actionsColumn

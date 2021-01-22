@@ -298,45 +298,25 @@ public class Endpoint extends BusinessEntity {
 	}
 
 	public String getPath() {
-		if(path==null){
-			String sep="";
+		if (path == null) {
+			String sep = "";
 			final StringBuilder endpointPath = new StringBuilder("/");
-			if(pathParameters!=null) {
-				for(EndpointPathParameter endpointPathParameter:pathParameters){
+			if (pathParameters != null) {
+				for (EndpointPathParameter endpointPathParameter : pathParameters) {
 					endpointPath.append(sep).append("{").append(endpointPathParameter).append("}");
-					sep="/";
+					sep = "/";
 				}
 			}
 			path = endpointPath.toString();
-			pathRegex=null;
+			pathRegex = null;
 		}
+		
 		return path;
 	}
 
 	public void setPath(String path) {
-		/* check that the path is valid */
-		if(path !=null) {
-			Matcher matcher=pathParamPattern.matcher(path);
-			int i=0;
-			while (matcher.find()) {
-				String param = matcher.group();
-				String paramName=param.substring(1,param.length()-1);
-				if(pathParameters.size()>i){
-					String actualParam=pathParameters.get(i).toString();
-					if(!paramName.equals(actualParam)){
-						throw new RuntimeException((i+1)+"th path param is expected to be " + pathParameters.get(i)+" while actual value is "+paramName);
-					}
-					i++;
-				} else {
-					throw new RuntimeException("unexpected param "+paramName);
-				}
-			}
-			if(pathParameters.size()>i){
-				throw new RuntimeException("missing param "+pathParameters.get(i));
-			}
-		}
 		this.path = path;
-		pathRegex=null;
+		pathRegex = null;
 		getPath();
 	}
 

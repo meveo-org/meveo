@@ -17,6 +17,7 @@ package org.meveo.service.technicalservice.endpoint;
 
 import java.io.File;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -96,6 +97,32 @@ public class EndpointService extends BusinessService<Endpoint> {
 		return getEntityManager().createNamedQuery("findByParameterName", Endpoint.class).setParameter("serviceCode", code).setParameter("propertyName", parameterName)
 				.getResultList();
 	}
+	
+	private void validatePath(Endpoint entity) throws BusinessException {
+		/* check that the path is valid */
+		if (entity.getPath() != null) {
+			Matcher matcher = Endpoint.pathParamPattern.matcher(entity.getPath());
+			int i = 0;
+			while (matcher.find()) {
+				String param = matcher.group();
+				String paramName = param.substring(1, param.length() - 1);
+				if (entity.getPathParameters().size() > i) {
+					String actualParam = entity.getPathParameters().get(i).toString();
+					if (!paramName.equals(actualParam)) {
+						throw new BusinessException((i + 1) + "th path param is expected to be " + entity.getPathParameters().get(i) + " while actual value is " + paramName);
+					}
+					i++;
+
+				} else {
+					throw new BusinessException("unexpected param " + paramName);
+				}
+			}
+
+			if (entity.getPathParameters().size() > i) {
+				throw new BusinessException("missing param " + entity.getPathParameters().get(i));
+			}
+		}
+	}
 
 	/**
 	 * Create a new endpoint in database. Also create associated client and roles in
@@ -133,7 +160,16 @@ public class EndpointService extends BusinessService<Endpoint> {
 //		keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
 //				EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
 
+		validatePath(entity);
+		
 		super.create(entity);
+	}
+	
+	@Override
+	public Endpoint update(Endpoint entity) throws BusinessException {
+		
+		validatePath(entity);
+		return super.update(entity);
 	}
 
 	/**

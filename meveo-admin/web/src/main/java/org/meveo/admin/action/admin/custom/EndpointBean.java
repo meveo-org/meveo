@@ -20,7 +20,7 @@ import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.exception.MeveoApiException;
+import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -34,6 +34,7 @@ import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.primefaces.event.TransferEvent;
 import org.primefaces.model.DualListModel;
 
 /**
@@ -78,6 +79,8 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	private String serviceCode;
 
 	private ScriptInstance scriptInstance = null;
+	
+	private boolean pathDirty = false;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -96,7 +99,11 @@ public class EndpointBean extends BaseBean<Endpoint> {
 	@Override
 	public Endpoint initEntity() {
 		entity = super.initEntity();
-
+		
+		if (entity.getPath().length() > 1) {
+			pathDirty = true;
+		}
+		
 		return entity;
 	}
 
@@ -167,6 +174,20 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	public void setPathParametersDL(DualListModel<String> pathParametersDL) {
 		this.pathParametersDL = pathParametersDL;
+		
+		List<String> pathParams = this.pathParametersDL.getTarget();
+		if (pathParams != null && CollectionUtils.isNotEmpty(pathParams)) {
+			final List<EndpointPathParameter> entityPathParameters = new ArrayList<>(entity.getPathParametersNullSafe());
+			pathParams.stream().filter(e -> entityPathParameters.stream().noneMatch(f -> e.equals(f.getEndpointParameter().getParameter()))).collect(Collectors.toList())
+					.forEach(g -> {
+						EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
+						endpointPathParameter.setEndpointParameter(buildEndpointParameter(entity, g));
+						entity.getPathParameters().add(endpointPathParameter);
+					});
+
+			entityPathParameters.stream().filter(e -> pathParams.stream().noneMatch(f -> e.getEndpointParameter().getParameter().equals(f))).collect(Collectors.toList())
+					.forEach(g -> entity.getPathParameters().remove(g));
+		}
 	}
 
 	public List<TSParameterMapping> getParameterMappings() {
@@ -266,6 +287,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		return endpointParameter;
 	}
 
+	@ActionMethod
 	@Override
 	@Transactional
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
@@ -280,23 +302,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 			entity.getParametersMappingNullSafe().clear();
 		}
 
-		if (pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget())) {
-			final List<EndpointPathParameter> entityPathParameters = new ArrayList<>(entity.getPathParametersNullSafe());
-			pathParametersDL.getTarget().stream()
-					.filter(e -> entityPathParameters.stream()
-							.noneMatch(f -> e.equals(f.getEndpointParameter().getParameter())))
-					.collect(Collectors.toList()).forEach(g -> {
-						EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
-						endpointPathParameter.setEndpointParameter(buildEndpointParameter(entity, g));
-						entity.getPathParameters().add(endpointPathParameter);
-					});
-
-			entityPathParameters.stream()
-					.filter(e -> pathParametersDL.getTarget().stream()
-							.noneMatch(f -> e.getEndpointParameter().getParameter().equals(f)))
-					.collect(Collectors.toList()).forEach(g -> entity.getPathParameters().remove(g));
-
-		} else {
+		if (!(pathParametersDL != null && CollectionUtils.isNotEmpty(pathParametersDL.getTarget()))) {
 			entity.getPathParametersNullSafe().clear();
 		}
 
@@ -326,7 +332,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 				setObjectId(entity.getId());
 			}
 
-		} catch (MeveoApiException e) {
+		} catch (Exception e) {
 			messages.error("Entity can't be saved. Please retry.");
 			throw new BusinessException(e);
 		}
@@ -355,5 +361,26 @@ public class EndpointBean extends BaseBean<Endpoint> {
 
 	public void setScriptInstance(ScriptInstance scriptInstance) {
 		this.scriptInstance = scriptInstance;
+	}
+	
+	public void onPathParametersTransfer(TransferEvent event) throws Exception {
+		
+		if (!pathDirty) {
+			StringBuilder newPath = new StringBuilder("");
+			String sep = "/";
+			for (EndpointPathParameter endpointPathParameter : entity.getPathParameters()) {
+				newPath.append(sep).append("{").append(endpointPathParameter).append("}");
+			}
+
+			entity.setPath(newPath.toString());
+		}
+	}
+
+	public boolean isPathDirty() {
+		return pathDirty;
+	}
+
+	public void setPathDirty(boolean pathDirty) {
+		this.pathDirty = pathDirty;
 	}
 }
