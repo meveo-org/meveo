@@ -857,12 +857,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     public synchronized ScriptInterface getScriptInterface(String scriptCode) throws Exception {
         ScriptInterfaceSupplier supplier = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
-
         if (supplier == null) {
             supplier = getScriptInterfaceWCompile(scriptCode);
         }
 
-        return supplier.getScriptInterface();
+        try {
+			return supplier.getScriptInterface();
+		} catch (NoClassDefFoundError e) {
+			clearCompiledScripts(scriptCode);
+			supplier = getScriptInterfaceWCompile(scriptCode);
+	        return supplier.getScriptInterface();
+		}
     }
 
     /**
