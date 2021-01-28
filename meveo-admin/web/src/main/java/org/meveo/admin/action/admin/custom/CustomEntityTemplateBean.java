@@ -1278,15 +1278,21 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	/**
 	 * Add CET and its CFTs to selected module.
+	 * @throws BusinessException 
 	 */
-	public void addToModuleForCET() {
+	public void addToModuleForCET() throws BusinessException {
 		if (entity != null && !getMeveoModule().equals(entity)) {
 			Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo());
 			BusinessEntity businessEntity = (BusinessEntity) entity;
 			MeveoModule module = meveoModuleService.findById(getMeveoModule().getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 			MeveoModuleItem item = new MeveoModuleItem(businessEntity);
 			if (!module.getModuleItems().contains(item)) {
-				meveoModuleService.addModuleItem(item, module);
+				try {
+					meveoModuleService.addModuleItem(item, module);
+				} catch (BusinessException e) {
+					throw new BusinessException("Entity cannot be add or remove from the module", e);
+				}
+				
 			} else {
 				messages.error(new BundleKey("messages", "customizedEntities.cetExisted.error"), businessEntity.getCode(), module.getCode());
 				return;

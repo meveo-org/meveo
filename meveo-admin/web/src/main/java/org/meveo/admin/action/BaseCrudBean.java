@@ -51,7 +51,7 @@ import org.primefaces.model.StreamedContent;
  * @version 6.10.0
  */
 @Named
-@ViewScoped
+//@ViewScoped
 public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> extends BaseBean<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -204,9 +204,13 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
     }
 
 	@Override
-	public void addToModule(T entity, MeveoModule module) {
+	public void addToModule(T entity, MeveoModule module) throws BusinessException {
 		baseCrudApi.addToModule(entity, module);
-		super.addToModule(entity, module);
+		try {
+			super.addToModule(entity, module);
+		} catch (BusinessException e) {
+			throw new BusinessException("Entity cannot be add or remove from the module", e);
+		}
 	}
 	
 }
