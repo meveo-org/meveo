@@ -63,6 +63,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	@Inject
 	private ESGenerator esGenerator;
 	
+	@Inject
 	private GitClient gitClient;
 
 	@Inject
@@ -218,12 +219,12 @@ public class EndpointService extends BusinessService<Endpoint> {
 		super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode()+"/"+entity.getCode()+".js";
     	
-    	File newDir = new File (gitDirectory, path);	
+    	File newJsFile = new File (gitDirectory, path);
     	
-		FileUtils.write(newDir, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
+		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
 		
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(newDir), "Add JS script for Endpoint " + entity.getCode());
+		gitClient.commitFiles(meveoRepository, Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
 	}
 }
