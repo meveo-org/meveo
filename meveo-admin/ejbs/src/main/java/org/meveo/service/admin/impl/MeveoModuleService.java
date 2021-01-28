@@ -85,6 +85,8 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
+import org.meveo.service.base.BusinessEntityFinder;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
@@ -118,6 +120,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private GitClient gitClient;
+    
+    @Inject
+    private BusinessEntityFinder businessEntityFinder;
 
     /**
      * Add missing dependencies of each module item
@@ -324,14 +329,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * Add module item with differentiate if appliesTo is null or not
      * 
      * @param meveoModuleItem Module item
+     * @throws BusinessException 
+     * @throws IOException 
      */
-    public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
+    @SuppressWarnings("unchecked")
+	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
     	}
     	
-    	List<MeveoModuleItem> testEmptyModule;
+    	List<MeveoModuleItem> testEmptyModule = new ArrayList<MeveoModuleItem>();;
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
@@ -343,10 +351,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		module.getModuleItems().add(meveoModuleItem);
     		meveoModuleItem.setMeveoModule(module);
     	}else {
-    		throw new IllegalArgumentException(
-    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
-    			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
-    		);
+    		
+//    		throw new IllegalArgumentException(
+//    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
+//   			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
+//    		);
+	    	try {
+	    		@SuppressWarnings("rawtypes")
+	    		BusinessService businessService = businessEntityFinder.find(meveoModuleItem.getItemEntity());
+				businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+			} catch (BusinessException | IOException e) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e);
+			}
     	}
     }
     
