@@ -332,34 +332,40 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @throws BusinessException 
      * @throws IOException 
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
 	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
     	}
     	
-    	List<MeveoModuleItem> testEmptyModule = new ArrayList<MeveoModuleItem>();;
+    	List<MeveoModuleItem> testEmptyModule = new ArrayList<MeveoModuleItem>();
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
+	    BusinessService businessService = businessEntityFinder.find(meveoModuleItem.getItemEntity());
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
     	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
-    		module.getModuleItems().add(meveoModuleItem);
-    		meveoModuleItem.setMeveoModule(module);
+    		try {
+    			businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    			module.getModuleItems().add(meveoModuleItem);
+    			meveoModuleItem.setMeveoModule(module);
+    		} catch (BusinessException | IOException e2) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e2);
+    		}
     	}else {
-    		
 //    		throw new IllegalArgumentException(
 //    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
 //   			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
 //    		);
-	    	try {
-	    		@SuppressWarnings("rawtypes")
-	    		BusinessService businessService = businessEntityFinder.find(meveoModuleItem.getItemEntity());
+    		try {
 				businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+				module.getModuleItems().remove(testEmptyModule.get(0));
+				module.getModuleItems().add(meveoModuleItem);
+				meveoModuleItem.setMeveoModule(module);
 			} catch (BusinessException | IOException e) {
 				throw new BusinessException("Entity cannot be add or remove from the module", e);
 			}
