@@ -274,12 +274,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	File newDir = new File (gitDirectory, path);
     	newDir.mkdirs();
     	
-    	File newFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
-    	newFile.createNewFile();
+    	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
+    	newJsonFile.createNewFile();
 
     	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
 
-    	Files.write(newDir.toPath(), strToBytes);
+    	Files.write(newJsonFile.toPath(), strToBytes);
 
 		gitClient.commitFiles(meveoRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     }
