@@ -26,14 +26,16 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.git.GitRepository;
+import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 
@@ -44,6 +46,8 @@ import javax.persistence.NonUniqueResultException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,6 +60,13 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	protected EntitySerializer businessEntitySerializer;
+	
+	@Inject
+	private GitClient gitClient;
+	
+	@Inject
+	@MeveoRepository
+	private GitRepository meveoRepository;
 	
     /**
      * Find entity by code - strict match.
@@ -200,18 +211,18 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     			CustomFieldTemplate entityCtf = (CustomFieldTemplate) entity;
     			
 				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType AND m.appliesTo = :appliesTo");
+	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass AND mi.appliesTo = :appliesTo");
 	    		q.setParameter("code", entityCtf.getCode());
-	    		q.setParameter("itemType", entityCtf.getClass().getName());
+	    		q.setParameter("itemClass", entityCtf.getClass().getName());
 	    		q.setParameter("appliesTo", entityCtf.getAppliesTo());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
     		}else {
 				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType");
+	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass");
 	    		q.setParameter("code", entity.getCode());
-	    		q.setParameter("itemType", entity.getClass().getName());
+	    		q.setParameter("itemClass", entity.getClass().getName());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
@@ -228,10 +239,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws BusinessException if the folder is not deleted
      */
     public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
-    	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
@@ -240,8 +250,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
     	}
+//    	gitClient.commitFiles(meveoRepository, Collections.singletonList(directoryToRemove), "Remove directory " + directoryToRemove.getPath());
+    	
+    	List<String> pattern = new ArrayList<String>();
+    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
+    	gitClient.commit(meveoRepository, pattern, "Remove directory " + directoryToRemove.getPath());
     }
-    
     /**
      * Create the entity in the dedicated module
      * 
@@ -255,15 +269,19 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	
     	File newDir = new File (gitDirectory, path);
-    	
     	newDir.mkdirs();
     	
+    	File newFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
+    	newFile.createNewFile();
+
     	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-    	
+
     	Files.write(newDir.toPath(), strToBytes);
+
+		gitClient.commitFiles(meveoRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     }
     
     /**
