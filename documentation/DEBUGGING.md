@@ -30,7 +30,6 @@ Then in `vscode`, open the project and [configure the file](https://code.visuals
         {
             "type": "java",
             "name": "Launch Current File",
-            "mainClass": "${file}",
             "request": "attach",
             "hostName": "localhost",
             "port": 8787
