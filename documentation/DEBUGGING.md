@@ -1,5 +1,46 @@
 ## Debugging
 
+### Realtime script debuggin using visual code
+It is possible to debug scripts executed in meveo using jdb, for instance in visual code.
+
+first you must launch wildfly in mode debug, for this edit your `docker-compose.yml` and add those lines
+in the meveo service
+
+```
+        environment:
+          #KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
+          KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
+          WILDFLY_DEBUG_ENABLE: "true"
+          WILDFLY_DEBUG_PORT: 8787
+        ports:
+          - 8080:8080
+          - 8787:8787
+          - 9990:9990
+```
+
+Then in `vscode`, open the project and [configure the file](https://code.visualstudio.com/docs/java/java-debugging) `launch.json`
+
+```
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "mainClass": "${file}",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 8787
+        }
+    ]
+}
+```
+
+### Check meveo logs
+
 We have several methods to see meveo log. 
 
 1. From meveo GUI, click on Execution / Logs
