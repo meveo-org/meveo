@@ -32,3 +32,7 @@ When being executed by an endpoint, a job or a notification, it is possible to c
 - NEW: the script execution will be wrapped in a new transaction
 - SAME (default): the script will be executed in the caller's transaction
 - NONE: the script will not be executed in a transaction
+
+## Debugging
+
+you can easily debug your scripts from your IDE [using jdb](../../../../../../../../../documentation/DEBUGGING.md).
