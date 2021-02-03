@@ -18,7 +18,7 @@
 
 	<changeSet author="Phu Bach" id="Waps#17">
 		<addColumn tableName="job_execution">
-			<column name="summary" type="varchar(500)" />
+			<column name="summary" type="text" />
 		</addColumn>
 	</changeSet>
 

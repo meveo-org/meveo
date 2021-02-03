@@ -125,7 +125,10 @@ public class FlatFileProcessingJobBean {
 
         if (file != null) {
             fileName = file.getName();
-            result.setSummary("fileName: " + fileName);
+            if (result.getSummary() == null || result.getSummary().isBlank())
+            	result.setSummary("fileName: " + fileName);
+            else
+            	result.setSummary(result.getSummary()+", " + fileName);
             ScriptInterface script = null;
             IFileParser fileParser = null;
             File currentFile = null;
