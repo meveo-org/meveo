@@ -33,4 +33,10 @@
 		baseColumnNames="git_repository_id" baseTableName="meveo_module" referencedColumnNames="id"/>
 	</changeSet>
 
+	<changeSet author="Phu Bach" id="Waps#17">
+		<addColumn tableName="job_execution">
+			<column name="file_name" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>
