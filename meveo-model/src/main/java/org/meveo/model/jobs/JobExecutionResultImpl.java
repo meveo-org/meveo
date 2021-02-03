@@ -45,8 +45,8 @@ public class JobExecutionResultImpl extends BaseEntity {
     @Column(name = "nb_error")
     private long nbItemsProcessedWithError;
 
-    @Column(name = "file_name")
-    private String fileName;
+    @Column(name = "summary")
+    private String summary;
 
     /**
      * True if the job didn't detect anything else to do. If false the Jobservice will execute it again immediatly
@@ -129,7 +129,7 @@ public class JobExecutionResultImpl extends BaseEntity {
         result.setWarnings(res.getWarnings());
         result.setDone(res.isDone());
         result.setId(res.getId());
-        result.setFileName(res.getFileName());
+        result.setSummary(res.getSummary());
         return result;
     }
 
@@ -145,7 +145,7 @@ public class JobExecutionResultImpl extends BaseEntity {
         result.setWarnings(source.getWarnings());
         result.setDone(source.isDone());
         result.setId(source.getId());
-        result.setFileName(source.getFileName());
+        result.setSummary(source.getSummary());
     }
 
     // Getter & setters
@@ -260,15 +260,15 @@ public class JobExecutionResultImpl extends BaseEntity {
         return jobInstance;
     }
 
-    public String getFileName() {
-        return fileName;
-    }
+    public String getSummary() {
+		return summary;
+	}
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
 
-    /**
+	/**
      * @return the jobLauncherEnum
      */
     public JobLauncherEnum getJobLauncherEnum() {
