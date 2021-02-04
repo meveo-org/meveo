@@ -813,6 +813,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType,
             String sourceCode, boolean isActive, boolean testCompile) {
+        List<ScriptInstanceError> result = new ArrayList<>();
         if (sourceType == ScriptSourceTypeEnum.JAVA) {
             log.debug("Compile script {}", scriptCode);
 
@@ -821,15 +822,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     clearCompiledScripts(scriptCode);
                 }
 
-                Class<ScriptInterface> compiledScript;
-                compiledScript = compileJavaSource(sourceCode, testCompile);
+                compileJavaSource(sourceCode, testCompile);
 
-                return null;
+                return result;
 
             } catch (CharSequenceCompilerException e) {
                 log.error("Failed to compile script {}. Compilation errors:", scriptCode);
-
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
 
                 List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
                 for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
@@ -844,27 +842,25 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             scriptInstanceError.setSourceFile("No source file");
                         }
 
-                        scriptErrors.add(scriptInstanceError);
+                        result.add(scriptInstanceError);
                         log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), scriptCode,
                                 diagnostic.getLineNumber(), diagnostic.getColumnNumber(),
                                 diagnostic.getMessage(Locale.getDefault()));
                     }
                 }
-                return scriptErrors;
+                return result;
 
             } catch (Exception e) {
                 log.error("Failed while compiling script", e);
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
                 ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
                 scriptInstanceError.setMessage(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-                scriptErrors.add(scriptInstanceError);
-
-                return scriptErrors;
+                result.add(scriptInstanceError);
+                return result;
             }
         } else {
             ScriptInterface engine = new ES5ScriptEngine(sourceCode);
             ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-            return null;
+            return result;
         }
     }
 
