@@ -580,104 +580,117 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		}
     }
 
-	/**
-	 * Add the given maven libraries to class path
-	 * 
-	 * @param mavenDependenciesList Denpendencies definitions
-	 */
-	public void addMavenLibrariesToClassPath(Collection<MavenDependency> mavenDependenciesList) {
-		MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
+    /**
+     * Add the given maven libraries to class path
+     * 
+     * @param mavenDependenciesList Denpendencies definitions
+     */
+    public List<ScriptInstanceError> addMavenLibrariesToClassPath(Collection<MavenDependency> mavenDependenciesList) {
+        List<ScriptInstanceError> result = new ArrayList<>();
+        MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
 
-		var dependenciesToResolve = mavenDependenciesList.stream()
-				.filter(Predicate.not(mavenClassLoader::isLibraryLoaded))
-				.collect(Collectors.toList());
+        var dependenciesToResolve = mavenDependenciesList.stream()
+                .filter(Predicate.not(mavenClassLoader::isLibraryLoaded))
+                .collect(Collectors.toList());
+        
+        if (dependenciesToResolve == null || dependenciesToResolve.isEmpty()) {
+            log.debug("All maven depencencies are already loaded");
+            return result;
+        }
 
-		Map<MavenDependency, Set<String>> resolvedDependencies = getMavenDependencies(dependenciesToResolve);
-				
-		synchronized (CLASSPATH_REFERENCE) {
-			resolvedDependencies.forEach((lib, locations) -> {
-				locations.forEach(location -> {
-					if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
-						CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-					}
-				});
-				
-				mavenClassLoader.addLibrary(lib, locations);
-			});
-		}
-	}
+        String m2FolderPath = mavenConfigurationService.getM2FolderPath();
+        if (StringUtils.isBlank(m2FolderPath)){
+            String errorStr = "No maven .m2 path defined in maven configuration";
+            log.error(errorStr);
+            ScriptInstanceError error = new ScriptInstanceError();
+            error.setMessage(errorStr);
+            result.add(error);
+            return result;
+        }
 
-	private Map<MavenDependency, Set<String>> getMavenDependencies(Collection<MavenDependency> mavenDependencies) {
-		if(mavenDependencies == null || mavenDependencies.isEmpty()) {
-			return Map.of();
-		}
-		
-		Map<MavenDependency, Set<String>> result = new HashMap<>();
-		List<String> repos = mavenConfigurationService.getMavenRepositories();
-		String m2FolderPath = mavenConfigurationService.getM2FolderPath();
+        List<String> repos = mavenConfigurationService.getMavenRepositories();
+        String repoId = RandomStringUtils.randomAlphabetic(5);
+        List<RemoteRepository> remoteRepositories = repos.stream()
+                    .map(e -> new RemoteRepository.Builder(repoId, "default", e).build())
+                    .collect(Collectors.toList());
+        
+        log.debug("Found {} repositories", remoteRepositories.size());
+        Map<MavenDependency, Set<String>> resolvedDependencies = new HashMap<>();
+        for(MavenDependency mavenDependency:dependenciesToResolve){
+            Set<String> resolvedDependency = getMavenDependencies(mavenDependency,remoteRepositories);
+            if(resolvedDependency != null){
+                resolvedDependencies.put(mavenDependency,resolvedDependency);
+            } else {
+                String errorStr = "Cannot find or load maven dependency " + mavenDependency.toString() + ", .m2 path: " + mavenDependency.toLocalM2Path(m2FolderPath);
+                log.error(errorStr);
+                ScriptInstanceError error = new ScriptInstanceError();
+                error.setMessage(errorStr);
+                result.add(error);
+            }
+        }
 
-		if (!StringUtils.isBlank(m2FolderPath)) {
-			String repoId = RandomStringUtils.randomAlphabetic(5);
-			List<RemoteRepository> remoteRepositories = repos.stream()
-					.map(e -> new RemoteRepository.Builder(repoId, "default", e)
-					.build())
-					.collect(Collectors.toList());
+        synchronized (CLASSPATH_REFERENCE) {
+            resolvedDependencies.forEach((lib, locations) -> {
+                locations.forEach(location -> {
+                    if (!StringUtils.isBlank(location) && !CLASSPATH_REFERENCE.get().contains(location)) {
+                        CLASSPATH_REFERENCE.set(CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
+                    }
+                });
 
-			log.debug("found {} repositories", remoteRepositories.size());
+                mavenClassLoader.addLibrary(lib, locations);
+            });
+        }
+        return result;
+    }
 
-			if (mavenDependencies != null && !mavenDependencies.isEmpty()) {
-				for(var e : mavenDependencies) {
-					log.info("Resolving artifacts for {}", e);
-					List<ArtifactResult> artifacts;
-					
-					DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
-					DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
-					Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
+    private Set<String> getMavenDependencies(MavenDependency e, List<RemoteRepository> remoteRepositories) {
+        Set<String> result = null;
+        log.info("Resolving artifacts for {}", e);
+        List<ArtifactResult> artifacts;
 
-					try {
-						// check if artifact exists in local repository or in maven central
-						CollectRequest collectRequestLocal = new CollectRequest();
-						collectRequestLocal.setRoot(root);
+        DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
+        DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
+        Dependency root = new Dependency(rootArtifact, JavaScopes.COMPILE);
 
-						DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestLocal, classpathFlter);
-						DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-						
-						artifacts = dependencyResult.getArtifactResults();
+        try {
+            // Check if artifact exists in local repository or in maven central
+            CollectRequest collectRequestLocal = new CollectRequest();
+            collectRequestLocal.setRoot(root);
 
-					} catch (DependencyResolutionException e1) {
-						
-						// If local repository resolution failed, try with remote
-						log.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
-						try {
-							CollectRequest collectRequestRemote = new CollectRequest();
-							collectRequestRemote.setRoot(root);
-							remoteRepositories.forEach(collectRequestRemote::addRepository);
-							
-							DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
-							DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-							artifacts = dependencyResult.getArtifactResults();
-							
-						} catch (DependencyResolutionException e2) {
-							log.error("Fail downloading dependencies {}", e2);
-							return null; // TODO handle it
-						}
+            DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestLocal, classpathFlter);
+            DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
 
-					}
-					
-					log.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
-					
-					Set<String> artifactLocations = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
-						return artifact.getArtifact().getFile().getPath();
-					}).collect(Collectors.toSet());
-					
-					result.put(e, artifactLocations);
-				}
+            artifacts = dependencyResult.getArtifactResults();
 
-			}
-		}
+        } catch (DependencyResolutionException e1) {
 
-		return result;
-	}
+            // If local repository resolution failed, try with remote
+            log.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
+            
+            try {
+                CollectRequest collectRequestRemote = new CollectRequest();
+                collectRequestRemote.setRoot(root);
+                remoteRepositories.forEach(collectRequestRemote::addRepository);
+
+                DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
+                DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
+                artifacts = dependencyResult.getArtifactResults();
+
+            } catch (DependencyResolutionException e2) {
+                log.error("Fail downloading dependencies {}", e2);
+                return null;
+            }
+
+        }
+
+        log.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
+
+        result = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
+            return artifact.getArtifact().getFile().getPath();
+        }).collect(Collectors.toSet());
+
+        return result;
+    }
 
     /**
      * Parse the java source code and extract getters and setters
