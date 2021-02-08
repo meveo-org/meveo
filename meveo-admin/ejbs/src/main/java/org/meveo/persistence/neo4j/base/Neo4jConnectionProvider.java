@@ -37,6 +37,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.neo4j.driver.v1.AuthToken;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
@@ -140,7 +141,8 @@ public class Neo4jConnectionProvider {
 	}
 
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
-		return GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword()));
+		AuthToken authToken = AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), neo4JConfiguration.getNeo4jPassword());
+		return GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), authToken);
 	}
 
     public String getNeo4jUrl() {
