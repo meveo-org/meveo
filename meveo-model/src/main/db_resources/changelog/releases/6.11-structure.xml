@@ -66,5 +66,11 @@
 			constraintName="fk_meveo_module_item_meveo_module" referencedTableName="meveo_module" 
 			referencedColumnNames="id" onDelete="CASCADE"/>
 	</changeSet>
+	
+	<changeSet id="Make neo4j protocol configurable" author="Clément Bareth">
+		<addColumn tableName="neo4j_configuration">
+			<column name="protocol" defaultValue="bolt" type="varchar(255)"></column>		
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

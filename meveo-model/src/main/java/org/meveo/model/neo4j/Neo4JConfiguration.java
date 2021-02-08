@@ -48,6 +48,12 @@ public class Neo4JConfiguration extends BusinessEntity {
 	private static final long serialVersionUID = 5788790630004555788L;
 
 	public transient static final String DEFAULT_NEO4J_CONNECTION = "default";
+	
+	/**
+	 * Protocol used to connect the database. Default is "bolt".
+	 */
+	@Column(name = "protocol")
+	private String protocol = "bolt";
 
 	/**
 	 * Url of the Neo4j repository
@@ -93,6 +99,22 @@ public class Neo4JConfiguration extends BusinessEntity {
 	public void setNeo4jPassword(String neo4jPassword) {
 		this.neo4jPassword = neo4jPassword;
 	}
+	
+
+	/**
+	 * @return the {@link #protocol}
+	 */
+	public String getProtocol() {
+		return protocol;
+	}
+
+	/**
+	 * @param protocol the protocol to set
+	 */
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+	}
+	
 
 	/**
 	 * @return the {@link #clearPassword}
@@ -110,5 +132,4 @@ public class Neo4JConfiguration extends BusinessEntity {
     		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
     	}
 	}
-	
 }
