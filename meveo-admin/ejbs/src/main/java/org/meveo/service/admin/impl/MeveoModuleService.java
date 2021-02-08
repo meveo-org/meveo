@@ -349,7 +349,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	BusinessService businessService = businessEntityFinder.find(meveoModuleItem.getItemEntity());
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
-    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
+    	if (testEmptyModule.isEmpty()) {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     			module.getModuleItems().add(meveoModuleItem);
@@ -357,7 +357,15 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		} catch (BusinessException | IOException e2) {
 				throw new BusinessException("Entity cannot be add or remove from the module", e2);
     		}
-    	}else {
+    	}else if (testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())){
+    		try {
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    			module.getModuleItems().add(meveoModuleItem);
+    			meveoModuleItem.setMeveoModule(module);
+    		} catch (BusinessException | IOException e2) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e2);
+    		}    		
+    	} else {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     		    MeveoModule moduleToRemove = businessService.findModuleOf(meveoModuleItem.getItemEntity());
