@@ -1,0 +1,36 @@
+{
+	"name": "Meveo",
+    "workspaceFolder": "/opt/jboss/wildfly/meveodata/default/git/meveo-src",
+	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
+	"dockerComposeFile": "docker-compose.yml",
+
+	// The 'service' property is the name of the service for the container that VS Code should
+	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+	"service": "meveo",
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": { 
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"java.home": "/usr/local/openjdk-11"
+	},
+	
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"vscjava.vscode-java-pack",
+        "vscjava.vscode-maven",
+        "redhat.vscode-server-connector"
+	],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // 5432 : postgres
+    // 8080 : meveo
+    // 8087 : wildfly debug
+    // 9990 : wildfly admin
+	"forwardPorts": [5432,8080,8087,9990],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "java -version",
+
+	"remoteUser": "root"
+	
+}
