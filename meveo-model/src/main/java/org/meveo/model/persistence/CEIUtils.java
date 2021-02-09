@@ -26,6 +26,9 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.PasswordUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+
 /**
  * Utilitary class for manipulating {@link CustomEntityInstance}
  * 
@@ -124,7 +127,7 @@ public class CEIUtils {
 	public static <T> T ceiToPojo(CustomEntityInstance cei, Class<T> pojoClass) {
 		Map<String, Object> pojoValues = cei.getCfValuesAsValues();
 		pojoValues.put("uuid", cei.getUuid());
-		return JacksonUtil.convert(pojoValues, pojoClass);
+		return deserialize(pojoValues, pojoClass);
 	}
 	
 	private static String getFieldForGetter(Class<?> clazz, Method getter) {
@@ -199,22 +202,25 @@ public class CEIUtils {
 
 				Class<?> paramType = setter.getParameters()[0].getType();
 
-				// if type extends CustomField set the UUID
+				// if type extends CustomEntity set the UUID
 				if (CustomEntity.class.isAssignableFrom(paramType)) {
-					lazyInitInstance = paramType //
-							.getDeclaredConstructor() //
+					lazyInitInstance = paramType
+							.getDeclaredConstructor()
 							.newInstance();
 					setUUIDField(lazyInitInstance, (String) entry.getValue());
 					setter.invoke(instance, lazyInitInstance);
 
 				} else {
 					try {
-						setter.invoke(instance, entry.getValue());
+						var type = setter.getParameters()[0].getParameterizedType();
+						var jacksonType = TypeFactory.defaultInstance().constructType(type);
+						var convertedValue = new ObjectMapper().convertValue(entry.getValue(), jacksonType);
+						setter.invoke(instance, convertedValue);
 
 					} catch (IllegalArgumentException e) {
 						try {
-							lazyInitInstance = paramType //
-									.getDeclaredConstructor() //
+							lazyInitInstance = paramType
+									.getDeclaredConstructor()
 									.newInstance();
 							setIdField(lazyInitInstance, entry.getValue());
 							setter.invoke(instance, lazyInitInstance);
