@@ -161,34 +161,12 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
      * @param context context used in execution of script.
      */
     public void test(String scriptCode, Map<String, Object> context) {
-    	String javaSrc;
-        
-        clearLogs(scriptCode);
-        try {
-            ScriptInstance scriptInstance = findByCode(scriptCode);
-            isUserHasExecutionRole(scriptInstance);
-            javaSrc = scriptInstance.getScript();
-            javaSrc = javaSrc.replaceAll("LoggerFactory.getLogger", "new org.meveo.service.script.RunTimeLogger(" + getClassName(javaSrc) + ".class,\"" + appProvider.getCode()
-            	+ "\",\"" + scriptCode + "\",\"ScriptInstanceService\");//");
-        } catch(Exception e) {
-        	log.error("Error retrieving script with code {} for test", scriptCode, e);
-        	return;
-        }
-        
-        Class<ScriptInterface> compiledScript;
-        try {
-        	compiledScript = compileJavaSource(javaSrc, true);
-        } catch (Exception e) {
-        	log.error("Can't compile script {} for test", scriptCode, e);
-        	return;
-        }
-            
-        try {
-        	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
-            execute(MeveoBeanManager.getInstance().getInstance(bean), context);
-        } catch (Exception e) {
-            log.error("Script test execution failed", e);
-        }
+    	
+    	try {
+			execute(scriptCode, context);
+		} catch (BusinessException e) {
+			log.error("Script test execution failed", e);
+		}
     }
 
     /**

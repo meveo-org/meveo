@@ -42,6 +42,9 @@ public class MeveoBeanResolver extends TypeSafeBeanResolver {
 			result = meveoBeanManager.getMeveoBeans().get(resolvable.getJavaClass().getName());
 			if(result == null || !result.iterator().hasNext()) {
 				ScriptInstance scriptInstance = scriptService.findByCode(resolvable.getJavaClass().getName());
+				if(scriptInstance == null) {
+					throw new NullPointerException("Script instance with code " + resolvable.getJavaClass().getName() + " does not exists");
+				}
 				scriptService.loadClassInCache(scriptInstance.getCode());
 				result = meveoBeanManager.getMeveoBeans().get(resolvable.getJavaClass().getName());
 			}
