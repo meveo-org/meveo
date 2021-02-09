@@ -56,7 +56,7 @@ services:
   meveo:
       build: 
         context: ../docker/
-        dockerfile: Dockerfile.wildfly
+        dockerfile: Dockerfile.dev
       container_name: meveo
       networks:
         - meveo
