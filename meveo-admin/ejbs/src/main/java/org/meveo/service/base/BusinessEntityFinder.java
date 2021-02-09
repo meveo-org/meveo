@@ -8,8 +8,8 @@ import org.meveo.model.BusinessEntity;
 /**
  * 
  * @author arthur.grenier
- * @since
- * @version
+ * @since 6.14.0
+ * @version 6.14.0
  */
 public interface BusinessEntityFinder {
 	
