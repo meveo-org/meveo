@@ -1,11 +1,6 @@
 package org.meveo.api.module;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -20,12 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
-import org.meveo.api.ApiService;
-import org.meveo.api.ApiUtils;
-import org.meveo.api.ApiVersionedService;
-import org.meveo.api.BaseCrudApi;
-import org.meveo.api.CustomFieldTemplateApi;
-import org.meveo.api.EntityCustomActionApi;
+import org.meveo.api.*;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -40,6 +30,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ModuleInstall;
@@ -127,6 +118,9 @@ public class MeveoModuleItemInstaller {
 	
 	@EJB
 	private MeveoModuleItemInstaller meveoModuleItemInstaller;
+
+	@Inject
+	private CustomEntityTemplateApi customEntityTemplateApi;
     
     /**
      * Uninstall the module and disables it items
@@ -716,6 +710,12 @@ public class MeveoModuleItemInstaller {
 							moduleItemDto.setDtoData(cet);
 						}
 					}
+
+					if (!StringUtils.isBlank(cet.getCrudEventListenerScript())) {
+						cet.setTransientCrudEventListenerScript(cet.getCrudEventListenerScript());
+						cet.setCrudEventListenerScript(null);
+						moduleItemDto.setDtoData(cet);
+					}
 				}
 			}
 
@@ -726,7 +726,6 @@ public class MeveoModuleItemInstaller {
 			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
 				try {
 					 var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
-//					var subResult = unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
 					result.merge(subResult);
 				} catch (Exception e) {
 					if (e instanceof EJBException) {
@@ -736,7 +735,20 @@ public class MeveoModuleItemInstaller {
 					throw new BusinessException(e);
 				}
 			}
-			
+
+			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
+				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+					CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+					if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
+						CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
+						ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
+						if (si != null) {
+							cet.setCrudEventListenerScript(si);
+							customEntityTemplateService.update(cet);
+						}
+					}
+				}
+			}
         }
     	
     }

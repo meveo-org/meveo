@@ -107,6 +107,16 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
     @XmlAttribute()
     @ApiModelProperty("Whether a table that will audit the changes will be created.")
 	private boolean audited = false;
+
+    private String transientCrudEventListenerScript;
+
+    public String getTransientCrudEventListenerScript() {
+        return transientCrudEventListenerScript;
+    }
+
+    public void setTransientCrudEventListenerScript(String transientCrudEventListenerScript) {
+        this.transientCrudEventListenerScript = transientCrudEventListenerScript;
+    }
     
     /**
      * Instantiates a new custom entity template dto.

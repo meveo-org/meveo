@@ -148,7 +148,7 @@ public class Neo4jConnectionProvider {
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
 		String salt = PasswordUtils.getSalt(neo4JConfiguration.getId(), neo4JConfiguration.getCode());
 		String pwd = PasswordUtils.decrypt(salt, neo4JConfiguration.getNeo4jPassword());
-		var driver =  GraphDatabase.driver("bolt://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd));
+		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd));
 		// Test connection
 		driver.session().close();
 		return driver;
