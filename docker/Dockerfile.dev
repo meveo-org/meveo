@@ -151,7 +151,7 @@ ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
 
 
-RUN mkdir -p /usr/share/trava   
+RUN mkdir -p /usr/share/trava \
   && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.10%2B2/java11-openjdk-dcevm-linux.tar.gz  \
   && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
