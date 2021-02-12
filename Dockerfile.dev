@@ -158,8 +158,8 @@ RUN mkdir -p /usr/share/trava \
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
 COPY . /home/meveo
-RUN cd /home/meveo && mvn install
-RUN cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
+RUN cd /home/meveo && mvn dependency:go-offline \
+    && rm -Rf /home/meveo 
 
 COPY --chown=jboss:jboss docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
