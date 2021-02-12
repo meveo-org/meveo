@@ -1,6 +1,6 @@
 {
 	"name": "Meveo",
-    "workspaceFolder": "/opt/jboss/wildfly/meveodata/default/git/meveo-src",
+    "workspaceFolder": "/home/meveo",
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	"dockerComposeFile": "docker-compose.yml",
 
@@ -18,7 +18,8 @@
 	"extensions": [
 		"vscjava.vscode-java-pack",
         "vscjava.vscode-maven",
-        "redhat.vscode-server-connector"
+        "redhat.vscode-server-connector",
+		"ms-azuretools.vscode-docker"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

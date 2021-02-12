@@ -62,7 +62,7 @@ services:
         - meveo
       volumes:
         #- meveo_data:/opt/jboss/wildfly/meveodata
-        - ..:/opt/jboss/wildfly/meveodata/default/git/meveo-src
+        - ..:/home/meveo
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
         KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
