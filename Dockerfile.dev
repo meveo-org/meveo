@@ -157,8 +157,7 @@ RUN mkdir -p /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
-USER jboss
-COPY --chown=jboss:jboss . /tmp/meveo
+COPY . /tmp/meveo
 RUN cd /tmp/meveo && mvn install --no-transfer-progress
 #RUN chown jboss:jboss ./meveo-admin/web/target/meveo.war \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
