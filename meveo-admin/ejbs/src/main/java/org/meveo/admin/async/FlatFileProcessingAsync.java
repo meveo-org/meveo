@@ -5,7 +5,11 @@ package org.meveo.admin.async;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
@@ -75,49 +79,87 @@ public class FlatFileProcessingAsync {
      * @throws Exception Exception
      */
     @Asynchronous
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Future<FlatFileAsyncListResponse> launchAndForget(IFileParser fileParser, JobExecutionResultImpl result, ScriptInterface script, String recordVariableName,
             String fileName, String originFilename, String errorAction) throws Exception {
         long cpLines = 0;
         FlatFileAsyncListResponse flatFileAsyncListResponse = new FlatFileAsyncListResponse();
-        while (fileParser.hasNext() && jobExecutionService.isJobRunningOnThis(result.getJobInstance())) {
+        int parallelism = 10;
+		ForkJoinPool pool = new ForkJoinPool(parallelism);
+        final AtomicBoolean doStop = new AtomicBoolean(false);
+        final AtomicReference<BusinessException> rollBackException = new AtomicReference<BusinessException>();
+        
+        while (fileParser.hasNext() && jobExecutionService.isJobRunningOnThis(result.getJobInstance()) && !doStop.get()) {
             RecordContext recordContext = null;
             cpLines++;
             FlatFileAsyncUnitResponse flatFileAsyncResponse = new FlatFileAsyncUnitResponse();
             flatFileAsyncResponse.setLineNumber(cpLines);
-            try {
-                recordContext = fileParser.getNextRecord();
-                flatFileAsyncResponse.setLineRecord(recordContext.getLineContent());
-                log.trace("record line content:{}", recordContext.getLineContent());
-                if (recordContext.getRecord() == null) {
-                    throw new Exception(recordContext.getReason());
-                }
-                Map<String, Object> executeParams = new HashMap<String, Object>();
-                executeParams.put(recordVariableName, recordContext.getRecord());
-                executeParams.put(originFilename, fileName);
-                if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
-                    executeParams.put(Script.CONTEXT_CURRENT_USER, currentUser);
-                    executeParams.put(Script.CONTEXT_APP_PROVIDER, appProvider);
-                    script.execute(executeParams);
-                } else {
-                    unitFlatFileProcessingJobBean.execute(script, executeParams);
-                }
-                flatFileAsyncResponse.setSuccess(true);
-            } catch (Throwable e) {
-                if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
-                    throw new BusinessException(e.getMessage());
-                }
-                String erreur = (recordContext == null || recordContext.getReason() == null) ? e.getMessage() : recordContext.getReason();
-                log.warn("record on error :" + erreur);
-                flatFileAsyncResponse.setSuccess(false);
-                flatFileAsyncResponse.setReason(erreur);
-                if (FlatFileProcessingJob.STOP.equals(errorAction)) {
-                    flatFileAsyncListResponse.getResponses().add(flatFileAsyncResponse);
-                    break;
-                }
-            }
             flatFileAsyncListResponse.getResponses().add(flatFileAsyncResponse);
+			try {
+				recordContext = fileParser.getNextRecord();
+				final RecordContext recordContextFinal = recordContext;
+				flatFileAsyncResponse.setLineRecord(recordContext.getLineContent());
+				log.trace("record line content:{}", recordContext.getLineContent());
+				if (recordContext.getRecord() == null) {
+					throw new Exception(recordContext.getReason());
+				}
+				Map<String, Object> executeParams = new HashMap<String, Object>();
+				executeParams.put(recordVariableName, recordContextFinal.getRecord());
+				executeParams.put(originFilename, fileName);
+				if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
+					executeParams.put(Script.CONTEXT_CURRENT_USER, currentUser);
+					executeParams.put(Script.CONTEXT_APP_PROVIDER, appProvider);
+					script.execute(executeParams);
+					flatFileAsyncResponse.setSuccess(true);
+				} else if (FlatFileProcessingJob.STOP.equals(errorAction)) {
+					unitFlatFileProcessingJobBean.execute(script, executeParams);
+					flatFileAsyncResponse.setSuccess(true);
+				} else {
+					while (pool.hasQueuedSubmissions()) {
+						Thread.sleep(10);
+					}
+
+					pool.submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								unitFlatFileProcessingJobBean.execute(script, executeParams);
+								flatFileAsyncResponse.setSuccess(true);
+							} catch (Throwable e) {
+								if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
+									rollBackException.set(new BusinessException(e.getMessage(), e));
+									doStop.set(true);
+								}
+								String erreur = (recordContextFinal == null || recordContextFinal.getReason() == null) ? e.getMessage() : recordContextFinal.getReason();
+								log.warn("record on error :" + erreur);
+								flatFileAsyncResponse.setSuccess(false);
+								flatFileAsyncResponse.setReason(erreur);
+								if (FlatFileProcessingJob.STOP.equals(errorAction)) {
+									doStop.set(true);
+								}
+							}
+						}
+					});
+				}
+
+			} catch (Throwable e) {
+				if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
+					throw new BusinessException(e.getMessage(), e);
+				}
+				String erreur = (recordContext == null || recordContext.getReason() == null) ? e.getMessage() : recordContext.getReason();
+				log.warn("record on error :" + erreur);
+				flatFileAsyncResponse.setSuccess(false);
+				flatFileAsyncResponse.setReason(erreur);
+				if (FlatFileProcessingJob.STOP.equals(errorAction)) {
+					doStop.set(true);
+				}
+			}
         }
+        pool.shutdown();
+        pool.awaitTermination(1, TimeUnit.HOURS);
+        
+        if (rollBackException.get() != null)
+        	throw rollBackException.get();
         return new AsyncResult<FlatFileAsyncListResponse>(flatFileAsyncListResponse);
     }
 }

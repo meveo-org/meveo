@@ -50,7 +50,7 @@ public class FileParserBeanio implements IFileParser {
 		if(beanReader == null){
 			return false;
 		}
-		recordContext.setRecord(null);
+		recordContext = new RecordContext(); // thread safe context
 		try{
 			recordContext.setRecord(beanReader.read());
 			recordContext.setLineContent(beanReader.getRecordContext(0).getRecordText());
