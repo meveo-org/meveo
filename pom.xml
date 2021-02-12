@@ -16,7 +16,7 @@
 		<version.wildfly>18.0.1.Final</version.wildfly>
 		<dbtype>generic</dbtype>
 		<releaseOption />
-		<jackson.version>[2.9.10.8,)</jackson.version>
+		<jackson.version>2.9.10</jackson.version>
 		<scm.url>scm:git:ssh://git@github.com/meveo-org/meveo</scm.url>
 		<aether.version>1.1.0</aether.version>
 	</properties>
@@ -228,12 +228,12 @@
 			<dependency>
 				<groupId>com.thoughtworks.xstream</groupId>
 				<artifactId>xstream</artifactId>
-				<version>[1.4.15,)</version>
+				<version>1.4.15</version>
 			</dependency>
 			<dependency>
 				<groupId>com.thoughtworks.xstream</groupId>
 				<artifactId>xstream-hibernate</artifactId>
-				<version>[1.4.15,)</version>
+				<version>1.4.15</version>
 			</dependency>
 			<dependency>
 				<groupId>org.codehaus.groovy</groupId>
@@ -271,12 +271,12 @@
 			<dependency>
 				<groupId>org.apache.poi</groupId>
 				<artifactId>poi</artifactId>
-				<version>[3.17,)</version>
+				<version>3.17</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.poi</groupId>
 				<artifactId>poi-ooxml</artifactId>
-				<version>[3.17,)</version>
+				<version>3.17</version>
 			</dependency>
 			<dependency>
 				<groupId>joda-time</groupId>
