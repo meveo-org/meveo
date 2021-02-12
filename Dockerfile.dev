@@ -157,9 +157,9 @@ RUN mkdir -p /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
-COPY . /home/meveo
-RUN cd /home/meveo && mvn dependency:go-offline \
-    && rm -Rf /home/meveo 
+COPY . /tmp/meveo
+RUN cd /tmp/meveo && mvn install \
+    && rm -Rf /tmp/meveo 
 
 COPY --chown=jboss:jboss docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
