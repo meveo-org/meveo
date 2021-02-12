@@ -3,10 +3,10 @@
 MVN_VERSION="3.6.3"
 MVN_REPO_DIR="/opt/jboss/wildfly/meveodata/default/.m2/repository"
 MVN_CONF="/opt/jboss/wildfly/meveodata/default/.m2/settings.xml"
-MVN_EXEC="$HOME/maven/bin/mvn"
+MVN_EXEC="mvn"
 
 MEVEO_SOURCE_DIR="."    # /opt/jboss/wildfly/meveodata/default/git/meveo-source
-MEVEO_DEPLOY_DIR="../../../../standalone/deployments"   # /opt/jboss/wildfly/standalone/deployments
+MEVEO_DEPLOY_DIR="/opt/jboss/wildfly/standalone/deployments" #"../../../../standalone/deployments"   #
 
 # Create a custom conf file for maven
 install_maven_conf() {

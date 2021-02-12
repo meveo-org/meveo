@@ -158,7 +158,8 @@ RUN mkdir -p /usr/share/trava \
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
 COPY . /tmp/meveo
-RUN cd /tmp/meveo && mvn install --no-transfer-progress
+RUN cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources
+RUN cd /tmp/meveo && ./deploy.sh
 #RUN chown jboss:jboss ./meveo-admin/web/target/meveo.war \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo 
