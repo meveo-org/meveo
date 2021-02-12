@@ -27,7 +27,7 @@
     // 8080 : meveo
     // 8087 : wildfly debug
     // 9990 : wildfly admin
-	"forwardPorts": [5432,8080,8087,9990],
+	"forwardPorts": [5432,8080,8081,8087,9990],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "java -version",
