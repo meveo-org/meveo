@@ -54,9 +54,10 @@ services:
       ports:
         - 8081:8080
   meveo:
-      build: 
-        context: ../
-        dockerfile: Dockerfile.dev
+      image: manaty/meveo-dev:latest 
+      #build: 
+      #  context: ../
+      #  dockerfile: Dockerfile.dev
       container_name: meveo
       networks:
         - meveo
