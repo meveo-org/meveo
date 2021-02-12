@@ -123,16 +123,14 @@ public class DateUtils {
         if (dateValue == null || dateValue.trim().length() == 0) {
             return null;
         }
-        Date result = null;
-
         SimpleDateFormat sdf = new SimpleDateFormat(pattern);
 
         try {
-            result = sdf.parse(dateValue);
+        	Date result = sdf.parse(dateValue);
+        	return result.toInstant();
         } catch (Exception e) {
-            result = null;
         }
-        return result.toInstant();
+        return null;
     }
 
     public static boolean isDateTimeWithinPeriod(Date date, Date periodStart, Date periodEnd) {
