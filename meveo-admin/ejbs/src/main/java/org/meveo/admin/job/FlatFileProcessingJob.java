@@ -153,7 +153,11 @@ public class FlatFileProcessingJob extends Job {
                 if (!jobExecutionService.isJobRunningOnThis(result.getJobInstance().getId())) {
                     break;
                 }
-                flatFileProcessingJobBean.execute(result, inputDir, outputDir, archiveDir, rejectDir, file, mappingConf, scriptInstanceFlowCode, recordVariableName, initContext, originFilename, formatTransfo,errorAction);
+                if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
+                	flatFileProcessingJobBean.executeWithRollBack(result, inputDir, outputDir, archiveDir, rejectDir, file, mappingConf, scriptInstanceFlowCode, recordVariableName, initContext, originFilename, formatTransfo,errorAction);
+                } else {
+                	flatFileProcessingJobBean.executeWithoutRollBack(result, inputDir, outputDir, archiveDir, rejectDir, file, mappingConf, scriptInstanceFlowCode, recordVariableName, initContext, originFilename, formatTransfo,errorAction);                	
+                }
             }
 
         } catch (Exception e) {
