@@ -20,15 +20,7 @@
 		<module>web</module>
 	</modules>
 
-	<properties>
-		<manaty.filterFile>meveo-admin-filter-${env}.properties</manaty.filterFile>
-	</properties>
-
 	<build>
-		<filters>
-			<filter>${project.basedir}/../src/filters/${manaty.filterFile}</filter>
-		</filters>
-
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

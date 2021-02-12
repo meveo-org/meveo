@@ -98,7 +98,7 @@ WORKDIR ${JBOSS_HOME}
 
 ARG POSTGRESQL_VERSION=42.2.5
 
-COPY --chown=jboss:jboss configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+COPY --chown=jboss:jboss docker/configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
 
 RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION}.jar \
     && mv postgresql-${POSTGRESQL_VERSION}.jar ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/ \
@@ -116,13 +116,13 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
     && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
 
 ### cli commands
-COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
+COPY --chown=jboss:jboss docker/configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss docker/configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 
 ### Changelog files for Liquibase
-COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
+COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_resources
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
@@ -157,7 +157,7 @@ RUN mkdir -p /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
-COPY .. /home/meveo
+COPY . /home/meveo
 RUN cd /home/meveo && mvn install \
   && cp ./meveo-admin/web/meveo.war ${JBOSS_HOME}/standalone/deployments/
 
