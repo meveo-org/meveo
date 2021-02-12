@@ -44,7 +44,9 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.meveo.admin.action.BaseBean;
@@ -445,11 +447,11 @@ public class MeasurementBean extends BaseBean<MeasuredValue> {
 
     public HSSFCellStyle getCellStyle(HSSFWorkbook workbook) {
         HSSFCellStyle style = workbook.createCellStyle();
-        style.setBorderBottom(HSSFCellStyle.BORDER_MEDIUM);
-        style.setBorderTop(HSSFCellStyle.BORDER_MEDIUM);
-        style.setBorderRight(HSSFCellStyle.BORDER_MEDIUM);
-        style.setBorderLeft(HSSFCellStyle.BORDER_MEDIUM);
-        style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+        style.setBorderBottom(BorderStyle.MEDIUM);
+        style.setBorderTop(BorderStyle.MEDIUM);
+        style.setBorderRight(BorderStyle.MEDIUM);
+        style.setBorderLeft(BorderStyle.MEDIUM);
+        style.setAlignment(HorizontalAlignment.CENTER);
         return style;
     }
 
