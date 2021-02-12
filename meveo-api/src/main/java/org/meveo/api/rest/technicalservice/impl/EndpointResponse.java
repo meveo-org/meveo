@@ -17,7 +17,6 @@
 package org.meveo.api.rest.technicalservice.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,5 +145,12 @@ public class EndpointResponse {
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
+
+	/**
+	 * @see javax.servlet.http.HttpServletResponse#sendRedirect(java.lang.String)
+	 */
+	public void sendRedirect(String location) throws IOException {
+		httpServletResponse.sendRedirect(location);
+	}
 
 }
