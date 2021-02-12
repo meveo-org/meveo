@@ -164,7 +164,7 @@ RUN cd /tmp/meveo && mvn install --no-transfer-progress
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo 
 
-COPY --chown=jboss:jboss docker-entrypoint.sh /
+COPY --chown=jboss:jboss /docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
