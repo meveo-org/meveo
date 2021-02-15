@@ -19,9 +19,12 @@
  */
 package org.meveo.service.script;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
@@ -45,7 +49,9 @@ import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.FunctionServiceFor;
@@ -54,6 +60,9 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
+import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
@@ -70,6 +79,13 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
 	@Inject
 	private ScriptInstanceExecutor scriptExecutor;
+	
+	@Inject
+	private GitClient gitClient;
+	
+	@Inject
+	@MeveoRepository
+	private GitRepository meveoRepository;
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
@@ -341,9 +357,23 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		}
 	}
 	
+	/**
+	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
+	 */
 	@Override
 	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
 		super.addFilesToModule(entity, module);
+		
+		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+		
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		String pathNewFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode() + extension;
+		
+		File newFile = new File(gitDirectory, pathNewFile);
+		
+		FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
+		
+		gitClient.commitFiles(meveoRepository, Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
 	}
 
 }
