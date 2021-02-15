@@ -19,6 +19,7 @@
  */
 package org.meveo.service.script;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -316,6 +317,11 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 				throw new InvalidScriptException(script.getCode(), script.getCode());
 			}
 		}
+	}
+	
+	@Override
+	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
+		super.addFilesToModule(entity, module);
 	}
 
 }
