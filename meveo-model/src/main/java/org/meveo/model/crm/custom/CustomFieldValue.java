@@ -268,9 +268,18 @@ public class CustomFieldValue implements Serializable {
         this.stringValue = stringValue;
     }
 
-    public Instant getDateValue() {
-        return dateValue;
-    }
+	public Instant getDateValue() {
+		if (dateValue != null)
+			return dateValue;
+		else if (doubleValue != null && doubleValue > 0 && !doubleValue.isInfinite() && Math.floor(doubleValue) == doubleValue) {
+			try {
+				dateValue = JacksonUtil.convert(doubleValue, Instant.class);
+			} catch (Exception e) {
+				// NOOP
+			}
+		}
+		return dateValue;
+	}
 
     public void setDateValue(Instant dateValue) {
         this.dateValue = dateValue;
@@ -1311,17 +1320,12 @@ public class CustomFieldValue implements Serializable {
         } else if(value instanceof Instant) {
         	dateValue = (Instant) value;
         
-    	} else if (value instanceof BigDecimal) {
-            doubleValue = ((BigDecimal) value).setScale(2, RoundingMode.HALF_UP).doubleValue();
-            
-            // Handle serialized Instant objects
-        	try {
-        		dateValue = JacksonUtil.convert(value, Instant.class);
-        	} catch(Exception e) {
-        		// NOOP
-        	}
+    	} else if (value instanceof BigDecimal) {             	
+ 			Double double_ = ((BigDecimal)value)./*setScale(2, RoundingMode.HALF_UP).*/doubleValue();
+ 			if (!double_.isNaN() && !double_.isInfinite() )
+ 				doubleValue = double_;
 
-        } else if (value instanceof Double) {
+    	} else if (value instanceof Double) {
             doubleValue = (Double) value;
 
         } else if (value instanceof Boolean) {

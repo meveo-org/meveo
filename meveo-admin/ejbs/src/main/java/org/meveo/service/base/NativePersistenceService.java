@@ -51,6 +51,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
@@ -1392,7 +1393,7 @@ public class NativePersistenceService extends BaseService {
 					queryBuilder.endOrClause();
 
 					// Search by additional Sql clause with specified parameters
-				} else if (PersistenceService.SEARCH_SQL.equals(key)) {
+				} else if (PersistenceService.SEARCH_SQL.equals(condition)) {
 					if (filterValue.getClass().isArray()) {
 						String additionalSql = (String) ((Object[]) filterValue)[0];
 						Object[] additionalParameters = Arrays.copyOfRange(((Object[]) filterValue), 1, ((Object[]) filterValue).length);
@@ -1480,7 +1481,15 @@ public class NativePersistenceService extends BaseService {
 		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
 		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
-		return query.list();
+		try {
+			return query.list();
+		} catch (PersistenceException e) {
+			if (query!= null)
+				throw new PersistenceException("Error with query: " + query.getQueryString() + "\n" + 
+						(queryBuilder.getParams()!=null ? "params " + queryBuilder.getParams().toString() + "\n":"")
+						+ e.getMessage(), e);
+			throw e;
+		}
 	}
 	
 	/**
@@ -1900,7 +1909,7 @@ public class NativePersistenceService extends BaseService {
         // Handle ID field
         Object uuid = values.get(FIELD_ID);
         if (uuid != null) {
-            valuesConverted.put(FIELD_ID, castValue(uuid, Long.class, false, datePatterns));
+            valuesConverted.put(FIELD_ID, castValue(uuid, String.class, false, datePatterns));
         }
 
         // Convert field based on data type

@@ -91,10 +91,49 @@ public class FlatFileProcessingJobBean {
      * @param formatTransfo the format transfo
      * @param errorAction action to do on error : continue, stop or rollback after an error
      */
+    @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
+    @TransactionAttribute(TransactionAttributeType.NEVER)
+    public void executeWithoutRollBack(JobExecutionResultImpl result, String inputDir, String outDir, String archDir, String rejDir, File file, String mappingConf, String scriptInstanceFlowCode, String recordVariableName,
+            Map<String, Object> context, String originFilename, String formatTransfo, String errorAction) {
+    	execute(result, inputDir, outDir, archDir, rejDir, file, mappingConf, scriptInstanceFlowCode, recordVariableName, context, originFilename, formatTransfo, errorAction);
+    }
+    /**
+     * Execute. in a new transaction, so rollback is possible
+     *
+     * @param result job execution result
+     * @param inputDir the input dir
+     * @param file the file
+     * @param mappingConf the mapping conf
+     * @param scriptInstanceFlowCode the script instance flow code
+     * @param recordVariableName the record variable name
+     * @param context the context
+     * @param originFilename the origin filename
+     * @param formatTransfo the format transfo
+     * @param errorAction action to do on error : continue, stop or rollback after an error
+     */
     @JpaAmpNewTx
     @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void execute(JobExecutionResultImpl result, String inputDir, String outDir, String archDir, String rejDir, File file, String mappingConf, String scriptInstanceFlowCode, String recordVariableName,
+    public void executeWithRollBack(JobExecutionResultImpl result, String inputDir, String outDir, String archDir, String rejDir, File file, String mappingConf, String scriptInstanceFlowCode, String recordVariableName,
+            Map<String, Object> context, String originFilename, String formatTransfo, String errorAction) {
+    	execute(result, inputDir, outDir, archDir, rejDir, file, mappingConf, scriptInstanceFlowCode, recordVariableName, context, originFilename, formatTransfo, errorAction);
+    }
+    
+    /**
+     * Execute.
+     *
+     * @param result job execution result
+     * @param inputDir the input dir
+     * @param file the file
+     * @param mappingConf the mapping conf
+     * @param scriptInstanceFlowCode the script instance flow code
+     * @param recordVariableName the record variable name
+     * @param context the context
+     * @param originFilename the origin filename
+     * @param formatTransfo the format transfo
+     * @param errorAction action to do on error : continue, stop or rollback after an error
+     */
+      protected void execute(JobExecutionResultImpl result, String inputDir, String outDir, String archDir, String rejDir, File file, String mappingConf, String scriptInstanceFlowCode, String recordVariableName,
             Map<String, Object> context, String originFilename, String formatTransfo, String errorAction) {
         log.debug("Running for inputDir={}, scriptInstanceFlowCode={},formatTransfo={}, errorAction={}", inputDir, scriptInstanceFlowCode, formatTransfo, errorAction);
 
@@ -125,6 +164,11 @@ public class FlatFileProcessingJobBean {
 
         if (file != null) {
             fileName = file.getName();
+            result.setSummary("fileName: " + fileName);
+            if (result.getSummary() == null || result.getSummary().isBlank())
+            	result.setSummary("fileName: " + fileName);
+            else
+            	result.setSummary(result.getSummary()+", " + fileName);
             ScriptInterface script = null;
             IFileParser fileParser = null;
             File currentFile = null;
