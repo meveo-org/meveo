@@ -21,8 +21,6 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,6 +62,7 @@ import org.meveo.model.customEntities.CrudEventListenerScript;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -95,7 +94,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private final static String CLASSES_DIR = "/classes";
     
     private static boolean useCETCache = true;
-
+	
     /**
      * @param currentUser the current meveo user
      * @return the directory where the classes are stored
@@ -168,7 +167,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private SqlConfigurationService sqlConfigurationService;
-    
+	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
@@ -752,5 +751,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @PostConstruct
     private void init() {
         useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
+    }
+    
+	/**
+	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
+	 */
+    @Override
+    public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException, IOException {
+    	super.addFilesToModule(entity, module);
     }
 }
