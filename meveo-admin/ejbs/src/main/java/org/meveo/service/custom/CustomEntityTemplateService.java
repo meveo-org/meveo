@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -77,6 +78,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
+import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
@@ -179,6 +181,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private JSONSchemaGenerator jSONSchemaGenerator;
+    
+    @Inject
+    private GitClient gitClient;
 	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -782,7 +787,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(pathJsonSchemaFile, entity);
 
     	FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    	gitClient.commitFiles(meveoRepository, Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
     	
     	FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    	gitClient.commitFiles(meveoRepository, Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
 }
