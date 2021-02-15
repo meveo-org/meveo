@@ -143,8 +143,14 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
     if [ "x${WILDFLY_CUSTOM_XMX}" = "x" ]; then
         WILDFLY_CUSTOM_XMX="2048m"
     fi
+    if [ "x${WILDFLY_CUSTOM_XMMS}" = "x" ]; then
+        WILDFLY_CUSTOM_XMMS="300m"
+    fi
+    if [ "x${WILDFLY_CUSTOM_XMMX}" = "x" ]; then
+        WILDFLY_CUSTOM_XMMX="500m"
+    fi
     JAVA_OPTS="-Xms${WILDFLY_CUSTOM_XMS} -Xmx${WILDFLY_CUSTOM_XMX}"
-    JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=500m"
+    JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=${WILDFLY_CUSTOM_XMMS} -XX:MaxMetaspaceSize=${WILDFLY_CUSTOM_XMMX}"
     JAVA_OPTS="${JAVA_OPTS} -XX:ParallelGCThreads=${system_cpu_cores} -XshowSettings:vm"
     JAVA_OPTS="${JAVA_OPTS} -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=${JBOSS_MODULES_SYSTEM_PKGS} -Djava.awt.headless=true"
     JAVA_OPTS="${JAVA_OPTS} --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-exports=java.base/jdk.internal.loader=ALL-UNNAMED"

@@ -60,6 +60,8 @@ The following environment variables can be redefined for meveo service
 | MEVEO_DB_PASSWORD | meveo | This is password for meveo database. This value should be same as the value of POSTGRES_PASSWORD in postgres service inside docker-compose.yml file |
 | WILDFLY_CUSTOM_XMS | 1024m | for java parameter -Xms |
 | WILDFLY_CUSTOM_XMX | 2048m | for java parameter -Xmx |
+| WILDFLY_CUSTOM_XMMS | 300m | for java parameter -XX:MetaspaceSize |
+| WILDFLY_CUSTOM_XMMX | 500m | for java parameter -XX:MaxMetaspaceSize= |
 | WILDFLY_LOG_CONSOLE_LEVEL | INFO | Wildfly console log level |
 | WILDFLY_LOG_FILE_LEVEL | INFO | Wildfly server log level (means server.log file) |
 | MEVEO_LOG_LEVEL | DEBUG | Meveo source log level |
