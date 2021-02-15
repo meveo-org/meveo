@@ -2,7 +2,7 @@
 MEVEO_DEPLOY_DIR="/opt/jboss/wildfly/standalone/deployments" 
 
 echo "Build meveo project"
-mvn clean package -gs "/opt/jboss/wildfly/meveodata/default/.m2/settings.xml" -DskipTests
+mvn clean package -DskipTests
 
 echo "Deploy meveo.war in exploded mode"
 unzip meveo-admin/web/target/meveo.war -d ${MEVEO_DEPLOY_DIR}/meveo.war
