@@ -21,6 +21,7 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +47,7 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -54,6 +56,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -72,6 +75,8 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.JSONSchemaGenerator;
+import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
@@ -79,6 +84,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.javaparser.ast.CompilationUnit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -167,6 +173,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private SqlConfigurationService sqlConfigurationService;
+    
+    @Inject
+    private JSONSchemaIntoJavaClassParser jSONSchemaIntoJavaClassParser;
+    
+    @Inject
+    private JSONSchemaGenerator jSONSchemaGenerator;
 	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -759,5 +771,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException, IOException {
     	super.addFilesToModule(entity, module);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	String pathJavaFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode() + ".java";
+    	String pathJsonSchemaFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode() + ".json";
+    	
+    	File newJavaFile = new File (gitDirectory, pathJavaFile);
+    	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
+    	
+    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(pathJsonSchemaFile, entity);
+
+    	FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    	
+    	FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
     }
 }
