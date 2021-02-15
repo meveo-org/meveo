@@ -5,5 +5,15 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
+    "fsdeploy.nodes": [
+        {
+            "source":"/home/meveo/meveo-admin/web/src/main/webapp/",
+            "target":"/opt/jboss/wildfly/standalone/deployments/meveo.war/",
+            "include":"**/*.*",
+            "deleteTargetOnDeploy": false
+        }
+    ],
+    "fsdeploy.deployOnSave": true,
+    "fsdeploy.deployWorkspaceOnSave": false,
     "java.configuration.updateBuildConfiguration": "automatic"
 }

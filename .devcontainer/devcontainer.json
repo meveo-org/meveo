@@ -19,7 +19,8 @@
 		"vscjava.vscode-java-pack",
         "vscjava.vscode-maven",
         "redhat.vscode-server-connector",
-		"ms-azuretools.vscode-docker"
+		"ms-azuretools.vscode-docker",
+		"mightycoco.fsdeploy"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
