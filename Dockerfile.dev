@@ -155,7 +155,6 @@ RUN mkdir -p /usr/share/trava \
   && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.10%2B2/java11-openjdk-dcevm-linux.tar.gz  \
   && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
-ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
 COPY . /tmp/meveo
 RUN cd /tmp/meveo \
@@ -164,6 +163,8 @@ RUN cd /tmp/meveo \
 #RUN chown jboss:jboss ./meveo-admin/web/target/meveo.war \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo 
+
+ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
 COPY --chown=jboss:jboss /docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

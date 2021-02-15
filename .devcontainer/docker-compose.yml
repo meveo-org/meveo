@@ -72,7 +72,7 @@ services:
         WILDFLY_DEBUG_PORT: 8787
         WILDFLY_CUSTOM_XMMS: "500m"
         WILDFLY_CUSTOM_XMMX: "1024m"
-        JAVA_EXTRA_OPTS: -XX:HotswapAgent=fatjar
+        JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
       ports:
         - 8080:8080
         - 8787:8787
