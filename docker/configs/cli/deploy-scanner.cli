@@ -1,0 +1,3 @@
+# set deployment scanner interval to 2 seconds 
+/subsystem=deployment-scanner/scanner=default:write-attribute(name="scan-interval",value=2000)
+    
