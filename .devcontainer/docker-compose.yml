@@ -70,6 +70,7 @@ services:
         KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
         WILDFLY_DEBUG_ENABLE: "true"
         WILDFLY_DEBUG_PORT: 8787
+        JAVA_EXTRA_OPTS: -XX:HotswapAgent=fatjar
       ports:
         - 8080:8080
         - 8787:8787
