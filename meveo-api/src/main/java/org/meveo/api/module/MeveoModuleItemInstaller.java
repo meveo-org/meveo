@@ -186,7 +186,7 @@ public class MeveoModuleItemInstaller {
             	log.error("Failed to load item {}, it won't be uninstalled");
                 continue;
             }
-
+            
             try {
                 if (itemEntity instanceof MeveoModule) {
                     uninstall((MeveoModule) itemEntity, true, removeItems);
@@ -207,6 +207,12 @@ public class MeveoModuleItemInstaller {
                     }
                     
                     if(removeItems) {
+						// Handle case where the install script is bundled in the module items
+						if(moduleScript != null && itemEntity.getCode().equals(moduleScript.getClass().getName())) {
+							scriptInstanceService.disable((ScriptInstance) itemEntity);
+							continue;
+						}
+						
                         if (itemEntity instanceof Endpoint) {
                             Endpoint endpoint = (Endpoint) itemEntity;
                             if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
@@ -241,6 +247,7 @@ public class MeveoModuleItemInstaller {
                         }
                         
 					} else {
+						
 						if(api.getPersistenceService() instanceof PersistenceService) {
 							try {
 								((PersistenceService) api.getPersistenceService()).disableNoMerge(itemEntity);
@@ -259,6 +266,15 @@ public class MeveoModuleItemInstaller {
 
         if (moduleScript != null) {
             moduleScriptService.postUninstallModule(moduleScript, module);
+        }
+        
+        // Remove the install script
+        if(moduleScript != null) {
+        	module.setScript(null);
+        	var moduleScriptInstance = scriptInstanceService.findByCode(moduleScript.getClass().getName());
+        	if(moduleScriptInstance != null) {
+        		scriptInstanceService.remove(moduleScriptInstance);
+        	}
         }
 
         // Remove if it is a child module
@@ -279,12 +295,9 @@ public class MeveoModuleItemInstaller {
             	moduleUpdated = meveoModuleService.update(module);
             }
             
-//            meveoModuleService.getEntityManager().createNamedQuery("MeveoModuleItem.deleteByModule")
-//            	.setParameter("meveoModule", module)
-//            	.executeUpdate();
-            
 			return moduleUpdated;
         }
+        
     }
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
