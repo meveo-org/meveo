@@ -11,7 +11,7 @@ import org.meveo.model.BusinessEntity;
  * @since 6.14.0
  * @version 6.14.0
  */
-public interface BusinessEntityFinder {
+public interface BusinessServiceFinder {
 	
 	@SuppressWarnings("rawtypes")
 	BusinessService find(BusinessEntity businessEntity);

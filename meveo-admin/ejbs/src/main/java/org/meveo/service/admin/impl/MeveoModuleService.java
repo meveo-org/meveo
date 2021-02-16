@@ -85,7 +85,7 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
-import org.meveo.service.base.BusinessEntityFinder;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.git.GitClient;
@@ -122,7 +122,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     private GitClient gitClient;
     
     @Inject
-    private BusinessEntityFinder businessEntityFinder;
+    private BusinessServiceFinder businessServiceFinder;
 
     /**
      * Add missing dependencies of each module item
@@ -346,10 +346,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
     	
-    	BusinessService businessService = businessEntityFinder.find(meveoModuleItem.getItemEntity());
+    	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
-    	if (testEmptyModule.isEmpty()) {
+    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     			module.getModuleItems().add(meveoModuleItem);
@@ -357,14 +357,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		} catch (BusinessException | IOException e2) {
 				throw new BusinessException("Entity cannot be add or remove from the module", e2);
     		}
-    	}else if (testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())){
-    		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
-    			module.getModuleItems().add(meveoModuleItem);
-    			meveoModuleItem.setMeveoModule(module);
-    		} catch (BusinessException | IOException e2) {
-				throw new BusinessException("Entity cannot be add or remove from the module", e2);
-    		}    		
     	} else {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);

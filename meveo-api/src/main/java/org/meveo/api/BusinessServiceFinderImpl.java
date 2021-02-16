@@ -4,17 +4,17 @@
 package org.meveo.api;
 
 import org.meveo.model.BusinessEntity;
-import org.meveo.service.base.BusinessEntityFinder;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 
 /**
- * Implementation of {@link BusinessEntityFinder}
+ * Implementation of {@link BusinessServiceFinder}
  * 
  * @author arthur.grenier
  * @since 6.14.0
  * @version 6.14.0
  */
-public class BusinessEntityFinderImpl implements BusinessEntityFinder{
+public class BusinessServiceFinderImpl implements BusinessServiceFinder{
 
 	@SuppressWarnings("rawtypes")
 	@Override
