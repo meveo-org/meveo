@@ -373,7 +373,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		
 		FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
 		
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
 	}
 
 }

@@ -788,13 +788,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
     	
     	FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
-    	gitClient.commitFiles(meveoRepository, Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
     	
-    	String SchemaLocation = this.cetCompiler.getTemplateSchema(entity);
+    	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
     	
-    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(SchemaLocation, entity);
+    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
     	FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
-    	gitClient.commitFiles(meveoRepository, Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
 }

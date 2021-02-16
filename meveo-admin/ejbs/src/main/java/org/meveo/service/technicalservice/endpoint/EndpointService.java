@@ -225,6 +225,6 @@ public class EndpointService extends BusinessService<Endpoint> {
     	
 		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
 		
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
 	}
 }
