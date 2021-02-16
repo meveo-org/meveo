@@ -4,12 +4,21 @@ FROM openjdk:11.0.7-jdk-slim-buster
 
 ### ------------------------- base ------------------------- ###
 # Install packages necessary
-# procps : for 'free' command
-# iputils-ping : for 'ping' command
-# iproute2 : for 'ip' command
-# postgresql-client : for 'pg_isready' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 postgresql-client \
+    && apt-get install -y --no-install-recommends \
+        apt-transport-https ca-certificates curl jsvc unzip \
+# procps : for 'free' command
+        procps \
+# iputils-ping : for 'ping' command
+        iputils-ping \
+# iproute2 : for 'ip' command
+        iproute2 \
+# postgresql-client : for 'pg_isready' command
+        postgresql-client \
+# java.lang.UnsatisfiedLinkError: /usr/local/openjdk-11/lib/libfontmanager.so: libfreetype.so.6: cannot open shared object file: No such file or directory
+# java.lang.NoClassDefFoundError: Could not initialize class sun.awt.X11FontManager
+# https://github.com/docker-library/openjdk/pull/235#issuecomment-424466077
+        fontconfig libfreetype6 \
     && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
