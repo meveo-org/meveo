@@ -254,7 +254,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	
     	List<String> pattern = new ArrayList<String>();
     	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	gitClient.commit(meveoRepository, pattern, "Remove directory " + directoryToRemove.getPath());
+    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
     }
     /**
      * Create the entity in the dedicated module
@@ -281,7 +281,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     	Files.write(newJsonFile.toPath(), strToBytes);
 
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     }
     
     /**
