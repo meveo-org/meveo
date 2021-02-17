@@ -163,14 +163,15 @@ public class CharSequenceCompiler<T> {
     *            if the generated class is not assignable to all the optional
     *            &lt;var&gt;types&lt;/var&gt;.
     */
-   public synchronized Class<T> compile(final String qualifiedClassName,
+   public synchronized Class<T> compile(final List<String> sourcePaths,
+		 final String qualifiedClassName,
          final CharSequence javaSource,
          final DiagnosticCollector<JavaFileObject> diagnosticsList,
          final boolean isTestCompile,
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
 
-      Class<T> newClass = compile(qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
+      Class<T> newClass = compile(sourcePaths, qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
       return castable(newClass, types);
    }
 
@@ -188,6 +189,7 @@ public class CharSequenceCompiler<T> {
 	 * @throws CharSequenceCompilerException if the source cannot be compiled
 	 */
    public synchronized Class<T> compile(
+		   final List<String> sourcePaths,
 		   final String qualifiedClassName,
            final CharSequence content,
            final DiagnosticCollector<JavaFileObject> diagnosticsList,
@@ -218,7 +220,11 @@ public class CharSequenceCompiler<T> {
 	   // Set source directory
 	   options.add("-sourcepath");
 	   options.add(repositoryDir.getAbsolutePath());
-
+	   if (!sourcePaths.isEmpty()) {
+		   for (String sourcePath: sourcePaths) {
+			   options.add(sourcePath);
+		   }
+	   }
 	   // Set output directory
 	   options.add("-d");
 	   options.add(outputDir.getAbsolutePath());
