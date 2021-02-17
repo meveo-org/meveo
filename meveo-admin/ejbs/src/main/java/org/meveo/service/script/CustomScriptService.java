@@ -73,6 +73,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.elasticsearch.cluster.metadata.AliasAction.Add;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -87,6 +88,9 @@ import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -874,7 +878,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+        final List<String> sourcePaths = new ArrayList<String>();
+        T script = this.findByCode(fullClassName);
+        if (script != null) {
+	        MeveoModule module = findModuleOf(script);
+	        if (module != null) {
+		        for (MeveoModuleDependency dependencie : module.getModuleDependencies()) {
+		        	sourcePaths.add(";");
+		        	sourcePaths.add(dependencie.toString());
+		        }
+	        }
+        }
+        return compiler.compile(sourcePaths, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
@@ -1025,11 +1040,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @throws BusinessException if the modifications can't be committed
      */
     public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
-        File file = findScriptFile(scriptInstance);
-        if (file.exists()) {
-            file.delete();
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
-        }
+    	removeFilesFromModule(	findByCode(scriptInstance.getCode()), findModuleOf(findByCode(scriptInstance.getCode())));
     }
 
     /**
