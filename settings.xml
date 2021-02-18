@@ -33,8 +33,8 @@
   <servers>
     <server>
       <id>meveo</id>
-      <username>smichea</username>
-      <password>b23a57da6d6a619474be44bc42dc054c7ee80da5</password>
+      <username>set your github username</username>
+      <password>set your token</password>
     </server>
   </servers>
 </settings>
