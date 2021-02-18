@@ -18,6 +18,8 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Debugging](https://github.com/meveo-org/meveo/blob/master/documentation/DEBUGGING.md)
 
+[Development Installation](./.devcontainer/README.md)
+
 ## Technical documentation
 
 ### System

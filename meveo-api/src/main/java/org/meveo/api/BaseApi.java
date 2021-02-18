@@ -265,12 +265,16 @@ public abstract class BaseApi {
 
                         List<EntityReferenceWrapper> childEntityReferences = new ArrayList<>();
 
-                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
-                            customEntityInstanceApi.createOrUpdate(ceiDto);
-                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
+                        try {
+	                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
+	                            customEntityInstanceApi.createOrUpdate(ceiDto);
+	                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
+	                        }
+	                        
+	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);
+                        } catch (ClassCastException e) {
+                        	customFieldInstanceService.setCFValue(entity, cfDto.getCode(), valueConverted);
                         }
-
-                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);
 
                     } else {
 
@@ -515,8 +519,10 @@ public abstract class BaseApi {
                     } else if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
                         // Just in case, set CET code to whatever CFT definition
                         // requires.
-                        ((CustomEntityInstanceDto) valueToCheck).setCetCode(CustomFieldTemplate.retrieveCetCode(cft.getEntityClazz()));
-                        customEntityInstanceApi.validateEntityInstanceDto((CustomEntityInstanceDto) valueToCheck);
+                    	if(valueToCheck instanceof CustomEntityInstanceDto) {
+	                        ((CustomEntityInstanceDto) valueToCheck).setCetCode(CustomFieldTemplate.retrieveCetCode(cft.getEntityClazz()));
+	                        customEntityInstanceApi.validateEntityInstanceDto((CustomEntityInstanceDto) valueToCheck);
+                    	}
                     }
                 }
             }

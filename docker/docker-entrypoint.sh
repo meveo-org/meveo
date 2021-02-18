@@ -43,7 +43,12 @@ DOCKER_GATEWAY_HOST=$(ip route|awk '/default/ { print $3 }')
 
 # Keycloak parameters
 if [ "x${KEYCLOAK_URL}" = "x" ]; then
-    export KEYCLOAK_URL="http://${DOCKER_GATEWAY_HOST}:8080/auth"
+    if ping -c 1 host.docker.internal &> /dev/null
+    then
+        export KEYCLOAK_URL="http://host.docker.internal:8081/auth"   # For Windows & MacOS localhost system
+    else
+        export KEYCLOAK_URL="http://${DOCKER_GATEWAY_HOST}:8081/auth" # For Linux system
+    fi
 else
     domain=$(echo ${KEYCLOAK_URL} | cut -d'/' -f3 | cut -d':' -f1)
     if [ "$domain" = "localhost" ]; then

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.time.Instant;
 import java.util.Map;
 
 import org.meveo.commons.utils.FileDeserializer;
@@ -30,7 +31,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  *
  * @author Clément Bareth
  * @author Edward P. Legaspi <czetsuya@gmail.com>
- * @lastModifiedVersion 6.3.0
+ * @lastModifiedVersion 6.14.0
  */
 @SuppressWarnings("deprecation")
 public class JacksonUtil {
@@ -40,13 +41,14 @@ public class JacksonUtil {
         om.setVisibility(om.getVisibilityChecker().withFieldVisibility(JsonAutoDetect.Visibility.ANY));
         om.setVisibility(om.getVisibilityChecker().withGetterVisibility(JsonAutoDetect.Visibility.NONE));
         om.setVisibility(om.getVisibilityChecker().withIsGetterVisibility(Visibility.NONE));
+		om.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        // om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		om.configure(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
+
         om.setSerializationInclusion(Include.NON_NULL);
         om.registerModule(new JavaTimeModule());
         om.registerModule(new Hibernate5Module());
-
 
         SimpleModule fileModule = new SimpleModule()
                 .addSerializer(File.class, new FileSerializer())
@@ -54,15 +56,12 @@ public class JacksonUtil {
 
         om.registerModule(fileModule);
         OBJECT_MAPPER = om;
-
-        /*                 .setSerializationInclusion(JsonInclude.Include.ALWAYS)
-                .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, true)
-                .configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false)
-                .configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, false)
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .configure(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS, false)
-                .configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true) */
+    }
+    
+    public static void main (String... args) {
+    	Instant now = Instant.now();
+    	Map<String, Object> map = Map.of("now", now);
+    	System.out.println(toString(map));
     }
 
     public static ObjectMapper OBJECT_MAPPER;
