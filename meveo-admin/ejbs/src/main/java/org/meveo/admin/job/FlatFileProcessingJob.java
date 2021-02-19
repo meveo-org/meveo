@@ -65,6 +65,8 @@ public class FlatFileProcessingJob extends Job {
 
     private static final String FLAT_FILE_PROCESSING_JOB_RECORD_VARIABLE_NAME = "FlatFileProcessingJob_recordVariableName";
 
+    public static final String FLAT_FILE_PROCESSING_JOB_THREAD_POOL_SIZE = "FlatFileProcessingJob_threadPoolSize";
+
     /** The flat file processing job bean. */
     @Inject
     private FlatFileProcessingJobBean flatFileProcessingJobBean;
@@ -266,7 +268,7 @@ public class FlatFileProcessingJob extends Job {
         variablesCF.setCode(FLAT_FILE_PROCESSING_JOB_VARIABLES);
         variablesCF.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         variablesCF.setActive(true);
-        variablesCF.setDescription("Init and finalize variables");
+        variablesCF.setDescription(resourceMessages.getString("flatFile.variablesCF"));
         variablesCF.setFieldType(CustomFieldTypeEnum.STRING);
         variablesCF.setStorageType(CustomFieldStorageTypeEnum.MAP);
         variablesCF.setValueRequired(false);
@@ -279,7 +281,7 @@ public class FlatFileProcessingJob extends Job {
         recordVariableName.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         recordVariableName.setActive(true);
         recordVariableName.setDefaultValue("record");
-        recordVariableName.setDescription("Record variable name");
+        recordVariableName.setDescription(resourceMessages.getString("flatFile.recordVariableName"));
         recordVariableName.setFieldType(CustomFieldTypeEnum.STRING);
         recordVariableName.setValueRequired(true);
         recordVariableName.setMaxValue(50L);
@@ -290,7 +292,7 @@ public class FlatFileProcessingJob extends Job {
         originFilename.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         originFilename.setActive(true);
         originFilename.setDefaultValue("origin_filename");
-        originFilename.setDescription("Filename variable name");
+        originFilename.setDescription(resourceMessages.getString("flatFile.originFilename"));
         originFilename.setFieldType(CustomFieldTypeEnum.STRING);
         originFilename.setValueRequired(false);
         originFilename.setMaxValue(256L);
@@ -301,7 +303,7 @@ public class FlatFileProcessingJob extends Job {
         formatTransfo.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         formatTransfo.setActive(true);
         formatTransfo.setDefaultValue("None");
-        formatTransfo.setDescription("Format transformation");
+        formatTransfo.setDescription(resourceMessages.getString("flatFile.formatXform"));
         formatTransfo.setFieldType(CustomFieldTypeEnum.LIST);
         formatTransfo.setValueRequired(false);
         Map<String, String> listValues = new HashMap<String, String>();
@@ -315,7 +317,7 @@ public class FlatFileProcessingJob extends Job {
         errorAction.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         errorAction.setActive(true);
         errorAction.setDefaultValue(FlatFileProcessingJob.CONTINUE);
-        errorAction.setDescription("Error action");
+        errorAction.setDescription(resourceMessages.getString("flatFile.errorAction"));
         errorAction.setFieldType(CustomFieldTypeEnum.LIST);
         errorAction.setValueRequired(false);
         Map<String, String> listValuesErrorAction = new HashMap<String, String>();
@@ -324,6 +326,16 @@ public class FlatFileProcessingJob extends Job {
         listValuesErrorAction.put(FlatFileProcessingJob.ROLLBBACK, "Rollback");
         errorAction.setListValues(listValuesErrorAction);
         result.put(FLAT_FILE_PROCESSING_JOB_ERROR_ACTION, errorAction);
+
+        CustomFieldTemplate threadPoolSize = new CustomFieldTemplate();
+        threadPoolSize.setCode(FLAT_FILE_PROCESSING_JOB_THREAD_POOL_SIZE);
+        threadPoolSize.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
+        threadPoolSize.setActive(true);
+        threadPoolSize.setDescription(resourceMessages.getString("flatFile.threadPoolSize"));
+        threadPoolSize.setFieldType(CustomFieldTypeEnum.LONG);
+        threadPoolSize.setDefaultValue("1");
+        threadPoolSize.setValueRequired(false);
+        result.put(FLAT_FILE_PROCESSING_JOB_THREAD_POOL_SIZE, threadPoolSize);
 
         return result;
     }
