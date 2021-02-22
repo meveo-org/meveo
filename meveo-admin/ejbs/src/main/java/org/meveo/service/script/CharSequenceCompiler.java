@@ -38,6 +38,8 @@ import org.meveo.service.script.maven.MavenClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import liquibase.util.StringUtils;
+
 /**
  * Compile a String or other {@link CharSequence}, returning a Java
  * {@link Class} instance that may be instantiated. This class is a Facade
@@ -221,7 +223,7 @@ public class CharSequenceCompiler<T> {
 	   // Set source directory
 	   options.add("-sourcepath");
 	   options.add(repositoryDir.getAbsolutePath());
-	   if (!sourcePath.isEmpty()) {
+	   if (!StringUtils.isEmpty(sourcePath)) {
 		   options.add(sourcePath);
 
 	   }
