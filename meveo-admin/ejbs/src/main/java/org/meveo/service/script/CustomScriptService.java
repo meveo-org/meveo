@@ -1039,12 +1039,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param scriptInstance Removed {@link ScriptInstance}
      * @throws BusinessException if the modifications can't be committed
      */
-    public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
+    @SuppressWarnings("unchecked")
+	public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
     	MeveoModule module = findModuleOf(findByCode(scriptInstance.getCode()));
     	
     	//TODO remove this condition with the default Meveo module
     	if (module != null) {
-    		removeFilesFromModule(findByCode(scriptInstance.getCode()), module);
+    		removeFilesFromModule((T) scriptInstance, module);
     	} else {
     		File file = findScriptFile(scriptInstance);
     		if (file.exists()) {
@@ -1085,8 +1086,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
                         GitRepository gitRepo = commitEvent.getGitRepository();
                         String moduleCode = gitRepo.getCode(); 
-                        if (moduleCode != null) {
-                        	MeveoModule module = meveoModuleService.findByCode(moduleCode);
+                        MeveoModule module = meveoModuleService.findByCode(moduleCode);
+                        if (module != null) {
                         	moveFilesToModule(script, module);
                         }
                         
