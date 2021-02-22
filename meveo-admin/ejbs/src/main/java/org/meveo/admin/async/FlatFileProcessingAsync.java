@@ -24,6 +24,7 @@ import org.meveo.admin.job.UnitFlatFileProcessingJobBean;
 import org.meveo.commons.parsers.IFileParser;
 import org.meveo.commons.parsers.RecordContext;
 import org.meveo.model.crm.Provider;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.security.CurrentUser;
@@ -89,7 +90,9 @@ public class FlatFileProcessingAsync {
 		long cpLines = 0;
 		FlatFileAsyncListResponse flatFileAsyncListResponse = new FlatFileAsyncListResponse();
 		JobInstance jobInstance = result.getJobInstance();
-		int parallelism = jobInstance != null ? (int) jobInstance.getCfValuesNullSafe().getValue(THREAD_POOL_SIZE) : 1;
+		CustomFieldValues values = jobInstance.getCfValuesNullSafe();
+		Long threadPoolSize = jobInstance != null ? (Long) values.getValue(THREAD_POOL_SIZE) : null;
+		int parallelism = threadPoolSize != null ? threadPoolSize.intValue() : 1;
 		ForkJoinPool pool = new ForkJoinPool(parallelism);
 		final AtomicBoolean doStop = new AtomicBoolean(false);
 		final AtomicReference<BusinessException> rollBackException = new AtomicReference<BusinessException>();
