@@ -25,6 +25,8 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -37,6 +39,8 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
  * @version 6.12.0
  */
 public class CEIUtils {
+	
+	private static Logger LOG = LoggerFactory.getLogger(CEIUtils.class);
 	
 	/**
 	 * @param cei  The entity to hash
@@ -214,7 +218,7 @@ public class CEIUtils {
 					try {
 						var type = setter.getParameters()[0].getParameterizedType();
 						var jacksonType = TypeFactory.defaultInstance().constructType(type);
-						var convertedValue = new ObjectMapper().convertValue(entry.getValue(), jacksonType);
+						var convertedValue = JacksonUtil.convert(entry.getValue(), jacksonType);
 						setter.invoke(instance, convertedValue);
 
 					} catch (IllegalArgumentException e) {
@@ -230,6 +234,8 @@ public class CEIUtils {
 							if (setter.getParameters()[0].getType().isAssignableFrom(Instant.class)) {
 								Instant val = ((Timestamp) entry.getValue()).toInstant();
 								setter.invoke(instance, val);
+							} else {
+								LOG.error("Failed to deserialize {}", entry.getValue(),e);
 							}
 						}
 					}

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -111,6 +112,10 @@ public class JacksonUtil {
         }
     }
     
+	public static Object convert(Object value, JavaType jacksonType) {
+        return OBJECT_MAPPER.convertValue(value, jacksonType);
+	}
+    
     public static <T> T convert(Object value, Class<T> clazz) {
         return OBJECT_MAPPER.convertValue(value, clazz);
     }
@@ -135,4 +140,5 @@ public class JacksonUtil {
     public static <T> T clone(T value) {
         return fromString(toString(value), (Class<T>) value.getClass());
     }
+
 }
