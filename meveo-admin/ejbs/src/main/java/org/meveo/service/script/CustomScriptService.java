@@ -103,6 +103,7 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
@@ -153,6 +154,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     
     @Inject
     private ModuleInstallationContext moduleInstallCtx;
+    
+	@Inject
+	private MeveoModuleService meveoModuleService;
     
     private RepositorySystem defaultRepositorySystem;
 
@@ -1040,7 +1044,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @throws BusinessException if the modifications can't be committed
      */
     public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
-    	removeFilesFromModule(	findByCode(scriptInstance.getCode()), findModuleOf(findByCode(scriptInstance.getCode())));
+    	MeveoModule module = findModuleOf(findByCode(scriptInstance.getCode()));
+    	
+    	//TODO remove this condition with the default Meveo module
+    	if (module != null) {
+    		removeFilesFromModule(findByCode(scriptInstance.getCode()), module);
+    	} else {
+    		File file = findScriptFile(scriptInstance);
+    		if (file.exists()) {
+    			file.delete();
+    			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
+    		}
+    	}
     }
 
     /**
@@ -1072,6 +1087,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
                         scriptInstance.setSourceTypeEnum(scriptType);
                         scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
+                        GitRepository gitRepo = commitEvent.getGitRepository();
+                        String moduleCode = gitRepo.getCode(); 
+                        if (moduleCode != null) {
+                        	MeveoModule module = meveoModuleService.findByCode(moduleCode);
+                        	moveFilesToModule(script, module);
+                        }
+                        
                         create((T) scriptInstance);
 
                     } else if (script != null && !scriptFile.exists()) {
@@ -1079,7 +1101,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         remove(script);
 
                     } else if (script != null && scriptFile.exists()) {
-                        // Scipt has been updated
+                        // Script has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
                         compileScript(script, false);
