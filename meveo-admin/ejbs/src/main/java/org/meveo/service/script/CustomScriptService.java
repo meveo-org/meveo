@@ -878,18 +878,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        final List<String> sourcePaths = new ArrayList<String>();
+        final String sourcePath = "";
         T script = this.findByCode(fullClassName);
         if (script != null) {
 	        MeveoModule module = findModuleOf(script);
 	        if (module != null) {
 		        for (MeveoModuleDependency dependencie : module.getModuleDependencies()) {
-		        	sourcePaths.add(";");
-		        	sourcePaths.add(dependencie.toString());
+		        	sourcePath.concat(";");
+		        	sourcePath.concat(dependencie.toString());
 		        }
 	        }
         }
-        return compiler.compile(sourcePaths, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+        return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
