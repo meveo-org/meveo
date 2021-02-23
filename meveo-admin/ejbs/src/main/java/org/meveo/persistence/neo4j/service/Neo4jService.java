@@ -498,6 +498,8 @@ public class Neo4jService implements CustomPersistenceService {
                         String id = mergeNodes(neo4JConfiguration, cet, ids);
                         LOGGER.info("Nodes {} were merge into node {}", joinedIds, id);
                         ids = Collections.singleton(id);
+                    } else {
+                    	log.debug("Constraint {} applied on entity {}, found ids : {}", uniqueConstraint, fields, ids);
                     }
 
                     for (String id : ids) {
