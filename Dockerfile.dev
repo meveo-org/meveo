@@ -132,6 +132,7 @@ EXPOSE 8080 9990
 
 
 #install maven
+USER root
 
 ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"
@@ -155,7 +156,8 @@ RUN mkdir -p /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
 
-COPY . /tmp/meveo
+USER jboss
+COPY --chown=jboss:jboss . /tmp/meveo
 RUN cd /tmp/meveo \
   && cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources \
   && ./deploy.sh
