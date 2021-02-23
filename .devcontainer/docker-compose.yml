@@ -67,7 +67,7 @@ services:
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
         #KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
-        KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
+        #KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
         WILDFLY_DEBUG_ENABLE: "true"
         WILDFLY_DEBUG_PORT: 8787
         JAVA_EXTRA_OPTS: -XX:HotswapAgent=fatjar
