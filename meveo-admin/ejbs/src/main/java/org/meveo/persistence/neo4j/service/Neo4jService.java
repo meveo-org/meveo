@@ -459,14 +459,18 @@ public class Neo4jService implements CustomPersistenceService {
                     .reversed()
                     .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
             
-            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
-                    .stream()
+            var uniqueConstraints = cet.getNeo4JStorageConfiguration().getUniqueConstraints();
+            List<CustomEntityTemplateUniqueConstraint> applicableConstraints = uniqueConstraints.stream()
                     .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
                     .sorted(comparator)
                     .collect(Collectors.toList());
 
             final List<String> labels = getAdditionalLabels(cet);
             if (applicableConstraints.isEmpty()) {
+            	if(!uniqueConstraints.isEmpty()) {
+            		log.info("No applicable constraints for {} with values {}", cet.getCode(), fields);
+            	}
+            	
                 var existingNode = neo4jDao.findNodeById(neo4JConfiguration, cet.getCode(), uuid);
 				if (uniqueFields.isEmpty() && (existingNode == null || existingNode.isEmpty())) {
                     String nodeId = neo4jDao.createNode(neo4JConfiguration, cet.getCode(), fields, labels, uuid);
@@ -491,6 +495,7 @@ public class Neo4jService implements CustomPersistenceService {
                 boolean appliedUniqueConstraint = false;
                 for (CustomEntityTemplateUniqueConstraint uniqueConstraint : applicableConstraints) {
                     Set<String> ids = neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, fields, cet.getCode());
+                	log.info("Constraint {} applied on entity {}, found ids : {}", uniqueConstraint, fields, ids);
 
                     if (uniqueConstraint.getTrustScore() == 100 && ids.size() > 1) {
                         String joinedIds = ids.stream() .map(Object::toString).collect(Collectors.joining(", "));
@@ -498,8 +503,6 @@ public class Neo4jService implements CustomPersistenceService {
                         String id = mergeNodes(neo4JConfiguration, cet, ids);
                         LOGGER.info("Nodes {} were merge into node {}", joinedIds, id);
                         ids = Collections.singleton(id);
-                    } else {
-                    	log.debug("Constraint {} applied on entity {}, found ids : {}", uniqueConstraint, fields, ids);
                     }
 
                     for (String id : ids) {
