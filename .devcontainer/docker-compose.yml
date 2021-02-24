@@ -54,10 +54,10 @@ services:
       ports:
         - 8081:8080
   meveo:
-      #image: manaty/meveo-dev:latest 
-      build: 
-        context: ../
-        dockerfile: Dockerfile.dev
+      image: manaty/meveo-dev:latest 
+      #build: 
+      #  context: ../
+      #  dockerfile: Dockerfile.dev
       container_name: meveo
       networks:
         - meveo
@@ -66,8 +66,7 @@ services:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
-        #KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
-        KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
+        #KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
         WILDFLY_DEBUG_ENABLE: "true"
         WILDFLY_DEBUG_PORT: 8787
         WILDFLY_CUSTOM_XMMS: "500m"
