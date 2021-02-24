@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +85,8 @@ import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -99,6 +99,7 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
@@ -149,6 +150,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     
     @Inject
     private ModuleInstallationContext moduleInstallCtx;
+    
+	@Inject
+	private MeveoModuleService meveoModuleService;
     
     private RepositorySystem defaultRepositorySystem;
 
@@ -874,7 +878,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+        final String sourcePath = "";
+        T script = this.findByCode(fullClassName);
+        if (script != null) {
+	        MeveoModule module = findModuleOf(script);
+	        if (module != null) {
+		        for (MeveoModuleDependency dependencie : module.getModuleDependencies()) {
+		        	sourcePath.concat(";");
+		        	sourcePath.concat(dependencie.toString());
+		        }
+	        }
+        }
+        return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
     /**
@@ -1024,12 +1039,20 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param scriptInstance Removed {@link ScriptInstance}
      * @throws BusinessException if the modifications can't be committed
      */
-    public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
-        File file = findScriptFile(scriptInstance);
-        if (file.exists()) {
-            file.delete();
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
-        }
+    @SuppressWarnings("unchecked")
+	public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
+    	MeveoModule module = findModuleOf(findByCode(scriptInstance.getCode()));
+    	
+    	//TODO remove this condition with the default Meveo module
+    	if (module != null) {
+    		removeFilesFromModule((T) scriptInstance, module);
+    	} else {
+    		File file = findScriptFile(scriptInstance);
+    		if (file.exists()) {
+    			file.delete();
+    			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
+    		}
+    	}
     }
 
     /**
@@ -1061,6 +1084,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
                         scriptInstance.setSourceTypeEnum(scriptType);
                         scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
+                        GitRepository gitRepo = commitEvent.getGitRepository();
+                        String moduleCode = gitRepo.getCode(); 
+                        MeveoModule module = meveoModuleService.findByCode(moduleCode);
+                        if (module != null) {
+                        	moveFilesToModule(script, module);
+                        }
+                        
                         create((T) scriptInstance);
 
                     } else if (script != null && !scriptFile.exists()) {
@@ -1068,7 +1098,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         remove(script);
 
                     } else if (script != null && scriptFile.exists()) {
-                        // Scipt has been updated
+                        // Script has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
                         compileScript(script, false);
