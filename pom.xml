@@ -574,9 +574,14 @@
 			<distributionManagement>
 				<repository>
 					<id>wd</id>
-					<name>webdrone nexus</name>
-					<url>https://maven.webdrone.fr/nexus/content/groups/webdrone</url>
+					<name>Webdrone Repo</name>
+					<url>https://maven.webdrone.fr/nexus/content/repositories/wd</url>
 				</repository>
+				<snapshotRepository>
+					<id>wd</id>
+					<name>Internal Releases</name>
+					<url>https://maven.webdrone.fr/nexus/content/repositories/snapshots/</url>
+				</snapshotRepository>
 			</distributionManagement>
 		</profile>
 	</profiles>
