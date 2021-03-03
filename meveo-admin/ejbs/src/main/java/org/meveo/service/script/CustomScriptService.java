@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,6 +144,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Inject
     private MavenConfigurationService mavenConfigurationService;
+
+    @Inject
+    private MavenDependencyService mavenDependencyService;
     
     @Inject
     private ModuleInstallationContext moduleInstallCtx;

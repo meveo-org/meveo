@@ -2,23 +2,21 @@ package org.meveo.model.scripts;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 /**
  * @author clement.bareth
@@ -28,6 +26,15 @@ import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 @Entity
 @Table(name = "maven_dependency", uniqueConstraints = { @UniqueConstraint(columnNames = { "group_id", "artifact_id" }) })
 @EntityListeners(JPAtoCDIListener.class)
+@NamedQueries({
+	@NamedQuery(name = "MavenDependency.removeDependencies", query = "DELETE FROM MavenDependency md WHERE md IN :dependencies")
+})
+@NamedNativeQueries({
+	@NamedNativeQuery(
+		name="MavenDependency.countOtherDependencies",
+		query = "SELECT COUNT (*) FROM adm_script_maven_dependency asmd WHERE asmd.script_instance_id <> :scriptId and asmd.maven_coordinates = :coordinates"
+	)
+})
 public class MavenDependency implements Serializable {
 
 	private static final long serialVersionUID = 4010437441199195133L;
