@@ -46,25 +46,29 @@ public class ScriptInstanceObserver {
     }
 
     /**
-     * Remove orphan maven dependencies
+     * When a script instance is deleted, load the related maven dependencies to
+     * force the entity to load them lazily.
      */
     public void onScriptDeleted(@Observes @Removed ScriptInstance scriptInstance) {
 	log.debug("onScriptDeleted: {}", scriptInstance);
-	// force the retrieval of the dependencies here, otherwise, it won't be available
-	// for lazy load later on AFTER_COMPLETION
+	// force the retrieval of the dependencies here, otherwise, it won't be
+	// available for lazy load later on AFTER_COMPLETION
 	List<MavenDependency> dependenciesToRemove = mavenDependencyService
-		.findScriptRelatedDependencies(scriptInstance);
+		.findUniquelyReferencedFromScript(scriptInstance);
 	log.debug("dependenciesToRemove: {}", dependenciesToRemove);
     }
 
     /**
-     * Remove orphan maven dependencies
+     * Remove maven dependencies related to the script instance and no longer
+     * referenced in other script instances.
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void onAfterScriptDeleted(@Observes(during = AFTER_COMPLETION) @RemovedAfterTx ScriptInstance scriptInstance) {
+    public void onAfterScriptDeleted(
+	    @Observes(during = AFTER_COMPLETION) @RemovedAfterTx ScriptInstance scriptInstance) {
 	log.debug("onAfterScriptDeleted: {}", scriptInstance);
 	long scriptId = scriptInstance.getId();
-	List<MavenDependency> dependenciesToRemove = mavenDependencyService.findScriptRelatedDependencies(scriptInstance);
+	List<MavenDependency> dependenciesToRemove = mavenDependencyService
+		.findUniquelyReferencedFromScript(scriptInstance);
 	log.debug("scriptId: {}", scriptId);
 	log.debug("dependenciesToRemove: {}", dependenciesToRemove);
 	mavenDependencyService.removeScriptRelatedDependencies(dependenciesToRemove);
