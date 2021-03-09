@@ -92,7 +92,7 @@ public class EndpointEventListener {
 	/**
 	 * Update (or create if not exists yet) the generated JS file to call the
 	 * endpoint and commit the changes if there are any. Automatically called at
-	 * endpoint's update.
+	 * endpoint's update. And update the JSON file of the endpoint
 	 *
 	 * @param endpoint Updated endpoint
 	 * @return the updated generated file
