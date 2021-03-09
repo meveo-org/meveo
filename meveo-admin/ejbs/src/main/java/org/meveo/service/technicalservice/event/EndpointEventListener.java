@@ -12,6 +12,8 @@ import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
@@ -23,6 +25,7 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.MeveoRepository;
@@ -96,8 +99,15 @@ public class EndpointEventListener {
 	 * @throws IOException       if file cannot be created or overwritten
 	 * @throws BusinessException if the changes can't be commited
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public File updateESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) throws IOException, BusinessException {
 
+		MeveoModule module = this.endpointService.findModuleOf(endpoint);
+		//TODO remove this condition with the default meveo module
+		if(module != null) {
+			this.endpointService.removeFilesFromModule(endpoint, module);
+			this.endpointService.addFilesToModule(endpoint, module);
+		}
 		log.debug("[CDI event] on update es file with id={}", endpoint.getId());
 		final File scriptFile = endpointService.getScriptFile(endpoint);
 		String updatedScript = esGeneratorService.buildJSInterface(endpoint);
