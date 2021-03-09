@@ -1,7 +1,6 @@
 package org.meveo.service.script;
 
 import static javax.enterprise.event.TransactionPhase.AFTER_COMPLETION;
-import java.util.List;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -13,15 +12,15 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.meveo.event.logging.LoggedEvent;
-import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.UpdatedAfterTx;
-import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @author Tony Alejandro | tonysviews@gmail.com
  * @version 6.11.0
  */
 @Singleton
@@ -30,48 +29,36 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class ScriptInstanceObserver {
 
-    @Inject
-    private Logger log;
+	@Inject
+	private Logger log;
 
-    @Inject
-    private MavenDependencyService mavenDependencyService;
+	@Inject
+	private MavenDependencyService mavenDependencyService;
 
-    /**
-     * Remove orphan maven dependencies
-     */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void onScriptUpdated(@Observes(during = AFTER_COMPLETION) @UpdatedAfterTx ScriptInstance scriptInstance) {
-	log.debug("[CDI event]  Trigger onScriptUpdated script instance with id={}", scriptInstance.getId());
-	mavenDependencyService.removeOrphans();
-    }
+	/**
+	 * Triggered after a script is created
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onAfterCreate(@Observes(during = AFTER_COMPLETION) @CreatedAfterTx ScriptInstance scriptInstance) {
+		log.debug("[CDI event]  Trigger onAfterCreate script instance with id={}", scriptInstance.getId());
+		mavenDependencyService.removeOrphans();
+	}
 
-    /**
-     * When a script instance is deleted, load the related maven dependencies to
-     * force the entity to load them lazily.
-     */
-    public void onScriptDeleted(@Observes @Removed ScriptInstance scriptInstance) {
-	log.debug("onScriptDeleted: {}", scriptInstance);
-	// force the retrieval of the dependencies here, otherwise, it won't be
-	// available for lazy load later on AFTER_COMPLETION
-	List<MavenDependency> dependenciesToRemove = mavenDependencyService
-		.findUniquelyReferencedFromScript(scriptInstance);
-	log.debug("dependenciesToRemove: {}", dependenciesToRemove);
-    }
+	/**
+	 * Triggered after a script is updated
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onAfterUpdate(@Observes(during = AFTER_COMPLETION) @UpdatedAfterTx ScriptInstance scriptInstance) {
+		log.debug("[CDI event]  Trigger onAfterUpdate script instance with id={}", scriptInstance.getId());
+		mavenDependencyService.removeOrphans();
+	}
 
-    /**
-     * Remove maven dependencies related to the script instance and no longer
-     * referenced in other script instances.
-     */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void onAfterScriptDeleted(
-	    @Observes(during = AFTER_COMPLETION) @RemovedAfterTx ScriptInstance scriptInstance) {
-	log.debug("onAfterScriptDeleted: {}", scriptInstance);
-	long scriptId = scriptInstance.getId();
-	List<MavenDependency> dependenciesToRemove = mavenDependencyService
-		.findUniquelyReferencedFromScript(scriptInstance);
-	log.debug("scriptId: {}", scriptId);
-	log.debug("dependenciesToRemove: {}", dependenciesToRemove);
-	mavenDependencyService.removeScriptRelatedDependencies(dependenciesToRemove);
-	mavenDependencyService.removeDependenciesFromClassLoader(dependenciesToRemove);
-    }
+	/**
+	 * Triggered after a script instance is deleted
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onAfterDelete(@Observes(during = AFTER_COMPLETION) @RemovedAfterTx ScriptInstance scriptInstance) {
+		log.debug("[CDI event]  Trigger onAfterDelete script instance with id={}", scriptInstance.getId());
+		mavenDependencyService.removeOrphans();
+	}
 }

@@ -1,22 +1,20 @@
 package org.meveo.service.script;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.scripts.MavenDependency;
-import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.script.maven.MavenClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +27,10 @@ public class MavenDependencyService {
 	@MeveoJpa
 	private EntityManagerWrapper emWrapper;
 
+	@Inject
+	@RemovedAfterTx
+	protected Event<MavenDependency> afterDeleteEvent;
+
 	private Object[] listAllCoordinates(Collection<MavenDependency> dependencies) {
 		return dependencies.stream().map(MavenDependency::getCoordinates).toArray();
 	}
@@ -36,8 +38,7 @@ public class MavenDependencyService {
 	public MavenDependency find(String coordinates) {
 		String queryString = "from MavenDependency " + "where lower(coordinates) = :coordinates ";
 
-		TypedQuery<MavenDependency> query = emWrapper.getEntityManager().createQuery(queryString, MavenDependency.class)
-				.setParameter("coordinates", coordinates.toLowerCase());
+		TypedQuery<MavenDependency> query = emWrapper.getEntityManager().createQuery(queryString, MavenDependency.class).setParameter("coordinates", coordinates.toLowerCase());
 
 		try {
 			return query.getSingleResult();
@@ -48,11 +49,9 @@ public class MavenDependencyService {
 
 	public boolean validateUniqueFields(String version, String groupId, String artifactId) {
 
-		String queryString = "select 1 " + "from MavenDependency " + "where lower(groupId)=:groupId "
-				+ "and lower(artifactId)=:artifactId " + "and lower(version) != :version";
+		String queryString = "select 1 " + "from MavenDependency " + "where lower(groupId)=:groupId " + "and lower(artifactId)=:artifactId " + "and lower(version) != :version";
 
-		Query query = emWrapper.getEntityManager().createQuery(queryString).setParameter("groupId", groupId.toLowerCase())
-				.setParameter("artifactId", artifactId.toLowerCase()).setParameter("version", version.toLowerCase());
+		Query query = emWrapper.getEntityManager().createQuery(queryString).setParameter("groupId", groupId.toLowerCase()).setParameter("artifactId", artifactId.toLowerCase()).setParameter("version", version.toLowerCase());
 
 		return query.getResultList().size() == 0;
 	}
@@ -61,31 +60,18 @@ public class MavenDependencyService {
 	 * Removes maven dependencies that are not linked to any script
 	 */
 	public void removeOrphans() {
-		String query = "DELETE FROM maven_dependency md\n" + "WHERE NOT EXISTS (\n" + "	SELECT 1 \n"
-				+ "	FROM adm_script_maven_dependency asmd\n" + "	WHERE asmd.maven_coordinates = md.coordinates\n" + ")";
-
-		emWrapper.getEntityManager().createNativeQuery(query).executeUpdate();
+		List<MavenDependency> dependenciesToRemove = findOrphans();
+		removeDependencies(dependenciesToRemove);
 	}
 
 	/**
-	 * Find maven dependencies that are related to a script instance and not related
-	 * to any other script instances.
+	 * Find maven dependencies that are not related to any script instances.
 	 */
-	public List<MavenDependency> findUniquelyReferencedFromScript(ScriptInstance scriptInstance) {
-		Set<MavenDependency> dependencies = scriptInstance.getMavenDependenciesNullSafe();
-		long scriptId = scriptInstance.getId();
-		log.debug("scriptInstance.id: {}", scriptId);
-		log.debug("scriptInstance.mavenDependencies: {}", listAllCoordinates(dependencies));
+	public List<MavenDependency> findOrphans() {
+		List<MavenDependency> dependenciesToRemove = emWrapper.getEntityManager().createNamedQuery("MavenDependency.getOrphans", MavenDependency.class).getResultList();
 
-		if (!dependencies.isEmpty()) {
-			List<MavenDependency> dependenciesToRemove = dependencies.stream().filter((dependency) -> {
-				return ((BigInteger) emWrapper.getEntityManager().createNamedQuery("MavenDependency.countOtherDependencies")
-						.setParameter("scriptId", scriptId).setParameter("coordinates", dependency.getCoordinates())
-						.getSingleResult()).intValue() == 0;
-			}).collect(Collectors.toList());
-			if (!dependenciesToRemove.isEmpty()) {
-				return dependenciesToRemove;
-			}
+		if (!dependenciesToRemove.isEmpty()) {
+			return dependenciesToRemove;
 		}
 		return new ArrayList<MavenDependency>();
 	}
@@ -93,11 +79,13 @@ public class MavenDependencyService {
 	/**
 	 * Removes the specified maven dependencies passed in.
 	 */
-	public void removeScriptRelatedDependencies(List<MavenDependency> dependenciesToRemove) {
+	public void removeDependencies(List<MavenDependency> dependenciesToRemove) {
 		if (!dependenciesToRemove.isEmpty()) {
 			log.debug("dependenciesToRemove: {}", listAllCoordinates(dependenciesToRemove));
-			emWrapper.getEntityManager().createNamedQuery("MavenDependency.removeDependencies")
-					.setParameter("dependencies", dependenciesToRemove).executeUpdate();
+			emWrapper.getEntityManager().createNamedQuery("MavenDependency.removeDependencies").setParameter("dependencies", dependenciesToRemove).executeUpdate();
+			dependenciesToRemove.stream().forEach((mavenDependency) -> {
+				afterDeleteEvent.fire(mavenDependency);
+			});
 		}
 	}
 
@@ -109,5 +97,13 @@ public class MavenDependencyService {
 			MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
 			mavenClassLoader.removeLibraries(dependenciesToRemove);
 		}
+	}
+
+	/**
+	 * Removes a single maven dependency from maven class loader.
+	 */
+	public void removeDependencyFromClassLoader(MavenDependency dependencyToRemove) {
+		MavenClassLoader mavenClassLoader = MavenClassLoader.getInstance();
+		mavenClassLoader.removeLibrary(dependencyToRemove);
 	}
 }

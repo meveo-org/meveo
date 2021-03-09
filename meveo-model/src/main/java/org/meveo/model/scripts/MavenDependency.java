@@ -27,12 +27,16 @@ import org.meveo.commons.utils.StringUtils;
 @Table(name = "maven_dependency", uniqueConstraints = { @UniqueConstraint(columnNames = { "group_id", "artifact_id" }) })
 @EntityListeners(JPAtoCDIListener.class)
 @NamedQueries({
-	@NamedQuery(name = "MavenDependency.removeDependencies", query = "DELETE FROM MavenDependency md WHERE md IN :dependencies")
+	@NamedQuery(
+		name = "MavenDependency.removeDependencies",
+		query = "DELETE FROM MavenDependency md WHERE md IN :dependencies"
+	)
 })
 @NamedNativeQueries({
 	@NamedNativeQuery(
-		name="MavenDependency.countOtherDependencies",
-		query = "SELECT COUNT (*) FROM adm_script_maven_dependency asmd WHERE asmd.script_instance_id <> :scriptId and asmd.maven_coordinates = :coordinates"
+		name = "MavenDependency.getOrphans",
+		query = "SELECT * FROM maven_dependency md WHERE NOT EXISTS (SELECT 1 FROM adm_script_maven_dependency asmd WHERE asmd.maven_coordinates = md.coordinates)",
+		resultClass = MavenDependency.class
 	)
 })
 public class MavenDependency implements Serializable {
