@@ -122,8 +122,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (!isUserAuthorized(endpoint)) {
 			throw new UserNotAuthorizedException();
 		}
-
-		return esGeneratorService.buildJSInterface(baseUrl, endpoint);
+		return esGeneratorService.buildJSInterface(endpoint);
 	}
 
 	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution)
