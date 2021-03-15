@@ -14,6 +14,7 @@ import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 
@@ -26,7 +27,6 @@ import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 
@@ -47,10 +47,19 @@ public class JSONSchemaIntoJavaClassParser {
 	private CustomEntityTemplateService cetService;
 	
 	@Inject
+	private CustomFieldTemplateService customFieldService;
+	
+	@Inject
 	private Logger log;
 
     private Map<String, Object> jsonMap;
 
+    /**
+     * Note : this method is only used for test purpose
+     * 
+     * @param file the file to parse
+     * @return the parsed file
+     */
     @SuppressWarnings("unchecked")
     public CompilationUnit parseJavaFile(String file) {
         CompilationUnit compilationUnit = new CompilationUnit();
@@ -59,7 +68,7 @@ public class JSONSchemaIntoJavaClassParser {
             byte[] mapData = Files.readAllBytes(sourceDir.toPath());
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(mapData, HashMap.class);
-            parseFields(jsonMap, compilationUnit);
+            parseFields(jsonMap, compilationUnit, Map.of());
         } catch (IOException e) {
         }
         return compilationUnit;
@@ -69,10 +78,12 @@ public class JSONSchemaIntoJavaClassParser {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomEntity.class);
         
+        var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
+        
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
-            parseFields(jsonMap, compilationUnit);
+            parseFields(jsonMap, compilationUnit, fields);
             
             if(template.getSuperTemplate() != null) {
             	var parentTemplate = Hibernate.isInitialized(template.getSuperTemplate()) ? 
@@ -111,7 +122,7 @@ public class JSONSchemaIntoJavaClassParser {
         return compilationUnit;
     }
 
-    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit) {
+    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, Map<String, CustomFieldTemplate> fieldsDefinition) {
         compilationUnit.setPackageDeclaration("org.meveo.model.customEntities");
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
         if (classDeclaration != null) {
@@ -143,16 +154,25 @@ public class JSONSchemaIntoJavaClassParser {
                     FieldDeclaration fd = new FieldDeclaration();
                     VariableDeclarator vd = new VariableDeclarator();
                     vd.setName(code);
+                    
+                    // Add @JsonProperty annotation
 					if (values.containsKey("nullable") && !Boolean.parseBoolean(values.get("nullable").toString())) {
 						fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
 						compilationUnit.addImport(JsonProperty.class);
 					}
-                    
+					
                     if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
                             compilationUnit.addImport("java.util.List");
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
                             if (value.containsKey("$ref")) {
+            					// Add @Relation annotation
+            					var fieldDefinition = fieldsDefinition.get(code);
+            					if(fieldDefinition.getRelationship() != null) {
+            						fd.addSingleMemberAnnotation(Relation.class, '"' + fieldDefinition.getRelationship().getCode() + '"');
+                					compilationUnit.addImport(Relation.class);
+            					}
+            					
                                 String ref = (String) value.get("$ref");
                                 if (ref != null) {
                                     String[] data = ref.split("/");
@@ -234,6 +254,13 @@ public class JSONSchemaIntoJavaClassParser {
                         }
 
                     } else if (values.get("$ref") != null) {
+    					// Add @Relation annotation
+    					var fieldDefinition = fieldsDefinition.get(code);            					
+    					if(fieldDefinition.getRelationship() != null) {
+    						fd.addSingleMemberAnnotation(Relation.class, '"' + fieldDefinition.getRelationship().getCode() + '"');
+        					compilationUnit.addImport(Relation.class);
+    					}
+    					
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
