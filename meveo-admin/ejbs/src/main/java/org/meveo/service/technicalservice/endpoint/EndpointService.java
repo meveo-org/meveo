@@ -197,9 +197,15 @@ public class EndpointService extends BusinessService<Endpoint> {
 
 		return f.exists() && !f.isDirectory();
 	}
-
+	
 	public File getScriptFile(Endpoint endpoint) {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		File repositoryDir;
+		MeveoModule module = this.findModuleOf(endpoint);
+		if (module == null) {
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		} else {
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		}
 		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
