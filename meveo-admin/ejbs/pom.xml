@@ -252,7 +252,6 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-el-resolver</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
