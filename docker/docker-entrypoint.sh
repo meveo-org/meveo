@@ -79,7 +79,7 @@ done
 info "Postgres is up"
 
 
-# DB init & update
+# Liquibase update the database for meveo app
 DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
 if [ -f "${DB_CHANGELOG_FILE}" ]; then
     info "Update meveo database using liquibase"
@@ -87,6 +87,18 @@ if [ -f "${DB_CHANGELOG_FILE}" ]; then
         --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
         --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
         --changeLogFile=${DB_CHANGELOG_FILE} \
+        update \
+        -Ddb.schema=public
+fi
+
+# Liquibase update the database for non-meveo app
+DB_CHANGELOG_FILE2="/opt/jboss/liquibase/db_resources/other-changelog/db.xml"
+if [ -f "${DB_CHANGELOG_FILE2}" ]; then
+    info "Update other database using liquibase"
+    /opt/jboss/liquibase/liquibase \
+        --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+        --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+        --changeLogFile=${DB_CHANGELOG_FILE2} \
         update \
         -Ddb.schema=public
 fi
