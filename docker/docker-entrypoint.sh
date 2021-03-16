@@ -92,15 +92,21 @@ if [ -f "${DB_CHANGELOG_FILE}" ]; then
 fi
 
 # Liquibase update the database for non-meveo app
-DB_CHANGELOG_FILE2="/opt/jboss/liquibase/db_resources/other-changelog/db.xml"
-if [ -f "${DB_CHANGELOG_FILE2}" ]; then
-    info "Update other database using liquibase"
-    /opt/jboss/liquibase/liquibase \
-        --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
-        --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
-        --changeLogFile=${DB_CHANGELOG_FILE2} \
-        update \
-        -Ddb.schema=public
+DB_CHANGELOG_OTHER="/opt/jboss/liquibase/db_resources/other-changelog"
+if [ -d "${DB_CHANGELOG_OTHER}" ]; then
+    for changelog_dir in $(find $DB_CHANGELOG_OTHER -maxdepth 1 -type d | awk '{if(NR>1)print}')
+    do
+        changelog_file="$changelog_dir/db.xml"
+        if [ -f "${changelog_file}" ]; then
+            echo "Update $(basename $changelog_dir) database using liquibase"
+            /opt/jboss/liquibase/liquibase \
+                --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+                --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+                --changeLogFile=${changelog_file} \
+                update \
+                -Ddb.schema=public
+        fi
+    done
 fi
 
 
