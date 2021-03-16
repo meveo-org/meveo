@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
@@ -107,10 +108,28 @@ public class CustomEntityTemplateDto extends BaseEntityDto implements Comparable
     @XmlAttribute()
     @ApiModelProperty("Whether a table that will audit the changes will be created.")
 	private boolean audited = false;
+    
+    @XmlAttribute
+    @ApiModelProperty("Function used to determine whether an instance of the related {@link CustomEntity} is equal to an other")
+    private String isEqualFn;
 
     private String transientCrudEventListenerScript;
+    
+    /**
+	 * @return the {@link #isEqualFn}
+	 */
+	public String getIsEqualFn() {
+		return isEqualFn;
+	}
 
-    public String getTransientCrudEventListenerScript() {
+	/**
+	 * @param isEqualFn the isEqualFn to set
+	 */
+	public void setIsEqualFn(String isEqualFn) {
+		this.isEqualFn = isEqualFn;
+	}
+
+	public String getTransientCrudEventListenerScript() {
         return transientCrudEventListenerScript;
     }
 

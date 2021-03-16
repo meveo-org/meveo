@@ -17,4 +17,8 @@ public interface CustomEntity {
 	
 	/** @return the uuid of the entity */
 	String getUuid();
+	
+	default boolean isEqual(CustomEntity other) {
+		return this.equals(other);
+	}
 }

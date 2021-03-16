@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -26,6 +27,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
@@ -113,6 +115,16 @@ public class JSONSchemaIntoJavaClassParser {
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
     			getCetCode.setBody(getCetCodeBody);
+    			
+    	        if(StringUtils.isNotBlank(template.getIsEqualFn())) {
+    	        	cl.addMethod("isEqual", Keyword.PUBLIC)
+	        			.addAnnotation(Override.class)
+    	        		.setType(Boolean.class)
+    	        		.addParameter(new Parameter()
+    	        			.setType("CustomEntity")
+    	        			.setName("other"))
+	        			.setBody(JavaParser.parseBlock(template.getIsEqualFn()));
+    	        }
     		});
             
         } catch (IOException e) {

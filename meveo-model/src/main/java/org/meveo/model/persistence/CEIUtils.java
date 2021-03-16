@@ -70,6 +70,8 @@ public class CEIUtils {
 
 	@SuppressWarnings("unchecked")
 	public static EntityGraph toEntityGraph(Collection<CustomEntity> customEntities) {
+		//TODO: use the isEqual method to merge main entities and sub entities
+		// Sub-entity = an entity extracted from a main object
 		List<org.meveo.interfaces.Entity> entities = new ArrayList<>();
 		List<EntityRelation> relations = new ArrayList<>();
 		EntityGraph entityGraph = new EntityGraph(entities, relations);
