@@ -199,7 +199,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     protected void afterUpdateOrCreate(T script) {
-    	
+    	MeveoModule module = this.findModuleOf(script);
         try {
         	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
@@ -213,7 +213,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
             if(commitFile) {
 	            buildScriptFile(scriptFile, script);
-	            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+	            if (module == null) {
+		            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+	            } else {
+	            	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create or update script" + script.getCode());
+	            }
             }
             
         } catch (Exception e) {
