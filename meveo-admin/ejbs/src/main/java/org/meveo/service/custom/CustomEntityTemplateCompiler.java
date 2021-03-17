@@ -6,14 +6,12 @@ package org.meveo.service.custom;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
-import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
