@@ -1116,14 +1116,23 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript(), StandardCharsets.UTF_8);
     }
 
-    private File findScriptFile(CustomScript scriptInstance) {
-        final File scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
-        if (!scriptDir.exists()) {
+    @SuppressWarnings("unchecked")
+	private File findScriptFile(CustomScript scriptInstance) {
+    	File scriptDir;
+    	String path;
+    	MeveoModule module = this.findModuleOf((T) scriptInstance);
+    	if (module == null) {
+    		scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
+    		path = scriptInstance.getCode().replaceAll("\\.", "/");
+    	} else {
+    		scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/scriptInstances/" + scriptInstance.getCode());
+    		path = scriptInstance.getCode();
+    	}
+    	if (!scriptDir.exists()) {
             scriptDir.mkdirs();
         }
 
         String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
-        String path = scriptInstance.getCode().replaceAll("\\.", "/");
         return new File(scriptDir, path + extension);
     }
 
