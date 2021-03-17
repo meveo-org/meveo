@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Priority;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -45,6 +44,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.BusinessServiceFinderImpl;
 import org.meveo.api.CustomEntityTemplateApi;
 import org.meveo.api.CustomRelationshipTemplateApi;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -62,10 +62,12 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
@@ -108,6 +110,9 @@ public class OntologyObserver {
     @CurrentUser
     private MeveoUser currentUser;
 
+    @Inject
+    private BusinessServiceFinderImpl businessServiceFinderImpl;
+    
     @Inject
     private JSONSchemaGenerator jsonSchemaGenerator;
 
@@ -256,16 +261,19 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws
             IOException, BusinessException {
-        hasChange.set(true);
+    	
+    	BusinessService businessService = businessServiceFinderImpl.find(cet);
+    	MeveoModule module = businessService.findModuleOf(cet);
+		
+    	hasChange.set(true);
 
         final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
         final File cetDir = cetCompiler.getCetDir(cet);
-
-        final File classDir = getClassDir();
 
         // This is for retro-compatibility, in case a CET created before 6.4.0 is updated
         if (!cetDir.exists()) {
@@ -284,9 +292,11 @@ public class OntologyObserver {
         // Update java source file in git repository
         File javaFile = cetCompiler.generateCETSourceFile(templateSchema, cet);
         fileList.add(javaFile);
-        
-        gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
-
+        if (module == null) {
+        	gitClient.commitFiles(meveoRepository, fileList, "Updated custom entity template " + cet.getCode());
+        } else {
+        	gitClient.commitFiles(module.getGitRepository(), fileList, "Update custom entity template " + cet.getCode());
+        }
 //        String sourceCode = Files.readString(javaFile.toPath());
 //        File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".java");
 //        FileUtils.write(classFile, sourceCode, StandardCharsets.UTF_8);
@@ -492,9 +502,14 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomFieldTemplate cft) throws IOException, BusinessException {
-        hasChange.set(true);
+        
+    	BusinessService businessService = this.businessServiceFinderImpl.find(cft);
+    	MeveoModule module = businessService.findModuleOf(cft);
+    	
+    	hasChange.set(true);
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
@@ -517,11 +532,19 @@ public class OntologyObserver {
 
                 listFile.add(schemaFile);
 
-                gitClient.commitFiles(
-                        meveoRepository,
-                        listFile,
-                        "Update property " + cft.getCode() + " of CET " + cet.getCode()
-                );
+                if (module == null) {
+	                gitClient.commitFiles(
+	                        meveoRepository,
+	                        listFile,
+	                        "Update property " + cft.getCode() + " of CET " + cet.getCode()
+	                );
+                } else {
+                	gitClient.commitFiles(
+                			module.getGitRepository(),
+                			listFile,
+                			"Update property " + cft.getCode() + "of CET " + cet.getCode()
+                	);
+                }
 
             }
 
