@@ -53,4 +53,9 @@ public class PropertyInstance {
 		return value.toString();
 	}
 
+	@Override
+	public String toString() {
+		return String.valueOf(value);
+	}
+
 }

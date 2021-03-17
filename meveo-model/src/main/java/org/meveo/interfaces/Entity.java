@@ -51,4 +51,9 @@ public class Entity extends EntityOrRelation {
 		this.name = builder.name;
 		setProperties(builder.properties);
 	}
+	
+	@Override
+	public String toString() {
+		return "Entity [type=" + type + ", getCompoundName()=" + getCompoundName() + "]";
+	}
 }
