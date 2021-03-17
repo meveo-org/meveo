@@ -197,7 +197,7 @@ public class OntologyObserver {
 
         final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
-        final File cetDir = cetCompiler.getCetDir();
+        final File cetDir = cetCompiler.getCetDir(cet);
 
         if (!cetDir.exists()) {
             cetDir.mkdirs();
@@ -226,7 +226,7 @@ public class OntologyObserver {
      */
     public void cetCreationFailure(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created CustomEntityTemplate cet) throws BusinessException {
         List<File> commitFiles = new ArrayList<>();
-        final File cetDir = cetCompiler.getCetDir();
+        final File cetDir = cetCompiler.getCetDir(cet);
         if (!cetDir.exists()) {
             return;
         }
@@ -263,7 +263,7 @@ public class OntologyObserver {
 
         final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
-        final File cetDir = cetCompiler.getCetDir();
+        final File cetDir = cetCompiler.getCetDir(cet);
 
         final File classDir = getClassDir();
 
@@ -300,7 +300,7 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
-        final File cetDir = cetCompiler.getCetDir();
+        final File cetDir = cetCompiler.getCetDir(cet);
         final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
@@ -428,7 +428,7 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = cetCompiler.getCetDir();
+            final File cetDir = cetCompiler.getCetDir(cet);
 
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -498,7 +498,7 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = cetCompiler.getCetDir();
+            final File cetDir = cetCompiler.getCetDir(cet);
 
             final File classDir = getClassDir();
 
@@ -567,7 +567,7 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = cetCompiler.getCetDir();
+            final File cetDir = cetCompiler.getCetDir(cet);
 
             final File classDir = getClassDir();
 

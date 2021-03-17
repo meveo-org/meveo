@@ -16,8 +16,11 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
@@ -40,6 +43,9 @@ public class CustomEntityTemplateCompiler {
     private GitRepository meveoRepository;
 	
     @Inject
+    private BusinessServiceFinder businessServiceFinder;
+    
+    @Inject
     private JSONSchemaIntoJavaClassParser jsonSchemaIntoJavaClassParser;
     
     @Inject
@@ -54,35 +60,6 @@ public class CustomEntityTemplateCompiler {
     
     @Inject
     private Logger log;
-    
-    /**
-     * Retrieve the java source file for a given CET. <br>
-     * <br><b>Note</b>: if the source file does not exists, it will be generated
-     * 
-     * @param cetCode Code of the cet
-     * @return the java source file
-     * @throws BusinessException if a read / write operation fails
-     */
-    public File getCETSourceFile(String cetCode) throws BusinessException {
-		final File cetDir = getCetDir();
-        File javaFile = new File(cetDir, cetCode + ".java");
-        if(!javaFile.exists()) {
-        	var cet = cache.getCustomEntityTemplate(cetCode);
-        	if (cet == null)
-        		throw new EntityDoesNotExistsException("CET does not exists : " + cetCode);
-            File schemaFile = new File(cetDir, cet.getCode() + ".json");
-             try {
-                 if (!schemaFile.exists()) {
-                	 String templateSchema = getTemplateSchema(cet);
-                	 FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
-                 }
-				javaFile = generateCETSourceFile(Files.readString(schemaFile.toPath()), cet);
-			} catch (IOException e) {
-				throw new BusinessException("Can't write/read schema file for " + cetCode, e);
-			}
-        }
-    	return javaFile;
-    }
     
     public String getTemplateSchema(CustomEntityTemplate cet) {
         String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
@@ -101,7 +78,7 @@ public class CustomEntityTemplateCompiler {
 	public File generateCETSourceFile(String templateSchema, CustomEntityTemplate cet) throws BusinessException {
 		log.info("Generating source file for {}", cet);
 		
-		final File cetDir = getCetDir();
+		final File cetDir = getCetDir(cet);
         final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
         File javaFile = new File(cetDir, cet.getCode() + ".java");
         if (javaFile.exists()) {
@@ -120,8 +97,19 @@ public class CustomEntityTemplateCompiler {
 	/**
 	 * @return the directory where custom entity templates source files are stored
 	 */
-    public File getCetDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
-        return new File(repositoryDir, "org/meveo/model/customEntities");
-    }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public File getCetDir(CustomEntityTemplate cet) {
+    	String path;
+    	File repositoryDir;
+    	BusinessService businessService = businessServiceFinder.find(cet);
+    	MeveoModule module = businessService.findModuleOf(cet);
+    	if (module == null) {
+	        repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
+	        path = "org/meveo/model/customEntities";
+    	} else {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    		path = "/customEntityTemplates/" + cet.getCode();
+    	}
+        return new File(repositoryDir, path);
+   	}
 }
