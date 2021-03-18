@@ -3,7 +3,7 @@
  */
 package org.meveo.model.customEntities;
 
-import org.meveo.interfaces.CustomEntity;
+import org.meveo.model.CustomEntity;
 
 /**
  * Interface for CRUD events concerning custom entities

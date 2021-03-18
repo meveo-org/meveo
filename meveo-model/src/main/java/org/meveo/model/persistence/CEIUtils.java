@@ -22,9 +22,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.interfaces.CustomEntity;
 import org.meveo.interfaces.EntityGraph;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
