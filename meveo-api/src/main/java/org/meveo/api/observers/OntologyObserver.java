@@ -44,7 +44,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.BusinessServiceFinderImpl;
 import org.meveo.api.CustomEntityTemplateApi;
 import org.meveo.api.CustomRelationshipTemplateApi;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -67,7 +66,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.BusinessService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.crm.impl.JSONSchemaIntoTemplateParser;
@@ -111,9 +110,6 @@ public class OntologyObserver {
     private MeveoUser currentUser;
 
     @Inject
-    private BusinessServiceFinderImpl businessServiceFinderImpl;
-    
-    @Inject
     private JSONSchemaGenerator jsonSchemaGenerator;
 
     @Inject
@@ -127,6 +123,9 @@ public class OntologyObserver {
 
     @Inject
     private CustomEntityTemplateApi customEntityTemplateApi;
+    
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -261,13 +260,11 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomEntityTemplate cet) throws
             IOException, BusinessException {
     	
-    	BusinessService businessService = businessServiceFinderImpl.find(cet);
-    	MeveoModule module = businessService.findModuleOf(cet);
+    	MeveoModule module = customEntityTemplateService.findModuleOf(cet);
 		
     	hasChange.set(true);
 
@@ -511,12 +508,10 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cftUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomFieldTemplate cft) throws IOException, BusinessException {
         
-    	BusinessService businessService = this.businessServiceFinderImpl.find(cft);
-    	MeveoModule module = businessService.findModuleOf(cft);
+    	MeveoModule module = customFieldTemplateService.findModuleOf(cft);
     	
     	hasChange.set(true);
 
@@ -808,12 +803,10 @@ public class OntologyObserver {
         return files;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
 	private File getCrtDir(CustomRelationshipTemplate crt) {
     	File repositoryDir;
     	String path;
-    	BusinessService businessService = businessServiceFinderImpl.find(crt);
-    	MeveoModule module = businessService.findModuleOf(crt);
+    	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
     	if (module == null) {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
     		path = "custom/relationships";
