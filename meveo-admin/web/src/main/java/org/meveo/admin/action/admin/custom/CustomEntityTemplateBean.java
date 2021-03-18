@@ -1418,10 +1418,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 	
 	public String getIsEqualFn() throws IOException {
-		if (!StringUtils.isBlank(entity.getIsEqualFn())){
-			return entity.getIsEqualFn();
-		}
-
-		return IOUtils.toString(this.getClass().getResourceAsStream("/templates/DefaultIsEqualFn.java"), StandardCharsets.UTF_8);
+		return entity.getIsEqualFn();
 	}
 }
