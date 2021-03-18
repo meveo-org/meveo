@@ -379,9 +379,12 @@ public class OntologyObserver {
      * @throws IOException if we cannot write to the JSON Schema file
      * @throws BusinessException if an error happen during the creation of the related files
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
-        hasChange.set(true);
+        
+    	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
+    	
+    	hasChange.set(true);
 
         final String templateSchema = getTemplateSchema(crt);
 
@@ -398,7 +401,12 @@ public class OntologyObserver {
         }
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        
+        if (module == null) {
+        	gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        } else {
+        	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        }
     }
 
     /**
