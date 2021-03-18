@@ -344,8 +344,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		
 		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
 		
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-		String pathNewFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode() + extension;
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "src/main/java");
+		String pathNewFile = entity.getCode().replaceAll("\\.", "/");
 		
 		File newFile = new File(gitDirectory, pathNewFile);
 		
