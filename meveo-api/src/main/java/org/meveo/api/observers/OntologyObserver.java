@@ -353,7 +353,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = getCrtDir();
+        final File crtDir = getCrtDir(crt);
 
         if (!crtDir.exists()) {
             crtDir.mkdirs();
@@ -369,6 +369,7 @@ public class OntologyObserver {
         commitFiles.add(schemaFile);
 
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom relationship template " + crt.getCode());
+
     }
 
     /**
@@ -384,7 +385,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = getCrtDir();
+        final File crtDir = getCrtDir(crt);
 
         // This is for retro-compatibility, in case a CRT created before 6.4.0 is updated
         if (!crtDir.exists()) {
@@ -408,7 +409,7 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
-        final File cetDir = getCrtDir();
+        final File cetDir = getCrtDir(crt);
         final File schemaFile = new File(cetDir, crt.getCode() + ".json");
         if (schemaFile.exists()) {
             schemaFile.delete();
@@ -471,7 +472,7 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = getCrtDir();
+            final File cetDir = getCrtDir(crt);
 
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -550,7 +551,7 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = getCrtDir();
+            final File cetDir = getCrtDir(crt);
 
             // This is for retro-compatibility, in case we update a field of a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -621,7 +622,7 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = getCrtDir();
+            final File cetDir = getCrtDir(crt);
 
             if (!cetDir.exists()) {
                 // Nothing to delete
@@ -799,10 +800,21 @@ public class OntologyObserver {
         return files;
     }
 
-    private File getCrtDir() {
-        final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-        return new File(repositoryDir, "custom/relationships");
-    }
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private File getCrtDir(CustomRelationshipTemplate crt) {
+    	File repositoryDir;
+    	String path;
+    	BusinessService businessService = businessServiceFinderImpl.find(crt);
+    	MeveoModule module = businessService.findModuleOf(crt);
+    	if (module == null) {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+    		path = "custom/relationships";
+    	} else {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    		path = "customRelationShipTemplates/" + crt.getCode();
+    	}
+    	return new File(repositoryDir, path);
+	}
 
 
     private String getTemplateSchema(CustomRelationshipTemplate crt) {
