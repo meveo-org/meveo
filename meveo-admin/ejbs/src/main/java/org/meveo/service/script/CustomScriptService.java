@@ -1123,14 +1123,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @SuppressWarnings("unchecked")
 	private File findScriptFile(CustomScript scriptInstance) {
     	File scriptDir;
-    	String path;
+    	String path = scriptInstance.getCode().replaceAll("\\.", "/");
     	MeveoModule module = this.findModuleOf((T) scriptInstance);
     	if (module == null) {
     		scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
-    		path = scriptInstance.getCode().replaceAll("\\.", "/");
     	} else {
-    		scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/scriptInstances/" + scriptInstance.getCode());
-    		path = scriptInstance.getCode();
+    		scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/src/main/java/");
     	}
     	if (!scriptDir.exists()) {
             scriptDir.mkdirs();
