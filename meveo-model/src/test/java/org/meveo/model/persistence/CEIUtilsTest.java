@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.meveo.model.CustomEntity;
+import org.meveo.interfaces.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.annotations.Relation;

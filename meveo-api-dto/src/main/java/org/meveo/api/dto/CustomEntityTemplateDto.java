@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
-import org.meveo.model.CustomEntity;
+import org.meveo.interfaces.CustomEntity;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 

@@ -3,7 +3,7 @@
  */
 package org.meveo.model.persistence;
 
-import org.meveo.model.CustomEntity;
+import org.meveo.interfaces.CustomEntity;
 import org.meveo.model.customEntities.annotations.Relation;
 
 /**

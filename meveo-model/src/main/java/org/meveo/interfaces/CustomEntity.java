@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.meveo.model;
+package org.meveo.interfaces;
 
 /**
  * Interface that the classes generated for each CET implements
