@@ -3,6 +3,7 @@ package org.meveo.service.crm.impl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,11 +27,15 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
+
+import jxl.biff.formula.ParseContext;
 
 /**
  * Parse a cet map into a java source code.
@@ -70,7 +75,7 @@ public class JSONSchemaIntoJavaClassParser {
             byte[] mapData = Files.readAllBytes(sourceDir.toPath());
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(mapData, HashMap.class);
-            parseFields(jsonMap, compilationUnit, Map.of());
+            parseFields(jsonMap, compilationUnit, new CustomEntityTemplate(), Map.of());
         } catch (IOException e) {
         }
         return compilationUnit;
@@ -85,7 +90,7 @@ public class JSONSchemaIntoJavaClassParser {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
-            parseFields(jsonMap, compilationUnit, fields);
+            parseFields(jsonMap, compilationUnit, template, fields);
             
             if(template.getSuperTemplate() != null) {
             	var parentTemplate = Hibernate.isInitialized(template.getSuperTemplate()) ? 
@@ -119,7 +124,7 @@ public class JSONSchemaIntoJavaClassParser {
     	        if(StringUtils.isNotBlank(template.getIsEqualFn())) {
     	        	cl.addMethod("isEqual", Keyword.PUBLIC)
 	        			.addAnnotation(Override.class)
-    	        		.setType(Boolean.class)
+    	        		.setType(boolean.class)
     	        		.addParameter(new Parameter()
     	        			.setType("CustomEntity")
     	        			.setName("other"))
@@ -134,11 +139,59 @@ public class JSONSchemaIntoJavaClassParser {
         return compilationUnit;
     }
 
-    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, Map<String, CustomFieldTemplate> fieldsDefinition) {
+    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, CustomEntityTemplate template, Map<String, CustomFieldTemplate> fieldsDefinition) {
         compilationUnit.setPackageDeclaration("org.meveo.model.customEntities");
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
+        Collection<FieldDeclaration> fds = new ArrayList<>();
+        
+        // Generate default constructor
+        classDeclaration.addConstructor(Modifier.Keyword.PUBLIC);
+
+        if (template.getNeo4JStorageConfiguration() != null && template.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+
+        	// Handle primitive entity if value field is not defined
+        	FieldDeclaration fd = new FieldDeclaration();
+        	VariableDeclarator variableDeclarator = new VariableDeclarator();
+        	variableDeclarator.setName("value");
+
+        	switch (template.getNeo4JStorageConfiguration().getPrimitiveType()) {
+	        	case DATE:
+	        		variableDeclarator.setType("Instant");
+	        		compilationUnit.addImport(Instant.class);
+	        		break;
+	        	case DOUBLE:
+	        		variableDeclarator.setType("Double");
+	        		compilationUnit.addImport(Double.class);
+	        		break;
+	        	case LONG:
+	        		variableDeclarator.setType("Long");
+	        		compilationUnit.addImport(Long.class);
+	        		break;
+	        	case STRING:
+	        		variableDeclarator.setType("String");
+	        		compilationUnit.addImport(String.class);
+	        		break;
+	        	default:
+	        		variableDeclarator.setType("Object");
+	        		break;
+        	}
+
+        	if(fieldsDefinition.get("value") == null) {
+        		fd.setModifiers(Modifier.Keyword.PRIVATE);
+        		fd.addVariable(variableDeclarator);
+        		fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+        		classDeclaration.addMember(fd);
+        		((ArrayList<FieldDeclaration>) fds).add(fd);
+        	}
+
+        	// Generate constructor with the value
+        	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
+	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
+
+        }
+        
         if (classDeclaration != null) {
-            Collection<FieldDeclaration> fds = new ArrayList<>();
             FieldDeclaration field = new FieldDeclaration();
             VariableDeclarator variable = new VariableDeclarator();
             variable.setName("uuid");
@@ -216,6 +269,9 @@ public class JSONSchemaIntoJavaClassParser {
                             } else if (value.containsKey("enum")) {
                                 vd.setType("List<String>");
                             }
+                            
+                            vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
+                            compilationUnit.addImport(ArrayList.class);
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
                             Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");
@@ -244,6 +300,9 @@ public class JSONSchemaIntoJavaClassParser {
                                     vd.setType("Map<String, Object>");
                                 }
                             }
+                            
+                            vd.setInitializer(JavaParser.parseExpression("new HashMap<>()"));
+                            compilationUnit.addImport(HashMap.class);
                         } else if (values.get("type").equals("integer")) {
                             if (code.equals("count")) {
                                 vd.setType("Integer");
@@ -295,10 +354,6 @@ public class JSONSchemaIntoJavaClassParser {
 
                     fd.addVariable(vd);
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
-                    if (values.get("nullable").equals(false)) {
-                        fd.addMarkerAnnotation("NotNull");
-                        compilationUnit.addImport("javax.validation.constraints.NotNull");
-                    }
                     classDeclaration.addMember(fd);
                     ((ArrayList<FieldDeclaration>) fds).add(fd);
                 }
