@@ -354,6 +354,9 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
         	schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
+        commitFiles.add(javaFile);
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         commitFiles.add(schemaFile);
@@ -385,9 +388,11 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
     }
 
     /**
@@ -403,8 +408,13 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        final File javaFile = new File(cetDir, crt.getCode() + ".java");
+        if (javaFile.exists()) {
+            javaFile.delete();
+        }
 
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Deleted custom relationship template " + crt.getCode());
+        gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Deleted custom relationship template " + crt.getCode());
     }
 
     /* ------------ CFT Notifications ------------ */

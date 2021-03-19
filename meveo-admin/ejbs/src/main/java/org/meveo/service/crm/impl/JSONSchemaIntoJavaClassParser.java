@@ -14,8 +14,11 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
+import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
@@ -80,6 +83,41 @@ public class JSONSchemaIntoJavaClassParser {
         }
         return compilationUnit;
     }
+    
+    public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomRelationshipTemplate template) {
+        CompilationUnit compilationUnit = new CompilationUnit();
+        compilationUnit.addImport(CustomRelation.class);
+        
+        var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
+        
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonMap = objectMapper.readValue(content, HashMap.class);
+            parseFields(jsonMap, compilationUnit, template, fields);
+            
+            compilationUnit.getClassByName((String) jsonMap.get("id"))
+    		.ifPresent(cl -> {
+                cl.addImplementedType(CustomRelation.class);
+    			
+    			cl.getMethodsByName("getUuid")
+    				.stream()
+    				.findFirst()
+    				.ifPresent(method -> method.addAnnotation(Override.class));
+    			
+    			var getCetCode = cl.addMethod("getCrtCode", Keyword.PUBLIC);
+    			getCetCode.addAnnotation(Override.class);
+    			getCetCode.setType(String.class);
+    			var getCetCodeBody = new BlockStmt();
+    			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
+    			getCetCode.setBody(getCetCodeBody);
+    		});
+            
+        } catch (IOException e) {
+        	log.error("Failed to generate class for CRT {}", template, e);
+        }
+        
+        return compilationUnit;
+    }
 
     public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
@@ -133,13 +171,13 @@ public class JSONSchemaIntoJavaClassParser {
     		});
             
         } catch (IOException e) {
-        	
+        	log.error("Failed to generate class for CET {}", template, e);
         }
         
         return compilationUnit;
     }
 
-    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, CustomEntityTemplate template, Map<String, CustomFieldTemplate> fieldsDefinition) {
+    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, CustomModelObject template, Map<String, CustomFieldTemplate> fieldsDefinition) {
         compilationUnit.setPackageDeclaration("org.meveo.model.customEntities");
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
         Collection<FieldDeclaration> fds = new ArrayList<>();
@@ -147,48 +185,51 @@ public class JSONSchemaIntoJavaClassParser {
         // Generate default constructor
         classDeclaration.addConstructor(Modifier.Keyword.PUBLIC);
 
-        if (template.getNeo4JStorageConfiguration() != null && template.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+        if(template instanceof CustomEntityTemplate) {
+        	CustomEntityTemplate cet = (CustomEntityTemplate) template;
+        	if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 
-        	// Handle primitive entity if value field is not defined
-        	FieldDeclaration fd = new FieldDeclaration();
-        	VariableDeclarator variableDeclarator = new VariableDeclarator();
-        	variableDeclarator.setName("value");
+            	// Handle primitive entity if value field is not defined
+            	FieldDeclaration fd = new FieldDeclaration();
+            	VariableDeclarator variableDeclarator = new VariableDeclarator();
+            	variableDeclarator.setName("value");
 
-        	switch (template.getNeo4JStorageConfiguration().getPrimitiveType()) {
-	        	case DATE:
-	        		variableDeclarator.setType("Instant");
-	        		compilationUnit.addImport(Instant.class);
-	        		break;
-	        	case DOUBLE:
-	        		variableDeclarator.setType("Double");
-	        		compilationUnit.addImport(Double.class);
-	        		break;
-	        	case LONG:
-	        		variableDeclarator.setType("Long");
-	        		compilationUnit.addImport(Long.class);
-	        		break;
-	        	case STRING:
-	        		variableDeclarator.setType("String");
-	        		compilationUnit.addImport(String.class);
-	        		break;
-	        	default:
-	        		variableDeclarator.setType("Object");
-	        		break;
-        	}
+            	switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
+    	        	case DATE:
+    	        		variableDeclarator.setType("Instant");
+    	        		compilationUnit.addImport(Instant.class);
+    	        		break;
+    	        	case DOUBLE:
+    	        		variableDeclarator.setType("Double");
+    	        		compilationUnit.addImport(Double.class);
+    	        		break;
+    	        	case LONG:
+    	        		variableDeclarator.setType("Long");
+    	        		compilationUnit.addImport(Long.class);
+    	        		break;
+    	        	case STRING:
+    	        		variableDeclarator.setType("String");
+    	        		compilationUnit.addImport(String.class);
+    	        		break;
+    	        	default:
+    	        		variableDeclarator.setType("Object");
+    	        		break;
+            	}
 
-        	if(fieldsDefinition.get("value") == null) {
-        		fd.setModifiers(Modifier.Keyword.PRIVATE);
-        		fd.addVariable(variableDeclarator);
-        		fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
-        		classDeclaration.addMember(fd);
-        		((ArrayList<FieldDeclaration>) fds).add(fd);
-        	}
+            	if(fieldsDefinition.get("value") == null) {
+            		fd.setModifiers(Modifier.Keyword.PRIVATE);
+            		fd.addVariable(variableDeclarator);
+            		fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+            		classDeclaration.addMember(fd);
+            		((ArrayList<FieldDeclaration>) fds).add(fd);
+            	}
 
-        	// Generate constructor with the value
-        	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
-	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
-	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
+            	// Generate constructor with the value
+            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+    	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
+    	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
 
+            }
         }
         
         if (classDeclaration != null) {
