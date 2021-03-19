@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -84,16 +85,37 @@ public class JSONSchemaIntoJavaClassParser {
         return compilationUnit;
     }
     
-    public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomRelationshipTemplate template) {
+    @SuppressWarnings("unchecked")
+	public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomRelationshipTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomRelation.class);
-        
+		compilationUnit.addImport(List.class);
         var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
         
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
+            
             parseFields(jsonMap, compilationUnit, template, fields);
+
+            compilationUnit.getClassByName((String) jsonMap.get("id"))
+	    		.ifPresent(cl -> {
+		            // Generate source
+	    			var sourceField = cl.addField(template.getStartNode().getCode(), "source", Modifier.Keyword.PRIVATE);
+	    			sourceField.createGetter();
+	    			sourceField.createSetter();
+	    			
+	    			// Generate target
+	    			if(template.isUnique()) {
+		    			var targetField = cl.addField(template.getEndNode().getCode(), "target", Modifier.Keyword.PRIVATE);
+		    			targetField.createGetter();
+		    			targetField.createSetter();
+	    			} else {
+		    			var targetsField = cl.addField("List<" + template.getEndNode().getCode() + ">", "targets", Modifier.Keyword.PRIVATE);
+		    			targetsField.createGetter();
+		    			targetsField.createSetter();
+	    			}
+	    		});
             
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
@@ -122,7 +144,8 @@ public class JSONSchemaIntoJavaClassParser {
     public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomEntity.class);
-        
+		compilationUnit.addImport(List.class);
+
         var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
         
         try {
