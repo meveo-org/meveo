@@ -12,6 +12,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
@@ -295,11 +296,20 @@ public class JSONSchemaIntoJavaClassParser {
                             compilationUnit.addImport("java.util.List");
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
                             if (value.containsKey("$ref")) {
-            					// Add @Relation annotation
+            					// Handle entity references
             					var fieldDefinition = fieldsDefinition.get(code);
-            					if(fieldDefinition.getRelationship() != null) {
-            						fd.addSingleMemberAnnotation(Relation.class, '"' + fieldDefinition.getRelationship().getCode() + '"');
-                					compilationUnit.addImport(Relation.class);
+            					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+            						String crtCode = fieldDefinition.getRelationship().getCode();
+            						var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+            						// If CRT has no relation, directly use the target node as field type
+            						if(relationFields == null || relationFields.isEmpty()) {
+										fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+	                					compilationUnit.addImport(Relation.class);
+            						} else {
+            							var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
+            		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+            							continue;
+            						}
             					}
             					
                                 String ref = (String) value.get("$ref");
@@ -389,11 +399,20 @@ public class JSONSchemaIntoJavaClassParser {
                         }
 
                     } else if (values.get("$ref") != null) {
-    					// Add @Relation annotation
-    					var fieldDefinition = fieldsDefinition.get(code);            					
-    					if(fieldDefinition.getRelationship() != null) {
-    						fd.addSingleMemberAnnotation(Relation.class, '"' + fieldDefinition.getRelationship().getCode() + '"');
-        					compilationUnit.addImport(Relation.class);
+    					var fieldDefinition = fieldsDefinition.get(code); 
+    					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+							String crtCode = fieldDefinition.getRelationship().getCode();
+							// If CRT has no relation, directly use the target node as field type
+							if(relationFields == null || relationFields.isEmpty()) {
+		    					// Add @Relation annotation
+								fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+	        					compilationUnit.addImport(Relation.class);
+							} else {
+								var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
+			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+								continue;
+							}
     					}
     					
                         String[] data = ((String) values.get("$ref")).split("/");
