@@ -112,7 +112,7 @@ public class JSONSchemaIntoJavaClassParser {
 	    			targetField.addAnnotation(JsonIgnore.class);
 	    			
 	    			cl.addConstructor(Modifier.Keyword.PUBLIC)
-	    				.setBody(JavaParser.parseBlock("{\n\tthis.source = source;\n\tthis.target=target\n}"))
+    					.setBody(JavaParser.parseBlock("{\n\tthis.source = source;\n\tthis.target=target;\n}"))
 	    				.addParameter(template.getStartNode().getCode(), "source")
 	    				.addParameter(template.getEndNode().getCode(), "target");
 	    			
