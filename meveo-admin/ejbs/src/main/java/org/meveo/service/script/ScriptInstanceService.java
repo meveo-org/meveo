@@ -36,7 +36,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -49,7 +48,6 @@ import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.jpa.JpaAmpNewTx;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.ModulePostInstall;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -63,7 +61,6 @@ import org.meveo.model.security.Role;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
-import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -341,9 +338,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	@Override
 	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
 		super.addFilesToModule(entity, module);
-		
-		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
-		
+
 		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "src/main/java");
 		String pathNewFile = entity.getCode().replaceAll("\\.", "/");
 		

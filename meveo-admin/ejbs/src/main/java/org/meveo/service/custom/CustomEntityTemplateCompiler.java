@@ -11,7 +11,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -48,9 +47,6 @@ public class CustomEntityTemplateCompiler {
     
     @Inject
     private JSONSchemaGenerator jsonSchemaGenerator;
-    
-    @Inject
-    private CustomFieldsCacheContainerProvider cache;
     
     @Inject
     @CurrentUser
