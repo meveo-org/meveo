@@ -19,6 +19,8 @@ public class CustomEntityA implements CustomEntity {
 	@Relation("HasTarget")
 	private CustomEntityB target;
 	
+	private AtoB aToBRelation;
+	
 	private String uuid;
 
 	/**
@@ -64,6 +66,20 @@ public class CustomEntityA implements CustomEntity {
 	@Override
 	public String getUuid() {
 		return uuid;
+	}
+
+	/**
+	 * @return the {@link #aToBRelation}
+	 */
+	public AtoB getaToBRelation() {
+		return aToBRelation;
+	}
+
+	/**
+	 * @param aToBRelation the aToBRelation to set
+	 */
+	public void setaToBRelation(AtoB aToBRelation) {
+		this.aToBRelation = aToBRelation;
 	}
 	
 

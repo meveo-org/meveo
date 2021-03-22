@@ -25,6 +25,7 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.interfaces.EntityGraph;
 import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
+import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -97,10 +98,10 @@ public class CEIUtils {
 			var fields = JacksonUtil.convert(customEntity, GenericTypeReferences.MAP_STRING_OBJECT);
 			var relationshipsFields = new HashMap<String, Object>();
 			
-			// Retain all fields annotated with @Relation
+			// Retain all relationships fields annotated with
 			for(var field : Map.copyOf(fields).entrySet()) {
 				var fieldDef = ReflectionUtils.getField(customClass, field.getKey());
-				if(fieldDef.isAnnotationPresent(Relation.class)) {
+				if(fieldDef.isAnnotationPresent(Relation.class) || CustomRelation.class.isAssignableFrom(fieldDef.getType())) {
 					relationshipsFields.put(field.getKey(), field.getValue());
 					fields.remove(field.getKey());
 				}
@@ -157,6 +158,24 @@ public class CEIUtils {
 							        .build();
 							entityGraph.getRelations().add(relation);
 						});
+				} else if(value.isPresent() && value.get() instanceof CustomRelation) {
+					CustomRelation<?,?> customRelation = (CustomRelation<?,?>) value.get();
+					Map<String, Object> customRelationProperties = JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT);
+					subGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
+						subGraph.getEntities()
+						.stream()
+						.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
+						.findFirst()
+						.ifPresent(e -> {
+							var relation = new org.meveo.interfaces.EntityRelation.Builder()
+									.name(UUID.randomUUID().toString())
+									.source(entity)
+									.target(e)
+							        .type(customRelation.getCrtCode())
+							        .properties(customRelationProperties)
+							        .build();
+							entityGraph.getRelations().add(relation);
+					});
 				}
 				
 				if(subGraph != null) {

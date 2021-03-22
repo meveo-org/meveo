@@ -22,9 +22,11 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.annotations.Relation;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
@@ -103,24 +105,28 @@ public class JSONSchemaIntoJavaClassParser {
 	    		.ifPresent(cl -> {
 		            // Generate source
 	    			var sourceField = cl.addField(template.getStartNode().getCode(), "source", Modifier.Keyword.PRIVATE);
+	    			sourceField.addAnnotation(JsonIgnore.class);
+
+	    			// Generate target
+	    			var targetField = cl.addField(template.getEndNode().getCode(), "target", Modifier.Keyword.PRIVATE);
+	    			targetField.addAnnotation(JsonIgnore.class);
+	    			
+	    			cl.addConstructor(Modifier.Keyword.PUBLIC)
+	    				.setBody(JavaParser.parseBlock("{\n\tthis.source = source;\n\tthis.target=target"))
+	    				.addParameter(template.getStartNode().getCode(), "source")
+	    				.addParameter(template.getEndNode().getCode(), "target");
+	    			
 	    			sourceField.createGetter();
 	    			sourceField.createSetter();
 	    			
-	    			// Generate target
-	    			if(template.isUnique()) {
-		    			var targetField = cl.addField(template.getEndNode().getCode(), "target", Modifier.Keyword.PRIVATE);
-		    			targetField.createGetter();
-		    			targetField.createSetter();
-	    			} else {
-		    			var targetsField = cl.addField("List<" + template.getEndNode().getCode() + ">", "targets", Modifier.Keyword.PRIVATE);
-		    			targetsField.createGetter();
-		    			targetsField.createSetter();
-	    			}
+	    			targetField.createGetter();
+	    			targetField.createSetter();
 	    		});
             
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
-                cl.addImplementedType(CustomRelation.class);
+                cl.tryAddImportToParentCompilationUnit(CustomRelation.class);
+                cl.addImplementedType("CustomRelation<" + template.getStartNode().getCode() + "," + template.getEndNode().getCode() + ">");
     			
     			cl.getMethodsByName("getUuid")
     				.stream()
@@ -129,6 +135,7 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCrtCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
+    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
@@ -178,6 +185,7 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCetCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
+    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
@@ -266,8 +274,9 @@ public class JSONSchemaIntoJavaClassParser {
             classDeclaration.addMember(field);
             ((ArrayList<FieldDeclaration>) fds).add(field);
             if (jsonMap.containsKey("storages")) {
-                compilationUnit.addImport("org.meveo.model.persistence.DBStorageType");
+                compilationUnit.addImport(DBStorageType.class);
                 FieldDeclaration fd = new FieldDeclaration();
+                fd.addAnnotation(JsonIgnore.class);
                 VariableDeclarator variableDeclarator = new VariableDeclarator();
                 variableDeclarator.setName("storages");
                 variableDeclarator.setType("DBStorageType");
@@ -306,7 +315,7 @@ public class JSONSchemaIntoJavaClassParser {
 										fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
 	                					compilationUnit.addImport(Relation.class);
             						} else {
-            							var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
+            							var fieldDeclaration = classDeclaration.addPrivateField("List<" + crtCode + ">", code);
             		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
             							continue;
             						}

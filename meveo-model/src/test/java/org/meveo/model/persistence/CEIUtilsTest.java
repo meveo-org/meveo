@@ -45,22 +45,28 @@ public class CEIUtilsTest {
 	@Test
 	public void testEntitiesAreMerged() {
 		var a1 = new CustomEntityA();
-		var a2 = new CustomEntityA();
-		var b1 = new CustomEntityB();
-		var b2 = new CustomEntityB();
-		
 		a1.setValue("a1");
+		
+		var a2 = new CustomEntityA();
 		a2.setValue("a2");
+
+		var b1 = new CustomEntityB();
 		b1.setValue("b");
+		a1.setTarget(b1);
+
+		var b2 = new CustomEntityB();
 		b2.setValue("b");
 		b2.setOtherValue("b2");
-		a1.setTarget(b1);
 		a2.setTarget(b2);
+
+		var b3 = new CustomEntityB();
+		b3.setValue("b3");
+		a1.setaToBRelation(new AtoB(a1, b3));
 		
 		var graph = CEIUtils.toEntityGraph(List.of(a1, a2));
 		
-		assert graph.getEntities().size() == 3;
-		assert graph.getRelations().size() == 2;
+		assert graph.getEntities().size() == 4;
+		assert graph.getRelations().size() == 3;
 	}
 	
 	@Test
