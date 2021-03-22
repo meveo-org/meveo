@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
@@ -60,6 +61,33 @@ public class CustomEntityTemplateCompiler {
         return schema.replaceAll("#/definitions", ".");
 
     }
+    
+    /**
+     * Create the java source file for a given CRT
+     * 
+     * @param templateSchema the json schema of the CRT
+     * @param cet The custom entity template
+     * @return the java source file
+     * @throws BusinessException if the file can't be written
+     */
+	public File generateCRTSourceFile(String templateSchema, CustomRelationshipTemplate crt) throws BusinessException {
+		log.info("Generating source file for {}", crt);
+		
+		final File cetDir = getCetDir();
+        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, crt);
+        File javaFile = new File(cetDir, crt.getCode() + ".java");
+        if (javaFile.exists()) {
+            javaFile.delete();
+        }
+        
+        try {
+			FileUtils.write(javaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new BusinessException("Can't write to file", e);
+		}
+        
+        return javaFile;
+	}
 
     /**
      * Create the java source file for a given CET

@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -361,12 +362,14 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
         	schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
+        commitFiles.add(javaFile);
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         commitFiles.add(schemaFile);
 
         gitClient.commitFiles(meveoRepository, commitFiles, "Created custom relationship template " + crt.getCode());
-
     }
 
     /**
@@ -396,13 +399,15 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         
         if (module == null) {
-        	gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        	gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
         } else {
-        	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        	gitClient.commitFiles(module.getGitRepository(), List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
         }
     }
 
@@ -419,8 +424,13 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        final File javaFile = new File(cetDir, crt.getCode() + ".java");
+        if (javaFile.exists()) {
+            javaFile.delete();
+        }
 
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Deleted custom relationship template " + crt.getCode());
+        gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Deleted custom relationship template " + crt.getCode());
     }
 
     /* ------------ CFT Notifications ------------ */

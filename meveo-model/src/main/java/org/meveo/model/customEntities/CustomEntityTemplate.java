@@ -142,6 +142,12 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@JoinColumn(name = "cr_ev_list_script")
 	private ScriptInstance crudEventListenerScript;
 	
+	/**
+	 * Function used to determine whether an instance of the related {@link CustomEntity} is equal to an other
+	 */
+	@Column(name = "is_equal_fn", columnDefinition = "TEXT")
+	private String isEqualFn;
+	
 	@Transient
 	private transient CrudEventListenerScript<CustomEntity> crudEventListener;
 
@@ -151,6 +157,20 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Transient
 	private boolean isInDraft = false;
 	
+	/**
+	 * @return the {@link #isEqualFn}
+	 */
+	public String getIsEqualFn() {
+		return isEqualFn;
+	}
+
+	/**
+	 * @param isEqualFn the isEqualFn to set
+	 */
+	public void setIsEqualFn(String isEqualFn) {
+		this.isEqualFn = isEqualFn;
+	}
+
 	/**
 	 * @return the {@link #crudEventListenerScript}
 	 */

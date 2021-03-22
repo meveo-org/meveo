@@ -92,6 +92,12 @@
 			<artifactId>jakarta.persistence-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.jboss.spec.javax.servlet</groupId>
+			<artifactId>jboss-servlet-api_4.0_spec</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
 		<!-- End of libraries provided in Jboss -->
 		<!-- https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api -->

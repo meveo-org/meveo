@@ -156,6 +156,11 @@ RUN mkdir -p /usr/share/trava \
   && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 
+
+# FIXME: make sure from the beggining of this file that those settings contain credential to access the needed server
+RUN export HOST_MVN_SETTINGS_PATH=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)/..
+COPY ${HOST_MVN_SETTINGS_PATH}/settings.xml ${MAVEN_CONFIG}/settings.xml
+
 COPY . /tmp/meveo
 RUN cd /tmp/meveo \
   && cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources \

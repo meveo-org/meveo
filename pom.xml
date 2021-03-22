@@ -9,7 +9,6 @@
 	<version>6.14.0-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
-		<env>dev</env>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.jakarta>8.0.0</version.jakarta>
 		<version.keycloak>10.0.2</version.keycloak>
@@ -49,6 +48,11 @@
 			<name>Temporary Staging Repository</name>
 			<url>file://${project.groupId}</url>
 		</site>
+		<repository>
+     		<id>meveo</id>
+     		<name>GitHub meveo-org Apache Maven Packages</name>
+     		<url>https://maven.pkg.github.com/meveo-org/meveo</url>
+   		</repository>
 	</distributionManagement>
 	<pluginRepositories>
 		<pluginRepository>
@@ -118,6 +122,11 @@
 			<dependency>
 				<groupId>org.meveo</groupId>
 				<artifactId>meveo-security</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.meveo</groupId>
+				<artifactId>meveo-el-resolver</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -547,103 +556,38 @@
 	</reporting>
 	<profiles>
 		<profile>
-			<id>development</id>
+			<id>github</id>
 			<activation>
 				<activeByDefault>true</activeByDefault>
-				<property>
-					<name>env</name>
-					<value>dev</value>
-				</property>
 			</activation>
-			<properties>
-				<db.driver>org.postgresql.Driver</db.driver>
-				<db.schema>public</db.schema>
-			</properties>
-			<dependencies>
-				<!-- Dependency for liquibase plugin -->
-				<dependency>
-					<groupId>org.postgresql</groupId>
-					<artifactId>postgresql</artifactId>
-					<version>42.2.5</version>
-				</dependency>
-				<dependency>
-					<groupId>org.liquibase.ext</groupId>
-					<artifactId>liquibase-postgresql</artifactId>
-					<version>3.0</version>
-					<scope>provided</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>postgresql</groupId>
-							<artifactId>postgresql</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-			</dependencies>
+			<distributionManagement>
+				<repository>
+					<id>meveo</id>
+					<name>GitHub meveo-org Apache Maven Packages</name>
+					<url>https://maven.pkg.github.com/meveo-org/meveo</url>
+				</repository>
+			</distributionManagement>
 		</profile>
-		<!--
 		<profile>
-		<id>war_explode</id>
-        <build>
-            <pluginManagement>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <version>2.6</version>
-                        <executions>
-                            <execution>
-                                <id>default-war</id>
-                                <phase>none</phase>
-                            </execution>
-                            <execution>
-                                <id>war-exploded</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>exploded</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>default-install</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </pluginManagement>
-        </build>
-    </profile>-->
-		<profile>
-			<id>production</id>
+			<id>wd</id>
 			<activation>
-				<property>
-					<name>env</name>
-					<value>prod</value>
-				</property>
-			</activation>
-			<properties>
-				<!-- Properties for liquibase plugin. Can be passed from a command line: 
-					mvn -Ddb.schema=ten2 -->
-				<db.driver>org.postgresql.Driver </db.driver>
-				<db.url>jdbc:postgresql://localhost/meveo</db.url>
-				<db.schema>public</db.schema>
-				<db.username>meveo</db.username>
-				<db.password>meveo</db.password>
-			</properties>
-			<dependencies>
-				<!-- Dependency for liquibase plugin -->
-				<dependency>
-					<groupId>org.liquibase.ext</groupId>
-					<artifactId>liquibase-postgresql</artifactId>
-					<version>3.0</version>
-					<scope>provided</scope>
-				</dependency>
-			</dependencies>
+            	<property>
+                	<name>useWdRepo</name>
+                	<value>true</value>
+            	</property>
+        	</activation>
+			<distributionManagement>
+				<repository>
+					<id>wd</id>
+					<name>Webdrone Repo</name>
+					<url>https://maven.webdrone.fr/nexus/content/repositories/wd</url>
+				</repository>
+				<snapshotRepository>
+					<id>wd</id>
+					<name>Internal Releases</name>
+					<url>https://maven.webdrone.fr/nexus/content/repositories/snapshots/</url>
+				</snapshotRepository>
+			</distributionManagement>
 		</profile>
 	</profiles>
 </project>

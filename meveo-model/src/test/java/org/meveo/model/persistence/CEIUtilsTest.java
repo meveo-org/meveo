@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.model.typereferences.GenericTypeReferences;
 
 /**
@@ -39,6 +41,155 @@ public class CEIUtilsTest {
 			"}";
 	
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
+	
+	@Test
+	public void testEntitiesAreMerged() {
+		var a1 = new CustomEntityA();
+		a1.setValue("a1");
+		
+		var a2 = new CustomEntityA();
+		a2.setValue("a2");
+
+		var b1 = new CustomEntityB();
+		b1.setValue("b");
+		a1.setTarget(b1);
+
+		var b2 = new CustomEntityB();
+		b2.setValue("b");
+		b2.setOtherValue("b2");
+		a2.setTarget(b2);
+
+		var b3 = new CustomEntityB();
+		b3.setValue("b3");
+		a1.setaToBRelation(new AtoB(a1, b3));
+		
+		var graph = CEIUtils.toEntityGraph(List.of(a1, a2));
+		
+		assert graph.getEntities().size() == 4;
+		assert graph.getRelations().size() == 3;
+	}
+	
+	@Test
+	public void convertEntitiesToGraph() {
+		var subTargetEntity = new CustomEntity() {
+			
+			private String uuid;
+			
+			@Override
+			public String getUuid() {
+				return uuid;
+			}
+			
+			public void setUuid(String uuid) {
+				this.uuid = uuid;
+			}
+
+			private String value = "I'm a target";
+			
+			private String getValue() {
+				return value;
+			}
+			
+			@Override
+			public String getCetCode() {
+				return "SubTargetEntity";
+			}
+			
+		};
+		
+		var targetEntity = new CustomEntity() {
+			
+			@Relation("BaseToTarget")
+			private CustomEntity target = subTargetEntity;
+			
+			/**
+			 * @return the {@link #target}
+			 */
+			public CustomEntity getTarget() {
+				return target;
+			}
+			
+			private String uuid;
+			
+			@Override
+			public String getUuid() {
+				return uuid;
+			}
+			
+			public void setUuid(String uuid) {
+				this.uuid = uuid;
+			}
+
+			private String value = "I'm a target";
+			
+			private String getValue() {
+				return value;
+			}
+			
+			@Override
+			public String getCetCode() {
+				return "TargetEntity";
+			}
+			
+		};
+		
+		var baseEntity = new CustomEntity() {
+			
+			private String uuid;
+			
+			@Override
+			public String getUuid() {
+				return uuid;
+			}
+			
+			public void setUuid(String uuid) {
+				this.uuid = uuid;
+			}
+			
+			private String toto = "toto";
+			
+			@Relation("BaseToTarget")
+			private CustomEntity target = targetEntity;
+			
+			
+			
+			/**
+			 * @return the {@link #target}
+			 */
+			public CustomEntity getTarget() {
+				return target;
+			}
+
+			/**
+			 * @param target the target to set
+			 */
+			public void setTarget(CustomEntity target) {
+				this.target = target;
+			}
+
+			/**
+			 * @param toto the toto to set
+			 */
+			public void setToto(String toto) {
+				this.toto = toto;
+			}
+
+			private String getToto() {
+				return toto;
+			}
+
+			@Override
+			public String getCetCode() {
+				return "TestA";
+			}
+
+		};
+		
+		var graph = CEIUtils.toEntityGraph(List.of(baseEntity));
+		
+		assert graph.getEntities().size() == 3;
+		assert graph.getRelations().size() == 2;
+	}
 	
 	@Test
 	public void deserializeNestedList() {

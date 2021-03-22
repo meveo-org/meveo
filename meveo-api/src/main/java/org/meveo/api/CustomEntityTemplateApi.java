@@ -644,6 +644,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
         cet.setAudited(dto.isAudited());
+        cet.setIsEqualFn(dto.getIsEqualFn());
         
         if(dto.getCrudEventListenerScript() != null) {
         	var crudListenerScript = scriptInstanceService.findByCode(dto.getCrudEventListenerScript());
