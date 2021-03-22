@@ -9,7 +9,7 @@
     file={path="server.log", relative-to="jboss.server.log.dir"}, \
     encoding="UTF-8", \
     level="${env.WILDFLY_LOG_FILE_LEVEL}", \
-    rotate-size=10000k, \
+    rotate-size=100m, \
     max-backup-index=5 \
 )
 
