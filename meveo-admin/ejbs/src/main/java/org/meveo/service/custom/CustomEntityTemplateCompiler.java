@@ -54,6 +54,9 @@ public class CustomEntityTemplateCompiler {
     private MeveoUser currentUser;
     
     @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+    @Inject
     private Logger log;
     
     public String getTemplateSchema(CustomEntityTemplate cet) {
@@ -73,7 +76,7 @@ public class CustomEntityTemplateCompiler {
 	public File generateCRTSourceFile(String templateSchema, CustomRelationshipTemplate crt) throws BusinessException {
 		log.info("Generating source file for {}", crt);
 		
-		final File cetDir = getCetDir();
+		final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
         final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, crt);
         File javaFile = new File(cetDir, crt.getCode() + ".java");
         if (javaFile.exists()) {

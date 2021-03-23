@@ -66,7 +66,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	@MeveoRepository
-	private GitRepository meveoRepository;
+	protected GitRepository meveoRepository;
 	
     /**
      * Find entity by code - strict match.

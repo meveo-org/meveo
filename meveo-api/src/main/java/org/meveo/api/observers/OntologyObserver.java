@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Priority;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -351,7 +350,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = getCrtDir(crt);
+        final File crtDir = customRelationshipTemplateService.getCrtDir(crt);
 
         if (!crtDir.exists()) {
             crtDir.mkdirs();
@@ -388,7 +387,7 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = getCrtDir(crt);
+        final File crtDir = customRelationshipTemplateService.getCrtDir(crt);
 
         // This is for retro-compatibility, in case a CRT created before 6.4.0 is updated
         if (!crtDir.exists()) {
@@ -419,7 +418,7 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
-        final File cetDir = getCrtDir(crt);
+        final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
         final File schemaFile = new File(cetDir, crt.getCode() + ".json");
         if (schemaFile.exists()) {
             schemaFile.delete();
@@ -487,7 +486,7 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = getCrtDir(crt);
+            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
 
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -564,7 +563,7 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = getCrtDir(crt);
+            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
 
             // This is for retro-compatibility, in case we update a field of a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -635,7 +634,7 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = getCrtDir(crt);
+            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
 
             if (!cetDir.exists()) {
                 // Nothing to delete
@@ -812,21 +811,6 @@ public class OntologyObserver {
         
         return files;
     }
-
-	private File getCrtDir(CustomRelationshipTemplate crt) {
-    	File repositoryDir;
-    	String path;
-    	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
-    	if (module == null) {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-    		path = "custom/relationships";
-    	} else {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    		path = "customRelationShipTemplates/" + crt.getCode();
-    	}
-    	return new File(repositoryDir, path);
-	}
-
 
     private String getTemplateSchema(CustomRelationshipTemplate crt) {
         String schema = jsonSchemaGenerator.generateSchema(crt.getCode(), crt);
