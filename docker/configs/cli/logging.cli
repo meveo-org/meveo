@@ -14,4 +14,4 @@
 )
 
 # Add a logger for meveo class
-/subsystem=logging/logger=org.meveo:add(level="${env.WILDFLY_LOG_MEVEO_LEVEL}")
+/subsystem=logging/logger=org.meveo:add(level="${env.WILDFLY_LOG_MEVEO_LEVEL:INFO}")
