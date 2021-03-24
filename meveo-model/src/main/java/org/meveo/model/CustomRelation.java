@@ -32,4 +32,8 @@ public interface CustomRelation<Source extends CustomEntity, Target extends Cust
 	 */
 	Target getTarget();
 	
+	void setSource(Source source);
+	
+	void setTarget(Target target);
+	
 }

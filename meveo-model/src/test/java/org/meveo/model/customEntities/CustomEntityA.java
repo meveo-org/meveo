@@ -1,7 +1,10 @@
 /**
  * 
  */
-package org.meveo.model.persistence;
+package org.meveo.model.customEntities;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.annotations.Relation;
@@ -19,7 +22,12 @@ public class CustomEntityA implements CustomEntity {
 	@Relation("HasTarget")
 	private CustomEntityB target;
 	
+	@Relation("HasTargets")
+	private List<CustomEntityB> targets = new ArrayList<>();
+	
 	private AtoB aToBRelation;
+	
+	private List<AtoBMulti> aToBmulti = new ArrayList<>();
 	
 	private String uuid;
 
@@ -81,6 +89,32 @@ public class CustomEntityA implements CustomEntity {
 	public void setaToBRelation(AtoB aToBRelation) {
 		this.aToBRelation = aToBRelation;
 	}
-	
 
+	/**
+	 * @return the {@link #targets}
+	 */
+	public List<CustomEntityB> getTargets() {
+		return targets;
+	}
+
+	/**
+	 * @param targets the targets to set
+	 */
+	public void setTargets(List<CustomEntityB> targets) {
+		this.targets = targets;
+	}
+
+	/**
+	 * @return the {@link #aToBmulti}
+	 */
+	public List<AtoBMulti> getaToBmulti() {
+		return aToBmulti;
+	}
+
+	/**
+	 * @param aToBmulti the aToBmulti to set
+	 */
+	public void setaToBmulti(List<AtoBMulti> aToBmulti) {
+		this.aToBmulti = aToBmulti;
+	}
 }

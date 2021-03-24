@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.meveo.model.persistence;
+package org.meveo.model.customEntities;
 
 import org.meveo.model.CustomEntity;
 
