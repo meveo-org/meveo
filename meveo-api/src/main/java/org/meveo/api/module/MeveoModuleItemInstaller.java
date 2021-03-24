@@ -771,12 +771,17 @@ public class MeveoModuleItemInstaller {
 	 * 
 	 * @param dto         CustomEntityTemplateDto instance
 	 * @param meveoModule where module item is added
+	 * @throws BusinessException 
 	 */
-	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) {
+	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
-				meveoModuleService.addModuleItem(itemDto, meveoModule);
+				try {
+					meveoModuleService.addModuleItem(itemDto, meveoModule);
+				} catch (BusinessException e) {
+					throw new BusinessException(e.getCause());
+				}
 			}
 		}
 	}
