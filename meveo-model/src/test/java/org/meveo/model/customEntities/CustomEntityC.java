@@ -4,7 +4,6 @@
 package org.meveo.model.customEntities;
 
 import org.meveo.model.CustomEntity;
-import org.meveo.model.customEntities.annotations.Relation;
 
 /**
  * 
@@ -12,21 +11,18 @@ import org.meveo.model.customEntities.annotations.Relation;
  * @since 
  * @version
  */
-public class CustomEntityB implements CustomEntity {
+public class CustomEntityC implements CustomEntity {
 	
 	private String value;
 	
 	private String otherValue;
 	
 	private String uuid;
-	
-	@Relation("HasCTarget")
-	private CustomEntityC target;
 
 
 	@Override
 	public String getCetCode() {
-		return "CustomEntityB";
+		return "CustomEntityC";
 	}
 	
 	
@@ -61,11 +57,11 @@ public class CustomEntityB implements CustomEntity {
 
 	@Override
 	public boolean isEqual(CustomEntity other) {
-		if (!(other instanceof CustomEntityB)) {
+		if (!(other instanceof CustomEntityC)) {
 			return false;
 		}
 		
-		var otherB = (CustomEntityB) other;
+		var otherB = (CustomEntityC) other;
 		if(otherB.value.equals(this.value)) {
 			return true;
 		}
@@ -87,22 +83,6 @@ public class CustomEntityB implements CustomEntity {
 	 */
 	public void setOtherValue(String otherValue) {
 		this.otherValue = otherValue;
-	}
-
-
-	/**
-	 * @return the {@link #target}
-	 */
-	public CustomEntityC getTarget() {
-		return target;
-	}
-
-
-	/**
-	 * @param target the target to set
-	 */
-	public void setTarget(CustomEntityC target) {
-		this.target = target;
 	}
 
 }

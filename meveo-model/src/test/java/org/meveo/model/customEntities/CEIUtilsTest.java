@@ -91,12 +91,26 @@ public class CEIUtilsTest {
 				.name("source")
 				.build();
 		
+		Entity targetTarget = new Entity.Builder()
+				.properties(Map.of("value", "targetTarget"))
+				.type("CustomEntityC")
+				.name("targetTarget")
+				.build();
+		
 		EntityRelation relation1 = new EntityRelation.Builder()
 				.properties(Map.of())
 				.type("HasTarget")
 				.name("source-target1")
 				.source(source)
 				.target(target1)
+				.build();
+		
+		EntityRelation transitiveRelation = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("HasCTarget")
+				.name("target1-targetTarget")
+				.source(target1)
+				.target(targetTarget)
 				.build();
 		
 		EntityRelation relation2 = new EntityRelation.Builder()
@@ -143,8 +157,8 @@ public class CEIUtilsTest {
 				.build();
 		
 		EntityGraph graph = new EntityGraph(
-				List.of(source, target1, target2, target3, target4, target5, target6), 
-				List.of(relation1, relation2, relation3, relation4, relation5, relation6)
+				List.of(source, target1, target2, target3, target4, target5, target6, targetTarget), 
+				List.of(relation1, relation2, relation3, relation4, relation5, relation6, transitiveRelation)
 			);
 		
 		var entities = CEIUtils.fromEntityGraph(graph);
@@ -159,7 +173,7 @@ public class CEIUtilsTest {
 		assert sourceEntity.getaToBRelation() != null;
 		assert sourceEntity.getaToBmulti().size() == 2;
 		
-		// TODO: test transitive relations
+		assert sourceEntity.getTarget().getTarget() != null;
 		
 	}
 	
