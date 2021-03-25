@@ -252,6 +252,7 @@ public class JSONSchemaIntoJavaClassParser {
             		fd.setModifiers(Modifier.Keyword.PRIVATE);
             		fd.addVariable(variableDeclarator);
             		fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+            		compilationUnit.addImport(JsonProperty.class);
             		classDeclaration.addMember(fd);
             		((ArrayList<FieldDeclaration>) fds).add(fd);
             	}
