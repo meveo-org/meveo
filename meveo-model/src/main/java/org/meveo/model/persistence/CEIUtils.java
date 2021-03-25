@@ -430,9 +430,10 @@ public class CEIUtils {
 		var setter = findSetter("uuid", object.getClass());
 		if (setter != null) {
 			try {
+				setter.setAccessible(true);
 				setter.invoke(object, value);
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-
+				LOG.error("Failed to set UUID", e);
 			}
 		}
 	}
