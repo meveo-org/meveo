@@ -375,6 +375,7 @@ public class OntologyObserver {
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
+        
         final String templateSchema = getTemplateSchema(crt);
 
         final File crtDir = getCrtDir();
@@ -391,6 +392,10 @@ public class OntologyObserver {
         
         File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
 
+        //Update the origin CET when the CRT is modified
+        //If a CFT is modified in the CRT, the origin CET need to be modified too
+        cetUpdated(crt.getStartNode());
+        
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
     }
@@ -551,6 +556,11 @@ public class OntologyObserver {
                 final String templateSchema = getTemplateSchema(crt);
 
                 FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
+                
+                //Update the origin CET when the CFT is modified
+                //If a CFT is modified in the CRT, the origin CET need to be modified too
+                cetUpdated(crt.getStartNode());
+                
                 gitClient.commitFiles(
                         meveoRepository,
                         Collections.singletonList(schemaFile),
