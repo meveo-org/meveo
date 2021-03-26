@@ -531,7 +531,7 @@ public class OntologyObserver {
                 listFile = updateCetFiles(cet, classDir, schemaFile, javaFile);
 
                 listFile.add(schemaFile);
-                cetUpdated(cet);
+
                 gitClient.commitFiles(
                         meveoRepository,
                         listFile,
