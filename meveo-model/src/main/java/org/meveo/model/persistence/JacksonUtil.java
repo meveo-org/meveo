@@ -3,7 +3,6 @@ package org.meveo.model.persistence;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.time.Instant;
 import java.util.Map;
 
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.FileSerializer;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 /**
@@ -49,7 +47,6 @@ public class JacksonUtil {
 
         om.setSerializationInclusion(Include.NON_NULL);
         om.registerModule(new JavaTimeModule());
-        om.registerModule(new Hibernate5Module());
 
         SimpleModule fileModule = new SimpleModule()
                 .addSerializer(File.class, new FileSerializer())
