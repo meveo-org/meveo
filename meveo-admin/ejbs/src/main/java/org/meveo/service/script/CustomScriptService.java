@@ -260,7 +260,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return getExecutionEngine(script, context);
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
         try {
             ScriptInterface scriptInstance = this.getScriptInstance(script.getCode());
@@ -288,10 +289,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         	if(classAndValue.getValue() instanceof Map || classAndValue.getValue() instanceof Collection) {
                         		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
-                        	} else if(classAndValue.getValue() instanceof CustomEntityInstance) {
+                            	
+                        	} else if (classAndValue.getValue() instanceof CustomEntityInstance) {
                         		CustomEntityInstance cei = (CustomEntityInstance) classAndValue.getValue();
                         		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
+                            	
+                        	} else if (Collection.class.isAssignableFrom(method.getParameters()[0].getType())) {
+                        		// If value which is supposed to be a collection comes with a single value, automatically deserialize it to a collection
+                        		Collection<Object> collection = (Collection<Object>) method.getParameters()[0].getType().getDeclaredConstructor().newInstance();
+                        		collection.add(classAndValue.getValue());
+                            	method.invoke(scriptInstance, collection);
+                            	
                         	} else {
                         		log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
                         		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
