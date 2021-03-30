@@ -44,6 +44,7 @@ public class JacksonUtil {
         om.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.configure(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
+		om.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
         om.setSerializationInclusion(Include.NON_NULL);
         om.registerModule(new JavaTimeModule());

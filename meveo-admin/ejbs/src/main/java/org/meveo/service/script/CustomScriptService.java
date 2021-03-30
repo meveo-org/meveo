@@ -110,6 +110,8 @@ import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -268,7 +270,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return getExecutionEngine(script, context);
     }
 
-    @SuppressWarnings("unchecked")
 	@Override
     public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
         try {
@@ -305,8 +306,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             	
                         	} else if (Collection.class.isAssignableFrom(method.getParameters()[0].getType())) {
                         		// If value which is supposed to be a collection comes with a single value, automatically deserialize it to a collection
-                        		Collection<Object> collection = (Collection<Object>) method.getParameters()[0].getType().getDeclaredConstructor().newInstance();
-                        		collection.add(classAndValue.getValue());
+                        		var type = method.getParameters()[0].getParameterizedType();
+                        		var jacksonType = TypeFactory.defaultInstance().constructType(type);
+                        		Collection<?> collection = (Collection<?>) JacksonUtil.convert(classAndValue.getValue(), jacksonType);
                             	method.invoke(scriptInstance, collection);
                             	
                         	} else {

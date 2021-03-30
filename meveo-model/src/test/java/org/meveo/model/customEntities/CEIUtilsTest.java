@@ -5,18 +5,19 @@ package org.meveo.model.customEntities;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityGraph;
 import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * 
@@ -46,6 +47,14 @@ public class CEIUtilsTest {
 			"}";
 	
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
+	
+	@Test
+	public void testSingleValueDeserialization() {
+		TypeReference<Set<Long>> typeRef = new TypeReference<Set<Long>>() {};
+		Integer value = 789;
+		Set<Long> collection = JacksonUtil.convert(value, typeRef);
+		assert collection.size() == 1;
+	}
 	
 	@Test
 	public void testConvertGraphToEntities() {
