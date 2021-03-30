@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+EXTRA_SCRIPT="$1"
+
 exit_with_error() {
     if [ "$ERROR" != "0" ]; then
         echo "${red}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR : $@ ${reset}";
@@ -62,6 +64,13 @@ fi
 export KEYCLOAK_REALM=${KEYCLOAK_REALM:-meveo}
 export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
+
+
+# Read and execute a script for the extra configurations
+if [ "x${EXTRA_SCRIPT}" != "x" ]; then
+	info "Run the extra script: ${EXTRA_SCRIPT}"
+	source ${EXTRA_SCRIPT}
+fi
 
 
 # wait with timeout 30s until postgres is up
@@ -207,7 +216,7 @@ if [ ! -z "${KEYCLOAK_ADMIN_USER}" -a ! -z "${KEYCLOAK_ADMIN_PASSWORD}" ]; then
     fi
 fi
 
-WILDFLY_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
+WILDFLY_OPTS="${WILDFLY_OPTS} -b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
     WILDFLY_OPTS="${WILDFLY_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi
