@@ -293,6 +293,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
                         	} else {
+                        		log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
                         		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
                         	}
                         	
