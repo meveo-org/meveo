@@ -1,8 +1,6 @@
 #!/bin/bash -e
 
 EXTRA_SCRIPT="$1"
-## Remove 1st argument from the argument list
-shift
 
 exit_with_error() {
     if [ "$ERROR" != "0" ]; then
