@@ -1,2 +1,0 @@
-FROM postgres:9.5.21
-COPY meveo.sql /docker-entrypoint-initdb.d/

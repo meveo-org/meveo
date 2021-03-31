@@ -28,8 +28,11 @@ services:
       ports:
         - 5432:5432
   # neo4j:
-  #     image: manaty/neo4j-meveo:dev-latest
+  #     image: neo4j-meveo
   #     container_name: neo4j
+  #     build:
+  #       context: ./
+  #       dockerfile: ../Dockerfile.neo4j
   #     networks:
   #       - meveo
   #     restart: unless-stopped
@@ -61,10 +64,13 @@ services:
       volumes:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
+      environment:
+        WILDFLY_DEBUG_ENABLE: "false"    # default: false
       ports:
         - 8080:8080
       depends_on:
         - postgres
+        - keycloak
 
 networks:
   meveo:
