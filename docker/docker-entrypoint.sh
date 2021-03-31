@@ -177,10 +177,10 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
         WILDFLY_CUSTOM_XMX="2048m"
     fi
     if [ "x${WILDFLY_CUSTOM_XMMS}" = "x" ]; then
-        WILDFLY_CUSTOM_XMMS="300m"
+        WILDFLY_CUSTOM_XMMS="96m"
     fi
     if [ "x${WILDFLY_CUSTOM_XMMX}" = "x" ]; then
-        WILDFLY_CUSTOM_XMMX="500m"
+        WILDFLY_CUSTOM_XMMX="512m"
     fi
     JAVA_OPTS="-Xms${WILDFLY_CUSTOM_XMS} -Xmx${WILDFLY_CUSTOM_XMX}"
     JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=${WILDFLY_CUSTOM_XMMS} -XX:MaxMetaspaceSize=${WILDFLY_CUSTOM_XMMX}"
