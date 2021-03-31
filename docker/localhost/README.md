@@ -4,16 +4,6 @@
 
 Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/develop/docker/localhost/docker-compose.yml) file in a directory. 
 
-#### Windows or Mac OS host system
-And then run:
-
-```sh
-  docker-compose up -d
-```
-
-#### Linux host system
-In the copied docker-compose.yml file, please uncomment `KEYCLOAK_URL: http://localhost:8081/auth` for Linux system, and comment `KEYCLOAK_URL` variable for Windows & Mac OS.
-
 And then run:
 
 ```sh
@@ -44,6 +34,9 @@ services:
   neo4j:
       image: manaty/neo4j-meveo:dev-latest
       container_name: neo4j
+      build:
+        context: ./
+        dockerfile: ../Dockerfile.neo4j
       networks:
         - meveo
       restart: unless-stopped
