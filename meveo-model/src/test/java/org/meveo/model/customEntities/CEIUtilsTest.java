@@ -49,6 +49,31 @@ public class CEIUtilsTest {
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
 	
 	@Test
+	public void testListRelationshipSerialization() {
+		CustomEntityA entityA = new CustomEntityA();
+		entityA.setValue("A");
+		
+		CustomEntityB entityB1 = new CustomEntityB();
+		entityB1.setValue("B1");
+		
+		CustomEntityB entityB2 = new CustomEntityB();
+		entityB2.setValue("B2");
+		
+		AtoBMulti rel1 = new AtoBMulti(entityA, entityB1);
+		rel1.setTest("rel1");
+		entityA.getaToBmulti().add(rel1);
+		
+		AtoBMulti rel2 = new AtoBMulti(entityA, entityB2);
+		rel2.setTest("rel2");
+		entityA.getaToBmulti().add(rel2);
+		
+		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA));
+		
+		assert graph.getEntities().size() == 3;
+		assert graph.getRelations().size() == 2;
+	}
+	
+	@Test
 	public void testSingleValueDeserialization() {
 		TypeReference<Set<Long>> typeRef = new TypeReference<Set<Long>>() {};
 		Integer value = 789;

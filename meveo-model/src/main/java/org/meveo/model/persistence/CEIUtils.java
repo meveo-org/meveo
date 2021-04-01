@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -213,7 +214,19 @@ public class CEIUtils {
 			// Retain all relationships fields annotated with
 			for(var field : Map.copyOf(fields).entrySet()) {
 				var fieldDef = ReflectionUtils.getField(customClass, field.getKey());
-				if(fieldDef.isAnnotationPresent(Relation.class) || CustomRelation.class.isAssignableFrom(fieldDef.getType())) {
+				boolean isRelationshipField = fieldDef.isAnnotationPresent(Relation.class) || CustomRelation.class.isAssignableFrom(fieldDef.getType());
+				
+				if(Collection.class.isAssignableFrom(fieldDef.getType())) {
+					Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
+					try {
+						var actualClass = Class.forName(actualType.getTypeName());
+						isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
+					} catch (ClassNotFoundException e) {
+						isRelationshipField = false;
+					}
+				}
+				
+				if(isRelationshipField) {
 					relationshipsFields.put(field.getKey(), field.getValue());
 					fields.remove(field.getKey());
 				}
@@ -232,27 +245,58 @@ public class CEIUtils {
 				var fieldDef = ReflectionUtils.getField(customClass, field);
 				var value = ReflectionUtils.findValueWithGetter(customEntity, field);
 				EntityGraph subGraph = null;
-				if(value.isPresent() && value.get() instanceof Collection) {
-					final var customEntitiesValue = (Collection<CustomEntity>) value.get();
-					subEntities.addAll(customEntitiesValue);
-					subGraph = toEntityGraph(List.copyOf(customEntitiesValue), subEntities);
-					for(var relatedCustomEntity : customEntitiesValue) {
-						subGraph.getEntities()
-						.stream()
-						.filter(e -> e.getName().equals(relatedCustomEntity.getUuid()))
-						.findFirst()
-						.ifPresent(e -> {
-							var relation = new org.meveo.interfaces.EntityRelation.Builder()
-									.name(UUID.randomUUID().toString())
-									.source(entity)
-									.target(e)
-									.type(fieldDef.getAnnotation(Relation.class).value())
-									.properties(Map.of())
-									.build();
-							entityGraph.getRelations().add(relation);
-						});
+				if(value.isPresent() && (value.get() instanceof Collection)) {
+					if(!isCollectionOfCustomRelation(fieldDef)) {
+						// Case where the field is a collection of custom entity annotated with @Relation
+						Collection<CustomEntity> customEntitiesValue = (Collection<CustomEntity>) value.get();
+						 
+						subEntities.addAll(customEntitiesValue);
+						subGraph = toEntityGraph(List.copyOf(customEntitiesValue), subEntities);
+						
+						for(var relatedCustomEntity : customEntitiesValue) {
+							subGraph.getEntities()
+							.stream()
+							.filter(e -> e.getName().equals(relatedCustomEntity.getUuid()))
+							.findFirst()
+							.ifPresent(e -> {
+								var relation = new org.meveo.interfaces.EntityRelation.Builder()
+										.name(UUID.randomUUID().toString())
+										.source(entity)
+										.target(e)
+										.type(fieldDef.getAnnotation(Relation.class).value())
+										.properties(Map.of())
+										.build();
+								entityGraph.getRelations().add(relation);
+							});
+						}
+					} else {
+						// Case where the field is a lsit of custom relations
+						Collection<CustomRelation<?,?>> customRelations = (Collection<CustomRelation<?,?>>) value.get();
+						subGraph = new EntityGraph();
+						for(CustomRelation<?,?> customRelation : customRelations) {
+							subEntities.add(customRelation.getTarget());
+							var subSubGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
+							subSubGraph.getEntities()
+							.stream()
+							.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
+							.findFirst()
+							.ifPresent(e -> {
+								var relation = new org.meveo.interfaces.EntityRelation.Builder()
+										.name(UUID.randomUUID().toString())
+										.source(entity)
+										.target(e)
+										.type(customRelation.getCrtCode())
+										.properties(JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT))
+										.build();
+								entityGraph.getRelations().add(relation);
+							});
+							
+							subGraph.getEntities().addAll(subSubGraph.getEntities());
+							subGraph.getRelations().addAll(subSubGraph.getRelations());
+						}
 					}
 				} else if(value.isPresent() && value.get() instanceof CustomEntity) {
+					// Case where the field is a custom entity annotated with @Relation
 					CustomEntity customEntityValue = (CustomEntity) value.get();
 					subEntities.add(customEntityValue);
 					subGraph = toEntityGraph(List.of(customEntityValue), subEntities);
@@ -271,6 +315,7 @@ public class CEIUtils {
 						entityGraph.getRelations().add(relation);
 					});
 				} else if(value.isPresent() && value.get() instanceof CustomRelation) {
+					// Case where the field is a custom relation
 					CustomRelation<?,?> customRelation = (CustomRelation<?,?>) value.get();
 					Map<String, Object> customRelationProperties = JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT);
 					subGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
@@ -337,6 +382,19 @@ public class CEIUtils {
 		entityGraph.getEntities().removeAll(entitiesToRemove);
 
 		return entityGraph;
+	}
+	
+	private static boolean isCollectionOfCustomRelation(Field fieldDef) {
+		if(Collection.class.isAssignableFrom(fieldDef.getType())) {
+			Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
+			try {
+				var actualClass = Class.forName(actualType.getTypeName());
+				return CustomRelation.class.isAssignableFrom(actualClass);
+			} catch (ClassNotFoundException e) {
+				return false;
+			}
+		}
+		return false;
 	}
 
 	public static CustomEntityInstance fromMap(Map<String, Object> map, CustomEntityTemplate cet) {
