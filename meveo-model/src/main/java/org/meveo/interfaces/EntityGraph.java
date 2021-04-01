@@ -3,6 +3,7 @@
  */
 package org.meveo.interfaces;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,6 +30,18 @@ public class EntityGraph {
 		this.entities = entities;
 		this.relations = relations;
 	}
+	
+	/**
+	 * Instantiates a new EntityGraph
+	 *
+	 */
+	public EntityGraph() {
+		super();
+		this.entities = new ArrayList<>();
+		this.relations = new ArrayList<>();
+	}
+
+
 
 	/**
 	 * @return the {@link #entities}
