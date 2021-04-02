@@ -19,6 +19,7 @@
  */
 package org.meveo.service.custom;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +41,16 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 
 /**
  * Class used for persisting CustomRelationshipTemplate entities
@@ -74,6 +78,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     
     @Inject
     private RepositoryService repositoryService;
+    
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -305,5 +312,18 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 				.getResultList();
 	}
 	
+	public File getCrtDir(CustomRelationshipTemplate crt) {
+    	File repositoryDir;
+    	String path;
+    	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
+    	if (module == null) {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+    		path = "custom/relationships";
+    	} else {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    		path = "customRelationShipTemplates/" + crt.getCode();
+    	}
+    	return new File(repositoryDir, path);
+	}
 
 }

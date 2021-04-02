@@ -82,23 +82,7 @@ public class ESGeneratorService {
 	 * @return it returns the endpoint interface in js
 	 */
 	public String buildJSInterface(String baseUrl, Endpoint endpoint) {
-
-		String template = "";
-		// checks if the file exists in repository
-		if (endpointService.isEndpointScriptExists(endpoint)) {
-			StringWriter writer = new StringWriter();
-			try {
-				IOUtils.copy(new InputStreamReader(new FileInputStream(endpointService.getScriptFile(endpoint))), writer);
-
-			} catch (IOException e) {
-				log.error("Failed loading js template with error {}", e.getMessage());
-				return "Missing template";
-			}
-
-			template = writer.toString();
-		}
-
-		return buildJSInterfaceFromTemplate(baseUrl, endpoint, template);
+		return buildJSInterfaceFromTemplate(baseUrl, endpoint, "");
 	}
 
 	/**
