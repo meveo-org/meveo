@@ -318,6 +318,9 @@ public class CEIUtils {
 					// Case where the field is a custom relation
 					CustomRelation<?,?> customRelation = (CustomRelation<?,?>) value.get();
 					Map<String, Object> customRelationProperties = JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT);
+					if(customRelation.getTarget() == null) {
+						throw new IllegalArgumentException("Target of relation " + customRelation.getCrtCode() + " (" + customRelation.getUuid() + ") is null");
+					}
 					subGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
 					subGraph.getEntities()
 					.stream()
