@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -191,17 +192,71 @@ public class CEIUtils {
 	 * @return the corresponding entity graph
 	 */
 	public static EntityGraph toEntityGraph(Collection<CustomEntity> mainEntities) {
-		return toEntityGraph(new HashSet<>(mainEntities), new ArrayList<>());
+		List<org.meveo.interfaces.Entity> entities = new ArrayList<>();
+		List<EntityRelation> relations = new ArrayList<>();
+		List<CustomEntity> subEntities = new ArrayList<>();
+		Set<CustomEntity> customEntities = new HashSet<>(mainEntities);
+		EntityGraph entityGraph = new EntityGraph(entities, relations);
+		
+		populateGraph(entityGraph, customEntities, subEntities, new HashSet<>());
+	
+		mergeEntities(subEntities, customEntities, entityGraph);
+		
+		return entityGraph;
+	}
+
+	private static void mergeEntities(List<CustomEntity> subEntities, Set<CustomEntity> customEntities, EntityGraph entityGraph) {
+		// Build a map of entities by uuid
+		Map<String, CustomEntity> customEntitiesByUuid = Stream.concat(customEntities.stream(), subEntities.stream())
+				.distinct()
+				.collect(Collectors.toMap(CustomEntity::getUuid, Function.identity()));
+
+		// Merge entities that are equals
+		List<org.meveo.interfaces.Entity> entitiesToRemove = new ArrayList<>();
+		Map<String, List<org.meveo.interfaces.Entity>> sameTypeEntities = entityGraph.getEntities()
+				.stream()
+				.collect(Collectors.groupingBy(org.meveo.interfaces.Entity::getType, Collectors.toList()));
+		
+		sameTypeEntities.forEach((type, entityList) -> {
+			int size = entityList.size();
+			for(int i = 0; i < size; i ++) {
+				org.meveo.interfaces.Entity entity1 = entityList.get(i);
+				CustomEntity cetInstance1 = customEntitiesByUuid.get(entity1.getName());
+				if(cetInstance1 == null) {
+					continue;
+				}
+				for(int j = i+1; j < size; j++) {
+					org.meveo.interfaces.Entity entity2 = entityList.get(j);
+					CustomEntity cetInstance2 = customEntitiesByUuid.get(entity2.getName());
+					if(cetInstance2 != null && cetInstance1.isEqual(cetInstance2)) {
+						entitiesToRemove.add(entity2);
+						entity1.merge(entity2);
+						entityGraph.getRelations().stream()
+						.forEach(r -> {
+							if(r.getSource().equals(entity2)) {
+								r.setSource(entity1);
+							}
+							if(r.getTarget().equals(entity2)) {
+								r.setTarget(entity2);
+							}
+						});
+					}
+				}
+			}
+		});
+		entityGraph.getEntities().removeAll(entitiesToRemove);
 	}
 
 	@SuppressWarnings("unchecked")
-	private static EntityGraph toEntityGraph(Collection<CustomEntity> customEntities, Collection<CustomEntity> subEntities) {
-		List<org.meveo.interfaces.Entity> entities = new ArrayList<>();
-		List<EntityRelation> relations = new ArrayList<>();
-
-		EntityGraph entityGraph = new EntityGraph(entities, relations);
-
+	private static void populateGraph(EntityGraph entityGraph, Collection<CustomEntity> customEntities, Collection<CustomEntity> subEntities, Collection<CustomEntity> entitiesToSkip) {
 		for(var customEntity : customEntities) {
+			// Avoid circular loops
+			if(entitiesToSkip.contains(customEntity)) {
+				continue;
+			} else {
+				entitiesToSkip.add(customEntity);
+			}
+			
 			if(customEntity.getUuid() == null) {
 				setUUIDField(customEntity, UUID.randomUUID().toString());
 			}
@@ -211,7 +266,7 @@ public class CEIUtils {
 			var fields = JacksonUtil.convert(customEntity, GenericTypeReferences.MAP_STRING_OBJECT);
 			var relationshipsFields = new HashMap<String, Object>();
 
-			// Retain all relationships fields annotated with
+			// Retain all relationships fields annotated with @Relation
 			for(var field : Map.copyOf(fields).entrySet()) {
 				var fieldDef = ReflectionUtils.getField(customClass, field.getKey());
 				boolean isRelationshipField = fieldDef.isAnnotationPresent(Relation.class) || CustomRelation.class.isAssignableFrom(fieldDef.getType());
@@ -241,79 +296,81 @@ public class CEIUtils {
 			entityGraph.getEntities().add(entity);
 
 			// Extract sub entities and relations
-			relationshipsFields.keySet().forEach(field -> {
+			for(var field : relationshipsFields.keySet()) {
 				var fieldDef = ReflectionUtils.getField(customClass, field);
 				var value = ReflectionUtils.findValueWithGetter(customEntity, field);
-				EntityGraph subGraph = null;
 				if(value.isPresent() && (value.get() instanceof Collection)) {
 					if(!isCollectionOfCustomRelation(fieldDef)) {
 						// Case where the field is a collection of custom entity annotated with @Relation
 						Collection<CustomEntity> customEntitiesValue = (Collection<CustomEntity>) value.get();
 						 
 						subEntities.addAll(customEntitiesValue);
-						subGraph = toEntityGraph(List.copyOf(customEntitiesValue), subEntities);
+						populateGraph(entityGraph, List.copyOf(customEntitiesValue), subEntities, entitiesToSkip);
 						
 						for(var relatedCustomEntity : customEntitiesValue) {
-							subGraph.getEntities()
-							.stream()
-							.filter(e -> e.getName().equals(relatedCustomEntity.getUuid()))
-							.findFirst()
-							.ifPresent(e -> {
-								var relation = new org.meveo.interfaces.EntityRelation.Builder()
-										.name(UUID.randomUUID().toString())
-										.source(entity)
-										.target(e)
-										.type(fieldDef.getAnnotation(Relation.class).value())
-										.properties(Map.of())
-										.build();
-								entityGraph.getRelations().add(relation);
-							});
+							entityGraph.getEntities().stream()
+								.filter(e -> e.getName().equals(relatedCustomEntity.getUuid()))
+								.findFirst()
+								.ifPresentOrElse(e -> {
+									var relation = new org.meveo.interfaces.EntityRelation.Builder()
+											.name(UUID.randomUUID().toString())
+											.source(entity)
+											.target(e)
+											.type(fieldDef.getAnnotation(Relation.class).value())
+											.properties(Map.of())
+											.build();
+									entityGraph.getRelations().add(relation);
+								}, () -> { 
+									LOG.warn("Target not found for {}", fieldDef.getAnnotation(Relation.class).value());
+								});
 						}
 					} else {
 						// Case where the field is a lsit of custom relations
 						Collection<CustomRelation<?,?>> customRelations = (Collection<CustomRelation<?,?>>) value.get();
-						subGraph = new EntityGraph();
 						for(CustomRelation<?,?> customRelation : customRelations) {
 							subEntities.add(customRelation.getTarget());
-							var subSubGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
-							subSubGraph.getEntities()
-							.stream()
-							.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
-							.findFirst()
-							.ifPresent(e -> {
-								var relation = new org.meveo.interfaces.EntityRelation.Builder()
-										.name(UUID.randomUUID().toString())
-										.source(entity)
-										.target(e)
-										.type(customRelation.getCrtCode())
-										.properties(JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT))
-										.build();
-								entityGraph.getRelations().add(relation);
-							});
+							populateGraph(entityGraph, List.of(customRelation.getTarget()), subEntities, entitiesToSkip);
+							entityGraph.getEntities().stream()
+								.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
+								.findFirst()
+								.ifPresentOrElse(e -> {
+									var relation = new org.meveo.interfaces.EntityRelation.Builder()
+											.name(UUID.randomUUID().toString())
+											.source(entity)
+											.target(e)
+											.type(customRelation.getCrtCode())
+											.properties(JacksonUtil.convert(customRelation, GenericTypeReferences.MAP_STRING_OBJECT))
+											.build();
+									entityGraph.getRelations().add(relation);
+								}, () -> { 
+									LOG.warn("Target not found for {}", customRelation);
+								});
 							
-							subGraph.getEntities().addAll(subSubGraph.getEntities());
-							subGraph.getRelations().addAll(subSubGraph.getRelations());
 						}
 					}
 				} else if(value.isPresent() && value.get() instanceof CustomEntity) {
 					// Case where the field is a custom entity annotated with @Relation
 					CustomEntity customEntityValue = (CustomEntity) value.get();
 					subEntities.add(customEntityValue);
-					subGraph = toEntityGraph(List.of(customEntityValue), subEntities);
-					subGraph.getEntities()
-					.stream()
-					.filter(e -> e.getName().equals(customEntityValue.getUuid()))
-					.findFirst()
-					.ifPresent(e -> {
-						var relation = new org.meveo.interfaces.EntityRelation.Builder()
-								.name(UUID.randomUUID().toString())
-								.source(entity)
-								.target(e)
-								.type(fieldDef.getAnnotation(Relation.class).value())
-								.properties(Map.of())
-								.build();
-						entityGraph.getRelations().add(relation);
-					});
+					
+					populateGraph(entityGraph, List.of(customEntityValue), subEntities, entitiesToSkip);
+					
+					entityGraph.getEntities().stream()
+						.filter(e -> e.getName().equals(customEntityValue.getUuid()))
+						.findFirst()
+						.ifPresentOrElse(e -> {
+							var relation = new org.meveo.interfaces.EntityRelation.Builder()
+									.name(UUID.randomUUID().toString())
+									.source(entity)
+									.target(e)
+									.type(fieldDef.getAnnotation(Relation.class).value())
+									.properties(Map.of())
+									.build();
+							entityGraph.getRelations().add(relation);
+						}, () -> { 
+							LOG.warn("Target not found for {} : {}", fieldDef.getAnnotation(Relation.class).value(), customEntityValue);	
+						});
+					
 				} else if(value.isPresent() && value.get() instanceof CustomRelation) {
 					// Case where the field is a custom relation
 					CustomRelation<?,?> customRelation = (CustomRelation<?,?>) value.get();
@@ -321,70 +378,27 @@ public class CEIUtils {
 					if(customRelation.getTarget() == null) {
 						throw new IllegalArgumentException("Target of relation " + customRelation.getCrtCode() + " (" + customRelation.getUuid() + ") is null");
 					}
-					subGraph = toEntityGraph(List.of(customRelation.getTarget()), subEntities);
-					subGraph.getEntities()
-					.stream()
-					.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
-					.findFirst()
-					.ifPresent(e -> {
-						var relation = new org.meveo.interfaces.EntityRelation.Builder()
-								.name(UUID.randomUUID().toString())
-								.source(entity)
-								.target(e)
-								.type(customRelation.getCrtCode())
-								.properties(customRelationProperties)
-								.build();
-						entityGraph.getRelations().add(relation);
-					});
-				}
-
-				if(subGraph != null) {
-					entityGraph.getEntities().addAll(subGraph.getEntities());
-					entityGraph.getRelations().addAll(subGraph.getRelations());
-				}
-			});
-		}
-
-		// Build a map of entities by uuid
-		Map<String, CustomEntity> customEntitiesByUuid = Stream.concat(customEntities.stream(), subEntities.stream())
-				.distinct()
-				.collect(Collectors.toMap(CustomEntity::getUuid, Function.identity()));
-
-		// Merge entities that are equals
-		List<org.meveo.interfaces.Entity> entitiesToRemove = new ArrayList<>();
-		Map<String, List<org.meveo.interfaces.Entity>> sameTypeEntities = entityGraph.getEntities()
-				.stream()
-				.collect(Collectors.groupingBy(org.meveo.interfaces.Entity::getType, Collectors.toList()));
-		sameTypeEntities.forEach((type, entityList) -> {
-			int size = entityList.size();
-			for(int i = 0; i < size; i ++) {
-				org.meveo.interfaces.Entity entity1 = entityList.get(i);
-				CustomEntity cetInstance1 = customEntitiesByUuid.get(entity1.getName());
-				if(cetInstance1 == null) {
-					continue;
-				}
-				for(int j = i+1; j < size; j++) {
-					org.meveo.interfaces.Entity entity2 = entityList.get(j);
-					CustomEntity cetInstance2 = customEntitiesByUuid.get(entity2.getName());
-					if(cetInstance2 != null && cetInstance1.isEqual(cetInstance2)) {
-						entitiesToRemove.add(entity2);
-						entity1.merge(entity2);
-						entityGraph.getRelations().stream()
-						.forEach(r -> {
-							if(r.getSource().equals(entity2)) {
-								r.setSource(entity1);
-							}
-							if(r.getTarget().equals(entity2)) {
-								r.setTarget(entity2);
-							}
+					
+					populateGraph(entityGraph, List.of(customRelation.getTarget()), subEntities, entitiesToSkip);
+					entityGraph.getEntities().stream()
+						.filter(e -> e.getName().equals(customRelation.getTarget().getUuid()))
+						.findFirst()
+						.ifPresentOrElse(e -> {
+							var relation = new org.meveo.interfaces.EntityRelation.Builder()
+									.name(UUID.randomUUID().toString())
+									.source(entity)
+									.target(e)
+									.type(customRelation.getCrtCode())
+									.properties(customRelationProperties)
+									.build();
+							entityGraph.getRelations().add(relation);
+						}, () ->  { 
+							LOG.warn("Target not found for {}", customRelation);
 						});
-					}
 				}
-			}
-		});
-		entityGraph.getEntities().removeAll(entitiesToRemove);
 
-		return entityGraph;
+			}
+		}
 	}
 	
 	private static boolean isCollectionOfCustomRelation(Field fieldDef) {

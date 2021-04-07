@@ -18,7 +18,8 @@ public class CustomEntityC implements CustomEntity {
 	private String otherValue;
 	
 	private String uuid;
-
+	
+	private CtoA circularRef;
 
 	@Override
 	public String getCetCode() {
@@ -83,6 +84,22 @@ public class CustomEntityC implements CustomEntity {
 	 */
 	public void setOtherValue(String otherValue) {
 		this.otherValue = otherValue;
+	}
+
+
+	/**
+	 * @return the {@link #circularRef}
+	 */
+	public CtoA getCircularRef() {
+		return circularRef;
+	}
+
+
+	/**
+	 * @param circularRef the circularRef to set
+	 */
+	public void setCircularRef(CtoA circularRef) {
+		this.circularRef = circularRef;
 	}
 
 }
