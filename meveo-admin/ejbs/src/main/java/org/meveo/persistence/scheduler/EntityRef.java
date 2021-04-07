@@ -16,6 +16,7 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.storage.Repository;
 
@@ -30,15 +31,28 @@ public class EntityRef {
 
     public EntityRef(EntityReferenceWrapper wrapper) {
     	this.uuid = wrapper.getUuid();
+    	
+    	if(StringUtils.isBlank(uuid)) {
+    		throw new IllegalArgumentException("UUID for entity with label " + label + "can't be null");
+    	}
+    	
     	this.label = wrapper.getClassnameCode();
     }
 
     public EntityRef(String uuid, String label) {
+    	if(StringUtils.isBlank(uuid)) {
+    		throw new IllegalArgumentException("UUID for entity with label " + label + "can't be null");
+    	}
+    	
         this.uuid = uuid;
         this.label = label;
     }
 
     public EntityRef(String uuid, Integer trustScore, String constraintCode, String label) {
+    	if(StringUtils.isBlank(uuid)) {
+    		throw new IllegalArgumentException("UUID for entity with label " + label + "can't be null");
+    	}
+    	
         this.uuid = uuid;
         this.trustScore = trustScore;
         this.constraintCode = constraintCode;
