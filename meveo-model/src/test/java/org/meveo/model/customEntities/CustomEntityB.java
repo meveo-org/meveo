@@ -20,6 +20,8 @@ public class CustomEntityB implements CustomEntity {
 	
 	private String uuid;
 	
+	private BtoA circularRef;
+	
 	@Relation("HasCTarget")
 	private CustomEntityC target;
 
@@ -103,6 +105,22 @@ public class CustomEntityB implements CustomEntity {
 	 */
 	public void setTarget(CustomEntityC target) {
 		this.target = target;
+	}
+
+
+	/**
+	 * @return the {@link #circularRef}
+	 */
+	public BtoA getCircularRef() {
+		return circularRef;
+	}
+
+
+	/**
+	 * @param circularRef the circularRef to set
+	 */
+	public void setCircularRef(BtoA circularRef) {
+		this.circularRef = circularRef;
 	}
 
 }

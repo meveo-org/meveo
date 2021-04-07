@@ -49,6 +49,63 @@ public class CEIUtilsTest {
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
 	
 	@Test
+	public void testCircularReferencesSameLevel() {
+		CustomEntityA entityA = new CustomEntityA();
+		entityA.setValue("A");
+		
+		CustomEntityB entityB1 = new CustomEntityB();
+		entityB1.setValue("B1");
+		entityB1.setCircularRef(new BtoA(entityB1, entityA));
+		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		
+		CustomEntityC entityC = new CustomEntityC();
+		entityC.setValue("C");
+		entityC.setCircularRef(new CtoA(entityC, entityA));
+		entityB1.setTarget(entityC);
+		
+		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA, entityB1, entityC));
+		
+		assert graph.getEntities().size() == 3;
+		assert graph.getRelations().size() == 4;
+	}
+	
+	@Test
+	public void testCircularReferencesSecondLevel() {
+		CustomEntityA entityA = new CustomEntityA();
+		entityA.setValue("A");
+		
+		CustomEntityB entityB1 = new CustomEntityB();
+		entityB1.setValue("B1");
+		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		
+		CustomEntityC entityC = new CustomEntityC();
+		entityC.setValue("C");
+		entityC.setCircularRef(new CtoA(entityC, entityA));
+		entityB1.setTarget(entityC);
+		
+		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA));
+		
+		assert graph.getEntities().size() == 3;
+		assert graph.getRelations().size() == 3;
+	}
+	
+	@Test
+	public void testCircularReferencesFirstLevel() {
+		CustomEntityA entityA = new CustomEntityA();
+		entityA.setValue("A");
+		
+		CustomEntityB entityB1 = new CustomEntityB();
+		entityB1.setValue("B1");
+		entityB1.setCircularRef(new BtoA(entityB1, entityA));
+		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		
+		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA));
+		
+		assert graph.getEntities().size() == 2;
+		assert graph.getRelations().size() == 2;
+	}
+	
+	@Test
 	public void testListRelationshipSerialization() {
 		CustomEntityA entityA = new CustomEntityA();
 		entityA.setValue("A");
