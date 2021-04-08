@@ -237,7 +237,7 @@ public class CEIUtils {
 								r.setSource(entity1);
 							}
 							if(r.getTarget().equals(entity2)) {
-								r.setTarget(entity2);
+								r.setTarget(entity1);
 							}
 						});
 					}
