@@ -77,7 +77,7 @@ public class Neo4JPersistenceRs {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
-                .filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY))
+                .filter(persistenceDto -> persistenceDto.getSource() == null && persistenceDto.getTarget() == null)
                 .map(persistenceDto -> new Entity.Builder()
                         .type(persistenceDto.getType())
                         .name(persistenceDto.getName())
@@ -87,7 +87,7 @@ public class Neo4JPersistenceRs {
 
         /* Extract the relationships */
         final List<EntityRelation> relations = dtos.stream()
-                .filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.RELATION))
+                .filter(persistenceDto -> persistenceDto.getSource() != null || persistenceDto.getTarget() != null)
                 .map(persistenceDto -> {
                     final Optional<Entity> source = entities.stream()
                             .filter(entity -> entity.getName().equals(persistenceDto.getSource()))
