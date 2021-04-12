@@ -20,38 +20,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
-import javax.annotation.security.DeclareRoles;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.jboss.resteasy.annotations.cache.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 
 /**
  * Rest endpoint for managing service endpoints
@@ -61,10 +42,6 @@ import io.swagger.annotations.ApiParam;
  * @since 04.02.2019
  * @version 6.9.0
  */
-@Path("/endpoint")
-@DeclareRoles({ "endpointManagement" })
-@RolesAllowed({ "endpointManagement" })
-@Api("EndpointRs")
 public class EndpointRs extends BaseRs implements IEndpointRs {
 
 	@EJB
@@ -74,8 +51,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	private UriInfo uriContextInfo;
 
 	@Override
-	@POST
-	public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
+	public Response create(EndpointDto endpointDto) throws BusinessException {
 		try {
 			final Endpoint endpoint = endpointApi.create(endpointDto);
 			return Response.status(201).entity(endpoint.getId()).build();
@@ -85,8 +61,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	}
 
 	@Override
-	@PUT
-	public Response createOrReplace(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
+	public Response createOrReplace(EndpointDto endpointDto) throws BusinessException {
 		final Endpoint endpoint = endpointApi.createOrReplace(endpointDto);
 		if (endpoint != null) {
 			return Response.status(201).entity(endpoint.getId()).build();
@@ -96,9 +71,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	}
 
 	@Override
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response list(@QueryParam("service") String serviceCode) {
+	public Response list(String serviceCode) {
 		List<EndpointDto> dtoList;
 		if (serviceCode != null) {
 			dtoList = endpointApi.findByServiceCode(serviceCode);
@@ -114,10 +87,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @param code Code of the {@link Endpoint} to delete
 	 */
 	@Override
-	@DELETE
-	@Path("/{code}")
-	@ApiOperation(value = "Delete endpoint")
-	public Response delete(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) throws BusinessException, EntityDoesNotExistsException {
+	public Response delete(String code) throws BusinessException, EntityDoesNotExistsException {
 		endpointApi.delete(code);
 		return Response.noContent().build();
 	}
@@ -128,11 +98,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @param code Code of the {@link Endpoint} to find
 	 */
 	@Override
-	@GET
-	@Path("/{code}")
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Find endpoint by code")
-	public Response find(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+	public Response find(String code) {
 		final EndpointDto endpointDto = endpointApi.findByCode(code);
 		if (endpointDto != null) {
 			return Response.ok(endpointDto).build();
@@ -146,10 +112,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @param code Code of the {@link Endpoint} to check
 	 */
 	@Override
-	@HEAD
-	@Path("/{code}")
-	@ApiOperation(value = "Check exist an endpoint")
-	public Response exists(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+	public Response exists(String code) {
 		final EndpointDto endpointDto = endpointApi.findByCode(code);
 		if (endpointDto != null) {
 			return Response.noContent().build();
@@ -163,12 +126,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @param code Code of the {@link Endpoint} to get script
 	 */
 	@Override
-	@GET
-	@Path("/{code}.js")
-    @Cache(maxAge = 86400)
-	@Produces("application/javascript")
-	@ApiOperation(value = " Get script of the endpoint")
-	public String getScript(@PathParam("code") @ApiParam("Code of the endpoint") String code, @Context HttpServletRequest servletRequest) throws EntityDoesNotExistsException, IOException {
+	public String getScript(String code, HttpServletRequest servletRequest) throws EntityDoesNotExistsException, IOException {
 		final URI contextUri = URI.create(servletRequest.getRequestURL().toString()).resolve(servletRequest.getContextPath());
 		return endpointApi.getEndpointScript(contextUri.toString(), code);
 	}
@@ -179,11 +137,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @param code Code of the {@link Endpoint} to generate open api json
 	 */
 	@Override
-	@GET
-	@Path("/openApi/{code}")
-	@ApiOperation(value = "Generate open api json of the endpoint")
-	public Response generateOpenApiJson(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
-
+	public Response generateOpenApiJson(String code) {
 		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
 	}
 
@@ -194,10 +148,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @return request schema of the given endpoint
 	 */
 	@Override
-	@GET
-	@Path("/schema/{code}/request")
-	@ApiOperation(value = "Generates and returns the request schema of a given endpoint.")
-	public String requestSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+	public String requestSchema(String code) {
 		return endpointApi.requestSchema(code);
 	}
 
@@ -208,10 +159,7 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 * @return response schema of the given endpoint
 	 */
 	@Override
-	@GET
-	@Path("/schema/{code}/response")
-	@ApiOperation(value = "Generates and returns the response schema of a given endpoint.")
-	public String responseSchema(@PathParam("code") @NotNull @ApiParam("Code of the endpoint") String code) {
+	public String responseSchema(String code) {
 		return endpointApi.responseSchema(code);
 	}
 
