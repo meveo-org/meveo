@@ -394,7 +394,8 @@ public class OntologyObserver {
 
         //Update the origin CET when the CRT is modified
         //If a CFT is modified in the CRT, the origin CET need to be modified too
-        cetUpdated(crt.getStartNode());
+        CustomEntityTemplate cet = customEntityTemplateService.findById(crt.getStartNode().getId());
+        cetUpdated(cet);
         
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
@@ -559,7 +560,8 @@ public class OntologyObserver {
                 
                 //Update the origin CET when the CFT is modified
                 //If a CFT is modified in the CRT, the origin CET need to be modified too
-                cetUpdated(crt.getStartNode());
+                CustomEntityTemplate cet = customEntityTemplateService.findById(crt.getStartNode().getId());
+                cetUpdated(cet);
                 
                 gitClient.commitFiles(
                         meveoRepository,
