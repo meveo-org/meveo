@@ -10,6 +10,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -37,6 +38,8 @@ import io.swagger.annotations.ApiParam;
 @DeclareRoles({ "endpointManagement" })
 @RolesAllowed({ "endpointManagement" })
 @Api("EndpointRs")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public interface IEndpointRs {
 
 	@POST
