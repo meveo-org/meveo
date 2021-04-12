@@ -65,7 +65,7 @@ import io.swagger.annotations.ApiParam;
 @DeclareRoles({ "endpointManagement" })
 @RolesAllowed({ "endpointManagement" })
 @Api("EndpointRs")
-public class EndpointRs extends BaseRs {
+public class EndpointRs extends BaseRs implements IEndpointRs {
 
 	@EJB
 	private EndpointApi endpointApi;
@@ -73,6 +73,7 @@ public class EndpointRs extends BaseRs {
 	@Context
 	private UriInfo uriContextInfo;
 
+	@Override
 	@POST
 	public Response create(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
 		try {
@@ -83,6 +84,7 @@ public class EndpointRs extends BaseRs {
 		}
 	}
 
+	@Override
 	@PUT
 	public Response createOrReplace(@Valid @NotNull EndpointDto endpointDto) throws BusinessException {
 		final Endpoint endpoint = endpointApi.createOrReplace(endpointDto);
@@ -93,6 +95,7 @@ public class EndpointRs extends BaseRs {
 		}
 	}
 
+	@Override
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response list(@QueryParam("service") String serviceCode) {
@@ -110,6 +113,7 @@ public class EndpointRs extends BaseRs {
 	 *
 	 * @param code Code of the {@link Endpoint} to delete
 	 */
+	@Override
 	@DELETE
 	@Path("/{code}")
 	@ApiOperation(value = "Delete endpoint")
@@ -123,6 +127,7 @@ public class EndpointRs extends BaseRs {
 	 *
 	 * @param code Code of the {@link Endpoint} to find
 	 */
+	@Override
 	@GET
 	@Path("/{code}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -140,6 +145,7 @@ public class EndpointRs extends BaseRs {
 	 *
 	 * @param code Code of the {@link Endpoint} to check
 	 */
+	@Override
 	@HEAD
 	@Path("/{code}")
 	@ApiOperation(value = "Check exist an endpoint")
@@ -156,6 +162,7 @@ public class EndpointRs extends BaseRs {
 	 *
 	 * @param code Code of the {@link Endpoint} to get script
 	 */
+	@Override
 	@GET
 	@Path("/{code}.js")
     @Cache(maxAge = 86400)
@@ -171,6 +178,7 @@ public class EndpointRs extends BaseRs {
 	 *
 	 * @param code Code of the {@link Endpoint} to generate open api json
 	 */
+	@Override
 	@GET
 	@Path("/openApi/{code}")
 	@ApiOperation(value = "Generate open api json of the endpoint")
@@ -185,6 +193,7 @@ public class EndpointRs extends BaseRs {
 	 * @param code code of the endpoint
 	 * @return request schema of the given endpoint
 	 */
+	@Override
 	@GET
 	@Path("/schema/{code}/request")
 	@ApiOperation(value = "Generates and returns the request schema of a given endpoint.")
@@ -198,6 +207,7 @@ public class EndpointRs extends BaseRs {
 	 * @param code code of the endpoint
 	 * @return response schema of the given endpoint
 	 */
+	@Override
 	@GET
 	@Path("/schema/{code}/response")
 	@ApiOperation(value = "Generates and returns the response schema of a given endpoint.")
