@@ -106,6 +106,28 @@ public class CEIUtilsTest {
 	}
 	
 	@Test
+	public void targetIsEmbeddedSerialization() {
+		Entity entity = new Entity.Builder()
+				.properties(Map.of(
+						"value", "source", 
+						"aToBRelation", Map.of("value", "target4")
+					))
+				.type("CustomEntityA")
+				.name("source")
+				.build();
+		
+		var entities = CEIUtils.fromEntityGraph(new EntityGraph(List.of(entity), List.of()));
+		
+		assert entities.size() == 1;
+		
+		entities.forEach(e -> {
+			var customEntityA = (CustomEntityA) e;
+			assert customEntityA.getaToBRelation() != null;
+			assert customEntityA.getaToBRelation().getTarget() != null;
+		});
+	}
+	
+	@Test
 	public void testListRelationshipSerialization() {
 		CustomEntityA entityA = new CustomEntityA();
 		entityA.setValue("A");
@@ -262,7 +284,12 @@ public class CEIUtilsTest {
 		assert sourceEntity.getTargets().size() == 2;
 		
 		assert sourceEntity.getaToBRelation() != null;
+		assert sourceEntity.getaToBRelation().getTarget() != null;
+
 		assert sourceEntity.getaToBmulti().size() == 2;
+		sourceEntity.getaToBmulti().forEach(rel -> {
+			assert rel.getTarget() != null;
+		});
 		
 		assert sourceEntity.getTarget().getTarget() != null;
 		
