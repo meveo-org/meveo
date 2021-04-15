@@ -1,16 +1,21 @@
 /**
  * 
  */
-package org.meveo.model.persistence;
+package org.meveo.model.customEntities;
 
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.meveo.interfaces.Entity;
+import org.meveo.interfaces.EntityGraph;
+import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.annotations.Relation;
+import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 
 /**
@@ -41,6 +46,136 @@ public class CEIUtilsTest {
 			"}";
 	
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
+	
+	@Test
+	public void testConvertGraphToEntities() {
+		Entity target1 = new Entity.Builder()
+				.properties(Map.of("value", "target1"))
+				.type("CustomEntityB")
+				.name("target1")
+				.build();
+		
+		Entity target2 = new Entity.Builder()
+				.properties(Map.of("value", "target2"))
+				.type("CustomEntityB")
+				.name("target2")
+				.build();
+		
+		Entity target3 = new Entity.Builder()
+				.properties(Map.of("value", "target3"))
+				.type("CustomEntityB")
+				.name("target3")
+				.build();
+		
+		Entity target4 = new Entity.Builder()
+				.properties(Map.of("value", "target4"))
+				.type("CustomEntityB")
+				.name("target4")
+				.build();
+		
+		Entity target5 = new Entity.Builder()
+				.properties(Map.of("value", "target5"))
+				.type("CustomEntityB")
+				.name("target5")
+				.build();
+		
+		Entity target6 = new Entity.Builder()
+				.properties(Map.of("value", "target6"))
+				.type("CustomEntityB")
+				.name("target6")
+				.build();
+		
+		Entity source = new Entity.Builder()
+				.properties(Map.of("value", "source"))
+				.type("CustomEntityA")
+				.name("source")
+				.build();
+		
+		Entity targetTarget = new Entity.Builder()
+				.properties(Map.of("value", "targetTarget"))
+				.type("CustomEntityC")
+				.name("targetTarget")
+				.build();
+		
+		EntityRelation relation1 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("HasTarget")
+				.name("source-target1")
+				.source(source)
+				.target(target1)
+				.build();
+		
+		EntityRelation transitiveRelation = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("HasCTarget")
+				.name("target1-targetTarget")
+				.source(target1)
+				.target(targetTarget)
+				.build();
+		
+		EntityRelation relation2 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("HasTargets")
+				.name("source-target2")
+				.source(source)
+				.target(target2)
+				.build();
+		
+		EntityRelation relation3 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("HasTargets")
+				.name("source-target3")
+				.source(source)
+				.target(target3)
+				.build();
+		
+		EntityRelation relation4 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("AtoB")
+				.properties(Map.of("test", "test4"))
+				.name("source-target4")
+				.source(source)
+				.target(target4)
+				.build();
+		
+		EntityRelation relation5 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("AtoBMulti")
+				.properties(Map.of("test", "relation5"))
+				.name("source-target5")
+				.source(source)
+				.target(target5)
+				.build();
+		
+		EntityRelation relation6 = new EntityRelation.Builder()
+				.properties(Map.of())
+				.type("AtoBMulti")
+				.properties(Map.of("test", "relation6"))
+				.name("source-target6")
+				.source(source)
+				.target(target6)
+				.build();
+		
+		EntityGraph graph = new EntityGraph(
+				List.of(source, target1, target2, target3, target4, target5, target6, targetTarget), 
+				List.of(relation1, relation2, relation3, relation4, relation5, relation6, transitiveRelation)
+			);
+		
+		var entities = CEIUtils.fromEntityGraph(graph);
+		
+		assert entities.size() == 1;
+
+		var sourceEntity = (CustomEntityA) entities.iterator().next();
+		
+		assert sourceEntity.getTarget() != null;
+		assert sourceEntity.getTargets().size() == 2;
+		
+		assert sourceEntity.getaToBRelation() != null;
+		assert sourceEntity.getaToBmulti().size() == 2;
+		
+		assert sourceEntity.getTarget().getTarget() != null;
+		
+	}
 	
 	@Test
 	public void testEntitiesAreMerged() {

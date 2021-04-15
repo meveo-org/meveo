@@ -36,6 +36,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -346,6 +348,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
     	
+    	if (meveoModuleItem.getItemEntity() == null) {
+    		loadModuleItem(meveoModuleItem);
+    	}
     	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)

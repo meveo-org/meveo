@@ -118,9 +118,6 @@ public class MeveoModuleItemInstaller {
 	
 	@EJB
 	private MeveoModuleItemInstaller meveoModuleItemInstaller;
-
-	@Inject
-	private CustomEntityTemplateApi customEntityTemplateApi;
     
     /**
      * Uninstall the module and disables it items
@@ -694,7 +691,6 @@ public class MeveoModuleItemInstaller {
             meveoModule.getModuleItems().clear();
             
             Collections.sort(moduleDto.getModuleItems());
-            
             /* To avoid conflict we should first create CET, then their fields, so we need to separate them and sort them */
 			for (MeveoModuleItemDto moduleItemDto : new ArrayList<>(moduleDto.getModuleItems())) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
@@ -751,7 +747,9 @@ public class MeveoModuleItemInstaller {
 
 			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
-					CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+					try {
+						Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+						CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
 					if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
 						CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
 						ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
@@ -759,6 +757,9 @@ public class MeveoModuleItemInstaller {
 							cet.setCrudEventListenerScript(si);
 							customEntityTemplateService.update(cet);
 						}
+					}
+					} catch (ClassNotFoundException e) {
+						log.error("Cannot find dto class", e);
 					}
 				}
 			}

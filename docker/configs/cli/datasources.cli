@@ -14,10 +14,9 @@ xa-data-source add --name=meveo \
     --jndi-name=java:jboss/datasources/MeveoAdminDatasource \
     --enabled=true \
     --use-java-context=true \
-    --spy=false \
     --use-ccm=false \
     --xa-datasource-properties=[ServerName=${meveo.admin.server.name},PortNumber=${meveo.admin.port.number},DatabaseName=${meveo.admin.database.name}] \
-    --driver-name=postgresql \
+    --driver-name=${meveo.admin.database.driver} \
     --min-pool-size=10 \
     --max-pool-size=200 \
     --pool-prefill=false \

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.meveo.model.persistence;
+package org.meveo.model.customEntities;
 
 import org.meveo.model.CustomEntity;
 
@@ -11,7 +11,7 @@ import org.meveo.model.CustomEntity;
  * @since 
  * @version
  */
-public class CustomEntityB implements CustomEntity {
+public class CustomEntityC implements CustomEntity {
 	
 	private String value;
 	
@@ -22,7 +22,7 @@ public class CustomEntityB implements CustomEntity {
 
 	@Override
 	public String getCetCode() {
-		return "CustomEntityB";
+		return "CustomEntityC";
 	}
 	
 	
@@ -57,11 +57,11 @@ public class CustomEntityB implements CustomEntity {
 
 	@Override
 	public boolean isEqual(CustomEntity other) {
-		if (!(other instanceof CustomEntityB)) {
+		if (!(other instanceof CustomEntityC)) {
 			return false;
 		}
 		
-		var otherB = (CustomEntityB) other;
+		var otherB = (CustomEntityC) other;
 		if(otherB.value.equals(this.value)) {
 			return true;
 		}
