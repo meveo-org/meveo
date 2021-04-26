@@ -15,7 +15,7 @@ public class JsonStringType extends AbstractSingleColumnStandardBasicType<Object
 
     @Override
     public String getName() {
-        return "json";
+        return JsonTypes.JSON;
     }
 
     @Override

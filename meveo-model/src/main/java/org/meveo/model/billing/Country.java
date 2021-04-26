@@ -24,6 +24,7 @@ import org.hibernate.annotations.Type;
 import org.meveo.model.AuditableEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.Currency;
+import org.meveo.model.persistence.JsonTypes;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -59,7 +60,7 @@ public class Country extends AuditableEntity {
     @JoinColumn(name = "language_id")
     private Language language;
 
-    @Type(type = "json")
+    @Type(type = JsonTypes.JSON)
     @Column(name = "description_i18n", columnDefinition = "text")
     private Map<String, String> descriptionI18n;
 

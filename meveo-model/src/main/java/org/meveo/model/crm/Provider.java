@@ -93,7 +93,6 @@ public class Provider extends AuditableEntity implements ICustomFieldEntity {
     private String uuid = UUID.randomUUID().toString();
 
 
-    // @Type(type = "json")
     @Convert(converter = CustomFieldValuesConverter.class)
     @Column(name = "cf_values", columnDefinition = "text")
     private CustomFieldValues cfValues;

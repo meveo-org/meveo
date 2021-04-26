@@ -39,6 +39,7 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.crm.CustomFieldTemplate.GroupedCustomFieldTreeItemType;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.scripts.ScriptInstance;
 
 /**
@@ -71,7 +72,7 @@ public class EntityCustomAction extends BusinessEntity {
     @Size(max = 50)
     private String label;
 
-    @Type(type = "json")
+    @Type(type = JsonTypes.JSON)
     @Column(name = "label_i18n", columnDefinition = "text")
     private Map<String, String> labelI18n;
 

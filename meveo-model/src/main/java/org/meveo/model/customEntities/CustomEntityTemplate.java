@@ -50,6 +50,7 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
@@ -131,7 +132,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * List of storages where the custom fields can be stored
 	 */
 	@Column(name = "available_storages", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	private List<DBStorageType> availableStorages = new ArrayList<>();
 	
 	@Type(type = "numeric_boolean")
