@@ -171,7 +171,6 @@ public class FlatFileProcessingJobBean {
 
         if (file != null) {
             fileName = file.getName();
-            result.setSummary("fileName: " + fileName);
             if (result.getSummary() == null || result.getSummary().isBlank())
             	result.setSummary("Starting file named " + fileName);
             else
