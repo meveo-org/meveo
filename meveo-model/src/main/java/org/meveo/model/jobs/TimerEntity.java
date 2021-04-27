@@ -46,7 +46,7 @@ import org.meveo.model.ModuleItemOrder;
  */
 @Entity
 @ModuleItem(value = "TimerEntity", path = "timerEntities")
-@ModuleItemOrder(101)
+@ModuleItemOrder(39) //before jobs
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_timer", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_timer_seq"), })
