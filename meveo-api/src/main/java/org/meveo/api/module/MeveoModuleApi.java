@@ -163,6 +163,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private CrossStorageService crossStorageService;
+    
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
