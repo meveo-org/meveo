@@ -85,6 +85,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
@@ -99,6 +100,7 @@ import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -170,6 +172,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
+	public ModuleInstallResult install(GitRepository repo) throws BusinessException, MeveoApiException {
+		
+		ModuleInstallResult result = null;
+		MeveoModule module = gitRepositoryService.findModuleOf(repo);
+		
+		MeveoModuleDto moduleDto= new MeveoModuleDto(module);
+		result = install(moduleDto, OnDuplicate.FAIL);
+		return result;
+	}
+	
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
 		if (meveoModule == null) {
