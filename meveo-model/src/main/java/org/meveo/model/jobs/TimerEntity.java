@@ -100,6 +100,11 @@ public class TimerEntity extends BusinessEntity{
 	@OneToMany(mappedBy = "timerEntity", fetch = FetchType.LAZY)
 	private List<JobInstance> jobInstances = new ArrayList<JobInstance>();
 
+	@Column(name = "sc_tz", nullable = false, length = 255)
+    @Size(max = 255)
+    @NotNull
+	private String timeZone;
+
 	public TimerEntity(){
 
 	}
@@ -176,7 +181,14 @@ public class TimerEntity extends BusinessEntity{
 	public void setEnd(Date end) {
 		this.end = end;
 	}
-	
+
+	public String getTimeZone() {
+		return timeZone;
+	}
+
+	public void setTimeZone(String timeZone) {
+		this.timeZone = timeZone;
+	}
 
 	/**
 	 * @return the jobInstances
