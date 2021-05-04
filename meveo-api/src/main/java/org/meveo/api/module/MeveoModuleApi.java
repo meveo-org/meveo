@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,6 +66,7 @@ import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -89,17 +91,22 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.module.ModuleLicenseEnum;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
@@ -116,6 +123,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.github.fge.jackson.JacksonUtils;
 
 /**
  * @author Clément Bareth
@@ -178,10 +186,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public ModuleInstallResult install(GitRepository repo) throws BusinessException, MeveoApiException {
 		
 		ModuleInstallResult result = null;
-		MeveoModule module = gitRepositoryService.findModuleOf(repo);
 		
-		MeveoModuleDto moduleDto= new MeveoModuleDto(module);
+		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
 		result = install(moduleDto, OnDuplicate.FAIL);
+		
 		return result;
 	}
 	
@@ -204,6 +212,67 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
+	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) {
+		MeveoModuleDto moduleDto = new MeveoModuleDto();
+		moduleDto.setCode(repo.getCode());
+		moduleDto.setModuleItems(new ArrayList<>());
+		moduleDto.setDescription("waps");
+		moduleDto.setLicense(ModuleLicenseEnum.APACHE);
+		
+		File repoDir = GitHelper.getRepositoryDir(null, moduleDto.getCode());
+		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
+		
+		MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values().forEach(clazz -> {
+			ModuleItem item = clazz.getAnnotation(ModuleItem.class);
+			try {
+				if (clazz == CustomFieldTemplate.class) {
+					entityDtoNamebyPath.put(item.path(), CustomFieldTemplateDto.class.getName());
+				} else if (clazz == EntityCustomAction.class) {
+					entityDtoNamebyPath.put(item.path(), EntityCustomActionDto.class.getName());
+				} else {
+					BaseCrudApi api = (BaseCrudApi)ApiUtils.getApiService(clazz, false);
+					if (api != null) {
+						entityDtoNamebyPath.put(item.path(), api.getDtoClass().getName());
+					}
+				}
+			} catch (Exception e) {
+				log.error("Can't retrieve dto class for {}",clazz.getName(), e);
+			}
+		});
+		
+		for (File file : repoDir.listFiles()) {
+			if (!file.isDirectory()) {
+				continue;
+			}
+			String entityName = file.getName();
+			String dtoClassName = entityDtoNamebyPath.get(entityName);
+			if (dtoClassName == null) {
+				continue;
+			}
+			for (File DirectoryFile : file.listFiles()) {
+				if (!DirectoryFile.isDirectory()) {
+					continue;
+				}
+				for (File entityFile : DirectoryFile.listFiles()) {
+					try {
+						if (!entityFile.getName().endsWith(".json")) {
+							continue;
+						}
+						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
+						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
+						moduleDto.getModuleItems().add(moduleItemDto);
+					} catch (IOException e) {
+						log.error("Can't read entityFile", e);
+					}
+				}
+			}
+		}
+		
+		return moduleDto;
+	}
+	
 	public void registerModulePackage(String packageName) {
 		Reflections reflections = new Reflections(packageName);
 		Set<Class<?>> moduleItemClasses = reflections.getTypesAnnotatedWith(ModuleItem.class);
