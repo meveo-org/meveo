@@ -103,7 +103,7 @@ public class TimerEntity extends BusinessEntity{
 	@Column(name = "sc_tz", nullable = false, length = 255)
     @Size(max = 255)
     @NotNull
-	private String timeZone;
+	private String timezone;
 
 	public TimerEntity(){
 
@@ -182,12 +182,12 @@ public class TimerEntity extends BusinessEntity{
 		this.end = end;
 	}
 
-	public String getTimeZone() {
-		return timeZone;
+	public String getTimezone() {
+		return timezone;
 	}
 
-	public void setTimeZone(String timeZone) {
-		this.timeZone = timeZone;
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
 	}
 
 	/**
@@ -242,7 +242,7 @@ public class TimerEntity extends BusinessEntity{
 		return "TimerEntity [year=" + year + ", month=" + month
 				+ ", dayOfMonth=" + dayOfMonth + ", dayOfWeek=" + dayOfWeek
 				+ ", hour=" + hour + ", minute=" + minute + ", second="
-				+ second + ", start=" + start + ", end=" + end
+				+ second + ", timezone=" + timezone + ", start=" + start + ", end=" + end
 				+ "]";
 	}
 	
