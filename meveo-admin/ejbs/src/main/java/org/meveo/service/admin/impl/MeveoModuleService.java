@@ -844,9 +844,15 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	var repo = new GitRepository();
     	repo.setCode(meveoModule.getCode());
     	repo.setDescription(meveoModule.getDescription());
-    	this.gitRepositoryService.create(repo);
-    	this.gitClient.checkout(repo, meveoModule.getCurrentVersion(), true);
-    	meveoModule.setGitRepository(repo);
+    	
+    	if (this.gitRepositoryService.findByCode(meveoModule.getCode()) == null) {
+			this.gitRepositoryService.create(repo);
+			this.gitClient.checkout(repo, meveoModule.getCurrentVersion(), true);
+			meveoModule.setGitRepository(repo);
+    		
+    	} else {
+    		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
+    	}
     }
     
     /**
