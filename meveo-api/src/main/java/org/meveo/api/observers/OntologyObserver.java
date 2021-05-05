@@ -208,7 +208,7 @@ public class OntologyObserver {
             commitFiles.add(cetDir);
         }
 
-        File schemaFile = new File(cetDir, cet.getCode() + ".json");
+        File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         commitFiles.add(schemaFile);
 
@@ -279,7 +279,7 @@ public class OntologyObserver {
 
         List<File> fileList = new ArrayList<>();
 
-        File schemaFile = new File(cetDir, cet.getCode() + ".json");
+        File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
             fileList.add(schemaFile);
@@ -311,7 +311,7 @@ public class OntologyObserver {
         final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
-        final File schemaFile = new File(cetDir, cet.getCode() + ".json");
+        final File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
             fileList.add(schemaFile);
@@ -357,7 +357,7 @@ public class OntologyObserver {
             commitFiles.add(crtDir);
         }
 
-        File schemaFile = new File(crtDir, crt.getCode() + ".json");
+        File schemaFile = new File(crtDir, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
         	schemaFile.delete();
         }
@@ -395,7 +395,7 @@ public class OntologyObserver {
             crtDir.mkdirs();
         }
 
-        File schemaFile = new File(crtDir, crt.getCode() + ".json");
+        File schemaFile = new File(crtDir, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
@@ -425,7 +425,7 @@ public class OntologyObserver {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
         final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
-        final File schemaFile = new File(cetDir, crt.getCode() + ".json");
+        final File schemaFile = new File(cetDir, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
@@ -467,7 +467,7 @@ public class OntologyObserver {
             }
 
             List<File> fileList = new ArrayList<>();
-            File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
@@ -542,7 +542,7 @@ public class OntologyObserver {
             }
 
             List<File> listFile = new ArrayList<>();
-            File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
@@ -624,7 +624,7 @@ public class OntologyObserver {
                 return;
             }
 
-            File schemaFile = new File(cetDir, cet.getCode() + ".json");
+            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
             File javaFile = new File(cetDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
