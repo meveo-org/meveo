@@ -212,7 +212,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		MeveoModuleDto moduleDto = new MeveoModuleDto();
 		moduleDto.setCode(repo.getCode());
 		moduleDto.setModuleItems(new ArrayList<>());
-		moduleDto.setDescription("waps");
+		moduleDto.setDescription(repo.getCode());
 		moduleDto.setLicense(ModuleLicenseEnum.APACHE);
 		
 		File repoDir = GitHelper.getRepositoryDir(null, moduleDto.getCode());
