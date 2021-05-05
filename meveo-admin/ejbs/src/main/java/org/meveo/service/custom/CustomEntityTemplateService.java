@@ -781,7 +781,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String pathJavaFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode() + ".java";
+    	String pathJavaFile = "src/main/java/org/meveo/model/customEntities" + "/" + entity.getCode() + ".java";
     	String pathJsonSchemaFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode()+"-schema" + ".json";
     	
     	File newJavaFile = new File (gitDirectory, pathJavaFile);

@@ -103,9 +103,9 @@ public class CustomEntityTemplateCompiler {
 	public File generateCETSourceFile(String templateSchema, CustomEntityTemplate cet) throws BusinessException {
 		log.info("Generating source file for {}", cet);
 		
-		final File cetDir = getCetDir(cet);
+		final File cetJavaDir = getJavaCetDir(cet);
         final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
-        File javaFile = new File(cetDir, cet.getCode() + ".java");
+        File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
         if (javaFile.exists()) {
             javaFile.delete();
         }
@@ -123,13 +123,13 @@ public class CustomEntityTemplateCompiler {
 	 * @return the directory where custom entity templates source files are stored
 	 */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public File getCetDir(CustomEntityTemplate cet) {
+	public File getJsonCetDir(CustomEntityTemplate cet) {
     	String path;
     	File repositoryDir;
     	BusinessService businessService = businessServiceFinder.find(cet);
     	MeveoModule module = businessService.findModuleOf(cet);
     	if (module == null) {
-	        repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode()  + "/src/main/java/");
+	        repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
 	        path = "org/meveo/model/customEntities";
     	} else {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
@@ -137,4 +137,20 @@ public class CustomEntityTemplateCompiler {
     	}
         return new File(repositoryDir, path);
    	}
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public File getJavaCetDir(CustomEntityTemplate cet) {
+    	String path;
+    	File repositoryDir;
+    	BusinessService businessService = businessServiceFinder.find(cet);
+    	MeveoModule module = businessService.findModuleOf(cet);
+    	if (module == null) {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java");
+    		path = "org/meveo/model/customEntities";
+    	} else {
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/src/main/java");
+    		path = "org/meveo/model/customEntities";
+    	}
+    	return new File(repositoryDir, path);
+    }
 }

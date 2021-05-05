@@ -201,20 +201,26 @@ public class OntologyObserver {
 
         final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
-        final File cetDir = cetCompiler.getCetDir(cet);
+        final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+        
+        final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
 
-        if (!cetDir.exists()) {
-            cetDir.mkdirs();
-            commitFiles.add(cetDir);
+        if (!cetJsonDir.exists()) {
+            cetJsonDir.mkdirs();
+            commitFiles.add(cetJsonDir);
+        }
+        if (!cetJavaDir.exists()) {
+        	cetJavaDir.mkdir();
+        	commitFiles.add(cetJavaDir);
         }
 
-        File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
+        File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         commitFiles.add(schemaFile);
 
         final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
         
-        File javaFile = new File(cetDir, cet.getCode() + ".java");
+        File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
         FileUtils.write(javaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
         commitFiles.add(javaFile);
 
@@ -230,16 +236,21 @@ public class OntologyObserver {
      */
     public void cetCreationFailure(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created CustomEntityTemplate cet) throws BusinessException {
         List<File> commitFiles = new ArrayList<>();
-        final File cetDir = cetCompiler.getCetDir(cet);
-        if (!cetDir.exists()) {
+        final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+        final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
+        if (!cetJsonDir.exists()) {
             return;
         }
-        File schemaFile = new File(cetDir, cet.getCode() + ".json");
+        if (!cetJavaDir.exists()) {
+        	return;
+        }
+        
+        File schemaFile = new File(cetJsonDir, cet.getCode() + ".json");
         if(schemaFile.exists()) {
         	schemaFile.delete();
         }
         commitFiles.add(schemaFile);
-        File javaFile = new File(cetDir, cet.getCode() + ".java");
+        File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
         if(javaFile.exists()) {
         	javaFile.delete();
         }
@@ -270,16 +281,20 @@ public class OntologyObserver {
 
         final String templateSchema = cetCompiler.getTemplateSchema(cet);
 
-        final File cetDir = cetCompiler.getCetDir(cet);
+        final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+        final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
 
         // This is for retro-compatibility, in case a CET created before 6.4.0 is updated
-        if (!cetDir.exists()) {
-            cetDir.mkdirs();
+        if (!cetJsonDir.exists()) {
+            cetJsonDir.mkdirs();
         }
-
+        if (!cetJavaDir.exists()) {
+            cetJavaDir.mkdirs();
+        }
+        
         List<File> fileList = new ArrayList<>();
 
-        File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
+        File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
             fileList.add(schemaFile);
@@ -307,17 +322,18 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void cetRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityTemplate cet) throws BusinessException {
-        final File cetDir = cetCompiler.getCetDir(cet);
+        final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+        final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
         final File classDir = getClassDir();
         List<File> fileList = new ArrayList<>();
 
-        final File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
+        final File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
             fileList.add(schemaFile);
         }
 
-        final File javaFile = new File(cetDir, cet.getCode() + ".java");
+        final File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
         if (javaFile.exists()) {
             javaFile.delete();
             fileList.add(javaFile);
@@ -459,16 +475,20 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = cetCompiler.getCetDir(cet);
+            final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+            final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
 
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
-            if (!cetDir.exists()) {
-                cetDir.mkdirs();
+            if (!cetJsonDir.exists()) {
+                cetJsonDir.mkdirs();
+            }
+            if (!cetJavaDir.exists()) {
+                cetJavaDir.mkdirs();
             }
 
             List<File> fileList = new ArrayList<>();
-            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
-            File javaFile = new File(cetDir, cet.getCode() + ".java");
+            File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
+            File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
@@ -532,18 +552,22 @@ public class OntologyObserver {
 
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = cache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            final File cetDir = cetCompiler.getCetDir(cet);
+            final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+            final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
 
             final File classDir = getClassDir();
 
             // This is for retro-compatibility, in case we update a field of a CET created before 6.4.0
-            if (!cetDir.exists()) {
-                cetDir.mkdirs();
+            if (!cetJsonDir.exists()) {
+                cetJsonDir.mkdirs();
+            }
+            if (!cetJavaDir.exists()) {
+                cetJavaDir.mkdirs();
             }
 
             List<File> listFile = new ArrayList<>();
-            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
-            File javaFile = new File(cetDir, cet.getCode() + ".java");
+            File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
+            File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
@@ -615,17 +639,22 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = cetCompiler.getCetDir(cet);
+            final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+            final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
 
             final File classDir = getClassDir();
 
-            if (!cetDir.exists()) {
+            if (!cetJsonDir.exists()) {
+                // Nothing to delete
+                return;
+            }
+            if (!cetJavaDir.exists()) {
                 // Nothing to delete
                 return;
             }
 
-            File schemaFile = new File(cetDir, cet.getCode() + "-schema.json");
-            File javaFile = new File(cetDir, cet.getCode() + ".java");
+            File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
+            File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
@@ -760,70 +789,6 @@ public class OntologyObserver {
         }
     }
     
-    private List<File> supplementClassPathWithMissingImports(String javaSrc, String pathJava) {
-
-        List<File> files = new ArrayList<>();
-
-        String regex = "import (.*?);";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(javaSrc);
-        while (matcher.find()) {
-            String className = matcher.group(1);
-            if (className.startsWith("org.meveo.model.customEntities")) {
-                String fileName = className.split("\\.")[4];
-                File file = new File(pathJava, fileName + ".java");
-                if (!file.exists()) {
-                    CustomEntityTemplate cet = customEntityTemplateService.findByCode(fileName);
-                    if (cet != null) {
-                        try {
-                            cetCreated(cet);
-                        } catch (Exception e) {
-                            LOGGER.error("Error create/write to the JSON Schema file", e);
-                        }
-                    }
-                }
-                files.add(file);
-                continue;
-            }
-            try {
-                Class<?> clazz;
-                
-                try {
-                    URLClassLoader classLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                    clazz = classLoader.loadClass(className);
-                } catch (ClassNotFoundException e) {
-                    clazz = Class.forName(className);
-                }
-
-                CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
-                if(codeSource != null) {
-					String location = codeSource.getLocation().getFile();
-                    
-					if (location.startsWith("file:")) {
-                        location = location.substring(5);
-                    }
-					
-                    if (location.endsWith("!/")) {
-                        location = location.substring(0, location.length() - 2);
-                    }
-
-                    if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
-                        synchronized (CustomScriptService.CLASSPATH_REFERENCE) {
-                            if (!CustomScriptService.CLASSPATH_REFERENCE.get().contains(location)) {
-                                CustomScriptService.CLASSPATH_REFERENCE.set(CustomScriptService.CLASSPATH_REFERENCE.get() + File.pathSeparator + location);
-                            }
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-            	Log.error("Error supplementing class path", e);
-            }
-        }
-        
-        return files;
-    }
-
     private String getTemplateSchema(CustomRelationshipTemplate crt) {
         String schema = jsonSchemaGenerator.generateSchema(crt.getCode(), crt);
         return schema.replaceAll("#/definitions", "../entities");
