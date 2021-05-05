@@ -280,6 +280,16 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 	public void remove(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
 		this.removeCustomRelationshipTemplate(dto.getCode());
 	}
+	
+	@Override
+	public boolean validateModuleFileName (String fileName) {
+		boolean validation = true;
+		if (fileName.endsWith("-schema.json"))
+		{
+			validation = false;
+		}
+		return validation;
+	}
 
    
 }

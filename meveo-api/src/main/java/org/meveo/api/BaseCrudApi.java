@@ -439,6 +439,10 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		return fileImport;
 	}
 	
+	public boolean validateModuleFileName (String fileName) {
+		return true;
+	}
+	
 	/**
 	 * Additional operation to be done when adding an entity to a module
 	 *  
