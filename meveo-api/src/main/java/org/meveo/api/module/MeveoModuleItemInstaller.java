@@ -695,15 +695,17 @@ public class MeveoModuleItemInstaller {
 			for (MeveoModuleItemDto moduleItemDto : new ArrayList<>(moduleDto.getModuleItems())) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
 					CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
-					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
-						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
-						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
-						cftModuleItem.setDtoData(cftData);
-						cftData.setAppliesTo("CE_" + cet.getCode());
-						moduleDto.getModuleItems().add(cftModuleItem);
-
-						cet.getFields().remove(cftData);
-						moduleItemDto.setDtoData(cet);
+					if (cet.getFields() != null) {
+						for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+							MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+							cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+							cftModuleItem.setDtoData(cftData);
+							cftData.setAppliesTo("CE_" + cet.getCode());
+							moduleDto.getModuleItems().add(cftModuleItem);
+	
+							cet.getFields().remove(cftData);
+							moduleItemDto.setDtoData(cet);
+						}
 					}
 					
 					// Also put entity custom action outside of the cet
