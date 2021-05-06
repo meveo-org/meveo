@@ -1,5 +1,8 @@
 # Custom Entities
 
+## Custom action
+A custom action is script that can be called on an entity ether by API of from meveo admin, the entity instance on which the action is called is set in the context variable `CONTEXT_ENTITY`
+
 ## CEI Auditing
 
 A boolean option to make CET auditable is available in both GUI and API. Is this field is true, a new table must be created with the code of the cet prefix with audit_. For example, CET=computer, then our audit table must be audit_computer. This table is updated when an operation is executed on a particular CEI.
