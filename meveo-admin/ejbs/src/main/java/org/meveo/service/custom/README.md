@@ -7,7 +7,7 @@ The entity instance on which the action is called is set in the context variable
 
 The code of the custom action executed is in the variable `CONTEXT_ACTION`
 
-A message can be displayed in the GUI by setting the variable`GUI_OUTCOME`
+A message can be displayed in the GUI by setting the variable `RESULT_GUI_MESSAGE` or `RESULT_GUI_MESSAGE_KEY` to use a message stored in the [message files](/meveo-admin/web/src/main/resources/messages_en.properties).
 
 ## CEI Auditing
 
