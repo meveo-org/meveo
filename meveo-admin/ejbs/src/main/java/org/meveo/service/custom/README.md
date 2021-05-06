@@ -1,7 +1,13 @@
 # Custom Entities
 
 ## Custom action
-A custom action is script that can be called on an entity ether by API of from meveo admin, the entity instance on which the action is called is set in the context variable `CONTEXT_ENTITY`
+A custom action is script that can be called on an entity ether by API of from meveo admin.
+
+The entity instance on which the action is called is set in the context variable `CONTEXT_ENTITY`
+
+The code of the custom action executed is in the variable `CONTEXT_ACTION`
+
+A message can be displayed in the GUI by setting the variable`GUI_OUTCOME`
 
 ## CEI Auditing
 
