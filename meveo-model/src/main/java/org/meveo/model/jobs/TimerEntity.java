@@ -103,7 +103,7 @@ public class TimerEntity extends BusinessEntity{
 	@Column(name = "sc_tz", nullable = false, length = 255)
     @Size(max = 255)
     @NotNull
-	private String timezone;
+	private String timezone = "GMT";
 
 	public TimerEntity(){
 
