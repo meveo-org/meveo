@@ -132,12 +132,14 @@ COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_res
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990
+EXPOSE 8080 8787 9990
 
 
 #install maven
 
 USER root
+
+RUN usermod -a -G jboss root
 
 ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"
