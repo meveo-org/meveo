@@ -18,7 +18,7 @@
 
 	<changeSet author="Tony Alejandro" id="Add  time zone column">
 		<addColumn tableName="meveo_timer">
-			<column name="sc_tz" type="${type.longText}"/>
+			<column name="sc_tz" type="${type.longText}" defaultValue="GMT" />
 		</addColumn>
 	</changeSet>
 
