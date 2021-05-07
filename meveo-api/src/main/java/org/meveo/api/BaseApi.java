@@ -266,10 +266,12 @@ public abstract class BaseApi {
                         List<EntityReferenceWrapper> childEntityReferences = new ArrayList<>();
 
                         try {
-	                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
-	                            customEntityInstanceApi.createOrUpdate(ceiDto);
-	                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
-	                        }
+                        	if (valueConverted != null)
+                        		if (valueConverted != null)
+			                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
+			                            customEntityInstanceApi.createOrUpdate(ceiDto);
+			                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
+			                        }
 	                        
 	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);
                         } catch (ClassCastException e) {
