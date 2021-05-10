@@ -18,12 +18,13 @@ info() {
 }
 
 
-# Meveo database parameters
+# Meveo parameters
 export MEVEO_DB_HOST=${MEVEO_DB_HOST:-postgres}
 export MEVEO_DB_PORT=${MEVEO_DB_PORT:-5432}
 export MEVEO_DB_NAME=${MEVEO_DB_NAME:-meveo}
 export MEVEO_DB_USERNAME=${MEVEO_DB_USERNAME:-meveo}
 export MEVEO_DB_PASSWORD=${MEVEO_DB_PASSWORD:-meveo}
+MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
 
 # Wildfly parameters
 export WILDFLY_BIND_ADDR=${WILDFLY_BIND_ADDR:-0.0.0.0}
@@ -148,6 +149,8 @@ if [ -d /docker-entrypoint-initdb.d ]; then
     done
 fi
 
+# Configure meveo-admin.properties
+sed -i "s|{{MEVEO_ADMIN_BASE_URL}}|${MEVEO_ADMIN_BASE_URL//:/\\\\:}|g" ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
 system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`

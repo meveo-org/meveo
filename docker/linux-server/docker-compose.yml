@@ -38,6 +38,7 @@ services:
         MEVEO_DB_NAME: ${DB_DATABASE}
         MEVEO_DB_USERNAME: ${DB_USER}
         MEVEO_DB_PASSWORD: ${DB_PASSWORD}
+        MEVEO_ADMIN_BASE_URL: https://${DOMAIN_NAME}/
       expose:
         - 8080
       depends_on:
