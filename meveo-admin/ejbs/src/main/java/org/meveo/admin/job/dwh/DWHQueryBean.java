@@ -63,7 +63,7 @@ public class DWHQueryBean {
 
     // iso 8601 date and datetime format
     private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    private SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
+    private SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
