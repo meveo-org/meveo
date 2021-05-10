@@ -3,6 +3,7 @@ package org.meveo.api.rest.custom;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -75,7 +76,10 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@DELETE
 	@Path("/entity/{customEntityTemplateCode}")
 	@ApiOperation(value = "Remove custom entity template information")
-	ActionStatus removeEntityTemplate(@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode);
+	ActionStatus removeEntityTemplate(
+				@PathParam("customEntityTemplateCode") @ApiParam("Code of the custom entity template") String customEntityTemplateCode, 
+				@QueryParam("withData") @DefaultValue("false") boolean withData
+		);
 
 	/**
 	 * Get custom entity template definition including its fields and applicable

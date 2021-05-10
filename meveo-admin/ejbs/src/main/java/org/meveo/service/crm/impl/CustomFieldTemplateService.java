@@ -400,9 +400,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         return cftUpdated;
     }
-
+    
     @Override
     public void remove(CustomFieldTemplate cft) throws BusinessException {
+    	remove(cft, false);
+    }
+
+    public void remove(CustomFieldTemplate cft, boolean withData) throws BusinessException {
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
 
@@ -413,7 +417,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
-			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			} else if (withData && cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
