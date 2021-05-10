@@ -296,6 +296,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         return cet;
     }
 
+    public void removeEntityTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    	removeEntityTemplate(code,false);
+    }
     public void removeEntityTemplate(String code, boolean withData) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
