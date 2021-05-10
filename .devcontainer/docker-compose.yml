@@ -71,8 +71,8 @@ services:
       environment:
         WILDFLY_DEBUG_ENABLE: "true"
         WILDFLY_DEBUG_PORT: 8787
-        WILDFLY_CUSTOM_XMMS: "500m"
-        WILDFLY_CUSTOM_XMMX: "1024m"
+        WILDFLY_CUSTOM_XMMS: "1024m"
+        WILDFLY_CUSTOM_XMMX: "2048m"
         JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
       ports:
         - 8080:8080

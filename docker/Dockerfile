@@ -135,12 +135,13 @@ COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
 COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
+RUN usermod -a -G jboss root
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990
+EXPOSE 8080 8787 9990
 
 COPY --chown=jboss:jboss docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

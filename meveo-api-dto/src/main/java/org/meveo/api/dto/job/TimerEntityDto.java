@@ -65,6 +65,11 @@ public class TimerEntityDto extends BusinessEntityDto {
 	@ApiModelProperty(required = true, value = "The day of week")
 	private String dayOfWeek = "*";
 
+	/** The timezone. */
+	@XmlAttribute(required = true)
+	@ApiModelProperty(required = true, value = "The timezone")
+	private String timezone;
+
 	/**
 	 * Instantiates a new timer entity dto.
 	 */
@@ -87,6 +92,7 @@ public class TimerEntityDto extends BusinessEntityDto {
 		this.hour = timerEntity.getHour();
 		this.minute = timerEntity.getMinute();
 		this.second = timerEntity.getSecond();
+		this.timezone = timerEntity.getTimezone();
 	}
 
 	/**
@@ -111,6 +117,7 @@ public class TimerEntityDto extends BusinessEntityDto {
 		timerEntity.setHour(dto.getHour());
 		timerEntity.setMinute(dto.getMinute());
 		timerEntity.setSecond(dto.getSecond());
+		timerEntity.setTimezone(dto.getTimezone());
 
 		return timerEntity;
 	}
@@ -241,6 +248,24 @@ public class TimerEntityDto extends BusinessEntityDto {
 		this.second = second;
 	}
 
+	/**
+	 * Gets the timezone.
+	 *
+	 * @return the timezone
+	 */
+	public String getTimezone() {
+		return timezone;
+	}
+
+	/**
+	 * Sets the timezone.
+	 *
+	 * @param timezone the new timezone
+	 */
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 
@@ -268,6 +293,6 @@ public class TimerEntityDto extends BusinessEntityDto {
 	@Override
 	public String toString() {
 		return "TimerEntityDto [code=" + getCode() + ", description=" + getDescription() + ", hour=" + hour + ", minute=" + minute + ", second=" + second + ", year=" + year
-				+ ", month=" + month + ", dayOfMonth=" + dayOfMonth + ", dayOfWeek=" + dayOfWeek + "]";
+				+ ", month=" + month + ", dayOfMonth=" + dayOfMonth + ", dayOfWeek=" + dayOfWeek + ", timezone=" + timezone + "]";
 	}
 }
