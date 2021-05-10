@@ -217,22 +217,18 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		File repoDir = GitHelper.getRepositoryDir(null, moduleDto.getCode());
 		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
-		Map<String, Function<String, Boolean>> validationMatrix = new HashMap<String, Function<String, Boolean>>();
 		
 		MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values().forEach(clazz -> {
 			ModuleItem item = clazz.getAnnotation(ModuleItem.class);
 			try {
 				if (clazz == CustomFieldTemplate.class) {
 					entityDtoNamebyPath.put(item.path(), CustomFieldTemplateDto.class.getName());
-					validationMatrix.put(item.path(), fileName -> true);
 				} else if (clazz == EntityCustomAction.class) {
 					entityDtoNamebyPath.put(item.path(), EntityCustomActionDto.class.getName());
-					validationMatrix.put(item.path(), fileName -> true);
 				} else {
 					BaseCrudApi api = (BaseCrudApi)ApiUtils.getApiService(clazz, false);
 					if (api != null) {
 						entityDtoNamebyPath.put(item.path(), api.getDtoClass().getName());
-						validationMatrix.put(item.path(), fileName -> api.validateModuleFileName(fileName));
 					}
 				}
 			} catch (Exception e) {
@@ -249,16 +245,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			if (dtoClassName == null) {
 				continue;
 			}
-			for (File DirectoryFile : file.listFiles()) {
-				if (!DirectoryFile.isDirectory()) {
+			for (File directoryFile : file.listFiles()) {
+				if (!directoryFile.isDirectory()) {
 					continue;
 				}
-				for (File entityFile : DirectoryFile.listFiles()) {
+				String jsonValidation = directoryFile.getName() + ".json";
+				for (File entityFile : directoryFile.listFiles()) {
 					try {
-						if (!entityFile.getName().endsWith(".json")) {
-							continue;
-						}
-						if (!validationMatrix.get(entityName).apply(entityFile.getName())) {
+						String entityFileName = entityFile.getName();
+						if (!entityFileName.equals(jsonValidation)) {
 							continue;
 						}
 						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);

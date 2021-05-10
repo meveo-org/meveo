@@ -869,15 +869,4 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	public boolean exists(CustomEntityTemplateDto dto) {
 		return customEntityTemplateService.findByCode(dto.getCode()) != null;
 	}
-	
-	@Override
-	public boolean validateModuleFileName (String fileName) {
-		boolean validation = true;
-		if (fileName.endsWith("-schema.json"))
-		{
-			validation = false;
-		}
-		return validation;
-	}
-
 }
