@@ -58,6 +58,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -70,6 +71,9 @@ import org.meveo.service.git.MeveoRepository;
 @Stateless
 @Default
 public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
+	
+	@Inject
+	private ModuleInstallationContext moduleInstallationContext;
 	
 	@Inject
 	private MavenDependencyService mdService;
@@ -86,6 +90,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
+    	if (this.moduleInstallationContext.getModuleCodeInstallation() == findModuleOf(script).getCode()) {
+    	
+    	}
 		super.beforeUpdateOrCreate(script);
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
@@ -338,9 +345,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	@Override
 	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
 		super.addFilesToModule(entity, module);
-
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "src/main/java");
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/src/main/java");
 		String pathNewFile = entity.getCode().replaceAll("\\.", "/");
+		pathNewFile += ".java";
 		
 		File newFile = new File(gitDirectory, pathNewFile);
 		
