@@ -1283,6 +1283,8 @@ public class CustomFieldValue implements Serializable {
             return fileValue;
         } else if(mapEmbeddedEntityValue != null && !mapEmbeddedEntityValue.isEmpty()) {
         	return mapEmbeddedEntityValue;
+        } else if(listMapValue != null) {
+        	return listMapValue;
         }
 
         return null;

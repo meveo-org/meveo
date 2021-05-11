@@ -632,7 +632,7 @@ public class CustomFieldInstanceService extends BaseService {
                                 itemWrapper = (EntityReferenceWrapper) item;
                             }
 
-							if(itemWrapper.getUuid() != null) {
+							if(itemWrapper.getUuid() != null || itemWrapper.getCode() != null) {
 								entityReferences.add(itemWrapper);
 							}
 						}

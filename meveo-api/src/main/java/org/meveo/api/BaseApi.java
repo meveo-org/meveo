@@ -263,17 +263,30 @@ public abstract class BaseApi {
                     // EntityReferenceWrapper objects
                     if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
 
-                        List<EntityReferenceWrapper> childEntityReferences = new ArrayList<>();
+                        List<Map> childEntitiesValues = new ArrayList<>();
+                        
 
                         try {
                         	if (valueConverted != null)
                         		if (valueConverted != null)
 			                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
-			                            customEntityInstanceApi.createOrUpdate(ceiDto);
-			                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
+			                    		CustomEntityInstance cei = CustomEntityInstanceDto.fromDTO(ceiDto, null);
+
+			                    		// populate customFields
+			                    		try {
+			                    			populateCustomFields(ceiDto.getCustomFields(), cei, true);
+			                    		} catch (MissingParameterException | InvalidParameterException e) {
+			                    			log.error("Failed to associate custom field instance to an entity: {}", e.getMessage());
+			                    			throw e;
+			                    		} catch (Exception e) {
+			                    			log.error("Failed to associate custom field instance to an entity", e);
+			                    			throw e;
+			                    		}
+			                    		
+			                    		childEntitiesValues.add(cei.getCfValuesAsValues());
 			                        }
 	                        
-	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);
+	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntitiesValues);
                         } catch (ClassCastException e) {
                         	customFieldInstanceService.setCFValue(entity, cfDto.getCode(), valueConverted);
                         }
