@@ -43,17 +43,19 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -88,7 +90,7 @@ public class MeveoModuleItemInstaller {
     private ModuleScriptService moduleScriptService;
 
     @Inject
-	private CustomTableService customTableService;
+	private CrossStorageService crossStorageService;
     
     @Inject
     private ConcreteFunctionService concreteFunctionService;
@@ -118,6 +120,9 @@ public class MeveoModuleItemInstaller {
 	
 	@EJB
 	private MeveoModuleItemInstaller meveoModuleItemInstaller;
+	
+	@Inject
+	private Repository currentRepository;
     
     /**
      * Uninstall the module and disables it items
@@ -170,7 +175,6 @@ public class MeveoModuleItemInstaller {
             }
 
             if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
-            	moduleItems.remove(item);
             	continue;
 			}
 
@@ -179,6 +183,13 @@ public class MeveoModuleItemInstaller {
         
         for (MeveoModuleItem item : moduleItems) {
             BusinessEntity itemEntity = item.getItemEntity();
+            
+            if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+                var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
+                crossStorageService.remove(currentRepository, cet, item.getItemCode());
+            	continue;
+			}
+            
             if (itemEntity == null) {
             	log.error("Failed to load item {}, it won't be uninstalled");
                 continue;
@@ -417,6 +428,7 @@ public class MeveoModuleItemInstaller {
 			if (dto instanceof CustomEntityInstanceDto) {
 				customEntityTemplate = customEntityTemplateService.findByCode(((CustomEntityInstanceDto) dto).getCetCode());
 			}
+			
 		    try {
 
 		        if (dto instanceof MeveoModuleDto) {
@@ -427,23 +439,21 @@ public class MeveoModuleItemInstaller {
 		            moduleItem = new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null);
 		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
-		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
+		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J)) {
                     CustomEntityInstance cei = new CustomEntityInstance();
                     cei.setUuid(dto.getCode());
                     cei.setCetCode(customEntityTemplate.getCode());
                     cei.setCet(customEntityTemplate);
+                    
                     try {
                         meveoModuleApi.populateCustomFields(((CustomEntityInstanceDto) dto).getCustomFields(), cei, true);
                     } catch (Exception e) {
                         log.error("Failed to associate custom field instance to an entity: {}", e.getMessage());
                         throw e;
                     }
-                    Map<String, Object> value = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, dto.getCode());
-                    if (value != null) {
-                    	customTableService.update(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
-					} else {
-                    	customTableService.create(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
-					}
+                    
+                    crossStorageService.createOrUpdate(currentRepository, cei);
+                    
 					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
 					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
