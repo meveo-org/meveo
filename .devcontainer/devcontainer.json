@@ -16,6 +16,7 @@
 
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
+    "GabrielBB.vscode-lombok",
     "vscjava.vscode-java-pack",
     "redhat.vscode-server-connector",
     "sonarsource.sonarlint-vscode",
