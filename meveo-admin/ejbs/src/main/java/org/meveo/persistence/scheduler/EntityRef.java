@@ -31,9 +31,12 @@ public class EntityRef {
 
     public EntityRef(EntityReferenceWrapper wrapper) {
     	this.uuid = wrapper.getUuid();
+    	if(this.uuid == null) {
+    		this.uuid = wrapper.getCode();
+    	}
     	
     	if(StringUtils.isBlank(uuid)) {
-    		throw new IllegalArgumentException("UUID for entity with label " + label + "can't be null");
+    		throw new IllegalArgumentException("UUID for entity with label " + label + " can't be null");
     	}
     	
     	this.label = wrapper.getClassnameCode();
