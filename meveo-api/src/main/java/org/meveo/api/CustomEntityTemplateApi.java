@@ -184,26 +184,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        cet.setInDraft(false);
 	        ontologyObserver.cetCreated(cet);
         
+		} catch (BusinessException | MeveoApiException e) {
+			throw e;
 		} catch (Exception e) {
             var message = e.getMessage();
 			if (message != null && message.endsWith("is a PostgresQL reserved keyword")) {
                 throw new IllegalArgumentException(e.getMessage());
             } else {
-            	try {
-	                // Delete CET if error occurs
-	                log.error("Creation of {} failed: {}", cet, message);
-	        		customEntityTemplateService.removeInNewTx(cet);
-                } catch(Exception ex) {
-                	log.warn("Failed to remove {}: {}", cet, message);
-                }
-                
-            	if(e instanceof BusinessException) {
-            		throw (BusinessException) e;
-            	} else if(e instanceof MeveoApiException) {
-            		throw (MeveoApiException) e;
-            	} else {
-            		throw new BusinessException(e);
-            	}
+        		throw new BusinessException(e);
             }
 		}
 
@@ -309,6 +297,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     }
 
     public void removeEntityTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    	removeEntityTemplate(code,false);
+    }
+    public void removeEntityTemplate(String code, boolean withData) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
@@ -319,16 +310,17 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet != null) {
             // Related custom field templates will be removed along with CET
             customEntityTemplateService.remove(cet);
-
-        } else {
-            throw new EntityDoesNotExistsException(CustomEntityTemplate.class, code);
+            
+            if(withData) {
+    	    	customEntityTemplateService.removeData(cet);
+            }
         }
     }
     
 	@Override
 	public void remove(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 		try { 
-			this.removeEntityTemplate(dto.getCode());
+			this.removeEntityTemplate(dto.getCode(), false);
 		} catch (EntityDoesNotExistsException e) {
 			// Make sure custom table is removed if cet was not created correctly
 	        if (dto.getSqlStorageConfiguration() != null && dto.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -644,6 +636,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         cet.setDescription(dto.getDescription());
         cet.setAvailableStorages(dto.getAvailableStorages());
         cet.setAudited(dto.isAudited());
+        cet.setIsEqualFn(dto.getIsEqualFn());
         
         if(dto.getCrudEventListenerScript() != null) {
         	var crudListenerScript = scriptInstanceService.findByCode(dto.getCrudEventListenerScript());

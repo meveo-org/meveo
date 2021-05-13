@@ -131,6 +131,14 @@
 						</h:outputText>
 					</p:column>
 
+					<p:column sortBy="#{entity.summary}">
+						<f:facet name="header">
+							<h:outputText value="#{messages['jobExecution.summary']}" />
+						</f:facet>
+						<h:outputText value="#{entity.summary}">
+						</h:outputText>
+					</p:column>
+
 					<hftl:column label="#{messages['jobExecution.report']}" field="report" showTruncated="true" />
 
 				</p:dataTable>

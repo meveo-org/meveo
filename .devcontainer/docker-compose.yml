@@ -28,8 +28,11 @@ services:
       ports:
         - 5432:5432
   # neo4j:
-  #     image: manaty/neo4j-meveo:dev-latest
+  #     image: neo4j-meveo
   #     container_name: neo4j
+  #     build:
+  #       context: ./
+  #       dockerfile: ../docker/Dockerfile.neo4j
   #     networks:
   #       - meveo
   #     restart: unless-stopped
@@ -54,10 +57,10 @@ services:
       ports:
         - 8081:8080
   meveo:
-      #image: manaty/meveo-dev:latest 
-      build: 
-        context: ../
-        dockerfile: Dockerfile.dev
+      image: manaty/meveo-dev:latest 
+      #build: 
+      #  context: ../
+      #  dockerfile: Dockerfile.dev
       container_name: meveo
       networks:
         - meveo
@@ -66,12 +69,10 @@ services:
         - meveo_data:/opt/jboss/wildfly/meveodata
         - meveo_binary_data:/tmp/meveo/binary/storage
       environment:
-        #KEYCLOAK_URL: http://localhost:8081/auth   # For Linux localhost system
-        KEYCLOAK_URL: http://host.docker.internal:8081/auth   # For Windows & MacOS localhost system
         WILDFLY_DEBUG_ENABLE: "true"
         WILDFLY_DEBUG_PORT: 8787
-        WILDFLY_CUSTOM_XMMS: "500m"
-        WILDFLY_CUSTOM_XMMX: "1024m"
+        WILDFLY_CUSTOM_XMMS: "1024m"
+        WILDFLY_CUSTOM_XMMX: "2048m"
         JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
       ports:
         - 8080:8080
@@ -79,6 +80,7 @@ services:
         - 9990:9990
       depends_on:
         - postgres
+        - keycloak
 
 networks:
   meveo:

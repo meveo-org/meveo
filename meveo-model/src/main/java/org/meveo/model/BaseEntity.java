@@ -38,6 +38,7 @@ import org.meveo.model.persistence.JsonBinaryType;
 import org.meveo.model.persistence.JsonListType;
 import org.meveo.model.persistence.JsonSetType;
 import org.meveo.model.persistence.JsonStringType;
+import org.meveo.model.persistence.JsonTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -45,10 +46,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * Base class for all entity classes.
  */
 @TypeDefs({
-        @TypeDef(name = "json", typeClass = JsonStringType.class),
-        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
-        @TypeDef(name = "jsonList", typeClass = JsonListType.class),
-        @TypeDef(name = "jsonSet", typeClass = JsonSetType.class)
+        @TypeDef(name = JsonTypes.JSON, typeClass = JsonStringType.class),
+        @TypeDef(name = JsonTypes.JSON_B, typeClass = JsonBinaryType.class),
+        @TypeDef(name = JsonTypes.JSON_LIST, typeClass = JsonListType.class),
+        @TypeDef(name = JsonTypes.JSON_SET, typeClass = JsonSetType.class)
 })
 @MappedSuperclass
 public abstract class BaseEntity implements Serializable, IEntity<Long>, IJPAVersionedEntity {

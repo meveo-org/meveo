@@ -181,9 +181,5 @@ public abstract class EntityOrRelation implements Serializable {
 	public Map<String, Map<String, Object>> toMap(){
 		return Collections.singletonMap(getCompoundName(), getProperties());
 	}
-
-	@Override
-	public String toString() {
-		return getCompoundName();
-	}
+	
 }

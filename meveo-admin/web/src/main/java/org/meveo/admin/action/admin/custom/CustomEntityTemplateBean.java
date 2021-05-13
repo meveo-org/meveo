@@ -1,5 +1,7 @@
 package org.meveo.admin.action.admin.custom;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -32,6 +35,7 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -56,7 +60,7 @@ import org.slf4j.LoggerFactory;
 public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 1187554162639618526L;
-
+	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
 
@@ -1407,5 +1411,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	public boolean showAuditedField() {
 		return getAvailableStoragesDM().getTarget().contains(DBStorageType.SQL);
+	}
+	
+	public void setIsEqualFn(String fn) {
+		entity.setIsEqualFn(fn);
+	}
+	
+	public String getIsEqualFn() throws IOException {
+		return entity.getIsEqualFn();
 	}
 }

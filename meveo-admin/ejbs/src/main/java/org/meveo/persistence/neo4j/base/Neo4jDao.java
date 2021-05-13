@@ -745,7 +745,14 @@ public class Neo4jDao {
     }
 
     public void createRelationBetweenNodes(String neo4JConfiguration, String startNodeId, String startNodeLabel, String label, String endNodeId, String endNodeLabel, Map<String, Object> fields) {
-
+    	if(StringUtils.isBlank(startNodeId)) {
+    		throw new IllegalArgumentException("Start node id must be provided to create a relationship");
+    	}
+    	
+    	if(StringUtils.isBlank(endNodeId)) {
+    		throw new IllegalArgumentException("End node id must be provided to create a relationship");
+    	}
+    	
         /* Build values map */
         final Map<String, Object> values = new HashMap<>();
         values.put("startNodeId", startNodeId);

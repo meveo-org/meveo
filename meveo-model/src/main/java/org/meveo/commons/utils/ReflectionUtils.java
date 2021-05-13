@@ -21,6 +21,7 @@ package org.meveo.commons.utils;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -46,7 +47,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.meveo.model.BusinessEntity;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -469,6 +469,23 @@ public class ReflectionUtils {
 
         }
         return null;
+    }
+    
+    public static Optional<Object> findValueWithGetter(Object obj, String property) {
+    	return Arrays.stream(obj.getClass().getMethods())
+	        .filter(method -> method.getName().startsWith("get") || method.getName().startsWith("is"))
+	        .filter(method -> method.getName().toLowerCase().endsWith(property.toLowerCase()))
+	        .findFirst()
+	        .map(getter -> {
+				try {
+					getter.trySetAccessible();
+					return getter.invoke(obj);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					logger.error("Cannot invoke getter {}", getter, e);
+					return null;
+				}
+			});
+    	
     }
 
     /**

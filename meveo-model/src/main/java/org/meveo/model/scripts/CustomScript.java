@@ -23,6 +23,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.meveo.commons.utils.XStreamCDATAConverter;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.persistence.JsonTypes;
 
 import com.thoughtworks.xstream.annotations.XStreamConverter;
 
@@ -61,14 +62,14 @@ public abstract class CustomScript extends Function {
 	/**
 	 * Setters defined for the script
 	 */
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	@Column(name = "setters", columnDefinition = "text")
 	private List<Accessor> setters;
 
 	/**
 	 * Getters defined for the script
 	 */
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	@Column(name = "getters", columnDefinition = "text")
 	private List<Accessor> getters;
 

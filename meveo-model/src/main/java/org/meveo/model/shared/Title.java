@@ -33,6 +33,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.persistence.JsonTypes;
 
 @Entity
 @Cacheable
@@ -48,7 +49,7 @@ public class Title extends BusinessEntity {
     @Column(name = "is_company")
     private Boolean isCompany = Boolean.FALSE;
 
-    @Type(type = "json")
+    @Type(type = JsonTypes.JSON)
     @Column(name = "description_i18n", columnDefinition = "text")
     private Map<String, String> descriptionI18n;
 

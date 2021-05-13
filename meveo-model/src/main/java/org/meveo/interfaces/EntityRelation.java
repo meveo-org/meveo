@@ -99,4 +99,9 @@ public class EntityRelation extends EntityOrRelation {
 	public String getCompoundName() {
 		return sourceName()+"-"+targetName();
 	}
+	
+	@Override
+	public String toString() {
+		return "EntityRelation [type=" + type + ", getCompoundName()=" + getCompoundName() + "]";
+	}
 }

@@ -15,10 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import org.jboss.logging.Logger;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.PersistenceDto;
 import org.meveo.api.exception.BusinessApiException;
@@ -32,6 +28,12 @@ import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -41,7 +43,7 @@ import org.meveo.persistence.scheduler.SchedulingService;
 @Api("Neo4j persistence")
 public class Neo4JPersistenceRs {
 
-    protected static final Logger LOGGER = Logger.getLogger(Neo4JPersistenceRs.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(Neo4JPersistenceRs.class);
 
     @Inject
     protected SchedulingService schedulingService;
@@ -75,7 +77,7 @@ public class Neo4JPersistenceRs {
 
         /* Extract the entities */
         final List<Entity> entities = dtos.stream()
-                .filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY))
+                .filter(persistenceDto -> persistenceDto.getSource() == null && persistenceDto.getTarget() == null)
                 .map(persistenceDto -> new Entity.Builder()
                         .type(persistenceDto.getType())
                         .name(persistenceDto.getName())
@@ -85,7 +87,7 @@ public class Neo4JPersistenceRs {
 
         /* Extract the relationships */
         final List<EntityRelation> relations = dtos.stream()
-                .filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.RELATION))
+                .filter(persistenceDto -> persistenceDto.getSource() != null || persistenceDto.getTarget() != null)
                 .map(persistenceDto -> {
                     final Optional<Entity> source = entities.stream()
                             .filter(entity -> entity.getName().equals(persistenceDto.getSource()))
@@ -100,7 +102,7 @@ public class Neo4JPersistenceRs {
                                 .properties(persistenceDto.getProperties())
                                 .build();
                     }
-                    LOGGER.warnv("Relationship of type {} between {} and {} will not be persisted because of missing source or target", persistenceDto.getType(), persistenceDto.getSource(), persistenceDto.getTarget());
+                    LOGGER.warn("Relationship of type {} between {} and {} will not be persisted because of missing source or target", persistenceDto.getType(), persistenceDto.getSource(), persistenceDto.getTarget());
                     return null;
                 })
                 .filter(Objects::nonNull)
@@ -109,6 +111,8 @@ public class Neo4JPersistenceRs {
         /* Create the persistence schedule */
         List<EntityOrRelation> entityOrRelations = new ArrayList<>(entities);
         entityOrRelations.addAll(relations);
+        
+        LOGGER.info("Will persist {} entities and {} relations", entities.size(), relations.size());
         AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityOrRelations);
 
         /* Persist the entities and return 201 created response */

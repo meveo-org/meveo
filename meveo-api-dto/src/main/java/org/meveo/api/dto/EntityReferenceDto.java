@@ -149,4 +149,19 @@ public class EntityReferenceDto implements Serializable {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
+	/**
+	 * @return the {@link #classnameCode}
+	 */
+	public String getClassnameCode() {
+		return classnameCode;
+	}
+
+	/**
+	 * @param classnameCode the classnameCode to set
+	 */
+	public void setClassnameCode(String classnameCode) {
+		this.classnameCode = classnameCode;
+	}
+	
 }

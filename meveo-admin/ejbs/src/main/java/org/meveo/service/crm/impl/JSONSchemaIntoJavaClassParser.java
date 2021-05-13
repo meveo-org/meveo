@@ -3,20 +3,30 @@ package org.meveo.service.crm.impl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
+import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.annotations.Relation;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
@@ -24,11 +34,15 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
+
+import jxl.biff.formula.ParseContext;
 
 /**
  * Parse a cet map into a java source code.
@@ -47,10 +61,19 @@ public class JSONSchemaIntoJavaClassParser {
 	private CustomEntityTemplateService cetService;
 	
 	@Inject
+	private CustomFieldTemplateService customFieldService;
+	
+	@Inject
 	private Logger log;
 
     private Map<String, Object> jsonMap;
 
+    /**
+     * Note : this method is only used for test purpose
+     * 
+     * @param file the file to parse
+     * @return the parsed file
+     */
     @SuppressWarnings("unchecked")
     public CompilationUnit parseJavaFile(String file) {
         CompilationUnit compilationUnit = new CompilationUnit();
@@ -59,20 +82,84 @@ public class JSONSchemaIntoJavaClassParser {
             byte[] mapData = Files.readAllBytes(sourceDir.toPath());
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(mapData, HashMap.class);
-            parseFields(jsonMap, compilationUnit);
+            parseFields(jsonMap, compilationUnit, new CustomEntityTemplate(), Map.of());
         } catch (IOException e) {
         }
+        return compilationUnit;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomRelationshipTemplate template) {
+        CompilationUnit compilationUnit = new CompilationUnit();
+        compilationUnit.addImport(CustomRelation.class);
+		compilationUnit.addImport(List.class);
+        var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
+        
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonMap = objectMapper.readValue(content, HashMap.class);
+            
+            parseFields(jsonMap, compilationUnit, template, fields);
+
+            compilationUnit.getClassByName((String) jsonMap.get("id"))
+	    		.ifPresent(cl -> {
+		            // Generate source
+	    			var sourceField = cl.addField(template.getStartNode().getCode(), "source", Modifier.Keyword.PRIVATE);
+	    			sourceField.addAnnotation(JsonIgnore.class);
+
+	    			// Generate target
+	    			var targetField = cl.addField(template.getEndNode().getCode(), "target", Modifier.Keyword.PRIVATE);
+	    			targetField.addAnnotation(JsonIgnore.class);
+	    			
+	    			cl.addConstructor(Modifier.Keyword.PUBLIC)
+    					.setBody(JavaParser.parseBlock("{\n\tthis.source = source;\n\tthis.target=target;\n}"))
+	    				.addParameter(template.getStartNode().getCode(), "source")
+	    				.addParameter(template.getEndNode().getCode(), "target");
+	    			
+	    			sourceField.createGetter();
+	    			sourceField.createSetter();
+	    			
+	    			targetField.createGetter();
+	    			targetField.createSetter();
+	    		});
+            
+            compilationUnit.getClassByName((String) jsonMap.get("id"))
+    		.ifPresent(cl -> {
+                cl.tryAddImportToParentCompilationUnit(CustomRelation.class);
+                cl.addImplementedType("CustomRelation<" + template.getStartNode().getCode() + "," + template.getEndNode().getCode() + ">");
+    			
+    			cl.getMethodsByName("getUuid")
+    				.stream()
+    				.findFirst()
+    				.ifPresent(method -> method.addAnnotation(Override.class));
+    			
+    			var getCetCode = cl.addMethod("getCrtCode", Keyword.PUBLIC);
+    			getCetCode.addAnnotation(Override.class);
+    			getCetCode.addAnnotation(JsonIgnore.class);
+    			getCetCode.setType(String.class);
+    			var getCetCodeBody = new BlockStmt();
+    			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
+    			getCetCode.setBody(getCetCodeBody);
+    		});
+            
+        } catch (IOException e) {
+        	log.error("Failed to generate class for CRT {}", template, e);
+        }
+        
         return compilationUnit;
     }
 
     public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomEntity.class);
+		compilationUnit.addImport(List.class);
+
+        var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
         
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonMap = objectMapper.readValue(content, HashMap.class);
-            parseFields(jsonMap, compilationUnit);
+            parseFields(jsonMap, compilationUnit, template, fields);
             
             if(template.getSuperTemplate() != null) {
             	var parentTemplate = Hibernate.isInitialized(template.getSuperTemplate()) ? 
@@ -98,24 +185,87 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCetCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
+    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
     			getCetCode.setBody(getCetCodeBody);
+    			
+    	        if(StringUtils.isNotBlank(template.getIsEqualFn())) {
+    	        	cl.addMethod("isEqual", Keyword.PUBLIC)
+	        			.addAnnotation(Override.class)
+    	        		.setType(boolean.class)
+    	        		.addParameter(new Parameter()
+    	        			.setType("CustomEntity")
+    	        			.setName("other"))
+	        			.setBody(JavaParser.parseBlock(template.getIsEqualFn()));
+    	        }
     		});
             
         } catch (IOException e) {
-        	
+        	log.error("Failed to generate class for CET {}", template, e);
         }
         
         return compilationUnit;
     }
 
-    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit) {
+    private void parseFields(Map<String, Object> jsonMap, CompilationUnit compilationUnit, CustomModelObject template, Map<String, CustomFieldTemplate> fieldsDefinition) {
         compilationUnit.setPackageDeclaration("org.meveo.model.customEntities");
         ClassOrInterfaceDeclaration classDeclaration = compilationUnit.addClass((String) jsonMap.get("id")).setPublic(true);
+        Collection<FieldDeclaration> fds = new ArrayList<>();
+        
+        // Generate default constructor
+        classDeclaration.addConstructor(Modifier.Keyword.PUBLIC);
+
+        if(template instanceof CustomEntityTemplate) {
+        	CustomEntityTemplate cet = (CustomEntityTemplate) template;
+        	if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+
+            	// Handle primitive entity if value field is not defined
+            	FieldDeclaration fd = new FieldDeclaration();
+            	VariableDeclarator variableDeclarator = new VariableDeclarator();
+            	variableDeclarator.setName("value");
+
+            	switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
+    	        	case DATE:
+    	        		variableDeclarator.setType("Instant");
+    	        		compilationUnit.addImport(Instant.class);
+    	        		break;
+    	        	case DOUBLE:
+    	        		variableDeclarator.setType("Double");
+    	        		compilationUnit.addImport(Double.class);
+    	        		break;
+    	        	case LONG:
+    	        		variableDeclarator.setType("Long");
+    	        		compilationUnit.addImport(Long.class);
+    	        		break;
+    	        	case STRING:
+    	        		variableDeclarator.setType("String");
+    	        		compilationUnit.addImport(String.class);
+    	        		break;
+    	        	default:
+    	        		variableDeclarator.setType("Object");
+    	        		break;
+            	}
+
+            	if(fieldsDefinition.get("value") == null) {
+            		fd.setModifiers(Modifier.Keyword.PRIVATE);
+            		fd.addVariable(variableDeclarator);
+            		fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
+            		compilationUnit.addImport(JsonProperty.class);
+            		classDeclaration.addMember(fd);
+            		((ArrayList<FieldDeclaration>) fds).add(fd);
+            	}
+
+            	// Generate constructor with the value
+            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+    	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
+    	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
+
+            }
+        }
+        
         if (classDeclaration != null) {
-            Collection<FieldDeclaration> fds = new ArrayList<>();
             FieldDeclaration field = new FieldDeclaration();
             VariableDeclarator variable = new VariableDeclarator();
             variable.setName("uuid");
@@ -125,8 +275,9 @@ public class JSONSchemaIntoJavaClassParser {
             classDeclaration.addMember(field);
             ((ArrayList<FieldDeclaration>) fds).add(field);
             if (jsonMap.containsKey("storages")) {
-                compilationUnit.addImport("org.meveo.model.persistence.DBStorageType");
+                compilationUnit.addImport(DBStorageType.class);
                 FieldDeclaration fd = new FieldDeclaration();
+                fd.addAnnotation(JsonIgnore.class);
                 VariableDeclarator variableDeclarator = new VariableDeclarator();
                 variableDeclarator.setName("storages");
                 variableDeclarator.setType("DBStorageType");
@@ -143,16 +294,34 @@ public class JSONSchemaIntoJavaClassParser {
                     FieldDeclaration fd = new FieldDeclaration();
                     VariableDeclarator vd = new VariableDeclarator();
                     vd.setName(code);
+                    
+                    // Add @JsonProperty annotation
 					if (values.containsKey("nullable") && !Boolean.parseBoolean(values.get("nullable").toString())) {
 						fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
 						compilationUnit.addImport(JsonProperty.class);
 					}
-                    
+					
                     if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
                             compilationUnit.addImport("java.util.List");
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
                             if (value.containsKey("$ref")) {
+            					// Handle entity references
+            					var fieldDefinition = fieldsDefinition.get(code);
+            					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+            						String crtCode = fieldDefinition.getRelationship().getCode();
+            						var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+            						// If CRT has no relation, directly use the target node as field type
+            						if(relationFields == null || relationFields.isEmpty()) {
+										fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+	                					compilationUnit.addImport(Relation.class);
+            						} else {
+            							var fieldDeclaration = classDeclaration.addPrivateField("List<" + crtCode + ">", code);
+            		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+            							continue;
+            						}
+            					}
+            					
                                 String ref = (String) value.get("$ref");
                                 if (ref != null) {
                                     String[] data = ref.split("/");
@@ -184,6 +353,9 @@ public class JSONSchemaIntoJavaClassParser {
                             } else if (value.containsKey("enum")) {
                                 vd.setType("List<String>");
                             }
+                            
+                            vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
+                            compilationUnit.addImport(ArrayList.class);
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
                             Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");
@@ -212,6 +384,9 @@ public class JSONSchemaIntoJavaClassParser {
                                     vd.setType("Map<String, Object>");
                                 }
                             }
+                            
+                            vd.setInitializer(JavaParser.parseExpression("new HashMap<>()"));
+                            compilationUnit.addImport(HashMap.class);
                         } else if (values.get("type").equals("integer")) {
                             if (code.equals("count")) {
                                 vd.setType("Integer");
@@ -234,6 +409,22 @@ public class JSONSchemaIntoJavaClassParser {
                         }
 
                     } else if (values.get("$ref") != null) {
+    					var fieldDefinition = fieldsDefinition.get(code); 
+    					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+							String crtCode = fieldDefinition.getRelationship().getCode();
+							// If CRT has no relation, directly use the target node as field type
+							if(relationFields == null || relationFields.isEmpty()) {
+		    					// Add @Relation annotation
+								fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+	        					compilationUnit.addImport(Relation.class);
+							} else {
+								var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
+			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+								continue;
+							}
+    					}
+    					
                         String[] data = ((String) values.get("$ref")).split("/");
                         if (data.length > 0) {
                             String name = data[data.length - 1];
@@ -256,10 +447,6 @@ public class JSONSchemaIntoJavaClassParser {
 
                     fd.addVariable(vd);
                     fd.setModifiers(Modifier.Keyword.PRIVATE);
-                    if (values.get("nullable").equals(false)) {
-                        fd.addMarkerAnnotation("NotNull");
-                        compilationUnit.addImport("javax.validation.constraints.NotNull");
-                    }
                     classDeclaration.addMember(fd);
                     ((ArrayList<FieldDeclaration>) fds).add(fd);
                 }

@@ -19,7 +19,7 @@
     <parent>
         <artifactId>meveo</artifactId>
         <groupId>org.meveo</groupId>
-        <version>6.14.0-SNAPSHOT</version>
+        <version>6.15.0-SNAPSHOT</version>
     </parent>
 
     <properties>

@@ -45,6 +45,7 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JsonTypes;
 
 /**
  * The Class CustomRelationshipTemplate.
@@ -94,7 +95,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
     
     @Column(name = "available_storages", columnDefinition = "TEXT")
-    @Type(type = "jsonList")
+    @Type(type = JsonTypes.JSON_LIST)
     private List<DBStorageType> availableStorages;
 
     /**

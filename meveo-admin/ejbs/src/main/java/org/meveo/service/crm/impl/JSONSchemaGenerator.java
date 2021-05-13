@@ -540,8 +540,13 @@ public class JSONSchemaGenerator {
 			result.refValue("#entity-classes/" + field.getEntityClazz());
 		} else {
 			final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(refCode);
-			// Do not make a reference in case of a primitive entity
-			if (customEntityTemplate != null && customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			Integer fieldsSize = 0;
+			if(field.getRelationship() != null) {
+				var fields = cache.getCustomFieldTemplates(field.getRelationship().getAppliesTo());
+				fieldsSize = fields == null ? 0 : fields.size();
+			}
+			// Do not make a reference in case of a primitive entity if the relation has no fields
+			if (fieldsSize == 0 && customEntityTemplate != null && customEntityTemplate.getNeo4JStorageConfiguration() != null && customEntityTemplate.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 				field.setMaxValue(customEntityTemplate.getNeo4JStorageConfiguration().getMaxValue());
 				switch (customEntityTemplate.getNeo4JStorageConfiguration().getPrimitiveType()) {
 					case STRING:

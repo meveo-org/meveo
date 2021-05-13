@@ -354,6 +354,9 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
         	schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
+        commitFiles.add(javaFile);
 
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
         commitFiles.add(schemaFile);
@@ -372,6 +375,7 @@ public class OntologyObserver {
     public void crtUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
+        
         final String templateSchema = getTemplateSchema(crt);
 
         final File crtDir = getCrtDir();
@@ -385,9 +389,16 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        File javaFile = cetCompiler.generateCRTSourceFile(templateSchema, crt);
 
+        //Update the origin CET when the CRT is modified
+        //If a CFT is modified in the CRT, the origin CET need to be modified too
+        CustomEntityTemplate cet = customEntityTemplateService.findById(crt.getStartNode().getId());
+        cetUpdated(cet);
+        
         FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Updated custom relationship template " + crt.getCode());
+        gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Updated custom relationship template " + crt.getCode());
     }
 
     /**
@@ -403,8 +414,13 @@ public class OntologyObserver {
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
+        
+        final File javaFile = new File(cetDir, crt.getCode() + ".java");
+        if (javaFile.exists()) {
+            javaFile.delete();
+        }
 
-        gitClient.commitFiles(meveoRepository, Collections.singletonList(schemaFile), "Deleted custom relationship template " + crt.getCode());
+        gitClient.commitFiles(meveoRepository, List.of(schemaFile, javaFile), "Deleted custom relationship template " + crt.getCode());
     }
 
     /* ------------ CFT Notifications ------------ */
@@ -541,6 +557,12 @@ public class OntologyObserver {
                 final String templateSchema = getTemplateSchema(crt);
 
                 FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
+                
+                //Update the origin CET when the CFT is modified
+                //If a CFT is modified in the CRT, the origin CET need to be modified too
+                CustomEntityTemplate cet = customEntityTemplateService.findById(crt.getStartNode().getId());
+                cetUpdated(cet);
+                
                 gitClient.commitFiles(
                         meveoRepository,
                         Collections.singletonList(schemaFile),

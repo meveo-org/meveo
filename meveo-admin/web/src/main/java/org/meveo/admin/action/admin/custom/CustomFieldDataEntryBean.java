@@ -1002,7 +1002,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
 				messages.info(new BundleKey("messages", (String) result.get(Script.RESULT_GUI_MESSAGE_KEY)));
 
-			} else if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
+			} else if (result.containsKey(Script.RESULT_GUI_MESSAGE)) {
 				messages.info((String) result.get(Script.RESULT_GUI_MESSAGE));
 
 			} else {

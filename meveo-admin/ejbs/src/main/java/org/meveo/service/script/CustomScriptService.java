@@ -109,6 +109,8 @@ import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -260,7 +262,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return getExecutionEngine(script, context);
     }
 
-    @Override
+	@Override
     public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
         try {
             ScriptInterface scriptInstance = this.getScriptInstance(script.getCode());
@@ -288,11 +290,21 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         	if(classAndValue.getValue() instanceof Map || classAndValue.getValue() instanceof Collection) {
                         		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
-                        	} else if(classAndValue.getValue() instanceof CustomEntityInstance) {
+                            	
+                        	} else if (classAndValue.getValue() instanceof CustomEntityInstance) {
                         		CustomEntityInstance cei = (CustomEntityInstance) classAndValue.getValue();
                         		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
                             	method.invoke(scriptInstance, convertedValue);
+                            	
+                        	} else if (Collection.class.isAssignableFrom(method.getParameters()[0].getType())) {
+                        		// If value which is supposed to be a collection comes with a single value, automatically deserialize it to a collection
+                        		var type = method.getParameters()[0].getParameterizedType();
+                        		var jacksonType = TypeFactory.defaultInstance().constructType(type);
+                        		Collection<?> collection = (Collection<?>) JacksonUtil.convert(classAndValue.getValue(), jacksonType);
+                            	method.invoke(scriptInstance, collection);
+                            	
                         	} else {
+                        		log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
                         		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
                         	}
                         	

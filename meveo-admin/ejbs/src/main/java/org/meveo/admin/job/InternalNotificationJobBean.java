@@ -50,7 +50,7 @@ public class InternalNotificationJobBean {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
     /** The tf. */
-    SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:hh");
+    SimpleDateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:hh");
 
     @Inject
     @MeveoJpa

@@ -36,9 +36,6 @@ info "-----------------------------------------------"
 cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
 cp meveo-admin/web/target/meveo.war docker/
 
-info "Building neo4j docker image for Meveo environment"
-docker build -t ${DCK_IMAGE_REPO}/neo4j-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile.neo4j ./docker
-
 info "Building meveo docker image"
 docker build -t ${DCK_IMAGE_REPO}/wildfly-meveo:${DCK_IMAGE_TAG} -f docker/Dockerfile ./docker
 

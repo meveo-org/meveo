@@ -71,11 +71,11 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     }
 
     @Override
-    public ActionStatus removeEntityTemplate(String customEntityTemplateCode) {
+    public ActionStatus removeEntityTemplate(String customEntityTemplateCode, boolean withData) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityTemplateApi.removeEntityTemplate(customEntityTemplateCode);
+            customEntityTemplateApi.removeEntityTemplate(customEntityTemplateCode, withData);
         } catch(EntityDoesNotExistsException e) {
         	//NOOP
         } catch (Exception e) {

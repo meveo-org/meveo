@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+EXTRA_SCRIPT="$1"
+
 exit_with_error() {
     if [ "$ERROR" != "0" ]; then
         echo "${red}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR : $@ ${reset}";
@@ -16,12 +18,13 @@ info() {
 }
 
 
-# Meveo database parameters
+# Meveo parameters
 export MEVEO_DB_HOST=${MEVEO_DB_HOST:-postgres}
 export MEVEO_DB_PORT=${MEVEO_DB_PORT:-5432}
 export MEVEO_DB_NAME=${MEVEO_DB_NAME:-meveo}
 export MEVEO_DB_USERNAME=${MEVEO_DB_USERNAME:-meveo}
 export MEVEO_DB_PASSWORD=${MEVEO_DB_PASSWORD:-meveo}
+MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
 
 # Wildfly parameters
 export WILDFLY_BIND_ADDR=${WILDFLY_BIND_ADDR:-0.0.0.0}
@@ -29,7 +32,7 @@ export WILDFLY_MANAGEMENT_BIND_ADDR=${WILDFLY_MANAGEMENT_BIND_ADDR:-0.0.0.0}
 export WILDFLY_PROXY_ADDRESS_FORWARDING=${WILDFLY_PROXY_ADDRESS_FORWARDING:-false}
 export WILDFLY_LOG_CONSOLE_LEVEL=${WILDFLY_LOG_CONSOLE_LEVEL:-INFO}
 export WILDFLY_LOG_FILE_LEVEL=${WILDFLY_LOG_FILE_LEVEL:-INFO}
-export MEVEO_LOG_LEVEL=${MEVEO_LOG_LEVEL:-DEBUG}
+export WILDFLY_LOG_MEVEO_LEVEL=${WILDFLY_LOG_MEVEO_LEVEL:-INFO}
 
 # Debug parameters
 export WILDFLY_DEBUG_ENABLE=${WILDFLY_DEBUG_ENABLE:-false}
@@ -37,6 +40,7 @@ export WILDFLY_DEBUG_PORT=${WILDFLY_DEBUG_PORT:-9999}
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
     export WILDFLY_LOG_CONSOLE_LEVEL=DEBUG
     export WILDFLY_LOG_FILE_LEVEL=DEBUG
+    export WILDFLY_LOG_MEVEO_LEVEL=DEBUG
 fi
 
 DOCKER_GATEWAY_HOST=$(ip route|awk '/default/ { print $3 }')
@@ -63,6 +67,13 @@ export KEYCLOAK_CLIENT=${KEYCLOAK_CLIENT:-meveo-web}
 export KEYCLOAK_SECRET=${KEYCLOAK_SECRET:-afe07e5a-68cb-4fb0-8b75-5b6053b07dc3}
 
 
+# Read and execute a script for the extra configurations
+if [ "x${EXTRA_SCRIPT}" != "x" ]; then
+	info "Run the extra script: ${EXTRA_SCRIPT}"
+	source ${EXTRA_SCRIPT}
+fi
+
+
 # wait with timeout 30s until postgres is up
 timeout=30
 counter=0
@@ -79,7 +90,7 @@ done
 info "Postgres is up"
 
 
-# DB init & update
+# Liquibase update the database for meveo app
 DB_CHANGELOG_FILE="/opt/jboss/liquibase/db_resources/changelog/db.rebuild.xml"
 if [ -f "${DB_CHANGELOG_FILE}" ]; then
     info "Update meveo database using liquibase"
@@ -89,6 +100,24 @@ if [ -f "${DB_CHANGELOG_FILE}" ]; then
         --changeLogFile=${DB_CHANGELOG_FILE} \
         update \
         -Ddb.schema=public
+fi
+
+# Liquibase update the database for non-meveo app
+DB_CHANGELOG_OTHER="/opt/jboss/liquibase/db_resources/other-changelog"
+if [ -d "${DB_CHANGELOG_OTHER}" ]; then
+    for changelog_dir in $(find $DB_CHANGELOG_OTHER -maxdepth 1 -type d | awk '{if(NR>1)print}')
+    do
+        changelog_file="$changelog_dir/db.xml"
+        if [ -f "${changelog_file}" ]; then
+            echo "Update $(basename $changelog_dir) database using liquibase"
+            /opt/jboss/liquibase/liquibase \
+                --url="jdbc:postgresql://${MEVEO_DB_HOST}:${MEVEO_DB_PORT}/${MEVEO_DB_NAME}" \
+                --username=${MEVEO_DB_USERNAME} --password=${MEVEO_DB_PASSWORD} \
+                --changeLogFile=${changelog_file} \
+                update \
+                -Ddb.schema=public
+        fi
+    done
 fi
 
 
@@ -120,6 +149,8 @@ if [ -d /docker-entrypoint-initdb.d ]; then
     done
 fi
 
+# Configure meveo-admin.properties
+sed -i "s|{{MEVEO_ADMIN_BASE_URL}}|${MEVEO_ADMIN_BASE_URL//:/\\\\:}|g" ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
 system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
@@ -149,10 +180,10 @@ if [ "x${JAVA_OPTS}" = "x" ]; then
         WILDFLY_CUSTOM_XMX="2048m"
     fi
     if [ "x${WILDFLY_CUSTOM_XMMS}" = "x" ]; then
-        WILDFLY_CUSTOM_XMMS="300m"
+        WILDFLY_CUSTOM_XMMS="96m"
     fi
     if [ "x${WILDFLY_CUSTOM_XMMX}" = "x" ]; then
-        WILDFLY_CUSTOM_XMMX="500m"
+        WILDFLY_CUSTOM_XMMX="512m"
     fi
     JAVA_OPTS="-Xms${WILDFLY_CUSTOM_XMS} -Xmx${WILDFLY_CUSTOM_XMX}"
     JAVA_OPTS="${JAVA_OPTS} -XX:MetaspaceSize=${WILDFLY_CUSTOM_XMMS} -XX:MaxMetaspaceSize=${WILDFLY_CUSTOM_XMMX}"
@@ -188,7 +219,7 @@ if [ ! -z "${KEYCLOAK_ADMIN_USER}" -a ! -z "${KEYCLOAK_ADMIN_PASSWORD}" ]; then
     fi
 fi
 
-WILDFLY_OPTS="-b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
+WILDFLY_OPTS="${WILDFLY_OPTS} -b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
     WILDFLY_OPTS="${WILDFLY_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi

@@ -22,6 +22,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -45,7 +47,7 @@ public class DateUtils {
     private static long lastTime = System.currentTimeMillis() / 1000;
 
     public static String DATE_PATTERN = "yyyy-MM-dd";
-    public static String DATE_TIME_PATTERN = "yyyy-MM-dd'T'hh:mm:ssXXX";
+    public static String DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ssXXX";
     private static final String START_DATE_DELIMITER = "[";
     private static final String END_DATE_DELIMITER = "]";
 
@@ -79,11 +81,15 @@ public class DateUtils {
             return "";
         }
         String result = null;
-        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
-
         try {
-            result = sdf.format(value);
-        } catch (Exception e) {
+            return DateTimeFormatter.ofPattern(pattern).format(value);
+        } catch (java.time.temporal.UnsupportedTemporalTypeException e) {
+            try {
+                return DateTimeFormatter.ofPattern(pattern).withZone(ZoneId.systemDefault()).format(value);
+            } catch (Exception e2) {
+                result = "";
+            }
+       } catch (Exception e) {
             result = "";
         }
 

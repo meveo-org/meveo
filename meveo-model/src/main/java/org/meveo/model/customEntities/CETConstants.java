@@ -94,7 +94,7 @@ public class CETConstants {
 
     public static final String DEFAULT_DATE_PATTERN = "dd/MM/yyyy";
 
-    public static final String COMPLET_DATE_PATTERN = "dd/MM/yyyy hh:mm:ss";
+    public static final String COMPLET_DATE_PATTERN = "dd/MM/yyyy HH:mm:ss";
 
 
     public static final String DATE_PATTERN_REPORT_NAME = "ddMMYYY";

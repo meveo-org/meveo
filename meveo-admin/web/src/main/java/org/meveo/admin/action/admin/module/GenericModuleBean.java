@@ -615,7 +615,10 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
     private TreeNode getOrCreateNodeByAppliesTo(String appliesTo, String classname) {
         TreeNode appliesToNode = getOrCreateNodeByClass(classname);
-        String code = appliesTo.split("_", 2)[1];
+        String code = null;
+        if (appliesTo.contains("_"))
+        	code = appliesTo.split("_", 2)[1];
+        else code = appliesTo;
         for (TreeNode node : appliesToNode.getChildren()) {
             if (code.equals(node.getData())) {
                 return node;
