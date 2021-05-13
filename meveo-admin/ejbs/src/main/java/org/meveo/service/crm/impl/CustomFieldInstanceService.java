@@ -571,6 +571,7 @@ public class CustomFieldInstanceService extends BaseService {
 							
 						} else if(value instanceof String) {
 							entityReferenceWrapper.setUuid((String) value);
+							entityReferenceWrapper.setCode((String) value);
 							
 						} else if (StringUtils.isNumeric(String.valueOf(value))) {
 							entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
@@ -624,6 +625,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 							} else if (item instanceof String) {
 								itemWrapper.setUuid((String) item);
+								itemWrapper.setCode((String) item);
 								
 								// Try to fetch code
 								fetchCode(cft, (String) item, itemWrapper);
