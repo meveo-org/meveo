@@ -22,7 +22,13 @@
     	    <hftl:searchField label="Unique" field="unique" />
         </hftl:searchPanel>
 
-        <hftl:dataList label="#{messages['meveoModule.title']}" backingBean="#{customRelationshipTemplateListBean}" addToModule="true" deleteManyButton="true" sortBy="#{entity.code}">
+        <hftl:dataList
+            label="#{messages['meveoModule.title']}"
+            backingBean="#{customRelationshipTemplateListBean}"
+            addToModule="true"
+            deleteManyButton="#{customRelationshipTemplateListBean.canUserUpdateEntity()}"
+            sortBy="#{entity.code}"
+        >
             <p:column headerText="#{messages['BusinessEntity.code']}">
                 <h:link outcome="customizedRelationship">
                     <h:outputText value="#{entity.code}" />

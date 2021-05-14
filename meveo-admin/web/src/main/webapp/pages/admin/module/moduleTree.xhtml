@@ -29,11 +29,11 @@
                     <f:convertDateTime pattern="#{paramBean.dateFormat}" />
                 </h:outputText>
             </p:column>
-            <p:column headerText="#{messages['commons.actions']}">
+            <p:column headerText="#{messages['commons.actions']}" rendered="#{backingBean.canUserUpdateEntity()}">
                 <p:commandButton icon="ui-icon-minus" partialSubmit="true" immediate="true" update="moduleItems" action="#{backingBean.removeTreeNode(node)}" rendered="#{node.type eq 'item'}" />
             </p:column>
             <f:facet name="footer" layout="block">
-                <p:commandButton value="#{messages['meveoModuleItem.add']}" type="button" onclick="PF('dlg_addModuleItem').show()" />
+                <p:commandButton value="#{messages['meveoModuleItem.add']}" type="button" onclick="PF('dlg_addModuleItem').show()" rendered="#{backingBean.canUserUpdateEntity()}" />
             </f:facet>
         </p:treeTable>
 

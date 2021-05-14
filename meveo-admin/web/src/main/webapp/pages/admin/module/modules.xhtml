@@ -61,10 +61,21 @@
 	                </ui:define>
 	            </hftl:actionsColumn>
 	            <ui:define name="add-on-buttons">
-	                <p:commandButton id="downloadMeveoModuleButton" rendered="#{meveoModuleListBean.canUserUpdateEntity()}" value="#{messages['meveoModule.downloadAndInstallModules']}"
-	                    update=":#{p:component('meveoModulesDialog')}" oncomplete="PF('meveoModulesDialog').show()">
-	                </p:commandButton>
-                    <p:commandButton id="importFromFileButton" value="#{messages['meveoModule.importFromInternalFile']}" actionListener="#{meveoModuleListBean.getFilesFromFileExplorer}" oncomplete="PF('importFromInternalFileDialog').show()" update="importForm"/>
+	                <p:commandButton
+                        id="downloadMeveoModuleButton"
+                        rendered="#{meveoModuleListBean.canUserUpdateEntity()}"
+                        value="#{messages['meveoModule.downloadAndInstallModules']}"
+	                    update=":#{p:component('meveoModulesDialog')}"
+                        oncomplete="PF('meveoModulesDialog').show()"
+                    />
+                    <p:commandButton
+                        id="importFromFileButton"
+                        value="#{messages['meveoModule.importFromInternalFile']}"
+                        rendered="#{backingBean.canUserUpdateEntity()}"
+                        actionListener="#{meveoModuleListBean.getFilesFromFileExplorer}"
+                        oncomplete="PF('importFromInternalFileDialog').show()"
+                        update="importForm"
+                    />
 	            </ui:define>
 	        </hftl:dataList>
         </p:outputPanel>
