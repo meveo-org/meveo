@@ -6,7 +6,7 @@
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.14.2</version>
+		<version>6.14.3</version>
 	</parent>
 	<artifactId>meveo-model</artifactId>
 	<packaging>jar</packaging>

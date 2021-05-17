@@ -120,7 +120,7 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
      *        expirations), current user might be lost, thus there is a need to reestablish.
      */
     @Asynchronous
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void executeNextJob(Job job, JobInstance jobInstance, boolean continueSameJob, MeveoUser lastCurrentUser) {
 
         currentUserProvider.reestablishAuthentication(lastCurrentUser);

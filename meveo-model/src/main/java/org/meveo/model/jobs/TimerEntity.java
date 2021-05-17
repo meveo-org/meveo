@@ -46,7 +46,7 @@ import org.meveo.model.ModuleItemOrder;
  */
 @Entity
 @ModuleItem(value = "TimerEntity", path = "timerEntities")
-@ModuleItemOrder(101)
+@ModuleItemOrder(39) //before jobs
 @ExportIdentifier({ "code"})
 @Table(name = "meveo_timer", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_timer_seq"), })
@@ -99,6 +99,11 @@ public class TimerEntity extends BusinessEntity{
 	
 	@OneToMany(mappedBy = "timerEntity", fetch = FetchType.LAZY)
 	private List<JobInstance> jobInstances = new ArrayList<JobInstance>();
+
+	@Column(name = "sc_tz", nullable = false, length = 255)
+    @Size(max = 255)
+    @NotNull
+	private String timezone = "GMT";
 
 	public TimerEntity(){
 
@@ -176,7 +181,14 @@ public class TimerEntity extends BusinessEntity{
 	public void setEnd(Date end) {
 		this.end = end;
 	}
-	
+
+	public String getTimezone() {
+		return timezone;
+	}
+
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
+	}
 
 	/**
 	 * @return the jobInstances
@@ -230,7 +242,7 @@ public class TimerEntity extends BusinessEntity{
 		return "TimerEntity [year=" + year + ", month=" + month
 				+ ", dayOfMonth=" + dayOfMonth + ", dayOfWeek=" + dayOfWeek
 				+ ", hour=" + hour + ", minute=" + minute + ", second="
-				+ second + ", start=" + start + ", end=" + end
+				+ second + ", timezone=" + timezone + ", start=" + start + ", end=" + end
 				+ "]";
 	}
 	

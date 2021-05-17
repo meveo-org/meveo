@@ -28,6 +28,7 @@ import org.meveo.interceptor.PerformanceInterceptor;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.shared.DateUtils;
+import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
@@ -52,6 +53,12 @@ public class FlatFileProcessingJobBean {
 
     @Inject
     private FlatFileProcessingAsync flatFileProcessingAsync;
+    
+	/** The job execution service. */
+	@Inject
+	private JobExecutionService jobExecutionService;
+
+
     
     /** The Constant DATETIME_FORMAT. */
     private static final String DATETIME_FORMAT = "dd_MM_yyyy-HHmmss";
@@ -164,11 +171,10 @@ public class FlatFileProcessingJobBean {
 
         if (file != null) {
             fileName = file.getName();
-            result.setSummary("fileName: " + fileName);
             if (result.getSummary() == null || result.getSummary().isBlank())
-            	result.setSummary("fileName: " + fileName);
+            	result.setSummary("Starting file named " + fileName);
             else
-            	result.setSummary(result.getSummary()+", " + fileName);
+            	result.setSummary(result.getSummary()+", Starting file named " + fileName);
             ScriptInterface script = null;
             IFileParser fileParser = null;
             File currentFile = null;
@@ -222,6 +228,20 @@ public class FlatFileProcessingJobBean {
                     }
                     report += "\r\n file " + fileName + " is " + stateFile;
                 }
+                try {
+                	if (!jobExecutionService.isJobRunningOnThis(result.getJobInstance())) {
+                		// job has been interrupted
+                		report += "\r\n Job interrupted";
+                	} else if (!fileParser.hasNext()) {
+                		// reached end of file
+                        result.setSummary(result.getSummary().replace("Starting file named " + fileName, "Processed file named " + fileName));						
+					} else {
+						// partial process
+                		report += "\r\n Stopped before end of file";
+					}
+				} catch (Exception e) {
+	                log.warn("Failed to check if reached end of file {}", fileName, e);
+				}
 
                 log.info("InputFiles job {} done.", fileName);
 
