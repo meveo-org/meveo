@@ -3,6 +3,9 @@
  */
 package org.meveo.model.customEntities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.meveo.model.CustomEntity;
 
 /**
@@ -20,7 +23,9 @@ public class CustomEntityC implements CustomEntity {
 	private String uuid;
 	
 	private CtoA circularRef;
-
+	
+	private List<String> list = new ArrayList<>();
+	
 	@Override
 	public String getCetCode() {
 		return "CustomEntityC";
@@ -100,6 +105,22 @@ public class CustomEntityC implements CustomEntity {
 	 */
 	public void setCircularRef(CtoA circularRef) {
 		this.circularRef = circularRef;
+	}
+
+
+	/**
+	 * @return the {@link #list}
+	 */
+	public List<String> getList() {
+		return list;
+	}
+
+
+	/**
+	 * @param list the list to set
+	 */
+	public void setList(List<String> list) {
+		this.list = list;
 	}
 
 }
