@@ -174,6 +174,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		List<String> selectFields;
 		Map<String, Object> values = new HashMap<>();
 		values.put("uuid", uuid);
+		boolean foudEntity=false;
 		
 		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
@@ -193,6 +194,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					String repoCode = repository.getNeo4jConfiguration().getCode();
 					final Map<String, Object> existingValues = neo4jDao.findNodeById(repoCode, cet.getCode(), uuid, neo4jFields);
 					if (existingValues != null) {
+						foudEntity=true;
 						values.putAll(existingValues);
 						// We need to fetch every relationship defined as entity references
 						if(withEntityReferences) {
@@ -239,6 +241,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					final Map<String, Object> customTableValue = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, sqlFields);
 					replaceKeys(cet, sqlFields, customTableValue);
 					if(customTableValue != null) {
+						foudEntity=true;
 						values.putAll(customTableValue);
 					}
 				} else {
@@ -277,6 +280,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			throw new RuntimeException(e);
 		}
 
+		if(!foudEntity){
+			throw new EntityDoesNotExistsException(cet.getCode(),uuid);
+		}
+		
 		// Remove null values
 		values.values().removeIf(Objects::isNull);
 
