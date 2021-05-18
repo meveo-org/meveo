@@ -124,7 +124,7 @@ public class Neo4jConnectionProvider {
                 return driver.session();
             }
         }catch (Exception e){
-            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage());
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
         	DRIVER_MAP.remove(neo4JConfigurationCode);
             return null;
         }

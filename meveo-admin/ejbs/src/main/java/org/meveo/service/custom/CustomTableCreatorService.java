@@ -628,13 +628,13 @@ public class CustomTableCreatorService implements Serializable {
 
 							} catch (Exception e) {
 								log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
-								throw new SQLException(e);
+								throw new SQLException(String.format("Failed to add field %s to custom table %s : ",dbFieldname, dbTableName) + e.getMessage(), e);
 							}
 						});
 					}).get(1, TimeUnit.MINUTES);
 					
 				} catch (InterruptedException | ExecutionException | TimeoutException e) {
-					log.error("Failed to add field {} to custom table {} within 1 minute", e);
+					log.error("Failed to add field {} to custom table {} within 1 minute",dbFieldname, dbTableName, e);
 					throw new RuntimeException(e);
 				}
 			}
