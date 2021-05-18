@@ -531,6 +531,8 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 
         cft.setIdentifier(dto.isIdentifier());
         
+        cft.setFilter(dto.isFilter());
+        
         cft.setHasReferenceJpaEntity(dto.hasReferenceJpaEntity());
 
         // A cft can't be stored in a db that is not available for its cet

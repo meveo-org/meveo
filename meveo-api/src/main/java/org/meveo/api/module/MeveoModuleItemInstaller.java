@@ -20,6 +20,7 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
@@ -41,6 +42,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
@@ -439,7 +441,7 @@ public class MeveoModuleItemInstaller {
 		            moduleItem = new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null);
 		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
-		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J)) {
+		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && (customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J))) {
                     CustomEntityInstance cei = new CustomEntityInstance();
                     cei.setUuid(dto.getCode());
                     cei.setCetCode(customEntityTemplate.getCode());
@@ -570,9 +572,12 @@ public class MeveoModuleItemInstaller {
 						}
 
 						//add cft of cet
-						if (dto instanceof CustomEntityTemplateDto) {
+						if (dto instanceof CustomEntityTemplateDto ) {
 							// check and add if cft exists to moduleItem
 							addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
+						} else if ( dto instanceof CustomRelationshipTemplateDto) {
+								// check and add if cft exists to moduleItem
+							addCftToModuleItem((CustomRelationshipTemplateDto) dto, meveoModule);
 						}
 
 						meveoModuleService.addModuleItem(moduleItem, meveoModule);
@@ -736,6 +741,20 @@ public class MeveoModuleItemInstaller {
 						moduleItemDto.setDtoData(cet);
 					}
 				}
+				if (moduleItemDto.getDtoClassName().equals(CustomRelationshipTemplateDto.class.getName())) {
+					CustomRelationshipTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomRelationshipTemplateDto.class);
+					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+						cftModuleItem.setDtoData(cftData);
+						cftData.setAppliesTo("CRT_" + cet.getCode());
+						moduleDto.getModuleItems().add(cftModuleItem);
+
+						cet.getFields().remove(cftData);
+						moduleItemDto.setDtoData(cet);
+					}
+					
+				}
 			}
 
 			// we need to sort the module items because of dependency hierarchy
@@ -791,5 +810,15 @@ public class MeveoModuleItemInstaller {
 			}
 		}
 	}
+	
+	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) {
+		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
+			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomRelationshipTemplate.CRT_PREFIX + "_" + dto.getCode(), null);
+				meveoModuleService.addModuleItem(itemDto, meveoModule);
+			}
+		}
+	}
+
 
 }
