@@ -361,12 +361,7 @@ public class Neo4jService implements CustomPersistenceService {
             Map<EntityRef, String> relationshipsToCreate = createEntityReferences(neo4JConfiguration, cet, fieldValues, cetFields, fields);
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
-            if (cet.getPrePersistScript() != null) {
-            	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
-            	fieldValues.put(Neo4jService.REPOSITORY_CODE, neo4JConfiguration);
-            	scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
-            	fieldValues.remove(Neo4jService.REPOSITORY_CODE);
-            }
+            executePrePersist(neo4JConfiguration, cet, fieldValues);
             
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
@@ -506,6 +501,15 @@ public class Neo4jService implements CustomPersistenceService {
         return new PersistenceActionResult(persistedEntities, nodeUuid);
     }
 
+	private void executePrePersist(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues) throws BusinessException {
+		if (cet.getPrePersistScript() != null) {
+			log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
+			fieldValues.put(Neo4jService.REPOSITORY_CODE, neo4JConfiguration);
+			scriptInstanceService.execute(cet.getPrePersistScript().getCode(), fieldValues);
+			fieldValues.remove(Neo4jService.REPOSITORY_CODE);
+		}
+	}
+
 	/**
 	 * @param neo4JConfiguration
 	 * @param cet
@@ -559,9 +563,7 @@ public class Neo4jService implements CustomPersistenceService {
 		            // If there is no unique constraints defined, directly merge node
 		            if (referencedCet.getNeo4JStorageConfiguration().getUniqueConstraints().isEmpty()) {
 		                List<String> additionalLabels = getAdditionalLabels(referencedCet);
-		                if (referencedCet.getPrePersistScript() != null) {
-		                    scriptInstanceService.execute(referencedCet.getPrePersistScript().getCode(), valueMap);
-		                }
+	                	executePrePersist(neo4JConfiguration, referencedCet, valueMap);
 		                String createdNodeId = neo4jDao.mergeNode(neo4JConfiguration, referencedCetCode, valueMap, valueMap, valueMap, additionalLabels, null);
 		                if(createdNodeId != null) {
 		                	relatedPersistedEntities.add(new EntityRef(createdNodeId, referencedCet.getCode()));
@@ -681,15 +683,8 @@ public class Neo4jService implements CustomPersistenceService {
         }
 
         /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
-        if (customRelationshipTemplate.getStartNode().getPrePersistScript() != null) {
-        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
-        	scriptInstanceService.execute(customRelationshipTemplate.getStartNode().getPrePersistScript().getCode(), startFieldValues);
-        }
-        
-        if (customRelationshipTemplate.getEndNode().getPrePersistScript() != null) {
-        	log.warn("Pre persist script usage will be dropped in future releases. Please use the crud event listener script instead");
-        	scriptInstanceService.execute(customRelationshipTemplate.getEndNode().getPrePersistScript().getCode(), endFieldValues);
-        }
+    	executePrePersist(neo4JConfiguration, customRelationshipTemplate.getStartNode(), startFieldValues);
+    	executePrePersist(neo4JConfiguration, customRelationshipTemplate.getEndNode(), endFieldValues);
 
         /* Recuperation of the custom fields of the CRT */
         Map<String, CustomFieldTemplate> crtCustomFields = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
