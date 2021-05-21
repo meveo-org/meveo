@@ -241,11 +241,6 @@ public class OntologyObserver {
         }
         commitFiles.add(javaFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Revert creation of custom entity template " + cet.getCode());
-    
-        // Remove table and sequence on failure
-        if(cet.isStoreAsTable()) {
-        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
-        }
     }
     
 

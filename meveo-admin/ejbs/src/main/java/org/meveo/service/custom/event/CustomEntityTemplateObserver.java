@@ -76,10 +76,6 @@ public class CustomEntityTemplateObserver {
 		if (cet.isAudited() && !isTableExists) {
 			createAuditTable(sqlConnCode, tableName);
 
-		} else {
-			if (isTableExists) {
-				customTableCreatorService.removeTable(sqlConnCode, tableName);
-			}
 		}
 	}
 

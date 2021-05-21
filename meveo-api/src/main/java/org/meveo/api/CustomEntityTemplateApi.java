@@ -286,9 +286,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
         
         } catch (Exception e) {
-        	if(sqlStorageAddition) {
-        		customTableCreatorService.get().removeTable(SQLStorageConfiguration.getDbTablename(cet));
-        	}
         	
         	throw e;
         }
@@ -322,10 +319,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		try { 
 			this.removeEntityTemplate(dto.getCode(), false);
 		} catch (EntityDoesNotExistsException e) {
-			// Make sure custom table is removed if cet was not created correctly
-	        if (dto.getSqlStorageConfiguration() != null && dto.getSqlStorageConfiguration().isStoreAsTable()) {
-	            customTableCreatorService.get().removeTable(SQLStorageConfiguration.getCetDbTablename(dto.getCode()));
-	        }			
 		}
 	}
 
