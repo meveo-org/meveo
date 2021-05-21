@@ -1,5 +1,8 @@
 package org.meveo.api.rest;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -38,6 +41,10 @@ import io.swagger.annotations.ApiParam;
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Api("UserRs")
 public interface UserRs extends IBaseRs {
+	
+	@GET
+	@Path("/current/roles")
+	public Set<String> getRoles();
 
 	/**
 	 * Create user.
