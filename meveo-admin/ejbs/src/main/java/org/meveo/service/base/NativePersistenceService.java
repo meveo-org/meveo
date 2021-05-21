@@ -1264,6 +1264,8 @@ public class NativePersistenceService extends BaseService {
 				if (condition != null) {
 					fields = Arrays.copyOfRange(fieldInfo, 1, fieldInfo.length);
 				}
+				
+				fieldName = "a." + fieldName;
 
 				// if ranged search - field value in between from - to values. Specifies "from"
 				// value: e.g value<=field.value
@@ -1296,7 +1298,7 @@ public class NativePersistenceService extends BaseService {
 					// Value is in field value (list)
 				} else if ("list".equals(condition)) {
 					String paramName = queryBuilder.convertFieldToParam(fieldName);
-					queryBuilder.addSqlCriterion(":" + paramName + " in elements(a." + fieldName + ")", paramName, filterValue);
+					queryBuilder.addSqlCriterion(":" + paramName + " in elements(" + fieldName + ")", paramName, filterValue);
 
 					// Field value is in value (list)
 				} else if ("inList".equals(condition) || "not-inList".equals(condition)) {
@@ -1338,8 +1340,8 @@ public class NativePersistenceService extends BaseService {
 
 					String paramName = queryBuilder.convertFieldToParam(fieldName);
 
-					String sql = "((a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or (a." + fieldName + "<=:" + paramName + " and :" + paramName + "<a."
-							+ fieldName2 + ") or (a." + fieldName + "<=:" + paramName + " and a." + fieldName2 + " IS NULL) or (a." + fieldName + " IS NULL and :" + paramName
+					String sql = "((" + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or (" + fieldName + "<=:" + paramName + " and :" + paramName + "<a."
+							+ fieldName2 + ") or (" + fieldName + "<=:" + paramName + " and a." + fieldName2 + " IS NULL) or (a." + fieldName + " IS NULL and :" + paramName
 							+ "<a." + fieldName2 + "))";
 					queryBuilder.addSqlCriterionMultiple(sql, paramName, filterValue);
 
@@ -1350,10 +1352,10 @@ public class NativePersistenceService extends BaseService {
 					String paramNameFrom = queryBuilder.convertFieldToParam(fieldName);
 					String paramNameTo = queryBuilder.convertFieldToParam(fieldName2);
 
-					String sql = "(( a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or  ( a." + fieldName + " IS NULL and a." + fieldName2 + ">:" + paramNameFrom
-							+ ") or (a." + fieldName2 + " IS NULL and a." + fieldName + "<:" + paramNameTo + ") or (a." + fieldName + " IS NOT NULL and a." + fieldName2
-							+ " IS NOT NULL and ((a." + fieldName + "<=:" + paramNameFrom + " and :" + paramNameFrom + "<a." + fieldName2 + ") or (:" + paramNameFrom + "<=a."
-							+ fieldName + " and a." + fieldName + "<:" + paramNameTo + "))))";
+					String sql = "((" + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or  (" + fieldName + " IS NULL and a." + fieldName2 + ">:" + paramNameFrom
+							+ ") or (a." + fieldName2 + " IS NULL and " + fieldName + "<:" + paramNameTo + ") or (" + fieldName + " IS NOT NULL and a." + fieldName2
+							+ " IS NOT NULL and ((" + fieldName + "<=:" + paramNameFrom + " and :" + paramNameFrom + "<a." + fieldName2 + ") or (:" + paramNameFrom + "<=a."
+							+ fieldName + " and " + fieldName + "<:" + paramNameTo + "))))";
 
 					if (filterValue.getClass().isArray()) {
 						queryBuilder.addSqlCriterionMultiple(sql, paramNameFrom, ((Object[]) filterValue)[0], paramNameTo, ((Object[]) filterValue)[1]);
