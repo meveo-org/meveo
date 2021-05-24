@@ -1492,4 +1492,9 @@ public class CustomFieldValue implements Serializable {
             return null;
         }
     }
+
+    public void resetEntityReferenceValueForGUI() {
+        entityReferenceValueForGUI = null;
+        entityReferenceValue = null;
+    }
 }
