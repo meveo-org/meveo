@@ -361,7 +361,7 @@ public class Neo4jService implements CustomPersistenceService {
             Map<EntityRef, String> relationshipsToCreate = createEntityReferences(neo4JConfiguration, cet, fieldValues, cetFields, fields);
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
-            executePrePersist(neo4JConfiguration, cet, fieldValues);
+            executePrePersist(neo4JConfiguration, cet, fields);
             
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
