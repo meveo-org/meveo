@@ -65,7 +65,7 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@PUT
 	@Path("/entity/")
 	@ApiOperation(value = "Update custom entity template information")
-	ActionStatus updateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto);
+	ActionStatus updateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("withData") boolean withData);
 
 	/**
 	 * Remove custom entity template definition given its code
@@ -113,7 +113,7 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@POST
 	@Path("/cet/createOrUpdate")
 	@ApiOperation(value = "Create or update custom entity template information")
-	ActionStatus createOrUpdateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto);
+	ActionStatus createOrUpdateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("withData") boolean withData);
 
 	/**
 	 * To be sure the compatibility of above method we will create a new one. Define

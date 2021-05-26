@@ -145,6 +145,12 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     public void setAppliesTo(String appliesTo) {
         this.appliesTo = appliesTo;
     }
+    
+	@Override
+	public void delete(Long id) throws BusinessException {
+		var cft = customFieldTemplateService.findById(id);
+		customFieldTemplateService.remove(cft, true);
+	}
 
 	/**
 	 * <p>In case of entity reference, 

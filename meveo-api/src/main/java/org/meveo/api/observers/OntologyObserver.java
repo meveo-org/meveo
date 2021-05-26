@@ -674,7 +674,7 @@ public class OntologyObserver {
                         customEntityTemplateApi.removeEntityTemplate(code);
                     } else if (customEntityTemplate != null && cetFile.exists()) {
                         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFile(cetFile.getAbsolutePath());
-                        customEntityTemplateApi.updateEntityTemplate(customEntityTemplateDto);
+                        customEntityTemplateApi.updateEntityTemplate(customEntityTemplateDto, false);
                     }
                 }
             }
