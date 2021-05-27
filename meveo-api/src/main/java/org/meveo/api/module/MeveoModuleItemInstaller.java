@@ -299,7 +299,7 @@ public class MeveoModuleItemInstaller {
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
-    	installCtx.begin();
+    	installCtx.begin(meveoModule);
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,6 +48,7 @@ import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ModulePostInstall;
 import org.meveo.model.git.GitRepository;
@@ -90,8 +92,18 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
-    	if (this.moduleInstallationContext.getModuleCodeInstallation() == findModuleOf(script).getCode()) {
-    	
+    	if (StringUtils.isBlank(script.getScript()) && this.moduleInstallationContext.isActive()) {
+    		File repoDir = GitHelper.getRepositoryDir(null, this.moduleInstallationContext.getModuleCodeInstallation());
+    		String scriptFileDir = "src/main/java/"+ script.getCode().replace(".", "/") +".java";
+    		File javaSource = new File(repoDir, scriptFileDir);
+    		try {
+	    		if (javaSource.exists()) {
+	    			String scriptText = Files.readString(javaSource.toPath());
+	    			script.setScript(scriptText);
+	    		}
+			} catch (IOException e) {
+				throw new BusinessException(e);
+			}
     	}
 		super.beforeUpdateOrCreate(script);
         // Fetch maven dependencies

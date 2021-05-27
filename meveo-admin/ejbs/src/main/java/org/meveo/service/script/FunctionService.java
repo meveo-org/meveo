@@ -158,7 +158,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     
     @Override
     public void create(T executable) throws BusinessException {
-        validateAndSetCode(executable);
+        beforeUpdateOrCreate(executable);
+    	validateAndSetCode(executable);
         super.create(executable);
         publish(executable, CrudActionEnum.create);
     }
@@ -166,8 +167,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Override
     public T update(T executable) throws BusinessException {
         
-    	validateAndSetCode(executable);
         beforeUpdateOrCreate(executable);
+    	validateAndSetCode(executable);
         executable = super.update(executable);        
         publish(executable, CrudActionEnum.update);
         
