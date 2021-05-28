@@ -363,6 +363,9 @@ public class Neo4jService implements CustomPersistenceService {
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
             executePrePersist(neo4JConfiguration, cet, fields);
             
+            // Populate unique fields again after pre presit script as they might have been computed
+            validateAndConvertCustomFields(cetFields, fields, uniqueFields, true);
+
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
             Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
                     .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
