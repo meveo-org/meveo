@@ -82,7 +82,7 @@ do
     if [ $counter -gt $timeout ]; then
         ERROR=1; exit_with_error "Timeout occurred after waiting $timeout seconds for postgres"
     else
-        info "Waiting for postgres ..."
+        info "Waiting for postgres (${MEVEO_DB_HOST}:${MEVEO_DB_PORT})..."
         counter=$((counter+1))
         sleep 1
     fi

@@ -16,6 +16,7 @@
 package org.meveo.persistence.neo4j.base;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
@@ -33,7 +34,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
@@ -86,11 +86,11 @@ public class Neo4jConnectionProvider {
 
     @PostConstruct
     public void loadConfig() {
-        ParamBean paramBean = ParamBean.getInstance();
-		neo4jUrl = paramBean.getProperty("neo4j.host", null);
-        neo4jRestUrl = "http://" + StringUtils.substringBefore(neo4jUrl, ":") + ":" +Integer.valueOf(paramBean.getProperty("neo4j.rest.port", "-1"));
-        neo4jLogin = paramBean.getProperty("neo4j.login", null);
-        neo4jPassword = paramBean.getProperty("neo4j.password", null);
+    	Properties sysProperties = System.getProperties();
+		neo4jUrl = sysProperties.getProperty("neo4j.host", null);
+        neo4jRestUrl = "http://" + StringUtils.substringBefore(neo4jUrl, ":") + ":" +Integer.valueOf(sysProperties.getProperty("neo4j.rest.port", "-1"));
+        neo4jLogin = sysProperties.getProperty("neo4j.login", null);
+        neo4jPassword = sysProperties.getProperty("neo4j.password", null);
 
         if(neo4jUrl != null && neo4jLogin != null && neo4jUrl != null) {
 	        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
@@ -206,5 +206,10 @@ public class Neo4jConnectionProvider {
 		configurationMap.remove(entity.getCode());
 		DRIVER_MAP.remove(entity.getCode());
 	}
+
+	public Neo4JConfiguration getDefaultConfiguration() {
+		return defaultConfiguration;
+	}
+	
 
 }
