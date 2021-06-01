@@ -205,7 +205,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
     }
 
-    public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+    public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto, boolean withData) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
 
@@ -283,7 +283,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	
 			cet = customEntityTemplateService.update(cet);
 	
-	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
+	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions(), withData);
         
         } catch (Exception e) {
         	
@@ -296,6 +296,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     public void removeEntityTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
     	removeEntityTemplate(code,false);
     }
+    
     public void removeEntityTemplate(String code, boolean withData) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
@@ -352,7 +353,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet == null) {
             return create(postData);
         } else {
-            return updateEntityTemplate(postData);
+            return updateEntityTemplate(postData, false);
         }
     }
 
@@ -396,10 +397,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         String appliesTo = EntityCustomizationUtils.getAppliesTo(clazz, null);
 
-        synchronizeCustomFieldsAndActions(appliesTo, dto.getFields(), dto.getActions());
+        synchronizeCustomFieldsAndActions(appliesTo, dto.getFields(), dto.getActions(), false);
     }
 
-    private void synchronizeCustomFieldsAndActions(String appliesTo, List<CustomFieldTemplateDto> fields, List<EntityCustomActionDto> actions)
+    private void synchronizeCustomFieldsAndActions(String appliesTo, List<CustomFieldTemplateDto> fields, List<EntityCustomActionDto> actions, boolean withData)
             throws MeveoApiException, BusinessException {
 
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
@@ -432,7 +433,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         for (CustomFieldTemplate cft : cftsToRemove) {
-            customFieldTemplateService.remove(cft.getId());
+            customFieldTemplateService.remove(cft, withData);
         }
 
         Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(appliesTo);

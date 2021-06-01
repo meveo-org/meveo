@@ -26,6 +26,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.EntityCustomizationRs;
 import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.model.customEntities.CustomEntityTemplate;
 
 /**
  * @author Andrius Karpavicius
@@ -58,11 +59,11 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     }
 
     @Override
-    public ActionStatus updateEntityTemplate(CustomEntityTemplateDto dto) {
+    public ActionStatus updateEntityTemplate(CustomEntityTemplateDto dto, boolean withData) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityTemplateApi.updateEntityTemplate(dto);
+            customEntityTemplateApi.updateEntityTemplate(dto, withData);
         } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
@@ -99,11 +100,18 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     }
 
     @Override
-    public ActionStatus createOrUpdateEntityTemplate(CustomEntityTemplateDto dto) {
+    public ActionStatus createOrUpdateEntityTemplate(CustomEntityTemplateDto dto, boolean withData) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityTemplateApi.createOrUpdate(dto);
+        	
+            var cet = customEntityTemplateApi.find(dto.getCode());
+            if (cet == null) {
+                customEntityTemplateApi.create(dto);
+            } else {
+                customEntityTemplateApi.updateEntityTemplate(dto, withData);
+            }
+            
         } catch (BusinessException | MeveoApiException e) {
             processException(e, result);
         }
@@ -347,6 +355,6 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 	 */
 	@Override
 	public ActionStatus createOrUpdateCustumizedEntityTemplate(CustomEntityTemplateDto dto) {
-		return this.createOrUpdateEntityTemplate(dto);
+		return this.createOrUpdateEntityTemplate(dto, false);
 	}
 }
