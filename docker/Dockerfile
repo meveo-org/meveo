@@ -128,7 +128,7 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
 COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
 COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
