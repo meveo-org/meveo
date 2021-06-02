@@ -139,15 +139,15 @@ public class StartupListener {
 				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
 				if (defaultRepository == null) {
 					
-					Neo4JConfiguration defaultNeo4jConfiguration = neo4jConfigurationService.findByCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
-					if (defaultNeo4jConfiguration == null) {
-						defaultNeo4jConfiguration = neo4jConnectionProvider.getDefaultConfiguration();
-					} 
+//					Neo4JConfiguration defaultNeo4jConfiguration = neo4jConfigurationService.findByCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
+//					if (defaultNeo4jConfiguration == null) {
+//						defaultNeo4jConfiguration = neo4jConnectionProvider.getDefaultConfiguration();
+//					} 
 					
 					defaultRepository = new Repository();
 					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
-					defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
+					//defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
 					repositoryService.create(defaultRepository);
 					log.info("Created default repository");
 				}
