@@ -141,6 +141,15 @@ if [ "$DISABLE_LOGGING" = true ]; then
     fi
 fi
 
+# Run the extra initial scripts:
+# This code should be launched before run the extra CLI and properties,
+# because it might need to run some scripts that export the environment variables.
+if [ -d /docker-entrypoint-initdb.d ]; then
+    for f in /docker-entrypoint-initdb.d/*.sh; do
+        [ -f "$f" ] && . "$f"
+    done
+fi
+
 # Run the extra cli
 if [ -d /docker-entrypoint-initdb.d ]; then
     for f in /docker-entrypoint-initdb.d/*.cli; do
@@ -168,13 +177,6 @@ if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
     ${JBOSS_HOME}/props/properties-merger.sh -s ${JBOSS_HOME}/props/meveo-admin.properties -i ${TMP_PROPS_INPUT} -o ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 
     rm -f ${TMP_PROPS_INPUT}
-fi
-
-# Run the extra initial scripts
-if [ -d /docker-entrypoint-initdb.d ]; then
-    for f in /docker-entrypoint-initdb.d/*.sh; do
-        [ -f "$f" ] && . "$f"
-    done
 fi
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
