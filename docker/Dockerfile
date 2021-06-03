@@ -135,7 +135,6 @@ COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
 COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
-RUN usermod -a -G jboss root
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
