@@ -59,11 +59,12 @@ The following environment variables can be redefined for meveo service
 | MEVEO_DB_USERNAME | meveo | This is username for meveo database. This value should be same as the value of POSTGRES_USER in postgres service inside docker-compose.yml file |
 | MEVEO_DB_PASSWORD | meveo | This is password for meveo database. This value should be same as the value of POSTGRES_PASSWORD in postgres service inside docker-compose.yml file |
 | MEVEO_ADMIN_BASE_URL | http://localhost:8080/ | Base url for meveo admin. |
+| MEVEO_ADMIN_WEB_CONTEXT | meveo | Web Context for meveo admin. |
 | WILDFLY_CUSTOM_XMS | 1024m | for java parameter -Xms |
 | WILDFLY_CUSTOM_XMX | 2048m | for java parameter -Xmx |
 | WILDFLY_CUSTOM_XMMS | 300m | for java parameter -XX:MetaspaceSize |
 | WILDFLY_CUSTOM_XMMX | 500m | for java parameter -XX:MaxMetaspaceSize= |
-| WILDFLY_LOG_CONSOLE_LEVEL | INFO | Wildfly console log level |
+| WILDFLY_LOG_CONSOLE_LEVEL | OFF | Wildfly console log level |
 | WILDFLY_LOG_FILE_LEVEL | INFO | Wildfly server log level (means server.log file) |
 | WILDFLY_LOG_MEVEO_LEVEL | INFO | Meveo source log level |
 | WILDFLY_DEBUG_ENABLE | "false" | Add a debug option to Wildfly startup command ("true" or "false"). debug_enable could not be used with `JAVA_OPTS` together. If this value is `true`, `JAVA_OPTS` should be commented. |
