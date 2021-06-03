@@ -32,7 +32,7 @@ volumes:
 .....
 services:
   neo4j:
-      image: manaty/neo4j-meveo:dev-latest
+      image: manaty/neo4j-meveo:3.5.13
       container_name: neo4j
       build:
         context: ./

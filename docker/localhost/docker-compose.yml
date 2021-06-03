@@ -28,7 +28,7 @@ services:
     ports:
       - 5432:5432
   # neo4j:
-  #   image: neo4j-meveo
+  #   image: manaty/neo4j-meveo:3.5.13
   #   container_name: neo4j
   #   build:
   #     context: ./
