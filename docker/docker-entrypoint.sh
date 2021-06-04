@@ -158,7 +158,8 @@ if [ -d /docker-entrypoint-initdb.d ]; then
 fi
 
 # Configure meveo-admin.properties
-if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
+## Store meveo-admin.properties file into the meveodata folder for volume mapping.
+if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
     MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
     MEVEO_ADMIN_WEB_CONTEXT=${MEVEO_ADMIN_WEB_CONTEXT:-meveo}
 
@@ -166,17 +167,24 @@ if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
 
     echo "meveo.admin.baseUrl=${MEVEO_ADMIN_BASE_URL//:/\\:}" > ${TMP_PROPS_INPUT}
     echo "meveo.admin.webContext=${MEVEO_ADMIN_WEB_CONTEXT}" >> ${TMP_PROPS_INPUT}
+    echo "" >> ${TMP_PROPS_INPUT}
 
     # Add the extra properties files
     if [ -d /docker-entrypoint-initdb.d ]; then
         for props_file in /docker-entrypoint-initdb.d/*.properties; do
             [ -f "${props_file}" ] && cat ${props_file} >> ${TMP_PROPS_INPUT}
+            ## Insert a line break for each file
+            echo "" >> ${TMP_PROPS_INPUT}
         done
     fi
 
-    ${JBOSS_HOME}/props/properties-merger.sh -s ${JBOSS_HOME}/props/meveo-admin.properties -i ${TMP_PROPS_INPUT} -o ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+    ${JBOSS_HOME}/props/properties-merger.sh -s ${JBOSS_HOME}/props/meveo-admin.properties -i ${TMP_PROPS_INPUT} -o ${JBOSS_HOME}/meveodata/meveo-admin.properties
 
     rm -f ${TMP_PROPS_INPUT}
+fi
+## Create a link of meveo-admin.properties into the wildfly configuration folder.
+if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
+    ln -s ${JBOSS_HOME}/meveodata/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
 fi
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
