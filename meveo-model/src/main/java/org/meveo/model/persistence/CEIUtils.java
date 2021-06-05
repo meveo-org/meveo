@@ -32,6 +32,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -587,7 +588,14 @@ public class CEIUtils {
 				// if type extends CustomEntity set the UUID
 				if (CustomEntity.class.isAssignableFrom(paramType)) {
 					lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
-					setUUIDField(lazyInitInstance, (String) entry.getValue());
+
+					Object val = entry.getValue();
+					if (entry.getValue() instanceof EntityReferenceWrapper) {
+						EntityReferenceWrapper wrapper = (EntityReferenceWrapper) entry.getValue();
+						val = wrapper.getUuid();
+					}
+
+					setUUIDField(lazyInitInstance, val.toString());
 					setter.invoke(instance, lazyInitInstance);
 
 				} else {
