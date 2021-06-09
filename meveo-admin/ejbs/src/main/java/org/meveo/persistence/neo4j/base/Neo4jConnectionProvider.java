@@ -82,7 +82,7 @@ public class Neo4jConnectionProvider {
     private String neo4jPassword;
     private String neo4jRestUrl;
 
-    private Neo4JConfiguration defaultConfiguration = new Neo4JConfiguration(); 
+    private Neo4JConfiguration defaultConfiguration = null; 
 
     @PostConstruct
     public void loadConfig() {
@@ -93,6 +93,7 @@ public class Neo4jConnectionProvider {
         neo4jPassword = sysProperties.getProperty("neo4j.password", null);
 
         if(neo4jUrl != null && neo4jLogin != null && neo4jUrl != null) {
+        	defaultConfiguration = new Neo4JConfiguration(); 
 	        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
 	        defaultConfiguration.setNeo4jLogin(neo4jLogin);
 	        defaultConfiguration.setClearPassword(neo4jPassword);
