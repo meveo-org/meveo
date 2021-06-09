@@ -51,7 +51,6 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -624,6 +623,8 @@ public abstract class BaseApi {
             return cfDto.getDoubleValue();
         } else if (cfDto.getLongValue() != null) {
             return cfDto.getLongValue();
+        } else if (cfDto.getBooleanValue() != null) {
+            return cfDto.getBooleanValue();
         } else if (cfDto.getEntityReferenceValue() != null) {
             return cfDto.getEntityReferenceValue().fromDTO();
             // } else {
