@@ -16,7 +16,7 @@
 		<dbtype>generic</dbtype>
 		<releaseOption />
 		<jackson.version>2.9.10</jackson.version>
-		<scm.url>scm:git:ssh://git@github.com/meveo-org/meveo</scm.url>
+		<scm.url>scm:git:git@github.com:meveo-org/meveo</scm.url>
 		<aether.version>1.1.0</aether.version>
 	</properties>
 
