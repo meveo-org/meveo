@@ -21,6 +21,7 @@
 	</properties>
 
 	<scm>
+		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
 	</scm>
 
