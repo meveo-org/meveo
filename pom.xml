@@ -49,11 +49,6 @@
 			<name>Temporary Staging Repository</name>
 			<url>file://${project.groupId}</url>
 		</site>
-		<repository>
-     		<id>meveo</id>
-     		<name>GitHub meveo-org Apache Maven Packages</name>
-     		<url>https://maven.pkg.github.com/meveo-org/meveo</url>
-   		</repository>
 	</distributionManagement>
 	<pluginRepositories>
 		<pluginRepository>
