@@ -105,7 +105,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 
         try {
         	
-            var cet = customEntityTemplateApi.find(dto.getCode());
+            var cet = customEntityTemplateApi.findIgnoreNotFound(dto.getCode());
             if (cet == null) {
                 customEntityTemplateApi.create(dto);
             } else {
