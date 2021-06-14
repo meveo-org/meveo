@@ -96,8 +96,8 @@ public class Neo4jConnectionProvider {
         	defaultConfiguration = new Neo4JConfiguration(); 
 	        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
 	        defaultConfiguration.setNeo4jLogin(neo4jLogin);
-	        defaultConfiguration.setClearPassword(neo4jPassword);
 	        defaultConfiguration.setNeo4jUrl(neo4jUrl);
+	        defaultConfiguration.setClearPassword(neo4jPassword);
 	    }
     }
 
