@@ -178,7 +178,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 */
 	public boolean isEndpointScriptExists(Endpoint endpoint) {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
+		final File endpointDir = new File(repositoryDir, "/facets/endpoints/");
 		File f = new File(endpointDir, endpoint.getCode() + ".js");
 
 		return f.exists() && !f.isDirectory();
@@ -206,14 +206,14 @@ public class EndpointService extends BusinessService<Endpoint> {
 		} else {
 			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
 		}
-		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
+		final File endpointDir = new File(repositoryDir, "/facets/endpoints/");
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
 	}
 	
 	public File getBaseScriptFile() {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-		final File endpointFile = new File(repositoryDir, "/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
+		final File endpointFile = new File(repositoryDir, "/facets/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
 		return endpointFile;
 	}
 	
@@ -225,7 +225,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 		super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode()+"/"+entity.getCode()+".js";
+    	String path = "facets/endpoints/"+entity.getCode()+".js";
     	
     	File newJsFile = new File (gitDirectory, path);
     	
