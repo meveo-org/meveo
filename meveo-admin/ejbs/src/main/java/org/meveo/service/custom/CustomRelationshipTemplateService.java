@@ -312,18 +312,30 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 				.getResultList();
 	}
 	
-	public File getCrtDir(CustomRelationshipTemplate crt) {
+	/**
+	 * Get directory the java or the json schema of a crt
+	 * @param crt code your a looking for
+	 * @param extension the file you target (json or java)
+	 * @return file
+	 */
+	public File getCrtDir(CustomRelationshipTemplate crt, String extension) {
     	File repositoryDir;
     	String path;
+    	String directory = "";
+    	
+    	if (extension == "json") {
+    		directory = "facets/json";
+    	}else if (extension == "java") {
+    		directory = "facets/java";
+    	}
     	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
     	if (module == null) {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-    		path = "custom/relationships";
+    		path = directory;
     	} else {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    		path = "customRelationShipTemplates/" + crt.getCode();
+    		path = directory;
     	}
     	return new File(repositoryDir, path);
 	}
-
 }

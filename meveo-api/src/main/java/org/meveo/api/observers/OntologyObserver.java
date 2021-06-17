@@ -366,14 +366,14 @@ public class OntologyObserver {
 
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = customRelationshipTemplateService.getCrtDir(crt);
+        final File crtDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
 
-        if (!crtDir.exists()) {
-            crtDir.mkdirs();
-            commitFiles.add(crtDir);
+        if (!crtDirJson.exists()) {
+            crtDirJson.mkdirs();
+            commitFiles.add(crtDirJson);
         }
 
-        File schemaFile = new File(crtDir, crt.getCode() + "-schema.json");
+        File schemaFile = new File(crtDirJson, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
         	schemaFile.delete();
         }
@@ -404,14 +404,14 @@ public class OntologyObserver {
         
         final String templateSchema = getTemplateSchema(crt);
 
-        final File crtDir = customRelationshipTemplateService.getCrtDir(crt);
+        final File crtDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
 
         // This is for retro-compatibility, in case a CRT created before 6.4.0 is updated
-        if (!crtDir.exists()) {
-            crtDir.mkdirs();
+        if (!crtDirJson.exists()) {
+            crtDirJson.mkdirs();
         }
 
-        File schemaFile = new File(crtDir, crt.getCode() + "-schema.json");
+        File schemaFile = new File(crtDirJson, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
@@ -440,13 +440,14 @@ public class OntologyObserver {
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void crtRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
-        final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
-        final File schemaFile = new File(cetDir, crt.getCode() + "-schema.json");
+        final File cetDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
+        final File cetDirJava = customRelationshipTemplateService.getCrtDir(crt, "java");
+        final File schemaFile = new File(cetDirJson, crt.getCode() + "-schema.json");
         if (schemaFile.exists()) {
             schemaFile.delete();
         }
         
-        final File javaFile = new File(cetDir, crt.getCode() + ".java");
+        final File javaFile = new File(cetDirJava, crt.getCode() + ".java");
         if (javaFile.exists()) {
             javaFile.delete();
         }
@@ -512,7 +513,7 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
+            final File cetDir = customRelationshipTemplateService.getCrtDir(crt, "json");
 
             // This is for retro-compatibility, in case a we add a field to a CET created before 6.4.0
             if (!cetDir.exists()) {
@@ -593,14 +594,14 @@ public class OntologyObserver {
 
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(cft.getAppliesTo().replaceAll("CRT_(.*)", "$1"));
-            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
+            final File cetDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
 
             // This is for retro-compatibility, in case we update a field of a CET created before 6.4.0
-            if (!cetDir.exists()) {
-                cetDir.mkdirs();
+            if (!cetDirJson.exists()) {
+                cetDirJson.mkdirs();
             }
 
-            File schemaFile = new File(cetDir, crt.getCode() + ".json");
+            File schemaFile = new File(cetDirJson, crt.getCode() + ".json");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();
@@ -675,14 +676,14 @@ public class OntologyObserver {
                 return;
             }
 
-            final File cetDir = customRelationshipTemplateService.getCrtDir(crt);
+            final File cetDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
 
-            if (!cetDir.exists()) {
+            if (!cetDirJson.exists()) {
                 // Nothing to delete
                 return;
             }
 
-            File schemaFile = new File(cetDir, crt.getCode() + ".json");
+            File schemaFile = new File(cetDirJson, crt.getCode() + ".json");
 
             if (schemaFile.exists()) {
                 schemaFile.delete();

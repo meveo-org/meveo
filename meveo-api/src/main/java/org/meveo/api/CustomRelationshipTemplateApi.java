@@ -281,7 +281,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 		this.removeCustomRelationshipTemplate(dto.getCode());
 	}
 	
-	@Override
+	
 	public boolean validateModuleFileName (String fileName) {
 		boolean validation = true;
 		if (fileName.endsWith("-schema.json"))
