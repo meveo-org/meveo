@@ -901,7 +901,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	        if (module != null) {
 		        for (MeveoModuleDependency dependencie : module.getModuleDependencies()) {
 		        	sourcePath.concat(";");
-		        	sourcePath.concat(dependencie.toString());
+		        	sourcePath.concat(module.getCode() + "/facets/java/" + dependencie.toString());
 		        }
 	        }
         }
@@ -1086,8 +1086,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
-                if (modifiedFile.startsWith("src/main/java") && !modifiedFile.contains("customEntities")) {
-                    String scriptCode = modifiedFile.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
+                if (modifiedFile.startsWith("facets/java") && !modifiedFile.contains("customEntities")) {
+                    String scriptCode = modifiedFile;//.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
                     File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
                     File scriptFile = new File(repositoryDir, modifiedFile);
@@ -1134,19 +1134,28 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @SuppressWarnings("unchecked")
 	private File findScriptFile(CustomScript scriptInstance) {
-    	File scriptDir;
-    	String path = scriptInstance.getCode().replaceAll("\\.", "/");
-    	MeveoModule module = this.findModuleOf((T) scriptInstance);
-    	if (module == null) {
-    		scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
-    	} else {
-    		scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/src/main/java/");
+    	File scriptDir = null;
+    	String path = scriptInstance.getCode();
+    	String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+    	String directory = "";
+    	
+    	if (extension == ".js") {
+    		directory = "/facets/javascript/";
+    	}else if (extension == ".java") {
+    		directory = "/facets/java/";
     	}
-    	if (!scriptDir.exists()) {
+	    MeveoModule module = this.findModuleOf((T) scriptInstance);
+
+	    if (module == null) {
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + directory);
+	    } else {
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
+	    }
+	    if (!scriptDir.exists()) {
             scriptDir.mkdirs();
         }
 
-        String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+        
         return new File(scriptDir, path + extension);
     }
 

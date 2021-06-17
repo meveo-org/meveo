@@ -94,7 +94,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
     	if (StringUtils.isBlank(script.getScript()) && this.moduleInstallationContext.isActive()) {
     		File repoDir = GitHelper.getRepositoryDir(null, this.moduleInstallationContext.getModuleCodeInstallation());
-    		String scriptFileDir = "src/main/java/"+ script.getCode().replace(".", "/") +".java";
+    		String scriptFileDir = "facets/java/"+ script.getCode() + ".java";
     		File javaSource = new File(repoDir, scriptFileDir);
     		try {
 	    		if (javaSource.exists()) {
@@ -357,9 +357,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	@Override
 	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
 		super.addFilesToModule(entity, module);
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/src/main/java");
-		String pathNewFile = entity.getCode().replaceAll("\\.", "/");
-		pathNewFile += ".java";
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java");
+		String pathNewFile = entity.getCode() + ".java";
 		
 		File newFile = new File(gitDirectory, pathNewFile);
 		

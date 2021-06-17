@@ -218,7 +218,7 @@ public class CharSequenceCompiler<T> {
 
 	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
 	   // javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
-	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/src/main/java/");
+	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/facets/java/");
 
 	   // Set source directory
 	   options.add("-sourcepath");
