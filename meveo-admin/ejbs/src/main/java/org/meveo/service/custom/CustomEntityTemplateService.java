@@ -328,13 +328,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     /**
      * 
      * @param cetCode code of the custom entity template
-     * @return the json scema of the custom entity template
+     * @return the json schema of the custom entity template
      * @throws IOException if a file can't be written / read
      */
     @SuppressWarnings("unchecked")
 	public String getJsonSchemaContent(String cetCode) throws IOException {
 
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/org/meveo/model/customEntities");
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/json");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -781,8 +781,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String pathJavaFile = "src/main/java/org/meveo/model/customEntities" + "/" + entity.getCode() + ".java";
-    	String pathJsonSchemaFile = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + "/" + entity.getCode()+"-schema" + ".json";
+    	String pathJavaFile = "facets/java" + "/" + entity.getCode() + ".java";
+    	String pathJsonSchemaFile = "facets/json" + "/" + entity.getCode()+"-schema" + ".json";
     	
     	File newJavaFile = new File (gitDirectory, pathJavaFile);
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
