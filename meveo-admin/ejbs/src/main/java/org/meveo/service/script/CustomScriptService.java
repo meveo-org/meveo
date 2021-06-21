@@ -1062,6 +1062,20 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	//TODO remove this condition with the default Meveo module
     	if (module != null) {
     		removeFilesFromModule((T) scriptInstance, module);
+    		
+    		String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+    		File gitDirectory;
+    		String path;
+    		if (extension == ".js") {
+    			gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    			path = "/facets/javascript/" + scriptInstance.getCode() + extension;
+    		} else {
+    			gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    			path = "/facets/java/" + scriptInstance.getCode() + extension;
+    		}
+			File directoryToRemove = new File(gitDirectory, path);
+			directoryToRemove.delete();
+			
     	} else {
     		File file = findScriptFile(scriptInstance);
     		if (file.exists()) {

@@ -357,6 +357,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	@Override
 	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
 		super.addFilesToModule(entity, module);
+		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+		if (extension == ".java") {
 		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java");
 		String pathNewFile = entity.getCode() + ".java";
 		
@@ -365,6 +367,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
 		
 		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
+		}	
 	}
 
 }
