@@ -298,7 +298,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			line = 1;
 			for (MavenDependency maven : mavenDependencyList) {
 				if (!mavenDependencyService.validateUniqueFields(maven.getVersion(), maven.getGroupId(), maven.getArtifactId())) {
-					throw new BusinessException("Same artifact with other version already exist");
+					throw new BusinessException("Same artifact with other version already exist" + "(new version : "+maven.getGroupId()+":"+maven.getArtifactId()+":"+maven.getVersion()+" ref by " + dto.getCode() + ")");
 				}
 				line++;
 

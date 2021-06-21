@@ -21,6 +21,8 @@ import java.net.URI;
 import java.util.List;
 
 import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
+import javax.interceptor.Interceptors;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Context;
@@ -30,6 +32,7 @@ import javax.ws.rs.core.UriInfo;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -42,6 +45,8 @@ import org.meveo.model.technicalservice.endpoint.Endpoint;
  * @since 04.02.2019
  * @version 6.9.0
  */
+@RequestScoped
+@Interceptors({ WsRestApiInterceptor.class })
 public class EndpointRs extends BaseRs implements IEndpointRs {
 
 	@EJB

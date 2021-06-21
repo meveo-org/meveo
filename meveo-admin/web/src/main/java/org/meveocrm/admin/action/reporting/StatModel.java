@@ -45,7 +45,7 @@ public class StatModel {
 
 	public String getLastUpdateFormatted() {
 		if (lastUpdated != null) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm a");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm a");
 			return sdf.format(lastUpdated).toString();
 		}
 		return "";

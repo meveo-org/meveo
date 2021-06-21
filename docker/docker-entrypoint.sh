@@ -18,7 +18,7 @@ info() {
 }
 
 
-# Meveo database parameters
+# Meveo parameters
 export MEVEO_DB_HOST=${MEVEO_DB_HOST:-postgres}
 export MEVEO_DB_PORT=${MEVEO_DB_PORT:-5432}
 export MEVEO_DB_NAME=${MEVEO_DB_NAME:-meveo}
@@ -29,7 +29,7 @@ export MEVEO_DB_PASSWORD=${MEVEO_DB_PASSWORD:-meveo}
 export WILDFLY_BIND_ADDR=${WILDFLY_BIND_ADDR:-0.0.0.0}
 export WILDFLY_MANAGEMENT_BIND_ADDR=${WILDFLY_MANAGEMENT_BIND_ADDR:-0.0.0.0}
 export WILDFLY_PROXY_ADDRESS_FORWARDING=${WILDFLY_PROXY_ADDRESS_FORWARDING:-false}
-export WILDFLY_LOG_CONSOLE_LEVEL=${WILDFLY_LOG_CONSOLE_LEVEL:-INFO}
+export WILDFLY_LOG_CONSOLE_LEVEL=${WILDFLY_LOG_CONSOLE_LEVEL:-OFF}
 export WILDFLY_LOG_FILE_LEVEL=${WILDFLY_LOG_FILE_LEVEL:-INFO}
 export WILDFLY_LOG_MEVEO_LEVEL=${WILDFLY_LOG_MEVEO_LEVEL:-INFO}
 
@@ -81,7 +81,7 @@ do
     if [ $counter -gt $timeout ]; then
         ERROR=1; exit_with_error "Timeout occurred after waiting $timeout seconds for postgres"
     else
-        info "Waiting for postgres ..."
+        info "Waiting for postgres (${MEVEO_DB_HOST}:${MEVEO_DB_PORT})..."
         counter=$((counter+1))
         sleep 1
     fi
@@ -141,13 +141,51 @@ if [ "$DISABLE_LOGGING" = true ]; then
     fi
 fi
 
-# Run entrypoint scripts if need to run extra cli
+# Run the extra initial scripts:
+# This code should be launched before run the extra CLI and properties,
+# because it might need to run some scripts that export the environment variables.
 if [ -d /docker-entrypoint-initdb.d ]; then
     for f in /docker-entrypoint-initdb.d/*.sh; do
         [ -f "$f" ] && . "$f"
     done
 fi
 
+# Run the extra cli
+if [ -d /docker-entrypoint-initdb.d ]; then
+    for f in /docker-entrypoint-initdb.d/*.cli; do
+        [ -f "$f" ] && ${JBOSS_HOME}/bin/jboss-cli.sh --file=$f
+    done
+fi
+
+# Configure meveo-admin.properties
+## Store meveo-admin.properties file into the meveodata folder for volume mapping.
+if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
+    MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
+    MEVEO_ADMIN_WEB_CONTEXT=${MEVEO_ADMIN_WEB_CONTEXT:-meveo}
+
+    TMP_PROPS_INPUT="/tmp/.tmp.${RANDOM}.props"
+
+    echo "meveo.admin.baseUrl=${MEVEO_ADMIN_BASE_URL//:/\\:}" > ${TMP_PROPS_INPUT}
+    echo "meveo.admin.webContext=${MEVEO_ADMIN_WEB_CONTEXT}" >> ${TMP_PROPS_INPUT}
+    echo "" >> ${TMP_PROPS_INPUT}
+
+    # Add the extra properties files
+    if [ -d /docker-entrypoint-initdb.d ]; then
+        for props_file in /docker-entrypoint-initdb.d/*.properties; do
+            [ -f "${props_file}" ] && cat ${props_file} >> ${TMP_PROPS_INPUT}
+            ## Insert a line break for each file
+            echo "" >> ${TMP_PROPS_INPUT}
+        done
+    fi
+
+    ${JBOSS_HOME}/props/properties-merger.sh -s ${JBOSS_HOME}/props/meveo-admin.properties -i ${TMP_PROPS_INPUT} -o ${JBOSS_HOME}/meveodata/meveo-admin.properties
+
+    rm -f ${TMP_PROPS_INPUT}
+fi
+## Create a link of meveo-admin.properties into the wildfly configuration folder.
+if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
+    ln -s ${JBOSS_HOME}/meveodata/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+fi
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
 system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`

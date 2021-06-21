@@ -84,7 +84,9 @@ public class EntityReferenceDto implements Serializable {
 		if (isEmpty()) {
 			return null;
 		}
-		return new EntityReferenceWrapper(classname, classnameCode, code, id);
+		var wrapper = new EntityReferenceWrapper(classname, classnameCode, code, id);
+		wrapper.setUuid(code);
+		return wrapper;
 	}
 
 	/**
@@ -139,7 +141,7 @@ public class EntityReferenceDto implements Serializable {
 	 * @return True if classname or code are empty
 	 */
 	public boolean isEmpty() {
-		return StringUtils.isBlank(classname) || StringUtils.isBlank(code);
+		return (StringUtils.isBlank(classname) && StringUtils.isBlank(classnameCode)) || StringUtils.isBlank(code);
 	}
 
 	public Long getId() {
@@ -149,4 +151,19 @@ public class EntityReferenceDto implements Serializable {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
+	/**
+	 * @return the {@link #classnameCode}
+	 */
+	public String getClassnameCode() {
+		return classnameCode;
+	}
+
+	/**
+	 * @param classnameCode the classnameCode to set
+	 */
+	public void setClassnameCode(String classnameCode) {
+		this.classnameCode = classnameCode;
+	}
+	
 }

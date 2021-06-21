@@ -21,11 +21,11 @@ RUN apt-get update \
         fontconfig libfreetype6 \
     && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
-# Set the timezone
-ENV TZ Europe/Paris
-RUN echo "Europe/Paris" > /etc/timezone \
-    && rm /etc/localtime && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && dpkg-reconfigure -f noninteractive tzdata
+# Set the timezone (Default timezone is UTC.)
+# ENV TZ Europe/Paris
+# RUN echo "Europe/Paris" > /etc/timezone \
+#     && rm /etc/localtime && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
+#     && dpkg-reconfigure -f noninteractive tzdata
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
@@ -128,7 +128,7 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
 COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
 COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
@@ -140,7 +140,7 @@ COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.wa
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990
+EXPOSE 8080 8787 9990
 
 COPY --chown=jboss:jboss docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

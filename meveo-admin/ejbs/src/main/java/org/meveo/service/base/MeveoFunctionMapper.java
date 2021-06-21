@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.commons.utils.EjbUtils;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.elresolver.MeveoDefaultFunctionMapper;
 import org.meveo.model.ICustomFieldEntity;
@@ -225,6 +226,8 @@ public class MeveoFunctionMapper extends MeveoDefaultFunctionMapper {
 
             addFunction("mv", "getCTValuesForDate", MeveoFunctionMapper.class.getMethod("getCTValues", String.class, Date.class, String.class, Object.class, String.class,
                     Object.class, String.class, Object.class, String.class, Object.class, String.class, Object.class));
+            
+            addFunction("mv", "getProperty", MeveoFunctionMapper.class.getMethod("getProperty", String.class));
 
             // addFunction("mv", "call", MeveoFunctionMapper.class.getMethod("call", String.class, String.class,String.class, Object[].class));
         } catch (NoSuchMethodException | SecurityException e) {
@@ -298,6 +301,10 @@ public class MeveoFunctionMapper extends MeveoDefaultFunctionMapper {
             }
         }
         return scriptInstanceService;
+    }
+    
+    public static Object getProperty(String param) {
+    	return ParamBean.getInstance().getProperty(param, null);
     }
 
     /**

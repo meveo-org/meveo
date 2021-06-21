@@ -16,6 +16,7 @@
 package org.meveo.persistence.neo4j.base;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
@@ -32,9 +33,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.LockOptions;
-import org.meveo.commons.utils.ParamBean;
-import org.meveo.event.qualifier.Updated;
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
@@ -81,23 +80,24 @@ public class Neo4jConnectionProvider {
     private String neo4jUrl;
     private String neo4jLogin;
     private String neo4jPassword;
-    private Integer neo4jRestPort;
+    private String neo4jRestUrl;
 
-    private Neo4JConfiguration defaultConfiguration = new Neo4JConfiguration(); 
+    private Neo4JConfiguration defaultConfiguration = null; 
 
     @PostConstruct
     public void loadConfig() {
-        ParamBean paramBean = ParamBean.getInstance();
-		neo4jUrl = paramBean.getProperty("neo4j.host", null);
-        neo4jRestPort = Integer.valueOf(paramBean.getProperty("neo4j.rest.port", "-1"));
-        neo4jLogin = paramBean.getProperty("neo4j.login", null);
-        neo4jPassword = paramBean.getProperty("neo4j.password", null);
+    	Properties sysProperties = System.getProperties();
+		neo4jUrl = sysProperties.getProperty("neo4j.host", null);
+        neo4jRestUrl = "http://" + StringUtils.substringBefore(neo4jUrl, ":") + ":" +Integer.valueOf(sysProperties.getProperty("neo4j.rest.port", "-1"));
+        neo4jLogin = sysProperties.getProperty("neo4j.login", null);
+        neo4jPassword = sysProperties.getProperty("neo4j.password", null);
 
-        if(neo4jUrl != null && neo4jRestPort != -1 && neo4jLogin != null && neo4jUrl != null) {
+        if(neo4jUrl != null && neo4jLogin != null && neo4jUrl != null) {
+        	defaultConfiguration = new Neo4JConfiguration(); 
 	        defaultConfiguration.setCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
 	        defaultConfiguration.setNeo4jLogin(neo4jLogin);
-	        defaultConfiguration.setClearPassword(neo4jPassword);
 	        defaultConfiguration.setNeo4jUrl(neo4jUrl);
+	        defaultConfiguration.setClearPassword(neo4jPassword);
 	    }
     }
 
@@ -125,7 +125,7 @@ public class Neo4jConnectionProvider {
                 return driver.session();
             }
         }catch (Exception e){
-            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage());
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
         	DRIVER_MAP.remove(neo4JConfigurationCode);
             return null;
         }
@@ -146,7 +146,7 @@ public class Neo4jConnectionProvider {
 	}
 
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
-		String salt = PasswordUtils.getSalt(neo4JConfiguration.getId(), neo4JConfiguration.getCode());
+		String salt = PasswordUtils.getSalt(neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl());
 		String pwd = PasswordUtils.decrypt(salt, neo4JConfiguration.getNeo4jPassword());
 		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd));
 		// Test connection
@@ -184,7 +184,7 @@ public class Neo4jConnectionProvider {
     }
 
     public String getRestUrl() {
-        return "http://" + neo4jUrl + ":" + neo4jRestPort;
+        return neo4jRestUrl;
     }
 
     /**
@@ -207,5 +207,10 @@ public class Neo4jConnectionProvider {
 		configurationMap.remove(entity.getCode());
 		DRIVER_MAP.remove(entity.getCode());
 	}
+
+	public Neo4JConfiguration getDefaultConfiguration() {
+		return defaultConfiguration;
+	}
+	
 
 }

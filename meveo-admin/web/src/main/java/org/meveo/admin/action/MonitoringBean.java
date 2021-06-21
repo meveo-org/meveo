@@ -46,7 +46,7 @@ public class MonitoringBean implements Serializable {
 
     private static String macAddress = null;
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZ");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     public static String getMacAddress() {
         if (macAddress == null) {

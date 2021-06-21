@@ -51,7 +51,6 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -263,15 +262,30 @@ public abstract class BaseApi {
                     // EntityReferenceWrapper objects
                     if (cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
 
-                        List<EntityReferenceWrapper> childEntityReferences = new ArrayList<>();
+                        List<Map> childEntitiesValues = new ArrayList<>();
+                        
 
                         try {
-	                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
-	                            customEntityInstanceApi.createOrUpdate(ceiDto);
-	                            childEntityReferences.add(new EntityReferenceWrapper(CustomEntityInstance.class.getName(), ceiDto.getCetCode(), ceiDto.getCode(), ceiDto.getId()));
-	                        }
+                        	if (valueConverted != null)
+                        		if (valueConverted != null)
+			                        for (CustomEntityInstanceDto ceiDto : ((List<CustomEntityInstanceDto>) valueConverted)) {
+			                    		CustomEntityInstance cei = CustomEntityInstanceDto.fromDTO(ceiDto, null);
+
+			                    		// populate customFields
+			                    		try {
+			                    			populateCustomFields(ceiDto.getCustomFields(), cei, true);
+			                    		} catch (MissingParameterException | InvalidParameterException e) {
+			                    			log.error("Failed to associate custom field instance to an entity: {}", e.getMessage());
+			                    			throw e;
+			                    		} catch (Exception e) {
+			                    			log.error("Failed to associate custom field instance to an entity", e);
+			                    			throw e;
+			                    		}
+			                    		
+			                    		childEntitiesValues.add(cei.getCfValuesAsValues());
+			                        }
 	                        
-	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntityReferences);
+	                        customFieldInstanceService.setCFValue(entity, cfDto.getCode(), childEntitiesValues);
                         } catch (ClassCastException e) {
                         	customFieldInstanceService.setCFValue(entity, cfDto.getCode(), valueConverted);
                         }
@@ -609,6 +623,8 @@ public abstract class BaseApi {
             return cfDto.getDoubleValue();
         } else if (cfDto.getLongValue() != null) {
             return cfDto.getLongValue();
+        } else if (cfDto.getBooleanValue() != null) {
+            return cfDto.getBooleanValue();
         } else if (cfDto.getEntityReferenceValue() != null) {
             return cfDto.getEntityReferenceValue().fromDTO();
             // } else {

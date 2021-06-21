@@ -60,9 +60,10 @@ public class PasswordUtils {
 	public static String encrypt(String salt, String value) {
 		try {
 			Cipher cipher = initCipher(salt, Cipher.ENCRYPT_MODE);
-			byte[] encrypted = cipher.doFinal(value.getBytes());
+			byte[] encrypted = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
 			byte[] cipherWithIv = addIVToCipher(encrypted);
-			return Base64.getEncoder().encodeToString(cipherWithIv);
+			byte[] encodedBytes = Base64.getEncoder().encode(cipherWithIv);
+			return new String(encodedBytes, StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

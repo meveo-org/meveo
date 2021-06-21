@@ -16,11 +16,11 @@ RUN apt-get update \
         fontconfig libfreetype6 \
     && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
-# Set the timezone
-ENV TZ Europe/Paris
-RUN echo "Europe/Paris" > /etc/timezone \
-    && rm /etc/localtime && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
-    && dpkg-reconfigure -f noninteractive tzdata
+# Set the timezone (Default timezone is UTC.)
+# ENV TZ Europe/Paris
+# RUN echo "Europe/Paris" > /etc/timezone \
+#     && rm /etc/localtime && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
+#     && dpkg-reconfigure -f noninteractive tzdata
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
@@ -123,7 +123,7 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
 COPY --chown=jboss:jboss docker/configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss docker/configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
 COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_resources
@@ -132,12 +132,14 @@ COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_res
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990
+EXPOSE 8080 8787 9990
 
 
 #install maven
 
 USER root
+
+RUN usermod -a -G jboss root
 
 ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"
@@ -156,7 +158,7 @@ ENV MAVEN_CONFIG "/opt/jboss/wildfly/meveodata/default/.m2"
 
 
 RUN mkdir -p /usr/share/trava \
-  && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.10%2B2/java11-openjdk-dcevm-linux.tar.gz  \
+  && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.11%2B1/Openjdk11u-dcevm-linux-x64.tar.gz  \
   && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
   && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 
@@ -173,7 +175,8 @@ RUN cd /tmp/meveo \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo 
 
-ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.10+2
+ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.11+1
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${JAVA_HOME}/bin
 
 COPY --chown=jboss:jboss /docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

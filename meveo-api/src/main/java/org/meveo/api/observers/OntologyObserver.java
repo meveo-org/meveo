@@ -256,11 +256,6 @@ public class OntologyObserver {
         }
         commitFiles.add(javaFile);
         gitClient.commitFiles(meveoRepository, commitFiles, "Revert creation of custom entity template " + cet.getCode());
-    
-        // Remove table and sequence on failure
-        if(cet.isStoreAsTable()) {
-        	customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
-        }
     }
     
 
@@ -735,7 +730,7 @@ public class OntologyObserver {
                         customEntityTemplateApi.removeEntityTemplate(code);
                     } else if (customEntityTemplate != null && cetFile.exists()) {
                         CustomEntityTemplateDto customEntityTemplateDto = jsonSchemaIntoTemplateParser.parseJsonFromFile(cetFile.getAbsolutePath());
-                        customEntityTemplateApi.updateEntityTemplate(customEntityTemplateDto);
+                        customEntityTemplateApi.updateEntityTemplate(customEntityTemplateDto, false);
                     }
                 }
             }

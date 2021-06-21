@@ -1,34 +1,36 @@
 {
-	"name": "Meveo",
-    "workspaceFolder": "/home/meveo",
-	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
-	"dockerComposeFile": "docker-compose.yml",
+  "name": "Meveo",
+  "workspaceFolder": "/home/meveo",
+  // Update the 'dockerComposeFile' list if you have more compose files or use different names.
+  "dockerComposeFile": "docker-compose.yml",
 
-	// The 'service' property is the name of the service for the container that VS Code should
-	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
-	"service": "meveo",
+  // The 'service' property is the name of the service for the container that VS Code should
+  // use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+  "service": "meveo",
 
-	// Set *default* container specific settings.json values on container create.
-	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash",
-		"java.home": "/usr/local/openjdk-11"
-	},
-	
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"vscjava.vscode-java-pack",
-		"mightycoco.fsdeploy"
-	],
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "java.home": "/usr/share/trava/dcevm-11.0.11+1"
+  },
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-    // 5432 : postgres
-    // 8080 : meveo
-    // 8087 : wildfly debug
-    // 9990 : wildfly admin
-	"forwardPorts": [5432,8080,8081,8087,9990],
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "vscjava.vscode-java-pack",
+    "sonarsource.sonarlint-vscode",
+    "dotjoshjohnson.xml",
+    "yzhang.markdown-all-in-one",
+    "eamodio.gitlens"
+  ],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "java -version",
-	"remoteUser": "root"
-	
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // 5432 : postgres
+  // 8080 : meveo
+  // 8787 : wildfly debug
+  // 9990 : wildfly admin
+  "forwardPorts": [5432, 8080, 8787, 9990],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "java -version",
+  "remoteUser": "root"
 }

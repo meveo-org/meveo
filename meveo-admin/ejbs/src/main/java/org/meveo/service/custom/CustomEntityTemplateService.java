@@ -540,6 +540,20 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	}
     	return cet.getCrudEventListener();
     }
+    
+    public void removeData(CustomEntityTemplate cet) {
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+
+        } else if (cet.getSqlStorageConfiguration() != null) {
+            customEntityInstanceService.removeByCet(cet.getCode());
+        }
+
+        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.removeCet(cet);
+            neo4jService.removeUUIDIndexes(cet);
+        }
+    }
 
     @Override
     public void remove(CustomEntityTemplate cet) throws BusinessException {
@@ -553,18 +567,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         	if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
         		customFieldTemplateService.remove(cft);
         	}
-        }
-
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
-
-        } else if (cet.getSqlStorageConfiguration() != null) {
-            customEntityInstanceService.removeByCet(cet.getCode());
-        }
-
-        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.removeCet(cet);
-            neo4jService.removeUUIDIndexes(cet);
         }
 
         for (EntityCustomAction entityCustomAction : customActionMap.values()) {

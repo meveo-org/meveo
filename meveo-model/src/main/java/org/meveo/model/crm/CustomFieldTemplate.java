@@ -79,6 +79,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.shared.DateUtils;
 
 /**
@@ -298,7 +299,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     @Size(max = 2000)
     private String tags;
 
-    @Type(type = "json")
+    @Type(type = JsonTypes.JSON)
     @Column(name = "description_i18n", columnDefinition = "text")
     private Map<String, String> descriptionI18n;
     
@@ -335,7 +336,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     /** Storage where the cft value will be stored. */
     @Column(name = "storages", columnDefinition = "TEXT")
-    @Type(type = "jsonList")
+    @Type(type = JsonTypes.JSON_LIST)
     List<DBStorageType> storages = new ArrayList<>();
 
     /**
@@ -343,7 +344,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
      */
     @Column(name = "display_format", length = 20)
     @Size(max = 20)
-    private String displayFormat = "dd-M-yyyy hh:mm:ss";
+    private String displayFormat = "dd-M-yyyy HH:mm:ss";
 
 	/**
 	 * List of content types
@@ -380,7 +381,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     private boolean saveOnExplorer;
 
     @Column(name = "samples", columnDefinition = "TEXT")
-    @Type(type = "jsonList")
+    @Type(type = JsonTypes.JSON_LIST)
     private List<String> samples = new ArrayList<>();
     
     @Type(type = "numeric_boolean")

@@ -3,6 +3,7 @@
  */
 package org.meveo.model.customEntities;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,23 @@ public class CEIUtilsTest {
 			"}";
 	
 	private static Map<String, Object> inputMap = JacksonUtil.fromString(inputStr, GenericTypeReferences.MAP_STRING_OBJECT);
+	
+	@Test
+	public void testListPropertyMerge() {
+		CustomEntityC c1 = new CustomEntityC();
+		c1.setValue("toto");
+		c1.getList().add("A");
+		
+		CustomEntityC c2 = new CustomEntityC();
+		c2.setValue("toto");
+		c2.getList().add("B");
+		
+		var graph = CEIUtils.toEntityGraph(List.of(c1, c2));
+		assert graph.getEntities().size() == 1;
+		
+		var col = (Collection) graph.getEntities().get(0).getProperties().get("list");
+		assert col.size() == 2;
+	}
 	
 	@Test
 	public void testCircularReferencesSameLevel() {
@@ -103,6 +121,28 @@ public class CEIUtilsTest {
 		
 		assert graph.getEntities().size() == 2;
 		assert graph.getRelations().size() == 2;
+	}
+	
+	@Test
+	public void targetIsEmbeddedSerialization() {
+		Entity entity = new Entity.Builder()
+				.properties(Map.of(
+						"value", "source", 
+						"aToBRelation", Map.of("value", "target4")
+					))
+				.type("CustomEntityA")
+				.name("source")
+				.build();
+		
+		var entities = CEIUtils.fromEntityGraph(new EntityGraph(List.of(entity), List.of()));
+		
+		assert entities.size() == 1;
+		
+		entities.forEach(e -> {
+			var customEntityA = (CustomEntityA) e;
+			assert customEntityA.getaToBRelation() != null;
+			assert customEntityA.getaToBRelation().getTarget() != null;
+		});
 	}
 	
 	@Test
@@ -262,7 +302,12 @@ public class CEIUtilsTest {
 		assert sourceEntity.getTargets().size() == 2;
 		
 		assert sourceEntity.getaToBRelation() != null;
+		assert sourceEntity.getaToBRelation().getTarget() != null;
+
 		assert sourceEntity.getaToBmulti().size() == 2;
+		sourceEntity.getaToBmulti().forEach(rel -> {
+			assert rel.getTarget() != null;
+		});
 		
 		assert sourceEntity.getTarget().getTarget() != null;
 		

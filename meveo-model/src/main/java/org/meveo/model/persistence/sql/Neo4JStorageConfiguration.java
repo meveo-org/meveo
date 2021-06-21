@@ -21,6 +21,7 @@ import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.model.crm.custom.PrimitiveTypeEnum;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.customEntities.Mutation;
+import org.meveo.model.persistence.JsonTypes;
 
 @Embeddable
 public class Neo4JStorageConfiguration implements Serializable {
@@ -54,11 +55,11 @@ public class Neo4JStorageConfiguration implements Serializable {
 	 * Additionnal fields that can be retrieved using graphql engine
 	 */
 	@Column(name = "graphql_query_fields", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	private List<GraphQLQueryField> graphqlQueryFields;
 
 	@Column(name = "mutations", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	private List<Mutation> mutations;
 
 	@Column(name = "max_value")

@@ -400,9 +400,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         return cftUpdated;
     }
-
+    
     @Override
     public void remove(CustomFieldTemplate cft) throws BusinessException {
+    	remove(cft, false);
+    }
+
+    public void remove(CustomFieldTemplate cft, boolean withData) throws BusinessException {
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
 
@@ -413,7 +417,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
-			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			} else if (withData && cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
 	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
 			}
 			
@@ -643,8 +647,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     private void checkIdentifierTypeAndUniqueness(CustomFieldTemplate cft) throws ValidationException {
         if(cft.isIdentifier()){
-            if(cft.getFieldType() != CustomFieldTypeEnum.STRING && cft.getFieldType() != CustomFieldTypeEnum.LONG){
-                throw new ValidationException("Identifier field can only be String or Long !");
+            if(cft.getFieldType() != CustomFieldTypeEnum.STRING && cft.getFieldType() != CustomFieldTypeEnum.LONG && cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION){
+                throw new ValidationException(cft.getAppliesTo() + ": Identifier field can only be String or Long !");
             }
 
             final Map<String, CustomFieldTemplate> fields = findByAppliesTo(cft.getAppliesTo());
@@ -652,7 +656,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                     .stream()
                     .anyMatch(customFieldTemplate -> customFieldTemplate.isIdentifier() && !customFieldTemplate.getCode().equals(cft.getCode()));
             if(identifierAlreadyExist){
-                throw new ValidationException("An other field has already been defined as identifier !");
+                throw new ValidationException(cft.getAppliesTo() + " An other field has already been defined as identifier !");
             }
         }
     }

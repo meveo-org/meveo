@@ -1,5 +1,16 @@
 # Custom Entities
 
+## Custom action
+A custom action is script that can be called on an entity ether by API of from meveo admin.
+
+The entity instance on which the action is called is set in the context variable `CONTEXT_ENTITY`
+
+The code of the custom action executed is in the variable `CONTEXT_ACTION`
+
+A message can be displayed in the GUI by setting the variable `RESULT_GUI_MESSAGE` or `RESULT_GUI_MESSAGE_KEY` to use a message stored in the [message files](/meveo-admin/web/src/main/resources/messages_en.properties).
+
+In order to redirect to another page once the action is executed the page name can be set in the variable `GUI_OUTCOME`
+
 ## CEI Auditing
 
 A boolean option to make CET auditable is available in both GUI and API. Is this field is true, a new table must be created with the code of the cet prefix with audit_. For example, CET=computer, then our audit table must be audit_computer. This table is updated when an operation is executed on a particular CEI.

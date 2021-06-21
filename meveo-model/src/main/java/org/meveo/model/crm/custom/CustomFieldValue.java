@@ -269,15 +269,6 @@ public class CustomFieldValue implements Serializable {
     }
 
 	public Instant getDateValue() {
-		if (dateValue != null)
-			return dateValue;
-		else if (doubleValue != null && doubleValue > 0 && !doubleValue.isInfinite() && Math.floor(doubleValue) == doubleValue) {
-			try {
-				dateValue = JacksonUtil.convert(doubleValue, Instant.class);
-			} catch (Exception e) {
-				// NOOP
-			}
-		}
 		return dateValue;
 	}
 
@@ -1283,6 +1274,8 @@ public class CustomFieldValue implements Serializable {
             return fileValue;
         } else if(mapEmbeddedEntityValue != null && !mapEmbeddedEntityValue.isEmpty()) {
         	return mapEmbeddedEntityValue;
+        } else if(listMapValue != null) {
+        	return listMapValue;
         }
 
         return null;

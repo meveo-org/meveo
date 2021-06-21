@@ -20,6 +20,7 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
@@ -41,19 +42,22 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.ScriptInstanceService;
@@ -88,7 +92,7 @@ public class MeveoModuleItemInstaller {
     private ModuleScriptService moduleScriptService;
 
     @Inject
-	private CustomTableService customTableService;
+	private CrossStorageService crossStorageService;
     
     @Inject
     private ConcreteFunctionService concreteFunctionService;
@@ -118,6 +122,9 @@ public class MeveoModuleItemInstaller {
 	
 	@EJB
 	private MeveoModuleItemInstaller meveoModuleItemInstaller;
+	
+	@Inject
+	private Repository currentRepository;
     
     /**
      * Uninstall the module and disables it items
@@ -170,7 +177,6 @@ public class MeveoModuleItemInstaller {
             }
 
             if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
-            	moduleItems.remove(item);
             	continue;
 			}
 
@@ -179,6 +185,13 @@ public class MeveoModuleItemInstaller {
         
         for (MeveoModuleItem item : moduleItems) {
             BusinessEntity itemEntity = item.getItemEntity();
+            
+            if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+                var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
+                crossStorageService.remove(currentRepository, cet, item.getItemCode());
+            	continue;
+			}
+            
             if (itemEntity == null) {
             	log.error("Failed to load item {}, it won't be uninstalled");
                 continue;
@@ -417,6 +430,7 @@ public class MeveoModuleItemInstaller {
 			if (dto instanceof CustomEntityInstanceDto) {
 				customEntityTemplate = customEntityTemplateService.findByCode(((CustomEntityInstanceDto) dto).getCetCode());
 			}
+			
 		    try {
 
 		        if (dto instanceof MeveoModuleDto) {
@@ -427,23 +441,21 @@ public class MeveoModuleItemInstaller {
 		            moduleItem = new MeveoModuleItem(((MeveoModuleDto) dto).getCode(), moduleClazz.getName(), null, null);
 		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
 
-		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && customEntityTemplate.isStoreAsTable()) {
+		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && (customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J))) {
                     CustomEntityInstance cei = new CustomEntityInstance();
                     cei.setUuid(dto.getCode());
                     cei.setCetCode(customEntityTemplate.getCode());
                     cei.setCet(customEntityTemplate);
+                    
                     try {
                         meveoModuleApi.populateCustomFields(((CustomEntityInstanceDto) dto).getCustomFields(), cei, true);
                     } catch (Exception e) {
                         log.error("Failed to associate custom field instance to an entity: {}", e.getMessage());
                         throw e;
                     }
-                    Map<String, Object> value = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, dto.getCode());
-                    if (value != null) {
-                    	customTableService.update(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
-					} else {
-                    	customTableService.create(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, cei);
-					}
+                    
+                    crossStorageService.createOrUpdate(currentRepository, cei);
+                    
 					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
 					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
@@ -560,9 +572,12 @@ public class MeveoModuleItemInstaller {
 						}
 
 						//add cft of cet
-						if (dto instanceof CustomEntityTemplateDto) {
+						if (dto instanceof CustomEntityTemplateDto ) {
 							// check and add if cft exists to moduleItem
 							addCftToModuleItem((CustomEntityTemplateDto) dto, meveoModule);
+						} else if ( dto instanceof CustomRelationshipTemplateDto) {
+								// check and add if cft exists to moduleItem
+							addCftToModuleItem((CustomRelationshipTemplateDto) dto, meveoModule);
 						}
 
 						meveoModuleService.addModuleItem(moduleItem, meveoModule);
@@ -728,6 +743,20 @@ public class MeveoModuleItemInstaller {
 						moduleItemDto.setDtoData(cet);
 					}
 				}
+				if (moduleItemDto.getDtoClassName().equals(CustomRelationshipTemplateDto.class.getName())) {
+					CustomRelationshipTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomRelationshipTemplateDto.class);
+					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+						cftModuleItem.setDtoData(cftData);
+						cftData.setAppliesTo("CRT_" + cet.getCode());
+						moduleDto.getModuleItems().add(cftModuleItem);
+
+						cet.getFields().remove(cftData);
+						moduleItemDto.setDtoData(cet);
+					}
+					
+				}
 			}
 
 			// we need to sort the module items because of dependency hierarchy
@@ -788,5 +817,15 @@ public class MeveoModuleItemInstaller {
 			}
 		}
 	}
+	
+	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) {
+		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
+			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
+				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomRelationshipTemplate.CRT_PREFIX + "_" + dto.getCode(), null);
+				meveoModuleService.addModuleItem(itemDto, meveoModule);
+			}
+		}
+	}
+
 
 }

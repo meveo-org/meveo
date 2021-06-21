@@ -18,6 +18,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.persistence.JsonTypes;
 
 /**
  * @author Edward P. Legaspi | <czetsuya@gmail.com>
@@ -46,11 +47,11 @@ public class Function extends BusinessEntity {
 	private Integer functionVersion = 1;
 
 	@Column(name = "test_suite", columnDefinition = "TEXT")
-	@Type(type = "json")
+	@Type(type = JsonTypes.JSON)
 	private String testSuite;
 
 	@Column(name = "samples", columnDefinition = "TEXT")
-	@Type(type = "jsonList")
+	@Type(type = JsonTypes.JSON_LIST)
 	private List<Sample> samples;
 	
 	@Type(type="numeric_boolean")

@@ -36,6 +36,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.security.PasswordUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -62,14 +63,14 @@ public class GitRepository extends BusinessEntity {
      * Roles that allows a user to make pull, fetch and clone actions
      */
     @Column(name = "reading_roles", columnDefinition = "TEXT")
-    @Type(type = "jsonList")
+    @Type(type = JsonTypes.JSON_LIST)
     private List<String> readingRoles = new ArrayList<>();
 
     /**
      * Roles that allows a user to make commit, merge and push actions
      */
     @Column(name = "writing_roles", columnDefinition = "TEXT")
-    @Type(type = "jsonList")
+    @Type(type = JsonTypes.JSON_LIST)
     private List<String> writingRoles = new ArrayList<>();
 
     /**

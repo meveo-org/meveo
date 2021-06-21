@@ -406,6 +406,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         expression.second(timerEntity.getSecond());
         expression.start(timerEntity.getStart());
         expression.year(timerEntity.getYear());
+        expression.timezone(timerEntity.getTimezone());
         return expression;
     }
 

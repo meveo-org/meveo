@@ -32,6 +32,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -87,13 +88,9 @@ public class CEIUtils {
 
 		// Create entities
 		for(org.meveo.interfaces.Entity entity : entityGraph.getEntities()) {
-			try {
-				var cetClass = (Class<? extends CustomEntity>) Class.forName("org.meveo.model.customEntities." + entity.getType());
-				var customEntity = JacksonUtil.convert(entity.getProperties(), cetClass);
-				setUUIDField(customEntity, entity.getUID());
+			var customEntity = convertToCustomEntity(entity);
+			if(customEntity != null) {
 				entities.put(entity.getUID(), customEntity);
-			} catch (ClassNotFoundException e) {
-				LOG.error("Can't find class", e);
 			}
 		}
 
@@ -183,6 +180,55 @@ public class CEIUtils {
 		// Remove target entities, as they are embedded in other objects
 		targetEntities.forEach(entities.values()::remove);
 		return entities.values();
+	}
+
+	/**
+	 * @param entity entity to convert
+	 * @return a corresponding instance of {@link CustomEntity}
+	 * @throws ClassNotFoundException if the type of the entity does not exists in class path
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static CustomEntity convertToCustomEntity(org.meveo.interfaces.Entity entity) {
+		Class<? extends CustomEntity> cetClass;
+		
+		try {
+			cetClass = (Class<? extends CustomEntity>) Class.forName("org.meveo.model.customEntities." + entity.getType());
+		} catch (ClassNotFoundException e) {
+			LOG.error("Can't find class", e);
+			return null;
+		}
+		
+		var customEntity = JacksonUtil.convert(entity.getProperties(), cetClass);
+		setUUIDField(customEntity, entity.getUID());
+
+		// Handle the case where the entity has the target of a relation embedded
+		for(var property : entity.getProperties().entrySet()) {
+			if(property.getValue() instanceof Map) {
+				var mapValue = (Map<String, Object>) property.getValue();
+				var optPropertyValue = ReflectionUtils.findValueWithGetter(customEntity, property.getKey());
+				optPropertyValue.ifPresent(propValue -> {
+					if(propValue instanceof CustomRelation) {
+						var customRelation = (CustomRelation) propValue;
+						if(customRelation.getSource() == null) {
+							customRelation.setSource(customEntity);
+						}
+						if(customRelation.getTarget() == null) {
+							var targetField = ReflectionUtils.getField(customRelation.getClass(), "target");
+							var targetEntity = new org.meveo.interfaces.Entity.Builder()
+									.name(UUID.randomUUID().toString())
+									.properties(mapValue)
+									.type(targetField.getType().getSimpleName())
+									.build();
+							
+							var target = convertToCustomEntity(targetEntity);
+							customRelation.setTarget(target);
+						}
+					}
+				});
+			}
+
+		}
+		return customEntity;
 	}
 
 	/**
@@ -541,9 +587,20 @@ public class CEIUtils {
 
 				// if type extends CustomEntity set the UUID
 				if (CustomEntity.class.isAssignableFrom(paramType)) {
-					lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
-					setUUIDField(lazyInitInstance, (String) entry.getValue());
-					setter.invoke(instance, lazyInitInstance);
+					if (entry.getValue() instanceof String) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, (String) entry.getValue());
+						setter.invoke(instance, lazyInitInstance);
+						
+					} else if (entry.getValue() instanceof Map) {
+						var customEntity = deserialize((Map<String, Object>) entry.getValue(), paramType);
+						setter.invoke(instance, customEntity);
+
+					} else if (entry.getValue() instanceof EntityReferenceWrapper) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getUuid());
+						setter.invoke(instance, lazyInitInstance);
+					}
 
 				} else {
 					try {

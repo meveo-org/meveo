@@ -14,7 +14,7 @@ public class JsonBinaryType extends AbstractSingleColumnStandardBasicType<Object
     }
 
     public String getName() {
-        return "jsonb";
+        return JsonTypes.JSON_B;
     }
 
     @Override
