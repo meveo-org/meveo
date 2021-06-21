@@ -270,7 +270,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
     	
     	File newDir = new File (gitDirectory, path);
     	newDir.mkdirs();

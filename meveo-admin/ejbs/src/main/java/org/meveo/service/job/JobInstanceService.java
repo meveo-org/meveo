@@ -220,6 +220,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         scheduleJob(jobInstance, null);
 
         clusterEventPublisher.publishEvent(jobInstance, CrudActionEnum.create);
+        //TODO call afterCreateOrUpdate from PersistenceService
     }
 
     @Override
@@ -233,6 +234,7 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
         clusterEventPublisher.publishEvent(jobInstance, CrudActionEnum.update);
 
+        //TODO call afterCreateOrUpdate from PersistenceService
         return jobInstance;
     }
     
