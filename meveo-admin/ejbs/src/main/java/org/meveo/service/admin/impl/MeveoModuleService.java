@@ -22,6 +22,7 @@ package org.meveo.service.admin.impl;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
@@ -88,6 +90,7 @@ import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.base.BusinessServiceFinder;
+import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.git.GitClient;
@@ -831,7 +834,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles");
+    	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "gitRepository");
     }
     
     /**
@@ -853,6 +856,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	} else {
     		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
     	}
+    	MeveoModule thinModule;
+		try {
+			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(meveoModule);
+			thinModule.setCode("meveoModule");
+			thinModule.setModuleItems(null);
+			BusinessService bes = businessServiceFinder.find(meveoModule);
+			bes.addFilesToModule(thinModule, meveoModule);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     /**
