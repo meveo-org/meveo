@@ -725,7 +725,7 @@ public class OntologyObserver {
                     String[] cetFileName = fileName.split("\\.");
                     String code = cetFileName[0];
                     CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(code);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/src/main/java/");
+                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode() + "/facets/json/");
                     File cetFile = new File(repositoryDir, modifiedFile);
                     if (customEntityTemplate == null) {
                         String absolutePath = cetFile.getAbsolutePath();

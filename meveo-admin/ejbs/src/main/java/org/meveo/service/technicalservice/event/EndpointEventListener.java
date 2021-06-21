@@ -126,7 +126,7 @@ public class EndpointEventListener {
 			if (module != null) {
 				File endpointInterface = endpointService.getBaseScriptFile();
 				File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-				String pathEndpointInterface = endpoint.getClass().getAnnotation(ModuleItem.class).path() + "/" + endpoint.getCode() + "/" + "/EndpointInterface.js";
+				String pathEndpointInterface = "facets/javascript/endpoints/" + "/EndpointInterface.js";
 				File fileEndpointInterface = new File (gitDirectory, pathEndpointInterface);
 				if (!fileEndpointInterface.exists()) {
 					FileUtils.copyFile(endpointInterface, fileEndpointInterface);

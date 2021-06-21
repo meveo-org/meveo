@@ -241,7 +241,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = "facets/endpoints/" + entity.getCode()+".js";
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + ".json";
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
