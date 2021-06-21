@@ -324,9 +324,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	String directory = "";
     	
     	if (extension == "json") {
-    		directory = "facets/json";
+    		directory = "/facets/json";
     	}else if (extension == "java") {
-    		directory = "facets/java";
+    		directory = "/facets/java";
     	}
     	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
     	if (module == null) {

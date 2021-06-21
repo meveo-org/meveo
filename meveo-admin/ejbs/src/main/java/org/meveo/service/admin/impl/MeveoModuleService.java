@@ -850,7 +850,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	
     	if (this.gitRepositoryService.findByCode(meveoModule.getCode()) == null) {
 			this.gitRepositoryService.create(repo);
-			this.gitClient.checkout(repo, "master", true);
+			this.gitClient.checkout(repo, "master", true);//TODO meveoModule.getCurrentVersion
 			meveoModule.setGitRepository(repo);
     		
     	} else {
