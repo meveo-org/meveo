@@ -783,8 +783,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String pathJavaFile = "facets/java" + "/" + entity.getCode() + ".java";
-    	String pathJsonSchemaFile = "facets/json" + "/" + entity.getCode()+"-schema" + ".json";
+    	String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
+    	String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
     	
     	File newJavaFile = new File (gitDirectory, pathJavaFile);
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);

@@ -94,7 +94,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
     	if (StringUtils.isBlank(script.getScript()) && this.moduleInstallationContext.isActive()) {
     		File repoDir = GitHelper.getRepositoryDir(null, this.moduleInstallationContext.getModuleCodeInstallation());
-    		String scriptFileDir = "facets/java/"+ script.getCode() + ".java";
+    		String pathScript = script.getCode().replaceAll("\\.", "/");
+    		pathScript = pathScript.replaceAll("/+\\w+$", "");
+    		String scriptFileDir = "facets/java/" + pathScript + ".java";
     		File javaSource = new File(repoDir, scriptFileDir);
     		try {
 	    		if (javaSource.exists()) {
@@ -359,14 +361,16 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		super.addFilesToModule(entity, module);
 		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
 		if (extension == ".java") {
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java");
-		String pathNewFile = entity.getCode() + ".java";
-		
-		File newFile = new File(gitDirectory, pathNewFile);
-		
-		FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
-		
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
+			String path = entity.getCode().replaceAll("\\.", "/");
+	    	
+			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java/");
+			String pathNewFile = path + ".java";
+			
+			File newFile = new File(gitDirectory, pathNewFile);
+			
+			FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
+			
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
 		}	
 	}
 

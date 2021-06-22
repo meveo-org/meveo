@@ -38,6 +38,7 @@ import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -326,7 +327,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	if (extension == "json") {
     		directory = "/facets/json";
     	}else if (extension == "java") {
-    		directory = "/facets/java";
+    		directory = "/facets/java/org/meveo/model/customEntities";// + crt.getClass().getAnnotation(ModuleItem.class).path();
     	}
     	MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
     	if (module == null) {

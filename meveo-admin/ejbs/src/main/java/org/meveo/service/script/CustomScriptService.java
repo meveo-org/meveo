@@ -901,7 +901,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	        if (module != null) {
 		        for (MeveoModuleDependency dependencie : module.getModuleDependencies()) {
 		        	sourcePath.concat(";");
-		        	sourcePath.concat(module.getCode() + "/facets/java/" + dependencie.toString());
+		        	String pathScript = fullClassName.replaceAll("\\.", "/");
+		        	pathScript = pathScript.replaceAll("/+\\w+$", "");
+		        	sourcePath.concat(module.getCode() + "/facets/java/" + pathScript + dependencie.toString());
 		        }
 	        }
         }
@@ -1071,7 +1073,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     			path = "/facets/javascript/" + scriptInstance.getCode() + extension;
     		} else {
     			gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    			path = "/facets/java/" + scriptInstance.getCode() + extension;
+    			path = "/facets/java/" + scriptInstance.getCode().replaceAll("\\.", "/") + extension;
     		}
 			File directoryToRemove = new File(gitDirectory, path);
 			directoryToRemove.delete();
@@ -1149,14 +1151,17 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @SuppressWarnings("unchecked")
 	private File findScriptFile(CustomScript scriptInstance) {
     	File scriptDir = null;
-    	String path = scriptInstance.getCode();
+    	String[] fullPath = scriptInstance.getCode().replaceAll("\\.", "/").split("/");
+    	String code = fullPath[fullPath.length - 1];
     	String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
     	String directory = "";
     	
     	if (extension == ".js") {
     		directory = "/facets/javascript/";
     	}else if (extension == ".java") {
-    		directory = "/facets/java/";
+    		String pathScript = scriptInstance.getCode().replaceAll("\\.", "/");
+    		pathScript = pathScript.replaceAll("/+\\w+$", "");
+    		directory = "/facets/java/" + pathScript +"/";
     	}
 	    MeveoModule module = this.findModuleOf((T) scriptInstance);
 
@@ -1170,7 +1175,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         
-        return new File(scriptDir, path + extension);
+        return new File(scriptDir, code + extension);
     }
 
     /**

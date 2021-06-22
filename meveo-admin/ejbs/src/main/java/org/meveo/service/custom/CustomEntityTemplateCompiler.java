@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
@@ -145,11 +146,11 @@ public class CustomEntityTemplateCompiler {
     	BusinessService businessService = businessServiceFinder.find(cet);
     	MeveoModule module = businessService.findModuleOf(cet);
     	if (module == null) {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/java");
-    		path = "";
+    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/java/");
+    		path = "org/meveo/model/customEntities";//+ cet.getClass().getAnnotation(ModuleItem.class).path();
     	} else {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java");
-    		path = "";
+    		path = "org/meveo/model/customEntities";// + cet.getClass().getAnnotation(ModuleItem.class).path();
     	}
     	return new File(repositoryDir, path);
     }
