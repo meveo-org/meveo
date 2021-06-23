@@ -225,11 +225,7 @@ public class CharSequenceCompiler<T> {
 	   
 	   // Set source directory
 	   options.add("-sourcepath");
-	   options.add(repositoryDir.getAbsolutePath());
-	   if (!StringUtils.isEmpty(sourcePath)) {
-		   options.add(sourcePath);
-
-	   }
+	   options.add(repositoryDir.getAbsolutePath() + sourcePath);
 	   // Set output directory
 	   options.add("-d");
 	   options.add(outputDir.getAbsolutePath());
