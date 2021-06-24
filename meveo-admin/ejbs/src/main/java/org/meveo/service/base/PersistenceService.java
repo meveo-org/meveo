@@ -511,6 +511,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 
 		postUpdate(entity);
+		
+		afterUpdateOrCreate(entity);
 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
@@ -808,6 +810,14 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @param entity The entity to create or update
 	 */
 	protected void beforeUpdateOrCreate(E entity) throws BusinessException {
+	}
+	
+	/**
+	 * Action to execute after update or create an entity
+	 *
+	 * @param entity The entity to create or update
+	 */
+	public void afterUpdateOrCreate(E entity) throws BusinessException {
 	}
 
 	/**

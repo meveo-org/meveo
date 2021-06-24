@@ -779,7 +779,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
 	 */
     @Override
-    public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException, IOException {
+    public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
     	super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
@@ -789,14 +789,22 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	File newJavaFile = new File (gitDirectory, pathJavaFile);
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
     	
-    	FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    	try {
+    		FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be write", e);
+    	}
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
     	
     	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
     	
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
-    	FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    	try {
+    		FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be write", e);
+    	}
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
 }

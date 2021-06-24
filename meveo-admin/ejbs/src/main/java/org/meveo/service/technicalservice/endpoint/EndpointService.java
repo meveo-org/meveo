@@ -221,7 +221,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
 	 */
 	@Override
-	public void addFilesToModule(Endpoint entity, MeveoModule module) throws BusinessException, IOException {
+	public void addFilesToModule(Endpoint entity, MeveoModule module) throws BusinessException {
 		super.addFilesToModule(entity, module);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
@@ -229,8 +229,11 @@ public class EndpointService extends BusinessService<Endpoint> {
     	
     	File newJsFile = new File (gitDirectory, path);
     	
-		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
-		
+    	try {
+    		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be write", e);
+    	}
 		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
 	}
 }

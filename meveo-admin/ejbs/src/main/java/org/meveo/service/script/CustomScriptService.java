@@ -198,9 +198,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * Re-compile the script
      *
      * @param script Created or updated {@link CustomScript}
+     * @throws BusinessException 
      */
-    @Override
-    protected void afterUpdateOrCreate(T script) {
+	@Override
+    public void afterUpdateOrCreate(T script) throws BusinessException {
+    	super.afterUpdateOrCreate(script);
     	MeveoModule module = this.findModuleOf(script);
         try {
         	boolean commitFile = true;

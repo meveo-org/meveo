@@ -123,7 +123,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	}
     
 	@Override
-	protected void afterUpdateOrCreate(ScriptInstance script) {
+	public void afterUpdateOrCreate(ScriptInstance script) throws BusinessException {
 		super.afterUpdateOrCreate(script);
 		
 		mdService.removeOrphans();
@@ -357,7 +357,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
 	 */
 	@Override
-	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException, IOException {
+	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException {
 		super.addFilesToModule(entity, module);
 		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
 		if (extension == ".java") {
@@ -368,8 +368,11 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			
 			File newFile = new File(gitDirectory, pathNewFile);
 			
-			FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
-			
+			try {
+				FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
+			} catch (IOException e) {
+				throw new BusinessException("File cannot be write", e);
+			}
 			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
 		}	
 	}

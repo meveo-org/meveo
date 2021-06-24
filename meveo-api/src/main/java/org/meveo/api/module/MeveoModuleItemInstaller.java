@@ -818,7 +818,7 @@ public class MeveoModuleItemInstaller {
 		}
 	}
 	
-	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) {
+	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomRelationshipTemplate.CRT_PREFIX + "_" + dto.getCode(), null);

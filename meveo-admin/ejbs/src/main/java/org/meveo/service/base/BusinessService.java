@@ -265,7 +265,19 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws IOException BusinessException
      * @throws BusinessException if serialization of entity fails
      */
-    public void addFilesToModule(P entity, MeveoModule module) throws IOException, BusinessException {
+    public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
+    	persistJsonFileInModule( entity,  module, true);
+    }
+
+    @Override
+    public void afterUpdateOrCreate(P entity) throws BusinessException {
+    	MeveoModule module = findModuleOf(entity);
+    	if(module!=null) {
+    		persistJsonFileInModule( entity,  module, false);
+    	}
+	}
+
+    private void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
@@ -276,12 +288,17 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	newDir.mkdirs();
     	
     	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
-    	newJsonFile.createNewFile();
-
-    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-
-    	Files.write(newJsonFile.toPath(), strToBytes);
-
+    	try {
+	    	if (isCreation) {
+	    		newJsonFile.createNewFile();
+	    	}
+	    	
+	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+	
+	    	Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
+    	}
 		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     }
     
@@ -302,7 +319,6 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
 	    addFilesToModule(entity, module);
     }
-
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
 
     public P findByCodeLazy(String code) {
