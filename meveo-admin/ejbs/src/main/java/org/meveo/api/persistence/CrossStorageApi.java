@@ -4,9 +4,9 @@
 package org.meveo.api.persistence;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
@@ -15,12 +15,21 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.elresolver.ELException;
+import org.meveo.interfaces.EntityGraph;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.scheduler.AtomicPersistencePlan;
+import org.meveo.persistence.scheduler.CyclicDependencyException;
+import org.meveo.persistence.scheduler.OrderedPersistenceService;
+import org.meveo.persistence.scheduler.PersistedItem;
+import org.meveo.persistence.scheduler.SchedulingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class CrossStorageApi.
@@ -35,12 +44,25 @@ public class CrossStorageApi{
 	@Inject
 	private CrossStorageService crossStorageService;
 	
+    @Inject
+    protected SchedulingService schedulingService;
+    
+    @Inject
+    protected OrderedPersistenceService<CrossStorageService> scheduledPersistenceService;
+	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+    protected static final Logger LOGGER = LoggerFactory.getLogger(CrossStorageApi.class);
 	
 	public <T> CrossStorageRequest<T> find(Repository repository, Class<T> cetClass) {
 		return new CrossStorageRequest(repository, crossStorageService, cetClass, getCet(cetClass));
 	}
+	
+    public List<PersistedItem> persistEntities(Repository repository, EntityGraph entityGraph) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
+        AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityGraph.getAll());
+        return scheduledPersistenceService.persist(repository.getCode(), atomicPersistencePlan);
+    }
 	
 	/**
 	 * Find an instance of a given CET
