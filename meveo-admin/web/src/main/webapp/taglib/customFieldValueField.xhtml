@@ -151,7 +151,7 @@
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
         <h:outputText value="#{field.entityReferenceValueForGUI.code}" 
         	styleClass="field-value" rendered="#{!edit or disabled}" />
-        <p:autoComplete value="#{field.entityReferenceValueForGUI}" 
+        <p:autoComplete id="acEntityField" value="#{field.entityReferenceValueForGUI}"
         	required="#{cft.valueRequired and !hasInheritedValue}" 
         	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
         	placeholder="#{cft.description}"
@@ -169,6 +169,10 @@
                 <h:outputText value="#{e.description}" />
             </p:column>
         </p:autoComplete>
+        <c:if test="#{!cft.valueRequired}">
+            <p:commandButton icon="ui-icon-trash" update="acEntityField"
+                             action="#{field.resetEntityReferenceValueForGUI()}"></p:commandButton>
+        </c:if>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">
         <h:outputText rendered="#{(!edit or disabled) and field.stringValue!=null}" value="#{cft.listValues[field.stringValue]} (#{field.stringValue})" styleClass="field-value" />

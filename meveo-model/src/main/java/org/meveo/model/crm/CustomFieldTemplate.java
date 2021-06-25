@@ -154,7 +154,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 
     @Column(name = "field_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private CustomFieldTypeEnum fieldType;
+    private CustomFieldTypeEnum fieldType = CustomFieldTypeEnum.STRING;
 
     @Column(name = "applies_to", nullable = false, length = 100)
     @Size(max = 100)

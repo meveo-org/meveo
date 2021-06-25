@@ -904,6 +904,7 @@ public class CustomFieldValue implements Serializable {
             case DATE:
                 if (dateValue != null) {
                     SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+
                     return sdf.format(dateValue);
                 }
                 break;
@@ -1237,7 +1238,8 @@ public class CustomFieldValue implements Serializable {
         return deserializedValue;
     }
 
-    public Object getValue() {
+    public Object
+    getValue() {
         if (mapStringValue != null && !mapStringValue.isEmpty()) {
             return mapStringValue;
         } else if (mapDateValue != null && !mapDateValue.isEmpty()) {
@@ -1279,6 +1281,16 @@ public class CustomFieldValue implements Serializable {
         }
 
         return null;
+    }
+
+    public Object getUnwrappedValue() {
+        Object result = getValue();
+
+        if (entityReferenceValue != null) {
+            result = entityReferenceValue.getUuid();
+        }
+
+        return result;
     }
 
     /**
@@ -1491,5 +1503,10 @@ public class CustomFieldValue implements Serializable {
             log.error("Failed to convert {} to String for CFT {}", valueToConvert, cft, e);
             return null;
         }
+    }
+
+    public void resetEntityReferenceValueForGUI() {
+        entityReferenceValueForGUI = null;
+        entityReferenceValue = null;
     }
 }
