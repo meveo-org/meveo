@@ -221,8 +221,7 @@ public class CharSequenceCompiler<T> {
 	   String pathScript = qualifiedClassName.replaceAll("\\.", "/");
 	   pathScript = pathScript.replaceAll("/+\\w+$", "");
 	   
-	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/facets/java/" + pathScript);
-	   
+	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/facets/java");
 	   // Set source directory
 	   options.add("-sourcepath");
 	   options.add(repositoryDir.getAbsolutePath() + sourcePath);
