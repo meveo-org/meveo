@@ -128,7 +128,9 @@ public class Neo4JConfiguration extends BusinessEntity {
 	 */
 	public void setClearPassword(String clearPassword) {
     	if(clearPassword != null) {
-    		String salt = PasswordUtils.getSalt(getId(), getCode());
+    		if (getCode() == null || getNeo4jUrl() == null)
+    			throw new java.lang.IllegalStateException("code and url are required to set password");
+    		String salt = PasswordUtils.getSalt(getCode(), getNeo4jUrl());
     		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
     	}
 	}

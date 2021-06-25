@@ -124,8 +124,8 @@ public class StartupListener {
 			
 			// A default Repository and SQL Configuration should be genarated/updated at Meveo first initialization
 			try {
+				// defaultSqlConfiguration
 				SqlConfiguration defaultSqlConfiguration;
-				Repository defaultRepository;
 				defaultSqlConfiguration = sqlConfigurationService.findByCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 				if (defaultSqlConfiguration == null) {
 					defaultSqlConfiguration = new SqlConfiguration();
@@ -136,20 +136,29 @@ public class StartupListener {
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.update(defaultSqlConfiguration);
 				}
-				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
-				if (defaultRepository == null) {
-					
-//					Neo4JConfiguration defaultNeo4jConfiguration = neo4jConfigurationService.findByCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
-//					if (defaultNeo4jConfiguration == null) {
-//						defaultNeo4jConfiguration = neo4jConnectionProvider.getDefaultConfiguration();
-//					} 
-					
+
+				//defaultNeo4jConfiguration
+				Neo4JConfiguration defaultNeo4jConfiguration = neo4jConfigurationService.findByCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
+				if (defaultNeo4jConfiguration == null) {
+					defaultNeo4jConfiguration = neo4jConnectionProvider.getDefaultConfiguration();
+					if (defaultNeo4jConfiguration != null) {
+						neo4jConfigurationService.create(defaultNeo4jConfiguration);
+					}
+				} 
+				
+				
+				Repository defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
+				if (defaultRepository == null) {					
 					defaultRepository = new Repository();
 					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
-					//defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
+					defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
 					repositoryService.create(defaultRepository);
 					log.info("Created default repository");
+				} else if (defaultNeo4jConfiguration != null && defaultRepository.getNeo4jConfiguration() == null) {
+					defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
+					repositoryService.update(defaultRepository);
+					log.info("Updated default repository");
 				}
 			} catch (BusinessException e) {
 				log.error("Cannot create default repository", e);

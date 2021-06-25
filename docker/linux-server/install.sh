@@ -89,6 +89,9 @@ then
       fi
       if [ -e /etc/letsencrypt/live/$DOMAIN_NAME/cert.pem ]
       then
+        if [ ! -d "/home/${SERVER_NAME}/conf/ssl" ]; then
+          mkdir -p /home/${SERVER_NAME}/conf/ssl
+        fi
         echo "Generating ssl certificate for $DOMAIN_NAME using letsencrypt"
         #openssl x509 -outform der -in /etc/letsencrypt/live/$DOMAIN_NAME/cert.pem -out ./ssl/domain.crt
         #openssl pkey -in /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem -out ./ssl/domain.key
@@ -97,14 +100,14 @@ then
         cp /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem  /home/${SERVER_NAME}/conf/ssl/
         mv /home/${SERVER_NAME}/conf/ssl/privkey.pem /home/${SERVER_NAME}/conf/ssl/domain.key
       else
-         echo "Error generating the certificate,  /etc/letsencrypt/live/$DOMAIN_NAME/cert.pem not found" 
-         exit 1
+        echo "Error generating the certificate,  /etc/letsencrypt/live/$DOMAIN_NAME/cert.pem not found" 
+        exit 1
       fi
 fi
 if [ ! -r /home/${SERVER_NAME}/conf/ssl/domain.key ] || [ ! -r /home/${SERVER_NAME}/conf/ssl/domain.crt ]
 then
-     echo "Error while converting the certificate, we cant find ./ssl/domain.key or ./ssl/domain.crt" 
-     exit 1
+    echo "Error while converting the certificate, we cant find ./ssl/domain.key or ./ssl/domain.crt" 
+    exit 1
 fi
 
 docker-compose up -d

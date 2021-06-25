@@ -587,16 +587,20 @@ public class CEIUtils {
 
 				// if type extends CustomEntity set the UUID
 				if (CustomEntity.class.isAssignableFrom(paramType)) {
-					lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+					if (entry.getValue() instanceof String) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, (String) entry.getValue());
+						setter.invoke(instance, lazyInitInstance);
+						
+					} else if (entry.getValue() instanceof Map) {
+						var customEntity = deserialize((Map<String, Object>) entry.getValue(), paramType);
+						setter.invoke(instance, customEntity);
 
-					Object val = entry.getValue();
-					if (entry.getValue() instanceof EntityReferenceWrapper) {
-						EntityReferenceWrapper wrapper = (EntityReferenceWrapper) entry.getValue();
-						val = wrapper.getUuid();
+					} else if (entry.getValue() instanceof EntityReferenceWrapper) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getUuid());
+						setter.invoke(instance, lazyInitInstance);
 					}
-
-					setUUIDField(lazyInitInstance, val.toString());
-					setter.invoke(instance, lazyInitInstance);
 
 				} else {
 					try {

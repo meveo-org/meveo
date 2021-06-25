@@ -26,6 +26,7 @@ Imagine you created a CET (Custom Entity Template), then a java class MyCet has 
 
 ```java
 
+import javax.inject.Inject;
 import org.meveo.model.customEntities.MyCet;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.model.storage.Repository;
@@ -34,8 +35,11 @@ import org.meveo.api.persistence.CrossStorageApi;
 
 ... in your class definition use script getCDIBean to get instance of services
 
-	private CrossStorageApi crossStorageApi = getCDIBean(CrossStorageApi.class);
-	private RepositoryService repositoryService = getCDIBean(RepositoryService.class);
+	@Inject
+	private CrossStorageApi crossStorageApi;
+	
+        @Inject
+	private RepositoryService repositoryService;
   
 ...
 
@@ -44,9 +48,12 @@ cei.setUuid("2434e3a3-3c32-4b18-869d-ea5ff1aeafbb") // Optionally set UUID
 // Set cei properties ...
 
 Repository defaultRepo = repositoryService.findDefaultRepository();
-String uuid = crossStorageApi.createOrUpdate(defaultRepo, cei);
-
-System.out.println("MyCet instance " + uuid + " created / updated");
+try{
+   String uuid = crossStorageApi.createOrUpdate(defaultRepo, cei);
+   System.out.println("MyCet instance " + uuid + " created / updated");
+} catch(Exception ex){
+   throw new BusinessException(ex);
+}
 ```
 
 ## 2. Find an entity

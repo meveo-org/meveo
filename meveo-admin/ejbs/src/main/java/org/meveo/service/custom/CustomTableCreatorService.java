@@ -607,14 +607,23 @@ public class CustomTableCreatorService implements Serializable {
 								try (ResultSet res = meta.getColumns(null, database.getDefaultSchemaName(), dbTableName, dbFieldname)) {
 									if(res.next()) {
 										String type = res.getString("TYPE_NAME");
-										int size = res.getInt("COLUMN_SIZE");
-										if(size != 0) {
-											type += "(" + size + ")";
+										switch (type) {
+											case "int8" : 
+												type = "bigint";
+												break;
+											case "text" :
+												// NOOP
+												break;
+											default : 
+												int size = res.getInt("COLUMN_SIZE");
+												if(size != 0) {
+													type += "(" + size + ")";
+												}
 										}
 										
 										// Field definition must match the existing field
 										if(!column.getType().toLowerCase().equals(type)) {
-											throw new BusinessException("Field defintion for " + cft + " does not match existing column in table " + dbTableName);
+											throw new BusinessException("Field defintion for " + cft + " (" + column.getType().toLowerCase() + ") does not match existing column in table " + dbTableName + " (" + type + ")");
 										}
 										
 									} else {
