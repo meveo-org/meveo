@@ -1201,6 +1201,10 @@ public class Neo4jService implements CustomPersistenceService {
                             stringValue = stringValue.trim().replaceAll("'", "’").replaceAll("\"", "");
                             stringValue = stringValue.replaceAll("\n", " ");
 
+                            if (cft.getIndexType()==CustomFieldIndexTypeEnum.INDEX_NEO4J ){
+                        		convertedFields.put(cft.getCode() + "_IDX", CETUtils.stripAndFormatFields(stringValue));
+                            }
+                            
                             if (cft.getMaxValue() == null) {
                                 cft.setMaxValue(CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING);
                             }

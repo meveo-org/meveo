@@ -152,7 +152,7 @@ public class CETUtils {
 
     public static String stripAndFormatFields(String value) {
         String convertedValue = org.apache.commons.lang3.StringUtils.stripAccents(value.toLowerCase()).trim();
-        convertedValue = convertedValue.replace(".", "").replace(",", "").replace("-", "");
+        convertedValue = convertedValue.replaceAll("[.,\\s-'’]", "");
         return convertedValue;
     }
 
