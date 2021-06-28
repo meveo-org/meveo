@@ -45,6 +45,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -465,7 +466,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			Collection<String> fetchFields = actualFetchFields != null ? actualFetchFields : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
 
 			final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, fetchFields);
-			data.putAll(missingData);
+			if(missingData != null) {
+				data.putAll(missingData);
+			}
 		}
 		
 		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo())
@@ -738,7 +741,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities);
+			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities, foundId);
 			if (foundId == null) {
 				ceiAfterPreEvents.setUuid(uuid);
 			}
@@ -843,12 +846,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		return cei.getUuid();
 	}
 
-	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
+	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities, String foundUuid) throws IOException, BusinessException, BusinessApiException {
+		
 		String uuid = null;
-
 		CustomEntityInstance neo4jCei = new CustomEntityInstance();
 		neo4jCei.setCetCode(cei.getCetCode());
-		neo4jCei.setUuid(cei.getUuid());
+		neo4jCei.setUuid(foundUuid);
 		neo4jCei.setCet(cei.getCet());
 		
 		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
@@ -866,7 +869,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					throw new NullPointerException("Generated UUID from Neo4J cannot be null");
 				}
 
-				if (cei.getUuid() != null && !cei.getUuid().equals(uuid)) {
+				if (foundUuid != null && !foundUuid.equals(uuid)) {
 					log.error("Wrong Neo4J UUID {} for {}, should be {}", uuid, neo4jCei, cei.getUuid(), new Exception());
 				}
 
@@ -1229,6 +1232,9 @@ public class CrossStorageService implements CustomPersistenceService {
 					uuid = neo4JUuid;
 				}
 
+			} catch (InvalidCustomFieldException e) {
+				log.warn("Invalid custom field", e.getMessage());
+				return null;
 			} catch (ELException | BusinessException e) {
 				throw new RuntimeException(e);
 			}
@@ -1407,7 +1413,6 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (cft == null) {
 				return false;
 			}
-
 			return cft.getStoragesNullSafe().contains(storageType);
 		}).collect(Collectors.toList());
 	}

@@ -319,11 +319,16 @@ public class CEIUtils {
 				
 				if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 					Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-					try {
-						var actualClass = Class.forName(actualType.getTypeName());
-						isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
-					} catch (ClassNotFoundException e) {
-						isRelationshipField = false;
+					if(actualType instanceof Class && CustomRelation.class.isAssignableFrom((Class<?>) actualType)) {
+						isRelationshipField = true;
+					} else {
+						//FIXME: test if we can delete that
+						try {
+							var actualClass = Class.forName(actualType.getTypeName());
+							isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
+						} catch (ClassNotFoundException e) {
+							isRelationshipField = false;
+						}
 					}
 				}
 				
@@ -348,6 +353,7 @@ public class CEIUtils {
 				if(value.isPresent() && (value.get() instanceof Collection)) {
 					if(!isCollectionOfCustomRelation(fieldDef)) {
 						// Case where the field is a collection of custom entity annotated with @Relation
+						
 						Collection<CustomEntity> customEntitiesValue = (Collection<CustomEntity>) value.get();
 						 
 						subEntities.addAll(customEntitiesValue);
@@ -450,11 +456,15 @@ public class CEIUtils {
 	private static boolean isCollectionOfCustomRelation(Field fieldDef) {
 		if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 			Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-			try {
-				var actualClass = Class.forName(actualType.getTypeName());
-				return CustomRelation.class.isAssignableFrom(actualClass);
-			} catch (ClassNotFoundException e) {
-				return false;
+			if(actualType instanceof Class) {
+				return CustomRelation.class.isAssignableFrom((Class<?>) actualType);
+			} else {
+				try {
+					var actualClass = Class.forName(actualType.getTypeName());
+					return CustomRelation.class.isAssignableFrom(actualClass);
+				} catch (ClassNotFoundException e) {
+					return false;
+				}
 			}
 		}
 		return false;

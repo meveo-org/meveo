@@ -526,11 +526,11 @@ public class Neo4jDao {
 
         Set<String> fieldsKeys = new HashSet<>(uniqueFields.keySet());
         Map<String, Object> fieldValues = new HashMap<>();
-
+        
         if (uniqueFields.isEmpty()) {
             if (uuid != null) {
                 fieldsKeys.add("meveo_uuid");
-                fieldValues.put("meveo_uuid", uuid);
+            	fieldValues.put("meveo_uuid", uuid);
             } else {
                 throw new IllegalArgumentException("Can't merge nodes without unique fields");
             }
@@ -572,7 +572,7 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             List<Record> results = result.list();
 
-            if(results.size() > 0) {
+            if(results.size() > 1) {
                 LOGGER.warn("Multiple nodes affected by merge.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues);
             }
 
