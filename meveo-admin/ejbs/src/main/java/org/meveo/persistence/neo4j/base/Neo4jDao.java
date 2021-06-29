@@ -311,21 +311,27 @@ public class Neo4jDao {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("MATCH (:" + startLabel + ")-[n:").append(type).append("]-(:" + endLabel + ") \n")
                 .append("WHERE n.meveo_uuid = $uuid \n")
-                .append("DELETE n \n")
                 .append("RETURN n;");
+        
+        StringBuilder deleteQuery =  new StringBuilder().append("MATCH (:" + startLabel + ")-[n:").append(type).append("]-(:" + endLabel + ") WHERE ID(n) = $id DETACH DELETE n");
+
 
        List<Neo4jRelationship> relationsRemoved = cypherHelper.execute(neo4jconfiguration, 
         		queryBuilder.toString(), 
         		Collections.singletonMap("uuid", uuid),
         		(tx, result) -> {
-        			var results = result.stream()
+        			return result.stream()
         					.map(r -> new Neo4jRelationship(r.get(0).asRelationship(), neo4jconfiguration))
         					.collect(Collectors.toList());
-        			tx.success();
-        			return results;
         		});
        
-       relationsRemoved.forEach(edgeRemovedEvent::fire);
+       relationsRemoved.forEach(rel -> {
+    	   cypherHelper.execute(neo4jconfiguration, 
+    			   deleteQuery.toString(),
+           		Collections.singletonMap("id", rel.id())
+       		);
+  			edgeRemovedEvent.fire(rel);
+       });
     }
 
     /**
