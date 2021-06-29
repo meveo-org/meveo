@@ -318,10 +318,11 @@ public class Neo4jDao {
         		queryBuilder.toString(), 
         		Collections.singletonMap("uuid", uuid),
         		(tx, result) -> {
-        			tx.success();
-        			return result.stream()
+        			var results = result.stream()
         					.map(r -> new Neo4jRelationship(r.get(0).asRelationship(), neo4jconfiguration))
         					.collect(Collectors.toList());
+        			tx.success();
+        			return results;
         		});
        
        relationsRemoved.forEach(edgeRemovedEvent::fire);
