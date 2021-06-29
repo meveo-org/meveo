@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.persistence.CrossStorageTransaction;
@@ -84,6 +85,10 @@ public class Neo4jDao {
     @Inject
     @Updated
     private Event<Neo4jRelationship> edgeUpdatedEvent;
+    
+    @Inject
+    @Removed
+    private Event<Neo4jRelationship> edgeRemovedEvent;
 
     @Inject
     @Created
@@ -304,9 +309,20 @@ public class Neo4jDao {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("MATCH ()-[n:").append(label).append("]-() \n")
                 .append("WHERE n.meveo_uuid = $uuid")
-                .append("DELETE n ;");
+                .append("DELETE n")
+                .append("RETURN n;");
 
-        cypherHelper.execute(neo4jconfiguration, queryBuilder.toString(), Collections.singletonMap("uuid", uuid));
+       List<Neo4jRelationship> relationsRemoved = cypherHelper.execute(neo4jconfiguration, 
+        		queryBuilder.toString(), 
+        		Collections.singletonMap("uuid", uuid),
+        		(tx, result) -> {
+        			tx.success();
+        			return result.stream()
+        					.map(r -> new Neo4jRelationship(r.get(0).asRelationship(), neo4jconfiguration))
+        					.collect(Collectors.toList());
+        		});
+       
+       relationsRemoved.forEach(edgeRemovedEvent::fire);
     }
 
     /**
