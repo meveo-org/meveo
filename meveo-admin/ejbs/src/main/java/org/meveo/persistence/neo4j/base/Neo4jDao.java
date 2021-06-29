@@ -308,8 +308,8 @@ public class Neo4jDao {
     public void removeRelation(String neo4jconfiguration, String label, String uuid) {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("MATCH ()-[n:").append(label).append("]-() \n")
-                .append("WHERE n.meveo_uuid = $uuid")
-                .append("DELETE n\n")
+                .append("WHERE n.meveo_uuid = $uuid \n")
+                .append("DELETE n \n")
                 .append("RETURN n;");
 
        List<Neo4jRelationship> relationsRemoved = cypherHelper.execute(neo4jconfiguration, 
