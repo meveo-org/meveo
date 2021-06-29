@@ -298,16 +298,18 @@ public class Neo4jDao {
         );
     }
 
-    /**
-     * Remove a relation using its UUID
-     *
-     * @param neo4jconfiguration Repository code
-     * @param label              Label of the relation to remove
-     * @param uuid               UUID of the relation to remove
-     */
-    public void removeRelation(String neo4jconfiguration, String label, String uuid) {
+	/**
+	 * Remove a relation using its UUID
+	 *
+	 * @param neo4jconfiguration Repository code
+	 * @param startLabel         Label of the start node
+	 * @param type               Label of the relation to remove
+	 * @param endLabel           Label of the end node
+	 * @param uuid               UUID of the relation to remove
+	 */
+    public void removeRelation(String neo4jconfiguration, String startLabel, String type, String endLabel, String uuid) {
         StringBuilder queryBuilder = new StringBuilder()
-                .append("MATCH ()-[n:").append(label).append("]-() \n")
+                .append("MATCH (:" + startLabel + ")-[n:").append(type).append("]-(:" + endLabel + ") \n")
                 .append("WHERE n.meveo_uuid = $uuid \n")
                 .append("DELETE n \n")
                 .append("RETURN n;");

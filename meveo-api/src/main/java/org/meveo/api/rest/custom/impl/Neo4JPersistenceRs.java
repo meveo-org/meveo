@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -80,10 +81,15 @@ public class Neo4JPersistenceRs {
     }
     
     @DELETE
-    @Path("/relations/{label}/{uuid}")
-    public void deleteRelation(@PathParam("label") String label, @PathParam("uuid") String uuid) {
+    @Path("/relations/{code}/{uuid}")
+    public void deleteRelation(@PathParam("code") String code, @PathParam("uuid") String uuid) {
     	//TODO: Make sure the user has the permission to delete the relation
-    	neo4jDao.removeRelation(neo4jConfiguration, label, uuid);
+    	var crt = crtService.findByCode(code, List.of("startNode", "endNode"));
+    	if(crt == null) {
+    		throw new BadRequestException("CRT does not exists");
+    	}
+    	
+    	neo4jDao.removeRelation(neo4jConfiguration, crt.getStartNode().getCode(), crt.getName(), crt.getEndNode().getCode(), uuid);
     }
 
     @POST
