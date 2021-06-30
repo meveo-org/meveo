@@ -119,10 +119,12 @@ public class CEIUtils {
 				if(singleRelationField.isPresent()) {
 					singleRelationField.ifPresent(field -> {
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, customRelation);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) { 
+							try {
+								setter.invoke(sourceEntity, customRelation);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					});
 					continue;
@@ -160,10 +162,12 @@ public class CEIUtils {
 					} else {
 						// Relation is mono valued
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, targetEntity);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) {
+							try {
+								setter.invoke(sourceEntity, targetEntity);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					}
 
@@ -590,7 +594,10 @@ public class CEIUtils {
 			T instance = clazz.getDeclaredConstructor().newInstance();
 			for (var entry : value.entrySet()) {
 				var setter = findSetter(entry.getKey(), clazz);
-
+				if(setter == null) {
+					continue;
+				}
+				
 				Object lazyInitInstance = null;
 
 				Class<?> paramType = setter.getParameters()[0].getType();
@@ -645,7 +652,7 @@ public class CEIUtils {
 	}
 
 	private static Method findSetter(String fieldName, Class<?> clazz) {
-		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElseThrow(() -> new IllegalArgumentException("No setter found for field " + fieldName + " in " + clazz));
+		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElse(null);
 	}
 
 }
