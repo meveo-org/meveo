@@ -29,8 +29,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 public class EndpointExecutionBuilder {
     private Map<String, Object> parameters = new HashMap<>();
     private HttpServletResponse resp;
-    private String[] pathInfo;
-    private String firstUriPart;
+    private String pathInfo;
     private boolean keep;
     private boolean wait;
     private EndpointHttpMethod method;
@@ -58,13 +57,8 @@ public class EndpointExecutionBuilder {
         return this;
     }
 
-    public EndpointExecutionBuilder setPathInfo(String[] pathInfo) {
+    public EndpointExecutionBuilder setPathInfo(String pathInfo) {
         this.pathInfo = pathInfo;
-        return this;
-    }
-
-    public EndpointExecutionBuilder setFirstUriPart(String firstUriPart) {
-        this.firstUriPart = firstUriPart;
         return this;
     }
 
@@ -84,7 +78,7 @@ public class EndpointExecutionBuilder {
     }
 
     public EndpointExecution createEndpointExecution() {
-        return new EndpointExecution(parameters, resp, pathInfo, firstUriPart, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue, request, endpoint);
+        return new EndpointExecution(parameters, resp, pathInfo, keep, wait, method, persistenceContextId, persistenceContext, budgetUnit, bugetMax, delayUnit, delayValue, request, endpoint);
     }
 
     public EndpointExecutionBuilder setResp(HttpServletResponse resp) {

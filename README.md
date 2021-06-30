@@ -16,7 +16,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Installation on a wildfly instance](./WILDFLY_INSTALL.md)
 
-[Debugging](https://github.com/meveo-org/meveo/blob/master/documentation/DEBUGGING.md)
+[Debugging](./documentation/DEBUGGING.md)
 
 [Development Installation](./.devcontainer/README.md)
 

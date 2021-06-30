@@ -2,9 +2,9 @@
 
 Using the scripts and configuration files provided here it is easy to setup instance
 
-* [either locally](./localhost)
+* [either locally](./localhost/README.md)
 
-* [or on a linux-server](./linux-server)
+* [or on a linux-server](./linux-server/README.md)
 
 # Environment variables for Meveo stack
 Meveo stack runs two docker containers: postgres container and meveo container.</br>

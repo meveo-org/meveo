@@ -21,5 +21,16 @@
 			<column name="is_equal_fn" type="${type.longText}"/>
 		</addColumn>
 	</changeSet>
+	
+		<changeSet author="Sebastien Michea" id="Github#299" >
+		<addColumn tableName="service_endpoint">
+			<column name="base_path" type="varchar(50)">
+				<constraints nullable="true"/>
+			</column>
+			<column name="path" type="varchar(255)">
+				<constraints nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

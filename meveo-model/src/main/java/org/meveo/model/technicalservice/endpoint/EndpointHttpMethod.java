@@ -27,7 +27,9 @@ public enum EndpointHttpMethod {
 
     GET,
     DELETE,
-    POST;
+    POST,
+    HEAD,
+    PUT;
 
     public String getLabel() {
         return this.name();
