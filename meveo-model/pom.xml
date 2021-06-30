@@ -50,23 +50,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<version>3.5.3</version>
-				<configuration>
-					<changeLogFile>${liquibase.changeLogFile}</changeLogFile>
-					<driver>${db.driver}</driver>
-					<url>${db.url}</url>
-					<defaultSchemaName>${db.schema}</defaultSchemaName>
-					<username>${db.username}</username>
-					<password>${db.password}</password>
-					<promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
-					<expressionVariables>
-						<db.schema>${db.schema}</db.schema>
-					</expressionVariables>
-				</configuration>
-			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -102,7 +85,23 @@
 						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
-
+				<plugin>
+					<groupId>org.liquibase</groupId>
+					<artifactId>liquibase-maven-plugin</artifactId>
+					<version>3.5.3</version>
+					<configuration>
+						<changeLogFile>${liquibase.changeLogFile}</changeLogFile>
+						<driver>${db.driver}</driver>
+						<url>${db.url}</url>
+						<defaultSchemaName>${db.schema}</defaultSchemaName>
+						<username>${db.username}</username>
+						<password>${db.password}</password>
+						<promptOnNonLocalDatabase>false</promptOnNonLocalDatabase>
+						<expressionVariables>
+							<db.schema>${db.schema}</db.schema>
+						</expressionVariables>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -296,12 +295,7 @@
 		<profile>
 			<id>additional</id>
 			<properties>
-				<db.driver>org.postgresql.Driver</db.driver>
-				<db.schema>public</db.schema>
-				<db.username>meveo</db.username>
-				<db.password>meveo</db.password>
-				<db.url>jdbc:postgresql://localhost:5432/meveo</db.url>
-				<liquibase.changeLogFile>src/main/db_resources/changelog/db.rebuild.xml</liquibase.changeLogFile>
+				<liquibase.changeLogFile>src/main/db_resources/changelog/db.releases.xml</liquibase.changeLogFile>
 			</properties>
 		</profile>
 	</profiles>
@@ -315,19 +309,3 @@
 		</dependencies>
 	</dependencyManagement>
 </project>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
