@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.meveo.commons.utils.CustomDateSerializer;
@@ -459,7 +460,10 @@ public class CustomFieldValue implements Serializable {
         }
         
         else {
-    	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
+        	String classesList = "null list";
+        	if (listValue != null)
+        		classesList = (String) listValue.stream().map(v->(v!=null?v.getClass().getName():"null")).collect(Collectors.joining(" "));
+           	throw new IllegalArgumentException("Unkown type for list value : " + itemClass + " -- list infos : " + classesList);
         }
     }
 
@@ -1116,7 +1120,7 @@ public class CustomFieldValue implements Serializable {
         } else if(classes.contains(Double.class)) {
         	return Double.class;
         } else {
-        	return Object.class;
+         	return Object.class;
         }
         
     }
