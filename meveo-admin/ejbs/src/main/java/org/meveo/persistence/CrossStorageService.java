@@ -198,8 +198,14 @@ public class CrossStorageService implements CustomPersistenceService {
 						foudEntity=true;
 						values.putAll(existingValues);
 						// We need to fetch every relationship defined as entity references
-						if(withEntityReferences) {
+						if(withEntityReferences || fetchFields != null) {
 							for(CustomFieldTemplate cft : cfts) {
+								if(!withEntityReferences && fetchFields != null) { // Skip fields not defined in fetch fields
+									if(!fetchFields.contains(cft.getCode())) {
+										continue;
+									}
+								}
+								
 								if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 									var referencedCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 									
@@ -1570,7 +1576,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 								
 				// Check if target is not JPA entity
 				try {
@@ -1598,12 +1604,25 @@ public class CrossStorageService implements CustomPersistenceService {
 					continue;
 				}
 				
-				if(entry.getValue() instanceof String) {
-					Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
-					values.put(cft.getCode(), refValues);
-				} else if(entry.getValue() instanceof Map) {
-					values.put(cft.getCode(), entry.getValue());
+				if(cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+					if(entry.getValue() instanceof String) {
+						Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
+						values.put(cft.getCode(), refValues);
+					} else if(entry.getValue() instanceof Map) {
+						values.put(cft.getCode(), entry.getValue());
+					}
+				} else if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+					if(entry.getValue() instanceof Collection) {
+						Collection<?> collection = (Collection<?>) entry.getValue();
+						if(!collection.isEmpty()) {
+							var firstItem = collection.iterator().next();
+							if(firstItem instanceof String) {
+								// List list = find(repository, cet, null);
+							}
+						}
+					}
 				}
+
 			}
 		}
 	}
