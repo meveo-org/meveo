@@ -118,7 +118,7 @@ public class Neo4jDao {
     					LOGGER.warn("findTarget: Multiple results found for query \n{}\nand uuid {}", query, sourceId);
     				}
     				
-    				return list.get(0).get(0).asMap();
+    				return new HashMap<>(list.get(0).get(0).asMap());
     			}
 			);
     }
@@ -133,7 +133,7 @@ public class Neo4jDao {
     	return cypherHelper.execute(repo, 
     			query.toString(), 
     			Collections.singletonMap("uuid", sourceId),
-    			(t, r) -> r.list().stream().map(record -> record.get(0).asMap()).collect(Collectors.toList())
+    			(t, r) -> r.list().stream().map(record -> new HashMap<>(record.get(0).asMap())).collect(Collectors.toList())
 			);
     }
 

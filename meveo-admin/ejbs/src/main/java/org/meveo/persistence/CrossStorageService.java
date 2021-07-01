@@ -217,10 +217,18 @@ public class CrossStorageService implements CustomPersistenceService {
 									if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), targets);
+										for (var target : targets) {
+											if(target.get("uuid") == null) {
+												target.put("uuid", target.remove("meveo_uuid"));
+											}
+										}
 										
 									} else {
 										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), target);
+										if(target.get("uuid") == null) {
+											target.put("uuid", target.remove("meveo_uuid"));
+										}
 									}
 								}
 							}
