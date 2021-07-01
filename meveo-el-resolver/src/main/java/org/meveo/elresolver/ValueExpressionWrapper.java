@@ -204,7 +204,7 @@ public class ValueExpressionWrapper {
 
         } catch (Exception e) {
             log.warn("EL {} throw error with variables {}", expression, userMap, e);
-            throw new ELException("Error while evaluating expression " + expression + " : " + e.getMessage());
+            throw new ELException("Error while evaluating expression " + expression, e);
         }
         return result;
     }
