@@ -17,6 +17,7 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +43,6 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 @Singleton
 @Startup
 public class EndpointCacheContainer {
-
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;
 
@@ -128,7 +128,10 @@ public class EndpointCacheContainer {
 		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();
 		while (it.hasNext()) {
 			Endpoint endpoint = it.next().getValue();
-			if(endpoint.getMethod().getLabel().equals(method) && endpoint.getPathRegex().matcher(path).matches()){
+			boolean sameMethod = endpoint.getMethod().getLabel().equals(method);
+			Matcher matcher = endpoint.getPathRegex().matcher(path);
+			boolean matched = matcher.matches() || matcher.lookingAt();
+			if( sameMethod && matched){
 				if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
 					result=endpoint;
 				}
