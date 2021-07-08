@@ -109,17 +109,17 @@ public class EndpointService extends BusinessService<Endpoint> {
 				if (entity.getPathParameters().size() > i) {
 					String actualParam = entity.getPathParameters().get(i).toString();
 					if (!paramName.equals(actualParam)) {
-						throw new BusinessException((i + 1) + "th path param is expected to be " + entity.getPathParameters().get(i) + " while actual value is " + paramName);
+						throw new BusinessException(entity.getCode() +" endpoint is invalid. " +(i + 1) + "th path param is expected to be " + entity.getPathParameters().get(i) + " while actual value is " + paramName);
 					}
 					i++;
 
 				} else {
-					throw new BusinessException("unexpected param " + paramName);
+					throw new BusinessException(entity.getCode() +" endpoint is invalid. Unexpected param " + paramName);
 				}
 			}
 
 			if (entity.getPathParameters().size() > i) {
-				throw new BusinessException("missing param " + entity.getPathParameters().get(i));
+				throw new BusinessException(entity.getCode() +" endpoint is invalid. Missing param " + entity.getPathParameters().get(i));
 			}
 		}
 	}
