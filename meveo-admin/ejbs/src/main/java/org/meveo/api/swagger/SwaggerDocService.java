@@ -65,12 +65,28 @@ public class SwaggerDocService {
 		Path path = new Path();
 
 		Operation operation = new Operation();
+		boolean isHeadMethod=false;
 
-		if (endpoint.getMethod().equals(EndpointHttpMethod.GET)) {
-			path.setGet(operation);
+		switch(endpoint.getMethod()){
+			case DELETE:
+				path.setDelete(operation);
+				break;
+			case GET:
+				path.setGet(operation);
+				break;
+			case HEAD:
+				path.setHead(operation);
+				isHeadMethod=true;
+				break;
+			case POST:
+				path.setPost(operation);
+				break;
+			case PUT:
+				path.setPut(operation);
+				break;
+			default:
+				break;
 
-		} else if (endpoint.getMethod().equals(EndpointHttpMethod.POST)) {
-			path.setPost(operation);
 		}
 
 		if (!Objects.isNull(endpoint.getPathParametersNullSafe())) {
@@ -110,7 +126,7 @@ public class SwaggerDocService {
 
 					if (samples != null && !samples.isEmpty()) {
 						Object inputExample = samples.get(0).getInputs().get(tsParameterMapping.getParameterName());
-						String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+						String mediaType = endpoint.getContentType();
 						if (inputExample != null) {
 							String inputExampleSerialized = inputExample.getClass().isPrimitive() ? String.valueOf(inputExample) : JacksonUtil.toString(inputExample);
 							bodyParameter.addExample(mediaType, inputExampleSerialized);
@@ -126,20 +142,22 @@ public class SwaggerDocService {
 		Map<String, io.swagger.models.Response> responses = new HashMap<>();
 		io.swagger.models.Response response = new io.swagger.models.Response();
 
-		if (samples != null && !samples.isEmpty()) {
+		if ((!isHeadMethod) && (samples != null) && (!samples.isEmpty())) {
 			Object outputExample = samples.get(0).getOutputs();
-			String mediaType = endpoint.getContentType() != null ? endpoint.getContentType() : "application/json";
+			String mediaType = endpoint.getContentType();
 			response.example(mediaType, outputExample);
 		}
 
-		buildResponseSchema(endpoint, response);
+		if(!isHeadMethod){
+			buildResponseSchema(endpoint, response);
+		}
 
 		responses.put("" + HttpStatus.SC_OK, response);
 
 		Swagger swagger = new Swagger();
 		swagger.setInfo(info);
 		swagger.setBasePath(baseUrl);
-		swagger.setSchemes(Arrays.asList(Scheme.HTTP, Scheme.HTTPS));
+		swagger.setSchemes(Arrays.asList(Scheme.HTTPS));
 		swagger.setProduces(Collections.singletonList(endpoint.getContentType()));
 		if (endpoint.getMethod() == EndpointHttpMethod.POST) {
 			swagger.setConsumes(Arrays.asList("application/json", "application/xml"));

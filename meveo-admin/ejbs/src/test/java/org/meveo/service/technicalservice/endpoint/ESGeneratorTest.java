@@ -16,12 +16,16 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+
+import java.util.regex.Pattern;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -94,6 +98,107 @@ public class ESGeneratorTest {
     public void testGenerateForm() {
         String postGenerated = ESGenerator.generateHtmlForm(postEndpoint);
         System.out.println(postGenerated);
+    }
+
+
+    @Test(expected = RuntimeException.class)
+    public void testInvalidCode() {
+        Endpoint endpoint = new Endpoint();
+        endpoint.setCode("mytest/toto");
+    }
+
+    @Test
+    public void testBasePath() {
+        Endpoint endpoint = new Endpoint();
+        endpoint.setCode("my-test01_EX");
+        assert (endpoint.getBasePath().equals("my-test01_EX"));
+        assert (endpoint.getPath().equals("/"));
+        endpoint.setBasePath("my-own_basepath");
+        assert (endpoint.getBasePath().equals("my-own_basepath"));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testInvalidBasePath() {
+        Endpoint endpoint = new Endpoint();
+        endpoint.setCode("mytest");
+        endpoint.setBasePath("basepath/is invalid");
+    }
+
+    private Endpoint createEndpointWithTwoPathParams() {
+        Endpoint endpoint = new Endpoint();
+        endpoint.setCode("mytest");
+        EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
+        EndpointParameter first = new EndpointParameter();
+        endpointPathParameter.setEndpointParameter(first);
+        first.setParameter("first");
+        endpoint.addPathParameter(endpointPathParameter);
+        EndpointPathParameter endpointPathParameter2 = new EndpointPathParameter();
+        EndpointParameter second = new EndpointParameter();
+        endpointPathParameter2.setEndpointParameter(second);
+        second.setParameter("second");
+        endpoint.addPathParameter(endpointPathParameter2);
+        return endpoint;
+    }
+
+    @Test
+    public void testPath() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        assert (endpoint.getPath().equals("/{first}/{second}"));
+        String url=endpoint.getEndpointUrl();
+        assert (url.equals("/rest/mytest/{first}/{second}"));
+        Pattern regex= endpoint.getPathRegex();
+        System.out.println(regex.pattern());
+        assert (regex.matcher("mytest/un/deux").matches());
+        assert (!regex.matcher("mytest/un").matches());
+        assert (!regex.matcher("mytest/un/deux/trois").matches());
+    }
+
+    @Test
+    public void testPathOverride() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        endpoint.setPath("/{first}/id/{second}");
+        assert (endpoint.getPath().equals("/{first}/id/{second}"));
+        Pattern regex= endpoint.getPathRegex();
+        System.out.println(regex.pattern());
+        assert (regex.matcher("mytest/un/id/deux").matches());
+        assert (!regex.matcher("mytest/un/deux").matches());
+        assert (!regex.matcher("mytest/un/id/deux/trois").matches());
+    }
+
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();
+
+    @Test
+    public void testInvalidPath() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        exceptionRule.expect(RuntimeException.class);
+        exceptionRule.expectMessage("1th path param is expected to be first while actual value is second");
+        endpoint.setPath("/id/{second}");
+    }
+
+    @Test
+    public void testInvalidPath2() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        exceptionRule.expect(RuntimeException.class);
+        exceptionRule.expectMessage("missing param second");
+        endpoint.setPath("/{first}/id/");
+    }
+
+    @Test
+    public void testInvalidPathAdditionalParam() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        exceptionRule.expect(RuntimeException.class);
+        exceptionRule.expectMessage("unexpected param third");
+        endpoint.setPath("/{first}/id/{second}/{third}");
+    }
+
+
+    @Test
+    public void testInvalidPathOrder() {
+        Endpoint endpoint = createEndpointWithTwoPathParams();
+        exceptionRule.expect(RuntimeException.class);
+        exceptionRule.expectMessage("1th path param is expected to be first while actual value is second");
+        endpoint.setPath("/{second}/id/{first}");
     }
 
 }

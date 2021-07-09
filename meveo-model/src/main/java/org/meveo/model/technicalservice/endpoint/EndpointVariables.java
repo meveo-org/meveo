@@ -20,5 +20,7 @@ public class EndpointVariables {
 
     public static final String BUDGET_UNIT = "budgetUnit";
     public static final String MAX_BUDGET = "maxBudget";
+    public static final String DELAY_UNIT = "delayUnit";
+    public static final String MAX_DELAY = "maxDelay";
 
 }

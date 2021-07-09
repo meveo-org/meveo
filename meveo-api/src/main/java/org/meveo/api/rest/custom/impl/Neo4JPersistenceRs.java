@@ -9,9 +9,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
@@ -23,11 +25,13 @@ import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.Entity;
 import org.meveo.interfaces.EntityOrRelation;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +48,9 @@ import io.swagger.annotations.ApiParam;
 public class Neo4JPersistenceRs {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(Neo4JPersistenceRs.class);
+    
+    @Inject
+    protected CustomRelationshipTemplateService crtService;
 
     @Inject
     protected SchedulingService schedulingService;
@@ -53,6 +60,9 @@ public class Neo4JPersistenceRs {
 
     @Inject
     protected Neo4jService neo4jService;
+    
+    @Inject
+    protected Neo4jDao neo4jDao;
 
     @QueryParam("neo4jConfiguration")
     private String neo4jConfiguration;
@@ -68,6 +78,18 @@ public class Neo4JPersistenceRs {
         }
 
         return Response.noContent().build();
+    }
+    
+    @DELETE
+    @Path("/relations/{code}/{uuid}")
+    public void deleteRelation(@PathParam("code") String code, @PathParam("uuid") String uuid) {
+    	//TODO: Make sure the user has the permission to delete the relation
+    	var crt = crtService.findByCode(code, List.of("startNode", "endNode"));
+    	if(crt == null) {
+    		throw new BadRequestException("CRT does not exists");
+    	}
+    	
+    	neo4jDao.removeRelation(neo4jConfiguration, crt.getStartNode().getCode(), crt.getName(), crt.getEndNode().getCode(), uuid);
     }
 
     @POST

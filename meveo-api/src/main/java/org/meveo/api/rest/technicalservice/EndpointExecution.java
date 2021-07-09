@@ -29,35 +29,36 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 public class EndpointExecution {
     private final Map<String, Object> parameters;
     private final HttpServletResponse resp;
-    private final String[] pathInfo;
-    private final String firstUriPart;
+    private final String pathInfo;
     private final boolean keep;
     private final boolean wait;
     private final EndpointHttpMethod method;
     private final String persistenceContextId;
     private final String persistenceContext;
     private final String budgetUnit;
-    private final Double bugetMax;
+    private final Double budgetMax;
     private final TimeUnit delayUnit;
-    private final Long delayValue;
+    private final Long delayMax;
     private final EndpointRequest request;
     private final EndpointResponse response;
     private final Endpoint endpoint;
 
-    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, String[] pathInfo, String firstUriPart, boolean keep, boolean wait, EndpointHttpMethod method, String persistenceContextId, String persistenceContext, String budgetUnit, Double bugetMax, TimeUnit delayUnit, Long delayValue, EndpointRequest request, Endpoint endpoint) {
+    public EndpointExecution(Map<String, Object> parameters, HttpServletResponse resp, String pathInfo, boolean keep,
+                             boolean wait, EndpointHttpMethod method, String persistenceContextId,
+                             String persistenceContext, String budgetUnit, Double budgetMax,
+                             TimeUnit delayUnit, Long delayMax, EndpointRequest request, Endpoint endpoint) {
         this.parameters = parameters;
         this.resp = resp;
         this.pathInfo = pathInfo;
-        this.firstUriPart = firstUriPart;
         this.keep = keep;
         this.wait = wait;
         this.method = method;
         this.persistenceContextId = persistenceContextId;
         this.persistenceContext = persistenceContext;
         this.budgetUnit = budgetUnit;
-        this.bugetMax = bugetMax;
+        this.budgetMax = budgetMax;
         this.delayUnit = delayUnit;
-        this.delayValue = delayValue;
+        this.delayMax = delayMax;
         this.request = request;
         this.endpoint = endpoint;
         this.response = new EndpointResponse(resp);
@@ -67,28 +68,24 @@ public class EndpointExecution {
 		return response;
 	}
 
-	public Endpoint getEndpoint() {
-		return endpoint;
-	}
+	public Endpoint getEndpoint() { return endpoint; }
 
 	public EndpointRequest getRequest() {
         return request;
     }
 
-    public TimeUnit getDelayUnit() {
-        return delayUnit;
-    }
+    public TimeUnit getDelayUnit() { return delayUnit; }
 
-    public Long getDelayValue() {
-        return delayValue;
+    public Long getDelayMax() {
+        return delayMax;
     }
 
     public String getBudgetUnit() {
         return budgetUnit;
     }
 
-    public Double getBugetMax() {
-        return bugetMax;
+    public Double getBudgetMax() {
+        return budgetMax;
     }
 
     public Map<String, Object> getParameters() {
@@ -99,13 +96,7 @@ public class EndpointExecution {
         return resp;
     }
 
-    public String[] getPathInfo() {
-        return pathInfo;
-    }
-
-    public String getFirstUriPart() {
-        return firstUriPart;
-    }
+    public String getPathInfo() { return pathInfo; }
 
     public boolean isKeep() {
         return keep;

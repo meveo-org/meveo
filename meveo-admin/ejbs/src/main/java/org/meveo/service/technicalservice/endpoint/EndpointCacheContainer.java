@@ -16,8 +16,9 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -32,10 +33,7 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 /**
  * @author Clément Bareth *
@@ -45,18 +43,26 @@ import com.google.common.cache.LoadingCache;
 @Singleton
 @Startup
 public class EndpointCacheContainer {
-
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;
 
 	@Inject
 	private EndpointService endpointService;
 
-	private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
+	private ConcurrentHashMap<String, Endpoint> endpointLoadingCache = new ConcurrentHashMap<>();
 
 	@PostConstruct
 	private void init() {
-		endpointLoadingCache = CacheBuilder.newBuilder() //
+		endpointLoadingCache = new ConcurrentHashMap<String, Endpoint>();
+		List<Endpoint> allEndpoints=endpointService.list();
+		for(Endpoint endpoint:allEndpoints){
+			endpoint.getService();
+			endpoint.getService().getCode();
+			endpoint.getPathParametersNullSafe().forEach(e -> {});
+			endpoint.getParametersMappingNullSafe().forEach(e -> {});
+			endpointLoadingCache.put(endpoint.getCode(),endpoint);
+		}
+		/*		CacheBuilder.newBuilder() //
 				.expireAfterAccess(24, TimeUnit.HOURS) //
 				.build(new CacheLoader<String, Endpoint>() { //
 					@Override
@@ -71,7 +77,7 @@ public class EndpointCacheContainer {
 						;
 						return result;
 					}
-				});
+				});*/
 	}
 
 	public PendingResult getPendingExecution(String key) {
@@ -87,22 +93,50 @@ public class EndpointCacheContainer {
 	}
 
 	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
-		endpointLoadingCache.invalidate(endpoint.getCode());
+		endpointLoadingCache.remove(endpoint.getCode());
 	}
 
 	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
-		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		if(endpoint.isActive()) {
+			endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		} else{
+			if(endpointLoadingCache.containsKey(endpoint.getCode())){
+				endpointLoadingCache.remove(endpoint.getCode());
+			}
+		}
 	}
 
 	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
-		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		if(endpoint.isActive()) {
+			endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		}
 	}
 
 	public Endpoint getEndpoint(String code) {
-		try {
-			return endpointLoadingCache.getUnchecked(code);
-		} catch (CacheLoader.InvalidCacheLoadException e) {
+		if(endpointLoadingCache.containsKey(code)){
+			return endpointLoadingCache.get(code);
+		} else {
 			return null;
 		}
+	}
+
+	/*
+	 * returns the endpoint with largest regex matching the path
+	 */
+	public Endpoint getEndpointForPath(String path, String method){
+		Endpoint result=null;
+		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();
+		while (it.hasNext()) {
+			Endpoint endpoint = it.next().getValue();
+			boolean sameMethod = endpoint.getMethod().getLabel().equals(method);
+			Matcher matcher = endpoint.getPathRegex().matcher(path);
+			boolean matched = matcher.matches() || matcher.lookingAt();
+			if( sameMethod && matched){
+				if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
+					result=endpoint;
+				}
+			}
+		}
+		return result;
 	}
 }

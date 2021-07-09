@@ -35,21 +35,19 @@ public class EndpointExecutionFactory {
 
         resp.setCharacterEncoding("UTF-8");
 
-        String[] pathInfo = req.getPathInfo().split("/");
-        if (pathInfo.length == 0) {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo.length() == 0) {
             throw new ServletException("Incomplete URL");
         }
         
         // Retrieve endpoint
-
-        final Endpoint endpoint = endpointCacheContainer.getEndpoint(pathInfo[1]);
+        final Endpoint endpoint = endpointCacheContainer.getEndpointForPath(req.getPathInfo(),req.getMethod());
 
         return new EndpointExecutionBuilder()
                 .setRequest(new EndpointRequest(req, endpoint))
                 .setResponse(resp)
                 .setEndpoint(endpoint)
                 .setPathInfo(pathInfo)
-                .setFirstUriPart(pathInfo[1])
                 .setKeep(Headers.KEEP_DATA.getValue(req, Boolean.class, false))
                 .setWait(Headers.WAIT_FOR_FINISH.getValue(req, Boolean.class, false))
                 .setBudgetUnit(Headers.BUDGET_UNIT.getValue(req, String.class))

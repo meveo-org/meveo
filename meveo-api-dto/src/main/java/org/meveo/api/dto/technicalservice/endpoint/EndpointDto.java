@@ -128,6 +128,22 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     @JsonProperty
     @ApiModelProperty("Content type of the response")
     private String contentType;
+
+
+    /**
+     * Content type of the response
+     */
+    @JsonProperty
+    @ApiModelProperty("endpoint base path, built from service code if not set")
+    private String basePath;
+
+
+    /**
+     * Content type of the response
+     */
+    @JsonProperty
+    @ApiModelProperty("endpoint path , built from path parameters if not set")
+    private String path;
     
     public EndpointDto() {
     	super();
@@ -228,4 +244,12 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
 	public void setCheckPathParams(boolean checkPathParams) {
 		this.checkPathParams = checkPathParams;
 	}
+
+    public String getBasePath() {return basePath;}
+
+    public void setBasePath(String basePath) {this.basePath = basePath;}
+
+    public String getPath() {return path;}
+
+    public void setPath(String path) {this.path = path;}
 }

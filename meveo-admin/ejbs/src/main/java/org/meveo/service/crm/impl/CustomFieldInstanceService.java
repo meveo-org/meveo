@@ -661,7 +661,12 @@ public class CustomFieldInstanceService extends BaseService {
             log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
             // Existing CFI found. Update with new value or NULL value only if cft.defaultValue is present
         } else if (value != null || cft.getDefaultValue() != null) {
-            cfValue.setValue(value);
+            try {
+				cfValue.setValue(value);
+			} catch (IllegalArgumentException e) {
+				log.error("Error setting value for field template with code " + cfCode + " for entity " + entity + " : " + e.getMessage());
+				throw e;
+			}
 
             // Existing CF value found, but new value is null, so remove CF value all together
         } else {

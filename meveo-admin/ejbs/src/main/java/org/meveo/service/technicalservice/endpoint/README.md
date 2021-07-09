@@ -8,6 +8,23 @@ It can be execute in synchronous or asynchonous mode. In asynchronous mode, a ra
 
 When writing a script, any setter (method starting by "set") will be considered as an input. To add description to this input, we can simply write a Javadoc for the setter.
 
+Some parameters are set in the input parameters indicating the delay and budget allowed for the execution :
+
+ - maxBudget (Double)  : come from request header **Budget-Max-Value** 
+ - budgetUnit (String) : in Joule if not set, come from header **Budget-Unit**
+ - maxDelay (Long)  : come from request header **Delay-Max-Value** 
+ - delayUnit ([TimeUnit](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/TimeUnit.html)) : in Second if not set, come from header **Delay-Unit**
+ 
+It is the responsibility of the Script to implement that its execution is done within the given budget and delay.
+
+In case the script is executed in an asynchronous way, then after the max delay in case the execute method has not yet returned
+then the cancel method of the script is called. It should stop the execution and return immediatly the current result.
+
+If the script extends [EndpointScript](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/EndpointScript.java)
+then the EndpointRequest is set , and in case the call is synchronous the EndpointResponse is set.
+If the script does not extend EndpointScript then the request (and response in synchronous case) are set
+in the parameters "request" and "response" respectively.
+
 ## GUI and API
 
 CRUD for endpoint is available on both GUI and API.
@@ -18,9 +35,11 @@ The endpoint API is /api/rest/endpoint. It is implemented in the class org.meveo
 
 See class org.meveo.api.rest.technicalservice.EndpointServlet.
 
-The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with "/rest/", followed by the name of the endpoint, and the path parameter in the order defined in the configuration. An endpoint is accessible via the URL <meveoURL>/rest/<endpointCode>.
+The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with "/rest/", followed by the basePath of the endpoint (which is its code if not overriden), and the path parameter (wichi is just the ordered list of path parameters if not overridem).
+An endpoint is accessible via the URL <meveoURL>/rest/<endpoint.basePath><endpoint.path>.
 
-If the endpoint was defined as GET, the parameters must be passed as query parameters, and if itwas defined as POST the parameters must be passed as JSON in the body of the request.
+If the endpoint was defined as GET, the parameters must be passed as query parameters, 
+and if it was defined as POST or PUT the parameters must be passed as JSON in the body of the request.
 
 There are several headers that was defined to modify the default behavior of the endpoint: 
 
@@ -36,7 +55,7 @@ For the following examples, let’s consider that we have three setters defined,
 
 ### GET Synchronous endpoint
 
-We should first call the creation rest service with JSON: 
+We should first call the creation rest service `POST on /endpoint` with JSON: 
 
 ```
 {
@@ -73,6 +92,8 @@ We should first call the creation rest service with JSON:
 ```
 
 So, the endpoint generated will be accessible with GET method under /rest/get-synchronous-endpoint/Webdrone?creationDate=2011&headOffice=Dijon and the result will be returned once the script has been executed.
+
+Both basePath and path could be set
 
 ### POST Asynchronous endpoint
 

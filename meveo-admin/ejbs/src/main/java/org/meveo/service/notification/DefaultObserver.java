@@ -451,6 +451,11 @@ public class DefaultObserver {
 		log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} updated", e.startNodeId(), e.endNodeId(), e.type(), e.id());
 		checkEvent(NotificationEventTypeEnum.UPDATED, e);
 	}
+	
+	public void relationshipRemoved(@Observes @Removed Neo4jRelationship e) throws BusinessException {
+		log.debug("Defaut observer : Relationship with startNodeId {}, endNodeId {}, type {} and id {} removed", e.startNodeId(), e.endNodeId(), e.type(), e.id());
+		checkEvent(NotificationEventTypeEnum.REMOVED, e);
+	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void commit(@Observes(during = TransactionPhase.AFTER_SUCCESS) CommitEvent commitEvent) throws BusinessException {

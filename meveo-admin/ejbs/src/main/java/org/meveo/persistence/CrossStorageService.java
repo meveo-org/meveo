@@ -45,6 +45,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -197,8 +198,14 @@ public class CrossStorageService implements CustomPersistenceService {
 						foudEntity=true;
 						values.putAll(existingValues);
 						// We need to fetch every relationship defined as entity references
-						if(withEntityReferences) {
+						if(withEntityReferences || fetchFields != null) {
 							for(CustomFieldTemplate cft : cfts) {
+								if(!withEntityReferences && fetchFields != null) { // Skip fields not defined in fetch fields
+									if(!fetchFields.contains(cft.getCode())) {
+										continue;
+									}
+								}
+								
 								if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 									var referencedCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 									
@@ -210,10 +217,18 @@ public class CrossStorageService implements CustomPersistenceService {
 									if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), targets);
+										for (var target : targets) {
+											if(target.get("uuid") == null) {
+												target.put("uuid", target.remove("meveo_uuid"));
+											}
+										}
 										
 									} else {
 										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), target);
+										if(target.get("uuid") == null) {
+											target.put("uuid", target.remove("meveo_uuid"));
+										}
 									}
 								}
 							}
@@ -465,7 +480,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			Collection<String> fetchFields = actualFetchFields != null ? actualFetchFields : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
 
 			final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, fetchFields);
-			data.putAll(missingData);
+			if(missingData != null) {
+				data.putAll(missingData);
+			}
 		}
 		
 		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo())
@@ -738,7 +755,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities);
+			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities, foundId);
 			if (foundId == null) {
 				ceiAfterPreEvents.setUuid(uuid);
 			}
@@ -843,12 +860,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		return cei.getUuid();
 	}
 
-	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
+	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities, String foundUuid) throws IOException, BusinessException, BusinessApiException {
+		
 		String uuid = null;
-
 		CustomEntityInstance neo4jCei = new CustomEntityInstance();
 		neo4jCei.setCetCode(cei.getCetCode());
-		neo4jCei.setUuid(cei.getUuid());
+		neo4jCei.setUuid(foundUuid);
 		neo4jCei.setCet(cei.getCet());
 		
 		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
@@ -866,7 +883,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					throw new NullPointerException("Generated UUID from Neo4J cannot be null");
 				}
 
-				if (cei.getUuid() != null && !cei.getUuid().equals(uuid)) {
+				if (foundUuid != null && !foundUuid.equals(uuid)) {
 					log.error("Wrong Neo4J UUID {} for {}, should be {}", uuid, neo4jCei, cei.getUuid(), new Exception());
 				}
 
@@ -1229,6 +1246,9 @@ public class CrossStorageService implements CustomPersistenceService {
 					uuid = neo4JUuid;
 				}
 
+			} catch (InvalidCustomFieldException e) {
+				log.warn("Invalid custom field", e.getMessage());
+				return null;
 			} catch (ELException | BusinessException e) {
 				throw new RuntimeException(e);
 			}
@@ -1407,7 +1427,6 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (cft == null) {
 				return false;
 			}
-
 			return cft.getStoragesNullSafe().contains(storageType);
 		}).collect(Collectors.toList());
 	}
@@ -1565,7 +1584,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 								
 				// Check if target is not JPA entity
 				try {
@@ -1593,12 +1612,25 @@ public class CrossStorageService implements CustomPersistenceService {
 					continue;
 				}
 				
-				if(entry.getValue() instanceof String) {
-					Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
-					values.put(cft.getCode(), refValues);
-				} else if(entry.getValue() instanceof Map) {
-					values.put(cft.getCode(), entry.getValue());
+				if(cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+					if(entry.getValue() instanceof String) {
+						Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
+						values.put(cft.getCode(), refValues);
+					} else if(entry.getValue() instanceof Map) {
+						values.put(cft.getCode(), entry.getValue());
+					}
+				} else if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+					if(entry.getValue() instanceof Collection) {
+						Collection<?> collection = (Collection<?>) entry.getValue();
+						if(!collection.isEmpty()) {
+							var firstItem = collection.iterator().next();
+							if(firstItem instanceof String) {
+								// List list = find(repository, cet, null);
+							}
+						}
+					}
 				}
+
 			}
 		}
 	}

@@ -99,12 +99,12 @@ public class Neo4JRequests {
             .append("RETURN startNode.meveo_uuid");
 
     public final static StringBuffer findRelationIdByTargetId = new StringBuffer()
-            .append("MATCH [r:${relationLabel}]->(t:${targetLabel}) \n")
+            .append("MATCH ()-[r:${relationLabel}]->(t:${targetLabel}) \n")
             .append("WHERE t.meveo_uuid = $").append(NODE_ID).append("\n")
             .append("RETURN r.meveo_uuid");
 
     public final static StringBuffer findSourceNodeByRelationId = new StringBuffer()
-            .append("MATCH (n:${sourceLabel})-[r:${relationLabel}] \n")
+            .append("MATCH (n:${sourceLabel})-[r:${relationLabel}]-() \n")
             .append("WHERE r.meveo_uuid = $").append(NODE_ID).append(" \n")
             .append("RETURN n.meveo_uuid");
 
@@ -117,7 +117,7 @@ public class Neo4JRequests {
             .append("SET startNode += ${fields}, startNode." + INTERNAL_UPDATE_DATE + " = timestamp() \n");
 
     public final static String mergeOutGoingRelStatement = "MATCH (a:${cetCode})-[r]->(c) where a.meveo_uuid = ${originNodeId} "
-            + "MATCH (b:${cetCode})where b.meveo_uuid =${targetNodeId} "
+            + "MATCH (b:${cetCode}) where b.meveo_uuid = ${targetNodeId} "
             + "WITH a, b,c,r, COLLECT(TYPE(r)) AS relTypes "
             + "UNWIND relTypes AS relType "
             + "CALL apoc.create.relationship(b, relType, {}, c) YIELD rel "

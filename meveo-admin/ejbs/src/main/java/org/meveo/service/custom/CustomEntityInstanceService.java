@@ -2,6 +2,7 @@ package org.meveo.service.custom;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -186,9 +188,16 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 		final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
 
-		if (values != null && !values.isEmpty()) {
+		var ownValues = new HashMap<>(values);
+		for (var entry : values.entrySet()) {
+			if (entry.getValue() instanceof EntityReferenceWrapper) {
+				ownValues.remove(entry.getKey());
+			}
+		}
+			
+		if (ownValues != null && !ownValues.isEmpty()) {
 			return resultList.stream()
-					.filter(customEntityInstance -> filterOnValues(values, customEntityInstance))
+					.filter(customEntityInstance -> filterOnValues(ownValues, customEntityInstance))
 					.collect(Collectors.toList());
 		}
 
@@ -236,6 +245,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 			if (filterValue.getValue() == null) {
 				continue;
+			}
+			
+			if(filterValue.getValue() instanceof Collection) {
+				continue; //FIXME
 			}
 
 			String[] fieldInfo = filterValue.getKey().split(" ");

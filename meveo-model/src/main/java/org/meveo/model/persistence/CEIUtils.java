@@ -119,10 +119,12 @@ public class CEIUtils {
 				if(singleRelationField.isPresent()) {
 					singleRelationField.ifPresent(field -> {
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, customRelation);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) { 
+							try {
+								setter.invoke(sourceEntity, customRelation);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					});
 					continue;
@@ -160,10 +162,12 @@ public class CEIUtils {
 					} else {
 						// Relation is mono valued
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, targetEntity);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) {
+							try {
+								setter.invoke(sourceEntity, targetEntity);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					}
 
@@ -319,11 +323,16 @@ public class CEIUtils {
 				
 				if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 					Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-					try {
-						var actualClass = Class.forName(actualType.getTypeName());
-						isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
-					} catch (ClassNotFoundException e) {
-						isRelationshipField = false;
+					if(actualType instanceof Class && CustomRelation.class.isAssignableFrom((Class<?>) actualType)) {
+						isRelationshipField = true;
+					} else {
+						//FIXME: test if we can delete that
+						try {
+							var actualClass = Class.forName(actualType.getTypeName());
+							isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
+						} catch (ClassNotFoundException e) {
+							isRelationshipField = false;
+						}
 					}
 				}
 				
@@ -348,6 +357,7 @@ public class CEIUtils {
 				if(value.isPresent() && (value.get() instanceof Collection)) {
 					if(!isCollectionOfCustomRelation(fieldDef)) {
 						// Case where the field is a collection of custom entity annotated with @Relation
+						
 						Collection<CustomEntity> customEntitiesValue = (Collection<CustomEntity>) value.get();
 						 
 						subEntities.addAll(customEntitiesValue);
@@ -450,11 +460,15 @@ public class CEIUtils {
 	private static boolean isCollectionOfCustomRelation(Field fieldDef) {
 		if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 			Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-			try {
-				var actualClass = Class.forName(actualType.getTypeName());
-				return CustomRelation.class.isAssignableFrom(actualClass);
-			} catch (ClassNotFoundException e) {
-				return false;
+			if(actualType instanceof Class) {
+				return CustomRelation.class.isAssignableFrom((Class<?>) actualType);
+			} else {
+				try {
+					var actualClass = Class.forName(actualType.getTypeName());
+					return CustomRelation.class.isAssignableFrom(actualClass);
+				} catch (ClassNotFoundException e) {
+					return false;
+				}
 			}
 		}
 		return false;
@@ -580,7 +594,10 @@ public class CEIUtils {
 			T instance = clazz.getDeclaredConstructor().newInstance();
 			for (var entry : value.entrySet()) {
 				var setter = findSetter(entry.getKey(), clazz);
-
+				if(setter == null) {
+					continue;
+				}
+				
 				Object lazyInitInstance = null;
 
 				Class<?> paramType = setter.getParameters()[0].getType();
@@ -635,7 +652,7 @@ public class CEIUtils {
 	}
 
 	private static Method findSetter(String fieldName, Class<?> clazz) {
-		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElseThrow(() -> new IllegalArgumentException("No setter found for field " + fieldName + " in " + clazz));
+		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElse(null);
 	}
 
 }

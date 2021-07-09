@@ -16,15 +16,18 @@
 package org.meveo.api.technicalservice.endpoint;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -188,7 +191,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
 		// Start endpoint script with timeout if one was set
-		if (execution.getDelayValue() != null) {
+		if (execution.getDelayMax() != null) {
 			try {
 				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
 					try {
@@ -197,7 +200,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						throw new RuntimeException(e);
 					}
 				});
-				return resultFuture.get(execution.getDelayValue(), execution.getDelayUnit());
+				return resultFuture.get(execution.getDelayMax(), execution.getDelayUnit());
 			} catch (TimeoutException e) {
 				return executionEngine.cancel();
 			}
@@ -218,39 +221,24 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 */
 	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
-		List<String> pathParameters = new ArrayList<>(
-				Arrays.asList(execution.getPathInfo()).subList(2, execution.getPathInfo().length));
 
-		// Set budget variables
-		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBugetMax());
-		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
 
-		// Assign path parameters
-		List<String> missingPathParameters = new ArrayList<>();
-
-		if (endpoint.isCheckPathParams() && pathParameters.size() != endpoint.getPathParametersNullSafe().size()) {
-			throw new IllegalArgumentException("Path parameters does not match with endpoint.");
-		}
-
-		if (pathParameters.isEmpty() && !endpoint.getPathParametersNullSafe().isEmpty()) {
-			missingPathParameters.addAll(endpoint.getPathParametersNullSafe().stream()
-					.map(EndpointPathParameter::toString).collect(Collectors.toList()));
-
-		} else {
-			for (EndpointPathParameter pathParameter : endpoint.getPathParametersNullSafe()) {
-				if (pathParameters.get(pathParameter.getPosition()) != null) {
-					parameterMap.put(pathParameter.toString(), pathParameters.get(pathParameter.getPosition()));
-
-				} else {
-					missingPathParameters.add(pathParameter.toString());
-				}
+		Matcher matcher=endpoint.getPathRegex().matcher(execution.getPathInfo());
+		matcher.find();
+		for(EndpointPathParameter pathParameter: endpoint.getPathParametersNullSafe()){
+			try {
+				String val = matcher.group(pathParameter.toString());
+				parameterMap.put(pathParameter.toString(),val);
+			} catch(Exception e){
+				throw new IllegalArgumentException("cannot find param "+pathParameter+" in "+execution.getPathInfo());
 			}
 		}
 
-		if (!missingPathParameters.isEmpty()) {
-			throw new IllegalArgumentException("The following path parameters must be specified ["
-					+ String.join(",", missingPathParameters) + "]");
-		}
+		// Set budget variables
+		parameterMap.put(EndpointVariables.MAX_BUDGET, execution.getBudgetMax());
+		parameterMap.put(EndpointVariables.BUDGET_UNIT, execution.getBudgetUnit());
+		parameterMap.put(EndpointVariables.MAX_DELAY, execution.getDelayMax());
+		parameterMap.put(EndpointVariables.DELAY_UNIT, execution.getDelayUnit());
 
 		// Assign query or post parameters
 		for (TSParameterMapping tsParameterMapping : endpoint.getParametersMappingNullSafe()) {
@@ -516,6 +504,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		}
 		endpointDto.setJsonataTransformer(endpoint.getJsonataTransformer());
 		endpointDto.setContentType(endpoint.getContentType());
+		endpointDto.setBasePath(endpoint.getBasePath());
+		endpointDto.setPath(endpoint.getPath());
 		return endpointDto;
 	}
 
@@ -582,6 +572,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		endpoint.setContentType(endpointDto.getContentType());
 
+		endpoint.setBasePath(endpointDto.getBasePath());
+
+		endpoint.setPath(endpointDto.getPath());
+
+
 		return endpoint;
 	}
 	
@@ -625,7 +620,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	
 	/**
 	 * To determine if the endpoint parameter is multivalued, check the corresponding input's type
-	 * @param e the parameter
+	 * @param parameter the parameter
 	 * @return whether the parameter is multivaluedn according to its type
 	 */
 	private static boolean isParameterMultivalued(Endpoint endpoint, TSParameterMapping parameter) {
@@ -746,7 +741,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		final boolean returnedVarNameDefined = !StringUtils.isBlank(endpoint.getReturnedVariableName());
 		boolean shouldSerialize = !returnedVarNameDefined || endpoint.isSerializeResult();
 
-		Object returnValue = result;
+		Object returnValue = "";
 		if (returnedVarNameDefined) {
 			Object extractedValue = result.get(endpoint.getReturnedVariableName());
 			if (extractedValue != null) {
@@ -756,8 +751,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						endpoint.getReturnedVariableName());
 			}
 		} else {
-			return "";
-		}
+			Map<String,Object> serializableResult = new HashMap<String,Object>();
+			for(Entry<String,Object> entry:result.entrySet()){
+				if(entry.getValue() instanceof Serializable){
+					serializableResult.put(entry.getKey(), entry.getValue());
+				}
+			}
+			returnValue=serializableResult;
+		} 
 		
 		if (!shouldSerialize) {
 			return returnValue.toString();
