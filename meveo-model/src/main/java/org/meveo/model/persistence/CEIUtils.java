@@ -515,10 +515,9 @@ public class CEIUtils {
 			});
 		}
 
-		// JacksonUtil.convert(pojo, GenericTypeReferences.MAP_STRING_OBJECT);
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setUuid((String) pojoAsMap.get("uuid"));
-		cei.setCetCode(pojo.getClass().getSimpleName());
+		cei.setCetCode((String) pojoAsMap.get("cetCode"));
 		CustomFieldValues customFieldValues = new CustomFieldValues();
 		pojoAsMap.forEach(customFieldValues::setValue);
 		cei.setCfValues(customFieldValues);
