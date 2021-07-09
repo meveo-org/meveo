@@ -236,7 +236,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Override
     protected void validate(T script) throws BusinessException {
-        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5) {
+        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 || this.moduleInstallCtx.isActive()) {
             return;
         }
         String className = getClassName(script.getScript());

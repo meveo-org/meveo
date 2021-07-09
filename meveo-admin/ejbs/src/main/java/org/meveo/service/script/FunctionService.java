@@ -100,7 +100,6 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
     private void publish(T executable, CrudActionEnum action) throws BusinessException {
     	
-        afterUpdateOrCreate(executable);
         clusterEventPublisher.publishEvent(executable, action);
     }
 
