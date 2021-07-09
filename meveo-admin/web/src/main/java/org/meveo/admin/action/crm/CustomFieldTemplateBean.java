@@ -38,6 +38,7 @@ import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.DualListModel;
@@ -72,6 +73,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
     
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     private DualListModel<CustomFieldMatrixColumn> childEntityFieldDM;
 
@@ -345,6 +349,9 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         for (CustomizedEntity customizedEntity : entities) {
             clazzNames.add(customizedEntity.getClassnameToDisplay());
         }
+
+        // add script classes
+
 
         return clazzNames;
     }
