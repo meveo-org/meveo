@@ -160,7 +160,7 @@
             itemValue="#{e}" rendered="#{edit and !disabled}">
             <f:attribute name="classname" value="#{cft.entityClazz}" />
             <p:column width="50" headerText="UUID">
-                <h:outputText value="#{not empty e.code ? e.code : e.uuid.substring(0,5)}" />
+                <h:outputText value="#{not empty e.uuid ? e.uuid.substring(0,8) : e.code}" />
             </p:column>
             <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
                 <h:outputText value="#{e.code}" />

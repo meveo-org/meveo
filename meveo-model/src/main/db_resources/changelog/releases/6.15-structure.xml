@@ -22,4 +22,13 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet author="Edward Legaspi" id="Convert function to business cf">
+		<addColumn tableName="meveo_function">
+			<column name="cf_values" type="${type.json}"/>
+			<column name="uuid" type="varchar(60)" defaultValueComputed="${uuid_function}">
+				<constraints nullable="false" unique="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

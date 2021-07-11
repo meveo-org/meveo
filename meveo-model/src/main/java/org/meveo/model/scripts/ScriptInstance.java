@@ -35,6 +35,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
@@ -62,6 +63,7 @@ import org.meveo.model.security.Role;
 })
 @ImportOrder(4)
 @ExportIdentifier({ "code" })
+@CustomFieldEntity(cftCodePrefix = "SI", cftCodeFields = "code")
 public class ScriptInstance extends CustomScript {
 
 	private static final long serialVersionUID = -7691357496569390167L;
