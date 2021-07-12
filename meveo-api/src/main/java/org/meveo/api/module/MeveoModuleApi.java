@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -171,7 +172,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
+		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
