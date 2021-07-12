@@ -37,20 +37,29 @@
 			<p:tabView id="tabView"
 				activeIndex="#{customEntityInstanceBean.activeTab}">
 				<p:tab title="#{messages['customer.tab.information']}"
-					rendered="#{!customEntityInstanceBean.entity.cet.storeAsTable}">
+					   rendered="#{!customEntityInstanceBean.entity.cet.storeAsTable}">
 					<p:outputPanel autoUpdate="false">
 						<hftl:formPanel ajaxSubmit="true" formId="informationForm"
-							submitPartialProcess=":tabView"
-							backingBean="#{customEntityInstanceBean}" showFormButtons="false">
+										submitPartialProcess=":tabView"
+										backingBean="#{customEntityInstanceBean}" showFormButtons="false">
 							<hftl:formField label="#{messages['BusinessEntity.code']}"
-								field="code" required="false" validateCode="false" />
+											field="code" required="false" validateCode="false" />
 							<hftl:formField label="#{messages['BusinessEntity.description']}"
-								field="description" useConverter="false" id="description" />
+											field="description" useConverter="false" id="description" />
 							<hftl:formField label="#{messages['enableEntity.disabled']}"
-								doNotShowOnNew="true" allowEdit="false" field="disabled"
-								isMessage="true" />
+											doNotShowOnNew="true" allowEdit="false" field="disabled"
+											isMessage="true" />
 						</hftl:formPanel>
 					</p:outputPanel>
+				</p:tab>
+
+				<p:tab title="#{messages['customer.tab.information']}">
+					<hftl:formPanel ajaxSubmit="true" formId="requiredForm"
+									submitPartialProcess=":tabView" edit="#{param.uuid == null}"
+									backingBean="#{customEntityInstanceBean}" showFormButtons="false">
+						<hftl:formField label="#{messages['BusinessEntity.uuid']}"
+										field="uuid" required="false" validateCode="false"/>
+					</hftl:formPanel>
 				</p:tab>
 
 				<hftl:customFields backingBean="#{customEntityInstanceBean}"
