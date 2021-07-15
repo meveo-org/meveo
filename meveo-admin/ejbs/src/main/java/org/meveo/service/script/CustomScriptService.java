@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,10 +84,10 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -102,6 +103,8 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -110,7 +113,6 @@ import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -159,6 +161,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
+    
+	@Inject
+	private CustomEntityTemplateCompiler customEntityTemplateCompiler;
+
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
+
     
     @PostConstruct
     private void init() {
@@ -901,17 +910,48 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if (script != null) {
 	        MeveoModule module = findModuleOf(script);
 	        if (module != null) {
+		        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, module.getCode()).getAbsolutePath() + "/" + module.getCode() + "/facets/java");
 	        	List<MeveoModule> meveoModuleInstalled = this.meveoModuleService.listInstalled();
-	        	for (MeveoModule moduleInstalled : meveoModuleInstalled) {
-			        sourcePath += sourcePath.concat(";");
-			        String pathScript = fullClassName.replaceAll("\\.", "/");
-			        pathScript = pathScript.replaceAll("/+\\w+$", "");
-			        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, module.getCode()).getAbsolutePath() + "/" + module.getCode() + "/facets/java");
+	        	for (MeveoModule moduleInstalled : meveoModuleInstalled) {	        		
+				        sourcePath += sourcePath.concat(";");
+				        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, moduleInstalled.getCode()).getAbsolutePath() + "/" + moduleInstalled.getCode() + "/facets/java");	        	
 	        	}
 	        }
         }
         return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
+    
+
+    public Class<CustomEntity> loadCustomEntityClass(String cetCode, boolean isTestCompile, Optional<String> module) throws CharSequenceCompilerException {
+         String fullClassName = "org.meveo.model.customEntities." + cetCode;
+        try {
+    		return CharSequenceCompiler.getCompiledClass(fullClassName);
+    	} catch (ClassNotFoundException e) {
+	        String classPath = CLASSPATH_REFERENCE.get();
+	        CharSequenceCompiler<CustomEntity> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+	        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
+	        String sourcePath ="";
+	        File sourceFile = new File(
+	        		customEntityTemplateCompiler.getJavaCetDir(customEntityTemplateService.findByCode(cetCode)), 
+	        		cetCode+".java");
+	        if (module.isPresent()) {
+		        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, module.get()).getAbsolutePath() + "/" + module.get() + "/facets/java");
+	        }
+        	List<MeveoModule> meveoModuleInstalled = this.meveoModuleService.listInstalled();
+        	for (MeveoModule moduleInstalled : meveoModuleInstalled) {	        		
+			        sourcePath += sourcePath.concat(";");
+			        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, moduleInstalled.getCode()).getAbsolutePath() + "/" + moduleInstalled.getCode() + "/facets/java");	        	
+        	}
+	
+	        try {
+				String sourceContent = org.apache.commons.io.FileUtils.readFileToString(sourceFile, StandardCharsets.UTF_8);
+				return compiler.compile(sourcePath, fullClassName, sourceContent, errs, isTestCompile, CustomEntity.class);
+			} catch (IOException e1) {
+				throw new CharSequenceCompilerException(e.getMessage(), null, e, errs);
+			}
+    	}
+    }
+
 
     /**
      * Find the script class for a given script code

@@ -28,11 +28,11 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.persistence.CrossStorageApi;
-import org.meveo.api.persistence.CrossStorageRequest;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -42,10 +42,12 @@ import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.CharSequenceCompilerException;
+import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.storage.Repository;
 
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -53,10 +55,12 @@ import javax.persistence.NonUniqueResultException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author phung
@@ -77,12 +81,14 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected GitRepository meveoRepository;
 	
 	@Inject
-	private CustomEntityTemplateCompiler customEntityTemplateCompiler;
-	
-	@Inject
 	private RepositoryService repositoryService;
 	
-	@Inject CrossStorageApi crossStorageApi;
+	@Inject 
+	private CrossStorageApi crossStorageApi;
+	
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
+
 	
     /**
      * Find entity by code - strict match.
@@ -295,19 +301,23 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     private void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	if (entity instanceof CustomEntityInstance) {
-    		CustomEntityTemplate cet = null;
-    		try {
-    			cet = this.crossStorageApi.find(this.repositoryService.findDefaultRepository(), entity.getCode(), cet.getClass());
-    		} catch (EntityDoesNotExistsException e1) {
-    			// TODO Auto-generated catch block
-    			e1.printStackTrace();
-    		}
-    		File javaPath = customEntityTemplateCompiler.getJavaCetDir(cet);
-    		String ceiJson = JacksonUtil.toString(javaPath);
+    		String cetCode = ((CustomEntityInstance)entity).getCetCode();
+			CustomEntity pojo;
+			try {
+				Class<CustomEntity> pojoClass = scriptInstanceService.loadCustomEntityClass(cetCode, false, Optional.of(module.getCode()));
+				pojo = this.crossStorageApi.find(this.repositoryService.findDefaultRepository(), ((CustomEntityInstance) entity).getUuid(), pojoClass);
+			} catch (EntityDoesNotExistsException e) {
+				throw new BusinessException("File cannot be updated or created", e);
+			} catch (CharSequenceCompilerException e) {
+				throw new BusinessException("File cannot be updated or created", e);
+			}
+     			
+    		
+    		String ceiJson = JacksonUtil.toString(pojo);
     		
     		
 	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cet.getCode();
+	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
 	    	File newDir = new File(gitDirectory, path);
 	    	newDir.mkdir();
 	    	
@@ -317,7 +327,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    			newJsonFile.createNewFile();
 	    		}
 	    		
-	    		byte[] strToBytes = ceiJson.getBytes();
+	    		byte[] strToBytes = ceiJson.getBytes(StandardCharsets.UTF_8);
 	    		Files.write(newJsonFile.toPath(), strToBytes);
 	    	} catch (IOException e) {
 	    		throw new BusinessException("File cannot be updated or created", e);
