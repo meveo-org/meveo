@@ -32,7 +32,8 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Module](./meveo-api/src/main/java/org/meveo/api/module)
 - [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
 
-### Execution
+### Development
+- [Git](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
 
 ### Ontology
 
