@@ -1,10 +1,12 @@
 package org.meveo.api.module;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -13,6 +15,7 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
+import org.hibernate.exception.ConstraintViolationException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.api.*;
@@ -236,10 +239,10 @@ public class MeveoModuleItemInstaller {
                                         .executeUpdate();
                             }
                             Function service = concreteFunctionService.findById(endpoint.getService().getId());
-                            meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteByService")
-                                    .setParameter("serviceId", service.getId())
+                            meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteById")
+                                    .setParameter("endpointId", endpoint.getId())
                                     .executeUpdate();
-                            
+                            log.info("uninstalled endpoint {} / {}", endpoint.getClass(), endpoint.getId());
                         } else {
                         	log.info("Uninstalling module item {}", item);
 							if (itemEntity instanceof ScriptInstance) {
@@ -270,7 +273,15 @@ public class MeveoModuleItemInstaller {
                 }
                 
             } catch (Exception e) {
-                throw new BusinessException("Failed to uninstall/disable module item " + item ,e);
+            	Throwable cause = e;
+            	if (e instanceof EJBTransactionRolledbackException && e.getCause() != null) {
+            		while (! (cause instanceof SQLException) && cause.getCause() != null) {
+            			cause = cause.getCause();
+            		}
+            		if (! (cause instanceof SQLException))
+            			cause = e.getCause();
+            	}
+                throw new BusinessException("Failed to uninstall/disable module item " + item + " (cause : "+ cause.getMessage() + ")",e);
             }
         }
 

@@ -63,7 +63,8 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 		+ "INNER JOIN e.service as service " + "LEFT JOIN e.pathParameters as pathParameter "
 		+ "LEFT JOIN e.parametersMapping as parameterMapping " + "WHERE service.code = :serviceCode "
 		+ "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"),
-		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId") })
+		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId"),
+		@NamedQuery(name = "Endpoint.deleteById", query = "DELETE from Endpoint e WHERE e.id=:endpointId")})
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
 @ModuleItem(value = "Endpoint", path = "endpoints")
