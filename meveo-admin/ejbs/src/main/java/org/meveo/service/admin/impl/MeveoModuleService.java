@@ -834,7 +834,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "gitRepository");
+    	return null;
     }
     
     /**

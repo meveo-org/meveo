@@ -38,6 +38,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateCompiler;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
@@ -58,6 +59,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -88,6 +90,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	
     /**
@@ -249,6 +254,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
     		}
+    		if (module != null) { String cc = module.getGitRepository().getCode(); }
 		}
     	return module;
     }
@@ -315,7 +321,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		
     		String ceiJson = JacksonUtil.toString(pojo);
     		
-    		
+    		module = meveoModuleService.findById(module.getId(), Arrays.asList("gitRepository"));
 	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
 	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
 	    	File newDir = new File(gitDirectory, path);
