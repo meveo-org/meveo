@@ -321,11 +321,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		
     		String ceiJson = JacksonUtil.toString(pojo);
     		
-    		module = meveoModuleService.findById(module.getId(), Arrays.asList("gitRepository"));
-	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    		MeveoModule meveoModule = meveoModuleService.findById(module.getId(), Arrays.asList("gitRepository"));
+	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, meveoModule.getGitRepository().getCode());
 	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
 	    	File newDir = new File(gitDirectory, path);
-	    	newDir.mkdir();
+	    	boolean check = newDir.mkdirs();
 	    	
 	    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getCode() + ".json");
 	    	try {
@@ -338,7 +338,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    	} catch (IOException e) {
 	    		throw new BusinessException("File cannot be updated or created", e);
 	    	}
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+			gitClient.commitFiles(meveoModule.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
 
     	} else {
 	    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);

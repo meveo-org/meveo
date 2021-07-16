@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +80,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -96,6 +98,7 @@ import org.meveo.model.module.ModuleLicenseEnum;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.typereferences.GenericTypeReferences;
@@ -169,6 +172,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private CrossStorageService crossStorageService;
+    
+    @Inject
+    private CrossStorageApi crossStorageApi;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -189,7 +195,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 	
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
+		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "gitRepository"));
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
@@ -208,7 +214,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) {
+	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
+		boolean ceiToInstall = false;
+		File ceiDirectory = null;
+		String dtoCeiClassName = "";
 		MeveoModuleDto moduleDto = new MeveoModuleDto();
 		moduleDto.setCode(repo.getCode());
 		moduleDto.setModuleItems(new ArrayList<>());
@@ -240,20 +249,25 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			if (!file.isDirectory()) {
 				continue;
 			}
-			String entityName = file.getName();
-			String dtoClassName = entityDtoNamebyPath.get(entityName);
+			String fileName = file.getName();
+			String dtoClassName = entityDtoNamebyPath.get(fileName);
 			if (dtoClassName == null) {
 				continue;
 			}
-			for (File directoryFile : file.listFiles()) {
-				if (!directoryFile.isDirectory()) {
-					continue;
+			if (fileName.equals("customEntityInstances")) {
+				for (File directoryFile : file.listFiles()) {
+					if (!directoryFile.isDirectory()) {
+						continue;
+					}
+					ceiToInstall = true;
+					ceiDirectory = directoryFile;
+					dtoCeiClassName = dtoClassName;
 				}
-				String jsonValidation = directoryFile.getName() + ".json";
-				for (File entityFile : directoryFile.listFiles()) {
+			} else {
+				for (File entityFile : file.listFiles()) {
 					try {
 						String entityFileName = entityFile.getName();
-						if (!entityFileName.equals(jsonValidation)) {
+						if (entityFileName.endsWith("-schema.json")) {
 							continue;
 						}
 						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
@@ -263,6 +277,28 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					} catch (IOException e) {
 						log.error("Can't read entityFile", e);
 					}
+				}
+			}
+		}
+		
+		if (ceiToInstall) {
+			String cetCode = ceiDirectory.getName();
+			for (File ceiFile : ceiDirectory.listFiles()) {
+				if (!ceiFile.getName().endsWith(".json")) {
+					continue;
+				}
+				try  {
+					CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
+					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+					if (cet != null) {
+						CustomEntityInstance ceiInstance = CEIUtils.fromMap(data, cet);//TODO récupérer la cet
+						String createdUUID = crossStorageApi.createOrUpdate(repositoryService.findDefaultRepository(), ceiInstance);
+						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto("org.meveo.api.dto.CustomEntityInstanceDto", data);
+						moduleDto.getModuleItems().add(moduleItemDto);
+					}
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
