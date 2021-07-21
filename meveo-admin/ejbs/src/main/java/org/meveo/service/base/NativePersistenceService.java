@@ -1272,9 +1272,9 @@ public class NativePersistenceService extends BaseService {
 				if ("fromRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion(fieldName, " >= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " >= ", rationalNumber, false);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion(fieldName, " >= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " >= ", filterValue, false);
 					} else if (filterValue instanceof Date) {
 						queryBuilder.addCriterionDateRangeFromTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					}  else if (filterValue instanceof Instant) {
@@ -1286,9 +1286,9 @@ public class NativePersistenceService extends BaseService {
 				} else if ("toRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, false);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion(fieldName, " <= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " <= ", filterValue, false);
 					} else if (filterValue instanceof Date) {
 						queryBuilder.addCriterionDateRangeToTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					} else if (filterValue instanceof Instant) {
@@ -1371,7 +1371,7 @@ public class NativePersistenceService extends BaseService {
 					if (filterValue instanceof String) {
 						String filterString = (String) filterValue;
 						for (String field : fields) {
-							queryBuilder.addCriterionWildcard(field, filterString, true);
+							queryBuilder.addCriterionWildcard(field, filterString, false);
 						}
 					}
 					queryBuilder.endOrClause();
@@ -1390,7 +1390,8 @@ public class NativePersistenceService extends BaseService {
 				} else if (PersistenceService.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) { // since SEARCH_WILDCARD_OR_IGNORE_CAS , then filterValue is necessary a String
-						queryBuilder.addSql("lower(a." + field + ") like '%" + String.valueOf(filterValue).toLowerCase() + "%'");
+						//lowercase functions may give different results in postgres/java => to avoid mismatch, postrges's function is the only one used. Example of mismath : Danışmanlık_İth
+						queryBuilder.addSqlCriterion("lower(a." + field + ") like concat('%', lower(:" + field + "), '%')", field, filterValue);
 					}
 					queryBuilder.endOrClause();
 
@@ -1417,9 +1418,9 @@ public class NativePersistenceService extends BaseService {
 						String filterString = (String) filterValue;
 						boolean wildcard = (filterString.indexOf("*") != -1);
 						if (wildcard) {
-							queryBuilder.addCriterionWildcard(fieldName, filterString, true, "ne".equals(condition));
+							queryBuilder.addCriterionWildcard(fieldName, filterString, false, "ne".equals(condition));
 						} else {
-							queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
+							queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterString, false);
 						}
 
 					} else if (filterValue instanceof Date) {
@@ -1429,12 +1430,12 @@ public class NativePersistenceService extends BaseService {
 						queryBuilder.addCriterionDateTruncatedToDay(fieldName, (Instant) filterValue);
 
 					} else if (filterValue instanceof Number || filterValue instanceof Boolean) {
-						queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, false);
 
 					} else if (filterValue instanceof Enum) {
 						if (filterValue instanceof IdentifiableEnum) {
 							String enumIdKey = new StringBuilder(fieldName).append("Id").toString();
-							queryBuilder.addCriterion(enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
+							queryBuilder.addCriterion(enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), false);
 						} else {
 							queryBuilder.addCriterionEnum(fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
 						}
