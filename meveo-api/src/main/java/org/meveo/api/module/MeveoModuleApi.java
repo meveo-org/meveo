@@ -39,7 +39,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
@@ -98,7 +97,6 @@ import org.meveo.model.module.ModuleLicenseEnum;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
-import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.typereferences.GenericTypeReferences;
@@ -288,15 +286,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					continue;
 				}
 				try  {
-					CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
 					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
 					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-					if (cet != null) {
-						CustomEntityInstance ceiInstance = CEIUtils.fromMap(data, cet);//TODO récupérer la cet
-						String createdUUID = crossStorageApi.createOrUpdate(repositoryService.findDefaultRepository(), ceiInstance);
-						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto("org.meveo.api.dto.CustomEntityInstanceDto", data);
-						moduleDto.getModuleItems().add(moduleItemDto);
-					}
+					MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto("org.meveo.api.dto.CustomEntityInstanceDto", data);
+					moduleDto.getModuleItems().add(moduleItemDto);
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -402,8 +395,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		handleMissingParameters();
-		MeveoModule meveoModuleBackup = meveoModuleService.findByCode(moduleDto.getCode());
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
+		MeveoModule meveoModuleBackup = meveoModuleService.findByCode(moduleDto.getCode(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "gitRepository"));
+		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "gitRepository"));
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleDto.getCode());
 		}
