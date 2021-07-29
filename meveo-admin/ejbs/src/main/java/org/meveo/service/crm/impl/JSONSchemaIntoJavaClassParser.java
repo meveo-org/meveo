@@ -135,7 +135,6 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCrtCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
-    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
@@ -185,7 +184,6 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCetCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
-    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));

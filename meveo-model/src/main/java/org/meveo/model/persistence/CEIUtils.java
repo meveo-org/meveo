@@ -518,6 +518,9 @@ public class CEIUtils {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setUuid((String) pojoAsMap.get("uuid"));
 		cei.setCetCode((String) pojoAsMap.get("cetCode"));
+		if(cei.getCetCode() == null) {
+			cei.setCetCode(pojo.getClass().getSimpleName());
+		}
 		CustomFieldValues customFieldValues = new CustomFieldValues();
 		pojoAsMap.forEach(customFieldValues::setValue);
 		cei.setCfValues(customFieldValues);
