@@ -1,7 +1,11 @@
 package org.meveo.api.module;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -15,10 +19,14 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
-import org.hibernate.exception.ConstraintViolationException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
-import org.meveo.api.*;
+import org.meveo.api.ApiService;
+import org.meveo.api.ApiUtils;
+import org.meveo.api.ApiVersionedService;
+import org.meveo.api.BaseCrudApi;
+import org.meveo.api.CustomFieldTemplateApi;
+import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -52,7 +60,6 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.persistence.CrossStorageService;
@@ -383,7 +390,7 @@ public class MeveoModuleItemInstaller {
 		log.info("Uninstalling item {}", dto);
 
     	if(dto instanceof MeveoModuleDto) {
-        	MeveoModule subModule = meveoModuleService.findByCode(((MeveoModuleDto) dto).getCode());
+        	MeveoModule subModule = meveoModuleService.findByCodeWithFetchEntities(((MeveoModuleDto) dto).getCode());
     		uninstall(subModule);
     		
     	} else if(dto instanceof CustomFieldTemplateDto) {
@@ -445,7 +452,7 @@ public class MeveoModuleItemInstaller {
 		    try {
 
 		        if (dto instanceof MeveoModuleDto) {
-		        	MeveoModule subModule = meveoModuleService.findByCode(((MeveoModuleDto) dto).getCode());
+		        	MeveoModule subModule = meveoModuleService.findByCodeWithFetchEntities(((MeveoModuleDto) dto).getCode());
 		        	result = install(subModule, (MeveoModuleDto) dto, onDuplicate);
 
 		            Class<? extends MeveoModule> moduleClazz = MeveoModule.class;

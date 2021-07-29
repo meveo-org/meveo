@@ -47,7 +47,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.CustomFieldBean;
-import org.meveo.admin.action.admin.module.MeveoModuleBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.UserApi;
@@ -120,9 +119,6 @@ public class UserBean extends CustomFieldBean<User> {
 	@Inject
 	private MeveoModuleService meveoModuleService;
 
-	@Inject
-	private MeveoModuleBean meveoModuleBean;
-	
 	@Inject
 	private KeycloakAdminClientService keycloakAdminClientService;
 
@@ -826,7 +822,7 @@ public class UserBean extends CustomFieldBean<User> {
 	 * @throws BusinessException when adding a file to a module failed
 	 */
 	public void addFileToModule() throws BusinessException {
-		MeveoModule module = meveoModuleService.findByCode(getMeveoModule().getCode(), meveoModuleBean.getFormFieldsToFetch());
+		MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(getMeveoModule().getCode());
 		if (!StringUtils.isBlank(selectedFileName)) {
 			String folder = this.selectedFolder == null ? "" : this.selectedFolder;
 			String fileName = folder + File.separator + selectedFileName;
