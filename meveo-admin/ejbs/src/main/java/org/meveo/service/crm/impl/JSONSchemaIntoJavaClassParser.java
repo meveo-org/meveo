@@ -126,8 +126,9 @@ public class JSONSchemaIntoJavaClassParser {
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
                 cl.tryAddImportToParentCompilationUnit(CustomRelation.class);
+    			cl.tryAddImportToParentCompilationUnit(JsonIgnore.class);
+
                 cl.addImplementedType("CustomRelation<" + template.getStartNode().getCode() + "," + template.getEndNode().getCode() + ">");
-    			
     			cl.getMethodsByName("getUuid")
     				.stream()
     				.findFirst()
@@ -176,7 +177,8 @@ public class JSONSchemaIntoJavaClassParser {
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
                 cl.addImplementedType(CustomEntity.class);
-    			
+    			cl.tryAddImportToParentCompilationUnit(JsonIgnore.class);
+
     			cl.getMethodsByName("getUuid")
     				.stream()
     				.findFirst()
