@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -171,7 +172,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode(), meveoModuleService.getLazyLoadedProperties());
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
@@ -285,8 +286,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		handleMissingParameters();
-		MeveoModule meveoModuleBackup = meveoModuleService.findByCode(moduleDto.getCode());
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());
+		MeveoModule meveoModuleBackup = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleDto.getCode());
 		}
@@ -337,7 +338,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	public void delete(String code) throws EntityDoesNotExistsException, BusinessException {
 
-		MeveoModule meveoModule = meveoModuleService.findByCode(code);
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -349,7 +350,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	public void delete(String code, boolean deleteFiles) throws EntityDoesNotExistsException, BusinessException, IOException {
 
-		MeveoModule meveoModule = meveoModuleService.findByCode(code);
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -443,7 +444,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@Override
 	public MeveoModule createOrUpdate(MeveoModuleDto postData) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode(postData.getCode());
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(postData.getCode());
 		if (meveoModule == null) {
 			// create
 			return create(postData, false);
@@ -465,7 +466,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			moduleClass = MeveoModule.class;
 		}
 
-		MeveoModule meveoModule = meveoModuleService.findByCode(code);
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(moduleClass, code);
 		}
@@ -585,7 +586,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			moduleClass = MeveoModule.class;
 		}
 
-		MeveoModule meveoModule = meveoModuleService.findByCode(code);
+		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(moduleClass, code);
 		}
@@ -797,7 +798,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public MeveoModuleDto addToModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
-		final MeveoModule module = meveoModuleService.findByCode(code);
+		final MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -830,7 +831,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public MeveoModuleDto removeFromModule(String code, String itemCode, String itemType, String appliesTo) throws EntityDoesNotExistsException, BusinessException {
-		final MeveoModule module = meveoModuleService.findByCode(code);
+		final MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -862,7 +863,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public MeveoModuleDto addFileToModule(String code, String path) throws EntityDoesNotExistsException, BusinessException {
-		MeveoModule module = meveoModuleService.findByCode(code);
+		MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -877,7 +878,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public MeveoModuleDto removeFileFromModule(String code, String path) throws EntityDoesNotExistsException, BusinessException {
-		final MeveoModule module = meveoModuleService.findByCode(code);
+		final MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(code);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -896,7 +897,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	public void fork(String moduleCode) throws MeveoApiException, BusinessException {
-		MeveoModule module = meveoModuleService.findByCode(moduleCode);
+		MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(moduleCode);
 
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
@@ -939,7 +940,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		for (MeveoModuleDto moduleDto : modules) {
 			if (!moduleDto.isInDraft()) {
-				MeveoModule module = meveoModuleService.findByCode(moduleDto.getCode());
+				MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
 				ModuleRelease moduleRelease = new ModuleRelease();
 				moduleRelease.setCode(module.getCode());
 				moduleRelease.setDescription(module.getDescription());
@@ -1153,7 +1154,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		List<MeveoModule> meveoModules = new ArrayList<>();
 		if (modulesCode != null) {
 			for (String code : modulesCode) {
-				MeveoModule meveoModule = meveoModuleService.findByCode(code);
+				MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 				if (meveoModule != null) {
 					meveoModules.add(meveoModule);
 				}
@@ -1271,7 +1272,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 						if (!moduleCode.contains(dependencyDto.getCode())) {
 							throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() +" doesn't exists locally.");
 						} else {
-							MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode());
+							MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode(),Arrays.asList("releases"));
 							List<String> versions = new ArrayList<>();
 							versions.add(meveoModule.getCurrentVersion());
 							if (!meveoModule.getReleases().isEmpty()) {

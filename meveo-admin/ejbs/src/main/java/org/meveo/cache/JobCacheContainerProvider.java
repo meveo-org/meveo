@@ -53,14 +53,6 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
     @CurrentUser
     protected MeveoUser currentUser;
 
-    @PostConstruct
-    protected void init(){
-        try {
-            populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-        } catch (Exception e) {
-            log.error("Failed to populate Job cache", e);
-        }
-    }
 
     /**
      * Get a summary of cached information.
@@ -91,18 +83,6 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
         }
     }
 
-    /**
-     * Populate cache by name
-     * 
-     * @param cacheName Name of cache to populate or null to populate all caches
-     */
-    // @Override
-    public void populateCache(String cacheName) {
-
-        if (cacheName == null || cacheName.equals(runningJobsCache.getName())) {
-            populateJobCache();
-        }
-    }
 
     /**
      * Determine if job, identified by a given job instance id, is currently running and if - on this or another clusternode.
@@ -206,7 +186,9 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
         BiFunction<? super CacheKeyLong, ? super List<String>, ? extends List<String>> remappingFunction = (jobInstIdFullKey, nodesOld) -> {
 
             if (nodesOld == null || nodesOld.isEmpty()) {
-                return nodesOld;
+                return new ArrayList<String>();
+            }else if (nodesOld.isEmpty()) {
+                    return nodesOld;
 
             } else if (!isClusterMode) {
                 return new ArrayList<>();
@@ -243,7 +225,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      */
     public List<String> getNodesJobIsRuningOn(Long jobInstanceId) {
         String currentProvider = currentUser.getProviderCode();
-        return runningJobsCache.get(new CacheKeyLong(currentProvider, jobInstanceId));
+        return runningJobsCache.compute(new CacheKeyLong(currentProvider, jobInstanceId), (k,v)-> (v==null ? new ArrayList<String>(): v));
     }
 
     /**

@@ -1,6 +1,7 @@
 package org.meveo.api.module;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -137,7 +138,7 @@ public class MeveoModulePatchApi extends BaseApi {
 	public MeveoModulePatch createAndReturnEntity(MeveoModulePatchDto postData) throws MeveoApiException, BusinessException {
 
 		validate(postData);
-		MeveoModule module = meveoModuleService.findByCode(postData.getModuleCode());
+		MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(postData.getModuleCode());
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, postData.getModuleCode());
 		}
@@ -207,7 +208,7 @@ public class MeveoModulePatchApi extends BaseApi {
 	 */
 	public MeveoModulePatch findPatchEntity(String moduleCode, String scriptInstanceCode, String sourceVersion, String targetVersion) throws EntityDoesNotExistsException {
 
-		MeveoModule module = meveoModuleService.findByCode(moduleCode);
+		MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(moduleCode);
 		if (module == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
 		}
@@ -229,7 +230,7 @@ public class MeveoModulePatchApi extends BaseApi {
 	 */
 	public List<MeveoModulePatchDto> list(String moduleCode) throws EntityDoesNotExistsException {
 
-		MeveoModule meveoModule = meveoModuleService.findByCode(moduleCode);
+		MeveoModule meveoModule = meveoModuleService.findByCode(moduleCode, Arrays.asList("patches"));
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, moduleCode);
 		}
@@ -316,7 +317,7 @@ public class MeveoModulePatchApi extends BaseApi {
 
 			Collections.sort(meveoModulePatches);
 
-			MeveoModule meveoModule = meveoModuleService.findByCode(moduleRelease.getCode());
+			MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleRelease.getCode());
 			Integer sourceVersion = meveoModulePatchService.convertVersionToInt(meveoModule.getCurrentVersion());
 
 			if (meveoModule.getCurrentVersion().equals(moduleRelease.getCurrentVersion())) {
