@@ -62,6 +62,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
@@ -1839,7 +1840,13 @@ public class CustomFieldDataEntryBean implements Serializable {
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
 		for (CustomFieldTemplate cft : customFieldTemplates.values()) {
 			if (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) {
-				segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, cft.getCode());
+				var cfValue = customFieldInstanceService.getCFValue(entity, cft.getCode());
+				if(cfValue instanceof String) {
+					segmentTreeValue = (String) cfValue;
+				} else {
+					segmentTreeValue = JacksonUtil.toString(cfValue);
+				}
+				
 				if (segmentTreeValue == null) {
 					segmentTreeValue = "{}";
 				}
