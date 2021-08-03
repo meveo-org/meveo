@@ -201,6 +201,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     private void setSuperTemplate(CustomEntityTemplateDto dto, CustomEntityTemplate cet) {
         if(dto.getSuperTemplate() != null){
             CustomEntityTemplate superTemplate = customEntityTemplateService.findByCode(dto.getSuperTemplate());
+            if(superTemplate == null) {
+            	throw new IllegalArgumentException("Can't set super template : cet with code " + dto.getSuperTemplate() + " does not exists");
+            }
             cet.setSuperTemplate(superTemplate);
         }
     }
