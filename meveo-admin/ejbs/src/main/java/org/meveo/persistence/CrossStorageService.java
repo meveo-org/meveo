@@ -417,6 +417,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			String graphQlQuery;
+			Map<String, Object> graphQlVariables = new HashMap<>();
 
 			// Find by graphql if query provided
 			if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
@@ -431,6 +432,10 @@ public class CrossStorageService implements CustomPersistenceService {
 				if(actualFetchFields != null) { 
 					actualFetchFields.forEach(builder::field);
 				}
+				
+				builder.limit(paginationConfiguration.getNumberOfRows());
+				builder.offset(paginationConfiguration.getFirstRow());
+				
 				graphQlQuery = builder.toString();
 			}
 			

@@ -21,6 +21,8 @@ public class GraphQLQueryBuilder {
 	private final Map<String, Object> filters = new HashMap<>();
 	private final List<String> fields = new ArrayList<>();
 	private final Map<String, GraphQLQueryBuilder> subQueries = new HashMap<>();
+	private Integer limit;
+	private Integer offset;
 	private GraphQLQueryBuilder parent;
 	
 	public static GraphQLQueryBuilder create(String type) {
@@ -47,6 +49,16 @@ public class GraphQLQueryBuilder {
 		return this;
 	}
 	
+	public GraphQLQueryBuilder limit(int limit) {
+		this.limit = limit;
+		return this;
+	}
+	
+	public GraphQLQueryBuilder offset(int offset) {
+		this.offset = offset;
+		return this;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder tabs = new StringBuilder("\t\t");
@@ -57,6 +69,14 @@ public class GraphQLQueryBuilder {
 			tabsMinus.append("\t");
 		}
 		
+		String prefixFilter = "(";
+		if(limit != null) {
+			prefixFilter += "first: " + limit + ", ";
+		}
+		if(offset != null) {
+			prefixFilter += "offset: " + offset + ", ";
+		}		
+		
 		String filtersStr = filters.isEmpty() ? "" : filters.entrySet()
 				.stream()
 				.map(e -> { 
@@ -65,7 +85,7 @@ public class GraphQLQueryBuilder {
 					} else {
 						return e.getKey() + ":" + e.getValue();
 					}
-				}).collect(Collectors.joining(",", "(", ")"));
+				}).collect(Collectors.joining(",", prefixFilter, ")"));
 		
 		List<String> fieldsList = new ArrayList<>(fields);
 		fieldsList.addAll(
