@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -18,8 +19,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.faces.application.FacesMessage;
@@ -2144,6 +2145,20 @@ public class CustomFieldDataEntryBean implements Serializable {
 			}
 		}
 		return value;
+	}
+	
+	/**
+	 * @param cetCode code of the cet
+	 * @return the first three summary fields for the given cet
+	 */
+	public Collection<CustomFieldTemplate> getSummaryFields(String cetCode) {
+		return customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+				.values()
+				.stream()
+				.filter(CustomFieldTemplate::isSummary)
+				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
+				.limit(3)
+				.collect(Collectors.toList());
 	}
 
 }

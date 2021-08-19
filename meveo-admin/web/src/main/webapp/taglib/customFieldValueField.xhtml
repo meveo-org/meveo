@@ -151,6 +151,7 @@
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
         <h:outputText value="#{field.entityReferenceValueForGUI.code}" 
         	styleClass="field-value" rendered="#{!edit or disabled}" />
+        	
         <p:autoComplete id="acEntityField" value="#{field.entityReferenceValueForGUI}"
         	required="#{cft.valueRequired and !hasInheritedValue}" 
         	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
@@ -158,16 +159,18 @@
             converter="entityReferenceValueConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e"
             itemLabel="#{e.code}"
             itemValue="#{e}" rendered="#{edit and !disabled}">
+            
             <f:attribute name="classname" value="#{cft.entityClazz}" />
             <p:column width="50" headerText="UUID">
                 <h:outputText value="#{not empty e.code ? e.code : e.uuid.substring(0,5)}" />
             </p:column>
-            <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
-                <h:outputText value="#{e.code}" />
-            </p:column>
-            <p:column width="50" headerText="#{messages['BusinessEntity.description']}">
-                <h:outputText value="#{e.description}" />
-            </p:column>
+            
+            <c:forEach var="summaryField" items="#{customFieldDataEntryBean.getSummaryFields(cft.entityClazzCetCode)}">
+            	<p:column width="50" headerText="#{summaryField.description}">
+                	<h:outputText value="#{e.get(summaryField.code)}"/>
+            	</p:column>
+            </c:forEach>
+            
         </p:autoComplete>
         <c:if test="#{!cft.valueRequired}">
             <p:commandButton icon="ui-icon-trash" update="acEntityField"
