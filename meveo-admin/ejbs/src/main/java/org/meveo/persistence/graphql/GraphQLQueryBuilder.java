@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * 
  * @author clement.bareth
  * @since 6.11.0
- * @version 6.11.0
+ * @version 6.15.0
  */
 public class GraphQLQueryBuilder {
 	
@@ -37,6 +37,8 @@ public class GraphQLQueryBuilder {
 		filters.put(name, value);
 		return this;
 	}
+	
+	//TODO: Implement "like" operator where value starts and ends with *
 	
 	public GraphQLQueryBuilder field(String name) {
 		fields.add(name);

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -107,6 +108,9 @@ public class CustomFieldInstanceService extends BaseService {
 
     @Inject
     private CustomTableService customTableService;
+    
+    @Inject
+    private CrossStorageApi crossStorageApi;
     
     @Inject
     private Repository repository;
@@ -197,51 +201,47 @@ public class CustomFieldInstanceService extends BaseService {
 
     /**
      * Find a list of entities of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
-     *
+     
      * @param classNameAndCode Classname to match. In case of CustomEntityTemplate, classname consist of "CustomEntityTemplate - &lt;CustomEntityTemplate code&gt;:"
-     * @param code         Filter by entity code
+     * @param wildcode         Filter by entity code (wildcard)
      * @return A list of entities
      */
     @SuppressWarnings("unchecked") // TODO review location
-    public List<BusinessEntity> findBusinessEntityForCFVByCode(String customEntityTemplateCode, String classNameAndCode, String wildcode) {
+    public List<BusinessEntity> findBusinessEntityForCFVByCode(String classNameAndCode, String wildcode) {
         Query query = null;
 
         List<BusinessEntity> entities = new ArrayList<>();
-
-        if(SqlConfiguration.DEFAULT_SQL_CONNECTION.equals(repository.getSqlConfigurationCode())) {
-            if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
-                String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-                query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) like :code");
-                query.setParameter("cetCode", cetCode);
-                query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
-                entities = query.getResultList();
-            } else {
-                if (classNameAndCode.equals(User.class.getName())) {
-                   List<User> users = userService.list();
-                   for (User user : users) {
-                       BusinessEntity businessEntity = new BusinessEntity();
-                       businessEntity.setCode(user.getUserName());
-                       businessEntity.setId(user.getId());
-                       entities.add(businessEntity);
-                   }
-                } else {
-                    query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
-                    query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
-                    entities = query.getResultList();
+        
+        if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+        	String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+        	String filterField = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+        			.values()
+        			.stream()
+        			.filter(CustomFieldTemplate::isIdentifier)
+        			.findFirst()
+        			.map(CustomFieldTemplate::getCode)
+        			.orElse("uuid");
+            
+        	List<CustomEntityInstance> ceis = crossStorageApi.find(repository, cetCode)
+            	.like(filterField, wildcode)
+            	.limit(20)
+            	.getResults();
+        	entities.addAll(ceis);
+        	
+        } else {
+        	if (classNameAndCode.equals(User.class.getName())) {
+                List<User> users = userService.list();
+                for (User user : users) {
+                    BusinessEntity businessEntity = new BusinessEntity();
+                    businessEntity.setCode(user.getUserName());
+                    businessEntity.setId(user.getId());
+                    entities.add(businessEntity);
                 }
-            }
-
-        }
-
-        if (entities.isEmpty() && classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
-            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-            CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
-            try {
-                List<Map<String, Object>> results = crossStorageService.find(repository, cet, new PaginationConfiguration());
-                entities = results.stream().map(m -> customEntityInstanceService.fromMap(cet, m)).collect(Collectors.toList());
-            } catch (EntityDoesNotExistsException e) {
-                log.error("Missing entity", e);
-            }
+             } else {
+                 query = getEntityManager().createQuery("select e from " + classNameAndCode + " e where lower(e.code) like :code");
+                 query.setParameter("code", "%" + wildcode.toLowerCase() + "%");
+                 entities = query.getResultList();
+             }
         }
         
         // Set code = uuid for entities with no codes

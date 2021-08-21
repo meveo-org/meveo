@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.storage.Repository;
@@ -22,6 +23,7 @@ import org.meveo.persistence.CrossStorageService;
  * @author clement.bareth
  * @since 
  * @version
+ * @param <T> Type of the returned object
  */
 public class CrossStorageRequest<T> {
 	
@@ -47,11 +49,29 @@ public class CrossStorageRequest<T> {
 		return this;
 	}
 	
+	public CrossStorageRequest<T> limit(int limit) {
+		configuration.setNumberOfRows(limit);
+		return this;
+	}
+	
 	public CrossStorageRequest<T> fetch(String field) {
 		this.relationsToFetch.add(field);
 		return this;
 	}
 	
+	/**
+	 * Filters the results on the given field, applying a LIKE query
+	 * 
+	 * @param filterField Field to apply filtering
+	 * @param wildcard Wildcard to search
+	 * @return the request builder
+	 */
+	public CrossStorageRequest<T> like(String filterField, String wildcard) {
+		configuration.getFilters().put(filterField, "*" + wildcard + "*");
+		return this;
+	}
+	
+	@SuppressWarnings("unchecked")
 	public List<T> getResults() {
 		try {
 			var results = api.find(repository, cet, configuration);
@@ -61,13 +81,20 @@ public class CrossStorageRequest<T> {
 			}
 			
 			return results.stream()
-					.map(v -> CEIUtils.deserialize(v, clazz))
+					.map(v -> {
+						if(clazz.equals(CustomEntityInstance.class)) {
+							return (T) CEIUtils.fromMap(v, cet);
+						} else {
+							return CEIUtils.deserialize(v, clazz);
+						}
+					})
 					.collect(Collectors.toList());
 		} catch (EntityDoesNotExistsException e) {
 			return List.of();
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public T getResult() {
 		try {
 			var values = api.find(repository, cet, configuration);
@@ -79,7 +106,11 @@ public class CrossStorageRequest<T> {
 				fetch(values.get(0));
 			}
 			
-			return CEIUtils.deserialize(values.get(0), clazz);
+			if(clazz.equals(CustomEntityInstance.class)) {
+				return (T) CEIUtils.fromMap(values.get(0), cet);
+			} else {
+				return CEIUtils.deserialize(values.get(0), clazz);
+			}
 			
 		} catch (EntityDoesNotExistsException e) {
 			return null;
@@ -105,7 +136,6 @@ public class CrossStorageRequest<T> {
 			throw new RuntimeException(e);
 		}
 	}
-
 	
 
 }

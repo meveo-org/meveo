@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -688,18 +689,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 */
 	public List<BusinessEntity> autocompleteEntityForCFV(String wildcode) {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		if (entity instanceof CustomEntityInstance) {
-			CustomEntityInstance customEntityInstance = (CustomEntityInstance) entity;
-			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(customEntityInstance.getCetCode(), classname, wildcode);
-		} else {
-			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, wildcode);
-		}
-		return availableEntities;
+		return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
 	}
 
 	public List<BusinessEntity> allEntityForCFV() {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		return customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, "");
+		return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, "");
 	}
 
 	public List<BusinessEntity> getAvailableEntities() {
@@ -2162,13 +2157,14 @@ public class CustomFieldDataEntryBean implements Serializable {
 	
 	/**
 	 * @param cetCode code of the cet
-	 * @return the first three summary fields for the given cet
+	 * @return the first three summary fields (excluding the identifier field) for the given cet
 	 */
 	public Collection<CustomFieldTemplate> getSummaryFields(String cetCode) {
 		return customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
 				.values()
 				.stream()
 				.filter(CustomFieldTemplate::isSummary)
+				.filter(Predicate.not(CustomFieldTemplate::isIdentifier))
 				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
 				.limit(3)
 				.collect(Collectors.toList());

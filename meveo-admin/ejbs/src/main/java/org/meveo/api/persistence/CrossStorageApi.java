@@ -28,6 +28,7 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,14 +36,16 @@ import org.slf4j.LoggerFactory;
  * The Class CrossStorageApi.
  *
  * @author clement.bareth
- * @version 6.11.0
+ * @version 6.15
  * @since 6.8.0
  */
-// @Stateless
 public class CrossStorageApi{
 
 	@Inject
 	private CrossStorageService crossStorageService;
+	
+	@Inject
+	private CustomEntityTemplateService cetService;
 	
     @Inject
     protected SchedulingService schedulingService;
@@ -57,6 +60,15 @@ public class CrossStorageApi{
 	
 	public <T> CrossStorageRequest<T> find(Repository repository, Class<T> cetClass) {
 		return new CrossStorageRequest(repository, crossStorageService, cetClass, getCet(cetClass));
+	}
+	
+	public CrossStorageRequest<CustomEntityInstance> find(Repository repository, String cetCode) {
+		CustomEntityTemplate cet = cetService.findByCode(cetCode);
+		if(cet == null) {
+			throw new IllegalArgumentException("Cet with code " + cetCode + " does not exists");
+		}
+		
+		return new CrossStorageRequest(repository, crossStorageService, CustomEntityInstance.class, cet);
 	}
 	
     public List<PersistedItem> persistEntities(Repository repository, EntityGraph entityGraph) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
