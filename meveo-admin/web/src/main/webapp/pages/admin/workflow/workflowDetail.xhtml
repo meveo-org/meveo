@@ -26,10 +26,11 @@
                         <hftl:formField label="#{messages['businessEntity.description']}" field="description" useConverter="false" size="50" />
 
                         <hftl:formField label="#{messages['workflow.customEntity']}" field="cetCode" required="true" size="50"
-                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCETName" isAutocomplete="true" listenerUpdate="@this wfType :tabView" actionListenerBean="#{workflowBean}" actionListenerMethod="resetValueForWFType"/>
+                            autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCETName" isAutocomplete="true" listenerUpdate="@this wfType" actionListenerBean="#{workflowBean}" actionListenerMethod="resetValueForWFType"/>
+                        
                         <h:panelGroup id="wfType">
                             <hftl:formField label="#{messages['workflow.field']}" field="wfType" required="true" size="50"
-                                            rendered="#{workflowBean.entity.cetCode != null}" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCFTName" isAutocomplete="true" listenerUpdate=":tabView"/>
+                                            rendered="#{workflowBean.entity.cetCode != null}" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteCFTName" isAutocomplete="true" listenerUpdate="@this"/>
                         </h:panelGroup>
                         <hftl:formField label="#{messages['workflow.exportLot']}" field="exportLot" />
                         <hftl:formField label="#{messages['workflow.enableHistory']}" field="enableHistory" />
