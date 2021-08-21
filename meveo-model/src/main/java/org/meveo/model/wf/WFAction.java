@@ -37,6 +37,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.EnableEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
 @ExportIdentifier({ "uuid" })
@@ -53,10 +54,15 @@ public class WFAction extends EnableEntity {
     @NotNull
     private String uuid = UUID.randomUUID().toString();
 
+    @Deprecated
     @Column(name = "action_el", length = 2000)
     @Size(max = 2000)
-    @NotNull
     private String actionEl;
+    
+    //TODO : Make this field mandatory 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "action_script")
+    private ScriptInstance actionScript;
 
     @Column(name = "priority")
     private int priority;
@@ -68,8 +74,22 @@ public class WFAction extends EnableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wf_transition_id")
     private WFTransition wfTransition;
+    
+    /**
+	 * @return the {@link #actionScript}
+	 */
+	public ScriptInstance getActionScript() {
+		return actionScript;
+	}
 
-    public String getUuid() {
+	/**
+	 * @param actionScript the actionScript to set
+	 */
+	public void setActionScript(ScriptInstance actionScript) {
+		this.actionScript = actionScript;
+	}
+
+	public String getUuid() {
         return uuid;
     }
 

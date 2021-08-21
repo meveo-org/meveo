@@ -33,7 +33,8 @@ import io.swagger.annotations.ApiModelProperty;
  * 
  * @author anasseh
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @author Clément Bareth
+ * @version 6.15
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel("WFActionDto")
@@ -48,9 +49,14 @@ public class WFActionDto extends BaseEntityDto {
 	private String uuid;
 
 	/** The action el. */
-	@XmlElement(required = true)
-	@ApiModelProperty(required = true, value = "expression to trigger when condition is true")
+	@XmlElement(required = false)
+	@ApiModelProperty(required = false, value = "expression to trigger when condition is true")
+	@Deprecated
 	private String actionEl;
+	
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "Script to trigger when condition is true")
+	private String actionScript;
 
 	/** The priority. */
 	@XmlElement(required = false)
@@ -78,6 +84,9 @@ public class WFActionDto extends BaseEntityDto {
 		this.actionEl = wfAction.getActionEl();
 		this.priority = wfAction.getPriority();
 		this.conditionEl = wfAction.getConditionEl();
+		if(wfAction.getActionScript() != null) {
+			this.actionScript = wfAction.getActionScript().getCode();
+		}
 	}
 
 	/**
@@ -95,6 +104,20 @@ public class WFActionDto extends BaseEntityDto {
 		wfAction.setPriority(getPriority());
 		wfAction.setConditionEl(getConditionEl());
 		return wfAction;
+	}
+	
+	/**
+	 * @return the {@link #actionScript}
+	 */
+	public String getActionScript() {
+		return actionScript;
+	}
+
+	/**
+	 * @param actionScript the actionScript to set
+	 */
+	public void setActionScript(String actionScript) {
+		this.actionScript = actionScript;
 	}
 
 	/**
