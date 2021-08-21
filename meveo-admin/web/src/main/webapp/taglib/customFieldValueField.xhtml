@@ -161,12 +161,21 @@
             itemValue="#{e}" rendered="#{edit and !disabled}">
             
             <f:attribute name="classname" value="#{cft.entityClazz}" />
-            <p:column width="50" headerText="UUID">
-                <h:outputText value="#{not empty e.code ? e.code : e.uuid.substring(0,5)}" />
-            </p:column>
+            
+            <c:set var="identifier" value="#{customFieldDataEntryBean.getIdentifierField(cft.entityClazzCetCode)}"/>
+            <c:if test="#{identifier == null}">
+                <p:column width="50" headerText="UUID">
+	                <h:outputText value="#{e.uuid}"/>
+	            </p:column>
+            </c:if>
+            <c:if test="#{identifier != null}">
+            	<p:column width="50" headerText="#{empty identifier.description ? identifier.code : identifier.description}">
+	                <h:outputText value="#{e.get(identifier.code)}"/>
+	            </p:column>
+            </c:if>
             
             <c:forEach var="summaryField" items="#{customFieldDataEntryBean.getSummaryFields(cft.entityClazzCetCode)}">
-            	<p:column width="50" headerText="#{summaryField.description}">
+            	<p:column width="50" headerText="#{empty summaryField.description ? summaryField.code : summaryField.description}">
                 	<h:outputText value="#{e.get(summaryField.code)}"/>
             	</p:column>
             </c:forEach>

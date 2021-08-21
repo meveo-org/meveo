@@ -2149,6 +2149,19 @@ public class CustomFieldDataEntryBean implements Serializable {
 	
 	/**
 	 * @param cetCode code of the cet
+	 * @return the identifier field for the cet, or null if there is not
+	 */
+	public CustomFieldTemplate getIdentifierField(String cetCode) {
+		return customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+				.values()
+				.stream()
+				.filter(CustomFieldTemplate::isIdentifier)
+				.findFirst()
+				.orElse(null);
+	}
+	
+	/**
+	 * @param cetCode code of the cet
 	 * @return the first three summary fields for the given cet
 	 */
 	public Collection<CustomFieldTemplate> getSummaryFields(String cetCode) {
