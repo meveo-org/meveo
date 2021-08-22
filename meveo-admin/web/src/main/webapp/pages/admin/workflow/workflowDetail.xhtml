@@ -129,6 +129,8 @@
 	                                                            	forceSelection="true" itemLabel="#{script.code}"
 	                                                            	itemValue="#{script}" dropdown="true" update="scriptParameters#{actionIndex.index}"
 	                                                            	completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
+	                                                            	
+	                                                            	<p:ajax event="itemSelect" process="@this" update="scriptParameters#{actionIndex.index}"/>
 																	<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
 								                                </p:autoComplete>
 	                                                                
