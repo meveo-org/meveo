@@ -271,11 +271,26 @@ public class WorkflowService extends BusinessService<Workflow> {
                     for (WFAction wfAction : listWFAction) {
                         if (matchExpression(wfAction.getConditionEl(), entity)) {
                             log.debug("Processing action: {} on entity {}", wfAction);
-                            Object actionResult = executeExpression(wfAction.getActionEl(), entity);
+                            
+                            Object actionResult;
+                            if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+	                            actionResult = executeExpression(wfAction.getActionEl(), entity);
+                            } else if (wfAction.getActionScript() != null) {
+                            	Map<String, Object> context = new HashMap<>();
+                            	context.put("entity", entity);
+                            	
+                            	scriptInstanceService.execute(wfAction.getActionScript().getCode(), context);
+                            	actionResult = context.get("result");
+                            } else {
+                            	log.error("WFAction {} has no action EL or action script", wfAction.getId());
+                            	continue;
+                            }
+                            
                             log.trace("Workflow action executed. Action {}, entity {}", wfAction, entity);
                             if (entity.equals(actionResult)) {
                                 entity = (BusinessEntity) actionResult;
                             }
+                            
                             if (workflow.isEnableHistory()) {
                                 WorkflowHistoryAction wfHistoryAction = new WorkflowHistoryAction();
                                 wfHistoryAction.setAction(wfAction.getActionEl());
