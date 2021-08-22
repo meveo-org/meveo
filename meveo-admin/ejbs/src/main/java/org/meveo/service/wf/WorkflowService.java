@@ -273,15 +273,11 @@ public class WorkflowService extends BusinessService<Workflow> {
                             log.debug("Processing action: {} on entity {}", wfAction);
                             
                             Object actionResult;
-                            if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+                            if (wfAction.getActionScript() != null) {
+                            	actionResult = executeActionScript(entity, wfAction);
+                            } else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
 	                            actionResult = executeExpression(wfAction.getActionEl(), entity);
-                            } else if (wfAction.getActionScript() != null) {
-                            	Map<String, Object> context = new HashMap<>();
-                            	context.put("entity", entity);
-                            	
-                            	scriptInstanceService.execute(wfAction.getActionScript().getCode(), context);
-                            	actionResult = context.get("result");
-                            } else {
+                            }  else {
                             	log.error("WFAction {} has no action EL or action script", wfAction.getId());
                             	continue;
                             }
@@ -320,6 +316,16 @@ public class WorkflowService extends BusinessService<Workflow> {
 
         return entity;
     }
+
+	public Object executeActionScript(BusinessEntity entity, WFAction wfAction) throws BusinessException {
+		Object actionResult;
+		Map<String, Object> context = new HashMap<>();
+		context.put("entity", entity);
+		
+		scriptInstanceService.execute(wfAction.getActionScript().getCode(), context);
+		actionResult = context.get("result");
+		return actionResult;
+	}
 
     /**
      * Return the workflowType class by name.

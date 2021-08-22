@@ -332,42 +332,57 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		Workflow workflow = workflowService.findByCetCodeAndWFType(instance.getCetCode(), cftCode);
 		CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(cftCode, "CE_" + instance.getCetCode());
 		if (workflow != null) {
-			List<String> conditionEls = new ArrayList<>();
 			List<WFTransition> transitions = new ArrayList<>();
 			List<String> statusWF = new ArrayList<>();
 			List<WFTransition> wfTransitions = workflow.getTransitions();
 			if (CollectionUtils.isNotEmpty(wfTransitions)) {
 				for (WFTransition wfTransition : wfTransitions) {
 					wfTransition = wfTransitionService.findById(wfTransition.getId());
-					transitions.add(wfTransition);
-					statusWF.add(wfTransition.getToStatus());
-					if (wfTransition.getConditionEl() != null) {
-						conditionEls.add(wfTransition.getConditionEl());
+					
+					boolean isTransitionApplicable = MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance);
+					String targetStatus = instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue();
+					boolean isSameTargetStatus = wfTransition.getToStatus().equals(targetStatus);
+					
+					if(isTransitionApplicable && isSameTargetStatus) {
+						transitions.add(wfTransition);
+						statusWF.add(wfTransition.getToStatus());
 					}
+					
 				}
 			}
-			if (CollectionUtils.isNotEmpty(statusWF)) {
-				if (!statusWF.contains(instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue())) {
-					return false;
-				}
+			
+			if (CollectionUtils.isEmpty(transitions)) {
+				log.debug("Update refused because no transition matched");
+				return false;
 			}
-			if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(transitions)) {
-				if (!CollectionUtils.isNotEmpty(conditionEls) || !conditionEls.contains(customFieldTemplate.getApplicableOnEl())) {
-					return false;
-				} else {
-					for (WFTransition wfTransition : transitions) {
-						if (wfTransition.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
-							for (WFAction action : wfTransition.getWfActions()) {
-								action = wfActionService.findById(action.getId());
-								if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
-									workflowService.executeExpression(action.getActionEl(), instance);
+			
+			for (WFTransition wfTransition : transitions) {
+				if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+					for (WFAction action : wfTransition.getWfActions()) {
+						WFAction wfAction = wfActionService.findById(action.getId());
+						if (action.getConditionEl() == null || MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
+							Object actionResult;
+							
+							if (wfAction.getActionScript() != null) {
+                            	try {
+									actionResult = workflowService.executeActionScript(instance, wfAction);
+								} catch (BusinessException e) {
+									log.error("Error execution workflow action script", e);
 								}
-							}
+                            } else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+	                            actionResult = workflowService.executeExpression(wfAction.getActionEl(), instance);
+                            } else {
+                            	log.error("WFAction {} has no action EL or action script", wfAction.getId());
+                            	continue;
+                            }
+							
+							//TODO: Log action result ?
 						}
 					}
 				}
 			}
 		}
+		
 		return true;
 	}
 

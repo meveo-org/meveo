@@ -3,11 +3,20 @@
  */
 package org.meveo.model.wf;
 
-import org.meveo.model.BusinessEntity;
+import java.util.Map;
+
+import org.meveo.model.customEntities.CustomEntityInstance;
 
 public interface WFScript {
 	
-	void setEntity(BusinessEntity entity);
+	default CustomEntityInstance getCustomEntityInstance(Map<String, Object> parameters) {
+		Object entity = parameters.get("entity");
+		if(entity instanceof CustomEntityInstance) {
+			return (CustomEntityInstance) entity;
+		} else {
+			return null;
+		}
+	}
 	
 	Object getResult();
 }
