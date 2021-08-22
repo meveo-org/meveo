@@ -18,6 +18,9 @@
  */
 package org.meveo.api.dto.payment;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -57,6 +60,10 @@ public class WFActionDto extends BaseEntityDto {
 	@XmlElement(required = true)
 	@ApiModelProperty(required = true, value = "Script to trigger when condition is true")
 	private String actionScript;
+	
+	@XmlElement(required = false)
+	@ApiModelProperty(required = false, value = "Map representing the script parameter where the key is the paramer name and the value the el to evaluate")
+    private Map<String, String> scriptParameters = new HashMap<>();
 
 	/** The priority. */
 	@XmlElement(required = false)
@@ -87,25 +94,30 @@ public class WFActionDto extends BaseEntityDto {
 		if(wfAction.getActionScript() != null) {
 			this.actionScript = wfAction.getActionScript().getCode();
 		}
+		this.scriptParameters = wfAction.getScriptParameters();
+	}
+	
+	/**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		return scriptParameters;
 	}
 
 	/**
-	 * From dto.
-	 *
-	 * @param wfAction the wf action
-	 * @return the WF action
+	 * @param scriptParameters the scriptParameters to set
 	 */
-	public WFAction fromDto(WFAction wfAction) {
-		if (wfAction == null) {
-			wfAction = new WFAction();
-		}
-		wfAction.setUuid(getUuid());
-		wfAction.setActionEl(getActionEl());
-		wfAction.setPriority(getPriority());
-		wfAction.setConditionEl(getConditionEl());
-		return wfAction;
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
 	}
-	
+
+	/**
+	 * @return the {@link #serialversionuid}
+	 */
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
 	/**
 	 * @return the {@link #actionScript}
 	 */

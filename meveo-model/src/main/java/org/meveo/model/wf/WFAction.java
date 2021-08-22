@@ -18,6 +18,8 @@
  */
 package org.meveo.model.wf;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -35,8 +37,10 @@ import javax.validation.constraints.Size;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.EnableEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
@@ -63,6 +67,14 @@ public class WFAction extends EnableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_script")
     private ScriptInstance actionScript;
+    
+    /**
+     * Map representing the script parameter where the key is the paramer name
+     * and the value the el to evaluate
+     */
+    @Column(name = "script_parameters", columnDefinition = "text")
+    @Type(type = JsonTypes.JSON)
+    private Map<String, String> scriptParameters = new HashMap<>();
 
     @Column(name = "priority")
     private int priority;
@@ -76,6 +88,23 @@ public class WFAction extends EnableEntity {
     private WFTransition wfTransition;
     
     /**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		if(scriptParameters == null) {
+			this.scriptParameters = new HashMap<>();
+		}
+		return scriptParameters;
+	}
+
+	/**
+	 * @param scriptParameters the scriptParameters to set
+	 */
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	/**
 	 * @return the {@link #actionScript}
 	 */
 	public ScriptInstance getActionScript() {

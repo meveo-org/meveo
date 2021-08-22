@@ -29,5 +29,11 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="#399 - Add script params">
+		<addColumn tableName="wf_action">
+			<column name="script_parameters" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

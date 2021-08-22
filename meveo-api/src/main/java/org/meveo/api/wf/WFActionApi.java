@@ -120,6 +120,7 @@ public class WFActionApi extends BaseApi {
         	throw new IllegalArgumentException("Action script with code = " + dto.getActionScript() + " does not exists");
         }
         wfAction.setActionScript(actionScript);
+        wfAction.setScriptParameters(dto.getScriptParameters());
         
         return wfAction;
     }

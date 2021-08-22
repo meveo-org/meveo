@@ -124,11 +124,20 @@
 	                                                        <hftl:decorateFormField fieldId="actionScript#{actionIndex.index}" label="#{messages['dunningPlan.actionScript']}"
 	                                                            componentWidth="75">
 	                                                            
-	                                                            <p:autoComplete	id="actionScript#{actionIndex.index}" value="#{action.actionScript}" var="script" size = "75" forceSelection="true" itemLabel="#{script.code}" itemValue="#{script}" dropdown="true" completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
+	                                                            <p:autoComplete	id="actionScript#{actionIndex.index}" value="#{action.actionScript}" 
+	                                                            	var="script" size = "75" 
+	                                                            	forceSelection="true" itemLabel="#{script.code}"
+	                                                            	itemValue="#{script}" dropdown="true" update="scriptParameters#{actionIndex.index}"
+	                                                            	completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
 																	<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
 								                                </p:autoComplete>
 	                                                                
 	                                                        </hftl:decorateFormField>
+	                                                        
+	                                                        <hftl:functionParamsForm id="scriptParameters#{actionIndex.index}"
+	                                                        	value="#{action.scriptParameters}"
+	                                                        	script="#{action.actionScript}"
+	                                                            componentWidth="75"/>
 	
 	                                                        <hftl:decorateFormField fieldId="conditionElAction#{actionIndex.index}" label="#{messages['dunningPlan.conditionEl']}"
 	                                                            componentWidth="75">

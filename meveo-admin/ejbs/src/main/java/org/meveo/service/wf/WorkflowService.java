@@ -322,6 +322,18 @@ public class WorkflowService extends BusinessService<Workflow> {
 		Map<String, Object> context = new HashMap<>();
 		context.put("entity", entity);
 		
+		Map<Object, Object> elMap = new HashMap<>(context);
+		wfAction.getScriptParameters().forEach((paramKey, paramValue) -> {
+			if(paramValue != null) {
+				try {
+					Object evaluatedValue = MeveoValueExpressionWrapper.evaluateExpression(paramValue, elMap, Object.class);
+					context.put(paramKey, evaluatedValue);
+				} catch (ELException e) {
+					log.error("Failed to evaluate value for EL {}", paramValue);
+				}
+			}
+		});
+		
 		scriptInstanceService.execute(wfAction.getActionScript().getCode(), context);
 		actionResult = context.get("result");
 		return actionResult;
