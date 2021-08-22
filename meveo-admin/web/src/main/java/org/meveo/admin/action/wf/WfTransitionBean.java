@@ -252,6 +252,7 @@ public class WfTransitionBean extends BaseBean<WFTransition> {
                 action.setActionEl(wfAction.getActionEl());
                 action.setConditionEl(wfAction.getConditionEl());
                 action.setPriority(wfAction.getPriority());
+                action.setActionScript(wfAction.getActionScript());
                 wfActionService.update(action);
                 messages.info(new BundleKey("messages", "update.successful"));
             } else {

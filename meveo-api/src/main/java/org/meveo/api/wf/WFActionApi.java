@@ -11,8 +11,10 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.wf.WFActionService;
 
 @Stateless
@@ -20,6 +22,9 @@ public class WFActionApi extends BaseApi {
 
     @Inject
     private WFActionService wfActionService;
+    
+    @Inject
+    private ScriptInstanceService scriptService;
 
     /**
      * 
@@ -109,6 +114,14 @@ public class WFActionApi extends BaseApi {
         wfAction.setActionEl(dto.getActionEl());
         wfAction.setPriority(dto.getPriority());
         wfAction.setConditionEl(dto.getConditionEl());
+        
+        ScriptInstance actionScript = scriptService.findByCode(dto.getActionScript());
+        if(actionScript == null) {
+        	throw new IllegalArgumentException("Action script with code = " + dto.getActionScript() + " does not exists");
+        }
+        wfAction.setActionScript(actionScript);
+        wfAction.setScriptParameters(dto.getScriptParameters());
+        
         return wfAction;
     }
 

@@ -21,5 +21,19 @@
 			<column name="sc_tz" type="${type.longText}" defaultValue="GMT" />
 		</addColumn>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="#399 - Add script to wf action">
+		<addColumn tableName="wf_action">
+			<column name="action_script" type="bigint">
+				<constraints foreignKeyName="fk_action_script" referencedTableName="meveo_script_instance" referencedColumnNames="id"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="#399 - Add script params">
+		<addColumn tableName="wf_action">
+			<column name="script_parameters" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

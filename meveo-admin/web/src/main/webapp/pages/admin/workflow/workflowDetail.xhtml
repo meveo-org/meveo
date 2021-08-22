@@ -97,37 +97,56 @@
                                             <p:panel id="transitionActionsPanel" styleClass="clearLeft">
                                                 <c:forEach items="#{workflowBean.wfActions}" var="action" varStatus="actionIndex">
                                                     <p:panel id="transitionActionPanel#{actionIndex.index}" styleClass="clearLeft">
-                                                        <hftl:decorateFormField fieldId="transitionActionOperationPanel#{actionIndex.index}" label="" componentWidth="15">
-                                                            <p:tooltip for="moveUpAction#{actionIndex.index}" value="#{messages['common.moveUp']}" showEffect="slide"
-                                                                hideEffect="slide" />
-                                                            <p:commandButton id="moveUpAction#{actionIndex.index}" icon="ui-icon-arrowthick-1-n"
-                                                                action="#{workflowBean.moveUpAction(actionIndex.index)}"
-                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
-                                                            <p:tooltip for="moveDownAction#{actionIndex.index}" value="#{messages['common.moveDown']}" showEffect="slide"
-                                                                hideEffect="slide" />
-                                                            <p:commandButton id="moveDownAction#{actionIndex.index}" icon="ui-icon-arrowthick-1-s"
-                                                                action="#{workflowBean.moveDownAction(actionIndex.index)}"
-                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
-                                                            <p:tooltip for="transitionActionOperationPanel#{actionIndex.index}" value="#{messages['commons.delete']}"
-                                                                showEffect="slide" hideEffect="slide" />
-                                                            <p:commandButton id="transitionActionOperationPanel#{actionIndex.index}" style="margin-top: 15px;"
-                                                                action="#{workflowBean.deleteWfAction(actionIndex.index)}" icon="ui-icon-trash"
-                                                                process="transitionActionOperationPanel#{actionIndex.index}" ajaxSubmit="true" partialSubmit="true"
-                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
+                                                        
+                                                        <p:panel styleClass="clearRight">
+	                                                        <hftl:decorateFormField fieldId="transitionActionOperationPanel#{actionIndex.index}" label="" componentWidth="15">
+	                                                            <p:tooltip for="moveUpAction#{actionIndex.index}" value="#{messages['common.moveUp']}" showEffect="slide"
+	                                                                hideEffect="slide" />
+	                                                            <p:commandButton id="moveUpAction#{actionIndex.index}" icon="ui-icon-arrowthick-1-n"
+	                                                                action="#{workflowBean.moveUpAction(actionIndex.index)}"
+	                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
+	                                                            <p:tooltip for="moveDownAction#{actionIndex.index}" value="#{messages['common.moveDown']}" showEffect="slide"
+	                                                                hideEffect="slide" />
+	                                                            <p:commandButton id="moveDownAction#{actionIndex.index}" icon="ui-icon-arrowthick-1-s"
+	                                                                action="#{workflowBean.moveDownAction(actionIndex.index)}"
+	                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
+	                                                            <p:tooltip for="transitionActionOperationPanel#{actionIndex.index}" value="#{messages['commons.delete']}"
+	                                                                showEffect="slide" hideEffect="slide" />
+	                                                            <p:commandButton id="transitionActionOperationPanel#{actionIndex.index}" style="margin-top: 15px;"
+	                                                                action="#{workflowBean.deleteWfAction(actionIndex.index)}" icon="ui-icon-trash"
+	                                                                process="transitionActionOperationPanel#{actionIndex.index}" ajaxSubmit="true" partialSubmit="true"
+	                                                                update=":tabView:formDunningPlanTransition:tabDetail:transitionActionsPanel" />
+	
+	                                                        </hftl:decorateFormField>
+                                                        </p:panel>
 
-                                                        </hftl:decorateFormField>
-
-                                                        <hftl:decorateFormField fieldId="actionEl#{actionIndex.index}" label="#{messages['dunningPlan.actionEl']}"
-                                                            componentWidth="75">
-                                                            <p:inputTextarea id="actionEl#{actionIndex.index}" value="#{action.actionEl}" required="true" autoResize="true"
-                                                                style="width:100%;" maxlength="2000" rows="1" />
-                                                        </hftl:decorateFormField>
-
-                                                        <hftl:decorateFormField fieldId="conditionElAction#{actionIndex.index}" label="#{messages['dunningPlan.conditionEl']}"
-                                                            componentWidth="75">
-                                                            <p:inputTextarea id="conditionElAction#{actionIndex.index}" value="#{action.conditionEl}" autoResize="true"
-                                                                style="width:100%;" maxlength="2000" rows="1" />
-                                                        </hftl:decorateFormField>
+														<p:panel styleClass="clearLeft">
+	                                                        <hftl:decorateFormField fieldId="actionScript#{actionIndex.index}" label="#{messages['dunningPlan.actionScript']}"
+	                                                            componentWidth="75">
+	                                                            
+	                                                            <p:autoComplete	id="actionScript#{actionIndex.index}" value="#{action.actionScript}" 
+	                                                            	var="script" size = "75" 
+	                                                            	forceSelection="true" itemLabel="#{script.code}"
+	                                                            	itemValue="#{script}" dropdown="true" update="scriptParameters#{actionIndex.index}"
+	                                                            	completeMethod="#{scriptInstanceBean.autocompleteScriptsNames}">
+	                                                            	
+	                                                            	<p:ajax event="itemSelect" process="@this" update="scriptParameters#{actionIndex.index}"/>
+																	<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.listActive()}" />                                
+								                                </p:autoComplete>
+	                                                                
+	                                                        </hftl:decorateFormField>
+	                                                        
+	                                                        <hftl:functionParamsForm id="scriptParameters#{actionIndex.index}"
+	                                                        	value="#{action.scriptParameters}"
+	                                                        	script="#{action.actionScript}"
+	                                                            componentWidth="75"/>
+	
+	                                                        <hftl:decorateFormField fieldId="conditionElAction#{actionIndex.index}" label="#{messages['dunningPlan.conditionEl']}"
+	                                                            componentWidth="75">
+	                                                            <p:inputTextarea id="conditionElAction#{actionIndex.index}" value="#{action.conditionEl}" autoResize="true"
+	                                                                style="width:100%;" maxlength="2000" rows="1" />
+	                                                        </hftl:decorateFormField>
+                                                        </p:panel>
                                                     </p:panel>
                                                 </c:forEach>
                                             </p:panel>
