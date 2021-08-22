@@ -165,7 +165,7 @@
             <c:set var="identifier" value="#{customFieldDataEntryBean.getIdentifierField(cft.entityClazzCetCode)}"/>
             <c:if test="#{identifier == null}">
                 <p:column width="50" headerText="UUID">
-	                <h:outputText value="#{e.uuid}"/>
+	                <h:outputText value="#{not empty e.code ?  e.code : e.uuid}"/>
 	            </p:column>
             </c:if>
             <c:if test="#{identifier != null}">
