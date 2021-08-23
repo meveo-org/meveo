@@ -433,8 +433,10 @@ public class CrossStorageService implements CustomPersistenceService {
 					actualFetchFields.forEach(builder::field);
 				}
 				
-				builder.limit(paginationConfiguration.getNumberOfRows());
-				builder.offset(paginationConfiguration.getFirstRow());
+				if(paginationConfiguration != null) {
+					builder.limit(paginationConfiguration.getNumberOfRows());
+					builder.offset(paginationConfiguration.getFirstRow());
+				}
 				
 				graphQlQuery = builder.toString();
 			}
