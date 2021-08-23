@@ -25,7 +25,7 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
             addFunction("string","contains", getClass().getMethod("contains", String.class, String.class));
             addFunction("string","startsWith", getClass().getMethod("startsWith", String.class, String.class));
             addFunction("string","endsWith", getClass().getMethod("endsWith", String.class, String.class));
-            addFunction("string","normalizeCaseAndAccent", getClass().getMethod("normalizeCaseAndAccent", String.class));
+            addFunction("string","normalizeCA", getClass().getMethod("normalizeCA", String.class));
                        
 
             addFunction("array", "first", getClass().getMethod("getFirstItem", Collection.class));
@@ -104,12 +104,13 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
         return collection.contains(object);
     }
 
-    /** replace accent characters by equivalent without accents
-     * change to lowerCase
-     * @param input
-     * @return
+    /**
+     * normalize Case And Accents of an input string 
+     *  
+     * @param input : text to normalize
+     * @return replace accent characters by equivalent without accents change to lowerCase
      */
-    public static String normalizeCaseAndAccent(String input) {
+    public static String normalizeCA(String input) {
     	if (StringUtils.isEmpty(input)) {
             return input;
         }
