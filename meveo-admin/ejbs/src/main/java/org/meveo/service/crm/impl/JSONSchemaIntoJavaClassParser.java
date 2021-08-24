@@ -262,6 +262,14 @@ public class JSONSchemaIntoJavaClassParser {
     	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
     	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
 
+            } else {
+            	VariableDeclarator variableDeclarator = new VariableDeclarator();
+            	variableDeclarator.setType("String");
+            	
+            	// Generate constructor with the value
+            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+    	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
+    	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
             }
         }
         
