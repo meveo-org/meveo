@@ -210,6 +210,11 @@
         <tag-name>functionParamsForm</tag-name>
         <source>functionParamsForm.xhtml</source>
     </tag>
+    
+    <tag>
+        <tag-name>cfEntityReference</tag-name>
+        <source>cfEntityReference.xhtml</source>
+    </tag>
 
     <tag>
         <description><![CDATA[Menu is a navigation component for Meveo Layout.]]></description>

@@ -148,44 +148,11 @@
             </c:if>
         </p:inputText>
     </c:if>
+    
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.ENTITY}">
-        <h:outputText value="#{field.entityReferenceValueForGUI.code}" 
-        	styleClass="field-value" rendered="#{!edit or disabled}" />
-        	
-        <p:autoComplete id="acEntityField" value="#{field.entityReferenceValueForGUI}"
-        	required="#{cft.valueRequired and !hasInheritedValue}" 
-        	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
-        	placeholder="#{cft.description}"
-            converter="entityReferenceValueConverter" completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" var="e"
-            itemLabel="#{e.code}"
-            itemValue="#{e}" rendered="#{edit and !disabled}">
-            
-            <f:attribute name="classname" value="#{cft.entityClazz}" />
-            
-            <c:set var="identifier" value="#{customFieldDataEntryBean.getIdentifierField(cft.entityClazzCetCode)}"/>
-            <c:if test="#{identifier == null}">
-                <p:column width="50" headerText="UUID">
-	                <h:outputText value="#{not empty e.code ?  e.code : e.uuid}"/>
-	            </p:column>
-            </c:if>
-            <c:if test="#{identifier != null}">
-            	<p:column width="50" headerText="#{empty identifier.description ? identifier.code : identifier.description}">
-	                <h:outputText value="#{e.get(identifier.code)}"/>
-	            </p:column>
-            </c:if>
-            
-            <c:forEach var="summaryField" items="#{customFieldDataEntryBean.getSummaryFields(cft.entityClazzCetCode)}">
-            	<p:column width="50" headerText="#{empty summaryField.description ? summaryField.code : summaryField.description}">
-                	<h:outputText value="#{e.get(summaryField.code)}"/>
-            	</p:column>
-            </c:forEach>
-            
-        </p:autoComplete>
-        <c:if test="#{!cft.valueRequired}">
-            <p:commandButton icon="ui-icon-trash" update="acEntityField"
-                             action="#{field.resetEntityReferenceValueForGUI()}"></p:commandButton>
-        </c:if>
+        <hftl:cfEntityReference cfValue="#{field}" value="#{field.entityReferenceValueForGUI}" cft="#{cft}" id="acEntityField" />
     </c:if>
+    
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">
         <h:outputText rendered="#{(!edit or disabled) and field.stringValue!=null}" value="#{cft.listValues[field.stringValue]} (#{field.stringValue})" styleClass="field-value" />
         <p:selectOneMenu value="#{field.stringValue}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit and !disabled}" label="#{cft.description}" placeholder="#{cft.description}">
