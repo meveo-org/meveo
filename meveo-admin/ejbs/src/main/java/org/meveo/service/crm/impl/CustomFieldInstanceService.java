@@ -21,6 +21,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.persistence.CrossStorageApi;
+import org.meveo.commons.utils.JpaUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -583,12 +584,20 @@ public class CustomFieldInstanceService extends BaseService {
 						if(value instanceof EntityReferenceWrapper) {
 							entityReferenceWrapper = (EntityReferenceWrapper) value;
 							
-						} else if(value instanceof String) {
+						} else if (value instanceof String) {
 							entityReferenceWrapper.setUuid((String) value);
 							entityReferenceWrapper.setCode((String) value);
 							
+						} else if (value instanceof BusinessEntity) { 
+							entityReferenceWrapper.setCode(((BusinessEntity) value).getCode());
+							entityReferenceWrapper.setId(((BusinessEntity) value).getId());
+							
 						} else if (StringUtils.isNumeric(String.valueOf(value))) {
 							entityReferenceWrapper.setId(Long.parseLong(String.valueOf(value)));
+							
+						} else if (value instanceof BaseEntity) {
+							JpaUtils.extractNaturalId(value).ifPresent(entityReferenceWrapper::setCode);
+							entityReferenceWrapper.setId(((BaseEntity) value).getId());
 						}
 
 						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
@@ -2595,6 +2604,7 @@ public class CustomFieldInstanceService extends BaseService {
 			        value = false;
                 }
 			}
+			
             if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof BigInteger) {
                 EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
                 if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
@@ -2607,7 +2617,20 @@ public class CustomFieldInstanceService extends BaseService {
                 entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
                 entityReferenceWrapper.setId(((BigInteger) value).longValue());
                 value = entityReferenceWrapper;
-            }
+                
+            } /* else if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof String) {
+            	EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+                if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
+                    User user = userService.findById(((BigInteger) value).longValue());
+                    entityReferenceWrapper.setCode(user.getUserName());
+                } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
+                    Provider provider = providerService.findById(((BigInteger) value).longValue());
+                    entityReferenceWrapper.setCode(provider.getCode());
+                }
+                entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
+                entityReferenceWrapper.setId(((BigInteger) value).longValue());
+                value = entityReferenceWrapper;
+            } */
 
             setCFValue(entity, cetField.getKey(), value);
 		}
