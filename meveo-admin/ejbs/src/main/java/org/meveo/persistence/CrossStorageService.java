@@ -377,7 +377,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				.forEach(key -> {
 					String[] fieldInfo = key.split(" ");
 					String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
-					if(fields.get(fieldName) == null && !"uuid".equals(fieldName)) {
+					if(fields.get(fieldName) == null && !"uuid".equals(fieldName) && !("code".equals(fieldName) && cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
 						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
 					}
 				});

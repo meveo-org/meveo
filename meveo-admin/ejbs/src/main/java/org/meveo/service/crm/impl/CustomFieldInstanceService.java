@@ -214,14 +214,20 @@ public class CustomFieldInstanceService extends BaseService {
         
         if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
         	String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-        	String filterField = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+        	Optional<String> filterFieldOpt = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
         			.values()
         			.stream()
         			.filter(CustomFieldTemplate::isIdentifier)
         			.findFirst()
-        			.map(CustomFieldTemplate::getCode)
-        			.orElse("uuid");
-            
+        			.map(CustomFieldTemplate::getCode);
+        	CustomEntityTemplate cet;
+			if (filterFieldOpt.isEmpty()) {
+        		cet = customEntityTemplateService.findByCode(cetCode);
+        		if (cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+        			filterFieldOpt = Optional.of("code");
+        		}
+        	}
+			String filterField = filterFieldOpt.orElse("uuid");
         	List<CustomEntityInstance> ceis = crossStorageApi.find(repository, cetCode)
             	.like(filterField, wildcode)
             	.limit(20)
@@ -246,9 +252,17 @@ public class CustomFieldInstanceService extends BaseService {
         
         // Set code = uuid for entities with no codes
         entities.stream()
+	    	.filter(e -> e instanceof CustomEntityInstance)
+	    	.filter(e -> e.getCode() == null)
+	    	.forEach(e -> e.setCode((String) ((CustomEntityInstance) e).getValuesNullSafe().get("code")));
+        entities.stream()
         	.filter(e -> e instanceof CustomEntityInstance)
         	.filter(e -> e.getCode() == null)
         	.forEach(e -> e.setCode(((CustomEntityInstance) e).getUuid()));
+        entities.stream()
+	    	.filter(e -> e instanceof CustomEntityInstance)
+	    	.filter(e -> e.getDescription() == null)
+	    	.forEach(e -> e.setDescription((String) ((CustomEntityInstance) e).getValuesNullSafe().get("description")));
 
         return entities;
     }
