@@ -158,7 +158,8 @@ if [ -d /docker-entrypoint-initdb.d ]; then
 fi
 
 # Configure meveo-admin.properties
-## Store meveo-admin.properties file into the meveodata folder for volume mapping.
+## Store meveo-admin.properties file into the meveodata folder for keeping permanently.
+## It's because the meveodata folder is volume-mapped folder.
 if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
     MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
     MEVEO_ADMIN_WEB_CONTEXT=${MEVEO_ADMIN_WEB_CONTEXT:-meveo}
@@ -188,13 +189,20 @@ if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
 fi
 
 # Configure meveo-security.properties
-if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-security.properties ]; then
+## Store meveo-security.properties file into the meveodata folder for keeping permanently.
+## It's because the meveodata folder is volume-mapped folder.
+if [ ! -f ${JBOSS_HOME}/meveodata/meveo-security.properties ]; then
     ## Generate a random string
     random_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)
     ## Encrypt above random string using AES-256
     enc_string=$(echo ${random_string} | openssl enc -aes-256-cbc -a -k secret 2>/dev/null)
     ## Create meveo-security.properties file
-    echo "meveo.security.secret="${enc_string} > ${JBOSS_HOME}/standalone/configuration/meveo-security.properties
+    echo "meveo.security.secret="${enc_string} > ${JBOSS_HOME}/meveodata/meveo-security.properties
+fi
+
+## Create a link of meveo-security.properties into the wildfly configuration folder.
+if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-security.properties ]; then
+    ln -s ${JBOSS_HOME}/meveodata/meveo-security.properties ${JBOSS_HOME}/standalone/configuration/meveo-security.properties
 fi
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
