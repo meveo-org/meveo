@@ -1,5 +1,5 @@
 [![Gitpod - Code Now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/meveo-org/meveo)
-[![Build Status](https://travis-ci.org/meveo-org/meveo.svg?branch=master)](https://travis-ci.org/meveo-org/meveo)
+[![Build Status](https://app.travis-ci.com/meveo-org/meveo.svg?branch=master)](https://travis-ci.org/meveo-org/meveo)
 
 # Meveo
 
