@@ -38,13 +38,24 @@ As the services are secrured, you must either use basic authentication (if allow
 
 ### I.2.1. By UUID
 
+```
+GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+:uuid : the uuid of the enitity instance to retrieve
+```
+
 ### I.2.2. By values
 
 ## I.3. List entities
 
 ### Request
 ```
-POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list
+POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/list
 ```
 
 Headers
@@ -54,6 +65,7 @@ Base64-Encode : boolean
 
 Path parameters
 ```
+:repository : the code of the storage repository (i.e default)
 :cet : the code of the Custom entity template
 ```
 
@@ -62,10 +74,33 @@ Query parameters
 withCount : boolean
 ```
 
+Body used for pagination, fields to retrieve, sorting and filtering
+```
+{
+ "firstRow":0,
+ "numberOfRows":1
+ "fetchFields":["customFieldCode1","customFieldCode2",...]
+ "sortField":"customFieldCode1"
+ "ordering":"ASCENDING/DESCENDING/UNSORTED"
+}
+```
+
 ### Response 
 body : either an array of serialized entities of type `:cet` if `withCount==false` or an  object with properties `count`, that givens the total number of entities  and `result` the list of entities
 
 ## I.4. Remove an entity
+
+```
+DELETE {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+:uuid : the uuid of the enitity instance to delete
+```
+
 
 # II. Persistence in Scripts
 
@@ -116,6 +151,10 @@ try{
    throw new BusinessException(ex);
 }
 ```
+
+# I.4 Remove an entity
+
+/{cetCode}/{uuid}
 
 ## II.2. Find an entity
 
