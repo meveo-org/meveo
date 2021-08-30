@@ -49,7 +49,7 @@ POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persi
 
 Headers
 ```
-Base64-Encode boolean
+Base64-Encode : boolean
 ```
 
 Path parameters
@@ -59,7 +59,7 @@ Path parameters
 
 Query parameters
 ```
-withCount boolean
+withCount : boolean
 ```
 
 ### Response 
