@@ -350,19 +350,24 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
 
-		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
-
+		final List<String> actualFetchFields;
+		// If no pagination nor fetch fields are defined, we consider that we must fetch everything
+		boolean fetchAllFields = paginationConfiguration == null || paginationConfiguration.getFetchFields() == null || paginationConfiguration.getFetchFields().isEmpty();
+		if(fetchAllFields && paginationConfiguration.getFetchFields() != null && paginationConfiguration.getFetchFields().isEmpty()) {
+			actualFetchFields = new ArrayList<>(fields.keySet());
+		} else {
+			actualFetchFields = paginationConfiguration.getFetchFields();
+		}
+		
 		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
-		final var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
 
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
 
-		// If no pagination nor fetch fields are defined, we consider that we must fetch
-		// everything
-		boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
 
+		
 		// In case where only graphql query is passed, we will only use it so we won't
 		// fetch sql
 		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
