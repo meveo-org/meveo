@@ -124,9 +124,9 @@ ARG WILDFLY_EXPORTER_SERVLET=wildfly_exporter_servlet-0.0.5.war
 # https://github.com/nlighten/wildfly_exporter#add-exporter-module-jars-to-wildfly
 COPY --chown=jboss:jboss configs/wildfly_exporter/${WILDFLY_EXPORTER_MODULE} ${JBOSS_HOME}/modules/${WILDFLY_EXPORTER_MODULE}
 RUN cd ${JBOSS_HOME}/modules \
-    jar -xvf ${WILDFLY_EXPORTER_MODULE} \
-    rm -rf META-INF \
-    rm -f ${WILDFLY_EXPORTER_MODULE}
+    && jar -xvf ${WILDFLY_EXPORTER_MODULE} \
+    && rm -rf META-INF \
+    && rm -f ${WILDFLY_EXPORTER_MODULE}
 
 # Add a deployment war file for the metrics servlet
 # https://github.com/nlighten/wildfly_exporter#deploy-exporter-servlet
