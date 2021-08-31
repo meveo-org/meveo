@@ -1,0 +1,12 @@
+# $WILDFLY_HOME/bin/jboss-cli.sh --file=/path/to/this/file.
+embed-server --server-config=standalone-full.xml
+batch
+
+# Configure wildfly-exporter module
+# https://github.com/nlighten/wildfly_exporter#configure-exporter-module-as-global-module
+
+/subsystem=ee/:write-attribute(name=global-modules,value=[\
+   {"name" => "nl.nlighten.prometheus.wildfly", "meta-inf" => "true", "services" => "true"}\
+])
+
+run-batch
