@@ -178,6 +178,10 @@ public class PersistenceRs {
 		if (customEntityTemplate == null) {
 			throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
 		}
+		
+		if (!currentUser.hasRole(customEntityTemplate.getReadPermission())) {
+			throw new ForbiddenException();
+		}
 
 		if (paginationConfiguration == null) {
 			paginationConfiguration = new PaginationConfiguration();
