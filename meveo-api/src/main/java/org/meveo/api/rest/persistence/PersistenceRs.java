@@ -258,7 +258,8 @@ public class PersistenceRs {
 	@ApiOperation(value = "Search entity by uuid")
 	public Map<String, Object> getByUuid(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid,
-			@HeaderParam("See-Decrypted") boolean seeDecrypted) throws EntityDoesNotExistsException, IOException {
+			@HeaderParam("See-Decrypted") boolean seeDecrypted, 
+			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 
@@ -274,7 +275,7 @@ public class PersistenceRs {
 		
 		hasAccessToRepository(repository);
 
-		Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
+		Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, paginationConfiguration.getFetchFields(), true);
 
 		if (values.size() == 1 && values.containsKey("uuid")) {
 			throw new NotFoundException(cetCode + " with uuid " + uuid + " does not exists");

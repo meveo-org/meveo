@@ -180,10 +180,10 @@ public class CrossStorageService implements CustomPersistenceService {
 		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
 		// Retrieve only asked fields
-		if (fetchFields != null) {
+		if (fetchFields != null && !fetchFields.isEmpty()) {
 			selectFields = new ArrayList<>(fetchFields);
 
-			// No restrictions about fields - retrieve all fields
+		// No restrictions about fields - retrieve all fields
 		} else {
 			selectFields = cfts.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 		}
