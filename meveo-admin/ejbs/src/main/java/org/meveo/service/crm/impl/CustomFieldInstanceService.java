@@ -127,14 +127,18 @@ public class CustomFieldInstanceService extends BaseService {
     public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String value) {
         Query query = null;
 
-        if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
-            String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+        // Extract cet code
+        CustomEntityTemplate cet = customEntityTemplateService.findByCode(classNameAndCode);
+        if (cet != null || classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
+            String cetCode = cet != null ? cet.getCode() : CustomFieldTemplate.retrieveCetCode(classNameAndCode);
+            
         	try {
 				return crossStorageApi.find(repository, value, cetCode);
 			} catch (EntityDoesNotExistsException e) {
 				log.error("Can't find {}/{}", cetCode, value);
 				return null;
 			}
+        	
         } else {
             BusinessEntity businessEntity = new BusinessEntity();
             if (classNameAndCode.equals(User.class.getName())) {
