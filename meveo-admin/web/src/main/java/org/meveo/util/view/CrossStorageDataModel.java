@@ -67,7 +67,6 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 				.values()
 				.stream()
 				.filter(CustomFieldTemplate::isSummary)
-				.filter(Predicate.not(CustomFieldTemplate::isIdentifier))
 				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
 				.map(CustomFieldTemplate::getCode)
 				.collect(Collectors.toList());
