@@ -79,7 +79,7 @@ public class GraphQLQueryBuilder {
 			prefixFilter += "offset: " + offset + ", ";
 		}		
 		
-		String filtersStr = filters.isEmpty() ? "" : filters.entrySet()
+		String filtersStr = filters.isEmpty() ? prefixFilter + ")" : filters.entrySet()
 				.stream()
 				.map(e -> { 
 					if(e.getValue() instanceof String) {
