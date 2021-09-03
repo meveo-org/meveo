@@ -126,43 +126,15 @@ public class CustomFieldInstanceService extends BaseService {
     @SuppressWarnings("unchecked")
     public BusinessEntity findBusinessEntityCFVByCode(String classNameAndCode, String value) {
         Query query = null;
+
         if (classNameAndCode.startsWith(CustomEntityTemplate.class.getName())) {
             String cetCode = CustomFieldTemplate.retrieveCetCode(classNameAndCode);
-            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
-            if (!customEntityTemplate.getSqlStorageConfiguration().isStoreAsTable()) {
-                query = getEntityManager().createQuery("select e from CustomEntityInstance e where cetCode=:cetCode and lower(e.code) =:code");
-                query.setParameter("cetCode", cetCode);
-                CustomEntityInstance customEntityInstance = customEntityInstanceService.findByCode(value);
-                if (customEntityInstance != null) {
-                    query.setParameter("code", customEntityInstance.getCode().toLowerCase());
-                } else {
-                    CustomEntityInstance entityInstance = customEntityInstanceService.findByUuid(cetCode, value);
-                    query.setParameter("code", entityInstance.getCode().toLowerCase());
-                }
-            } else {
-                CustomEntityInstance cei = new CustomEntityInstance();
-                try {
-                    Map<String, Object> objectMap = customTableService.findById("default", customEntityTemplate, value);
-                    if (objectMap != null && !objectMap.isEmpty()) {
-                        if (objectMap.get("code") != null) {
-                            cei.setCode((String) objectMap.get("code"));
-                        } else {
-                            cei.setCode(value);
-                        }
-                        cei.setCet(customEntityTemplate);
-                        cei.setUuid(value);
-                    } else {
-                        Map<String, Object> filters = new HashMap<>();
-                        filters.put("code", value);
-                        PaginationConfiguration paginationConfiguration = new PaginationConfiguration(0, 1000, filters, null, null, null, null, null);
-                        List<Map<String, Object>> list = customTableService.searchAndFetch("default", cetCode, paginationConfiguration);
-                        if (!list.isEmpty()) {
-                           cei = customEntityInstanceService.fromMap(customEntityTemplate, list.get(0));
-                        }
-                    }
-                } catch (EntityDoesNotExistsException e) {}
-                return cei;
-            }
+        	try {
+				return crossStorageApi.find(repository, value, cetCode);
+			} catch (EntityDoesNotExistsException e) {
+				log.error("Can't find {}/{}", cetCode, value);
+				return null;
+			}
         } else {
             BusinessEntity businessEntity = new BusinessEntity();
             if (classNameAndCode.equals(User.class.getName())) {

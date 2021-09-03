@@ -7,14 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.enterprise.inject.spi.CDI;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
@@ -35,6 +39,8 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	private static final long serialVersionUID = 1L;
 
 	private CrossStorageService persistenceService = CDI.current().select(CrossStorageService.class).get();
+	
+	private CustomFieldTemplateService cftService = CDI.current().select(CustomFieldTemplateService.class).get();
 
 	private Logger log = LoggerFactory.getLogger(CrossStorageDataModel.class);
 
@@ -45,12 +51,28 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	protected abstract Repository getRepository();
 
 	protected abstract CustomEntityTemplate getCustomEntityTemplate();
-
+	
 	@Override
 	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
 
-		PaginationConfiguration paginationConfig = new PaginationConfiguration(first, pageSize, getSearchCriteria(loadingFilters), null, getListFieldsToFetchImpl(), sortField,
+		PaginationConfiguration paginationConfig = new PaginationConfiguration(first, 
+				pageSize, 
+				getSearchCriteria(loadingFilters), 
+				null, 
+				getListFieldsToFetchImpl(), 
+				sortField,
 				sortOrder);
+		
+		List<String> summaryFields = cftService.findByAppliesTo(getCustomEntityTemplate().getAppliesTo())
+				.values()
+				.stream()
+				.filter(CustomFieldTemplate::isSummary)
+				.filter(Predicate.not(CustomFieldTemplate::isIdentifier))
+				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
+				.map(CustomFieldTemplate::getCode)
+				.collect(Collectors.toList());
+		
+		paginationConfig.setFetchFields(summaryFields);
 
 		try {
 			setRowCount(persistenceService.count(getRepository(), getCustomEntityTemplate(), paginationConfig));

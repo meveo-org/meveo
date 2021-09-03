@@ -432,15 +432,31 @@ public class CrossStorageService implements CustomPersistenceService {
 				GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(cet.getCode());
 				builder.field("meveo_uuid");
 				if(filters != null) {
-					filters.forEach(builder::filter);
+					filters.forEach((key, value) -> {
+						if (!key.equals("uuid")) {
+							builder.filter(key, value);
+						} else {
+							if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+								builder.filter("meveo_uuid", value);
+							}
+						}
+					});
 				}
 				if(actualFetchFields != null) { 
-					actualFetchFields.forEach(builder::field);
+					actualFetchFields
+						.stream()
+						.filter(field -> !field.equals("uuid"))
+						.forEach(builder::field);
 				}
 				
 				if(paginationConfiguration != null) {
-					builder.limit(paginationConfiguration.getNumberOfRows());
-					builder.offset(paginationConfiguration.getFirstRow());
+					if (paginationConfiguration.getNumberOfRows() != null) {
+						builder.limit(paginationConfiguration.getNumberOfRows());
+					}
+					
+					if (paginationConfiguration.getFirstRow() != null) {
+						builder.offset(paginationConfiguration.getFirstRow());
+					}
 				}
 				
 				graphQlQuery = builder.toString();
@@ -448,7 +464,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			
 			// Check if filters contains a field not stored in Neo4J
 			var dontFilterOnNeo4J = filters != null && filters.keySet().stream()
-					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
+					.anyMatch(f -> fields.get(f) != null && !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
 			Map<String, Object> result = null;
 			if (!dontFilterOnNeo4J && repository.getNeo4jConfiguration() != null) {
