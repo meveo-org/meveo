@@ -3,11 +3,12 @@
  */
 package org.meveo.api.persistence;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -32,7 +33,7 @@ public class CrossStorageRequest<T> {
 	private Class<T> clazz;
 	private PaginationConfiguration configuration;
 	private CustomEntityTemplate cet;
-	private List<String> relationsToFetch;
+	private Set<String> relationsToFetch;
 	
 	public CrossStorageRequest(Repository repo, CrossStorageService api, Class<T> clazz, CustomEntityTemplate cet) {
 		repository = repo;
@@ -41,7 +42,7 @@ public class CrossStorageRequest<T> {
 		this.cet = cet;
 		configuration = new PaginationConfiguration();
 		configuration.setFilters(new HashMap<>());
-		this.relationsToFetch = new ArrayList<>();
+		this.relationsToFetch = new HashSet<>();
 	}
 	
 	public CrossStorageRequest<T> by(String field, Object value) {
@@ -130,7 +131,8 @@ public class CrossStorageRequest<T> {
 		});
 		
 		try {
-			api.fetchEntityReferences(repository, cet, valuesToFetch);
+			Map<String, Set<String>> subFields = api.extractSubFields(relationsToFetch);
+			api.fetchEntityReferences(repository, cet, valuesToFetch, subFields);
 			valuesToFetch.forEach(values::put);
 		} catch (EntityDoesNotExistsException e) {
 			throw new RuntimeException(e);

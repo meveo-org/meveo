@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -274,8 +275,16 @@ public class PersistenceRs {
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		
 		hasAccessToRepository(repository);
+		
+		Set<String> fields = new HashSet<>(paginationConfiguration.getFetchFields());
+		Map<String, Set<String>> subFields = crossStorageService.extractSubFields(fields);
 
-		Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, paginationConfiguration.getFetchFields(), true);
+		Map<String, Object> values = crossStorageService.find(repository, 
+				customEntityTemplate, 
+				uuid,
+				paginationConfiguration.getFetchFields(),
+				subFields,
+				true);
 
 		if (values.size() == 1 && values.containsKey("uuid")) {
 			throw new NotFoundException(cetCode + " with uuid " + uuid + " does not exists");
