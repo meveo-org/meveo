@@ -1664,11 +1664,11 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 				fetchFields = new HashSet<>(fetchFields);
 				
+				Map<String, Set<String>> subSubFields = extractSubFields(fetchFields);
+
 				if (fetchFields.contains("*")) {
 					fetchFields = cache.getCustomFieldTemplates(cet.getAppliesTo()).keySet();
 				}
-				
-				Map<String, Set<String>> subSubFields = extractSubFields(fetchFields);
 				
 				if(cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
 					if(entry.getValue() instanceof String) {
