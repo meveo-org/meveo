@@ -54,6 +54,10 @@ Meveo can be deployed in a wildfly cluster to scale its capabilities.
 Infinispan cache can be replicated/distributed/scaterred among nodes.
 A JMS topic is used to [publish events](./meveo-admin/ejbs/src/main/java/org/meveo/event/monitoring) to the cluster nodes.
 
+## REST API Reference
+
+On a started instance, go to <serverAddress>/meveo/api/rest/swagger.json or <serverAddress>/meveo/api/rest/swagger.yaml
+
 ## User Guide
 
 - [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
