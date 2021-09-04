@@ -169,3 +169,7 @@ In case you need the original body in the Script, you can retrieve it from the `
 ## JSONata
 
 In the field  jsonataTransformer  you can provide a JSONata expression to transform the output ofthe endpoint.
+	
+## OpenAPI definition
+	
+Go to ```GET /meveo/api/rest/endpoint/openApi/{code}```
