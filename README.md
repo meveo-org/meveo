@@ -56,7 +56,7 @@ A JMS topic is used to [publish events](./meveo-admin/ejbs/src/main/java/org/mev
 
 ## REST API Reference
 
-On a started instance, go to <serverAddress>/meveo/api/rest/swagger.json or <serverAddress>/meveo/api/rest/swagger.yaml
+On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swagger.yaml
 
 ## User Guide
 
