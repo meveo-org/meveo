@@ -133,6 +133,10 @@ public class CustomFieldInstanceService extends BaseService {
             String cetCode = cet != null ? cet.getCode() : CustomFieldTemplate.retrieveCetCode(classNameAndCode);
             
         	try {
+        		if(repository == null) {
+        			log.warn("Repository should not be null at this point !");
+        			return null;
+        		}
 				return crossStorageApi.find(repository, value, cetCode);
 			} catch (EntityDoesNotExistsException e) {
 				log.error("Can't find {}/{}", cetCode, value);

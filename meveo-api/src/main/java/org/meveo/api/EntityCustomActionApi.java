@@ -27,6 +27,7 @@ import org.meveo.model.IEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
@@ -46,6 +47,9 @@ public class EntityCustomActionApi extends BaseApi {
 
     @Inject
     private EntityCustomActionService entityCustomActionService;
+    
+    @Inject
+    private Repository repository;
 
     public List<ScriptInstanceErrorDto> create(EntityCustomActionDto actionDto, String appliesTo)
             throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
@@ -268,7 +272,8 @@ public class EntityCustomActionApi extends BaseApi {
 
         Map<String, Object> context = new HashMap<String, Object>();
 
-        Map<String, Object> result = scriptInstanceService.execute(entity, action.getScript().getCode(), context);
+        
+        Map<String, Object> result = scriptInstanceService.execute(entity, repository, action.getScript().getCode(), context);
 
         if (result.containsKey(Script.RESULT_GUI_OUTCOME)) {
             return (String) result.get(Script.RESULT_GUI_OUTCOME);
