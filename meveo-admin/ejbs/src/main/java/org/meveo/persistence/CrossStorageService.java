@@ -431,37 +431,8 @@ public class CrossStorageService implements CustomPersistenceService {
 				graphQlQuery = paginationConfiguration.getGraphQlQuery();
 				graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 			} else {
-				GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(cet.getCode());
-				builder.field("meveo_uuid");
-				if(filters != null) {
-					filters.forEach((key, value) -> {
-						if (!key.equals("uuid")) {
-							builder.filter(key, value);
-						} else {
-							if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
-								builder.filter("meveo_uuid", value);
-							}
-						}
-					});
-				}
-				if(actualFetchFields != null) { 
-					actualFetchFields
-						.stream()
-						.filter(field -> !field.equals("uuid"))
-						.forEach(builder::field);
-				}
-				
-				if(paginationConfiguration != null) {
-					if (paginationConfiguration.getNumberOfRows() != null) {
-						builder.limit(paginationConfiguration.getNumberOfRows());
-					}
-					
-					if (paginationConfiguration.getFirstRow() != null) {
-						builder.offset(paginationConfiguration.getFirstRow());
-					}
-				}
-				
-				graphQlQuery = builder.toString();
+				graphQlQuery = generateGraphQlFromPagination(cet.getCode(), paginationConfiguration, actualFetchFields, filters, subFields)
+						.toString();
 			}
 			
 			// Check if filters contains a field not stored in Neo4J
@@ -520,6 +491,55 @@ public class CrossStorageService implements CustomPersistenceService {
 		return valuesList.stream()
 				.map(values -> deserializeData(values, fields.values()))
 				.collect(Collectors.toList());
+	}
+
+	/**
+	 * @param cet
+	 * @param paginationConfiguration
+	 * @param actualFetchFields
+	 * @param filters
+	 * @return
+	 */
+	private GraphQLQueryBuilder generateGraphQlFromPagination(String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
+		GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(type);
+		builder.field("meveo_uuid");
+		if(filters != null) {
+			filters.forEach((key, value) -> {
+				if (!key.equals("uuid")) {
+					builder.filter(key, value);
+				} else {
+					if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+						builder.filter("meveo_uuid", value);
+					}
+				}
+			});
+		}
+		
+		if(actualFetchFields != null) { 
+			actualFetchFields
+				.stream()
+				.filter(field -> !field.equals("uuid"))
+				.forEach(builder::field);
+		}
+		
+		if(paginationConfiguration != null) {
+			if (paginationConfiguration.getNumberOfRows() != null) {
+				builder.limit(paginationConfiguration.getNumberOfRows());
+			}
+			
+			if (paginationConfiguration.getFirstRow() != null) {
+				builder.offset(paginationConfiguration.getFirstRow());
+			}
+		}
+		
+		for (var subField : subFields.entrySet()) {
+			Set<String> subFetchFields = new HashSet<>(subField.getValue());
+			Map<String, Set<String>> subSubFields = extractSubFields(subFetchFields);
+			GraphQLQueryBuilder subQuery = generateGraphQlFromPagination(null, null, subFetchFields, null, subSubFields);
+			builder.field(subField.getKey(), subQuery);
+		}
+		
+		return builder;
 	}
 
 	/**
