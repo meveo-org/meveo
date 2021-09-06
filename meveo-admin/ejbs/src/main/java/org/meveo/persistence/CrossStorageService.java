@@ -519,6 +519,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			actualFetchFields
 				.stream()
 				.filter(field -> !field.equals("uuid"))
+				.filter(field -> !subFields.containsKey(field))
 				.forEach(builder::field);
 		}
 		

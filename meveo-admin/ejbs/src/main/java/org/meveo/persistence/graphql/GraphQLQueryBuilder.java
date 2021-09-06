@@ -71,23 +71,29 @@ public class GraphQLQueryBuilder {
 			tabsMinus.append("\t");
 		}
 		
-		String prefixFilter = "(";
-		if(limit != null) {
-			prefixFilter += "first: " + limit + ", ";
-		}
-		if(offset != null) {
-			prefixFilter += "offset: " + offset + ", ";
-		}		
+		String filtersStr;
+		if(filters.isEmpty() && limit == null && offset == null) {
+			filtersStr = "";
+		} else {
 		
-		String filtersStr = filters.isEmpty() ? prefixFilter + ")" : filters.entrySet()
-				.stream()
-				.map(e -> { 
-					if(e.getValue() instanceof String) {
-						return e.getKey() + ":\"" + e.getValue() + "\"";
-					} else {
-						return e.getKey() + ":" + e.getValue();
-					}
-				}).collect(Collectors.joining(",", prefixFilter, ")"));
+			String prefixFilter = "(";
+			if(limit != null) {
+				prefixFilter += "first: " + limit + ", ";
+			}
+			if(offset != null) {
+				prefixFilter += "offset: " + offset + ", ";
+			}		
+			
+			filtersStr = filters.isEmpty() ? prefixFilter + ")" : filters.entrySet()
+					.stream()
+					.map(e -> { 
+						if(e.getValue() instanceof String) {
+							return e.getKey() + ":\"" + e.getValue() + "\"";
+						} else {
+							return e.getKey() + ":" + e.getValue();
+						}
+					}).collect(Collectors.joining(",", prefixFilter, ")"));
+		}
 		
 		List<String> fieldsList = new ArrayList<>(fields);
 		fieldsList.addAll(
