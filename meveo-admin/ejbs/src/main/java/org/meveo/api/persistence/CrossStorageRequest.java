@@ -3,6 +3,7 @@
  */
 package org.meveo.api.persistence;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,6 +58,14 @@ public class CrossStorageRequest<T> {
 	
 	public CrossStorageRequest<T> fetch(String field) {
 		this.relationsToFetch.add(field);
+		return this;
+	}
+	
+	public CrossStorageRequest<T> select(String field) {
+		if(this.configuration.getFetchFields() == null) {
+			this.configuration.setFetchFields(new ArrayList<>());
+		}
+		this.configuration.getFetchFields().add(field);
 		return this;
 	}
 	
@@ -131,8 +140,7 @@ public class CrossStorageRequest<T> {
 		});
 		
 		try {
-			Map<String, Set<String>> subFields = api.extractSubFields(relationsToFetch);
-			api.fetchEntityReferences(repository, cet, valuesToFetch, subFields);
+			api.fetchEntityReferences(repository, cet, valuesToFetch, new HashMap<>());
 			valuesToFetch.forEach(values::put);
 		} catch (EntityDoesNotExistsException e) {
 			throw new RuntimeException(e);
