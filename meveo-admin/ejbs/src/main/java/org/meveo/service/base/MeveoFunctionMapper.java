@@ -1190,8 +1190,8 @@ public class MeveoFunctionMapper extends MeveoDefaultFunctionMapper {
 
         try {
             try {
-            	Repository currentRepository = CDI.current().select(Repository.class).get();
-                result = getScriptInstanceService().execute(entity, currentRepository, scriptCode, encodedParameters);
+            	//FIXME : pass repository
+                result = getScriptInstanceService().execute(entity, null, scriptCode, encodedParameters);
             } catch (ElementNotFoundException enf) {
                 result = null;
             }
