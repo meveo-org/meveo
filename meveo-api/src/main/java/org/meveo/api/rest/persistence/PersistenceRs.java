@@ -282,7 +282,7 @@ public class PersistenceRs {
 		Map<String, Object> values = crossStorageService.find(repository, 
 				customEntityTemplate, 
 				uuid,
-				paginationConfiguration.getFetchFields(),
+				fields,
 				subFields,
 				true);
 
