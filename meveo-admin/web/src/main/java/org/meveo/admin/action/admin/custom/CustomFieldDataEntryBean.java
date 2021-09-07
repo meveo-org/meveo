@@ -346,6 +346,16 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.entity = entity;
 
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
+		
+		// Load inherited fields as well
+		if (entity instanceof CustomEntityInstance) {
+			String cetCode = ((CustomEntityInstance) entity).getCetCode();
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+			for (CustomEntityTemplate e = cet.getSuperTemplate(); e != null; e = e.getSuperTemplate()) {
+				customFieldTemplates.putAll(customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()));
+			}
+		}
+		
 		log.trace("Found {} custom field templates for entity {}", customFieldTemplates.size(), entity.getClass());
 
 		customFieldTemplates = sortByValue(customFieldTemplates);
@@ -993,7 +1003,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
-			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, action.getScript().getCode(), context);
+			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, repository, action.getScript().getCode(), context);
 
 			// Display a message accordingly on what is set in result
 			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
@@ -1037,7 +1047,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			context.put(Script.CONTEXT_PARENT_ENTITY, parentEntity);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
 
-			Map<String, Object> result = scriptInstanceService.execute((IEntity) childEntity, action.getScript().getCode(), context);
+			Map<String, Object> result = scriptInstanceService.execute((IEntity) childEntity, repository, action.getScript().getCode(), context);
 
 			// Display a message accordingly on what is set in result
 			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {

@@ -136,7 +136,6 @@ EXPOSE 8080 8787 9990
 
 
 #install maven
-
 USER root
 
 RUN usermod -a -G jboss root
@@ -167,7 +166,8 @@ ENV MAVEN_CONFIG "/opt/jboss/wildfly/meveodata/default/.m2"
 RUN export HOST_MVN_SETTINGS_PATH=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)/..
 COPY ${HOST_MVN_SETTINGS_PATH}/settings.xml ${MAVEN_CONFIG}/settings.xml
 
-COPY . /tmp/meveo
+USER jboss
+COPY --chown=jboss:jboss . /tmp/meveo
 RUN cd /tmp/meveo \
   && cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources \
   && ./deploy.sh

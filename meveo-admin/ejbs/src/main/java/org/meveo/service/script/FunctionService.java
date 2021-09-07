@@ -45,6 +45,7 @@ import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.scripts.FunctionUtils;
 import org.meveo.model.scripts.Sample;
 import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.job.JobInstanceService;
 
@@ -308,6 +309,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * Execute action on an entity.
      *
      * @param entity            Entity to execute action on
+     * @param repository Repository containing the entity
      * @param scriptCode        Script to execute, identified by a code
      * @param encodedParameters Additional parameters encoded in URL like style
      *                          param=value&amp;param=value
@@ -316,8 +318,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws ElementNotFoundException   Script not found
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(IEntity<?> entity, String scriptCode, String encodedParameters) throws BusinessException {
-        return execute(entity, scriptCode, CustomScriptService.parseParameters(encodedParameters));
+    public Map<String, Object> execute(IEntity<?> entity, Repository repository, String scriptCode, String encodedParameters) throws BusinessException {
+        return execute(entity, repository, scriptCode, CustomScriptService.parseParameters(encodedParameters));
     }
 
     /**
@@ -339,6 +341,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * Execute action on an entity.
      *
      * @param entity     Entity to execute action on
+     * @param repository Repository containing the entity
      * @param scriptCode Script to execute, identified by a code
      * @param context    Additional parameters
      * @return Context parameters. Will not be null even if "context" parameter is null.
@@ -347,7 +350,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @throws InvalidPermissionException Insufficient access to run the script
      * @throws BusinessException          Any execution exception
      */
-    public Map<String, Object> execute(IEntity<?> entity, String scriptCode, Map<String, Object> context) throws BusinessException {
+    public Map<String, Object> execute(IEntity<?> entity, Repository repository, String scriptCode, Map<String, Object> context) throws BusinessException {
         if (context == null) {
             context = new HashMap<>();
         }
