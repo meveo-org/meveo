@@ -314,7 +314,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		for(var script : scripts) {
 			if(script.getError()) {
                 String message = "script "+ script.getCode() + " failed to compile. ";
-                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
+                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("<br>\n"));
 				throw new InvalidScriptException(message);
 			}
 		}
