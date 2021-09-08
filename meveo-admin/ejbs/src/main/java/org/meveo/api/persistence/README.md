@@ -55,12 +55,48 @@ Query parameters
 fetch : code of custom field to fetch (you can repeat this param)
 ```
 
+If the custom field you fetch is a reference to an entity you can explicitely tell what subfield of the reference entity
+you want to fetch.
+
+For instance if your entity `user` as a field `address` and you want to retrieve with the user the `zipcode` of its `address` then use
+```
+fetch=address.zipcode
+```
+
+If you want to retrieve all the fields of the `address` then use
+```
+fetch=address.*
+```
+
+If the `country` of the `address` is also an entity that has a field `name`, then to retrieve it along with the `user` you can use
+```
+fetch=address.country.name
+```
 
 ### I.2.2. By values
 
 ## I.3. List entities
 
-### Request
+
+### GET Request with list of field to fetch in query parameters
+```
+GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet?fetch=fieldName1&fetch=fieldName2
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+```
+
+Query parameters
+
+```
+fetch : code of custom field to fetch (you can repeat this param)
+```
+
+
+### POST Request with pagination configuration in the body
 ```
 POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/list
 ```
@@ -85,12 +121,13 @@ Body used for pagination, fields to retrieve, sorting and filtering
 ```
 {
  "firstRow":0,
- "numberOfRows":1
- "fetchFields":["customFieldCode1","customFieldCode2",...]
- "sortField":"customFieldCode1"
- "ordering":"ASCENDING/DESCENDING/UNSORTED"
+ "numberOfRows":1,
+ "fetchFields":["customFieldCode1","customFieldCode2.subField1","customFieldCode3.*"],
+ "sortField":"customFieldCode1",
+ "ordering":"ASCENDING"
 }
 ```
+ordering is one of  ASCENDING,DESCENDING,UNSORTED
 
 ### Response 
 body : either an array of serialized entities of type `:cet` if `withCount==false` or an  object with properties `count`, that givens the total number of entities  and `result` the list of entities
