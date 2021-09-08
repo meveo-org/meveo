@@ -151,6 +151,10 @@ public class CrossStorageService implements CustomPersistenceService {
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, boolean withReferences) throws EntityDoesNotExistsException {
 		return find(repository, cet, uuid, null, new HashMap<>(), true);
 	}
+	
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+		return find(repository, cet, uuid, fetchFields, new HashMap<>(), withEntityReferences);
+	}
 
 	/**
 	 * Retrieves one entity instance
