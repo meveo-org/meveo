@@ -39,7 +39,7 @@ As the services are secrured, you must either use basic authentication (if allow
 ### I.2.1. By UUID
 
 ```
-GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid
+GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid?fetch=fieldName1&fetch=fieldName2
 ```
 
 Path parameters
@@ -48,6 +48,13 @@ Path parameters
 :cet : the code of the Custom entity template
 :uuid : the uuid of the enitity instance to retrieve
 ```
+
+Query parameters
+
+```
+fetch : code of custom field to fetch (you can repeat this param)
+```
+
 
 ### I.2.2. By values
 
