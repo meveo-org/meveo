@@ -407,6 +407,7 @@ public class CustomizedEntityService implements Serializable {
 	    	// Find standard entities that implement ICustomFieldEntity interface except JobInstance
 	        Reflections reflections = new Reflections(packageStr);
 	    	cfClasses.addAll(reflections.getSubTypesOf(ICustomFieldEntity.class));
+	    	scannedPackages.add(packageStr);
     	}
     }
 
