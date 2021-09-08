@@ -564,14 +564,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             source = readScriptFile(script);
         }
 
-    	addScriptDependencies(script);
+    	List<ScriptInstanceError> scriptErrors = addScriptDependencies(script);
         
-        List<ScriptInstanceError> scriptErrors = compileScript(
+        if(scriptErrors==null || scriptErrors.isEmpty()){
+            scriptErrors = compileScript(
         		script.getCode(), 
         		script.getSourceTypeEnum(), 
         		source, 
         		script.isActive(), 
         		testCompile);
+        }
         
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
@@ -581,15 +583,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
-    private void addScriptDependencies(T script) {
-
+    private List<ScriptInstanceError> addScriptDependencies(T script) {
 		if (script instanceof ScriptInstance) {
 			ScriptInstance scriptInstance = (ScriptInstance) script;
 
 			if (scriptInstance.getMavenDependencies() != null && scriptInstance.getMavenDependencies().size() > 0) {
-				addMavenLibrariesToClassPath(scriptInstance.getMavenDependenciesNullSafe());
+				List<ScriptInstanceError> result = addMavenLibrariesToClassPath(scriptInstance.getMavenDependenciesNullSafe());
+                if(result.size()>0){
+                    return result;
+                }
 			}
 		}
+        return null;
     }
 
     /**
@@ -688,7 +693,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
                 artifacts = dependencyResult.getArtifactResults();
 
-            } catch (DependencyResolutionException e2) {
+            } catch (Exception e2) {
                 log.error("Fail downloading dependencies {}", e2);
                 return null;
             }
