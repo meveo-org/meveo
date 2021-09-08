@@ -112,10 +112,16 @@
                 <ui:define name="fields">
                     <h:panelGrid columns="2">
                         <hftl:decorateFormField fieldId="code" label="#{messages['maven.configuration.code']}">
-                            <p:inputText id="code" value="#{mavenConfigurationBean.remoteRepository.code}" size="53" maxlength="100"/>
+                            <p:inputText id="code" value="#{mavenConfigurationBean.remoteRepository.code}" size="50"
+                                         maxlength="100"/>
+                        </hftl:decorateFormField>
+                        <hftl:decorateFormField fieldId="description" label="#{messages['BusinessEntity.description']}">
+                            <p:inputText id="description"
+                                         value="#{mavenConfigurationBean.remoteRepository.description}" size="50" maxlength="100"/>
                         </hftl:decorateFormField>
                         <hftl:decorateFormField fieldId="url" label="#{messages['maven.configuration.url']}">
-                            <p:inputText id="url" value="#{mavenConfigurationBean.remoteRepository.url}" size="53" maxlength="100"/>
+                            <p:inputText id="url" value="#{mavenConfigurationBean.remoteRepository.url}" size="100"
+                                         maxlength="100"/>
                         </hftl:decorateFormField>
                     </h:panelGrid>
                 </ui:define>

@@ -36,4 +36,15 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet author="Edward Legaspi" id="Convert to buss entity">
+		<addColumn tableName="remote_repository">
+			<column name="description" type="varchar(100)" />
+		</addColumn>
+		<addColumn tableName="remote_repository">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>
