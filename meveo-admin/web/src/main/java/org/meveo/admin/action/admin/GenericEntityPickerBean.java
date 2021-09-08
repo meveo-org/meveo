@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import java.util.stream.Collectors;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -77,9 +78,10 @@ public class GenericEntityPickerBean extends BaseBean<IEntity> {
      * @return A list of classes
      */
     public List<Class<?>> getEntityClasses(String annotation) {
-    	if(annotation.equals(ModuleItem.class.getName())) {
-    		return moduleApi.getModuleItemClasses();
-    	}
+        if(annotation.equals(ModuleItem.class.getName())) {
+            List<Class<?>> classes = moduleApi.getModuleItemClasses();
+            return classes.stream().sorted(Comparator.comparing(Class::getSimpleName)).collect(Collectors.toUnmodifiableList());
+        }
     	
         try {
 

@@ -18,8 +18,8 @@
  */
 package org.meveo.model.communication;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,15 +35,13 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.User;
 import org.meveo.security.PasswordUtils;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Cacheable
@@ -183,10 +181,13 @@ public class MeveoInstance extends BusinessEntity {
 	/**
 	 * @param clearPassword the clearPassword to set
 	 */
-	public void setClearPassword(String clearPassword) {
-    	if(this.clearPassword != null) {
+	public void setClearPassword(String newClearPassword) {
+      if (!StringUtils.isBlank(newClearPassword)) {
+          clearPassword = newClearPassword;
+      }
+    	if(clearPassword != null) {
     		String salt = getSalt();
-    		this.authPassword = PasswordUtils.encrypt(salt, this.clearPassword);
+    		authPassword = PasswordUtils.encrypt(salt, clearPassword);
     	}
 	}
 

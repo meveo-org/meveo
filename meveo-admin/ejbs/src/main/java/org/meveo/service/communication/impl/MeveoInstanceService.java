@@ -26,7 +26,6 @@ import javax.persistence.NoResultException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -209,5 +208,4 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 			throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
 		}
 	}
-
 }

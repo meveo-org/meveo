@@ -1,31 +1,32 @@
 package org.meveo.model.storage;
 
+import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.AuditableEntity;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.ModuleItemOrder;
 
+/**
+ * @author Edward P. Legaspi | czetsuya@gmail.com
+ * @version 6.15
+ */
 @Entity
-@Table(name = "remote_repository")
+@Table(name = "remote_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "remote_repository_seq"), })
-public class RemoteRepository extends AuditableEntity {
+@ModuleItem(value = "RemoteRepository", path = "remoteRepositories")
+@ExportIdentifier({ "code"})
+public class RemoteRepository extends BusinessEntity {
 
     private static final long serialVersionUID = 1L;
 
-    private String code;
-
     private String url;
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 
     public String getUrl() {
         return url;

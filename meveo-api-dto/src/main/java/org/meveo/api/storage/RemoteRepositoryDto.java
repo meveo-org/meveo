@@ -1,22 +1,23 @@
 package org.meveo.api.storage;
 
 import io.swagger.annotations.ApiModelProperty;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.BusinessEntityDto;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.storage.RemoteRepository;
 
 import java.io.Serializable;
 
 /**
  * @author Hien Bach
- * @lastModifiedVersion 6.7.0
+ * @author Edward P. Legaspi
+ * @version 6.15
  */
-public class RemoteRepositoryDto implements Serializable {
+public class RemoteRepositoryDto extends BusinessEntityDto {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty("Code of remote repisitory")
-    private String code;
-
-    @ApiModelProperty("The url of remote repisitory")
+    @ApiModelProperty("The url of remote repository")
     private String url;
 
     public RemoteRepositoryDto() {
@@ -29,8 +30,8 @@ public class RemoteRepositoryDto implements Serializable {
      * @param remoteRepository the remote repository entity
      */
     public RemoteRepositoryDto(RemoteRepository remoteRepository) {
-        this.code = remoteRepository.getCode();
-        this.url = remoteRepository.getUrl();
+        super(remoteRepository);
+        url = remoteRepository.getUrl();
     }
 
 
