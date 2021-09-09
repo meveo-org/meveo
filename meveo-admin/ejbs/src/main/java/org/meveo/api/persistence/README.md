@@ -1,14 +1,154 @@
-# Persistence
+# Crosstorage Persistence
 
-- [1. Persisting an entity](#1-persisting-an-entity)
-- [2. Find an entity](#2-find-an-entity)
-	- [2.1. By UUID](#21-by-uuid)
-	- [2.2. By values](#22-by-values)
-- [3. List entities](#3-list-entities)
-- [4. Remove an entity](#4-remove-an-entity)
-- [5. CREATE, UPDATE, DELETE events](#5-create-update-delete-events)
+[I. Persistence using rest API](I-persistence-using-rest-api)
+- [I.1. Persisting an entity](#i1-persisting-an-entity)
+- [I.2. Find an entity](#i2-find-an-entity)
+	- [I.2.1. By UUID](#i21-by-uuid)
+	- [I.2.2. By values](#i22-by-values)
+- [I.3. List entities](#i3-list-entities)
+- [I.4. Remove an entity](#i4-remove-an-entity)
 
-## 1. Persisting an entity
+[II. Persistence in Scripts](#ii-persistence-in-scripts)
+- [II.1. Persisting an entity](#ii1-persisting-an-entity)
+- [II.2. Find an entity](#ii2-find-an-entity)
+	- [II.2.1. By UUID](#ii21-by-uuid)
+	- [II.2.2. By values](#ii22-by-values)
+- [II.3. List entities](#ii3-list-entities)
+- [II.4. Remove an entity](#ii4-remove-an-entity)
+- [II.5. CREATE, UPDATE, DELETE events](#i5-create-update-delete-events)
+
+# I. Persistence using rest API
+
+The crosstorage persistence API is accessible at `{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence` 
+
+with typically 
+```
+{{protocol}}=https
+{{hostname}}=mydomain.com
+{{port}}=443
+{{webContext}}=meveo
+:project = default  (the repository to use for persistence)
+```
+As the services are secrured, you must either use basic authentication (if allowed on your instance) or bearer token.
+
+## I.1. Persisting an entity
+
+
+## I.2. Find an entity
+
+### I.2.1. By UUID
+
+```
+GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid?fetch=fieldName1&fetch=fieldName2
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+:uuid : the uuid of the enitity instance to retrieve
+```
+
+Query parameters
+
+```
+fetch : code of custom field to fetch (you can repeat this param)
+```
+
+If the custom field you fetch is a reference to an entity you can explicitely tell what subfield of the reference entity
+you want to fetch.
+
+For instance if your entity `user` as a field `address` and you want to retrieve with the user the `zipcode` of its `address` then use
+```
+fetch=address.zipcode
+```
+
+If you want to retrieve all the fields of the `address` then use
+```
+fetch=address.*
+```
+
+If the `country` of the `address` is also an entity that has a field `name`, then to retrieve it along with the `user` you can use
+```
+fetch=address.country.name
+```
+
+### I.2.2. By values
+
+## I.3. List entities
+
+
+### GET Request with list of field to fetch in query parameters
+```
+GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet?fetch=fieldName1&fetch=fieldName2
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+```
+
+Query parameters
+
+```
+fetch : code of custom field to fetch (you can repeat this param)
+```
+
+
+### POST Request with pagination configuration in the body
+```
+POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/list
+```
+
+Headers
+```
+Base64-Encode : boolean
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+```
+
+Query parameters
+```
+withCount : boolean
+```
+
+Body used for pagination, fields to retrieve, sorting and filtering
+```
+{
+ "firstRow":0,
+ "numberOfRows":1,
+ "fetchFields":["customFieldCode1","customFieldCode2.subField1","customFieldCode3.*"],
+ "sortField":"customFieldCode1",
+ "ordering":"ASCENDING"
+}
+```
+ordering is one of  ASCENDING,DESCENDING,UNSORTED
+
+### Response 
+body : either an array of serialized entities of type `:cet` if `withCount==false` or an  object with properties `count`, that givens the total number of entities  and `result` the list of entities
+
+## I.4. Remove an entity
+
+```
+DELETE {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence/:cet/:uuid
+```
+
+Path parameters
+```
+:repository : the code of the storage repository (i.e default)
+:cet : the code of the Custom entity template
+:uuid : the uuid of the enitity instance to delete
+```
+
+
+# II. Persistence in Scripts
+
+## II.1. Persisting an entity
 
 To persist an entity, use `CrossStorageApi#createOrUpdate` with these parameters :
 
@@ -56,9 +196,13 @@ try{
 }
 ```
 
-## 2. Find an entity
+# I.4 Remove an entity
 
-### 2.1. By UUID
+/{cetCode}/{uuid}
+
+## II.2. Find an entity
+
+### II.2.1. By UUID
 
 To retrieve an entity by its uuid, use `CrossStorageApi#find` with these parameters :
 
@@ -80,7 +224,7 @@ MyCet cei = crossStorageApi.find(defaultRepo, uuid, MyCet.class);
 System.out.println("Found MyCet instance: " + cei);
 ```
 
-### 2.2. By values
+### II.2.2. By values
 
 To retrieve an entity by its uuid, use `CrossStorageApi#find` with these parameters :
 
@@ -111,7 +255,7 @@ MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
 System.out.println("Found MyCet instance: " + cei);
 ```
 
-## 3. List entities
+## II.3. List entities
 
 To retrieve a list of entities, follow the steps above but at the end, call `CrossStorageRequest#getResults` instead.
 
@@ -127,7 +271,7 @@ List<MyCet> ceis = crossStorageApi.find(defaultRepo, MyCet.class)
 System.out.println("Found MyCet instances: " + ceis);
 ```
 
-## 4. Remove an entity
+## II.4. Remove an entity
 
 To remove an entity, either call  `CrossStorageApi#remove(Repository repository, String uuid, String cetCode)` or `CrossStorageApi#remove(Repository repository, String uuid, Class<?> cetClass)`
 
@@ -143,7 +287,7 @@ crossStorageApi.remove(defaultRepo, uuid, MyCet.class);
 System.out.println("Removed MyCet instance: " + uuid);
 ```
 
-## 5. CREATE, UPDATE, DELETE events
+## II.5. CREATE, UPDATE, DELETE events
 
 Despite it is possible to observe CREATE, UPDATE, DELETE events on custom entities instances using the meveo notifications, it is also possible to link a script to the custom entity template. This script will contain several methods (desribed below) called at the right moment during the persistence process.
 

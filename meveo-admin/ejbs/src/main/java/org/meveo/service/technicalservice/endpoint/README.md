@@ -146,7 +146,7 @@ The request of the body should be:
 
 The execution will return an UUID like “6bbb2e71-8361-4d51-887d-91c2a52d08f0” and the script will be executed. So, to retrieve the result, we need to call the endpoint /rest/6bbb2e71-8361-4d51-887d-91c2a52d08f0. If the execution is still not finished when we make the request, it will return with code 102. If we want to wait until finish and get result, we must set the header “Wait-For-Finish” to true.
 
-## How to get the POST body in Script
+## How to get the POST or PUT body in Script
 
 The POST body parameters are added into the context map parameter of the Script's execute method. In our example above, if we call the POST API with the following JSON body:
 
@@ -164,6 +164,12 @@ context.get("creationDate");
 context.get("headOffice");
 ```
 
+In case you need the original body in the Script, you can retrieve it from the `REQUEST_BODY` parameter.
+	
 ## JSONata
 
 In the field  jsonataTransformer  you can provide a JSONata expression to transform the output ofthe endpoint.
+	
+## OpenAPI definition
+	
+Go to ```GET /meveo/api/rest/endpoint/openApi/{code}```

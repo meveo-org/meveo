@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -18,8 +19,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.faces.application.FacesMessage;
@@ -62,6 +64,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
@@ -343,6 +346,16 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.entity = entity;
 
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
+		
+		// Load inherited fields as well
+		if (entity instanceof CustomEntityInstance) {
+			String cetCode = ((CustomEntityInstance) entity).getCetCode();
+			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+			for (CustomEntityTemplate e = cet.getSuperTemplate(); e != null; e = e.getSuperTemplate()) {
+				customFieldTemplates.putAll(customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()));
+			}
+		}
+		
 		log.trace("Found {} custom field templates for entity {}", customFieldTemplates.size(), entity.getClass());
 
 		customFieldTemplates = sortByValue(customFieldTemplates);
@@ -686,18 +699,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 */
 	public List<BusinessEntity> autocompleteEntityForCFV(String wildcode) {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		if (entity instanceof CustomEntityInstance) {
-			CustomEntityInstance customEntityInstance = (CustomEntityInstance) entity;
-			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(customEntityInstance.getCetCode(), classname, wildcode);
-		} else {
-			availableEntities = customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, wildcode);
-		}
-		return availableEntities;
+		return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, wildcode);
 	}
 
 	public List<BusinessEntity> allEntityForCFV() {
 		String classname = (String) UIComponent.getCurrentComponent(FacesContext.getCurrentInstance()).getAttributes().get("classname");
-		return customFieldInstanceService.findBusinessEntityForCFVByCode(null, classname, "");
+		return customFieldInstanceService.findBusinessEntityForCFVByCode(classname, "");
 	}
 
 	public List<BusinessEntity> getAvailableEntities() {
@@ -996,7 +1003,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
-			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, action.getScript().getCode(), context);
+			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, repository, action.getScript().getCode(), context);
 
 			// Display a message accordingly on what is set in result
 			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
@@ -1040,7 +1047,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			context.put(Script.CONTEXT_PARENT_ENTITY, parentEntity);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
 
-			Map<String, Object> result = scriptInstanceService.execute((IEntity) childEntity, action.getScript().getCode(), context);
+			Map<String, Object> result = scriptInstanceService.execute((IEntity) childEntity, repository, action.getScript().getCode(), context);
 
 			// Display a message accordingly on what is set in result
 			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
@@ -1839,7 +1846,13 @@ public class CustomFieldDataEntryBean implements Serializable {
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
 		for (CustomFieldTemplate cft : customFieldTemplates.values()) {
 			if (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) {
-				segmentTreeValue = (String) customFieldInstanceService.getCFValue(entity, cft.getCode());
+				var cfValue = customFieldInstanceService.getCFValue(entity, cft.getCode());
+				if(cfValue instanceof String) {
+					segmentTreeValue = (String) cfValue;
+				} else {
+					segmentTreeValue = JacksonUtil.toString(cfValue);
+				}
+				
 				if (segmentTreeValue == null) {
 					segmentTreeValue = "{}";
 				}
@@ -2137,6 +2150,34 @@ public class CustomFieldDataEntryBean implements Serializable {
 			}
 		}
 		return value;
+	}
+	
+	/**
+	 * @param cetCode code of the cet
+	 * @return the identifier field for the cet, or null if there is not
+	 */
+	public CustomFieldTemplate getIdentifierField(String cetCode) {
+		return customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+				.values()
+				.stream()
+				.filter(CustomFieldTemplate::isIdentifier)
+				.findFirst()
+				.orElse(null);
+	}
+	
+	/**
+	 * @param cetCode code of the cet
+	 * @return the first three summary fields (excluding the identifier field) for the given cet
+	 */
+	public Collection<CustomFieldTemplate> getSummaryFields(String cetCode) {
+		return customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+				.values()
+				.stream()
+				.filter(CustomFieldTemplate::isSummary)
+				.filter(Predicate.not(CustomFieldTemplate::isIdentifier))
+				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
+				.limit(3)
+				.collect(Collectors.toList());
 	}
 
 }

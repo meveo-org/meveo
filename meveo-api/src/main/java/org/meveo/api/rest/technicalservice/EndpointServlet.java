@@ -141,6 +141,7 @@ public class EndpointServlet extends HttpServlet {
 
         } else {
             String requestBody = StringUtils.readBuffer(req.getReader());
+            parameters.put("REQUEST_BODY",requestBody);
         	if (!StringUtils.isBlank(requestBody) && contentType != null) {
 		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
 		            parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});

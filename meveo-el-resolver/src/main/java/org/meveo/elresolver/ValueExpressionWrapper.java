@@ -244,7 +244,8 @@ public class ValueExpressionWrapper {
 
     protected ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
         Map<String, Object> additionalSources = getAdditionalSources(expression, userMap);
-        userMap.putAll(additionalSources);
+        if (!additionalSources.isEmpty())
+        	userMap.putAll(additionalSources);
         simpleELResolver = new SimpleELResolver(userMap);
         final VariableMapper variableMapper = new SimpleVariableMapper();
         if(functionMapper == null) {

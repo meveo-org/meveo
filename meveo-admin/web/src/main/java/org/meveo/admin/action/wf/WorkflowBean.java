@@ -45,6 +45,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
@@ -52,6 +53,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.wf.WFActionService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
@@ -92,6 +94,9 @@ public class WorkflowBean extends BaseBean<Workflow> {
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private ScriptInstanceService scriptService;
 
     private List<WFAction> wfActions = new ArrayList<>();
 
@@ -518,7 +523,7 @@ public class WorkflowBean extends BaseBean<Workflow> {
             filters.put("wfType", "org.meveo.admin.wf.types.DunningWF");
         }
         return filters;
-    }
+    }    
 
     public void resetValueForWFType() {
         if (oldCetCode != null && !entity.getCetCode().equals(oldCetCode)) {

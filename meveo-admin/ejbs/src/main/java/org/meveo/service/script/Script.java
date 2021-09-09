@@ -87,6 +87,8 @@ public abstract class Script implements ScriptInterface {
 	 * Nb of result to process when script is executed by a Job
 	 */
 	public static String JOB_RESULT_TO_PROCESS = "RESULT_TO_PROCESS";
+	
+	public static final String REPOSITORY = "REPOSITORY";
 
 	protected Object getServiceInterface(String serviceInterfaceName) {
 		return EjbUtils.getServiceInterface(serviceInterfaceName);

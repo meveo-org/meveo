@@ -1,5 +1,14 @@
 package org.meveo.api.storage;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+
 import org.meveo.api.BaseApi;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -11,13 +20,6 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.storage.BinaryStorageUtils;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -61,7 +63,12 @@ public class FileSystemApi extends BaseApi {
 			}
 
 			// Retrieve the entity
-			Map<String, Object> values = crossStorageService.find(repository, cet, uuid, Collections.singletonList(cftCode), true);
+			Map<String, Object> values = crossStorageService.find(repository, 
+					cet, 
+					uuid, 
+					Collections.singletonList(cftCode),
+					new HashMap<>(),
+					true);
 			if(values == null){
 				throw new EntityDoesNotExistsException("EntityInstance", uuid);
 			}

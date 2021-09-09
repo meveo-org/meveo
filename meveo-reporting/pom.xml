@@ -28,7 +28,7 @@
 	<repositories>
 		<repository>
 			<id>jasperreports</id>
-			<url>http://jasperreports.sourceforge.net/maven2/</url>
+			<url>https://www.mvnrepository.com</url>
 		</repository>
 	</repositories>
 
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.4.0</version>
+            <version>6.17.0</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>

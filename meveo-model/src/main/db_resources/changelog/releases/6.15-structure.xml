@@ -21,5 +21,30 @@
 			<column name="sc_tz" type="${type.longText}" defaultValue="GMT" />
 		</addColumn>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="#399 - Add script to wf action">
+		<addColumn tableName="wf_action">
+			<column name="action_script" type="bigint">
+				<constraints foreignKeyName="fk_action_script" referencedTableName="meveo_script_instance" referencedColumnNames="id"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="#399 - Add script params">
+		<addColumn tableName="wf_action">
+			<column name="script_parameters" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet author="Edward Legaspi" id="Convert to buss entity">
+		<addColumn tableName="remote_repository">
+			<column name="description" type="varchar(100)" />
+		</addColumn>
+		<addColumn tableName="remote_repository">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

@@ -66,14 +66,15 @@ services:
       - meveo
     volumes:
       - ..:/home/meveo
-      - meveo_data:/opt/jboss/wildfly/meveodata
+      - ~/meveodata:/opt/jboss/wildfly/meveodata
+      - ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data:/tmp/meveo/binary/storage
     environment:
       WILDFLY_DEBUG_ENABLE: "true"
       WILDFLY_DEBUG_PORT: 8787
       WILDFLY_CUSTOM_XMMS: "1024m"
       WILDFLY_CUSTOM_XMMX: "2048m"
-      JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
+      #JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
     ports:
       - 8080:8080
       - 8787:8787

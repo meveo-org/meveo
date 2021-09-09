@@ -24,40 +24,55 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.ws.rs.Encoded;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.primefaces.model.SortOrder;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+
 /**
+ * @author Clément Bareth
  * @author Andrius
  * @author Edward P. Legaspi(edward.legaspi@manaty.net)
  */
 public class PaginationConfiguration implements Serializable {
 
     private static final long serialVersionUID = -2750287256630146681L;
-
+    
+    @QueryParam("firstRow")
     private Integer firstRow;
 
+    @QueryParam("numberOfRows")
     private Integer numberOfRows;
 
+    @QueryParam("randomize")
     private boolean randomize;
 
-    /**
-     * Full text search filter. Mutually exclusive with filters attribute. fullTextFilter has priority
-     */
+    /** Full text search filter. Mutually exclusive with filters attribute. fullTextFilter has priority */
+    @QueryParam("fullTextFilter")
     private String fullTextFilter;
 
     /** Search filters (key = field name, value = search pattern or value). */
     private Map<String, Object> filters;
-
+    
     private Map<String, String> sortOrdering;
 
     /**
      * Fields that needs to be fetched when selecting (like lists or other entities).
      */
+    @QueryParam("fetch")
     private List<String> fetchFields;
 
+    @QueryParam("sortBy")
     private String sortField;
 
+    @QueryParam("sortOrder")
     private SortOrder ordering;
 
     private String graphQlQuery;
@@ -65,12 +80,14 @@ public class PaginationConfiguration implements Serializable {
     /**
      * Super type of the data to query
      */
+    @QueryParam("superType")
     private String superType;
     
     /**
      * Fields that belongs to the super type
      */
-    private Collection<String> superTypeFields;
+    @QueryParam("superTypeFields")
+    private Set<String> superTypeFields;
     
     /**
      *
@@ -104,6 +121,7 @@ public class PaginationConfiguration implements Serializable {
      */
     public PaginationConfiguration(Integer firstRow, Integer numberOfRows, Map<String, Object> filters, String fullTextFilter, List<String> fetchFields, String sortField,
                                    SortOrder sortOrder) {
+    	
         this(firstRow, numberOfRows, filters, fullTextFilter, fetchFields, sortField, sortOrder, null);
     }
 
@@ -304,8 +322,14 @@ public class PaginationConfiguration implements Serializable {
 	/**
 	 * @param superTypeFields the superTypeFields to set
 	 */
-	public void setSuperTypeFields(Collection<String> superTypeFields) {
+	public void setSuperTypeFields(Set<String> superTypeFields) {
 		this.superTypeFields = superTypeFields;
 	}
 	
+	@QueryParam("filters")
+	public void setFilters(String serializedFilters) {
+		if(serializedFilters != null) {
+			this.filters = JacksonUtil.fromString(serializedFilters, GenericTypeReferences.MAP_STRING_OBJECT);
+		}
+	}
 }

@@ -1,16 +1,23 @@
 package org.meveo.elresolver;
 
-
-import javax.el.FunctionMapper;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import javax.el.FunctionMapper;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class MeveoDefaultFunctionMapper extends FunctionMapper {
 
     private Map<String, Method> functionMap = new HashMap<>();
+    
+    private static final Pattern PATTERN_STRIP_ACCENTS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+
 
     public MeveoDefaultFunctionMapper(){
 
@@ -18,6 +25,8 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
             addFunction("string","contains", getClass().getMethod("contains", String.class, String.class));
             addFunction("string","startsWith", getClass().getMethod("startsWith", String.class, String.class));
             addFunction("string","endsWith", getClass().getMethod("endsWith", String.class, String.class));
+            addFunction("string","normalizeCA", getClass().getMethod("normalizeCA", String.class));
+                       
 
             addFunction("array", "first", getClass().getMethod("getFirstItem", Collection.class));
             addFunction("array", "contains", getClass().getMethod("contains", Collection.class, Object.class));
@@ -95,5 +104,19 @@ public class MeveoDefaultFunctionMapper extends FunctionMapper {
         return collection.contains(object);
     }
 
+    /**
+     * normalize Case And Accents of an input string 
+     *  
+     * @param input : text to normalize
+     * @return replace accent characters by equivalent without accents change to lowerCase
+     */
+    public static String normalizeCA(String input) {
+    	if (StringUtils.isEmpty(input)) {
+            return input;
+        }
+    	input = Normalizer.normalize(input, Normalizer.Form.NFD);
+    	input = PATTERN_STRIP_ACCENTS.matcher(input).replaceAll(StringUtils.EMPTY);
+    	return input.toLowerCase();
+    }
 
 }

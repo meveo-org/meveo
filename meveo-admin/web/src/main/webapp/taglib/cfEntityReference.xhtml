@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:hftl="http://hftl.org">
+
+<ui:composition>
+	<c:if test="#{true}">
+	    <h:outputText value="#{cfValue.entityReferenceValueForGUI.code}" 
+	        	styleClass="cfValue-value" rendered="#{!edit or disabled}" />
+	        	
+	        <p:autoComplete id="#{id}" value="#{value}"
+	        	required="#{cft.valueRequired and !hasInheritedValue}" 
+	        	size="30" maxlength="60" dropdown="true" label="#{cft.description}" 
+	        	placeholder="#{cft.description}"
+	            converter="entityReferenceValueConverter" 
+	            completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" 
+	            var="e"
+	            itemLabel="#{e.code}"
+	            itemValue="#{e}" rendered="#{edit and !disabled}">
+	            
+	            <f:attribute name="classname" value="#{cft.entityClazz}" />
+	            
+	            <c:set var="identifier" value="#{customFieldDataEntryBean.getIdentifierField(cft.entityClazzCetCode)}"/>
+	            <c:if test="#{identifier == null}">
+	                <p:column width="50" headerText="UUID">
+		                <h:outputText value="#{not empty e.code ?  e.code : e.uuid}"/>
+		            </p:column>
+	            </c:if>
+	            
+	            <c:if test="#{identifier != null}">
+	            	<p:column width="50" headerText="#{empty identifier.description ? identifier.code : identifier.description}">
+		                <h:outputText value="#{e.get(identifier.code)}"/>
+		            </p:column>
+	            </c:if>
+	            
+	            <c:forEach var="summaryField" items="#{customFieldDataEntryBean.getSummaryFields(cft.entityClazzCetCode)}">
+	            	<p:column width="50" headerText="#{empty summaryField.description ? summaryField.code : summaryField.description}">
+	                	<h:outputText value="#{e.get(summaryField.code)}"/>
+	            	</p:column>
+	            </c:forEach>
+	            
+	        </p:autoComplete>
+	        <c:if test="#{!cft.valueRequired}">
+	        	<c:if test="#{cfValue != null}" >
+		            <p:commandButton icon="ui-icon-trash" 
+		            				 update="#{id}"
+		                             action="#{cfValue.resetEntityReferenceValueForGUI()}">
+	                </p:commandButton>
+                </c:if>
+	        </c:if>
+        </c:if>
+</ui:composition>
+
+</html>

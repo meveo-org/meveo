@@ -53,6 +53,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
+import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptIO;
 import org.meveo.model.scripts.ScriptInstance;
@@ -60,6 +61,7 @@ import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptInstanceNode;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
+import org.meveo.model.wf.WFAction;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
@@ -717,4 +719,17 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		mavenDependency = new MavenDependency();
 		mavenDependencies.add(mavenDependency);
 	}
+	
+    public List<FunctionIO> getScriptInputs(ScriptInstance script) {
+    	if(script == null) {
+    		return List.of();
+    	}
+    	
+    	try {
+			return scriptInstanceService.getInputs(script);
+		} catch (BusinessException e) {
+			log.error("Failed to get inputs of script {}", script);
+			return List.of();
+		}
+    }
 }

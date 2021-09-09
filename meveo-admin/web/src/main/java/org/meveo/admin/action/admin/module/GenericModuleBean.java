@@ -509,7 +509,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     @ActionMethod
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
-        MeveoModule moduleDuplicate = meveoModuleService.findByCode(entity.getCode());
+        MeveoModule moduleDuplicate = meveoModuleService.findByCodeWithFetchEntities(entity.getCode());
         if (moduleDuplicate != null && !moduleDuplicate.getId().equals(entity.getId())) {
             messages.error(new BundleKey("messages", "commons.uniqueField.code"), entity.getCode());
             return null;

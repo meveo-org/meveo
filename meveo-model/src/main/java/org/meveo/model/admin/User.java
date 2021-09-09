@@ -54,6 +54,7 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.EnableEntity;
@@ -92,6 +93,7 @@ public class User extends EnableEntity implements ICustomFieldEntity {
 
     @Column(name = "username", length = 50, unique = true)
     @Size(max = 50)
+    @NaturalId
     private String userName;
 
     @Column(name = "email", length = 100)

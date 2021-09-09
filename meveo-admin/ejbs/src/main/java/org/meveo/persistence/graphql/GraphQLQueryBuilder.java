@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * 
  * @author clement.bareth
  * @since 6.11.0
- * @version 6.11.0
+ * @version 6.15.0
  */
 public class GraphQLQueryBuilder {
 	
@@ -21,6 +21,8 @@ public class GraphQLQueryBuilder {
 	private final Map<String, Object> filters = new HashMap<>();
 	private final List<String> fields = new ArrayList<>();
 	private final Map<String, GraphQLQueryBuilder> subQueries = new HashMap<>();
+	private Integer limit;
+	private Integer offset;
 	private GraphQLQueryBuilder parent;
 	
 	public static GraphQLQueryBuilder create(String type) {
@@ -36,6 +38,8 @@ public class GraphQLQueryBuilder {
 		return this;
 	}
 	
+	//TODO: Implement "like" operator where value starts and ends with *
+	
 	public GraphQLQueryBuilder field(String name) {
 		fields.add(name);
 		return this;
@@ -44,6 +48,16 @@ public class GraphQLQueryBuilder {
 	public GraphQLQueryBuilder field(String name, GraphQLQueryBuilder value) {
 		subQueries.put(name, value);
 		value.parent = this;
+		return this;
+	}
+	
+	public GraphQLQueryBuilder limit(int limit) {
+		this.limit = limit;
+		return this;
+	}
+	
+	public GraphQLQueryBuilder offset(int offset) {
+		this.offset = offset;
 		return this;
 	}
 	
@@ -57,15 +71,29 @@ public class GraphQLQueryBuilder {
 			tabsMinus.append("\t");
 		}
 		
-		String filtersStr = filters.isEmpty() ? "" : filters.entrySet()
-				.stream()
-				.map(e -> { 
-					if(e.getValue() instanceof String) {
-						return e.getKey() + ":\"" + e.getValue() + "\"";
-					} else {
-						return e.getKey() + ":" + e.getValue();
-					}
-				}).collect(Collectors.joining(",", "(", ")"));
+		String filtersStr;
+		if(filters.isEmpty() && limit == null && offset == null) {
+			filtersStr = "";
+		} else {
+		
+			String prefixFilter = "(";
+			if(limit != null) {
+				prefixFilter += "first: " + limit + ", ";
+			}
+			if(offset != null) {
+				prefixFilter += "offset: " + offset + ", ";
+			}		
+			
+			filtersStr = filters.isEmpty() ? prefixFilter + ")" : filters.entrySet()
+					.stream()
+					.map(e -> { 
+						if(e.getValue() instanceof String) {
+							return e.getKey() + ":\"" + e.getValue() + "\"";
+						} else {
+							return e.getKey() + ":" + e.getValue();
+						}
+					}).collect(Collectors.joining(",", prefixFilter, ")"));
+		}
 		
 		List<String> fieldsList = new ArrayList<>(fields);
 		fieldsList.addAll(

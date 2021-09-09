@@ -202,10 +202,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
         try {
-        	var field = findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
+        	String calculatedAppliesToValue = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
+        	CustomFieldTemplate field = null;
+			if (calculatedAppliesToValue!=null)
+				field = findByCodeAndAppliesTo(code, calculatedAppliesToValue);
+			else
+				log.error("Can not calculate applicable AppliesToValue for entity of {} class.", entity.getClass().getSimpleName());
             if(field == null && entity instanceof CustomEntityInstance) {
             	var cet = ((CustomEntityInstance) entity).getCet();
-            	if(cet.getSuperTemplate() != null) {
+            	if(cet.getSuperTemplate() != null && cet.getSuperTemplate().getAppliesTo() != null) {
             		return findByCodeAndAppliesTo(code, cet.getSuperTemplate().getAppliesTo());
             	}
             }

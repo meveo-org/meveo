@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -32,13 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -178,6 +177,10 @@ public class PersistenceRs {
 		if (customEntityTemplate == null) {
 			throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
 		}
+		
+		if (!currentUser.hasRole(customEntityTemplate.getReadPermission())) {
+			throw new ForbiddenException();
+		}
 
 		if (paginationConfiguration == null) {
 			paginationConfiguration = new PaginationConfiguration();
@@ -238,23 +241,26 @@ public class PersistenceRs {
 
 		return Response.noContent().build();
 	}
+	
+	@GET
+	@Path("/{cetCode}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Search through entity")
+	public Response get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, 
+			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
+		
+		return list(base64Encode, cetCode, false, paginationConfiguration);
+	}
 
-	/**
-	 * @param base64Encode
-	 * @param cetCode
-	 * @param uuid
-	 * @param seeDecrypted
-	 * @return
-	 * @throws EntityDoesNotExistsException
-	 * @throws IOException
-	 */
 	@GET
 	@Path("/{cetCode}/{uuid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get persistence")
-	public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+	@ApiOperation(value = "Search entity by uuid")
+	public Map<String, Object> getByUuid(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid,
-			@HeaderParam("See-Decrypted") boolean seeDecrypted) throws EntityDoesNotExistsException, IOException {
+			@HeaderParam("See-Decrypted") boolean seeDecrypted, 
+			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 
@@ -269,8 +275,16 @@ public class PersistenceRs {
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		
 		hasAccessToRepository(repository);
+		
+		Set<String> fields = new HashSet<>(paginationConfiguration.getFetchFields());
+		Map<String, Set<String>> subFields = crossStorageService.extractSubFields(fields);
 
-		Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
+		Map<String, Object> values = crossStorageService.find(repository, 
+				customEntityTemplate, 
+				uuid,
+				fields,
+				subFields,
+				true);
 
 		if (values.size() == 1 && values.containsKey("uuid")) {
 			throw new NotFoundException(cetCode + " with uuid " + uuid + " does not exists");

@@ -1,3 +1,22 @@
+#################################################################
+#####                Build meveo source code                #####
+#################################################################
+FROM maven:3.6-jdk-11-slim AS build-meveo
+ 
+ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git" 
+
+WORKDIR /usr/src/meveo
+
+VOLUME /root/.m2
+
+COPY . .
+
+RUN mvn clean package -Dscm.url=${SCM} -DskipTests
+
+##################################################################
+#####                Build meveo docker image                #####
+##################################################################
+
 #FROM jboss/wildfly:18.0.1.Final
 FROM openjdk:11.0.7-jdk-slim-buster
 
@@ -107,11 +126,30 @@ WORKDIR ${JBOSS_HOME}
 
 ARG POSTGRESQL_VERSION=42.2.5
 
-COPY --chown=jboss:jboss configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+COPY --chown=jboss:jboss docker/configs/postgresql/module.xml ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
 
 RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION}.jar \
     && mv postgresql-${POSTGRESQL_VERSION}.jar ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/ \
     && sed -i "s|\[POSTGRESQL\_VERSION\]|${POSTGRESQL_VERSION}|g" ${JBOSS_HOME}/modules/system/layers/base/org/postgresql/main/module.xml
+
+
+
+### ------------------------- Wildfly-Exporter module ----------------------------- ###
+
+ARG WILDFLY_EXPORTER_MODULE=wildfly_exporter_module-0.0.5.jar
+ARG WILDFLY_EXPORTER_SERVLET=wildfly_exporter_servlet-0.0.5.war
+
+# Add a module jar file to wildfly
+# https://github.com/nlighten/wildfly_exporter#add-exporter-module-jars-to-wildfly
+COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_MODULE} ${JBOSS_HOME}/modules/${WILDFLY_EXPORTER_MODULE}
+RUN cd ${JBOSS_HOME}/modules \
+    && jar -xvf ${WILDFLY_EXPORTER_MODULE} \
+    && rm -rf META-INF \
+    && rm -f ${WILDFLY_EXPORTER_MODULE}
+
+# Add a deployment war file for the metrics servlet
+# https://github.com/nlighten/wildfly_exporter#deploy-exporter-servlet
+COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_SERVLET} ${JBOSS_HOME}/standalone/deployments/metrics.war
 
 
 
@@ -125,16 +163,16 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
     && cp ${JBOSS_HOME}/standalone/configuration/standalone-full.xml ${JBOSS_HOME}/standalone/configuration/standalone-full.xml.org
 
 ### cli commands
-COPY --chown=jboss:jboss configs/cli ${JBOSS_HOME}/cli
+COPY --chown=jboss:jboss docker/configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss configs/props ${JBOSS_HOME}/props
+COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
-COPY --chown=jboss:jboss configs/db_resources /opt/jboss/liquibase/db_resources
+COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-model/src/main/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
-COPY --chown=jboss:jboss meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
+COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
@@ -142,7 +180,7 @@ ENV LAUNCH_JBOSS_IN_BACKGROUND true
 # Expose the ports we're interested in
 EXPOSE 8080 8787 9990
 
-COPY --chown=jboss:jboss docker-entrypoint.sh /
+COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]

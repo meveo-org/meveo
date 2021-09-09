@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,8 @@ public class CustomizedEntityService implements Serializable {
 
     private static final long serialVersionUID = 4108034108745598588L;
     
-    private static Set<Class<? extends ICustomFieldEntity>> cfClasses;
+    private static Set<Class<? extends ICustomFieldEntity>> cfClasses = Collections.synchronizedSet(new HashSet<>());
+    private static Set<String> scannedPackages = Collections.synchronizedSet(new HashSet<>());
 
     @Inject
     private JobInstanceService jobInstanceService;
@@ -399,12 +401,17 @@ public class CustomizedEntityService implements Serializable {
         
         return null;
     }
+    
+    public void scanPackageForCfClasses(String packageStr) {
+    	if(!scannedPackages.contains(packageStr)) {
+	    	// Find standard entities that implement ICustomFieldEntity interface except JobInstance
+	        Reflections reflections = new Reflections(packageStr);
+	    	cfClasses.addAll(reflections.getSubTypesOf(ICustomFieldEntity.class));
+	    	scannedPackages.add(packageStr);
+    	}
+    }
 
 	private void initCfClasses() {
-		if(cfClasses == null) {
-            // Find standard entities that implement ICustomFieldEntity interface except JobInstance
-            Reflections reflections = new Reflections("org.meveo.model");
-        	cfClasses = reflections.getSubTypesOf(ICustomFieldEntity.class);
-        }
+		scanPackageForCfClasses("org.meveo.model");
 	}
 }

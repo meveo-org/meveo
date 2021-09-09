@@ -69,8 +69,10 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 				for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
 					List<CustomFieldTemplate> list = new ArrayList<>();
 					if (groupedCustomField != null) {
-						CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
-						list.add(cft);
+						if(groupedCustomField.getData() instanceof CustomFieldTemplate) {
+							CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
+							list.add(cft);
+						}
 					}
 					i++;
 					customFieldTemplateList.addAll(list);

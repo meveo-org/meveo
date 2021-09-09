@@ -201,6 +201,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     private void setSuperTemplate(CustomEntityTemplateDto dto, CustomEntityTemplate cet) {
         if(dto.getSuperTemplate() != null){
             CustomEntityTemplate superTemplate = customEntityTemplateService.findByCode(dto.getSuperTemplate());
+            if(superTemplate == null) {
+            	throw new IllegalArgumentException("Can't set super template : cet with code " + dto.getSuperTemplate() + " does not exists");
+            }
             cet.setSuperTemplate(superTemplate);
         }
     }
@@ -516,7 +519,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		String entityClazz = cft.getEntityClazz();
 		if (!StringUtils.isBlank(entityClazz)) {
 			List<BusinessEntity> businessEntities = customFieldInstanceService
-					.findBusinessEntityForCFVByCode(null, entityClazz, wildcode);
+					.findBusinessEntityForCFVByCode(entityClazz, wildcode);
 			if (businessEntities != null) {
 				for (BusinessEntity be : businessEntities) {
 					result.add(new BusinessEntityDto(be));

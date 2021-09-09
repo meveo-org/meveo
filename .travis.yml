@@ -36,7 +36,7 @@ before_install:
 
   - |
     if [ "${TRAVIS_BRANCH}" == "master" ]; then
-      export DOCKER_IMAGE_TAG="dev-latest"
+      export DOCKER_IMAGE_TAG="latest"
     else
       export DOCKER_IMAGE_TAG="${TRAVIS_BRANCH//[ \/]/-}"
     fi
@@ -70,7 +70,7 @@ before_script:
 
   # Pull the necessary docker images in advance
   - docker pull openjdk:11.0.7-jdk-slim-buster
-  - if docker pull manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
+  - if docker pull manaty/meveo-dev:${DOCKER_IMAGE_TAG} > /dev/null; then echo "meveo pulled up"; fi
 
 
 script:
@@ -85,16 +85,16 @@ script:
 
   # Build a meveo image
   - docker build
-    --cache-from manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
-    --tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+    --cache-from manaty/meveo-dev:${DOCKER_IMAGE_TAG}
+    --tag manaty/meveo-dev:${DOCKER_IMAGE_TAG}
     --build-arg BUILDKIT_INLINE_CACHE=1
     -f docker/Dockerfile ./docker
 
 
 after_success:
-  - docker push manaty/wildfly-meveo:${DOCKER_IMAGE_TAG}
+  - docker push manaty/meveo-dev:${DOCKER_IMAGE_TAG}
   - |
     if [ ! -z "${TRAVIS_TAG}" ]; then
-      docker tag manaty/wildfly-meveo:${DOCKER_IMAGE_TAG} manaty/wildfly-meveo:${TRAVIS_TAG}
-      docker push manaty/wildfly-meveo:${TRAVIS_TAG}
+      docker tag manaty/meveo-dev:${DOCKER_IMAGE_TAG} manaty/meveo-dev:${TRAVIS_TAG}
+      docker push manaty/meveo-dev:${TRAVIS_TAG}
     fi
