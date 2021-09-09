@@ -152,13 +152,25 @@ public class CustomFieldInstanceService extends BaseService {
             		}
             	}
     			
+    			CustomEntityInstance cei = null;
+    			
     			if(filterFieldOpt.isPresent()) {
-    				return crossStorageApi.find(repository, cetCode)
+    				cei = crossStorageApi.find(repository, cetCode)
     	                	.by(filterFieldOpt.get(), value)
     	                	.getResult();
-    			} else {
-    				return crossStorageApi.find(repository, value, cetCode);
     			}
+    			
+    			if(cei == null) {
+    				cei = crossStorageApi.find(repository, value, cetCode);
+    			}
+    			
+    			if(filterFieldOpt.isPresent()) {
+    				cei.setCode(cei.get(filterFieldOpt.get()));
+    			} else {
+    				cei.setCode(cei.getUuid());
+    			}
+    			
+    			return cei;
             	
 			} catch (EntityDoesNotExistsException e) {
 				log.error("Can't find {}/{}", cetCode, value);

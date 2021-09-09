@@ -477,6 +477,11 @@ public class CEIUtils {
 	public static CustomEntityInstance fromMap(Map<String, Object> map, CustomEntityTemplate cet) {
 		var cei = pojoToCei(map);
 		cei.setCet(cet);
+		
+		if(cet != null && cet.getSqlStorageConfiguration() != null && !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			cei.setCode((String) map.get("code"));
+		}
+		
 		return cei;
 	}
 
