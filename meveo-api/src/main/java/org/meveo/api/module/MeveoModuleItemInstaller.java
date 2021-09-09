@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -211,7 +212,9 @@ public class MeveoModuleItemInstaller {
             
             if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
                 var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
-                crossStorageService.remove(currentRepository, cet, item.getItemCode());
+                if(cet != null) {
+                	crossStorageService.remove(currentRepository, cet, item.getItemCode());
+                }
             	continue;
 			}
             
