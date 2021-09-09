@@ -911,18 +911,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
         String sourcePath = "";
-        T script = this.findByCode(fullClassName);
-        if (script != null) {
-	        MeveoModule module = findModuleOf(script);
-	        if (module != null) {
-		        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, module.getCode()).getAbsolutePath() + "/" + module.getCode() + "/facets/java");
-	        	List<MeveoModule> meveoModuleInstalled = this.meveoModuleService.listInstalled();
-	        	for (MeveoModule moduleInstalled : meveoModuleInstalled) {	        		
-				        sourcePath += sourcePath.concat(";");
-				        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, moduleInstalled.getCode()).getAbsolutePath() + "/" + moduleInstalled.getCode() + "/facets/java");	        	
-	        	}
-	        }
-        }
+        
+        File baseDir = new File(GitHelper.getGitDirectory(null));
+        
+        for (File moduleDir : baseDir.listFiles()) {
+        	File javaSrcDir = new File(moduleDir, "/facets/java");
+        	if(javaSrcDir.exists()) {
+        		sourcePath += javaSrcDir.getAbsolutePath() + ";";
+        	}
+    	}
+        
         return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
     
