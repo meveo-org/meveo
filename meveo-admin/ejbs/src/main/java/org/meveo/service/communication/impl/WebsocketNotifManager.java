@@ -25,9 +25,9 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.notification.WebNotificationService;
 import org.slf4j.Logger;
 
-@ServerEndpoint("/websocket/{notif-name}")
+@ServerEndpoint("/wsnotif/{notif-name}")
 @Singleton
-public class WebsocketManager {
+public class WebsocketNotifManager {
 	
 	@Inject
 	private Logger log;
