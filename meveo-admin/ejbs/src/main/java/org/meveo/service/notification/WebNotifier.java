@@ -16,7 +16,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.communication.impl.SseManager;
-import org.meveo.service.communication.impl.WebsocketManager;
+import org.meveo.service.communication.impl.WebsocketNotifManager;
 import org.slf4j.Logger;
 
 @Stateless
@@ -29,7 +29,7 @@ class WebNotifier {
 	private SseManager sseManager;
 
 	@Inject
-	private WebsocketManager websocketManager;
+	private WebsocketNotifManager websocketManager;
 	
 	@Inject
 	private NotificationHistoryService notificationHistoryService;
