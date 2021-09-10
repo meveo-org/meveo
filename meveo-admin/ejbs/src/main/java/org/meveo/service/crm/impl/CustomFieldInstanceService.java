@@ -137,7 +137,41 @@ public class CustomFieldInstanceService extends BaseService {
         			log.warn("Repository should not be null at this point !");
         			return null;
         		}
-				return crossStorageApi.find(repository, value, cetCode);
+        		
+            	Optional<String> filterFieldOpt = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cetCode))
+            			.values()
+            			.stream()
+            			.filter(CustomFieldTemplate::isIdentifier)
+            			.findFirst()
+            			.map(CustomFieldTemplate::getCode);
+            	
+    			if (filterFieldOpt.isEmpty()) {
+            		cet = customEntityTemplateService.findByCode(cetCode);
+            		if (cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            			filterFieldOpt = Optional.of("code");
+            		}
+            	}
+    			
+    			CustomEntityInstance cei = null;
+    			
+    			if(filterFieldOpt.isPresent()) {
+    				cei = crossStorageApi.find(repository, cetCode)
+    	                	.by(filterFieldOpt.get(), value)
+    	                	.getResult();
+    			}
+    			
+    			if(cei == null) {
+    				cei = crossStorageApi.find(repository, value, cetCode);
+    			}
+    			
+    			if(filterFieldOpt.isPresent()) {
+    				cei.setCode(cei.get(filterFieldOpt.get()));
+    			} else {
+    				cei.setCode(cei.getUuid());
+    			}
+    			
+    			return cei;
+            	
 			} catch (EntityDoesNotExistsException e) {
 				log.error("Can't find {}/{}", cetCode, value);
 				return null;

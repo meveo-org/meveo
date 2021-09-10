@@ -151,6 +151,10 @@ public class CrossStorageService implements CustomPersistenceService {
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, boolean withReferences) throws EntityDoesNotExistsException {
 		return find(repository, cet, uuid, null, new HashMap<>(), true);
 	}
+	
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+		return find(repository, cet, uuid, fetchFields, new HashMap<>(), withEntityReferences);
+	}
 
 	/**
 	 * Retrieves one entity instance
@@ -505,10 +509,10 @@ public class CrossStorageService implements CustomPersistenceService {
 		builder.field("meveo_uuid");
 		if(filters != null) {
 			filters.forEach((key, value) -> {
-				if (!key.equals("uuid")) {
-					builder.filter(key, value);
-				} else {
-					if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+				if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+					if (!key.equals("uuid")) {
+						builder.filter(key, value);
+					} else {
 						builder.filter("meveo_uuid", value);
 					}
 				}
