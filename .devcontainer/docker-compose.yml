@@ -56,6 +56,8 @@ services:
       KEYCLOAK_PASSWORD: admin
     ports:
       - 8081:8080
+    depends_on:
+      - postgres
   meveo:
     image: manaty/meveo-dev
     #build: 
@@ -67,7 +69,7 @@ services:
     volumes:
       - ..:/home/meveo
       - ~/meveodata:/opt/jboss/wildfly/meveodata
-      - ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
+      #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data:/tmp/meveo/binary/storage
     environment:
       WILDFLY_DEBUG_ENABLE: "true"
