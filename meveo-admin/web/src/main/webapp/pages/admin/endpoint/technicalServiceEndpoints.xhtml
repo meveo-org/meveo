@@ -17,8 +17,8 @@
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
-				<p:menuitem outcome="endpoint"
-					value="#{messages['menu.endpoint']}" />
+				<p:menuitem value="#{messages['menu.endpoint']}" disabled="true" />
+				<p:menuitem outcome="endpoint" value="#{messages['menu.endpoint.rest']}" />
 			</p:breadCrumb>
 		</h:form>
 
