@@ -74,7 +74,6 @@ public class WSEndpoint extends BusinessEntity {
 	@JoinColumn(name = "service_id", updatable = false, nullable = false)
 	private Function service;
 
-
 	public void setCode(String code){
 		Matcher matcher = basePathPattern.matcher(code);
 		if(matcher.matches()) {

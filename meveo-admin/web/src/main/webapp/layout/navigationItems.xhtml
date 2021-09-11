@@ -136,8 +136,11 @@
 		<p:menuitem id="functionCategories" outcome="functionCategories" value="Function categories"/>
 		<p:menuitem id="scriptInstances" outcome="scriptInstances"
 			value="#{messages['menu.functions']}" />
-		<p:menuitem id="endpoint" value="#{messages['menu.endpoint']}"
-			outcome="endpoint" />
+		<p:submenu id="endpoint" label="#{messages['menu.endpoint']}">
+			<p:menuitem id="restEndpoint" value="#{messages['menu.endpoint.rest']}" outcome="endpoint" />
+			<p:menuitem id="webSocketEndpoint" value="#{messages['menu.endpoint.webSocket']}"
+						outcome="webSocketEndpoints" />
+		</p:submenu>
 		<p:submenu id="jobSubMenu" label="#{messages['menu.jobs']}">
 			<p:menuitem id="jobs" outcome="jobInstances"
 				value="#{messages['menu.jobInstances']}" />

@@ -1,4 +1,4 @@
-package org.meveo.admin.action.admin.custom;
+package org.meveo.admin.action.admin.endpoint;
 
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Named;
