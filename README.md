@@ -43,8 +43,9 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ### Services
 
-- [Function](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
-- [Endpoint](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+- [Functions](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
+- [Rest Endpoints](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+- [Websocket Endpoints](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/wsendpoint)
 - [Lifecycle Workflows](./meveo-admin/ejbs/src/main/java/org/meveo/service/wf)
 - [Notification](./meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
