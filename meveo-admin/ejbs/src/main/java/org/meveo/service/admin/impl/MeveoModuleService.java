@@ -57,6 +57,7 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
@@ -75,6 +76,7 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModulePostInstall;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -856,18 +858,21 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	} else {
     		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
     	}
-    	MeveoModule thinModule;
-		try {
-			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(meveoModule);
-			thinModule.setCode("meveoModule");
-			thinModule.setModuleItems(null);
-			BusinessService bes = businessServiceFinder.find(meveoModule);
-			bes.addFilesToModule(thinModule, meveoModule);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     }
+    
+	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
+    	MeveoModule thinModule;
+    	
+		try {
+			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
+			thinModule.setCode("module");
+			thinModule.setModuleItems(null);
+			
+			addFilesToModule(thinModule, module);
+		} catch (Exception e) {
+			throw new BusinessException(e);
+		}
+	}
     
     /**
      * Remove the GitRepository corresponding to the meveo module deleted

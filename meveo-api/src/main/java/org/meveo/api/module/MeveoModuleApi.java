@@ -288,7 +288,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				try  {
 					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
 					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-					MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto("org.meveo.api.dto.CustomEntityInstanceDto", data);
+					MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(),  data);
 					moduleDto.getModuleItems().add(moduleItemDto);
 				} catch (IOException e) {
 					log.error(e.getMessage(), e);

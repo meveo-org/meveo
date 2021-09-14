@@ -910,7 +910,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        String sourcePath = "";
+        String sourcePath = getSourcePath();
+        
+        return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+    }
+
+	/**
+	 * @return
+	 */
+	private String getSourcePath() {
+		String sourcePath = "";
         
         File baseDir = new File(GitHelper.getGitDirectory(null));
         
@@ -920,9 +929,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         		sourcePath += javaSrcDir.getAbsolutePath() + ";";
         	}
     	}
-        
-        return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
-    }
+		return sourcePath;
+	}
     
 
     public Class<CustomEntity> loadCustomEntityClass(String cetCode, boolean isTestCompile, Optional<String> module) throws CharSequenceCompilerException {
@@ -933,22 +941,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	        String classPath = CLASSPATH_REFERENCE.get();
 	        CharSequenceCompiler<CustomEntity> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
 	        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-	        String sourcePath ="";
 	        File sourceFile = new File(
 	        		customEntityTemplateCompiler.getJavaCetDir(customEntityTemplateService.findByCode(cetCode)), 
-	        		cetCode+".java");
-	        if (module.isPresent()) {
-		        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, module.get()).getAbsolutePath() + "/" + module.get() + "/facets/java");
-	        }
-        	List<MeveoModule> meveoModuleInstalled = this.meveoModuleService.listInstalled();
-        	for (MeveoModule moduleInstalled : meveoModuleInstalled) {	        		
-			        sourcePath += sourcePath.concat(";");
-			        sourcePath += sourcePath.concat(GitHelper.getRepositoryDir(null, moduleInstalled.getCode()).getAbsolutePath() + "/" + moduleInstalled.getCode() + "/facets/java");	        	
-        	}
+	        		cetCode + ".java");
+	        
 	
 	        try {
 				String sourceContent = org.apache.commons.io.FileUtils.readFileToString(sourceFile, StandardCharsets.UTF_8);
-				return compiler.compile(sourcePath, fullClassName, sourceContent, errs, isTestCompile, CustomEntity.class);
+				return compiler.compile(getSourcePath(), fullClassName, sourceContent, errs, isTestCompile, CustomEntity.class);
 			} catch (IOException e1) {
 				throw new CharSequenceCompilerException(e.getMessage(), null, e, errs);
 			}

@@ -1,14 +1,11 @@
 package org.meveo.api.module;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -60,14 +57,12 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
@@ -75,7 +70,6 @@ import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
-import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
@@ -144,12 +138,6 @@ public class MeveoModuleItemInstaller {
 	@Inject
 	private Repository currentRepository;
 	
-	@Inject
-	private CrossStorageApi crossStorageApi;
-	
-	@Inject
-	private RepositoryService repositoryService;
-    
     /**
      * Uninstall the module and disables it items
      * 
@@ -450,10 +438,6 @@ public class MeveoModuleItemInstaller {
 	@Transactional(TxType.MANDATORY)
 	public ModuleInstallResult unpackAndInstallModuleItem(MeveoModule meveoModule, MeveoModuleItemDto moduleItemDto, OnDuplicate onDuplicate) throws IllegalArgumentException, MeveoApiException, Exception, BusinessException {
 		ModuleInstallResult result = new ModuleInstallResult();
-		File repoDir = GitHelper.getRepositoryDir(null, meveoModule.getCode());
-		String path = "/customEntityInstances/";
-		repoDir = new File(repoDir, path);
-		File ceiFile = null;
 
 		Class<? extends BaseEntityDto> dtoClass;
 
@@ -466,13 +450,6 @@ public class MeveoModuleItemInstaller {
 
 			CustomEntityTemplate customEntityTemplate = null;
 			if (dto instanceof CustomEntityInstanceDto) {
-				for (File file : repoDir.listFiles()) {
-					if (!file.isDirectory()) {
-						continue;
-					}
-					((CustomEntityInstanceDto) dto).setCetCode(file.getName());
-					ceiFile = new File(file, file.listFiles()[0].getName());
-				}
 				customEntityTemplate = customEntityTemplateService.findByCode(((CustomEntityInstanceDto) dto).getCetCode());
 			}
 			
@@ -488,15 +465,10 @@ public class MeveoModuleItemInstaller {
 
 		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && (customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J))) {
                     CustomEntityInstance cei = new CustomEntityInstance();
-					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
-					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-					CustomEntityInstance ceiInstance = CEIUtils.fromMap(data, customEntityTemplate);
-					String createdUUID = crossStorageApi.createOrUpdate(repositoryService.findDefaultRepository(), ceiInstance);
-					
-					cei.setCode(createdUUID);
+                    cei.setUuid(dto.getCode());
                     cei.setCetCode(customEntityTemplate.getCode());
                     cei.setCet(customEntityTemplate);
-					cei.setUuid(createdUUID);
+                    
                     try {
                         meveoModuleApi.populateCustomFields(((CustomEntityInstanceDto) dto).getCustomFields(), cei, true);
                     } catch (Exception e) {
@@ -505,7 +477,8 @@ public class MeveoModuleItemInstaller {
                     }
                     
                     crossStorageService.createOrUpdate(currentRepository, cei);
-					moduleItem = new MeveoModuleItem(cei.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
+                    
+					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
 					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
