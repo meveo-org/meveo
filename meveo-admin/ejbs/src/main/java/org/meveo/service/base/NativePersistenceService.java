@@ -1209,7 +1209,12 @@ public class NativePersistenceService extends BaseService {
 				// Declaratively fetch super-type fields
 				if(config.getSuperTypeFields() != null) {
 					for(var superTypeField : config.getSuperTypeFields()) {
-						startQuery += ", b." + superTypeField + " ";
+						String fieldName = superTypeField;
+						if (PostgresReserverdKeywords.isReserved(fieldName)) {
+							fieldName = "\"" + fieldName + "\"" ;
+						}
+						
+						startQuery += ", b." + fieldName + " ";
 					}
 				} else {
 					startQuery += ", b.*";
@@ -1228,7 +1233,13 @@ public class NativePersistenceService extends BaseService {
 			}
 		} else {
 			StringBuilder builder = new StringBuilder("select a.uuid, "); // Always return UUID
-			config.getFetchFields().forEach(s -> builder.append(s).append(", "));
+			config.getFetchFields().forEach(s -> {
+				String fieldName = s;
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldName = "\"" + fieldName + "\"" ;
+				}
+				builder.append(fieldName).append(", ");
+			});
 			builder.delete(builder.length() - 2, builder.length());
 			startQuery = builder.append(" from {h-schema}").append(tableName).append(" a ").toString();
 			if(superType != null) {
