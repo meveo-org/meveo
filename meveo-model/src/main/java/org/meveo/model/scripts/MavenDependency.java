@@ -2,23 +2,25 @@ package org.meveo.model.scripts;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.validation.constraint.subtypeof.SubTypeOf;
 
 /**
  * @author clement.bareth
@@ -50,6 +52,11 @@ public class MavenDependency implements Serializable {
 
 	@Column(name = "classifier", updatable = false)
 	private String classifier;
+	
+	@NotFound(action = NotFoundAction.IGNORE)
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "adm_script_maven_dependency", joinColumns = @JoinColumn(name = "maven_coordinates"), inverseJoinColumns = @JoinColumn(name = "script_instance_id"))
+	private Set<ScriptInstance> scriptInstances = new HashSet<>();
 	
 	@PrePersist
 	public void prePersist() {
@@ -129,6 +136,20 @@ public class MavenDependency implements Serializable {
 		} else if (!coordinates.equals(other.coordinates))
 			return false;
 		return true;
+	}
+	
+	/**
+	 * @return the {@link #scriptInstances}
+	 */
+	public Set<ScriptInstance> getScriptInstances() {
+		return scriptInstances;
+	}
+
+	/**
+	 * @param scriptInstances the scriptInstances to set
+	 */
+	public void setScriptInstances(Set<ScriptInstance> scriptInstances) {
+		this.scriptInstances = scriptInstances;
 	}
 
 	public String toLocalM2Path(String m2Path) {

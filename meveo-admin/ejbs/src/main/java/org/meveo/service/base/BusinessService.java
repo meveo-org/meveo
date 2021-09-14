@@ -19,6 +19,19 @@
  */
 package org.meveo.service.base;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+
 import org.apache.commons.io.FileUtils;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
@@ -37,28 +50,16 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.CharSequenceCompilerException;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
-import org.meveo.model.module.MeveoModule;
-import org.meveo.model.persistence.JacksonUtil;
-
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * @author phung
@@ -73,6 +74,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	private GitClient gitClient;
+	
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 	
 	@Inject
 	@MeveoRepository
@@ -340,7 +344,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
 	    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
 	    	
-	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
 	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
 	    	
 	    	File newDir = new File (gitDirectory, path);
@@ -358,7 +362,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    	} catch (IOException e) {
 	    		throw new BusinessException("File cannot be updated or created", e);
 	    	}
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+	    	
+	    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+			gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     	}
     }
     

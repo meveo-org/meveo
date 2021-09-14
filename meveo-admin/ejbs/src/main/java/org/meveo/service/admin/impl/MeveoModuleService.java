@@ -95,6 +95,7 @@ import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.communication.impl.MeveoInstanceService;
+import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
@@ -112,6 +113,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
+    
+    @Inject
+    private MavenConfigurationService mavenConfigurationService;
     
     @Inject
     private MeveoModuleItemService meveoModuleItemService;
@@ -836,7 +840,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return null;
+    	return List.of("gitRepository");
     }
     
     /**
@@ -863,6 +867,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
     	MeveoModule thinModule;
     	
+    	// Generate module.json file
 		try {
 			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
 			thinModule.setCode("module");
@@ -872,6 +877,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		} catch (Exception e) {
 			throw new BusinessException(e);
 		}
+		
+		// Generate maven facet if file does not exists yet
+		mavenConfigurationService.createDefaultPomFile(module.getCode());
 	}
     
     /**

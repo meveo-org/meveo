@@ -38,13 +38,13 @@ public class ScriptInstanceObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onScriptUpdated(@Observes(during = TransactionPhase.AFTER_COMPLETION) @UpdatedAfterTx ScriptInstance si) {
 		log.debug("[CDI event]  Trigger onScriptUpdated script instance with id={}", si.getId());
-		mavenDependencyService.removeOrphans();
+		mavenDependencyService.removeOrphans(si);
 	}
 
 	/**
 	 * Remove orphan maven dependencies
 	 */
 	public void onScriptDeleted(@Observes @Removed ScriptInstance si) {
-		mavenDependencyService.removeOrphans();
+		mavenDependencyService.removeOrphans(si);
 	}
 }

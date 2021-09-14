@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
@@ -49,7 +50,9 @@ import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.ModulePostInstall;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -108,13 +111,16 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			}
     	}
 		super.beforeUpdateOrCreate(script);
+		
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
         for(MavenDependency md : script.getMavenDependenciesNullSafe()) {
         	MavenDependency persistentMd = mdService.find(md.getBuiltCoordinates());
         	if(persistentMd != null) {
         		mavenDependencies.add(persistentMd);
+        		persistentMd.getScriptInstances().add(script);
         	} else {
+        		md.getScriptInstances().add(script);
         		getEntityManager().persist(md);
         		mavenDependencies.add(md);
         	}
@@ -126,7 +132,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	public void afterUpdateOrCreate(ScriptInstance script) throws BusinessException {
 		super.afterUpdateOrCreate(script);
 		
-		mdService.removeOrphans();
+		mdService.removeOrphans(script);
 	}
 
 
@@ -365,7 +371,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		if (extension == ".java") {
 			String path = entity.getCode().replaceAll("\\.", "/");
 	    	
-			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java/");
+			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/java/");
 			String pathNewFile = path + ".java";
 			
 			File newFile = new File(gitDirectory, pathNewFile);
@@ -375,6 +381,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			} catch (IOException e) {
 				throw new BusinessException("File cannot be write", e);
 			}
+			
 			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
 		}	
 	}
