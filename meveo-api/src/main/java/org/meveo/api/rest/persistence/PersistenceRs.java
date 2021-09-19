@@ -58,6 +58,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -77,6 +78,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -324,6 +326,7 @@ public class PersistenceRs {
 		cei.setCet(cache.getCustomEntityTemplate(cetCode));
 		cei.setUuid(uuid);
 		customFieldInstanceService.setCfValues(cei, cetCode, body);
+		cei.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(cei.getCfValues()));
 
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		

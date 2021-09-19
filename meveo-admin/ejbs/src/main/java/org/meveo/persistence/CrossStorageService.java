@@ -37,6 +37,7 @@ import javax.persistence.PersistenceException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -735,6 +736,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setDescription(ceiToSave.getDescription());
 		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 		
+		if (ceiToSave.getCfValuesOld() != null && !ceiToSave.getCfValuesOld().getValuesByCode().isEmpty()) {
+			try {
+				checkBeforeUpdate(repository, ceiToSave);
+			} catch (EntityDoesNotExistsException | ELException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		if(ceiToSave.getUuid() != null) {
 			cei.setUuid(ceiToSave.getUuid());
 		}
@@ -1116,6 +1125,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		String uuid = ceiToUpdate.getUuid();
 		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
 
+		if (ceiToUpdate.getCfValuesOld() != null && !ceiToUpdate.getCfValuesOld().getValuesByCode().isEmpty()) {
+			try {
+				checkBeforeUpdate(repository, ceiToUpdate);
+			} catch (EntityDoesNotExistsException | ELException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		// Neo4j storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			Map<String, Object> neo4jValues = filterValues(customFieldTemplates, values, cet, DBStorageType.NEO4J);
@@ -1760,51 +1777,32 @@ public class CrossStorageService implements CustomPersistenceService {
 		return map;
 	}
 	
-	public boolean checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException {
+	public void checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException, IllegalTransitionException {
 		Map<String, Set<String>> map = customEntityInstanceService.getValueCetCodeAndWfTypeFromWF();
-		if (entity.getCet().isStoreAsTable()) {
-			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), entity.getCet(), entity.getUuid());
-			if (values != null) {
-				if (map.isEmpty()) {
-					return true;
-				}
-				for (String key : values.keySet()) {
-					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
-						if (values.get(key).equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
-							continue;
-						} else {
-							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
-								continue;
-							} else {
-								return false;
-							}
-						}
-					}
-				}
+		Map<String, Object> values = entity.getCfValuesAsValues();
+		if (values != null) {
+			if (map.isEmpty()) {
+				return;
 			}
-		} else {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(entity.getCetCode(), entity.getUuid());
-			if (customEntityInstance != null && customEntityInstance.getCfValues() != null) {
-				if (map.isEmpty()) {
-					return true;
-				}
-				for (String key : customEntityInstance.getCfValues().getValuesByCode().keySet()) {
-					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
-						if (customEntityInstance.getCfValues().getValuesByCode().get(key).get(0).getStringValue()
-								.equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
-							continue;
-						} else {
-							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
-								continue;
-							} else {
-								return false;
-							}
-						}
+			
+			for (String key : values.keySet()) {
+				if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
+					
+					// Skip if value doesn't changes
+					if(Objects.equals(entity.getCfValuesOld().getValue(key), entity.getCfValues().getValue(key))) {
+						continue;
+					}
+					
+					if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
+						continue;
+					} else {
+						throw new IllegalTransitionException((String) entity.getCfValuesOldNullSafe().getValue(key), 
+								(String) values.get(key), 
+								key);
 					}
 				}
 			}
 		}
-		return true;
 	}
 
 }
