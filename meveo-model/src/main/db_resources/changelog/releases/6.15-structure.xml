@@ -72,5 +72,11 @@
 			</column>
 		</createTable>
 	</changeSet>
+	
+	<changeSet id="412 - Add default script parameters to custom action" author="Clément Bareth">
+		<addColumn tableName="crm_custom_action">
+			<column name="script_parameters" type="${type.json}"/>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

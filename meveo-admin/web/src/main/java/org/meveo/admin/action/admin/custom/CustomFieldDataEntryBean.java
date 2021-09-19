@@ -1003,6 +1003,19 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
+			
+			Map<Object, Object> elContext = new HashMap<>(context);
+			elContext.put("entity", entity);
+			
+			action.getScriptParameters().forEach((key, value) -> {
+				try {
+					context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
+				} catch (ELException e) {
+					log.error("Failed to evaluate el for custom action", e);
+				}
+			});
+			
+			
 			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, repository, action.getScript().getCode(), context);
 
 			// Display a message accordingly on what is set in result
@@ -1046,6 +1059,17 @@ public class CustomFieldDataEntryBean implements Serializable {
 			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
 			context.put(Script.CONTEXT_PARENT_ENTITY, parentEntity);
 			context.put(Script.CONTEXT_ACTION, action.getCode());
+			
+			Map<Object, Object> elContext = new HashMap<>(context);
+			elContext.put("entity", entity);
+			
+			action.getScriptParameters().forEach((key, value) -> {
+				try {
+					context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
+				} catch (ELException e) {
+					log.error("Failed to evaluate el for custom action", e);
+				}
+			});
 
 			Map<String, Object> result = scriptInstanceService.execute((IEntity) childEntity, repository, action.getScript().getCode(), context);
 

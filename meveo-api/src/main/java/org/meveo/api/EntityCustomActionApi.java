@@ -22,12 +22,14 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.storage.Repository;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
@@ -271,7 +273,16 @@ public class EntityCustomActionApi extends BaseApi {
         IEntity entity = (IEntity) entityCustomActionService.findByEntityClassAndCode(entityClass, entityCode);
 
         Map<String, Object> context = new HashMap<String, Object>();
-
+		Map<Object, Object> elContext = new HashMap<>(context);
+		elContext.put("entity", entity);
+		
+		action.getScriptParameters().forEach((key, value) -> {
+			try {
+				context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
+			} catch (ELException e) {
+				log.error("Failed to evaluate el for custom action", e);
+			}
+		});
         
         Map<String, Object> result = scriptInstanceService.execute(entity, repository, action.getScript().getCode(), context);
 
