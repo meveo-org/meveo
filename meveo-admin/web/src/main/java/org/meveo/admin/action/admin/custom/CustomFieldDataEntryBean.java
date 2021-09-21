@@ -986,62 +986,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 	}
 
 	/**
-	 * Execute custom action on an entity
-	 *
-	 * @param entity            Entity to execute action on
-	 * @param action            Action to execute
-	 * @param encodedParameters Additional parameters encoded in URL like style
-	 *                          param=value&amp;param=value
-	 * @return A script execution result value from Script.RESULT_GUI_OUTCOME
-	 *         variable
-	 */
-	public String executeCustomAction(ICustomFieldEntity entity, EntityCustomAction action, String encodedParameters) {
-
-		try {
-
-			action = entityActionScriptService.findByCode(action.getCode());
-
-			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
-			context.put(Script.CONTEXT_ACTION, action.getCode());
-			
-			Map<Object, Object> elContext = new HashMap<>(context);
-			elContext.put("entity", entity);
-			
-			action.getScriptParameters().forEach((key, value) -> {
-				try {
-					context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
-				} catch (ELException e) {
-					log.error("Failed to evaluate el for custom action", e);
-				}
-			});
-			
-			
-			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, repository, action.getScript().getCode(), context);
-
-			// Display a message accordingly on what is set in result
-			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
-				messages.info(new BundleKey("messages", (String) result.get(Script.RESULT_GUI_MESSAGE_KEY)));
-
-			} else if (result.containsKey(Script.RESULT_GUI_MESSAGE)) {
-				messages.info((String) result.get(Script.RESULT_GUI_MESSAGE));
-
-			} else {
-				messages.info(new BundleKey("messages", "scriptInstance.actionExecutionSuccessfull"), action.getLabel());
-			}
-
-			if (result.containsKey(Script.RESULT_GUI_OUTCOME)) {
-				return (String) result.get(Script.RESULT_GUI_OUTCOME);
-			}
-
-		} catch (BusinessException e) {
-			log.error("Failed to execute a script {} on entity {}", action.getCode(), entity, e);
-			messages.error(new BundleKey("messages", "scriptInstance.actionExecutionFailed"), action.getLabel(), e.getMessage());
-		}
-
-		return null;
-	}
-
-	/**
 	 * Execute custom action on a child entity
 	 *
 	 * @param parentEntity      Parent entity, entity is related to

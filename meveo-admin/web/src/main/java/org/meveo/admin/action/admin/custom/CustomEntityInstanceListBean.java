@@ -157,12 +157,12 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 						customEntityInstance.setDescription((String) entity.get("description"));
 						customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entity);
 					}
-					customFieldDataEntryBean.executeCustomAction(customEntityInstance, action, null);
+					executeCustomAction(customEntityInstance, action, null);
 				}
 				setSelectedValues(null);
 
 			} else {
-				customFieldDataEntryBean.executeCustomAction(null, action, null);
+				executeCustomAction(null, action, null);
 			}
 
 		} catch (BusinessException e) {
