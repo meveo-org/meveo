@@ -19,6 +19,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
+import org.meveo.model.util.KeyValuePair;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.Job;
@@ -49,7 +50,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     
     private TimerEntity prevTimerEntity;
 
-    private List<Map<String, Object>> overrideParams;
+	private Set<KeyValuePair> overrideParams;
 
     public JobInstanceBean() {
         super(JobInstance.class);
@@ -71,13 +72,10 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         if (entity.getId() != null && overrideParams == null) {
             Map<String, Object> context = (Map<String, Object>) customFieldInstanceService.getCFValue(entity, "ScriptingJob_variables");
             if (context != null && !context.isEmpty()) {
-                overrideParams = new ArrayList<>();
+                overrideParams  = new HashSet<>();
                 hasParams = true;
                 for (Map.Entry<String, Object> entry : context.entrySet()) {
-                    Map<String, Object> param = new HashMap<>();
-                    param.put("key", entry.getKey());
-                    param.put("value", entry.getValue());
-                    overrideParams.add(param);
+                    overrideParams.add(new KeyValuePair(entry.getKey(), entry.getValue()));
                 }
             }
         }
@@ -128,8 +126,8 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
             Map<String, Object> params = new HashMap<>();
             if (CollectionUtils.isNotEmpty(overrideParams)) {
                 params = new HashMap<>();
-                for (Map<String, Object> param : overrideParams) {
-                    params.put((String)param.get("key"), param.get("value"));
+                for (KeyValuePair param : overrideParams) {
+                    params.put(param.getKey(), param.getValue());
                 }
             }
             jobExecutionService.manualExecute(entity, params);
@@ -264,7 +262,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
         customFieldDataEntryBean.refreshFieldsAndActions(entity);
     }
 
-    public List<Map<String, Object>> getOverrideParams() {
+    public Set<KeyValuePair> getOverrideParams() {
         return overrideParams;
     }
 

@@ -1054,12 +1054,18 @@
 					<hftl:formField id="script"
 						label="#{messages['customizedEntities.actionScript']}"
 						field="script" valueLabelField="code" newLine="true"
+						listenerUpdate="scriptParameters"
 						componentWidth="100" popup="true" popupId="actionScriptPopup"
 						createEditPopup="true" createEditPopupId="scriptDialog"
 						createEditPopupListenerBean="#{entityCustomActionBean}"
 						createEditPopupListenerViewMethod="viewEditScript"
 						createEditPopupListenerNewMethod="newScript"
 						createEditPopupListenerUpdate=":scriptForm" required="true" />
+						
+					<hftl:functionParamsForm id="scriptParameters"
+                    	value="#{entityCustomActionBean.entity.scriptParameters}"
+                    	script="#{entityCustomActionBean.entity.script}"
+                   		componentWidth="100"/>
 
 					<hftl:formField label="#{messages['enableEntity.disabled']}"
 						doNotShowOnNew="true" allowEdit="false" field="disabled"
@@ -1130,7 +1136,7 @@
 		column2Label="#{messages['BusinessEntity.description']}"
 		column2="description"
 		selection="#{entityCustomActionBean.entity.script}"
-		updateField=":actionForm:script_entity">
+		updateField=":actionForm:script_entity :actionForm:scriptParameters">
 	</hftl:entityPopup>
 
 

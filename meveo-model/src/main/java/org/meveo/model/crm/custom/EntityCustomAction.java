@@ -87,6 +87,14 @@ public class EntityCustomAction extends BusinessEntity {
 	@Type(type = "numeric_boolean")
 	@Column(name = "applicable_to_entity_instance")
 	private Boolean applicableToEntityInstance = true;
+	
+    /**
+     * Map representing the script parameter where the key is the paramer name
+     * and the value the el to evaluate
+     */
+    @Column(name = "script_parameters", columnDefinition = "text")
+    @Type(type = JsonTypes.JSON)
+    private Map<String, String> scriptParameters = new HashMap<>();
 
     /**
      * Where action should be displayed. Format: tab:&lt;tab name&gt;:&lt;tab relative position&gt;;action:&lt;action relative position in tab&gt;
@@ -100,8 +108,22 @@ public class EntityCustomAction extends BusinessEntity {
     @Column(name = "gui_position", length = 2000)
     @Size(max = 2000)
     private String guiPosition;
+    
+    /**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		return scriptParameters;
+	}
 
-    public String getAppliesTo() {
+	/**
+	 * @param scriptParameters the scriptParameters to set
+	 */
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	public String getAppliesTo() {
         return appliesTo;
     }
 
