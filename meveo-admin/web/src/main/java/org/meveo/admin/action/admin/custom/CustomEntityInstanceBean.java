@@ -11,12 +11,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.BeanUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.BusinessEntity;
@@ -152,7 +155,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-//					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
+					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
 				}
 
 			} catch (Exception e) {
@@ -194,15 +197,14 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 			customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew);
 
-			boolean checkBeforeUpdate = crossStorageService.checkBeforeUpdate(repository, entity);
-			if (!checkBeforeUpdate) {
-				messages.error(new BundleKey("messages", "customEntityInstance.update.error"));
-				return null;
-			}
-
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
 
-			crossStorageService.createOrUpdate(repository, entity);
+			try {
+				crossStorageService.createOrUpdate(repository, entity);
+			} catch (IllegalTransitionException e) {
+				messages.error(new BundleKey("messages", "customEntityInstance.update.illegalTransition"), e.getField(), e.getFrom(), e.getTo());
+				return null;
+			}
 
 			if (killConversation) {
 				endConversation();

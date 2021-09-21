@@ -51,11 +51,7 @@ import com.ibm.icu.math.BigDecimal;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * @deprecated This service is now exclusively use by
- *             {@link CrossStorageService} and this service should now be use
- *             for managing {@link CustomEntityInstance}.
  */
-@Deprecated(since = "6.13")
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
 
@@ -330,7 +326,6 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	public boolean transitionsFromPreviousState(String cftCode, CustomEntityInstance instance) throws ELException {
 		Workflow workflow = workflowService.findByCetCodeAndWFType(instance.getCetCode(), cftCode);
-		CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(cftCode, "CE_" + instance.getCetCode());
 		if (workflow != null) {
 			List<WFTransition> transitions = new ArrayList<>();
 			List<String> statusWF = new ArrayList<>();
@@ -341,9 +336,11 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 					
 					boolean isTransitionApplicable = MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance);
 					String targetStatus = instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue();
-					boolean isSameTargetStatus = wfTransition.getToStatus().equals(targetStatus);
+					String startStatus = (String) instance.getCfValuesOldNullSafe().getValue(cftCode);
 					
-					if(isTransitionApplicable && isSameTargetStatus) {
+					boolean isSameTargetStatus = wfTransition.getToStatus().equals(targetStatus);
+					boolean isSameStartStatus = wfTransition.getFromStatus().equals(startStatus);
+					if(isTransitionApplicable && isSameTargetStatus && isSameStartStatus) {
 						transitions.add(wfTransition);
 						statusWF.add(wfTransition.getToStatus());
 					}
