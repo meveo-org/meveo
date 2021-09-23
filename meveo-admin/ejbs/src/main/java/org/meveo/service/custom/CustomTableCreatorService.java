@@ -1078,10 +1078,11 @@ public class CustomTableCreatorService implements Serializable {
 		case EXPRESSION:
 		case MULTI_VALUE:
 		case STRING:
-		case TEXT_AREA:
 		case ENTITY:
 		case LIST:
 			return "varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")";
+		case TEXT_AREA:
+			return "text";
 		// Store serialized
 		case CHILD_ENTITY:
 		case EMBEDDED_ENTITY:
