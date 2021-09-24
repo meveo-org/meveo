@@ -73,10 +73,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected EntitySerializer businessEntitySerializer;
 	
 	@Inject
-	private GitClient gitClient;
+	protected GitClient gitClient;
 	
 	@Inject
-	private GitRepositoryService gitRepositoryService;
+	protected GitRepositoryService gitRepositoryService;
 	
 	@Inject
 	@MeveoRepository
@@ -305,7 +305,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
 	}
 
-    private void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
+    protected void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	if (entity instanceof CustomEntityInstance) {
     		String cetCode = ((CustomEntityInstance)entity).getCetCode();
 			CustomEntity pojo;

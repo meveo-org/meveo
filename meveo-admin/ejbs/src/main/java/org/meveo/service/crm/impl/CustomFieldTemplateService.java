@@ -2,9 +2,11 @@ package org.meveo.service.crm.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +23,11 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.catalog.CalendarDaily;
 import org.meveo.model.catalog.CalendarInterval;
 import org.meveo.model.catalog.CalendarYearly;
@@ -33,7 +37,10 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
@@ -42,6 +49,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -704,4 +712,38 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         return null;
     }
+
+	@Override
+	protected void persistJsonFileInModule(CustomFieldTemplate entity, MeveoModule module, boolean isCreation) throws BusinessException {
+    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+    	if(cetCode == null) {
+    		cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+    	}
+    	
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+    	
+    	File newDir = new File (gitDirectory, path);
+    	newDir.mkdirs();
+    	
+    	File newJsonFile = new File(newDir, entity.getCode() +".json");
+    	try {
+	    	if (isCreation) {
+	    		newJsonFile.createNewFile();
+	    	}
+	    	
+	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+	
+	    	Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
+    	}
+    	
+    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for CFT " + cetCode + "." + entity.getCode());
+	}
+    
 }

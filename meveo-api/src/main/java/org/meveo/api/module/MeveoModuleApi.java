@@ -215,6 +215,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
 		boolean ceiToInstall = false;
 		File ceiDirectory = null;
+		File cftDirectory;
 		String dtoCeiClassName = "";
 		MeveoModuleDto moduleDto = new MeveoModuleDto();
 		moduleDto.setCode(repo.getCode());
@@ -252,7 +253,18 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			if (dtoClassName == null) {
 				continue;
 			}
-			if (fileName.equals("customEntityInstances")) {
+			
+			//TODO: Custom action special case
+			
+			if (fileName.equals("customFieldTemplates")) {
+				customFieldTemplateApi.readCfts(file)
+					.stream()
+					.map(cftDto -> new MeveoModuleItemDto(CustomFieldTemplateDto.class.getName(), cftDto))
+					.forEach(moduleDto.getModuleItems()::add);
+			
+			} else if (fileName.equals("customEntityInstances")) {
+				// CustomEntityInstance special case
+				//TODO: rework this part
 				for (File directoryFile : file.listFiles()) {
 					if (!directoryFile.isDirectory()) {
 						continue;
