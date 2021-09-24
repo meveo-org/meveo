@@ -36,7 +36,12 @@ As the services are secrured, you must either use basic authentication (if allow
 ```
 POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence
 ```
+Path parameters
 
+```
+:repository : the code of the storage repository (e.g default)
+
+```
 body 
 ```
 [
@@ -64,7 +69,7 @@ GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/per
 
 Path parameters
 ```
-:repository : the code of the storage repository (i.e default)
+:repository : the code of the storage repository (e.g default)
 :cet : the code of the Custom entity template
 :uuid : the uuid of the enitity instance to retrieve
 ```
@@ -105,7 +110,7 @@ GET {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/per
 
 Path parameters
 ```
-:repository : the code of the storage repository (i.e default)
+:repository : the code of the storage repository (e.g default)
 :cet : the code of the Custom entity template
 ```
 
@@ -128,7 +133,7 @@ Base64-Encode : boolean
 
 Path parameters
 ```
-:repository : the code of the storage repository (i.e default)
+:repository : the code of the storage repository (e.g default)
 :cet : the code of the Custom entity template
 ```
 
@@ -160,7 +165,7 @@ DELETE {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/
 
 Path parameters
 ```
-:repository : the code of the storage repository (i.e default)
+:repository : the code of the storage repository (e.g default)
 :cet : the code of the Custom entity template
 :uuid : the uuid of the enitity instance to delete
 ```
