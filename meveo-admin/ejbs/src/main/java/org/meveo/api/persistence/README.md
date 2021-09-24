@@ -33,6 +33,26 @@ As the services are secrured, you must either use basic authentication (if allow
 
 ## I.1. Persisting an entity
 
+```
+POST {{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repository/persistence
+```
+
+body 
+```
+[
+    {
+        "type": "CustomEntityCode",
+        "properties":
+        {
+            "customField1": value1,
+	    ...
+            "customFieldN": valueN,
+        }
+    }
+]
+```
+
+Not that you can persist (update or created depending if you set the uuid, an identifier or use a merging rule) several entities and relations in one call
 
 ## I.2. Find an entity
 
