@@ -1065,6 +1065,10 @@ public class CustomTableCreatorService implements Serializable {
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 			return "text";
 		}
+		
+		if(cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
+			return "text";
+		}
 
 		switch (fieldType) {
 		case DATE:
