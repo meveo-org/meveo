@@ -41,6 +41,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -82,10 +83,12 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.CrossStorageTransaction;
+import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
@@ -103,6 +106,8 @@ import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -418,7 +423,7 @@ public class PersistenceRs {
 			}
 		}
 
-		return persist(dtos);
+		return persist(PersistenceMode.graph, dtos);
 	}
 	
 	@POST
@@ -440,11 +445,6 @@ public class PersistenceRs {
 		scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 	}
 
-	/**
-	 * @param dtos
-	 * @return
-	 * @throws CyclicDependencyException
-	 */
 	private AtomicPersistencePlan getSchedule(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 		/* Extract the entities */
 		final List<Entity> entities = dtos.stream().filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY))
@@ -473,21 +473,46 @@ public class PersistenceRs {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Persist many entities")
-	public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException, EntityDoesNotExistsException {
+	public List<PersistedItem> persist(
+			@HeaderParam("Persistence-Mode") @DefaultValue("graph") PersistenceMode persistenceMode, 
+			Object body) throws CyclicDependencyException, EntityDoesNotExistsException {
+		
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		hasAccessToRepository(repository);
 		
-		AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
+		if(persistenceMode.equals(PersistenceMode.graph)) {
+			Collection<PersistenceDto> dtos = JacksonUtil.convert(body, new TypeReference<Collection<PersistenceDto>>() {});
+			AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
+	
+			try {
+				/* Persist the entities and return 201 created response */
+				return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
+	
+			} catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
+				/* An error happened */
+				throw new ServerErrorException(Response.serverError().entity(e).build());
+			}
+			
+		} else {
+			List<PersistedItem> persistedItems = new ArrayList<>();
+			Collection<Map<String, Object>> dtos = JacksonUtil.convert(body, new TypeReference<Collection<Map<String, Object>>>() {});
+			
+			for(Map<String, Object> dto : dtos) {
+				try {
+					CustomEntityInstance cei = CEIUtils.pojoToCei(dto);
+					PersistenceActionResult result = crossStorageService.createOrUpdate(repository, cei);
+					
+					PersistedItem item = new PersistedItem(result.getBaseEntityUuid(), dto);
+					persistedItems.add(item);
+					
+				} catch (BusinessApiException | EntityDoesNotExistsException | BusinessException | IOException e) {
+					/* An error happened */
+					Response response = Response.serverError().entity(e).build();
+					throw new ServerErrorException(response);
+				}
+			}
 
-		try {
-
-			/* Persist the entities and return 201 created response */
-			return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
-
-		} catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
-
-			/* An error happened */
-			throw new ServerErrorException(Response.serverError().entity(e).build());
+			return persistedItems;
 		}
 
 	}
