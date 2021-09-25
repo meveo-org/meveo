@@ -42,7 +42,11 @@ Path parameters
 :repository : the code of the storage repository (e.g default)
 
 ```
-body 
+
+Headers
+- Persistence-Mode (graph | list) : determine the structure of the body to send
+
+body (Persistence-Mode = graph)
 ```
 [
     {
@@ -57,7 +61,19 @@ body
 ]
 ```
 
-Not that you can persist (update or created depending if you set the uuid, an identifier or use a merging rule) several entities and relations in one call
+body (Persistence-Mode = list)
+```
+[
+    {
+        "cetCode": "CustomEntityCode",
+        "customField1": "value1",
+	...
+        "customFieldN": valueN
+    }
+]
+```
+
+Note that you can persist (update or created depending if you set the uuid, an identifier or use a merging rule) several entities and relations in one call
 
 ## I.2. Find an entity
 
