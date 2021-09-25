@@ -1704,11 +1704,11 @@ public class NativePersistenceService extends BaseService {
 					return Boolean.parseBoolean(value.toString());
 				}
 
-			} else if (targetClass == Date.class) {
+			} else if (targetClass == Date.class || targetClass == Instant.class) {
 				if (dateVal != null || listVal != null) {
 					return value;
 				} else if (numberVal != null) {
-					return new Date(numberVal.longValue());
+					return Instant.ofEpochMilli(numberVal.longValue());
 				} else if (stringVal != null) {
 
 					// Use provided date patterns or try default patterns if they were not provided
