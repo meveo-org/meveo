@@ -353,8 +353,7 @@ public class OntologyObserver {
      * @throws IOException       if we cannot create / write to the JSON Schema file
      * @throws BusinessException if exception occurs
      */
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void crtCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomRelationshipTemplate crt) throws IOException, BusinessException {
+    public void crtCreated(@Observes @Created CustomRelationshipTemplate crt) throws IOException, BusinessException {
         hasChange.set(true);
 
         List<File> commitFiles = new ArrayList<>();
