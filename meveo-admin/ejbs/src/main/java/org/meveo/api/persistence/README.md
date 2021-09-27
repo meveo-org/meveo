@@ -44,7 +44,7 @@ Path parameters
 ```
 
 Headers
-- Persistence-Mode (graph | list) : determine the structure of the body to send
+- Persistence-Mode (graph | list) : determine the structure of the body to send, graph by default
 
 body (Persistence-Mode = graph)
 ```
