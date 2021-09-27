@@ -66,6 +66,7 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
 import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
@@ -144,6 +145,9 @@ public class OntologyObserver {
     
     @Inject
     private CustomTableCreatorService customTableCreatorService;
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallCtx;
 
     private AtomicBoolean hasChange = new AtomicBoolean(true);
     
@@ -195,6 +199,11 @@ public class OntologyObserver {
      * @throws BusinessException if the json schema file already exists
      */
     public void cetCreated(@Observes @Created CustomEntityTemplate cet) throws IOException, BusinessException {
+    	if(moduleInstallCtx.isActive()) {
+    		// Cet files will be handled by dedicated service
+    		return;
+    	}
+    	
     	hasChange.set(true);
 
         List<File> commitFiles = new ArrayList<>();
@@ -354,7 +363,12 @@ public class OntologyObserver {
      * @throws BusinessException if exception occurs
      */
     public void crtCreated(@Observes @Created CustomRelationshipTemplate crt) throws IOException, BusinessException {
-        hasChange.set(true);
+    	if(moduleInstallCtx.isActive()) {
+    		// crt files will be handled by dedicated service
+    		return;
+    	}
+    	
+    	hasChange.set(true);
 
         List<File> commitFiles = new ArrayList<>();
 
@@ -465,6 +479,11 @@ public class OntologyObserver {
         if(cft.isInDraft()) {
         	return;
         }
+        
+    	if(moduleInstallCtx.isActive()) {
+    		// files will be handled by dedicated service
+    		return;
+    	}
         
     	hasChange.set(true);
 

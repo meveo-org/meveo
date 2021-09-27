@@ -61,6 +61,7 @@ import org.meveo.api.ApiService;
 import org.meveo.api.ApiUtils;
 import org.meveo.api.ApiVersionedService;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.CustomEntityInstanceApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
@@ -173,6 +174,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private CrossStorageApi crossStorageApi;
+    
+    @Inject
+    private CustomEntityInstanceApi ceiApi;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -213,10 +217,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@SuppressWarnings("rawtypes")
 	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
-		boolean ceiToInstall = false;
-		File ceiDirectory = null;
-		File cftDirectory;
-		String dtoCeiClassName = "";
 		MeveoModuleDto moduleDto = new MeveoModuleDto();
 		moduleDto.setCode(repo.getCode());
 		moduleDto.setModuleItems(new ArrayList<>());
@@ -255,24 +255,24 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 			
 			//TODO: Custom action special case
-			
-			if (fileName.equals("customFieldTemplates")) {
+			if(fileName.equals("entityCustomActions")) {
+				entityCustomActionApi.readEcas(file)
+					.stream()
+					.map(ecaDto -> new MeveoModuleItemDto(ecaDto.getClass().getName(), ecaDto))
+					.forEach(moduleDto.getModuleItems()::add);
+				
+			} else if (fileName.equals("customFieldTemplates")) {
 				customFieldTemplateApi.readCfts(file)
 					.stream()
 					.map(cftDto -> new MeveoModuleItemDto(CustomFieldTemplateDto.class.getName(), cftDto))
 					.forEach(moduleDto.getModuleItems()::add);
 			
 			} else if (fileName.equals("customEntityInstances")) {
-				// CustomEntityInstance special case
-				//TODO: rework this part
-				for (File directoryFile : file.listFiles()) {
-					if (!directoryFile.isDirectory()) {
-						continue;
-					}
-					ceiToInstall = true;
-					ceiDirectory = directoryFile;
-					dtoCeiClassName = dtoClassName;
-				}
+				ceiApi.readCeis(file)
+					.stream()
+					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
+					.forEach(moduleDto.getModuleItems()::add);
+
 			} else {
 				for (File entityFile : file.listFiles()) {
 					try {
@@ -287,23 +287,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					} catch (IOException e) {
 						log.error("Can't read entityFile", e);
 					}
-				}
-			}
-		}
-		
-		if (ceiToInstall) {
-			String cetCode = ceiDirectory.getName();
-			for (File ceiFile : ceiDirectory.listFiles()) {
-				if (!ceiFile.getName().endsWith(".json")) {
-					continue;
-				}
-				try  {
-					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
-					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-					MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(),  data);
-					moduleDto.getModuleItems().add(moduleItemDto);
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
 				}
 			}
 		}

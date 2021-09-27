@@ -20,7 +20,10 @@
 package org.meveo.service.custom;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,6 +37,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.io.FileUtils;
 import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -48,9 +52,14 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.JSONSchemaGenerator;
+import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
+
+import com.github.javaparser.ast.CompilationUnit;
+
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 
 /**
@@ -82,6 +91,15 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+    @Inject
+    private JSONSchemaIntoJavaClassParser jSONSchemaIntoJavaClassParser;
+    
+    @Inject
+    private JSONSchemaGenerator jSONSchemaGenerator;
+    
+    @Inject
+    private CustomEntityTemplateCompiler cetCompiler;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -170,7 +188,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
     @Override
     public void remove(CustomRelationshipTemplate crt) throws BusinessException {
-        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
+        Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(crt.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
             customFieldTemplateService.remove(cft.getId());
@@ -339,4 +357,34 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	}
     	return new File(repositoryDir, path);
 	}
+	
+	@Override
+	public void addFilesToModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {
+    	super.addFilesToModule(entity, module);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
+    	String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
+    	
+    	File newJavaFile = new File (gitDirectory, pathJavaFile);
+    	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
+    	
+    	try {
+    		FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be write", e);
+    	}
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the crt json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
+    	
+    	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
+    	
+    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
+
+    	try {
+    		FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be write", e);
+    	}
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the crt java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
+    }
 }

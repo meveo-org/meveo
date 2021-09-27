@@ -1,5 +1,8 @@
 package org.meveo.api;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,17 +16,19 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
-import org.meveo.api.rest.persistence.PersistenceRs;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -33,9 +38,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
  * @author Andrius Karpavicius
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @version 6.13
- * @deprecated Use {@link PersistenceRs} instead.
  **/
-@Deprecated(since = "6.13")
 @Stateless
 public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, CustomEntityInstanceDto> {
 
@@ -50,6 +53,33 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 
 	public CustomEntityInstanceApi() {
 		super(CustomEntityInstance.class, CustomEntityInstanceDto.class);
+	}
+	
+	public List<Map<String, Object>> readCeis(File ceiDirectory) {
+		List<Map<String, Object>> dtos = new ArrayList<>();
+		
+		for (File ceiByCetDir : ceiDirectory.listFiles()) {
+			if(!ceiByCetDir.isDirectory()) {
+				continue;
+			}
+				
+			for (File ceiFile : ceiByCetDir.listFiles()) {
+				if (!ceiFile.getName().endsWith(".json")) {
+					continue;
+				}
+			
+				try  {
+					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
+					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+					data.put("cetCode", ceiByCetDir.getName());
+					dtos.add(data);
+				} catch (IOException e) {
+					log.error("Failed to read CEI data", e);
+				}
+			}
+		}
+		
+		return dtos;
 	}
 
 	public void create(CustomEntityInstanceDto dto) throws MeveoApiException, BusinessException {

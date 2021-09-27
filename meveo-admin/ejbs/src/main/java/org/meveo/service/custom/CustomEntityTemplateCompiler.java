@@ -63,7 +63,11 @@ public class CustomEntityTemplateCompiler {
     public String getTemplateSchema(CustomEntityTemplate cet) {
         String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
         return schema.replaceAll("#/definitions", ".");
-
+    }
+    
+    public String getTemplateSchema(CustomRelationshipTemplate crt) {
+        String schema = jsonSchemaGenerator.generateSchema(crt.getCode(), crt);
+        return schema.replaceAll("#/definitions", ".");
     }
     
     /**
