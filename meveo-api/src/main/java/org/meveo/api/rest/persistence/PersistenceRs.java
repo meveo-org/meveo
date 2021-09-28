@@ -216,25 +216,20 @@ public class PersistenceRs {
 				totalCount = customEntityInstanceService.count(paginationConfiguration);
 			}
 			
-			if(singleValue) {
-				PersistenceListResult result = new PersistenceListResult();
-				result.setCount(totalCount.intValue());
-				result.setResult(entities);
-				return Response.ok(result).build();
-				
+			PersistenceListResult result = new PersistenceListResult();
+			result.setCount(totalCount.intValue());
+			result.setResult(entities);
+			return Response.ok(result).build();
+
+		} else if(singleValue != null && singleValue) {
+			if(entities.isEmpty()) {
+				return Response.status(404).build();
 			} else {
-				if(entities.isEmpty()) {
-					return Response.status(404).build();
-				} else {
-					return Response.ok(entities.get(0)).build();
-				}
-				
+				return Response.ok(entities.get(0)).build();
 			}
-
-
-		} else {
-			return Response.ok(entities).build();
 		}
+		
+		return Response.ok(entities).build();
 	}
 
 	@DELETE
