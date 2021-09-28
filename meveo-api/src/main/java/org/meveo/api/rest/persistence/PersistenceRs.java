@@ -107,6 +107,8 @@ import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.swagger.annotations.Api;
@@ -475,6 +477,14 @@ public class PersistenceRs {
 		entityOrRelations.addAll(relations);
 		AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityOrRelations);
 		return atomicPersistencePlan;
+	}
+	
+	@POST
+	@Path("/{cetCode}")
+	public List<PersistedItem> peristMany(@PathParam("cetCode") String cetCode, 
+			@JsonFormat(with = Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY) Collection<Map<String, Object>> body) throws EntityDoesNotExistsException, CyclicDependencyException {
+		body.forEach(dto -> dto.put("cetCode", cetCode));
+		return persist(PersistenceMode.list, body);
 	}
 
 	@POST
