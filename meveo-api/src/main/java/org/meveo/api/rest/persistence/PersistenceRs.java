@@ -179,6 +179,7 @@ public class PersistenceRs {
 	public Response list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
 			@QueryParam("withCount") @ApiParam("If true returns the count of entities") Boolean withCount,
+			@QueryParam("singleValue") @ApiParam("Whether to return only one value") Boolean singleValue,
 			@ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 		if (customEntityTemplate == null) {
@@ -215,11 +216,21 @@ public class PersistenceRs {
 				totalCount = customEntityInstanceService.count(paginationConfiguration);
 			}
 			
-			PersistenceListResult result = new PersistenceListResult();
-			result.setCount(totalCount.intValue());
-			result.setResult(entities);
+			if(singleValue) {
+				PersistenceListResult result = new PersistenceListResult();
+				result.setCount(totalCount.intValue());
+				result.setResult(entities);
+				return Response.ok(result).build();
+				
+			} else {
+				if(entities.isEmpty()) {
+					return Response.status(404).build();
+				} else {
+					return Response.ok(entities.get(0)).build();
+				}
+				
+			}
 
-			return Response.ok(result).build();
 
 		} else {
 			return Response.ok(entities).build();
@@ -254,10 +265,11 @@ public class PersistenceRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Search through entity")
 	public Response get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
-			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, 
+			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
+			@QueryParam("singleValue") Boolean singleValue,
 			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 		
-		return list(base64Encode, cetCode, false, paginationConfiguration);
+		return list(base64Encode, cetCode, false, singleValue, paginationConfiguration);
 	}
 
 	@GET
