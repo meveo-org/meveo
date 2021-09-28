@@ -481,10 +481,11 @@ public class PersistenceRs {
 	
 	@POST
 	@Path("/{cetCode}")
-	public List<PersistedItem> peristMany(@PathParam("cetCode") String cetCode, 
-			@JsonFormat(with = Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY) Collection<Map<String, Object>> body) throws EntityDoesNotExistsException, CyclicDependencyException {
-		body.forEach(dto -> dto.put("cetCode", cetCode));
-		return persist(PersistenceMode.list, body);
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<PersistedItem> peristMany(@PathParam("cetCode") String cetCode, String body) throws EntityDoesNotExistsException, CyclicDependencyException {
+		Collection<Map<String, Object>> dtos = JacksonUtil.fromString(body, new TypeReference<Collection<Map<String, Object>>>() {});
+		dtos.forEach(dto -> dto.put("cetCode", cetCode));
+		return persist(PersistenceMode.list, dtos);
 	}
 
 	@POST
