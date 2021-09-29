@@ -335,9 +335,14 @@ This is another way to install the EGIT plugin in case for some reason that you 
 
 * Select file pom.xml in project meveo-model .
 * Select run as maven, and run with the following options :
-    * GOALS : liquibase dropAll liquibase:update
-    * Profiles : rebuild
-    * Attributes :  "db.url=jdbc:postgresql://localhost:5432/meveo"   "db.username=meveo" "db.password=meveo"
+    * **Goals** : liquibase dropAll liquibase:update
+    * **Profiles** : rebuild
+    * **Attributes** : 
+        * db.url=jdbc:postgresql://localhost:5432/meveo
+        * db.username=meveo
+        * db.password=meveo
+        * db.schema=public
+        * db.driver=org.postgresql.Driver
     
 #### Deploying Meveo to Wildfly
 
