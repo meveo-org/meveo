@@ -76,5 +76,27 @@
             <column name="permission_id" valueNumeric="-30" />
         </insert>
 	</changeSet>
-        
+
+    <changeSet id="#313 - Custom relationship roles" author="Tony Alejandro">
+        <insert tableName="adm_role">
+            <column name="id" valueNumeric="-8" />
+            <column name="version" valueNumeric="0" />
+            <column name="role_description" value="Modify all custom relations" />
+            <column name="role_name" value="ModifyAllCR" />
+        </insert>
+        <insert tableName="adm_role">
+            <column name="id" valueNumeric="-9" />
+            <column name="version" valueNumeric="0" />
+            <column name="role_description" value="Read all custom relations" />
+            <column name="role_name" value="ReadAllCR" />
+        </insert>
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+            <column name="child_role_id" valueNumeric="-8" />
+        </insert>
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+            <column name="child_role_id" valueNumeric="-9" />
+        </insert>
+    </changeSet>
 </databaseChangeLog>
