@@ -1,12 +1,11 @@
-[![Gitpod - Code Now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/meveo-org/meveo)
-[![Build Status](https://app.travis-ci.com/meveo-org/meveo.svg?branch=master)](https://travis-ci.org/meveo-org/meveo)
+[![Gitpod - Code Now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/manaty/meveo)
 
 # Meveo
 
 Meveo is a platform that allow to develop and execute enterprise back and front applications
 It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence : AGPLv3.0
 
-Frontend framework  https://github.com/meveo-org/meveo-fronted.github.io
+Frontend framework  https://github.com/manaty/meveo-fronted.github.io
 
 Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
 
@@ -33,7 +32,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
 
 ### Development
-- [Git](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
+- [Git](https://github.com/manaty/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
 
 ### Ontology
 
@@ -62,4 +61,4 @@ On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swa
 
 ## User Guide
 
-- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
+- [Documentation](https://github.com/manaty/meveo/tree/master/documentation/userguide)
