@@ -308,6 +308,7 @@ This is done inside Eclipse IDE. Since we have installed egit component from JBo
 You should have already cloned the meveo project before proceeding with these steps.
 
 * Build the meveo parent project, disregard the errors for now.
+  * `mvn clean package -DskipTests` 
 * Expand the meveo-admin-ejbs project.
 * Expand the target/generated-sources folder.
 * Right click on the java folder, choose Build Path and select Use as Source Folder.
