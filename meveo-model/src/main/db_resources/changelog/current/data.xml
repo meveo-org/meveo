@@ -98,5 +98,13 @@
             <column name="role_id" valueNumeric="-1" />
             <column name="child_role_id" valueNumeric="-9" />
         </insert>
+        <insert tableName="adm_user_role">
+            <column name="user_id" value="-1"></column>
+            <column name="role_id" value="-8"></column>
+        </insert>
+        <insert tableName="adm_user_role">
+            <column name="user_id" value="-1"></column>
+            <column name="role_id" value="-9"></column>
+        </insert>
     </changeSet>
 </databaseChangeLog>

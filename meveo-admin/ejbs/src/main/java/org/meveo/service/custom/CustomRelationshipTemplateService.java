@@ -95,7 +95,6 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         
         try {
             permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
-            permissionService.createIfAbsent(crt.getDecrpytPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
             permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
             if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             	customTableCreatorService.createCrtTable(crt);
@@ -114,7 +113,6 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         CustomRelationshipTemplate cetUpdated = super.update(crt);
 
         permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
-        permissionService.createIfAbsent(crt.getDecrpytPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
         permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
         
         // SQL Storage logic
@@ -177,7 +175,6 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         customFieldsCache.removeCustomRelationshipTemplate(crt);
 
         permissionService.removeIfPresent(crt.getModifyPermission());
-        permissionService.removeIfPresent(crt.getDecrpytPermission());
         permissionService.removeIfPresent(crt.getReadPermission());
 
         super.remove(crt);
