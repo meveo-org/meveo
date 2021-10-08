@@ -251,8 +251,18 @@ fi
 if [ "${GLOWROOT_ENABLE}" = true ]; then
     JAVA_OPTS="${JAVA_OPTS} -javaagent:${JBOSS_HOME}/glowroot/glowroot.jar"
 
-    ## Change the bind address for the access from remote machines.
-    sed -i 's,"bindAddress": "127.0.0.1","bindAddress": "0.0.0.0",g' ${JBOSS_HOME}/glowroot/admin.json
+    if [ -f "${JBOSS_HOME}/glowroot/admin.json" ]; then
+        ## Change the bind address for the access from remote machines.
+        sed -i 's,"bindAddress": "127.0.0.1","bindAddress": "0.0.0.0",g' ${JBOSS_HOME}/glowroot/admin.json
+    else
+        cat > ${JBOSS_HOME}/glowroot/admin.json << EOL
+{
+  "web": {
+    "bindAddress": "0.0.0.0"
+  }
+}
+EOL
+    fi
 fi
 
 #
