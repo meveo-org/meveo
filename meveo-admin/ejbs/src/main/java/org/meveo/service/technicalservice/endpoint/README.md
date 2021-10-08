@@ -164,7 +164,20 @@ context.get("creationDate");
 context.get("headOffice");
 ```
 
-In case you need the original body in the Script, you can retrieve it from the `REQUEST_BODY` parameter.
+if you need the original body you can retrieve it from the `REQUEST_BODY` parameter.
+	
+## How to access the HTTP request in Script
+	
+In case you need the headers, cookies or anything else low level in the Script, you can retrieve the `request` [EndpointRequest](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) from the parameters
+```
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+	
+   public void execute(Map<String, Object> parameters) throws BusinessException {
+	EndpointRequest req = (EndpointRequest) parameters.get("request");
+	...
+   }
+```
+	
 	
 ## JSONata
 
