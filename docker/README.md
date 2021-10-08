@@ -72,3 +72,21 @@ The following environment variables can be redefined for meveo service
 | JAVA_OPTS | Many parameters.<br/>Need to look at code | This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored. |
 | JAVA_EXTRA_OPTS | - | The extra options to add to the default jvm options. |
 
+### APM for Meveo wildfly
+
+Meveo image installed [glowroot](https://glowroot.org).
+
+`glowroot` is a Java APM(Application Performance Management), which is the monitoring and management of performance and availability of java applications.
+
+`glowroot` helps you get to the root cause of application performance issues.
+
+By default, it is not launched. To launch it, set the env variable `GLOWROOT_ENABLE` to `true`.
+
+Like this:
+
+```yaml
+    environment:
+      GLOWROOT_ENABLE: "true"
+```
+
+It is supposed to listen to the port 4000 inside the container. To access `glowroot` UI, please configure the reverse proxy or the port mapping of the container.
