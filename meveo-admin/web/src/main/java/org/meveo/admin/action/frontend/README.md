@@ -8,7 +8,7 @@ To upload files to be served from meveo, follow these steps:
 1. Log in to meveo.
 2. Select `Execution` menu and click on `File Explorer`.
 3. Click the `frontend` folder.
-4. In the input box enter the preferred the web application's name, do not use spaces in between. (This will be used to refer to it on the URL path.  From here on, it will be referred to as `WEB_APP`).
+4. In the input box enter the preferred web application's name, do not use spaces in between. (This will be used to refer to it on the URL path.  From here on, it will be referred to as `WEB_APP`).
 5. Click the `Create Directory` button.
 6. Click the newly created `WEB_APP` folder.
 7. If the file to be uploaded is a zip file, select `Unzip automately`
