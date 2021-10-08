@@ -250,6 +250,9 @@ fi
 # Glowroot - helps you get to the root of application performance issues.
 if [ "${GLOWROOT_ENABLE}" = true ]; then
     JAVA_OPTS="${JAVA_OPTS} -javaagent:${JBOSS_HOME}/glowroot/glowroot.jar"
+
+    ## Change the bind address for the access from remote machines.
+    sed -i 's,"bindAddress": "127.0.0.1","bindAddress": "0.0.0.0",g' ${JBOSS_HOME}/glowroot/admin.json
 fi
 
 #
