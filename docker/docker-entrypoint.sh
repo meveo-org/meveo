@@ -247,6 +247,11 @@ else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
 fi
 
+# Glowroot - helps you get to the root of application performance issues.
+if [ "${GLOWROOT_ENABLE}" = true ]; then
+    JAVA_OPTS="${JAVA_OPTS} -javaagent:${JBOSS_HOME}/glowroot/glowroot.jar"
+fi
+
 #
 # The extra options to pass to the Java VM.
 #

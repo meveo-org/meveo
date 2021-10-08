@@ -153,6 +153,19 @@ COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_SERV
 
 
 
+### ------------------------- glowroot ----------------------------- ###
+### https://glowroot.org/
+### https://github.com/glowroot/glowroot/releases
+
+ARG GLOWROOT_VERSION=0.13.6
+
+RUN set -ex \
+    && curl -L https://github.com/glowroot/glowroot/releases/download/v${GLOWROOT_VERSION}/glowroot-${GLOWROOT_VERSION}-dist.zip > glowroot.zip \
+    && unzip glowroot.zip \
+    && rm glowroot.zip \
+    && ls ${JBOSS_HOME}/glowroot/glowroot.jar
+
+
 ### ------------------------- Configurations ----------------------------- ###
 
 
