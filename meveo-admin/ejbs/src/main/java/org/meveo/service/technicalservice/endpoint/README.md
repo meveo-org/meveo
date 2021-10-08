@@ -21,9 +21,18 @@ In case the script is executed in an asynchronous way, then after the max delay 
 then the cancel method of the script is called. It should stop the execution and return immediatly the current result.
 
 If the script extends [EndpointScript](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/EndpointScript.java)
-then the EndpointRequest is set , and in case the call is synchronous the EndpointResponse is set.
+then the [EndpointRequest](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) is set , and in case the call is synchronous the EndpointResponse is set.
 If the script does not extend EndpointScript then the request (and response in synchronous case) are set
-in the parameters "request" and "response" respectively.
+in the parameters `request` and `response` respectively.
+
+```
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+	
+   public void execute(Map<String, Object> parameters) throws BusinessException {
+	EndpointRequest req = (EndpointRequest) parameters.get("request");
+	...
+   }
+```
 
 ## GUI and API
 
@@ -165,18 +174,7 @@ context.get("headOffice");
 ```
 
 if you need the original body you can retrieve it from the `REQUEST_BODY` parameter.
-	
-## How to access the HTTP request in Script
-	
-In case you need the headers, cookies or anything else low level in the Script, you can retrieve the `request` [EndpointRequest](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) from the parameters
-```
-import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
-	
-   public void execute(Map<String, Object> parameters) throws BusinessException {
-	EndpointRequest req = (EndpointRequest) parameters.get("request");
-	...
-   }
-```
+
 	
 	
 ## JSONata
