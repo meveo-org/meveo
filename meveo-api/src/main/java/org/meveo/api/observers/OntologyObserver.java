@@ -18,18 +18,16 @@ package org.meveo.api.observers;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Priority;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -57,12 +55,14 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.ModulePostInstall;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -83,7 +83,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.utils.Log;
 
 /**
  * Observer that updates IDL definitions when a CET, CRT or CFT changes
@@ -635,6 +634,34 @@ public class OntologyObserver {
             }
         }
     }
+	
+	/**
+	 * Generate java files for CETs and CRTs
+	 * 
+	 * @param module the installed module
+	 * @throws BusinessException if we can't generate a file
+	 */
+	public void generateJavaFiles(@Observes @ModulePostInstall @Priority(1) MeveoModule module) throws BusinessException {
+		List<CustomEntityTemplate> cets = module.getModuleItems().stream()
+			.filter(item -> item.getItemClass().equals(CustomEntityTemplate.class.getName()))
+			.map(item -> customEntityTemplateService.findByCode(item.getItemCode()))
+			.collect(Collectors.toList());
+		
+		for (var cet : cets) {
+	        final String templateSchema = cetCompiler.getTemplateSchema(cet);
+	        cetCompiler.generateCETSourceFile(templateSchema, cet);
+		}
+		
+		List<CustomRelationshipTemplate> crts = module.getModuleItems().stream()
+			.filter(item -> item.getItemClass().equals(CustomRelationshipTemplate.class.getName()))
+			.map(item -> customRelationshipTemplateService.findByCode(item.getItemCode()))
+			.collect(Collectors.toList());
+
+		for (var crt : crts) {
+	        final String templateSchema = getTemplateSchema(crt);
+	        cetCompiler.generateCRTSourceFile(templateSchema, crt);
+		}
+	}
 
     /**
      * When a {@link CustomFieldTemplate} is removed, update the corresponding JSON Schema of the related CET / CFT

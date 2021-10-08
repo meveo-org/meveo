@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Priority;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -343,7 +344,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	 * @param module installed module
 	 * @throws InvalidScriptException if one of the script can't be compiled
 	 */
-	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws InvalidScriptException {
+	public void postModuleInstall(@Observes @ModulePostInstall @Priority(2) MeveoModule module) throws InvalidScriptException {
 		var scripts = module.getModuleItems().stream()
 			.filter(item -> item.getItemClass().equals(ScriptInstance.class.getName()))
 			.map(item -> findByCode(item.getItemCode()))
