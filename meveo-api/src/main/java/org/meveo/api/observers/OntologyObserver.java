@@ -649,6 +649,21 @@ public class OntologyObserver {
 		
 		for (var cet : cets) {
 	        final String templateSchema = cetCompiler.getTemplateSchema(cet);
+	        final File cetJsonDir = cetCompiler.getJsonCetDir(cet);
+	        final File cetJavaDir = cetCompiler.getJavaCetDir(cet);
+	        if (!cetJsonDir.exists()) {
+	            cetJsonDir.mkdirs();
+	        }
+	        if (!cetJavaDir.exists()) {
+	        	cetJavaDir.mkdir();
+	        }
+	        File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
+	        try {
+				FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	        cetCompiler.generateCETSourceFile(templateSchema, cet);
 		}
 		
@@ -659,6 +674,20 @@ public class OntologyObserver {
 
 		for (var crt : crts) {
 	        final String templateSchema = getTemplateSchema(crt);
+	        final File crtDirJson = customRelationshipTemplateService.getCrtDir(crt, "json");
+	        if (!crtDirJson.exists()) {
+	            crtDirJson.mkdirs();
+	        }
+	        File schemaFile = new File(crtDirJson, crt.getCode() + "-schema.json");
+	        if (schemaFile.exists()) {
+	        	schemaFile.delete();
+	        }
+	        try {
+				FileUtils.write(schemaFile, templateSchema, StandardCharsets.UTF_8);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	        cetCompiler.generateCRTSourceFile(templateSchema, crt);
 		}
 	}

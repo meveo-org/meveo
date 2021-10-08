@@ -719,12 +719,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
-    	if(cetCode == null) {
-    		cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
-    	}
     	
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getAppliesTo();
     	
     	File newDir = new File (gitDirectory, path);
     	newDir.mkdirs();
@@ -743,7 +739,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for CFT " + cetCode + "." + entity.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for CFT " + entity.getAppliesTo() + "." + entity.getCode());
 	}
     
 }

@@ -82,19 +82,6 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	@MeveoRepository
 	protected GitRepository meveoRepository;
 	
-	@Inject
-	private RepositoryService repositoryService;
-	
-	@Inject 
-	private CrossStorageApi crossStorageApi;
-	
-	@Inject
-	private ScriptInstanceService scriptInstanceService;
-	
-	@Inject
-	private MeveoModuleService meveoModuleService;
-
-	
     /**
      * Find entity by code - strict match.
      * 
@@ -306,66 +293,30 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	}
 
     protected void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
-    	if (entity instanceof CustomEntityInstance) {
-    		String cetCode = ((CustomEntityInstance)entity).getCetCode();
-			CustomEntity pojo;
-			try {
-				Class<CustomEntity> pojoClass = scriptInstanceService.loadCustomEntityClass(cetCode, false, Optional.of(module.getCode()));
-				pojo = this.crossStorageApi.find(this.repositoryService.findDefaultRepository(), ((CustomEntityInstance) entity).getUuid(), pojoClass);
-			} catch (EntityDoesNotExistsException e) {
-				throw new BusinessException("File cannot be updated or created", e);
-			} catch (CharSequenceCompilerException e) {
-				throw new BusinessException("File cannot be updated or created", e);
-			}
-     			
-    		
-    		String ceiJson = JacksonUtil.toString(pojo);
-    		
-    		MeveoModule meveoModule = meveoModuleService.findById(module.getId());
-	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, meveoModule.getCode());
-	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
-	    	File newDir = new File(gitDirectory, path);
-	    	boolean check = newDir.mkdirs();
-	    	
-	    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getCode() + ".json");
-	    	try {
-	    		if (isCreation) {
-	    			newJsonFile.createNewFile();
-	    		}
-	    		
-	    		byte[] strToBytes = ceiJson.getBytes(StandardCharsets.UTF_8);
-	    		Files.write(newJsonFile.toPath(), strToBytes);
-	    	} catch (IOException e) {
-	    		throw new BusinessException("File cannot be updated or created", e);
-	    	}
-			gitClient.commitFiles(meveoModule.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
-
-    	} else {
-	    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-	    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
-	    	
-	    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-	    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
-	    	
-	    	File newDir = new File (gitDirectory, path);
-	    	newDir.mkdirs();
-	    	
-	    	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
-	    	try {
-		    	if (isCreation) {
-		    		newJsonFile.createNewFile();
-		    	}
-		    	
-		    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-		
-		    	Files.write(newJsonFile.toPath(), strToBytes);
-	    	} catch (IOException e) {
-	    		throw new BusinessException("File cannot be updated or created", e);
+    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
+    	
+    	File newDir = new File (gitDirectory, path);
+    	newDir.mkdirs();
+    	
+    	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
+    	try {
+	    	if (isCreation) {
+	    		newJsonFile.createNewFile();
 	    	}
 	    	
-	    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-			gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+	
+	    	Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
     	}
+    	
+    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
     }
     
     /**

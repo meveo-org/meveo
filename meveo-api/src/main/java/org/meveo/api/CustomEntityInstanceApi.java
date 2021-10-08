@@ -27,6 +27,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.local.IPersistenceService;
@@ -55,8 +56,8 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 		super(CustomEntityInstance.class, CustomEntityInstanceDto.class);
 	}
 	
-	public List<Map<String, Object>> readCeis(File ceiDirectory) {
-		List<Map<String, Object>> dtos = new ArrayList<>();
+	public List<CustomEntityInstanceDto> readCeis(File ceiDirectory) {
+		List<CustomEntityInstanceDto> dtos = new ArrayList<>();
 		
 		for (File ceiByCetDir : ceiDirectory.listFiles()) {
 			if(!ceiByCetDir.isDirectory()) {
@@ -72,7 +73,10 @@ public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, C
 					String fileToString = org.apache.commons.io.FileUtils.readFileToString(ceiFile, StandardCharsets.UTF_8);
 					Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
 					data.put("cetCode", ceiByCetDir.getName());
-					dtos.add(data);
+					
+					CustomEntityInstance cei = CEIUtils.pojoToCei(data);
+					cei.setCode((String) data.getOrDefault(data.get("code"), data.get("uuid")));
+					dtos.add(toDto(cei));
 				} catch (IOException e) {
 					log.error("Failed to read CEI data", e);
 				}

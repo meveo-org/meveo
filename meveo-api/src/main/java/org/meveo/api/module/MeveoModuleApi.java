@@ -191,7 +191,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		ModuleInstallResult result = null;
 		
 		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
-		result = install(moduleDto, OnDuplicate.FAIL);
+		result = install(moduleDto, OnDuplicate.SKIP);
 		
 		return result;
 	}

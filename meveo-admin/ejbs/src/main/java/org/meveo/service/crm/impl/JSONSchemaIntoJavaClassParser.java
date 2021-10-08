@@ -367,7 +367,7 @@ public class JSONSchemaIntoJavaClassParser {
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
                             Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");
-                            Map<String, Object> properties = (Map<String, Object>) patternProperties.get("^.*$");
+                            Map<String, Object> properties = (Map<String, Object>) (patternProperties != null ? patternProperties.get("^.*$") : values.get("properties"));
                             if (properties.containsKey("$ref")) {
                                 String ref = (String) properties.get("$ref");
                                 if (ref != null) {

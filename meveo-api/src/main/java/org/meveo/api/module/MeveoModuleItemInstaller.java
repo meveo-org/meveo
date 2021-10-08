@@ -496,7 +496,7 @@ public class MeveoModuleItemInstaller {
 							skipped = true;
 							break;
 						case FAIL:
-							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getCode());
+							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getAppliesTo() + "." + cft.getCode());
 						default:
 							break;
 						}
