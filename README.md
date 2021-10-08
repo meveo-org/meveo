@@ -48,7 +48,10 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Lifecycle Workflows](./meveo-admin/ejbs/src/main/java/org/meveo/service/wf)
 - [Notification](./meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
 
-### Reporting
+### Frontend
+
+ - [Static pages](./meveo-admin/web/src/main/java/org/meveo/admin/action/frontend)
+ - [Module Webapp](https://github.com/meveo-org/module-webapprouter)
 
 ### Clustering
 Meveo can be deployed in a wildfly cluster to scale its capabilities.
