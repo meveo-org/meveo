@@ -22,6 +22,11 @@ package org.meveo.service.admin.impl;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +49,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
@@ -71,6 +77,7 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
+import org.meveo.model.ModulePostInstall;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -85,8 +92,12 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
+import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.communication.impl.MeveoInstanceService;
+import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
@@ -105,6 +116,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     private MeveoInstanceService meveoInstanceService;
     
     @Inject
+    private MavenConfigurationService mavenConfigurationService;
+    
+    @Inject
     private MeveoModuleItemService meveoModuleItemService;
 
     @Inject
@@ -118,6 +132,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private GitClient gitClient;
+    
+    @Inject
+    private BusinessServiceFinder businessServiceFinder;
 
     /**
      * Add missing dependencies of each module item
@@ -324,29 +341,47 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * Add module item with differentiate if appliesTo is null or not
      * 
      * @param meveoModuleItem Module item
+     * @throws BusinessException 
+     * @throws IOException 
      */
-    public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
     	}
     	
-    	List<MeveoModuleItem> testEmptyModule;
+    	List<MeveoModuleItem> testEmptyModule = new ArrayList<MeveoModuleItem>();
     	if (meveoModuleItem.getAppliesTo() == null) {
     		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
     		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
     	
+    	if (meveoModuleItem.getItemEntity() == null) {
+    		loadModuleItem(meveoModuleItem);
+    	}
+    	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
+    	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
     	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
-    		module.getModuleItems().add(meveoModuleItem);
-    		meveoModuleItem.setMeveoModule(module);
-    	}else {
-    		throw new IllegalArgumentException(
-    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
-    			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
-    		);
+    		try {
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    			module.getModuleItems().add(meveoModuleItem);
+    			meveoModuleItem.setMeveoModule(module);
+    		} catch (BusinessException | IOException e2) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e2);
+    		}
+    	} else {
+    		try {
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    		    MeveoModule moduleToRemove = businessService.findModuleOf(meveoModuleItem.getItemEntity());
+    		    moduleToRemove.removeItem(meveoModuleItem);
+    		    module.getModuleItems().add(meveoModuleItem);
+				meveoModuleItem.setMeveoModule(module);
+    		} catch (BusinessException | IOException e) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e);
+			}
     	}
     }
     
@@ -806,7 +841,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return null;
+    	return List.of("gitRepository");
     }
     
     /**
@@ -819,10 +854,34 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	var repo = new GitRepository();
     	repo.setCode(meveoModule.getCode());
     	repo.setDescription(meveoModule.getDescription());
-    	this.gitRepositoryService.create(repo);
-    	this.gitClient.checkout(repo, meveoModule.getCurrentVersion(), true);
-    	meveoModule.setGitRepository(repo);
+    	
+    	if (this.gitRepositoryService.findByCode(meveoModule.getCode()) == null) {
+			this.gitRepositoryService.create(repo);
+			this.gitClient.checkout(repo, "master", true);//TODO meveoModule.getCurrentVersion
+			meveoModule.setGitRepository(repo);
+    		
+    	} else {
+    		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
+    	}
     }
+    
+	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
+    	MeveoModule thinModule;
+    	
+    	// Generate module.json file
+		try {
+			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
+			thinModule.setCode(module.getCode());
+			thinModule.setModuleItems(null);
+			
+			addFilesToModule(thinModule, module);
+		} catch (Exception e) {
+			throw new BusinessException(e);
+		}
+		
+		// Generate maven facet if file does not exists yet
+		mavenConfigurationService.createDefaultPomFile(module.getCode());
+	}
     
     /**
      * Remove the GitRepository corresponding to the meveo module deleted
@@ -841,5 +900,29 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
 		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+	}
+	
+	/**
+	 * Copy the module files into the git directory if they are not present yet
+	 * 
+	 * @param module the installed module
+	 * @throws IOException if a file / directory can't be copied
+	 */
+	public void copyFilesToGitDirectory(@Observes @ModulePostInstall MeveoModule module) throws IOException {
+		if(!CollectionUtils.isEmpty(module.getModuleFiles())) {
+			String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+			for (String filePath : module.getModuleFiles()) {
+				Path source = Paths.get(chrootDir, filePath);
+				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getCode()).getAbsolutePath(), filePath);
+				if(!Files.exists(target) && Files.exists(source)) {
+					Files.createDirectories(target);
+					if (Files.isDirectory(target)) {
+						FileUtils.copyDirectory(source.toFile(), target.toFile());
+					} else {
+						Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+					}
+				}
+			}
+		}
 	}
 }

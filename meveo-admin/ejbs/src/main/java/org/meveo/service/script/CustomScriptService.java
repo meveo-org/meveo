@@ -25,8 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -85,8 +84,10 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -99,8 +100,11 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -109,7 +113,6 @@ import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -152,9 +155,19 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Inject
     private ModuleInstallationContext moduleInstallCtx;
     
+	@Inject
+	private MeveoModuleService meveoModuleService;
+    
     private RepositorySystem defaultRepositorySystem;
 
     private RepositorySystemSession defaultRepositorySystemSession;
+    
+	@Inject
+	private CustomEntityTemplateCompiler customEntityTemplateCompiler;
+
+	@Inject
+	private CustomEntityTemplateService customEntityTemplateService;
+
     
     @PostConstruct
     private void init() {
@@ -194,10 +207,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * Re-compile the script
      *
      * @param script Created or updated {@link CustomScript}
+     * @throws BusinessException 
      */
-    @Override
-    protected void afterUpdateOrCreate(T script) {
-    	
+	@Override
+    public void afterUpdateOrCreate(T script) throws BusinessException {
+    	super.afterUpdateOrCreate(script);
+    	MeveoModule module = this.findModuleOf(script);
         try {
         	boolean commitFile = true;
             File scriptFile = findScriptFile(script);
@@ -211,7 +226,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
             if(commitFile) {
 	            buildScriptFile(scriptFile, script);
-	            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+	            if (module == null) {
+		            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
+	            } else {
+	            	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create or update script" + script.getCode());
+	            }
             }
             
         } catch (Exception e) {
@@ -226,7 +245,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Override
     protected void validate(T script) throws BusinessException {
-        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5) {
+        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 || this.moduleInstallCtx.isActive()) {
             return;
         }
         String className = getClassName(script.getScript());
@@ -891,8 +910,51 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
-        return compiler.compile(fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+        String sourcePath = getSourcePath();
+        
+        return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
+
+	/**
+	 * @return
+	 */
+	private String getSourcePath() {
+		String sourcePath = "";
+        
+        File baseDir = new File(GitHelper.getGitDirectory(null));
+        
+        for (File moduleDir : baseDir.listFiles()) {
+        	File javaSrcDir = new File(moduleDir, "/facets/java");
+        	if(javaSrcDir.exists()) {
+        		sourcePath += javaSrcDir.getAbsolutePath() + ";";
+        	}
+    	}
+		return sourcePath;
+	}
+    
+
+    public Class<CustomEntity> loadCustomEntityClass(String cetCode, boolean isTestCompile, Optional<String> module) throws CharSequenceCompilerException {
+         String fullClassName = "org.meveo.model.customEntities." + cetCode;
+        try {
+    		return CharSequenceCompiler.getCompiledClass(fullClassName);
+    	} catch (ClassNotFoundException e) {
+	        String classPath = CLASSPATH_REFERENCE.get();
+	        CharSequenceCompiler<CustomEntity> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+	        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
+	        File sourceFile = new File(
+	        		customEntityTemplateCompiler.getJavaCetDir(customEntityTemplateService.findByCode(cetCode)), 
+	        		cetCode + ".java");
+	        
+	
+	        try {
+				String sourceContent = org.apache.commons.io.FileUtils.readFileToString(sourceFile, StandardCharsets.UTF_8);
+				return compiler.compile(getSourcePath(), fullClassName, sourceContent, errs, isTestCompile, CustomEntity.class);
+			} catch (IOException e1) {
+				throw new CharSequenceCompilerException(e.getMessage(), null, e, errs);
+			}
+    	}
+    }
+
 
     /**
      * Find the script class for a given script code
@@ -1041,12 +1103,34 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      * @param scriptInstance Removed {@link ScriptInstance}
      * @throws BusinessException if the modifications can't be committed
      */
-    public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
-        File file = findScriptFile(scriptInstance);
-        if (file.exists()) {
-            file.delete();
-            gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
-        }
+    @SuppressWarnings("unchecked")
+	public void onScriptRemoved(@Observes @Removed ScriptInstance scriptInstance) throws BusinessException {
+    	MeveoModule module = findModuleOf(findByCode(scriptInstance.getCode()));
+    	
+    	//TODO remove this condition with the default Meveo module
+    	if (module != null) {
+    		removeFilesFromModule((T) scriptInstance, module);
+    		
+    		String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+    		File gitDirectory;
+    		String path;
+    		if (extension == ".js") {
+    			gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    			path = "/facets/javascript/" + scriptInstance.getCode() + extension;
+    		} else {
+    			gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    			path = "/facets/java/" + scriptInstance.getCode().replaceAll("\\.", "/") + extension;
+    		}
+			File directoryToRemove = new File(gitDirectory, path);
+			directoryToRemove.delete();
+			
+    	} else {
+    		File file = findScriptFile(scriptInstance);
+    		if (file.exists()) {
+    			file.delete();
+    			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
+    		}
+    	}
     }
 
     /**
@@ -1064,8 +1148,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
         if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
             for (String modifiedFile : commitEvent.getModifiedFiles()) {
-                if (modifiedFile.startsWith("src/main/java") && !modifiedFile.contains("customEntities")) {
-                    String scriptCode = modifiedFile.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
+                if (modifiedFile.startsWith("facets/java") && !modifiedFile.contains("customEntities")) {
+                    String scriptCode = modifiedFile;//.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
                     T script = findByCode(scriptCode);
                     File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
                     File scriptFile = new File(repositoryDir, modifiedFile);
@@ -1078,6 +1162,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
                         scriptInstance.setSourceTypeEnum(scriptType);
                         scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
+                        GitRepository gitRepo = commitEvent.getGitRepository();
+                        String moduleCode = gitRepo.getCode(); 
+                        MeveoModule module = meveoModuleService.findByCode(moduleCode);
+                        if (module != null) {
+                        	moveFilesToModule(script, module);
+                        }
+                        
                         create((T) scriptInstance);
 
                     } else if (script != null && !scriptFile.exists()) {
@@ -1085,7 +1176,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         remove(script);
 
                     } else if (script != null && scriptFile.exists()) {
-                        // Scipt has been updated
+                        // Script has been updated
                     	script.setScript(readScriptFile(script));
                         update(script);
                         compileScript(script, false);
@@ -1103,15 +1194,34 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         org.apache.commons.io.FileUtils.write(scriptFile, scriptInstance.getScript(), StandardCharsets.UTF_8);
     }
 
-    private File findScriptFile(CustomScript scriptInstance) {
-        final File scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/");
-        if (!scriptDir.exists()) {
+    @SuppressWarnings("unchecked")
+	private File findScriptFile(CustomScript scriptInstance) {
+    	File scriptDir = null;
+    	String[] fullPath = scriptInstance.getCode().replaceAll("\\.", "/").split("/");
+    	String code = fullPath[fullPath.length - 1];
+    	String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
+    	String directory = "";
+    	
+    	if (extension == ".js") {
+    		directory = "/facets/javascript/";
+    	}else if (extension == ".java") {
+    		String pathScript = scriptInstance.getCode().replaceAll("\\.", "/");
+    		pathScript = pathScript.replaceAll("/+\\w+$", "");
+    		directory = "/facets/java/" + pathScript +"/";
+    	}
+	    MeveoModule module = this.findModuleOf((T) scriptInstance);
+
+	    if (module == null) {
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + directory);
+	    } else {
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
+	    }
+	    if (!scriptDir.exists()) {
             scriptDir.mkdirs();
         }
 
-        String extension = scriptInstance.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
-        String path = scriptInstance.getCode().replaceAll("\\.", "/");
-        return new File(scriptDir, path + extension);
+        
+        return new File(scriptDir, code + extension);
     }
 
     /**

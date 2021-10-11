@@ -41,6 +41,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -73,6 +74,7 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
+import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 
 /**
@@ -135,7 +137,7 @@ public class MeveoModuleItemInstaller {
 	
 	@Inject
 	private Repository currentRepository;
-    
+	
     /**
      * Uninstall the module and disables it items
      * 
@@ -198,7 +200,9 @@ public class MeveoModuleItemInstaller {
             
             if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
                 var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
-                crossStorageService.remove(currentRepository, cet, item.getItemCode());
+                if(cet != null) {
+                	crossStorageService.remove(currentRepository, cet, item.getItemCode());
+                }
             	continue;
 			}
             
@@ -330,7 +334,7 @@ public class MeveoModuleItemInstaller {
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
-    	installCtx.begin();
+    	installCtx.begin(meveoModule);
     	ModuleInstallResult result = new ModuleInstallResult();
     	
         boolean installed = false;
@@ -492,7 +496,7 @@ public class MeveoModuleItemInstaller {
 							skipped = true;
 							break;
 						case FAIL:
-							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getCode());
+							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getAppliesTo() + "." + cft.getCode());
 						default:
 							break;
 						}
@@ -728,15 +732,17 @@ public class MeveoModuleItemInstaller {
 			for (MeveoModuleItemDto moduleItemDto : new ArrayList<>(moduleDto.getModuleItems())) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
 					CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
-					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
-						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
-						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
-						cftModuleItem.setDtoData(cftData);
-						cftData.setAppliesTo("CE_" + cet.getCode());
-						moduleDto.getModuleItems().add(cftModuleItem);
-
-						cet.getFields().remove(cftData);
-						moduleItemDto.setDtoData(cet);
+					if (cet.getFields() != null) {
+						for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+							MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+							cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+							cftModuleItem.setDtoData(cftData);
+							cftData.setAppliesTo("CE_" + cet.getCode());
+							moduleDto.getModuleItems().add(cftModuleItem);
+							
+							cet.getFields().remove(cftData);
+							moduleItemDto.setDtoData(cet);
+						}
 					}
 					
 					// Also put entity custom action outside of the cet
@@ -819,17 +825,22 @@ public class MeveoModuleItemInstaller {
 	 * 
 	 * @param dto         CustomEntityTemplateDto instance
 	 * @param meveoModule where module item is added
+	 * @throws BusinessException 
 	 */
-	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) {
+	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
-				meveoModuleService.addModuleItem(itemDto, meveoModule);
+				try {
+					meveoModuleService.addModuleItem(itemDto, meveoModule);
+				} catch (BusinessException e) {
+					throw new BusinessException(e.getCause());
+				}
 			}
 		}
 	}
 	
-	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) {
+	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomRelationshipTemplate.CRT_PREFIX + "_" + dto.getCode(), null);

@@ -718,6 +718,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 		mavenDependency = new MavenDependency();
 		mavenDependencies.add(mavenDependency);
+		mavenDependency.getScriptInstances().add(entity);
 	}
 	
     public List<FunctionIO> getScriptInputs(ScriptInstance script) {

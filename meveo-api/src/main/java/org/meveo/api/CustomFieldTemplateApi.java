@@ -29,6 +29,7 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -39,6 +40,9 @@ import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -76,6 +80,27 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
     public CustomFieldTemplateApi() {
 		super(CustomFieldTemplate.class, CustomFieldTemplateDto.class);
 	}
+    
+    public List<CustomFieldTemplateDto> readCfts(File directory) {
+    	List<CustomFieldTemplateDto> cftDtos = new ArrayList<>();
+    	
+    	for (File cetOrCrtDir : directory.listFiles()) {
+    		if(!cetOrCrtDir.isDirectory()) {
+    			continue;
+    		}
+    		
+    		for (File cftFile : cetOrCrtDir.listFiles()) {
+    			try {
+					cftDtos.add(JacksonUtil.read(cftFile, CustomFieldTemplateDto.class));
+				} catch (IOException e) {
+					log.error("Failed to read cft file", e);
+					return null;
+				}
+    		}
+    	}
+    	
+    	return cftDtos;
+    }
 
     /**
 	 * Creates a new CustomFieldTemplate using the given data.
@@ -251,7 +276,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         	return;
         }
 
-        CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(code, appliesTo);
+        CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesToNoCache(code, appliesTo);
         if (cft != null) {
             customFieldTemplateService.remove(cft.getId());
         }

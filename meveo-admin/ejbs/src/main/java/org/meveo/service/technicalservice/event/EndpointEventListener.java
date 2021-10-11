@@ -12,6 +12,8 @@ import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
@@ -22,9 +24,14 @@ import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
@@ -42,6 +49,10 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class EndpointEventListener {
 
+    @Inject
+    @CurrentUser
+    protected MeveoUser currentUser;
+    
 	@Inject
 	private Logger log;
 
@@ -67,8 +78,11 @@ public class EndpointEventListener {
 	 * @throws IOException       if file cannot be created
 	 * @throws BusinessException if the changes can't be commited
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public File createESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) throws IOException, BusinessException {
 
+		MeveoModule module = this.endpointService.findModuleOf(endpoint);
+		
 		List<File> filesToCommit = new ArrayList<>();
 		// check if base interface exists
 		if (!endpointService.isBaseEndpointScriptExists()) {
@@ -80,31 +94,47 @@ public class EndpointEventListener {
 		final File scriptFile = endpointService.getScriptFile(endpoint);
 		FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint), StandardCharsets.UTF_8);
 		filesToCommit.add(scriptFile);
-
-		gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
-
+		if (module != null) {
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create JS script for endpoit" + endpoint.getCode());
+		} else {
+			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
+		}
 		return scriptFile;
 	}
 
 	/**
 	 * Update (or create if not exists yet) the generated JS file to call the
 	 * endpoint and commit the changes if there are any. Automatically called at
-	 * endpoint's update.
+	 * endpoint's update. And update the JSON file of the endpoint
 	 *
 	 * @param endpoint Updated endpoint
 	 * @return the updated generated file
 	 * @throws IOException       if file cannot be created or overwritten
 	 * @throws BusinessException if the changes can't be commited
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public File updateESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) throws IOException, BusinessException {
 
+		MeveoModule module = this.endpointService.findModuleOf(endpoint);
+		
 		log.debug("[CDI event] on update es file with id={}", endpoint.getId());
 		final File scriptFile = endpointService.getScriptFile(endpoint);
 		String updatedScript = esGeneratorService.buildJSInterface(endpoint);
-
+		
 		if (!scriptFile.exists() || !FileUtils.readFileToString(scriptFile).equals(updatedScript)) {
 			FileUtils.write(scriptFile, updatedScript);
-			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode());
+			if (module != null) {
+				File endpointInterface = endpointService.getBaseScriptFile();
+				File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+				String pathEndpointInterface = "facets/javascript/endpoints/" + "/EndpointInterface.js";
+				File fileEndpointInterface = new File (gitDirectory, pathEndpointInterface);
+				if (!fileEndpointInterface.exists()) {
+					FileUtils.copyFile(endpointInterface, fileEndpointInterface);
+				}
+				gitClient.commitFiles(module.getGitRepository(), List.of(scriptFile, fileEndpointInterface), "Update JS script for endpoint " + endpoint.getCode());
+			} else {
+				gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoit " + endpoint.getCode());
+			}
 		}
 
 		return scriptFile;
@@ -118,17 +148,25 @@ public class EndpointEventListener {
 	 * @return the result of {@link File#delete()} called on the script file
 	 * @throws BusinessException if the changes can't be commited
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public boolean removeESFile(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint)
 			throws BusinessException {
 
+		MeveoModule module = this.endpointService.findModuleOf(endpoint);
+		
 		File scriptFile = endpointService.getScriptFile(endpoint);
 		boolean flag = true;
 		if (scriptFile != null) {
 			File parentDir = scriptFile.getParentFile();
 			flag = scriptFile.delete();
 			parentDir.delete();
-			gitClient.commitFiles(meveoRepository, Arrays.asList(scriptFile, parentDir),
+			if (module != null) {
+				gitClient.commitFiles(module.getGitRepository(), Arrays.asList(scriptFile, parentDir), 
 					"Delete JS dir and script for endpoint " + endpoint.getCode());
+			} else {
+				gitClient.commitFiles(meveoRepository, Arrays.asList(scriptFile, parentDir),
+					"Delete JS dir and script for endpoint " + endpoint.getCode());
+			}
 		}
 
 		return flag;

@@ -1,13 +1,19 @@
 package org.meveo.service.custom;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,24 +28,34 @@ import org.apache.commons.lang.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.elresolver.ELException;
+import org.meveo.model.CustomEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.git.GitHelper;
+import org.meveo.service.script.CharSequenceCompilerException;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.service.wf.WFActionService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
@@ -54,6 +70,18 @@ import com.ibm.icu.math.BigDecimal;
  */
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
+	
+	@Inject
+	private RepositoryService repositoryService;
+	
+	@Inject 
+	private CrossStorageApi crossStorageApi;
+	
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
@@ -469,4 +497,42 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
         }
         return map;
     }
+
+	@Override
+	protected void persistJsonFileInModule(CustomEntityInstance entity, MeveoModule module, boolean isCreation) throws BusinessException {
+		String cetCode = entity.getCetCode();
+		CustomEntity pojo;
+		try {
+			Class<CustomEntity> pojoClass = scriptInstanceService.loadCustomEntityClass(cetCode, false, Optional.of(module.getCode()));
+			pojo = this.crossStorageApi.find(this.repositoryService.findDefaultRepository(), ((CustomEntityInstance) entity).getUuid(), pojoClass);
+		} catch (EntityDoesNotExistsException e) {
+			throw new BusinessException("File cannot be updated or created", e);
+		} catch (CharSequenceCompilerException e) {
+			throw new BusinessException("File cannot be updated or created", e);
+		}
+ 			
+		
+		String ceiJson = JacksonUtil.toStringPrettyPrinted(pojo);
+		
+		MeveoModule meveoModule = meveoModuleService.findById(module.getId());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, meveoModule.getCode());
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+    	File newDir = new File(gitDirectory, path);
+    	boolean check = newDir.mkdirs();
+    	
+    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getCode() + ".json");
+    	try {
+    		if (isCreation) {
+    			newJsonFile.createNewFile();
+    		}
+    		
+    		byte[] strToBytes = ceiJson.getBytes(StandardCharsets.UTF_8);
+    		Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
+    	}
+		gitClient.commitFiles(meveoModule.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+	}
+    
+    
 }

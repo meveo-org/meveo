@@ -30,8 +30,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,12 +61,14 @@ import org.meveo.api.ApiService;
 import org.meveo.api.ApiUtils;
 import org.meveo.api.ApiVersionedService;
 import org.meveo.api.BaseCrudApi;
+import org.meveo.api.CustomEntityInstanceApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.admin.FilesApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
+import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -77,6 +80,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -86,13 +90,17 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.module.ModuleLicenseEnum;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -100,6 +108,7 @@ import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -162,6 +171,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private CrossStorageService crossStorageService;
+    
+    @Inject
+    private CrossStorageApi crossStorageApi;
+    
+    @Inject
+    private CustomEntityInstanceApi ceiApi;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -171,6 +186,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
+	public ModuleInstallResult install(GitRepository repo) throws BusinessException, MeveoApiException {
+		
+		ModuleInstallResult result = null;
+		
+		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
+		result = install(moduleDto, OnDuplicate.SKIP);
+		
+		// Copy module files to file explorer
+		try {
+			importFileFromModule(List.of(moduleDto), GitHelper.getRepositoryDir(currentUser, moduleDto.getCode()));
+		} catch (FileNotFoundException e) {
+			throw new BusinessException("Failed to copy module files", e);
+		}
+		
+		return result;
+	}
+	
 	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
 		if (meveoModule == null) {
@@ -190,6 +222,88 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
+	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
+		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+
+		MeveoModuleDto moduleDto;
+		try {
+			moduleDto = JacksonUtil.read(new File(repoDir, "module.json"), MeveoModuleDto.class);
+			moduleDto.setCode(repo.getCode());
+		} catch (IOException e1) {
+			throw new BusinessException("Can't read module descriptor", e1);
+		}
+		
+		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
+		
+		MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values().forEach(clazz -> {
+			ModuleItem item = clazz.getAnnotation(ModuleItem.class);
+			try {
+				if (clazz == CustomFieldTemplate.class) {
+					entityDtoNamebyPath.put(item.path(), CustomFieldTemplateDto.class.getName());
+				} else if (clazz == EntityCustomAction.class) {
+					entityDtoNamebyPath.put(item.path(), EntityCustomActionDto.class.getName());
+				} else {
+					BaseCrudApi api = (BaseCrudApi)ApiUtils.getApiService(clazz, false);
+					if (api != null) {
+						entityDtoNamebyPath.put(item.path(), api.getDtoClass().getName());
+					}
+				}
+			} catch (Exception e) {
+				log.error("Can't retrieve dto class for {}",clazz.getName(), e);
+			}
+		});
+		
+		for (File file : repoDir.listFiles()) {
+			if (!file.isDirectory()) {
+				continue;
+			}
+			String fileName = file.getName();
+			String dtoClassName = entityDtoNamebyPath.get(fileName);
+			if (dtoClassName == null) {
+				continue;
+			}
+			
+			//TODO: Custom action special case
+			if(fileName.equals("entityCustomActions")) {
+				entityCustomActionApi.readEcas(file)
+					.stream()
+					.map(ecaDto -> new MeveoModuleItemDto(ecaDto.getClass().getName(), ecaDto))
+					.forEach(moduleDto.getModuleItems()::add);
+				
+			} else if (fileName.equals("customFieldTemplates")) {
+				customFieldTemplateApi.readCfts(file)
+					.stream()
+					.map(cftDto -> new MeveoModuleItemDto(CustomFieldTemplateDto.class.getName(), cftDto))
+					.forEach(moduleDto.getModuleItems()::add);
+			
+			} else if (fileName.equals("customEntityInstances")) {
+				ceiApi.readCeis(file)
+					.stream()
+					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
+					.forEach(moduleDto.getModuleItems()::add);
+
+			} else {
+				for (File entityFile : file.listFiles()) {
+					try {
+						String entityFileName = entityFile.getName();
+						if (entityFileName.endsWith("-schema.json")) {
+							continue;
+						}
+						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
+						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
+						moduleDto.getModuleItems().add(moduleItemDto);
+					} catch (IOException e) {
+						log.error("Can't read entityFile", e);
+					}
+				}
+			}
+		}
+		
+		return moduleDto;
+	}
+	
 	public void registerModulePackage(String packageName) {
 		Reflections reflections = new Reflections(packageName);
 		Set<Class<?>> moduleItemClasses = reflections.getTypesAnnotatedWith(ModuleItem.class);
@@ -923,7 +1037,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		try {
 			checkModuleDependencies(modules);
 			// Import files contained in each modules
-			importFileFromModule(modules);
+			if(!getFileImport().isEmpty()) {
+				File parentDir = getFileImport().iterator().next().getParentFile();
+				importFileFromModule(modules, parentDir);
+			}
 
 			importEntities(modules, overwrite);
 		} catch (EntityDoesNotExistsException e) {
@@ -934,7 +1051,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public void importJSON(List<MeveoModuleDto> modules, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 
 		// Import files contained in each modules
-		importFileFromModule(modules);
+		if(!getFileImport().isEmpty()) {
+			File parentDir = getFileImport().iterator().next().getParentFile();
+			importFileFromModule(modules, parentDir);
+		}
 
 		importEntities(modules, overwrite);
 
@@ -1013,7 +1133,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		});
 	}
 
-	public void importFileFromModule(List<MeveoModuleDto> modules) throws FileNotFoundException {
+	public void importFileFromModule(List<MeveoModuleDto> modules, File parentDir) throws FileNotFoundException {
 
 		for (MeveoModuleDto module : modules) {
 			List<String> moduleFiles = module.getModuleFiles();
@@ -1021,24 +1141,20 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				continue;
 			}
 
-			if (!getFileImport().isEmpty()) {
-				File parentDir = getFileImport().iterator().next().getParentFile();
+			for (String moduleFile : moduleFiles) {
+				File fileToImport = new File(parentDir, moduleFile);
 
-				for (String moduleFile : moduleFiles) {
-					File fileToImport = new File(parentDir, moduleFile);
+				String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+				File targetFile = new File(chrootDir , moduleFile);
+				if (!targetFile.exists() && fileToImport.isDirectory()) {
+					targetFile.mkdirs();
+				}
 
-					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-					File targetFile = new File(chrootDir , moduleFile);
-					if (!targetFile.exists() && fileToImport.isDirectory()) {
-						targetFile.mkdirs();
-					}
-
-					if (fileToImport.isDirectory()) {
-						copyFileFromFolder(targetFile, fileToImport);
-					} else {
-						FileInputStream inputStream = new FileInputStream(fileToImport);
-						copyFile(targetFile, inputStream);
-					}
+				if (fileToImport.isDirectory()) {
+					copyFileFromFolder(targetFile, fileToImport);
+				} else {
+					FileInputStream inputStream = new FileInputStream(fileToImport);
+					copyFile(targetFile, inputStream);
 				}
 			}
 		}

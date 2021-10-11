@@ -364,7 +364,7 @@ public abstract class TechnicalServiceService<T extends TechnicalService> extend
 	}
 
 	@Override
-    protected void afterUpdateOrCreate(T executable) {}
+    public void afterUpdateOrCreate(T executable) {}
 
     @Override
     protected void validate(T executable) {}

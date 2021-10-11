@@ -227,7 +227,7 @@ public class StartupListener {
 			}
 
 			// Create default pom file
-			mavenConfigurationService.createDefaultPomFile(meveoRepo);
+			mavenConfigurationService.createDefaultPomFile(meveoRepo.getCode());
 
 			try {
 				// Create default maven repository

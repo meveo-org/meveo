@@ -7,9 +7,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,18 +23,15 @@ import javax.ejb.Singleton;
 import javax.ejb.Timeout;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
-import javax.transaction.UserTransaction;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
@@ -47,13 +47,13 @@ import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
+import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -63,7 +63,10 @@ import org.meveo.service.aether.ConsoleRepositoryListener;
 import org.meveo.service.aether.ManualRepositorySystemFactory;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.MavenDependencyService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
@@ -82,18 +85,12 @@ import org.slf4j.Logger;
  * @version 6.9.0
  */
 @Singleton
-@TransactionManagement(TransactionManagementType.BEAN)
 public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
     private final static String M2_DIR = "/.m2";
 
-	private static List<MavenDependency> createdBuffer = new ArrayList<>();
-	private static List<MavenDependency> updatedBuffer = new ArrayList<>();
-	private static List<MavenDependency> deletedBuffer = new ArrayList<>();
-
-	@Resource
-	private UserTransaction transaction;
+	private static Map<String, ChangeBuffer> buffers = new HashMap<>();
 
 	@Inject
 	@MeveoRepository
@@ -112,6 +109,9 @@ public class MavenConfigurationService implements Serializable {
 
 	@Inject
 	private GitClient gitClient;
+	
+	@Inject
+	private GitRepositoryService gitRepositoryService;
 
 	@Inject
 	private Logger log;
@@ -124,6 +124,12 @@ public class MavenConfigurationService implements Serializable {
 	
 	@Inject
 	private CurrentUserProvider currentUserProvider;
+	
+	@Inject
+	private MavenDependencyService mavenDependencyService;
+	
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
 
 	private javax.ejb.Timer ejbTimer;
 
@@ -144,24 +150,46 @@ public class MavenConfigurationService implements Serializable {
         return m2;
     }
 
-	public void onDependencyCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created MavenDependency d) {
-		createdBuffer.add(d);
-		schedulePomGeneration();
+	public void onDependencyCreated(@Observes @Created MavenDependency d) {
+		d.getScriptInstances()
+			.stream()
+				.map(scriptInstanceService::findModuleOf)
+				.forEach(module -> {
+					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
+						.getCreatedBuffer()
+						.add(d);
+					schedulePomGeneration();
+				});
 	}
 
-	public void onDependencyUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated MavenDependency d) {
-		log.debug("[CDI event] on dependency update with id={}", d.getArtifactId());
-		if (!createdBuffer.contains(d)) {
-			updatedBuffer.add(d);
-		}
-		schedulePomGeneration();
+	public void onDependencyUpdated(@Observes @Updated MavenDependency d) {
+		d.getScriptInstances()
+			.stream()
+				.map(scriptInstanceService::findModuleOf)
+				.forEach(module -> {
+					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
+						.getUpdatedBuffer()
+						.add(d);
+					schedulePomGeneration();
+				});
 	}
 
-	public void onDependencyRemoved(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Removed MavenDependency d) {
-		createdBuffer.remove(d);
-		updatedBuffer.remove(d);
-		deletedBuffer.add(d);
-		schedulePomGeneration();
+	public void onDependencyRemoved(MavenDependency d, ScriptInstance script) {
+		Optional.ofNullable(script)
+			.map(scriptInstanceService::findModuleOf)
+			.filter(Objects::nonNull)
+			.ifPresent(module -> {
+				buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
+					.getUpdatedBuffer()
+					.remove(d);
+				buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
+					.getCreatedBuffer()
+					.remove(d);
+				buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
+					.getDeletedBuffer()
+					.add(d);
+				schedulePomGeneration();
+			});
 	}
 
 	private void schedulePomGeneration() {
@@ -196,42 +224,51 @@ public class MavenConfigurationService implements Serializable {
 				log.debug("Can't parse string to MeveoUser", e);
 				return;
 			}
+			
+			buffers.forEach((moduleCode, buffer) -> {
+				
+				List<String> lines = new ArrayList<>();
 
-			List<String> lines = new ArrayList<>();
+				buffer.getCreatedBuffer().forEach(d -> lines.add("Add dependency " + d.getBuiltCoordinates()));
+				buffer.getUpdatedBuffer().forEach(d -> lines.add("Update dependency " + d.getBuiltCoordinates()));
+				buffer.getDeletedBuffer().forEach(d -> lines.add("Delete dependency " + d.getBuiltCoordinates()));
 
-			createdBuffer.forEach(d -> lines.add("Add dependency " + d.getBuiltCoordinates()));
-			updatedBuffer.forEach(d -> lines.add("Update dependency " + d.getBuiltCoordinates()));
-			deletedBuffer.forEach(d -> lines.add("Delete dependency " + d.getBuiltCoordinates()));
+				StringBuilder message = new StringBuilder();
 
-			StringBuilder message = new StringBuilder();
+				// If commit will only contain one change on dependencies, this change will be the header of the commit.
+				// If commit will contains many changes on dependencies, then the header is generic and all changes are detailed in the body.
+				if (lines.size() == 1) {
+					message.append(lines.get(0));
+				} else {
+					message.append("Update pom.xml (").append(lines.size()).append(" modifications) \n");
+					lines.forEach(l -> message.append("\n").append(l));
+				}
 
-			// If commit will only contain one change on dependencies, this change will be the header of the commit.
-			// If commit will contains many changes on dependencies, then the header is generic and all changes are detailed in the body.
-			if(lines.size() == 1) {
-				message.append(lines.get(0));
-			} else {
-				message.append("Update pom.xml (").append(lines.size()).append(" modifications) \n");
-				lines.forEach(l -> message.append("\n").append(l));
-			}
+				buffer.getCreatedBuffer().clear();
+				buffer.getUpdatedBuffer().clear();
+				buffer.getDeletedBuffer().clear();
 
-			createdBuffer.clear();
-			updatedBuffer.clear();
-			deletedBuffer.clear();
+				currentUserProvider.reestablishAuthentication(user);
 
-			currentUserProvider.reestablishAuthentication(user);
-
-			generatePom(message.toString(), meveoRepository.get());
+				generatePom(message.toString(), moduleCode);
+			});
 		}
 	}
 
-	private void generatePom(String message, GitRepository repository) {
+	private void generatePom(String message, String repositoryCode) {
+		
+		GitRepository repository = gitRepositoryService.findByCode(repositoryCode);
+		
 		log.debug("Generating pom.xml file");
 
 		Model model = new Model();
-		model.setGroupId("org.meveo");
-		model.setArtifactId("meveo-application");
+		model.setGroupId("org.meveo");//TODO: Add group id to module
+		model.setArtifactId(repositoryCode);
 		model.setVersion("1.0.0");
 		model.setModelVersion("4.0.0");
+		
+		model.setBuild(new Build());
+		model.getBuild().setSourceDirectory("../java");
 		
 		Properties properties = new Properties();
 		properties.setProperty("maven.compiler.target", "11");
@@ -268,9 +305,7 @@ public class MavenConfigurationService implements Serializable {
 
 		try {
 
-			transaction.begin();
-			entityManager.createQuery("SELECT d FROM MavenDependency d", MavenDependency.class)
-					.getResultStream()
+			mavenDependencyService.findModuleDependencies(repositoryCode)
 					.forEach(mavenDependency -> {
 						Dependency dependency = new Dependency();
 						dependency.setGroupId(mavenDependency.getGroupId());
@@ -279,16 +314,17 @@ public class MavenConfigurationService implements Serializable {
 						dependency.setScope("provided");
 						model.addDependency(dependency);
 					});
-			transaction.commit();
 
 		} catch (Exception e) {
 			log.error("Error retrieving maven dependencies", e);
 		}
 
 		final File repositoryDir = GitHelper.getRepositoryDir(null, repository.getCode());
-		File pomFile = new File(repositoryDir, "pom.xml");
+		File pomFile = new File(repositoryDir, "/facets/maven/pom.xml");
 
 		try {
+			pomFile.getParentFile().mkdirs();
+			
 			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
 			FileWriter fileWriter = new FileWriter(pomFile);
 			xmlWriter.write(fileWriter, model);
@@ -504,13 +540,38 @@ public class MavenConfigurationService implements Serializable {
 	 * 
 	 * @param repositoryCode code of the repository
 	 */
-	public void createDefaultPomFile(GitRepository repo) {
+	public void createDefaultPomFile(String repositoryCode) {
 
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repo.getCode());
-		File pomFile = new File(gitRepo.getPath() + File.separator + "pom.xml");
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repositoryCode);
+		File pomFile = new File(gitRepo.getPath() + File.separator + "facets" + File.separator + "maven" + File.separator + "pom.xml");
 
 		if (!pomFile.exists()) {
-			generatePom("Initialized default repository", repo);
+			generatePom("Initialized default repository", repositoryCode);
 		}
+	}
+	
+	private static class ChangeBuffer {
+		private List<MavenDependency> createdBuffer = new ArrayList<>();
+		private List<MavenDependency> updatedBuffer = new ArrayList<>();
+		private List<MavenDependency> deletedBuffer = new ArrayList<>();
+		/**
+		 * @return the {@link #createdBuffer}
+		 */
+		public List<MavenDependency> getCreatedBuffer() {
+			return createdBuffer;
+		}
+		/**
+		 * @return the {@link #updatedBuffer}
+		 */
+		public List<MavenDependency> getUpdatedBuffer() {
+			return updatedBuffer;
+		}
+		/**
+		 * @return the {@link #deletedBuffer}
+		 */
+		public List<MavenDependency> getDeletedBuffer() {
+			return deletedBuffer;
+		}
+		
 	}
 }
