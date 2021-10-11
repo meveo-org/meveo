@@ -22,7 +22,11 @@ package org.meveo.service.admin.impl;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,8 +41,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -57,7 +59,6 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
@@ -91,12 +92,12 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
-import org.meveo.service.base.BusinessServiceFinder;
-import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.communication.impl.MeveoInstanceService;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
@@ -870,7 +871,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	// Generate module.json file
 		try {
 			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
-			thinModule.setCode("module");
+			thinModule.setCode(module.getCode());
 			thinModule.setModuleItems(null);
 			
 			addFilesToModule(thinModule, module);
@@ -899,5 +900,29 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
 		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+	}
+	
+	/**
+	 * Copy the module files into the git directory if they are not present yet
+	 * 
+	 * @param module the installed module
+	 * @throws IOException if a file / directory can't be copied
+	 */
+	public void copyFilesToGitDirectory(@Observes @ModulePostInstall MeveoModule module) throws IOException {
+		if(!CollectionUtils.isEmpty(module.getModuleFiles())) {
+			String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+			for (String filePath : module.getModuleFiles()) {
+				Path source = Paths.get(chrootDir, filePath);
+				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getCode()).getAbsolutePath(), filePath);
+				if(!Files.exists(target) && Files.exists(source)) {
+					Files.createDirectories(target);
+					if (Files.isDirectory(target)) {
+						FileUtils.copyDirectory(source.toFile(), target.toFile());
+					} else {
+						Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+					}
+				}
+			}
+		}
 	}
 }

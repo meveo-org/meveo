@@ -193,6 +193,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
 		result = install(moduleDto, OnDuplicate.SKIP);
 		
+		// Copy module files to file explorer
+		try {
+			importFileFromModule(List.of(moduleDto), GitHelper.getRepositoryDir(currentUser, moduleDto.getCode()));
+		} catch (FileNotFoundException e) {
+			throw new BusinessException("Failed to copy module files", e);
+		}
+		
 		return result;
 	}
 	
@@ -217,13 +224,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@SuppressWarnings("rawtypes")
 	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
-		MeveoModuleDto moduleDto = new MeveoModuleDto();
-		moduleDto.setCode(repo.getCode());
-		moduleDto.setModuleItems(new ArrayList<>());
-		moduleDto.setDescription(repo.getCode());
-		moduleDto.setLicense(ModuleLicenseEnum.APACHE);
+		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+
+		MeveoModuleDto moduleDto;
+		try {
+			moduleDto = JacksonUtil.read(new File(repoDir, "module.json"), MeveoModuleDto.class);
+			moduleDto.setCode(repo.getCode());
+		} catch (IOException e1) {
+			throw new BusinessException("Can't read module descriptor", e1);
+		}
 		
-		File repoDir = GitHelper.getRepositoryDir(null, moduleDto.getCode());
 		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
 		
 		MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values().forEach(clazz -> {
@@ -1027,7 +1037,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		try {
 			checkModuleDependencies(modules);
 			// Import files contained in each modules
-			importFileFromModule(modules);
+			if(!getFileImport().isEmpty()) {
+				File parentDir = getFileImport().iterator().next().getParentFile();
+				importFileFromModule(modules, parentDir);
+			}
 
 			importEntities(modules, overwrite);
 		} catch (EntityDoesNotExistsException e) {
@@ -1038,7 +1051,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public void importJSON(List<MeveoModuleDto> modules, boolean overwrite) throws BusinessException, IOException, MeveoApiException {
 
 		// Import files contained in each modules
-		importFileFromModule(modules);
+		if(!getFileImport().isEmpty()) {
+			File parentDir = getFileImport().iterator().next().getParentFile();
+			importFileFromModule(modules, parentDir);
+		}
 
 		importEntities(modules, overwrite);
 
@@ -1117,7 +1133,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		});
 	}
 
-	public void importFileFromModule(List<MeveoModuleDto> modules) throws FileNotFoundException {
+	public void importFileFromModule(List<MeveoModuleDto> modules, File parentDir) throws FileNotFoundException {
 
 		for (MeveoModuleDto module : modules) {
 			List<String> moduleFiles = module.getModuleFiles();
@@ -1125,24 +1141,20 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				continue;
 			}
 
-			if (!getFileImport().isEmpty()) {
-				File parentDir = getFileImport().iterator().next().getParentFile();
+			for (String moduleFile : moduleFiles) {
+				File fileToImport = new File(parentDir, moduleFile);
 
-				for (String moduleFile : moduleFiles) {
-					File fileToImport = new File(parentDir, moduleFile);
+				String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
+				File targetFile = new File(chrootDir , moduleFile);
+				if (!targetFile.exists() && fileToImport.isDirectory()) {
+					targetFile.mkdirs();
+				}
 
-					String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-					File targetFile = new File(chrootDir , moduleFile);
-					if (!targetFile.exists() && fileToImport.isDirectory()) {
-						targetFile.mkdirs();
-					}
-
-					if (fileToImport.isDirectory()) {
-						copyFileFromFolder(targetFile, fileToImport);
-					} else {
-						FileInputStream inputStream = new FileInputStream(fileToImport);
-						copyFile(targetFile, inputStream);
-					}
+				if (fileToImport.isDirectory()) {
+					copyFileFromFolder(targetFile, fileToImport);
+				} else {
+					FileInputStream inputStream = new FileInputStream(fileToImport);
+					copyFile(targetFile, inputStream);
 				}
 			}
 		}
