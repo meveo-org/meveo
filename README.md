@@ -65,3 +65,8 @@ On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swa
 ## User Guide
 
 - [Documentation](https://github.com/manaty/meveo/tree/master/documentation/userguide)
+
+## Migration from versions previous to 7.0.0
+
+- The simplest solution is to uninstall / re-install all the modules
+- If the uninstall is not possible without data loss, move your git/Meveo/src/main/java folder to git/Meveo/facets/java
