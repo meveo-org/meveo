@@ -499,7 +499,19 @@ public class PersistenceRs {
 		hasAccessToRepository(repository);
 		
 		if(persistenceMode.equals(PersistenceMode.graph)) {
-			Collection<PersistenceDto> dtos = JacksonUtil.convert(body, new TypeReference<Collection<PersistenceDto>>() {});
+			Collection<PersistenceDto> dtos = null;
+			if(body instanceof Collection) {
+				if(!((Collection) body).isEmpty()) {
+					Object firstItem = ((Collection) body).iterator().next();
+					if (firstItem instanceof PersistenceDto) {
+						dtos = (Collection<PersistenceDto>) body;
+					}
+				}
+			}
+			
+			if (dtos == null) {
+				dtos = JacksonUtil.convert(body, new TypeReference<Collection<PersistenceDto>>() {});
+			}
 			AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
 	
 			try {
