@@ -3,6 +3,7 @@ package org.meveo.service.custom;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -86,7 +87,7 @@ public class CustomEntityInstanceAuditService extends NativePersistenceService {
 				CustomEntityInstanceAudit ceiAudit = new CustomEntityInstanceAudit();
 				ceiAudit.setAction(CustomEntityInstanceAuditType.CREATED);
 				ceiAudit.setCeiUuid(ceiUuid);
-				ceiAudit.setEventDate(LocalDateTime.now());
+				ceiAudit.setEventDate(new Date());
 				ceiAudit.setField(e.getKey());
 				ceiAudit.setNewValue(newValues.getCfValue(e.getKey()).getValue());
 				ceiAudit.setOldValue(oldValues.getCfValue(e.getKey()).getValue());
@@ -119,7 +120,7 @@ public class CustomEntityInstanceAuditService extends NativePersistenceService {
 				CustomEntityInstanceAudit ceiAudit = new CustomEntityInstanceAudit();
 				ceiAudit.setAction(CustomEntityInstanceAuditType.UPDATED);
 				ceiAudit.setCeiUuid(ceiUuid);
-				ceiAudit.setEventDate(LocalDateTime.now());
+				ceiAudit.setEventDate(new Date());
 				ceiAudit.setField(e.getKey());
 				ceiAudit.setNewValue(newValues.getCfValue(e.getKey()).getValue());
 				ceiAudit.setOldValue(oldValues.getCfValue(e.getKey()).getValue());
@@ -152,7 +153,7 @@ public class CustomEntityInstanceAuditService extends NativePersistenceService {
 				CustomEntityInstanceAudit ceiAudit = new CustomEntityInstanceAudit();
 				ceiAudit.setAction(CustomEntityInstanceAuditType.REMOVED);
 				ceiAudit.setCeiUuid(ceiUuid);
-				ceiAudit.setEventDate(LocalDateTime.now());
+				ceiAudit.setEventDate(new Date());
 				ceiAudit.setField(e.getKey());
 				ceiAudit.setOldValue(oldValues.getCfValue(e.getKey()).getValue());
 				ceiAudit.setUser(currentUser.getUserName());
