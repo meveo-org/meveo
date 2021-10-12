@@ -98,8 +98,8 @@ public class WFActionApi extends BaseApi {
         if (isUpdate && StringUtils.isBlank(wfActionDto.getUuid())) {
             missingParameters.add("uuid");
         }
-        if (StringUtils.isBlank(wfActionDto.getActionEl())) {
-            missingParameters.add("actionEl");
+        if (StringUtils.isBlank(wfActionDto.getActionScript())) {
+            missingParameters.add("actionScript");
         }
 
         handleMissingParameters();
