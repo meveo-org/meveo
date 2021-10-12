@@ -1276,7 +1276,11 @@ public class NativePersistenceService extends BaseService {
 					fields = Arrays.copyOfRange(fieldInfo, 1, fieldInfo.length);
 				}
 				
-				fieldName = "a." + fieldName;
+				if (config.getSuperTypeFields() != null && config.getSuperTypeFields().contains(fieldName)) {
+					fieldName = "b." + fieldName;
+				} else {
+					fieldName = "a." + fieldName;
+				}
 
 				// if ranged search - field value in between from - to values. Specifies "from"
 				// value: e.g value<=field.value
