@@ -526,6 +526,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		preUpdate(entity);
 
 		postUpdate(entity);
+		
+		afterUpdateOrCreate(entity);
 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		
@@ -580,6 +582,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (entity instanceof ICustomFieldEntity) {
 			customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
 		}
+		
+		afterUpdateOrCreate(entity);
 
 		log.trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
 	}
