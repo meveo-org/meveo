@@ -103,12 +103,6 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
             throw new EntityAlreadyExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
-        if (!currentUser.hasRole(CustomRelationshipTemplate.getModifyPermission(dto.getCode()))
-                && !currentUser.hasRole("ModifyAllCR")) {
-            throw new ActionForbiddenException("User does not have permission '"
-                    + CustomRelationshipTemplate.getModifyPermission(dto.getCode()) + "'");
-        }
-
         CustomRelationshipTemplate crt = CustomRelationshipTemplateDto.fromDTO(dto, null);
         completeCrtData(crt, dto);
 
@@ -134,12 +128,6 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
-        if (!currentUser.hasRole(CustomRelationshipTemplate.getModifyPermission(dto.getCode()))
-                && !currentUser.hasRole("ModifyAllCR")) {
-            throw new ActionForbiddenException("User does not have permission '"
-                    + CustomRelationshipTemplate.getModifyPermission(dto.getCode()) + "'");
-        }
-
         crt = CustomRelationshipTemplateDto.fromDTO(dto, crt);
 
         completeCrtData(crt, dto);
@@ -161,12 +149,6 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
-        }
-
-        if (!currentUser.hasRole(CustomRelationshipTemplate.getModifyPermission(code))
-                && !currentUser.hasRole("ModifyAllCR")) {
-            throw new ActionForbiddenException("User does not have permission '"
-                    + CustomRelationshipTemplate.getModifyPermission(code) + "'");
         }
 
         // Related custom field templates will be removed along with CET
