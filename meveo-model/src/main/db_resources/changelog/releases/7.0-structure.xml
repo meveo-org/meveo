@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+
+    <changeSet id="#313 - Custom relationship roles" author="Tony Alejandro">
+        <insert tableName="adm_role">
+            <column name="id" valueNumeric="-8" />
+            <column name="version" valueNumeric="0" />
+            <column name="role_description" value="Modify all custom relations" />
+            <column name="role_name" value="ModifyAllCR" />
+        </insert>
+        <insert tableName="adm_role">
+            <column name="id" valueNumeric="-9" />
+            <column name="version" valueNumeric="0" />
+            <column name="role_description" value="Read all custom relations" />
+            <column name="role_name" value="ReadAllCR" />
+        </insert>
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+            <column name="child_role_id" valueNumeric="-8" />
+        </insert>
+        <insert tableName="adm_role_role">
+            <column name="role_id" valueNumeric="-1" />
+            <column name="child_role_id" valueNumeric="-9" />
+        </insert>
+        <insert tableName="adm_user_role">
+            <column name="user_id" value="-1"></column>
+            <column name="role_id" value="-8"></column>
+        </insert>
+        <insert tableName="adm_user_role">
+            <column name="user_id" value="-1"></column>
+            <column name="role_id" value="-9"></column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
