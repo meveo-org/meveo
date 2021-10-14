@@ -168,13 +168,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
         }
 
-        if (!currentUser.hasRole(CustomRelationshipTemplate.getReadPermission(code))
-                && !currentUser.hasRole("ReadAllCR")) {
-            throw new ActionForbiddenException("User does not have permission '"
-                    + CustomRelationshipTemplate.getReadPermission(code) + "'");
-        }
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
-
 
         return CustomRelationshipTemplateDto.toDTO(crt, cetFields.values());
     }
@@ -199,15 +193,6 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         }
 
         List<CustomRelationshipTemplateDto> crtDtos = new ArrayList<>();
-
-        for (CustomRelationshipTemplate crt : crts) {
-            if (currentUser.hasRole(CustomRelationshipTemplate.getReadPermission(crt.getCode()))
-                    || currentUser.hasRole("ReadAllCR")) {
-                Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService
-                        .findByAppliesTo(crt.getAppliesTo());
-                crtDtos.add(CustomRelationshipTemplateDto.toDTO(crt, cetFields.values()));
-            }
-        }
 
         return crtDtos;
     }
