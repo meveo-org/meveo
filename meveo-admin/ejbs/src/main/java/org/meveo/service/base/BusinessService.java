@@ -266,8 +266,6 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
     	}
-//    	gitClient.commitFiles(meveoRepository, Collections.singletonList(directoryToRemove), "Remove directory " + directoryToRemove.getPath());
-    	
     	List<String> pattern = new ArrayList<String>();
     	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
     	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());

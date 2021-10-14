@@ -156,7 +156,10 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         try {
         	//TODO: add option in query
-            moduleApi.install(moduleDto, OnDuplicate.OVERWRITE);
+        	moduleApi.createOrUpdate(moduleDto);
+        	
+        	
+            moduleApi.install(moduleDto, OnDuplicate.SKIP);
 
         } catch (Exception e) {
             processException(e, result);

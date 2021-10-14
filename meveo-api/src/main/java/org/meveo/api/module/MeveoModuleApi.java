@@ -457,6 +457,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
 		String logoPicture = meveoModule.getLogoPicture();
+		
+		if (meveoModule.isInstalled()) {
+			try {
+				uninstall(meveoModule.getCode(), MeveoModule.class, false);
+			} catch (MeveoApiException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		meveoModuleService.remove(meveoModule);
 		removeModulePicture(logoPicture);
 
@@ -465,6 +474,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public void delete(String code, boolean deleteFiles) throws EntityDoesNotExistsException, BusinessException, IOException {
 
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
+		
 		if (meveoModule == null) {
 			throw new EntityDoesNotExistsException(MeveoModule.class, code);
 		}
@@ -475,6 +485,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 		String logoPicture = meveoModule.getLogoPicture();
+		
+		if (meveoModule.isInstalled()) {
+			try {
+				uninstall(meveoModule.getCode(), MeveoModule.class, false);
+			} catch (MeveoApiException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		meveoModuleService.remove(meveoModule);
 		if (CollectionUtils.isNotEmpty(moduleFiles) && deleteFiles) {
 			meveoModuleService.removeFilesIfModuleIsDeleted(moduleFiles);

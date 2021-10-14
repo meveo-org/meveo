@@ -326,10 +326,10 @@ public class MavenConfigurationService implements Serializable {
 			pomFile.getParentFile().mkdirs();
 			
 			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
-			FileWriter fileWriter = new FileWriter(pomFile);
-			xmlWriter.write(fileWriter, model);
-
-			gitClient.commitFiles(repository, Collections.singletonList(pomFile), message);
+			try (FileWriter fileWriter = new FileWriter(pomFile)) {
+				xmlWriter.write(fileWriter, model);
+				gitClient.commitFiles(repository, Collections.singletonList(pomFile), message);
+			}
 
 		} catch (IOException e) {
 			log.error("Can't write to pom.xml", e);
