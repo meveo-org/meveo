@@ -351,11 +351,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		return;
     	}
     	
-    	List<MeveoModuleItem> testEmptyModule = new ArrayList<MeveoModuleItem>();
+    	List<MeveoModuleItem> existingItems = new ArrayList<MeveoModuleItem>();
     	if (meveoModuleItem.getAppliesTo() == null) {
-    		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
+    		existingItems = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
-    		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
+    		existingItems = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
     	
     	if (meveoModuleItem.getItemEntity() == null) {
@@ -363,8 +363,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	}
     	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
     	
+    	// Throw an error if the item belongs to another module other than the Meveo module
+    	boolean belongsToModule = existingItems.stream().anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo"));
+    	if (belongsToModule) {
+    		throw new IllegalArgumentException(meveoModuleItem.toString() + " already belongs to module " + existingItems.get(0).getMeveoModule().getCode());
+    	}
+    	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
-    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
+    	if (existingItems.isEmpty() || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     			module.getModuleItems().add(meveoModuleItem);
@@ -857,7 +863,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	
     	if (this.gitRepositoryService.findByCode(meveoModule.getCode()) == null) {
 			this.gitRepositoryService.create(repo);
-			this.gitClient.checkout(repo, "master", true);//TODO meveoModule.getCurrentVersion
+			this.gitClient.checkout(repo, "master", true);
 			meveoModule.setGitRepository(repo);
     		
     	} else {
