@@ -156,10 +156,11 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         try {
         	//TODO: add option in query
-        	moduleApi.createOrUpdate(moduleDto);
-        	
-        	
-            moduleApi.install(moduleDto, OnDuplicate.SKIP);
+        	MeveoModuleDto dto = moduleApi.findIgnoreNotFound(moduleDto.getCode());
+        	if(dto == null) {
+        		moduleApi.create(moduleDto, false);
+        	}
+            moduleApi.install(moduleDto, OnDuplicate.FAIL);
 
         } catch (Exception e) {
             processException(e, result);
