@@ -45,6 +45,7 @@ public class WebsocketServerEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config, @PathParam("endpoint-name") String endpointName) {
+		log.info("onOpen activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		try {
 			String username = null;
 			Principal principal = session.getUserPrincipal();
@@ -111,6 +112,7 @@ public class WebsocketServerEndpoint {
 	// DefaultRole.ADMIN)
 	@OnMessage
 	public String onMessage(Session session, String message) {
+		log.info("onMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		String result = "message correctly processed";
 		Map<String, Object> context = (Map<String, Object>) session.getUserProperties().get("context");
 		ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
@@ -136,6 +138,7 @@ public class WebsocketServerEndpoint {
 	// DefaultRole.ADMIN)
 	@OnClose
 	public void onClose(Session session, CloseReason reason) {
+		log.info("onClose activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		log.info("WebSocket connection closed with CloseCode: " + reason.getCloseCode());
 		try {
 			Map<String, Object> context = (Map<String, Object>) session.getUserProperties().get("context");
@@ -168,6 +171,7 @@ public class WebsocketServerEndpoint {
 	}
 
 	public void sendMessage(String enpointCode, String username, String txtMessage) {
+		log.info("sendMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		List<Session> sessions = activeSessionsByEndpointCode.get(enpointCode);
 		List<Session> listeningSessions = new ArrayList<>();
 		List<Session> sessionsToRemove = new ArrayList<>();
@@ -195,6 +199,7 @@ public class WebsocketServerEndpoint {
 	}
 
 	public void broadcastMessage(String id, String name, String data, Map<Object, Object> context) {
+		log.info("broadcastMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		List<Session> sessions = activeSessionsByEndpointCode.get(name);
 		List<Session> listeningSessions = new ArrayList<>();
 		List<Session> sessionsToRemove = new ArrayList<>();
@@ -238,6 +243,7 @@ public class WebsocketServerEndpoint {
 	}
 
 	public void removeNotification(String notificationCode) {
+		log.info("removeNotification activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		List<Session> sessions = activeSessionsByEndpointCode.get(notificationCode);
 		if (sessions == null) {
 			log.debug("remove notification: no one was listening");
