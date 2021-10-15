@@ -32,7 +32,6 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
-import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
@@ -43,6 +42,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.model.util.CustomFieldUtils;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.admin.impl.UserService;
@@ -52,8 +52,6 @@ import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.util.PersistenceUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -1627,7 +1625,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
 
         Object value = entity.getCfValues().getValue(cfCode);
-        Object valueMatched = CustomFieldInstanceService.matchClosestValue(value, keyToMatch);
+        Object valueMatched = CustomFieldUtils.matchClosestValue(value, keyToMatch);
 
         log.trace("Found closest match value {} for keyToMatch={}", valueMatched, keyToMatch);
 
@@ -1666,7 +1664,7 @@ public class CustomFieldInstanceService extends BaseService {
 
         Object value = entity.getCfValues().getValue(cfCode, date);
 
-        Object valueMatched = CustomFieldInstanceService.matchClosestValue(value, keyToMatch);
+        Object valueMatched = CustomFieldUtils.matchClosestValue(value, keyToMatch);
         log.trace("Found closest match value {} for period {} and keyToMatch={}", valueMatched, date, keyToMatch);
 
         // Need to check if it is a multi-value type value and convert it to a map
@@ -1725,7 +1723,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         Object valueMatched = null;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            valueMatched = CustomFieldInstanceService.matchMatrixValue(cft, value, keys);
+            valueMatched = CustomFieldUtils.matchMatrixValue(cft, value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
@@ -1803,7 +1801,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         Object valueMatched = null;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            valueMatched = CustomFieldInstanceService.matchMatrixValue(cft, value, keys);
+            valueMatched = CustomFieldUtils.matchMatrixValue(cft, value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
@@ -1917,122 +1915,6 @@ public class CustomFieldInstanceService extends BaseService {
     }
 
     /**
-     * Match as close as possible map's key to the key provided and return a map value. Match is performed by matching a full string and then reducing one by one symbol untill a
-     * match is found.
-     * 
-     *
-     * @param value      Value to inspect
-     * @param keyToMatch Key to match
-     * @return Map value that closely matches map key
-     */
-    @SuppressWarnings("unchecked")
-    private static Object matchClosestValue(Object value, String keyToMatch) {
-        if (value == null || !(value instanceof Map) || StringUtils.isEmpty(keyToMatch)) {
-            return null;
-        }
-        Logger log = LoggerFactory.getLogger(CustomFieldInstanceService.class);
-        Object valueFound = null;
-        Map<String, Object> mapValue = (Map<String, Object>) value;
-        log.trace("matchClosestValue keyToMatch: {} in {}", keyToMatch, mapValue);
-        for (int i = keyToMatch.length(); i > 0; i--) {
-            valueFound = mapValue.get(keyToMatch.substring(0, i));
-            if (valueFound != null) {
-                log.trace("matchClosestValue found value: {} for key: {}", valueFound, keyToMatch.substring(0, i));
-                return valueFound;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Match for a given value map's key as the matrix value and return a map value.
-     * 
-     * Map key is assumed to be the following format. Note that MATRIX_STRING and MATRIX_RON keys can be mixed
-     * 
-     * &lt;matrix first key&gt;|&lt;matrix second key&gt;|&lt;range of numbers for the third key&gt;
-     *
-     * @param cft   Custom field template
-     * @param value Value to inspect
-     * @param keys  Keys to match. The order must correspond to the order of the keys during data entry
-     * @return A value matched
-     */
-    @SuppressWarnings("unchecked")
-    private static Object matchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
-        if (value == null || !(value instanceof Map) || keys == null || keys.length == 0) {
-            return null;
-        }
-
-        Object valueMatched = null;
-
-        for (Entry<String, Object> valueInfo : ((Map<String, Object>) value).entrySet()) {
-            String[] keysParsed = valueInfo.getKey().split("\\" + CustomFieldValue.MATRIX_KEY_SEPARATOR);
-            if (keysParsed.length != keys.length) {
-                continue;
-            }
-
-            boolean allMatched = true;
-            for (int i = 0; i < keysParsed.length; i++) {
-                CustomFieldMatrixColumn matrixColumn = cft.getMatrixColumnByIndex(i);
-                if (matrixColumn == null || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.STRING && !keysParsed[i].equals(keys[i]))
-                        || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.RON && !isNumberRangeMatch(keysParsed[i], keys[i]))) {
-                    allMatched = false;
-                    break;
-                }
-            }
-
-            if (allMatched) {
-                valueMatched = valueInfo.getValue();
-                break;
-            }
-        }
-
-        return valueMatched;
-    }
-
-    /**
-     * Check if a match for a given value map's key as the matrix value is present.
-     * 
-     * Map key is assumed to be the following format. Note that MATRIX_STRING and MATRIX_RON keys can be mixed
-     * 
-     * &lt;matrix first key&gt;|&lt;matrix second key&gt;|&lt;range of numbers for the third key&gt;
-     *
-     * @param cft   Custom field template
-     * @param value Value to inspect
-     * @param keys  Keys to match. The order must correspond to the order of the keys during data entry
-     * @return True if a value was matched
-     */
-    @SuppressWarnings("unchecked")
-   private static boolean isMatchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
-        if (value == null || !(value instanceof Map) || keys == null || keys.length == 0) {
-            return false;
-        }
-
-        for (Entry<String, Object> valueInfo : ((Map<String, Object>) value).entrySet()) {
-            String[] keysParsed = valueInfo.getKey().split("\\" + CustomFieldValue.MATRIX_KEY_SEPARATOR);
-            if (keysParsed.length != keys.length) {
-                continue;
-            }
-
-            boolean allMatched = true;
-            for (int i = 0; i < keysParsed.length; i++) {
-                CustomFieldMatrixColumn matrixColumn = cft.getMatrixColumnByIndex(i);
-                if (matrixColumn == null || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.STRING && !keysParsed[i].equals(keys[i]))
-                        || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.RON && !isNumberRangeMatch(keysParsed[i], keys[i]))) {
-                    allMatched = false;
-                    break;
-                }
-            }
-
-            if (allMatched) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Match map's key as a range of numbers value and return a matched value.
      * 
      * Number ranges is assumed to be the following format: &lt;number from&gt;&lt;&lt;number to&gt;
@@ -2049,7 +1931,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
 
         for (Entry<String, Object> valueInfo : ((Map<String, Object>) value).entrySet()) {
-            if (isNumberRangeMatch(valueInfo.getKey(), numberToMatch)) {
+            if (CustomFieldUtils.isNumberRangeMatch(valueInfo.getKey(), numberToMatch)) {
                 return valueInfo.getValue();
             }
         }
@@ -2074,85 +1956,11 @@ public class CustomFieldInstanceService extends BaseService {
         }
 
         for (Entry<String, Object> valueInfo : ((Map<String, Object>) value).entrySet()) {
-            if (isNumberRangeMatch(valueInfo.getKey(), numberToMatch)) {
+            if (CustomFieldUtils.isNumberRangeMatch(valueInfo.getKey(), numberToMatch)) {
                 return true;
             }
         }
 
-        return false;
-    }
-
-    /**
-     * Determine if a number value is inside the number range expressed as &lt;number from&gt;&lt;&lt;number to&gt;.
-     *
-     * @param numberRange      Number range value
-     * @param numberToMatchObj A double number o
-     * @return True if number have matched
-     */
-    private static boolean isNumberRangeMatch(String numberRange, Object numberToMatchObj) {
-        if (numberToMatchObj == null) {
-            return false;
-        }
-
-        String[] rangeInfo = numberRange.split(CustomFieldValue.RON_VALUE_SEPARATOR);
-        Double fromNumber = null;
-        try {
-            fromNumber = Double.parseDouble(rangeInfo[0]);
-        } catch (NumberFormatException e) { // Ignore the error as value might be empty
-        }
-        Double toNumber = null;
-        if (rangeInfo.length == 2) {
-            try {
-                toNumber = Double.parseDouble(rangeInfo[1]);
-            } catch (NumberFormatException e) { // Ignore the error as value might be empty
-            }
-        }
-
-        // Convert matching number to Double for further comparison
-        Double numberToMatchDbl = null;
-        if (numberToMatchObj instanceof Double) {
-            numberToMatchDbl = (Double) numberToMatchObj;
-
-        } else if (numberToMatchObj instanceof Integer) {
-            numberToMatchDbl = ((Integer) numberToMatchObj).doubleValue();
-
-        } else if (numberToMatchObj instanceof Long) {
-            numberToMatchDbl = ((Long) numberToMatchObj).doubleValue();
-
-        } else if (numberToMatchObj instanceof BigDecimal) {
-            numberToMatchDbl = ((BigDecimal) numberToMatchObj).doubleValue();
-
-        } else if (numberToMatchObj instanceof String) {
-            try {
-                numberToMatchDbl = Double.parseDouble(((String) numberToMatchObj));
-
-            } catch (NumberFormatException e) {
-                Logger log = LoggerFactory.getLogger(CustomFieldInstanceService.class);
-                log.error("Failed to match CF value for a range of numbers. Value passed is not a number {} {}", numberToMatchObj,
-                        numberToMatchObj != null ? numberToMatchObj.getClass() : null);
-                return false;
-            }
-
-        } else {
-            Logger log = LoggerFactory.getLogger(CustomFieldInstanceService.class);
-            log.error("Failed to match CF value for a range of numbers. Value passed is not a number {} {}", numberToMatchObj,
-                    numberToMatchObj != null ? numberToMatchObj.getClass() : null);
-            return false;
-        }
-
-        if (fromNumber != null && toNumber != null) {
-            if (fromNumber.compareTo(numberToMatchDbl) <= 0 && toNumber.compareTo(numberToMatchDbl) > 0) {
-                return true;
-            }
-        } else if (fromNumber != null) {
-            if (fromNumber.compareTo(numberToMatchDbl) <= 0) {
-                return true;
-            }
-        } else if (toNumber != null) {
-            if (toNumber.compareTo(numberToMatchDbl) > 0) {
-                return true;
-            }
-        }
         return false;
     }
 
@@ -2330,7 +2138,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         boolean hasKey = false;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            hasKey = CustomFieldInstanceService.isMatchMatrixValue(cft, value, keys);
+            hasKey = CustomFieldUtils.isMatchMatrixValue(cft, value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
@@ -2396,7 +2204,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         boolean hasKey = false;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            hasKey = CustomFieldInstanceService.isMatchMatrixValue(cft, value, keys);
+            hasKey = CustomFieldUtils.isMatchMatrixValue(cft, value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
