@@ -12,15 +12,16 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.customEntities.MeveoMatrix;
 import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -34,15 +35,11 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
-
-import jxl.biff.formula.ParseContext;
 
 /**
  * Parse a cet map into a java source code.
@@ -303,6 +300,14 @@ public class JSONSchemaIntoJavaClassParser {
                     VariableDeclarator vd = new VariableDeclarator();
                     vd.setName(code);
                     
+                     CustomFieldTemplate cft = fieldsDefinition.get(code);
+                     if (cft.getStorageType().equals(CustomFieldStorageTypeEnum.MATRIX)) {
+                    	 fd = getMatrixField(cft, compilationUnit);
+                    	 fds.add(fd);
+                    	 classDeclaration.addMember(fd);
+                    	 continue;
+                     }
+                    
                     // Add @JsonProperty annotation
 					if (values.containsKey("nullable") && !Boolean.parseBoolean(values.get("nullable").toString())) {
 						fd.addSingleMemberAnnotation(JsonProperty.class, "required = true");
@@ -467,5 +472,53 @@ public class JSONSchemaIntoJavaClassParser {
             }
 
         }
+    }
+    
+    private FieldDeclaration getMatrixField(CustomFieldTemplate cft, CompilationUnit compilationUnit) {
+   	 	compilationUnit.addImport(MeveoMatrix.class);
+
+    	FieldDeclaration fieldDeclaration = new FieldDeclaration();
+    	VariableDeclarator vd = new VariableDeclarator();
+        vd.setName(cft.getCode());
+        fieldDeclaration.addVariable(vd);
+        fieldDeclaration.setModifiers(Keyword.PRIVATE);
+        
+        switch (cft.getFieldType()) {
+		case BOOLEAN:
+			vd.setType("MeveoMatrix<Boolean>");
+			compilationUnit.addImport(Boolean.class);
+			break;
+		case CHILD_ENTITY:
+			//TODO
+			break;
+		case DATE:
+			vd.setType("MeveoMatrix<Instant>");
+			compilationUnit.addImport(Instant.class);
+			break;
+		case DOUBLE:
+			vd.setType("MeveoMatrix<Double>");
+			compilationUnit.addImport(Double.class);
+			break;
+		case LONG:
+			vd.setType("MeveoMatrix<Long>");
+			compilationUnit.addImport(Long.class);
+			break;
+		case BINARY:
+		case ENTITY:
+		case EXPRESSION:
+		case LIST:
+		case LONG_TEXT:
+		case MULTI_VALUE:
+		case SECRET:
+		case STRING:
+		case TEXT_AREA:
+			vd.setType("MeveoMatrix<String>");
+			break;
+		default:
+			break;
+        
+        }
+        
+        return fieldDeclaration;
     }
 }

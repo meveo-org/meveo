@@ -1723,7 +1723,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         Object valueMatched = null;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            valueMatched = CustomFieldUtils.matchMatrixValue(cft, value, keys);
+            valueMatched = CustomFieldUtils.matchMatrixValue(value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
@@ -1801,7 +1801,7 @@ public class CustomFieldInstanceService extends BaseService {
         }
         Object valueMatched = null;
         if (cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-            valueMatched = CustomFieldUtils.matchMatrixValue(cft, value, keys);
+            valueMatched = CustomFieldUtils.matchMatrixValue(value, keys);
 
         } else if (cft.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
             if (keys[0] == null) {
