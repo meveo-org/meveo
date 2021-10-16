@@ -58,14 +58,13 @@ public class CustomFieldUtils {
 	 * Map key is assumed to be the following format. Note that MATRIX_STRING and MATRIX_RON keys can be mixed
 	 * 
 	 * &lt;matrix first key&gt;|&lt;matrix second key&gt;|&lt;range of numbers for the third key&gt;
-	 *
-	 * @param cft   Custom field template
 	 * @param value Value to inspect
 	 * @param keys  Keys to match. The order must correspond to the order of the keys during data entry
+	 *
 	 * @return A value matched
 	 */
 	@SuppressWarnings("unchecked")
-	public static Object matchMatrixValue(CustomFieldTemplate cft, Object value, Object... keys) {
+	public static Object matchMatrixValue(Object value, Object... keys) {
 	    if (value == null || !(value instanceof Map) || keys == null || keys.length == 0) {
 	        return null;
 	    }
@@ -79,13 +78,12 @@ public class CustomFieldUtils {
 	        }
 	
 	        boolean allMatched = true;
-	        for (int i = 0; i < keysParsed.length; i++) {
-	            CustomFieldMatrixColumn matrixColumn = cft.getMatrixColumnByIndex(i);
-	            if (matrixColumn == null || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.STRING && !keysParsed[i].equals(keys[i]))
-	                    || (matrixColumn.getKeyType() == CustomFieldMapKeyEnum.RON && !isNumberRangeMatch(keysParsed[i], keys[i]))) {
-	                allMatched = false;
-	                break;
-	            }
+	        for (int i = 0; i < keysParsed.length && allMatched; i++) {
+	        	if (keysParsed[i].contains(CustomFieldValue.RON_VALUE_SEPARATOR)) {
+	        		allMatched = isNumberRangeMatch(keysParsed[i], keys[i]);
+	        	} else {
+	        		allMatched = keysParsed[i].equals(keys[i]);
+	        	}
 	        }
 	
 	        if (allMatched) {
