@@ -1,0 +1,285 @@
+{
+	"info": {
+		"_postman_id": "8bdc2fd8-b1b7-4ed6-a755-ead5d1dfdb7a",
+		"name": "Maven",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "81606899-040a-4cda-813d-3275ae195602",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{keycloakClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{keycloakClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{keycloakHostname}}/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "https",
+							"host": [
+								"{{keycloakHostname}}"
+							],
+							"port": "443",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Maven",
+			"item": [
+				{
+					"name": "Upload an artifact",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "283ddeb8-555d-4476-8075-a9ce228266a0",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "multipart/form-data",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "jarFile",
+									"type": "file",
+									"src": "../binaries/jdom2-2.0.6.jar"
+								},
+								{
+									"key": "groupId",
+									"value": "jdom",
+									"type": "text"
+								},
+								{
+									"key": "artifactId",
+									"value": "jdom2",
+									"type": "text"
+								},
+								{
+									"key": "version",
+									"value": "2.0.6",
+									"type": "text"
+								},
+								{
+									"key": "filename",
+									"value": "jdom2-2.0.6",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/mavenConfiguration/upload",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"mavenConfiguration",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download an artifact",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0e7e8641-1e89-4b6c-8c86-da6491c29ea5",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/maven/jdom/jdom2/2.0.6/jdom2-2.0.6.jar",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"maven",
+								"jdom",
+								"jdom2",
+								"2.0.6",
+								"jdom2-2.0.6.jar"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "a720f9f8-d193-40c2-81e4-7c3e03e9d59e",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4fd55c37-b43a-4fd5-86e5-03a103c89951",
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Response code should be above 200\", function() {",
+					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,403]); ",
+					"});"
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

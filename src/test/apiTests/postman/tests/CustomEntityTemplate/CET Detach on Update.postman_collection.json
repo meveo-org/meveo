@@ -1,0 +1,674 @@
+{
+	"info": {
+		"_postman_id": "4f1a84e7-c512-4d0c-8317-4bfc5beab939",
+		"name": "CET Detach on Update",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create phone and devices category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9ea3b4a6-db3b-4bfb-abed-f9b8c69a9f4c",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Phone\",\r\n\t\"description\": \"Phone\",\r\n\t\"name\": \"Phone\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create laptop with devices category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9e64b873-215c-4dd3-a8c9-bdb7cd553a79",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find phone",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "652c3219-7864-4c44-8860-e3f4fc5ce747",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.customEntityTemplate.customEntityCategoryCode).to.eql(\"DEVICES\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Phone",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Phone"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find laptop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "05399cb1-dbd6-461d-85c0-eda149a2c28f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.customEntityTemplate.customEntityCategoryCode).to.eql(\"DEVICES\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Laptop",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Laptop"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update phone and devices category android",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "d67528f6-e545-414a-b159-212368e5ee1c",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"Android\",\r\n\t\"code\": \"Phone\",\r\n\t\"description\": \"Phone\",\r\n\t\"name\": \"Phone\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find phone android",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "549cd0bc-baa7-4b0a-9b35-9bf2d11d44a7",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.customEntityTemplate.customEntityCategoryCode).to.eql(\"Android\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Phone",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Phone"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update laptop with no category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7fc65fa0-4ac7-4bbb-b297-40fdd07dd5c8",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find laptop null",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0c9e1ced-afa4-40ef-8707-fa027bae91cd",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Laptop",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Laptop"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove phone",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "056f1874-2df2-4a65-970a-03b5a1d85255",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Phone\",\r\n\t\"description\": \"Phone\",\r\n\t\"name\": \"Phone\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Phone",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Phone"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Remove laptop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "59f5d838-79e4-4905-b9c9-24be1d5feb0f",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Phone\",\r\n\t\"description\": \"Phone\",\r\n\t\"name\": \"Phone\",\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Laptop",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"Laptop"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

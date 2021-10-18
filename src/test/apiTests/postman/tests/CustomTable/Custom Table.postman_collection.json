@@ -1,0 +1,1355 @@
+{
+	"info": {
+		"_postman_id": "1fc27a30-b273-4cb5-baae-7a7e6fd7ef53",
+		"name": "Custom Table",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create / Delete / Create CET",
+			"item": [
+				{
+					"name": "Create CustomCet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CustomCet\",\n    \"code\": \"CustomCet\",\n    \"description\": \"CustomCet\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"fieldA\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"field\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CustomCet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CustomCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CustomCet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CustomCet again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CustomCet\",\n    \"code\": \"CustomCet\",\n    \"description\": \"CustomCet\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"fieldA\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"field\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check CustomCet exists",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CustomCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CustomCet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CustomCet Again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CustomCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CustomCet"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Scenario:\r\n1.) Create a new CET, add fields.\r\n2.) Delete the CET.\r\n3.) Recreate the same CET.\r\n\r\nExpected Result:\r\nThe CET should be created.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "CET Reference an existing JPA Entity",
+			"item": [
+				{
+					"name": "Create custom entity category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"BOOKS\",\n\t\"name\": \"Books\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customEntityCategory",
+								"entity",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create cet scifi -  non SINGLE",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 500\", function () {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"JPA reference CFT must be stored in a SINGLE field storage type.\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"customEntityCategoryCode\": \"BOOKS\",\n\t\"code\": \"scifi\",\n\t\"description\": \"Sci Fi\",\n\t\"name\": \"Sci Fi\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"title\",\n\t\t\t\"description\": \"Title\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": true\n\t\t},\n\t\t{\n\t\t\t\"code\": \"country\",\n\t\t\t\"description\": \"Country\",\n\t\t\t\"fieldType\": \"ENTITY\",\n\t\t\t\"storageType\": \"LIST\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": false,\n\t\t\t\"isUnique\": false,\n\t\t\t\"entityClazz\": \"org.meveo.model.billing.Country\"\n\t\t}\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create cet scifi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"customEntityCategoryCode\": \"BOOKS\",\n\t\"code\": \"scifi\",\n\t\"description\": \"Sci Fi\",\n\t\"name\": \"Sci Fi\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"title\",\n\t\t\t\"description\": \"Title\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": true\n\t\t},\n\t\t{\n\t\t\t\"code\": \"country\",\n\t\t\t\"description\": \"Country\",\n\t\t\t\"fieldType\": \"ENTITY\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": false,\n\t\t\t\"isUnique\": false,\n\t\t\t\"entityClazz\": \"org.meveo.model.billing.Country\"\n\t\t}\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert scifi books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ceiUuid\", jsonData[0].uuid);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"name\": \"Frankenstein\",\n        \"type\": \"scifi\",\n        \"properties\": {\n            \"title\": \"Frankenstein\",\n            \"country\": 166\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"default",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get frankenstein book",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.eql(\"Frankenstein\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence/scifi/{{ceiUuid}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"default",
+								"persistence",
+								"scifi",
+								"{{ceiUuid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete category and cets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"BOOKS\",\n\t\"name\": \"Books\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/BOOKS?deleteRelatedTemplates=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customEntityCategory",
+								"entity",
+								"BOOKS"
+							],
+							"query": [
+								{
+									"key": "deleteRelatedTemplates",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tables are not deleted",
+			"item": [
+				{
+					"name": "Create CET in SQL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTable\",\n  \"code\": \"TestTable\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTable\",\n  \"fields\": [\n    {\n      \"code\": \"id\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"id\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert data",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"TestTable\",\n        \"properties\": {\n            \"id\": \"TOTO\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete the cet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TestCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"TestCet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create the CET again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTable\",\n  \"code\": \"TestTable\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTable\",\n  \"fields\": [\n    {\n      \"code\": \"id\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"id\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check data still exists",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Data still exists\", function () {",
+									"    pm.expect(jsonData[0].id).to.eql(\"TOTO\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/TestTable/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"TestTable",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete the CET with the data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TestTable?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"TestTable"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CET once again",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTable\",\n  \"code\": \"TestTable\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTable\",\n  \"fields\": [\n    {\n      \"code\": \"id\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"id\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check data does not exist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"No data returned\", function () {",
+									"    pm.expect(jsonData.length).to.eql(0);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/TestTable/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"TestTable",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete the CET with the data bis",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TestTable?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"TestTable"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

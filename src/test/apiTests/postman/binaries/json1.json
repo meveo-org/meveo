@@ -1,0 +1,9 @@
+[ {
+  "active" : true,
+  "code" : "MyRepo",
+  "description" : "Description of my repo 1",
+  "binaryStorageConfigurationCode" : "TestStorage",
+  "neo4jConfigurationCode" : "localhost",
+  "dataSeparationType" : "PHYSICAL",
+  "path" : "12"
+} ]

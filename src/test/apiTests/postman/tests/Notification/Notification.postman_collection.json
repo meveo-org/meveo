@@ -1,0 +1,1650 @@
+{
+	"info": {
+		"_postman_id": "9d8fed89-2007-451e-a035-18e3c7ab1e97",
+		"name": "RefactorNotification",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Create Script",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a6e3aaa3-afc8-47e5-af4e-c43ddbd79c43",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"org.meveo.script.NotificationScript\",\r\n    \"type\": \"JAVA\",\r\n    \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\n\\r\\npublic class NotificationScript extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n\\t\\tsuper.execute(parameters);\\r\\n\\t}\\r\\n\\t\\r\\n}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Notification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4358f8f0-ec55-4cd6-826f-2b03dcdb0c48",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityInstance\",\r\n    \"eventTypeFilter\": \"CREATED\",\r\n    \"scriptInstanceCode\": \"org.meveo.script.NotificationScript\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/script/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"script",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Notification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8576bcd8-5006-45af-be48-4aacf457c3bb",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/script/?notificationCode=AddNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"script",
+								""
+							],
+							"query": [
+								{
+									"key": "notificationCode",
+									"value": "AddNotification"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "51c40b36-27a1-4608-a0cd-520224c5607e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityTemplate\",\r\n    \"eventTypeFilter\": \"UPDATED\",\r\n    \"scriptInstanceCode\": \"org.meveo.script.NotificationScript\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/script/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"script",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "971be1f9-19db-489b-846f-2e8bc10ec600",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/script/AddNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"script",
+								"AddNotification"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Script",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0123970e-c708-4f60-9b0d-bbbc6ef1b4bb",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.NotificationScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.NotificationScript"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Webhook",
+			"item": [
+				{
+					"name": "Create Webhook",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b361ceee-4440-4573-aab0-6eb42226caad",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddWebhook\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityInstance\",\r\n    \"eventTypeFilter\": \"CREATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"httpProtocol\": \"HTTP\",\r\n    \"host\": \"localhost\",\r\n    \"port\": 8080,\r\n    \"page\": \"/meveo\",\r\n    \"httpMethod\": \"HTTP_POST\",\r\n    \"headers\": {},\r\n    \"params\": {}\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/webhook/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"webhook",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find Webhook",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "32a5b1e9-35ef-4465-9937-3ed5e3b10280",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/webhook/?notificationCode=AddWebhook",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"webhook",
+								""
+							],
+							"query": [
+								{
+									"key": "notificationCode",
+									"value": "AddWebhook"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Webhook",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f9e5f80f-2064-47d1-9edb-4a7c58492804",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddWebhook\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityTemplate\",\r\n    \"eventTypeFilter\": \"UPDATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"httpProtocol\": \"HTTP\",\r\n    \"host\": \"localhost\",\r\n    \"port\": 8081,\r\n    \"page\": \"/meveo/admin\",\r\n    \"httpMethod\": \"HTTP_POST\",\r\n    \"headers\": {},\r\n    \"params\": {}\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/webhook/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"webhook",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Webhook",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea923344-6bc2-43d7-91a7-c9bfd7ba88ad",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/webhook/AddWebhook",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"webhook",
+								"AddWebhook"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "EmailNotification",
+			"item": [
+				{
+					"name": "Create EmailNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5e9919c8-52f4-4388-be3b-fffe5dc9edae",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddEmailNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityInstance\",\r\n    \"eventTypeFilter\": \"CREATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"emailFrom\": \"wd\",\r\n    \"subject\": \"Test\",\r\n    \"body\": \"Test\",\r\n    \"sendToMail\": []\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/email/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"email",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find EmailNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea553b6e-eb74-4933-860e-fe75bad69c39",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/email/?notificationCode=AddEmailNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"email",
+								""
+							],
+							"query": [
+								{
+									"key": "notificationCode",
+									"value": "AddEmailNotification"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update EmailNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e2c1a27b-9861-45b2-9046-05eb82d0d099",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddEmailNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityTemplate\",\r\n    \"eventTypeFilter\": \"UPDATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"emailFrom\": \"wd\",\r\n    \"subject\": \"TestUpdate\",\r\n    \"body\": \"Test\",\r\n    \"sendToMail\": []\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/email/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"email",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete EmailNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8b6c695f-3a6d-47cd-a773-38d82fd10be4",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/email/AddEmailNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"email",
+								"AddEmailNotification"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "JobNotification",
+			"item": [
+				{
+					"name": "Create JobInstance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d0011a76-a478-4254-96bf-d04fc5ccf635",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"active\": \"true\",\r\n    \"code\": \"JobExection\",\r\n    \"jobCategory\": \"DWH\",\r\n    \"jobTemplate\": \"DWHQueryJob\",\r\n    \"limitToSingleNode\": true\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/jobInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"jobInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create JobNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25f71eca-97c2-47cb-aaab-776d63614416",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"active\": true,\r\n    \"code\": \"AddJobTrigger\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityInstance\",\r\n    \"eventTypeFilter\": \"CREATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"jobParams\": {},\r\n    \"jobInstance\": \"JobExection\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/jobTrigger/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"jobTrigger",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find JobNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "286e9f03-a14b-4d8c-8805-9ebe3b7d8639",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/jobTrigger/?notificationCode=AddJobTrigger",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"jobTrigger",
+								""
+							],
+							"query": [
+								{
+									"key": "notificationCode",
+									"value": "AddJobTrigger"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update JobNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "80f2de22-cfbd-4e0a-80a6-2614e36e8259",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"active\": true,\r\n    \"code\": \"AddJobTrigger\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityTemplate\",\r\n    \"eventTypeFilter\": \"UPDATED\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"jobParams\": {},\r\n    \"jobInstance\": \"JobExection\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/jobTrigger/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"jobTrigger",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete JobNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "53bbbd55-8117-47b3-9d8f-aff77c7f925e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/jobTrigger/AddJobTrigger",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"jobTrigger",
+								"AddJobTrigger"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete JobInstance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8a0ada64-bfd7-4c49-a51f-6fef09e7925b",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/jobInstance/JobExection",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"jobInstance",
+								"JobExection"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "WebNotification",
+			"item": [
+				{
+					"name": "Create Script",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6d9a48b0-7885-4853-9bd8-737c3e37ddcc",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"org.meveo.script.WebNotificationScript\",\r\n    \"type\": \"JAVA\",\r\n    \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\n\\r\\npublic class WebNotificationScript extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n\\t\\tsuper.execute(parameters);\\r\\n\\t}\\r\\n\\t\\r\\n}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create WebNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5256070a-ec98-4f7b-b14e-f09d66f182be",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddWebNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityInstance\",\r\n    \"eventTypeFilter\": \"CREATED\",\r\n    \"scriptInstanceCode\": \"org.meveo.script.WebNotificationScript\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"idStrategy\": \"UUID\",\r\n    \"publicationAllowed\": false,\r\n    \"persistHistory\": false\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/web/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"web",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find WebNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2e08854b-9d68-4938-9a7d-1037208cc45a",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/web/?notificationCode=AddWebNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"web",
+								""
+							],
+							"query": [
+								{
+									"key": "notificationCode",
+									"value": "AddWebNotification"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update WebNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3b61d65f-2269-400b-9d4d-e321b5947403",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"AddWebNotification\",\r\n    \"classNameFilter\": \"org.meveo.model.customEntities.CustomEntityTemplate\",\r\n    \"eventTypeFilter\": \"UPDATED\",\r\n    \"scriptInstanceCode\": \"org.meveo.script.WebNotificationScript\",\r\n    \"scriptParams\": {},\r\n    \"priority\": 1,\r\n    \"idStrategy\": \"UUID\",\r\n    \"publicationAllowed\": false,\r\n    \"persistHistory\": false\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/web/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"web",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete WebNotification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "29da4140-94c0-4e94-b1c0-0bb2a861ec73",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/notification/web/AddWebNotification",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"notification",
+								"web",
+								"AddWebNotification"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Script",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b367332d-d19a-469d-a301-736b194c905c",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.WebNotificationScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.WebNotificationScript"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

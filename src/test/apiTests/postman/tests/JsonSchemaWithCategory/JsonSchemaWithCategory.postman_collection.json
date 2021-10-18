@@ -1,0 +1,601 @@
+{
+	"info": {
+		"_postman_id": "b7531576-3354-4d00-91e7-53bc18f88a6f",
+		"name": "JsonSchemaWithCategory",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "81606899-040a-4cda-813d-3275ae195602",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.environment.get(\"variable_key\");",
+							"var json = pm.response.json();",
+							"var token = json[\"access_token\"];",
+							"var refreshToken = json[\"refresh_token\"]",
+							"pm.environment.set(\"access_token\", token);",
+							"pm.environment.set(\"refresh_token\", refreshToken);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{keycloakClientId}}",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{keycloakClientSecret}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{keycloakHostname}}/auth/realms/{{webContext}}/protocol/openid-connect/token",
+					"protocol": "https",
+					"host": [
+						"{{keycloakHostname}}"
+					],
+					"port": "443",
+					"path": [
+						"auth",
+						"realms",
+						"{{webContext}}",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				},
+				"description": "Request Keycloak and get auth token"
+			},
+			"response": []
+		},
+		{
+			"name": "JsonSchemaTest",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"JsonSchemaTest\",\n\t\"name\": \"JsonSchema Test\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SourceCet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "eabac7dd-2f8e-43d6-9787-c21974921641",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"SourceCet\",\n\t\"sqlStorageConfiguration\": {\"storeAsTable\": false},\n    \"name\": \"Source Cet\",\n    \"description\": \"Source Cet\",\n    \"availableStorages\":[],\n    \"customEntityCategoryCode\":\"JsonSchemaTest\",\n    \"fields\": [\n{\n                \"code\": \"sourceField\",\n                \"description\": \"sourceField\",\n                \"fieldType\": \"STRING\",\n                \"accountLevel\": \"CE_SourceCet\",\n                \"appliesTo\": \"CE_SourceCet\",\n                \"useInheritedAsDefaultValue\": false,\n                \"storageType\": \"SINGLE\",\n                \"valueRequired\": true,\n                \"versionable\": false,\n                \"triggerEndPeriodEvent\": false,\n                \"allowEdit\": true,\n                \"hideOnNew\": false,\n                \"maxValue\": 255,\n                \"guiPosition\": \"tab:Custom Fields:0;field:0\",\n                \"isUnique\": false,\n                \"isFilter\": false,\n                \"identifier\": false,\n                \"storages\": []\n            }\n        ],\n        \"action\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TargetCet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a1e9365e-24ff-4b9c-a53d-d3668785630d",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"TargetCet\",\n\t\"sqlStorageConfiguration\": {\"storeAsTable\": false},\n    \"name\": \"Target Cet\",\n    \"description\": \"Target Cet\",\n    \"availableStorages\":[],\n    \"customEntityCategoryCode\":\"JsonSchemaTest\",\n    \"fields\": [\n{\n                \"code\": \"targetField\",\n                \"description\": \"targetField\",\n                \"fieldType\": \"STRING\",\n                \"accountLevel\": \"CE_TargetCet\",\n                \"appliesTo\": \"CE_TargetCet\",\n                \"useInheritedAsDefaultValue\": false,\n                \"storageType\": \"SINGLE\",\n                \"valueRequired\": true,\n                \"versionable\": false,\n                \"triggerEndPeriodEvent\": false,\n                \"allowEdit\": true,\n                \"hideOnNew\": false,\n                \"maxValue\": 255,\n                \"guiPosition\": \"tab:Custom Fields:0;field:0\",\n                \"isUnique\": false,\n                \"isFilter\": false,\n                \"identifier\": false,\n                \"storages\": []\n            }\n        ],\n        \"action\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "JsonSchemaTestCrt",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e5cdc316-d3b5-4db9-8fae-93fa65755e00",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"code\": \"JsonSchemaTestCrt\",\n    \"name\": \"JsonSchema TestCrt\",\n    \"description\": \"JsonSchema TestCrt\",\n    \"startNodeCode\": \"SourceCet\",\n    \"endNodeCode\": \"TargetCet\",\n    \"availableStorages\": [],\n    \"fields\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/crt/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customRelationshipTemplate",
+						"crt",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get JsonSchemaTestCrt ",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "08948ae3-ebc2-4f39-b6f5-1a9486fc52e3",
+						"exec": [
+							"const jsonData = pm.response.json().definitions;",
+							"",
+							"console.log(jsonData);",
+							"",
+							"pm.test('SourceCet exists', function() {",
+							"  pm.expect(jsonData).to.have.property('SourceCet');",
+							"});",
+							"",
+							"pm.test('TargetCet exists', function() {",
+							"  pm.expect(jsonData).to.have.property('TargetCet');",
+							"});",
+							"",
+							"pm.test('JsonSchemaTestCrt exists', function() {",
+							"  pm.expect(jsonData).to.have.property('JsonSchemaTestCrt');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Cache-Control",
+						"value": "no-cache",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/ontology?category=JsonSchemaTest",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"ontology"
+					],
+					"query": [
+						{
+							"key": "category",
+							"value": "JsonSchemaTest"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete JsonSchemaTestCrt",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"code\": \"JsonSchemaTestCrt\",\n    \"name\": \"JsonSchema TestCrt\",\n    \"description\": \"JsonSchema TestCrt\",\n    \"startNodeCode\": \"SourceCet\",\n    \"endNodeCode\": \"TargetCet\",\n    \"availableStorages\": [],\n    \"field\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/relationship/JsonSchemaTestCrt/SourceCet/TargetCet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customRelationshipTemplate",
+						"relationship",
+						"JsonSchemaTestCrt",
+						"SourceCet",
+						"TargetCet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete SourceCet",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"SourceCet\",\n\t\"sqlStorageConfiguration\": {\"storeAsTable\": false},\n    \"name\": \"Source Cet\",\n    \"description\": \"Source Cet\",\n    \"availableStorages\":[],\n    \"customEntityCategoryCode\":\"JsonSchemaTest\",\n    \"fields\": [\n{\n                \"code\": \"sourceField\",\n                \"description\": \"sourceField\",\n                \"fieldType\": \"STRING\",\n                \"accountLevel\": \"CE_SourceCet\",\n                \"appliesTo\": \"CE_SourceCet\",\n                \"useInheritedAsDefaultValue\": false,\n                \"storageType\": \"SINGLE\",\n                \"valueRequired\": true,\n                \"versionable\": false,\n                \"triggerEndPeriodEvent\": false,\n                \"allowEdit\": true,\n                \"hideOnNew\": false,\n                \"maxValue\": 255,\n                \"guiPosition\": \"tab:Custom Fields:0;field:0\",\n                \"isUnique\": false,\n                \"isFilter\": false,\n                \"identifier\": false,\n                \"storages\": []\n            }\n        ],\n        \"action\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/SourceCet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"SourceCet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete TargetCet",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"TargetCet\",\n\t\"sqlStorageConfiguration\": {\"storeAsTable\": false},\n    \"name\": \"Target Cet\",\n    \"description\": \"Target Cet\",\n    \"availableStorages\":[],\n    \"customEntityCategoryCode\":\"JsonSchema Test\",\n    \"fields\": [\n{\n                \"code\": \"targetField\",\n                \"description\": \"targetField\",\n                \"fieldType\": \"STRING\",\n                \"accountLevel\": \"CE_TargetCet\",\n                \"appliesTo\": \"CE_TargetCet\",\n                \"useInheritedAsDefaultValue\": false,\n                \"storageType\": \"SINGLE\",\n                \"valueRequired\": true,\n                \"versionable\": false,\n                \"triggerEndPeriodEvent\": false,\n                \"allowEdit\": true,\n                \"hideOnNew\": false,\n                \"maxValue\": 255,\n                \"guiPosition\": \"tab:Custom Fields:0;field:0\",\n                \"isUnique\": false,\n                \"isFilter\": false,\n                \"identifier\": false,\n                \"storages\": []\n            }\n        ],\n        \"action\": []\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TargetCet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"TargetCet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Category",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"JsonSchemaTest\",\n\t\"name\": \"JsonSchema Test\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/JsonSchemaTest",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"JsonSchemaTest"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "da50b8b1-2271-41f2-901c-d017096075d5",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "6530db49-d910-4eb1-ab2d-633fdeee6289",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

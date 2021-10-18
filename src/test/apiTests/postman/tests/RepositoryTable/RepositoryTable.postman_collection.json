@@ -1,0 +1,1256 @@
+{
+	"info": {
+		"_postman_id": "89e0833f-005d-4812-88f1-9386f27702cc",
+		"name": "Repositories",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "CRUD",
+			"item": [
+				{
+					"name": "create neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "937dc620-4685-4b91-84aa-a052f03badab",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"NEO4J\",\n\t\"neo4jUrl\": \"URL\",\n\t\"neo4jLogin\": \"login\",\n\t\"neo4jPassword\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a546b864-dfb9-4ac6-9a46-b00c620f3f24",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/NEO4J",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"NEO4J"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create neo4j config 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f5c618b3-0249-451e-9ca0-450c4b336ba8",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"NEO4J2\",\n\t\"neo4jUrl\": \"URL\",\n\t\"neo4jLogin\": \"login\",\n\t\"neo4jPassword\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "bb306e08-2406-4082-a034-80a66a311976",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"NEO4J\",\n\t\"neo4jUrl\": \"URL1\",\n\t\"neo4jLogin\": \"login1\",\n\t\"neo4jPassword\": \"password1\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4602a71b-edc4-478f-a382-8f27433f9e02",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/NEO4J",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"NEO4J"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "77eef82d-3b23-4865-9443-65cff9c86866",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0d5f1a1f-5ccb-4f29-9876-425067e063b6",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/NEO4J2",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"NEO4J2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1fa04b75-e904-415b-a835-622ce9876973",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create binary storage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "dabcb471-1569-4289-971e-04d337268c06",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"STORAGE1\",\n\t\"rootPath\": \"/tmp/meveo/storage/1\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/binaries/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"binaries",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create repository 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a91c1854-1b4e-4901-8d30-5aed6a4483d9",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"REPO-1\",\n\t\"binaryStorageConfigurationCode\": \"STORAGE1\",\n\t\"active\": true,\n\t\"neo4jConfigurationCode\": \"NEO4J\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create repository 1-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b91b84d1-a4c3-40f7-904a-10aec66adeaa",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"REPO-1-1\",\n\t\"binaryStorageConfigurationCode\": \"STORAGE1\",\n\t\"parentCode\": \"REPO-1\",\n\t\"dataSeparationType\": \"PHYSICAL\",\n\t\"neo4jConfigurationCode\": \"NEO4J\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create repository 1-1-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ed52bfa9-1744-4729-a7da-02b860eb66e4",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"REPO-1-1-1\",\n\t\"parentCode\": \"REPO-1-1\",\n\t\"dataSeparationType\": \"LOGICAL\",\n\t\"neo4jConfigurationCode\": \"NEO4J\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create repository 1-2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e2bd1a19-29ef-448b-a529-7d0ce7bf0bc7",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"REPO-1-2\",\n\t\"parentCode\": \"REPO-1\",\n\t\"dataSeparationType\": \"PHYSICAL\",\n\t\"neo4jConfigurationCode\": \"NEO4J\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create repository 1-1-1-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d11cb84b-e326-4c61-aca6-72a1393116cd",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"REPO-1-1-1-1\",\n\t\"parentCode\": \"REPO-1-1-1\",\n\t\"dataSeparationType\": \"LOGICAL\",\n\t\"neo4jConfigurationCode\": \"NEO4J\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find repository 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c57d4877-7b4d-4d01-a71c-961af348822f",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/REPO-1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"REPO-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List repositories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "98b2f20c-f301-493a-af13-d63851b741a2",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete repository - fail parent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0fc94749-2dcb-472f-aa74-2749b5f2d042",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([500]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/REPO-1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"REPO-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete repository REPO-1-1-1-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c4930107-3444-47be-b0c1-90fb544060e1",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/REPO-1-1-1-1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"REPO-1-1-1-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete hierarchy REPO-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ba61cfed-94a9-4107-a95e-d5cc685df0a0",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/REPO-1?forceDelete=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"REPO-1"
+							],
+							"query": [
+								{
+									"key": "forceDelete",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete neo4j config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b5b56766-eb2f-437f-ae27-187440438df7",
+								"exec": [
+									"pm.test(\"Response code should be above 200\", function() {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/configurations/NEO4J",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"configurations",
+								"NEO4J"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "1ce4e10d-1523-4ec1-aad6-e733ed8d0749",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "feb32ba8-5e26-47bb-8be9-d6f1a324491f",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

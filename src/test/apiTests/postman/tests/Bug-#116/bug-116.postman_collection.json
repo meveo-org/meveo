@@ -1,0 +1,444 @@
+{
+	"info": {
+		"_postman_id": "ddb3f316-ade6-4e6a-8117-45eaee60f437",
+		"name": "bug-#116",
+		"description": "https://github.com/meveo-org/meveo/issues/116",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create CET A",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"code\" : \"CetA\",\r\n      \"name\" : \"CetA\",\r\n      \"description\" : \"CetA\",\r\n      \"actions\" : [ ],\r\n      \"availableStorages\" : [\"NEO4J\"],\r\n      \"samples\" : [ ],\r\n      \"fields\" : []\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create CET B",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"code\" : \"CetB\",\r\n      \"name\" : \"CetB\",\r\n      \"description\" : \"CetB\",\r\n      \"actions\" : [ ],\r\n      \"availableStorages\" : [\"NEO4J\"],\r\n      \"samples\" : [ ],\r\n      \"fields\" : []\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create CRT AB",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"code\": \"CetA_AB_CetB\",\r\n  \"availableStorages\": [\"NEO4J\"],\r\n  \"description\": \"AB\",\r\n  \"name\": \"AB\",\r\n  \"isUnique\": false,\r\n  \"startNodeCode\": \"CetA\",\r\n  \"endNodeCode\": \"CetB\",\r\n  \"field\": []\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/crt/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customRelationshipTemplate",
+						"crt",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update CET A",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9d6be8c6-20fa-4275-96ee-af1293549598",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"code\" : \"CetA\",\r\n      \"name\" : \"CetA\",\r\n      \"description\" : \"CetA\",\r\n      \"actions\" : [ ],\r\n      \"customEntityCategoryCode\" : \"\",\r\n      \"availableStorages\" : [\"NEO4J\"],\r\n      \"samples\" : [ ],\r\n      \"fields\" : [{\r\n        \"code\": \"b\",\r\n        \"description\": \"b\",\r\n        \"fieldType\": \"ENTITY\",\r\n        \"storageType\": \"SINGLE\",\r\n        \"entityClazz\": \"CetB\",\r\n        \"storages\": [\"NEO4J\"],\r\n        \"relationshipName\": \"AB\"\r\n      }]\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CET A",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						":cetCode"
+					],
+					"variable": [
+						{
+							"key": "cetCode",
+							"value": "CetA"
+						}
+					],
+					"query": [
+						{
+							"key": "withData",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CET B",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						":cetCode"
+					],
+					"variable": [
+						{
+							"key": "cetCode",
+							"value": "CetB"
+						}
+					],
+					"query": [
+						{
+							"key": "withData",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CRT",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/relationship/CetA_AB_CetB/CetA/CetB",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customRelationshipTemplate",
+						"relationship",
+						"CetA_AB_CetB",
+						"CetA",
+						"CetB"
+					],
+					"query": [
+						{
+							"key": "withData",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "2d11a3d6-ab9d-4371-a0c5-1cde88791911",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "967a7106-1019-478c-8da8-c39ca8f20f4b",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,0 +1,308 @@
+{
+	"info": {
+		"_postman_id": "f5db2971-2dc1-4891-a75d-df530864214d",
+		"name": "RemoteRepositories",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "81606899-040a-4cda-813d-3275ae195602",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{keycloakClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{keycloakClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{keycloakHostname}}/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "https",
+							"host": [
+								"{{keycloakHostname}}"
+							],
+							"port": "443",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Remote Repository",
+			"item": [
+				{
+					"name": "Create remote repository",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4c4e6f7f-ab5b-42c1-b717-00e58fc433ff",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"jboss\",\r\n    \"url\": \"http://repository.jboss.org/nexus/content/groups/public-jboss\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/mavenConfiguration/remoteRepository",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"mavenConfiguration",
+								"remoteRepository"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ac1eabae-0e41-4c93-a051-a9e8efbfca73",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/mavenConfiguration/remoteRepository",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"mavenConfiguration",
+								"remoteRepository"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete remote repository",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4347ec3d-b34f-454e-99b0-360a22d7610b",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/mavenConfiguration/remoteRepository/jboss",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"mavenConfiguration",
+								"remoteRepository",
+								"jboss"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "a720f9f8-d193-40c2-81e4-7c3e03e9d59e",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4fd55c37-b43a-4fd5-86e5-03a103c89951",
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Response code should be above 200\", function() {",
+					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,403]); ",
+					"});"
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,0 +1,747 @@
+{
+	"info": {
+		"_postman_id": "9a37589e-0096-4a0b-b52f-0bdf35214f46",
+		"name": "StateOfCEI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create CEC",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Other\",\r\n    \"code\": \"Other\"\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create CET",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"TestPersonWF\",\r\n    \"name\": \"TestPersonWF\",\r\n    \"customEntityCategoryCode\": \"Other\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"samples\": [],\r\n    \"audited\": false,\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"createDate\",\r\n            \"description\": \"Date\",\r\n            \"fieldType\": \"DATE\",\r\n            \"accountLevel\": \"CE_TestPersonWF\",\r\n            \"appliesTo\": \"CE_TestPersonWF\",\r\n            \"useInheritedAsDefaultValue\": false,\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"versionable\": false,\r\n            \"triggerEndPeriodEvent\": false,\r\n            \"listValues\": {},\r\n            \"allowEdit\": true,\r\n            \"hideOnNew\": false,\r\n            \"contentTypes\": [],\r\n            \"fileExtensions\": [],\r\n            \"saveOnExplorer\": false,\r\n            \"guiPosition\": \"tab:TestPersonWF:0;field:1\",\r\n            \"identifier\": false,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ],\r\n            \"samples\": [],\r\n            \"summary\": false,\r\n            \"unique\": false,\r\n            \"filter\": false,\r\n            \"matrixColumns\": []\r\n        },\r\n        {\r\n            \"code\": \"description\",\r\n            \"description\": \"Description\",\r\n            \"fieldType\": \"STRING\",\r\n            \"accountLevel\": \"CE_TestPersonWF\",\r\n            \"appliesTo\": \"CE_TestPersonWF\",\r\n            \"useInheritedAsDefaultValue\": false,\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"versionable\": false,\r\n            \"triggerEndPeriodEvent\": false,\r\n            \"listValues\": {},\r\n            \"allowEdit\": true,\r\n            \"hideOnNew\": false,\r\n            \"maxValue\": 255,\r\n            \"contentTypes\": [],\r\n            \"fileExtensions\": [],\r\n            \"saveOnExplorer\": false,\r\n            \"guiPosition\": \"tab:TestPersonWF:0;field:2\",\r\n            \"identifier\": false,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ],\r\n            \"samples\": [],\r\n            \"summary\": true,\r\n            \"unique\": false,\r\n            \"filter\": false,\r\n            \"matrixColumns\": []\r\n        },\r\n        {\r\n            \"code\": \"name\",\r\n            \"description\": \"Name\",\r\n            \"fieldType\": \"STRING\",\r\n            \"accountLevel\": \"CE_TestPersonWF\",\r\n            \"appliesTo\": \"CE_TestPersonWF\",\r\n            \"useInheritedAsDefaultValue\": false,\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"versionable\": false,\r\n            \"triggerEndPeriodEvent\": false,\r\n            \"listValues\": {},\r\n            \"allowEdit\": true,\r\n            \"hideOnNew\": false,\r\n            \"maxValue\": 255,\r\n            \"contentTypes\": [],\r\n            \"fileExtensions\": [],\r\n            \"saveOnExplorer\": false,\r\n            \"guiPosition\": \"tab:TestPersonWF:0;field:0\",\r\n            \"identifier\": false,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ],\r\n            \"samples\": [],\r\n            \"summary\": true,\r\n            \"unique\": false,\r\n            \"filter\": false,\r\n            \"matrixColumns\": []\r\n        },\r\n        {\r\n            \"code\": \"status\",\r\n            \"description\": \"Status\",\r\n            \"fieldType\": \"LIST\",\r\n            \"accountLevel\": \"CE_TestPersonWF\",\r\n            \"appliesTo\": \"CE_TestPersonWF\",\r\n            \"defaultValue\": \"NEW\",\r\n            \"useInheritedAsDefaultValue\": false,\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"versionable\": false,\r\n            \"triggerEndPeriodEvent\": false,\r\n            \"listValues\": {\r\n                \"CLOSED\": \"CLOSED\",\r\n                \"NEW\": \"NEW\",\r\n                \"ONGOING\": \"ONGOING\"\r\n            },\r\n            \"allowEdit\": true,\r\n            \"hideOnNew\": false,\r\n            \"contentTypes\": [],\r\n            \"fileExtensions\": [],\r\n            \"saveOnExplorer\": false,\r\n            \"guiPosition\": \"tab:TestPersonWF:0;field:3\",\r\n            \"identifier\": false,\r\n            \"applicableOnEl\": \"true\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ],\r\n            \"samples\": [],\r\n            \"summary\": false,\r\n            \"unique\": false,\r\n            \"filter\": false,\r\n            \"matrixColumns\": []\r\n        }\r\n    ],\r\n    \"actions\": []\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create WF script",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"code\": \"org.meveo.script.WorkflowTestScript\",\r\n        \"inputs\": [],\r\n        \"outputs\": [],\r\n        \"generateOutputs\": false,\r\n        \"type\": \"JAVA\",\r\n        \"transactionType\": \"SAME\",\r\n        \"script\": \"\\r\\npackage org.meveo.script;\\r\\n\\r\\nimport org.meveo.model.customEntities.CustomEntityInstance;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\n\\r\\npublic class WorkflowTestScript extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n\\t\\tCustomEntityInstance cei = (CustomEntityInstance) parameters.get(\\\"CONTEXT_ENTITY\\\");\\r\\n      \\tcei.getCfValues().setValue(\\\"description\\\", \\\"Test OK\\\");\\r\\n\\t}\\r\\n\\t\\r\\n}\",\r\n        \"executionRole\": [],\r\n        \"sourcingRole\": [],\r\n        \"mavenDependency\": [],\r\n        \"importScriptInstancy\": []\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/api/rest/scriptInstance/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"investigation-core",
+						"api",
+						"rest",
+						"scriptInstance",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Workflow",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"Project_cycle\",\r\n    \"cetCode\": \"TestPersonWF\",\r\n    \"wfType\": \"status\",\r\n    \"enableHistory\": false,\r\n    \"transition\": [\r\n        {\r\n            \"fromStatus\": \"NEW\",\r\n            \"toStatus\": \"ONGOING\",\r\n            \"conditionEl\": \"#{entity.cfValues.valuesByCode.get(\\\"name\\\").get(0).getStringValue() == 'Jerry'}\",\r\n            \"priority\": 1,\r\n            \"description\": \"test\",\r\n            \"action\": [\r\n                {\r\n                    \"actionScript\": \"org.meveo.script.WorkflowTestScript\",\r\n                    \"priority\": 1,\r\n                    \"conditionEl\": \"#{entity.cetCode == 'TestPersonWF'}\"\r\n                }\r\n            ],\r\n            \"decisionRule\": []\r\n        },\r\n         {\r\n            \"fromStatus\": \"NEW\",\r\n            \"toStatus\": \"CLOSED\",\r\n            \"conditionEl\": \"#{entity.cfValues.valuesByCode.get(\\\"name\\\").get(0).getStringValue() == 'Tom'}\",\r\n            \"priority\": 2,\r\n            \"description\": \"new\",\r\n            \"action\": [],\r\n            \"decisionRule\": []\r\n        },\r\n         {\r\n            \"fromStatus\": \"ONGOING\",\r\n            \"toStatus\": \"CLOSED\",\r\n            \"conditionEl\": \"true\",\r\n            \"priority\": 2,\r\n            \"description\": \"new\",\r\n            \"action\": [],\r\n            \"decisionRule\": []\r\n        }\r\n    ]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/admin/workflow/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"admin",
+						"workflow",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create CEI 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"var uuid = pm.response.json()[0].uuid;\r",
+							"pm.environment.set(\"uuid\", uuid);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\r\n    \"name\" : \"test\",\r\n    \"type\": \"TestPersonWF\",\r\n    \"properties\": {\r\n        \"name\": \"Jerry\",\r\n        \"status\": \"NEW\"\r\n    }\r\n}]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get States Of CEI 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"No available states\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.states).to.include(\"ONGOING\");\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityInstance/states/TestPersonWF/status/{{uuid}}",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityInstance",
+						"states",
+						"TestPersonWF",
+						"status",
+						"{{uuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create CEI 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"var uuid = pm.response.json()[0].uuid;\r",
+							"pm.environment.set(\"uuid\", uuid);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[{\r\n    \"name\" : \"test\",\r\n    \"type\": \"TestPersonWF\",\r\n    \"properties\": {\r\n        \"name\": \"TOM\",\r\n        \"status\": \"NEW\"\r\n    }\r\n}]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get States Of CEI 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"No available states\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.states.length).to.eql(0);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityInstance/states/TestPersonWF/status/{{uuid}}",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityInstance",
+						"states",
+						"TestPersonWF",
+						"status",
+						"{{uuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Workflow",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/admin/workflow/Project_cycle",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"admin",
+						"workflow",
+						"Project_cycle"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CET",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TestPersonWF",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"entity",
+						"TestPersonWF"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CEC",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/Other",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"Other"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete WF script",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "meveo",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "meveo.admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/api/rest/scriptInstance/org.meveo.script.WorkflowTestScript",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"investigation-core",
+						"api",
+						"rest",
+						"scriptInstance",
+						"org.meveo.script.WorkflowTestScript"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

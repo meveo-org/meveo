@@ -1,0 +1,385 @@
+{
+	"info": {
+		"_postman_id": "9940d156-d235-4114-ab8a-fc3c3d9051eb",
+		"name": "Custom transaction management in script execution",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create InsertCet script",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\" : \"org.meveo.script.InsertCet\",\r\n    \"script\" : \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport javax.transaction.UserTransaction;\\r\\nimport org.meveo.model.customEntities.CustomEntityTemplate;\\r\\nimport org.meveo.service.custom.CustomEntityTemplateService;\\r\\n\\r\\npublic class InsertCet extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n        var cetService = (CustomEntityTemplateService) getCDIBean(CustomEntityTemplateService.class);\\r\\n      \\r\\n      \\t\\/\\/ UserTransaction tx = (UserTransaction) parameters.get(\\\"userTx\\\");\\r\\n      \\r\\n      \\ttry {\\r\\n          \\t\\/\\/ tx.begin();\\r\\n          \\t\\/\\/ tx.commit();\\r\\n          \\r\\n          \\tSystem.out.println(\\\"Start\\\");\\r\\n            \\/\\/ tx.begin();\\r\\n          \\t\\r\\n          \\tvar cet = new CustomEntityTemplate();\\r\\n          \\tcet.setCode(\\\"TestCetTemp\\\");\\r\\n          \\tcet.setDescription(\\\"toto\\\");\\r\\n          \\tcet.setName(\\\"TestCetTemp\\\");\\r\\n          \\tcetService.getEntityManager().persist(cet);\\r\\n      \\t\\t\\/\\/ Thread.sleep(1000 * 12);\\r\\n            \\/\\/ tx.commit();\\r\\n          \\tSystem.out.println(\\\"Stop\\\");\\r\\n          \\r\\n          \\t\\/\\/ tx.begin();\\r\\n          \\tcetService.remove(cet);\\r\\n            \\/\\/ tx.commit();\\r\\n        } catch (Exception e) {\\r\\n           e.printStackTrace();\\r\\n           throw new RuntimeException(e);\\r\\n        }\\r\\n\\t}\\r\\n\\t\\r\\n}\",\r\n    \"transactionType\": \"NONE\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/api/rest/scriptInstance/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"investigation-core",
+						"api",
+						"rest",
+						"scriptInstance",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create endpoint",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\": \"insert-cet\",\r\n    \"serviceCode\": \"org.meveo.script.InsertCet\",\r\n    \"synchronous\": true,\r\n    \"method\": \"GET\",\r\n    \"parameterMappings\": [],\r\n    \"pathParameters\": [],\r\n    \"roles\": [],\r\n    \"serializeResult\": false,\r\n    \"contentType\": \"application/json\"\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"endpoint"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Execute endpoint - fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "96547f63-2d1d-4c51-b5d8-ebd2c58cc12e",
+						"exec": [
+							"pm.test(\"Status code is 500\", function () {",
+							"    pm.response.to.have.status(500);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/insert-cet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"rest",
+						"insert-cet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update transaction type",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\" : \"org.meveo.script.InsertCet\",\r\n    \"script\" : \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport javax.transaction.UserTransaction;\\r\\nimport org.meveo.model.customEntities.CustomEntityTemplate;\\r\\nimport org.meveo.service.custom.CustomEntityTemplateService;\\r\\n\\r\\npublic class InsertCet extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n        var cetService = (CustomEntityTemplateService) getCDIBean(CustomEntityTemplateService.class);\\r\\n      \\r\\n      \\t\\/\\/ UserTransaction tx = (UserTransaction) parameters.get(\\\"userTx\\\");\\r\\n      \\r\\n      \\ttry {\\r\\n          \\t\\/\\/ tx.begin();\\r\\n          \\t\\/\\/ tx.commit();\\r\\n          \\r\\n          \\tSystem.out.println(\\\"Start\\\");\\r\\n            \\/\\/ tx.begin();\\r\\n          \\t\\r\\n          \\tvar cet = new CustomEntityTemplate();\\r\\n          \\tcet.setCode(\\\"TestCetTemp\\\");\\r\\n          \\tcet.setDescription(\\\"toto\\\");\\r\\n          \\tcet.setName(\\\"TestCetTemp\\\");\\r\\n          \\tcetService.getEntityManager().persist(cet);\\r\\n      \\t\\t\\/\\/ Thread.sleep(1000 * 12);\\r\\n            \\/\\/ tx.commit();\\r\\n          \\tSystem.out.println(\\\"Stop\\\");\\r\\n          \\r\\n          \\t\\/\\/ tx.begin();\\r\\n          \\tcetService.remove(cet);\\r\\n            \\/\\/ tx.commit();\\r\\n        } catch (Exception e) {\\r\\n           e.printStackTrace();\\r\\n           throw new RuntimeException(e);\\r\\n        }\\r\\n\\t}\\r\\n\\t\\r\\n}\",\r\n    \"transactionType\": \"SAME\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/api/rest/scriptInstance/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"investigation-core",
+						"api",
+						"rest",
+						"scriptInstance",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Execute endpoint - success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "22fd8206-6490-48f4-98d0-e271d6f2772d",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/insert-cet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"rest",
+						"insert-cet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update script - manual tx",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"code\" : \"org.meveo.script.InsertCet\",\r\n    \"script\" : \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport javax.transaction.UserTransaction;\\r\\nimport org.meveo.model.customEntities.CustomEntityTemplate;\\r\\nimport org.meveo.service.custom.CustomEntityTemplateService;\\r\\n\\r\\npublic class InsertCet extends Script {\\r\\n\\t\\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n        var cetService = (CustomEntityTemplateService) getCDIBean(CustomEntityTemplateService.class);\\r\\n      \\r\\n      \\tUserTransaction tx = (UserTransaction) parameters.get(\\\"userTx\\\");\\r\\n      \\r\\n      \\ttry {\\r\\n          \\ttx.begin();\\r\\n          \\r\\n          \\tSystem.out.println(\\\"Start\\\");\\r\\n          \\t\\r\\n          \\tvar cet = new CustomEntityTemplate();\\r\\n          \\tcet.setCode(\\\"TestCetTemp\\\");\\r\\n          \\tcet.setDescription(\\\"toto\\\");\\r\\n          \\tcet.setName(\\\"TestCetTemp\\\");\\r\\n          \\tcetService.getEntityManager().persist(cet);\\r\\n\\r\\n            tx.commit();\\r\\n          \\tSystem.out.println(\\\"Stop\\\");\\r\\n          \\r\\n          \\tcetService.remove(cet);\\r\\n        } catch (Exception e) {\\r\\n           e.printStackTrace();\\r\\n           throw new RuntimeException(e);\\r\\n        }\\r\\n\\t}\\r\\n\\t\\r\\n}\",\r\n    \"transactionType\": \"MANUAL\"\r\n} ",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/api/rest/scriptInstance/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"investigation-core",
+						"api",
+						"rest",
+						"scriptInstance",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Execute endpoint - success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "41fb9cf7-2f18-4843-bd6a-a9c15d62d793",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/insert-cet",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"rest",
+						"insert-cet"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

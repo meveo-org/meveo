@@ -1,0 +1,712 @@
+{
+	"info": {
+		"_postman_id": "041ccfdf-19ef-4772-a6a0-ead5b4af139e",
+		"name": "feature-209-repository-user-level",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create user hierarchy level marketing",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9b57f747-84b0-4fe5-b15a-573f541764e2",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"MARKETING\",\n\t\"description\": \"Marketing\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/hierarchy/userGroupLevel/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"hierarchy",
+						"userGroupLevel",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create user hierarchy level marketing ph",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4ca2d704-bb30-4dee-8e20-1fa1f4b0c123",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"code\": \"PH\",\n\t\"parentLevel\": \"MARKETING\",\n    \"description\": \"Philippines\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/hierarchy/userGroupLevel/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"hierarchy",
+						"userGroupLevel",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create user hierarchy level marketing FR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bbe5a98f-70ad-46ea-925e-c02f3fcbff0e",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"parentLevel\": \"MARKETING\",\n\t\"code\": \"FR\",\n\t\"description\": \"France\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/hierarchy/userGroupLevel/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"hierarchy",
+						"userGroupLevel",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create custom entity category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "78e30397-46b7-4ce5-b0ad-98b93e74de54",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"DEVICES\",\n\t\"name\": \"Devices\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create laptop with devices category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4fcb0545-44d3-46b7-b292-65a2d6df6696",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"Devices\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"audited\": true,\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": true\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create POSTGRESQL - PH",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "58a15770-a5fa-4707-a516-2107e12dde75",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"POSTGRESQL_PH\",\n\t\"username\": \"meveo\",\n\t\"password\": \"meveo\",\n\t\"driverClass\": \"org.postgresql.Driver\",\n    \"url\": \"jdbc:postgresql://localhost/meveo_ph\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/sql/configurations/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"sql",
+						"configurations",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create POSTGRESQL - FR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b77bc00b-1701-4562-bd1a-b51e15385763",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"POSTGRESQL_FR\",\n\t\"username\": \"meveo\",\n\t\"password\": \"meveo\",\n\t\"driverClass\": \"org.postgresql.Driver\",\n    \"url\": \"jdbc:postgresql://localhost/meveo_fr\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/sql/configurations/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"sql",
+						"configurations",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create repository - PH",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "954d99b9-e905-4f20-8f8d-8f35b583fc72",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"POSTGRESQL_PH\",\n\t\"sqlConfigurationCode\": \"POSTGRESQL_PH\",\n    \"userHierarchyLevelCode\": \"PH\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"storages",
+						"repositories",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create repository - FR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3f8431a0-803d-4ca7-a8d4-a09010d48a93",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"POSTGRESQL_FR\",\n\t\"sqlConfigurationCode\": \"POSTGRESQL_FR\",\n    \"userHierarchyLevelCode\": \"FR\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"storages",
+						"repositories",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Insert data - POSTGRESQL_PH",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "881d83ae-7d15-470d-94a5-490be6fd57fb",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"name\": \"MBP2013\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"MBP2013\",\n            \"imei\": \"MBP2013\",\n            \"manufacturer\": \"APPLE\"\n        }\n    },\n    {\n        \"name\": \"LENOVOZ480\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"Z480\",\n            \"imei\": \"480\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad750\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad750\",\n            \"imei\": \"ThinkPad750\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad750C\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad750C\",\n            \"imei\": \"ThinkPad750C\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad755C\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad755C\",\n            \"imei\": \"ThinkPad755C\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad760ED\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad760ED\",\n            \"imei\": \"ThinkPad760ED\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad760XD\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad760XD\",\n            \"imei\": \"ThinkPad760XD\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad770\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad770\",\n            \"imei\": \"ThinkPad770\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPadA31p\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPadA31p\",\n            \"imei\": \"ThinkPadA31p\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPadT61p\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPadT61p\",\n            \"imei\": \"ThinkPadT61p\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad235\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad235\",\n            \"imei\": \"ThinkPad235\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad240\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad240\",\n            \"imei\": \"ThinkPad240\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"IdeapadS130\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"IdeapadS130\",\n            \"imei\": \"IdeapadS130\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/POSTGRESQL_PH/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"POSTGRESQL_PH",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Insert data - POSTGRESQL_FR",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "346778f7-f02f-4fd9-95e7-0c217c20f579",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n   \n    {\n        \"name\": \"ThinkPad750C\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad750C\",\n            \"imei\": \"ThinkPad750C\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad755C\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad755C\",\n            \"imei\": \"ThinkPad755C\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n    {\n        \"name\": \"ThinkPad760ED\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"ThinkPad760ED\",\n            \"imei\": \"ThinkPad760ED\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    },\n     {\n        \"name\": \"IdeapadS130\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"code\": \"IdeapadS130\",\n            \"imei\": \"IdeapadS130\",\n            \"manufacturer\": \"LENOVO\"\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/POSTGRESQL_FR/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"POSTGRESQL_FR",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,0 +1,444 @@
+{
+	"info": {
+		"_postman_id": "352cad2a-3e6e-4162-9d32-4e62048ddb1f",
+		"name": "ScriptCompile",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a0ed07e6-29a3-4802-b9d1-8db3397ab2a6",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{keycloakClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{keycloakClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{keycloakHostname}}:443/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "https",
+							"host": [
+								"{{keycloakHostname}}"
+							],
+							"port": "443",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Script Instance",
+			"item": [
+				{
+					"name": "Create script A",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\" : \"org.meveo.script.AScript\",\r\n  \"type\" : \"JAVA\",\r\n  \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\n\\r\\npublic class AScript extends Script {\\r\\n\\r\\n    private String value;\\r\\n\\r\\n    public String getValue() {\\r\\n        return value;\\r\\n    }\\r\\n\\r\\n    public void setValue(String value) {\\r\\n        this.value = value;\\r\\n    }\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) throws BusinessException {\\r\\n        methodContext.put(\\\"valueA\\\", \\\"A\\\");\\r\\n        System.out.println(methodContext);\\r\\n    }\\r\\n}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						},
+						"description": "Create script A that return \"value=A\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Create script B",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\" : \"org.meveo.script.BScript\",\r\n  \"type\" : \"JAVA\",\r\n  \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\nimport org.meveo.script.AScript;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\n\\r\\npublic class BScript extends AScript {\\r\\n\\r\\n    private Map<String, Object> response;\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) throws BusinessException {\\r\\n        super.execute(methodContext);\\r\\n        methodContext.put(\\\"valueB\\\", \\\"B\\\");\\r\\n        response = methodContext;\\r\\n        System.out.println(methodContext);\\r\\n    }\\r\\n\\r\\n    public Map<String, Object> getResponse() {\\r\\n        return response;\\r\\n    }\\r\\n}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						},
+						"description": "Create script B that call script A with its own methodContext. The script B add \"valueB=B\" in the method context."
+					},
+					"response": []
+				},
+				{
+					"name": "Create script endpoint",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceCode\": \"org.meveo.script.BScript\",\n    \"code\": \"testScript\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [],\n    \"contentType\": \"application/json\",\n    \"returnedVariableName\": \"response\",\n    \"serializeResult\": true,\n    \"parameterMappings\" : []\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						},
+						"description": "Create script endpoint to execute script B."
+					},
+					"response": []
+				},
+				{
+					"name": "Test result",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "13d9df29-b566-49a3-9cd5-8558e6c90ab9",
+								"exec": [
+									"pm.test(\"Response is ok\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"valueB\");",
+									"    pm.expect(pm.response.text()).to.include(\"B\");",
+									"    pm.expect(pm.response.text()).to.include(\"valueA\");",
+									"    pm.expect(pm.response.text()).to.include(\"A\");",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/testScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"rest",
+								"testScript"
+							]
+						},
+						"description": "Test endpoint that the result contains \"value=A\" and \"valueB=B\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script endpoint",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/testScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"testScript"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script B",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.BScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.BScript"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script A",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.AScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.AScript"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
