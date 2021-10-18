@@ -488,7 +488,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		if (meveoModule.isInstalled()) {
 			try {
-				uninstall(meveoModule.getCode(), MeveoModule.class, false);
+				uninstall(meveoModule.getCode(), MeveoModule.class, true);
 			} catch (MeveoApiException e) {
 				throw new BusinessException(e);
 			}
