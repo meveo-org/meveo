@@ -1,18 +1,23 @@
 package org.meveo.service.storage;
 
+import java.io.Serializable;
+
+import javax.ejb.Stateless;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
+import javax.persistence.Query;
+
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.storage.RemoteRepository;
-import org.meveo.service.base.PersistenceService;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.*;
-import java.io.Serializable;
+import org.meveo.service.base.BusinessService;
 
 @Stateless
-public class RemoteRepositoryService extends PersistenceService<RemoteRepository> implements Serializable {
+public class RemoteRepositoryService extends BusinessService<RemoteRepository> implements Serializable {
 
     @PersistenceContext(unitName = "MeveoAdmin", type = PersistenceContextType.TRANSACTION)
     private EntityManager entityManager;

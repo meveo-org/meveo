@@ -184,9 +184,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@EJB
 	private CustomFieldInstanceService customFieldInstanceService;
 	
-    @Inject
-    private BusinessServiceFinder businessServiceFinder;
-
 	@Inject
 	protected ParamBeanFactory paramBeanFactory;
 
@@ -399,7 +396,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 			getEntityManager().remove(entity);
 			
 			if (entity instanceof BusinessEntity) {
-				BusinessService businessService = businessServiceFinder.find((BusinessEntity) entity);
+				BusinessService businessService = (BusinessService) this;
 				MeveoModule meveoModule = businessService.findModuleOf((BusinessEntity) entity);
 				if (meveoModule != null) {
 					businessService.removeFilesFromModule((BusinessEntity) entity, meveoModule);
