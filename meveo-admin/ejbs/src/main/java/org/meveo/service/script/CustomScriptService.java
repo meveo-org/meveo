@@ -987,7 +987,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     protected ScriptInterfaceSupplier getScriptInterfaceWCompile(String scriptCode) throws ElementNotFoundException, InvalidScriptException {
         ScriptInterfaceSupplier result;
 
-        result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), scriptCode);
+		result = ALL_SCRIPT_INTERFACES.get(key);
 
         if (result == null) {
         	List<String> fetchFields = Arrays.asList("mavenDependencies");
@@ -997,15 +998,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
             
-            //compileScript(script, false, false);
-            loadClassInCache(scriptCode);
+            if (script.getSourceTypeEnum() == JAVA) {
+            	loadClassInCache(scriptCode);
+            } else {
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript()));
+            }
             
             if (script.isError()) {
                 log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
             }
             
-            result = ALL_SCRIPT_INTERFACES.get(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
+            result = ALL_SCRIPT_INTERFACES.get(key);
             detach(script);
         }
 
