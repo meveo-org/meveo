@@ -166,13 +166,6 @@ public class UserApi extends BaseApi {
         }
         handleMissingParameters();
 
-        // we support old dto that containt only one role
-        if (!StringUtils.isBlank(postData.getRole())) {
-            if (postData.getRoles() == null) {
-                postData.setRoles(new ArrayList<String>());
-            }
-            postData.getRoles().add(postData.getRole());
-        }
 
         // find user
         User user = userService.findByUsername(postData.getUsername());
@@ -208,7 +201,6 @@ public class UserApi extends BaseApi {
             roles.addAll(extractRoles(postData.getRoles()));
             securedEntities.addAll(extractSecuredEntities(postData.getSecuredEntities()));
         }
-
         
 		if (postData.getUserLevel() != null) {
 			if (!StringUtils.isBlank(postData.getUserLevel())) {
@@ -236,7 +228,9 @@ public class UserApi extends BaseApi {
             name.setFirstName(postData.getFirstName());
             user.setName(name);
         }
-        if (isUsersManager) {
+        
+        // If roles were not defined, do not update them
+        if (isUsersManager && postData.getRoles() != null) {
             user.setRoles(roles);
             user.setSecuredEntities(securedEntities);
         }
