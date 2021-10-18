@@ -448,7 +448,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
+	            customTableCreatorService.removeField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
 		
