@@ -10,12 +10,15 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.io.input.Tailer;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.Messages;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.util.FileTail;
 import org.primefaces.PrimeFaces;
 import org.slf4j.Logger;
+import org.unix4j.Unix4j;
+import org.unix4j.builder.Unix4jCommandBuilder;
 
 /**
  * Bean for managing the log viewer.
@@ -41,7 +44,7 @@ public class LogViewerBean implements Serializable {
 
 	private Integer offset = 5000;
 
-	private volatile FileTail fileTail = null;
+	private volatile Unix4jCommandBuilder tail;
 
 	private boolean paused = true;
 
@@ -56,19 +59,19 @@ public class LogViewerBean implements Serializable {
 		String serverLogFile = System.getProperty("jboss.server.log.dir") + File.separator + "server.log";
 		logFile = paramBean.getProperty("meveo.log.file", serverLogFile);
 		offset = Integer.parseInt(paramBean.getProperty("log.offset", "5000"));
+		
+		if (logFile != null) {
+			tail = Unix4j.tail(offset, logFile);
+		}
 	}
 
 	public void start() {
 
 		try {
 			if (logFile != null) {
-				/* Create new tail only if file has changed */
-				if (fileTail == null || !fileTail.getFileName().equals(logFile)) {
-					fileTail = new FileTail(logFile, offset);
-				}
-
 				this.paused = false;
 				this.initialized = true;
+				tail = Unix4j.tail(offset, logFile);
 				read();
 			}
 
@@ -81,7 +84,6 @@ public class LogViewerBean implements Serializable {
 
 	public void stop() {
 		this.paused = true;
-
 	}
 
 	public void setLogFile(String logFile) {
@@ -97,25 +99,7 @@ public class LogViewerBean implements Serializable {
 	}
 
 	public void read() throws FileNotFoundException, IOException {
-
-		if (logFile != null) {
-			if (fileTail == null) {
-				synchronized (this) {
-					if (fileTail == null) {
-						fileTail = new FileTail(logFile, offset);
-						this.initialized = true;
-					}
-				}
-			}
-		}
-
-		synchronized (fileTail) {
-			if (fileTail != null) {
-				fileTail.read();
-				PrimeFaces.current().ajax().addCallbackParam("value", fileTail.getAsString());
-			}
-		}
-
+		PrimeFaces.current().ajax().addCallbackParam("value", tail.toStringResult());
 	}
 
 	public boolean isPaused() {
