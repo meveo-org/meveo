@@ -29,10 +29,10 @@ public class CurrentRepositoryProvider implements Serializable {
 	private static final long serialVersionUID = -1161560465567580602L;
 
 	@Inject
-	private RepositoryService repositoryService;
+	private transient RepositoryService repositoryService;
 
 	@Inject
-	private Logger log;
+	private transient Logger log;
 	
 	private Repository repository;
 
