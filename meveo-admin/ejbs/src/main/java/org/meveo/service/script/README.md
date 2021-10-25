@@ -2,8 +2,8 @@
 
 A function (or script)  is a piece source code that can be written in Java or Javascript and can be used to perform some business logic.
 
-A function can be executed manually, from an [endpoint](https://github.com/manaty/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint),
-from a [notification]((https://github.com/manaty/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)) or from another function.
+A function can be executed manually, from an [endpoint](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint),
+from a [notification]((https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/notification)) or from another function.
 
 ## Java function
 

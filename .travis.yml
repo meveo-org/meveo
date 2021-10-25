@@ -77,7 +77,7 @@ script:
   - set -e
 
   # Packaging meveo.war file
-  - mvn clean package -Dscm.url="scm:git:ssh://git@github.com:manaty/meveo.git" -DskipTests
+  - mvn clean package -Dscm.url="scm:git:ssh://git@github.com:meveo-org/meveo.git" -DskipTests
 
   # Copy dbchangelog and meveo.war files into the docker image folder for meveo
   - cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
