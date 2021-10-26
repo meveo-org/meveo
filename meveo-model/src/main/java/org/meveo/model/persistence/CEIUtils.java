@@ -624,6 +624,10 @@ public class CEIUtils {
 						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
 						setUUIDField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getUuid());
 						setter.invoke(instance, lazyInitInstance);
+						
+					} else if(entry.getValue() instanceof CustomEntityInstance) {
+						var customEntity = ceiToPojo((CustomEntityInstance) entry.getValue(), paramType);
+						setter.invoke(instance, customEntity);
 					}
 
 				} else {
