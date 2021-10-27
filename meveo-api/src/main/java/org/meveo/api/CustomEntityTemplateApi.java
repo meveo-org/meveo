@@ -2,6 +2,7 @@ package org.meveo.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.EntityCustomizationDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -43,8 +45,8 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
@@ -95,8 +97,32 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private OntologyObserver ontologyObserver;
-   
-    public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+    
+    @Override
+	public int compareDtos(CustomEntityTemplateDto obj1, CustomEntityTemplateDto obj2, List<MeveoModuleItemDto> dtos) {
+    	Map<String, CustomEntityTemplateDto> cetDtos = new HashMap<>();
+    	dtos.stream()
+    			.filter(dto -> dto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName()))
+    			.map(dto -> JacksonUtil.convert(dto.getDtoData(), CustomEntityTemplateDto.class))
+    			.forEach(dto -> cetDtos.put(dto.getCode(), dto));
+    	
+		return countAncestors(obj1, cetDtos) - countAncestors(obj2, cetDtos);
+	}
+    
+    private int countAncestors(CustomEntityTemplateDto cet, Map<String, CustomEntityTemplateDto> dtos) {
+    	int count = 0;
+    	
+    	// Retrieve child parent's in the dtos
+    	CustomEntityTemplateDto iteratbleCet = cet;
+    	while (iteratbleCet != null && iteratbleCet.getSuperTemplate() != null) {
+			count ++;
+			iteratbleCet = dtos.get(iteratbleCet.getSuperTemplate());
+    	}
+    	
+    	return count;
+    }
+    
+	public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
 
