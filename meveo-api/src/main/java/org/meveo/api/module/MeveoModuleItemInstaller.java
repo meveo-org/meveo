@@ -45,6 +45,7 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
+import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ModulePostInstall;
@@ -663,7 +664,13 @@ public class MeveoModuleItemInstaller {
 		}
 	}
 	
+	private <E extends IEntity, T extends BaseEntityDto> int compare(T obj1, T obj2, Class<E> entityClass, List<MeveoModuleItemDto> dtos) {
+		ApiService<E, T> apiService = ApiUtils.getApiService(entityClass, false);
+	    return apiService.compareDtos(obj1, obj2, dtos);
+	}
+	
 	public List<MeveoModuleItemDto> getSortedModuleItems(List<MeveoModuleItemDto> moduleItems) {
+		List<MeveoModuleItemDto> unsortedItems = List.copyOf(moduleItems);
 
 		Comparator<MeveoModuleItemDto> comparator = new Comparator<MeveoModuleItemDto>() {
 
@@ -673,29 +680,29 @@ public class MeveoModuleItemInstaller {
 				String m1;
 				String m2;
 				try {
-					var dtoClass1 = Class.forName(o1.getDtoClassName());
-					var dtoClass2 = Class.forName(o2.getDtoClassName());
+					Class<BaseEntityDto> dtoClass1 =  (Class<BaseEntityDto>) Class.forName(o1.getDtoClassName());
+					Class<BaseEntityDto> dtoClass2 = (Class<BaseEntityDto>) Class.forName(o2.getDtoClassName());
 
 					m1 = ModuleUtil.getModuleItemName(dtoClass1);
 					m2 = ModuleUtil.getModuleItemName(dtoClass2);
 
-					Class<?> entityClass1 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
+					Class<IEntity<?>> entityClass1 = (Class<IEntity<?>>) MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
 					if(entityClass1 == null) {
 						log.error("Can't get module item type for {}", m1);
 						return 0;
 					}
 					
-					Class<?> entityClass2 = MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
+					Class<IEntity<?>> entityClass2 = (Class<IEntity<?>>) MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
 					if(entityClass2 == null) {
 						log.error("Can't get module item type for {}", m2);
 					}
 					
-					// Both items are same type and we know how to compare them
-					if(dtoClass1.equals(dtoClass2) && Comparable.class.isAssignableFrom(dtoClass1)) {
-						Comparable<Object> dto1 = (Comparable<Object>) JacksonUtil.convert(o1.getDtoData(), dtoClass1);
-						Comparable<Object> dto2 = (Comparable<Object>) JacksonUtil.convert(o2.getDtoData(), dtoClass2);
-
-						return dto1.compareTo(dto2);
+					// Both items are same type
+					if(dtoClass1.equals(dtoClass2)) {
+						BaseEntityDto dto1 = JacksonUtil.convert(o1.getDtoData(), dtoClass1);
+						BaseEntityDto dto2 = JacksonUtil.convert(o2.getDtoData(), dtoClass2);
+						
+						return MeveoModuleItemInstaller.this.compare(dto1, dto2, entityClass1, unsortedItems);
 					}
 					
 					ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
