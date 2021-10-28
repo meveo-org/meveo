@@ -18,17 +18,6 @@
 	<p:tooltip for="reindexES">#{help['menu.fullTextSearch.index']}</p:tooltip>
     <p:tooltip for="ESSearch">#{help['menu.fullTextSearch.search']}</p:tooltip>
 
-	<c:set var="cetIndex" value="0" />
-	<c:forEach items="#{customEntityTemplateBean.listMenuCustomEntities()}"
-		var="mapCet">
-		<c:forEach items="#{mapCet.value}" var="cet">
-			<c:if test="#{currentUser.hasRole(cet.readPermission) }">
-				<p:tooltip for="cet_#{cetIndex}" value="#{cet.description}" />
-				<c:set var="cetIndex" value="#{cetIndex + 1}" />
-			</c:if>
-		</c:forEach>
-	</c:forEach>
-
 	<div class="Container">
 		<div class="Container5 NoIndent">
 			<h:link outcome="indexPage" styleClass="fa fw fa-home fa-3x"/>
