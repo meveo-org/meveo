@@ -1,20 +1,21 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -35,7 +36,6 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
-import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -44,6 +44,8 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
+import org.primefaces.model.menu.DefaultMenuItem;
+import org.primefaces.model.menu.DefaultSubMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,11 +86,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private EntityCustomAction selectedEntityAction;
 
-	private List<CustomEntityTemplate> customEntityTemplates;
+	private transient List<CustomEntityTemplate> customEntityTemplates;
 
 	private List<CustomEntityTemplate> cetConfigurations;
 
-	private List<CustomEntityCategory> customEntityCategories;
+	private transient List<CustomEntityCategory> customEntityCategories;
 
 	private List<CustomEntityTemplateUniqueConstraint> customEntityTemplateUniqueConstraints = new ArrayList<>();
 
@@ -111,6 +113,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private List<CustomizedEntity> selectedCustomizedEntities;
 
 	private List<Map<String, String>> parameters;
+	
+	private List<DefaultSubMenu> menuModels;
 
 	@Inject
 	private MeveoModuleService meveoModuleService;
@@ -128,6 +132,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
+		initMenues();
 	}
 
 	@Override
@@ -197,6 +202,54 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	 */
 	public boolean isCustomTable() {
 		return isCustomEntityTemplate() && entity != null && entity.getSqlStorageConfiguration() != null && entity.getSqlStorageConfiguration().isStoreAsTable();
+	}
+	
+	private void initMenues() {
+		
+		menuModels = new ArrayList<>();
+		
+		for (CustomEntityCategory category : customEntityCategories) {
+			DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
+			
+			List<CustomEntityTemplate> firstLevelCets = category.getCustomEntityTemplates()
+					.stream()
+					.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
+					.collect(Collectors.toList());
+					
+			addItems(firstSubmenu, firstLevelCets);
+			menuModels.add(firstSubmenu);
+		}
+		
+		DefaultSubMenu subMenu = new DefaultSubMenu("Others");
+		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplates.stream()
+			.filter(cet -> cet.getCustomEntityCategory() == null)
+			.collect(Collectors.toList());
+		addItems(subMenu, cetsWithoutCategories);
+		menuModels.add(subMenu);
+		
+		var menuComponent = (org.primefaces.component.Menu) MenuFacesContext.getCurrentInstance().getViewRoot().findComponent("menu");
+		
+	}
+	
+	private void addItems(DefaultSubMenu subMenu, Collection<CustomEntityTemplate> templates) {
+		for (CustomEntityTemplate cet : templates) {
+			if (cet.getSubTemplates().isEmpty()) {
+				DefaultMenuItem item = new DefaultMenuItem(cet.getName());
+				item.setOutcome("customEntities");
+				subMenu.addElement(item);
+			} else {
+				DefaultSubMenu cetSubMenu = new DefaultSubMenu(cet.getName());
+				addItems(cetSubMenu, cet.getSubTemplates());
+				subMenu.addElement(cetSubMenu);
+			}
+		}
+	}
+	
+	/**
+	 * @return the {@link #menuModels}
+	 */
+	public List<DefaultSubMenu> getMenuModels() {
+		return menuModels;
 	}
 
 	/**
