@@ -58,6 +58,7 @@ public class CrossStorageRequest<T> {
 	
 	public CrossStorageRequest<T> fetch(String field) {
 		this.relationsToFetch.add(field);
+		this.select(field + ".uuid");
 		return this;
 	}
 	
