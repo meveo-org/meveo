@@ -128,9 +128,11 @@ public class WebsocketServerEndpoint {
 
 	private void removeSession(Session session) {
 		String notifName = (String) session.getUserProperties().get("notifname");
-		List<Session> sessions = activeSessionsByEndpointCode.get(notifName);
-		if (sessions != null && sessions.contains(session)) {
-			sessions.remove(session);
+		if(notifName != null) {
+			List<Session> sessions = activeSessionsByEndpointCode.get(notifName);
+			if (sessions != null && sessions.contains(session)) {
+				sessions.remove(session);
+			}
 		}
 	}
 
