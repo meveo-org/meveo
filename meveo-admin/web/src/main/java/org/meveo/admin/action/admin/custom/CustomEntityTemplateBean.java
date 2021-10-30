@@ -227,7 +227,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		addItems(subMenu, cetsWithoutCategories);
 		menuModels.add(subMenu);
 		
-		var menuComponent = (org.primefaces.component.Menu) MenuFacesContext.getCurrentInstance().getViewRoot().findComponent("menu");
+		// var menuComponent = (org.primefaces.component.Menu) MenuFacesContext.getCurrentInstance().getViewRoot().findComponent("menu");
 		
 	}
 	
