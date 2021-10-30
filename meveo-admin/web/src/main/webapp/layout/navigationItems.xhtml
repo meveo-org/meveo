@@ -13,11 +13,6 @@
 		<p:menuitem id="meveoModules" outcome="meveoModules"
 			value="#{messages['menu.meveoModules']}" />
 		<p:submenu id="storages" label="#{messages['menu.storages']}">
-			<p:submenu id="test" label="test">
-				<p:menuitem id="repositories2" value="#{messages['repository.title']}"
-					outcome="repositories"
-					rendered="#{currentUser.hasRole('administrationVisualization')}" />
-			</p:submenu>
 			<p:menuitem id="repositories" value="#{messages['repository.title']}"
 				outcome="repositories"
 				rendered="#{currentUser.hasRole('administrationVisualization')}" />
