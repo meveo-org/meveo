@@ -43,9 +43,26 @@ public class WebsocketServerEndpoint {
 
 	private Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
 
+	private void removeSession(Session session) {
+		String endpointName = (String) session.getUserProperties().get("endpointName");
+		if(endpointName != null) {
+			List<Session> sessions = activeSessionsByEndpointCode.get(endpointName);
+			if (sessions != null && sessions.contains(session)) {
+				sessions.remove(session);
+				log.info("removed session, remains {}",sessions.size());
+			}
+		} else {
+			for(List<Session> sessions : activeSessionsByEndpointCode.values()){
+				if (sessions != null && sessions.contains(session)) {
+					sessions.remove(session);
+					log.info("removed session, remains {}",sessions.size());
+				}
+			}
+		}
+	}
+
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config, @PathParam("endpoint-name") String endpointName) {
-		log.info("onOpen activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		try {
 			String username = null;
 			Principal principal = session.getUserPrincipal();
@@ -78,10 +95,12 @@ public class WebsocketServerEndpoint {
 			if (sessions == null) {
 				sessions = new ArrayList<>();
 				activeSessionsByEndpointCode.put(wsEndpoint.getCode(), sessions);
+				log.info("onOpen create session list for {}", wsEndpoint.getCode());
 			}
 			try {
 				functionService = concreteFunctionService.getFunctionService(service.getCode());
 				executionEngine = functionService.getExecutionEngine(service.getCode(), context);
+				session.getUserProperties().put("executionEngine",executionEngine);
 				context.put("WS_EVENT", "open");
 				context.put("WS_SESSION", session);
 				executionEngine.execute(context);
@@ -90,8 +109,8 @@ public class WebsocketServerEndpoint {
 						"WSEndpoint's code " + service.getCode() + "is not valid, function is not found.", e);
 			}
 			session.getUserProperties().put("endpointName", endpointName);
-			session.getUserProperties().put("context", context);
-			session.getUserProperties().put("executionEngine", executionEngine);
+			//session.getUserProperties().put("context", context);
+			//session.getUserProperties().put("executionEngine", executionEngine);
 			if (username != null) {
 				session.getUserProperties().put("username", username);
 			}
@@ -114,7 +133,7 @@ public class WebsocketServerEndpoint {
 	public String onMessage(Session session, String message) {
 		log.info("onMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		String result = "message correctly processed";
-		Map<String, Object> context = (Map<String, Object>) session.getUserProperties().get("context");
+		Map<String, Object> context = new HashMap<>();
 		ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
 		context.put("WS_EVENT", "message");
 		context.put("WS_MESSAGE", message);
@@ -126,15 +145,6 @@ public class WebsocketServerEndpoint {
 		return result;
 	}
 
-	private void removeSession(Session session) {
-		String notifName = (String) session.getUserProperties().get("notifname");
-		if(notifName != null) {
-			List<Session> sessions = activeSessionsByEndpointCode.get(notifName);
-			if (sessions != null && sessions.contains(session)) {
-				sessions.remove(session);
-			}
-		}
-	}
 
 	// @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole =
 	// DefaultRole.ADMIN)
@@ -143,7 +153,7 @@ public class WebsocketServerEndpoint {
 		log.info("onClose activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		log.info("WebSocket connection closed with CloseCode: " + reason.getCloseCode());
 		try {
-			Map<String, Object> context = (Map<String, Object>) session.getUserProperties().get("context");
+			Map<String, Object> context = new HashMap<>();
 			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
 			context.put("WS_EVENT", "close");
 			context.put("WS_REASON_CODE", reason.getCloseCode());
@@ -161,7 +171,7 @@ public class WebsocketServerEndpoint {
 	public void error(Session session, Throwable t) {
 		log.error("error in session {} : {}", session.getId(), t.getMessage());
 		try {
-			Map<String, Object> context = (Map<String, Object>) session.getUserProperties().get("context");
+			Map<String, Object> context = new HashMap<>();
 			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
 			context.put("WS_EVENT", "error");
 			context.put("WS_ERROR", t.getMessage());
@@ -197,6 +207,7 @@ public class WebsocketServerEndpoint {
 		}
 		if (sessionsToRemove.size() > 0) {
 			sessions.removeAll(sessionsToRemove);
+			log.info("garbage collected {} sessions, remains {}",sessionsToRemove.size(),sessions.size());
 		}
 	}
 
@@ -241,24 +252,8 @@ public class WebsocketServerEndpoint {
 		}
 		if (sessionsToRemove.size() > 0) {
 			sessions.removeAll(sessionsToRemove);
+			log.info("garbage collected {} sessions, remains {}",sessionsToRemove.size(),sessions.size());
 		}
 	}
 
-	public void removeNotification(String notificationCode) {
-		log.info("removeNotification activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
-		List<Session> sessions = activeSessionsByEndpointCode.get(notificationCode);
-		if (sessions == null) {
-			log.debug("remove notification: no one was listening");
-			return;
-		}
-
-		for (Session session : sessions) {
-			try {
-				session.close();
-			} catch (IOException e) {
-				log.debug("exception while closing websocket :{}", e.getMessage());
-			}
-		}
-		activeSessionsByEndpointCode.remove(notificationCode);
-	}
 }
