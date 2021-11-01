@@ -191,16 +191,5 @@
 			outcome="charts" />
 	</p:submenu>
 
-	<c:forEach items="#{customEntityTemplateBean.getMenuModels()}" var="menu">
-		<p:submenu model="#{model}"/>
-	</c:forEach>
-
-	<p:submenu label="#{messages['menu.trading']}" rendered="false">
-		<p:menuitem id="providerContacts" outcome="providerContacts"
-			value="#{messages['menu.providerContacts']}" />
-		<p:menuitem id="providers" outcome="providers"
-			value="#{messages['menu.tenants']}"
-			rendered="#{currentUser.hasRole('superAdminManagement') and currentUser.providerCode==null and paramBean.isMultitenancyEnabled()}" />
-	</p:submenu>
 
 </ui:composition>
