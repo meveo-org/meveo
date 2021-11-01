@@ -179,7 +179,14 @@ if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
         done
     fi
 
-    ${JBOSS_HOME}/props/properties-merger.sh -s ${JBOSS_HOME}/props/meveo-admin.properties -i ${TMP_PROPS_INPUT} -o ${JBOSS_HOME}/meveodata/meveo-admin.properties
+    # Generate the final proerties file.
+    if [ ! -x "${JBOSS_HOME}/props/properties-merger.sh" ]; then
+        chmod +x "${JBOSS_HOME}/props/properties-merger.sh"
+    fi
+    ${JBOSS_HOME}/props/properties-merger.sh \
+        -s ${JBOSS_HOME}/props/meveo-admin.properties \
+        -i ${TMP_PROPS_INPUT} \
+        -o ${JBOSS_HOME}/meveodata/meveo-admin.properties
 
     rm -f ${TMP_PROPS_INPUT}
 fi
