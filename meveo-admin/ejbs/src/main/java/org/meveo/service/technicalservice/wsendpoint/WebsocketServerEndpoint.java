@@ -136,6 +136,7 @@ public class WebsocketServerEndpoint {
 		String result = "message correctly processed";
 		Map<String, Object> context = new HashMap<>();
 		ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
+		context.put("WS_SESSION", session);
 		context.put("WS_EVENT", "message");
 		context.put("WS_MESSAGE", message);
 		try {
@@ -156,6 +157,7 @@ public class WebsocketServerEndpoint {
 		try {
 			Map<String, Object> context = new HashMap<>();
 			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
+			context.put("WS_SESSION", session);
 			context.put("WS_EVENT", "close");
 			context.put("WS_REASON_CODE", reason.getCloseCode());
 			context.put("WS_REASON_PHRASE", reason.getReasonPhrase());
@@ -174,6 +176,7 @@ public class WebsocketServerEndpoint {
 		try {
 			Map<String, Object> context = new HashMap<>();
 			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
+			context.put("WS_SESSION", session);
 			context.put("WS_EVENT", "error");
 			context.put("WS_ERROR", t.getMessage());
 			executionEngine.execute(context);
