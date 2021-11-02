@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -30,7 +29,6 @@ import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 
 @ServerEndpoint("/ws/{endpoint-name}")
-@Singleton
 public class WebsocketServerEndpoint {
 	@Inject
 	private Logger log;
@@ -41,7 +39,7 @@ public class WebsocketServerEndpoint {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	private Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
+	private static Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
 
 	private void removeSession(Session session) {
 		String endpointName = (String) session.getUserProperties().get("endpointName");
@@ -101,7 +99,7 @@ public class WebsocketServerEndpoint {
 			try {
 				functionService = concreteFunctionService.getFunctionService(service.getCode());
 				executionEngine = functionService.getExecutionEngine(service.getCode(), context);
-				session.getUserProperties().put("executionEngine",executionEngine);
+				session.getUserProperties().put("functionCode",service.getCode());
 				context.put("WS_EVENT", "open");
 				context.put("WS_SESSION", session);
 				executionEngine.execute(context);
@@ -135,11 +133,12 @@ public class WebsocketServerEndpoint {
 		log.info("onMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		String result = "message correctly processed";
 		Map<String, Object> context = new HashMap<>();
-		ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
 		context.put("WS_SESSION", session);
 		context.put("WS_EVENT", "message");
 		context.put("WS_MESSAGE", message);
 		try {
+			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 			executionEngine.execute(context);
 		} catch (BusinessException e) {
 			result = "error while processing message " + e.getMessage();
@@ -156,7 +155,8 @@ public class WebsocketServerEndpoint {
 		log.info("WebSocket connection closed with CloseCode: " + reason.getCloseCode());
 		try {
 			Map<String, Object> context = new HashMap<>();
-			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
+			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 			context.put("WS_SESSION", session);
 			context.put("WS_EVENT", "close");
 			context.put("WS_REASON_CODE", reason.getCloseCode());
@@ -175,7 +175,8 @@ public class WebsocketServerEndpoint {
 		log.error("error in session {} : {}", session.getId(), t.getMessage());
 		try {
 			Map<String, Object> context = new HashMap<>();
-			ScriptInterface executionEngine = (ScriptInterface) session.getUserProperties().get("executionEngine");
+			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 			context.put("WS_SESSION", session);
 			context.put("WS_EVENT", "error");
 			context.put("WS_ERROR", t.getMessage());
