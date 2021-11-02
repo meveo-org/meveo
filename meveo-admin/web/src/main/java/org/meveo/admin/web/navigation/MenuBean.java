@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.util.ResourceBundle;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.CurrentUser;
@@ -241,21 +242,30 @@ public class MenuBean implements Serializable {
 	}
 	
 	private void addCETMenues(DynamicMenuModel menu) {
-		for (CustomEntityCategory category : customEntityCategoryService.list()) {
-			DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
-			
-			List<CustomEntityTemplate> firstLevelCets = category.getCustomEntityTemplates()
-					.stream()
-					.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
-					.collect(Collectors.toList());
-					
-			addItems(firstSubmenu, firstLevelCets);
-			menu.addElement(firstSubmenu);
-		}
+		PaginationConfiguration confCec = new PaginationConfiguration();
+		confCec.setFetchFields(List.of("customEntityTemplates"));
 		
-		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplateService.list().stream()
+		customEntityCategoryService.list(confCec).stream()
+			.distinct()
+			.forEach(category -> {
+				DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
+				
+				List<CustomEntityTemplate> firstLevelCets = category.getCustomEntityTemplates()
+						.stream()
+						.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
+						.collect(Collectors.toList());
+						
+				addItems(firstSubmenu, firstLevelCets);
+				menu.addElement(firstSubmenu);
+			});
+		
+		PaginationConfiguration confCet = new PaginationConfiguration();
+		confCet.setFetchFields(List.of("subTemplates"));
+		
+		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplateService.list(confCet).stream()
 			.filter(cet -> cet.getCustomEntityCategory() == null)
 			.collect(Collectors.toList());
+		
 		if (!cetsWithoutCategories.isEmpty()) {
 			DefaultSubMenu subMenu = new DefaultSubMenu("Others");
 			addItems(subMenu, cetsWithoutCategories);
