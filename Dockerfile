@@ -3,7 +3,7 @@
 #################################################################
 FROM maven:3.6-jdk-11-slim AS build-meveo
  
-ARG SCM="scm:git:ssh://git@github.com:manaty/meveo.git" 
+ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git"
 
 WORKDIR /usr/src/meveo
 
