@@ -283,8 +283,14 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 				filterValue.setValue(((Date) filterValue.getValue()).getTime());
 			}
 
-			String strPattern = filterValue.getValue().toString().replace("*", ".*");
-			Pattern pattern = Pattern.compile(strPattern, Pattern.CASE_INSENSITIVE);
+			Pattern pattern;
+			if (filterValue.getValue().toString().contains("*")) {
+				String strPattern = filterValue.getValue().toString().replace("*", ".*");
+				pattern = Pattern.compile(strPattern, Pattern.CASE_INSENSITIVE);
+			} else {
+				pattern = Pattern.compile(filterValue.getValue().toString(), Pattern.LITERAL);
+			}
+
 
 			if (cfValuesAsValues.get(fieldName) == null) {
 				if (isStoreAsTable) {
@@ -324,11 +330,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 			} else {
 				if (filterValue.getValue().toString().contains("*")) {
-					if (strPattern instanceof String) {
-						Matcher matcher = pattern.matcher(referenceValue.toString());
-						if (!matcher.matches()) {
-							return false;
-						}
+					Matcher matcher = pattern.matcher(referenceValue.toString());
+					if (!matcher.matches()) {
+						return false;
 					}
 				} else {
 					return filterValue.getValue().equals(referenceValue);
