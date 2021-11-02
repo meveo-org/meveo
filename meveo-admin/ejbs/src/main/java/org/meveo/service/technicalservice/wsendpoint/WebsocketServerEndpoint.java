@@ -47,7 +47,7 @@ public class WebsocketServerEndpoint {
 			List<Session> sessions = activeSessionsByEndpointCode.get(endpointName);
 			if (sessions != null && sessions.contains(session)) {
 				sessions.remove(session);
-				log.info("removed session, remains {}",sessions.size());
+				log.info("removed session for endpoint {}, remains {}",endpointName,sessions.size());
 			}
 		} else {
 			for(List<Session> sessions : activeSessionsByEndpointCode.values()){
@@ -61,7 +61,6 @@ public class WebsocketServerEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config, @PathParam("endpoint-name") String endpointName) {
-		log.info("onOpen activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		try {
 			String username = null;
 			Principal principal = session.getUserPrincipal();
@@ -104,6 +103,7 @@ public class WebsocketServerEndpoint {
 				context.put("WS_SESSION", session);
 				executionEngine.execute(context);
 			} catch (BusinessException e) {
+				log.error("error on open",e);
 				throw new IllegalArgumentException(
 						"WSEndpoint's code " + service.getCode() + "is not valid, function is not found.", e);
 			}
@@ -116,6 +116,7 @@ public class WebsocketServerEndpoint {
 			sessions.add(session);
 			log.info("endpointName={} with session={} has been successfully registered", endpointName, session.getId());
 		} catch (Exception e) {
+			log.error("error on open", e);
 			try {
 				session.close(new CloseReason(CloseCodes.UNEXPECTED_CONDITION, e.getMessage()));
 			} catch (IOException ex) {
@@ -130,7 +131,6 @@ public class WebsocketServerEndpoint {
 	// DefaultRole.ADMIN)
 	@OnMessage
 	public String onMessage(Session session, String message) {
-		log.info("onMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		String result = "message correctly processed";
 		Map<String, Object> context = new HashMap<>();
 		context.put("WS_SESSION", session);
@@ -151,19 +151,20 @@ public class WebsocketServerEndpoint {
 	// DefaultRole.ADMIN)
 	@OnClose
 	public void onClose(Session session, CloseReason reason) {
-		log.info("onClose activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
 		log.info("WebSocket connection closed with CloseCode: " + reason.getCloseCode());
-		try {
-			Map<String, Object> context = new HashMap<>();
-			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
-			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
-			context.put("WS_SESSION", session);
-			context.put("WS_EVENT", "close");
-			context.put("WS_REASON_CODE", reason.getCloseCode());
-			context.put("WS_REASON_PHRASE", reason.getReasonPhrase());
-			executionEngine.execute(context);
-		} catch (Exception e) {
-			log.error("Error while executing script ", e);
+		if(session.getUserProperties().get("functionCode")!=null){
+			try {
+				Map<String, Object> context = new HashMap<>();
+				FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+				ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
+				context.put("WS_SESSION", session);
+				context.put("WS_EVENT", "close");
+				context.put("WS_REASON_CODE", reason.getCloseCode());
+				context.put("WS_REASON_PHRASE", reason.getReasonPhrase());
+				executionEngine.execute(context);
+			} catch (Exception e) {
+				log.error("Error while executing script ", e);
+			}
 		}
 		removeSession(session);
 	}
