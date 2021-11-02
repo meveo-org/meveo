@@ -455,7 +455,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public List<CustomEntityTemplate> list(PaginationConfiguration config) {
 
-        if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
+        if (useCETCache && (config.getFetchFields() == null || config.getFetchFields().isEmpty()) && (config.getFilters() == null || config.getFilters().isEmpty()
                 || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
             List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 

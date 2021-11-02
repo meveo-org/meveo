@@ -132,7 +132,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
-		initMenues();
 	}
 
 	@Override
@@ -203,47 +202,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public boolean isCustomTable() {
 		return isCustomEntityTemplate() && entity != null && entity.getSqlStorageConfiguration() != null && entity.getSqlStorageConfiguration().isStoreAsTable();
 	}
-	
-	private void initMenues() {
-		
-		menuModels = new ArrayList<>();
-		
-		for (CustomEntityCategory category : customEntityCategories) {
-			DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
-			
-			List<CustomEntityTemplate> firstLevelCets = category.getCustomEntityTemplates()
-					.stream()
-					.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
-					.collect(Collectors.toList());
-					
-			addItems(firstSubmenu, firstLevelCets);
-			menuModels.add(firstSubmenu);
-		}
-		
-		DefaultSubMenu subMenu = new DefaultSubMenu("Others");
-		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplates.stream()
-			.filter(cet -> cet.getCustomEntityCategory() == null)
-			.collect(Collectors.toList());
-		addItems(subMenu, cetsWithoutCategories);
-		menuModels.add(subMenu);
-		
-		// var menuComponent = (org.primefaces.component.Menu) MenuFacesContext.getCurrentInstance().getViewRoot().findComponent("menu");
-		
-	}
-	
-	private void addItems(DefaultSubMenu subMenu, Collection<CustomEntityTemplate> templates) {
-		for (CustomEntityTemplate cet : templates) {
-			if (cet.getSubTemplates().isEmpty()) {
-				DefaultMenuItem item = new DefaultMenuItem(cet.getName());
-				item.setOutcome("customEntities");
-				subMenu.addElement(item);
-			} else {
-				DefaultSubMenu cetSubMenu = new DefaultSubMenu(cet.getName());
-				addItems(cetSubMenu, cet.getSubTemplates());
-				subMenu.addElement(cetSubMenu);
-			}
-		}
-	}
+
 	
 	/**
 	 * @return the {@link #menuModels}
