@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -30,7 +29,6 @@ import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 
 @ServerEndpoint("/ws/{endpoint-name}")
-@Singleton
 public class WebsocketServerEndpoint {
 	@Inject
 	private Logger log;
@@ -41,7 +39,7 @@ public class WebsocketServerEndpoint {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	private Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
+	private static Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
 
 	private void removeSession(Session session) {
 		String endpointName = (String) session.getUserProperties().get("endpointName");
