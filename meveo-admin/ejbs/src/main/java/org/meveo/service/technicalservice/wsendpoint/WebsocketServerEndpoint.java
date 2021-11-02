@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -29,6 +30,7 @@ import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 
 @ServerEndpoint("/ws/{endpoint-name}")
+@Stateless
 public class WebsocketServerEndpoint {
 	@Inject
 	private Logger log;
