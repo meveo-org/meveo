@@ -60,10 +60,13 @@ jobs:
         env:
           GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}
         run: |
-          if ${GIT_BRANCH} == 'master'; then
+          if ${{ env.GIT_BRANCH == 'master' }}
+          then
             echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
+            echo "IMAGE_TAG=dev-latest"
           else
             echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${GIT_BRANCH}"
           fi
 
       # Build and push an image
@@ -75,7 +78,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/wildfly-meveo:env.IMAGE_TAG
+          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/wildfly-meveo:${{ env.IMAGE_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
