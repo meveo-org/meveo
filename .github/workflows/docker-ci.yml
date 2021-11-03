@@ -82,6 +82,15 @@ jobs:
       - name: Prod Image digest
         run: echo ${{ steps.docker_build_prod.outputs.digest }}
 
+      # Build cache reduces the build time. For this, use of GitHub cache.
+      - name: Cache Docker layers (Dev)
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache-dev
+          key: ${{ runner.os }}-buildx-dev-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-dev-
+
       - name: Build/Push a Dev Image
         id: docker_build_dev
         uses: docker/build-push-action@v2
@@ -91,8 +100,8 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/meveo-dev:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=local,src=/tmp/.buildx-cache-dev
+          cache-to: type=local,dest=/tmp/.buildx-cache-dev
 
       - name: Dev Image digest
         run: echo ${{ steps.docker_build_dev.outputs.digest }}
