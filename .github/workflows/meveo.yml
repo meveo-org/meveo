@@ -4,11 +4,15 @@ name: Meveo-Image-CI
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - "*.*"
     paths-ignore:
       - '**.md'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - "*.*"
     paths-ignore:
       - '**.md'
 
@@ -44,6 +48,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      # Get current branch name
+      - name: Extract branch name
+        id: extract_branch
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
+      # Determine a tag for new image
+      - name: Set Image Tag
+        id: image_tag
+        env:
+          GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        run: |
+          if ${GIT_BRANCH} == 'master'; then
+            echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
+          fi
+
+      # Build and push an image
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
@@ -52,7 +75,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/wildfly-meveo:dev-latest
+          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/wildfly-meveo:env.IMAGE_TAG
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
