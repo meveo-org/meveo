@@ -26,15 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.Encoded;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.primefaces.model.SortOrder;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 /**
  * @author Clément Bareth
@@ -285,6 +283,7 @@ public class PaginationConfiguration implements Serializable {
                 firstRow, numberOfRows, fullTextFilter, filters, sortOrdering, fetchFields, sortField, ordering);
     }
 
+    @JsonSetter("filters")
     public void setFilters(Map<String, Object> filters) {
         this.filters = filters;
     }
@@ -332,4 +331,5 @@ public class PaginationConfiguration implements Serializable {
 			this.filters = JacksonUtil.fromString(serializedFilters, GenericTypeReferences.MAP_STRING_OBJECT);
 		}
 	}
+	
 }
