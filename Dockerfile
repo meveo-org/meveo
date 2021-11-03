@@ -7,12 +7,10 @@ ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git"
 
 WORKDIR /usr/src/meveo
 
+VOLUME /root/.m2
+
 COPY . .
 
-# Build all dependencies for caching
-RUN mvn dependency:go-offline
-
-# Build package
 RUN mvn clean package -Dscm.url=${SCM} -DskipTests
 
 ##################################################################
