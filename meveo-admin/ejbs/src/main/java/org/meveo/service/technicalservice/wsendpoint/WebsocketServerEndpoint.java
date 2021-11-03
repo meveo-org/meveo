@@ -68,9 +68,7 @@ public class WebsocketServerEndpoint {
 			Principal principal = session.getUserPrincipal();
 			if (principal != null) {
 				username = principal.getName();
-			} else {
-				throw new IllegalStateException("Missing principal please authenticate the request.");
-			}
+			} 
 			if (endpointName == null) {
 				throw new IllegalStateException("No ws endpoint name set.");
 			}
