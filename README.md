@@ -2,7 +2,7 @@
 
 # Meveo
 
-Meveo is a platform that allow to develop and execute enterprise back and front applications
+Meveo is a platform that allow to develop and execute enterprise back and front applications 
 It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence : AGPLv3.0
 
 Frontend framework  https://github.com/manaty/meveo-fronted.github.io

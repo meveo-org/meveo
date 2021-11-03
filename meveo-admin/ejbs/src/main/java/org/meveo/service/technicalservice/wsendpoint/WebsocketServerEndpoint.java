@@ -68,7 +68,7 @@ public class WebsocketServerEndpoint {
 			Principal principal = session.getUserPrincipal();
 			if (principal != null) {
 				username = principal.getName();
-			}
+			} 
 			if (endpointName == null) {
 				throw new IllegalStateException("No ws endpoint name set.");
 			}
@@ -110,8 +110,6 @@ public class WebsocketServerEndpoint {
 						"WSEndpoint's code " + service.getCode() + "is not valid, function is not found.", e);
 			}
 			session.getUserProperties().put("endpointName", endpointName);
-			//session.getUserProperties().put("context", context);
-			//session.getUserProperties().put("executionEngine", executionEngine);
 			if (username != null) {
 				session.getUserProperties().put("username", username);
 			}
@@ -191,31 +189,21 @@ public class WebsocketServerEndpoint {
 	}
 
 	public void sendMessage(String enpointCode, String username, String txtMessage) {
-		log.info("sendMessage activeSessionsByEndpointCode.count={}", activeSessionsByEndpointCode.size());
+		log.info("sendMessage ");
+		if(username==null){
+			throw new RuntimeException("username is mandatory to send message");
+		}
 		List<Session> sessions = activeSessionsByEndpointCode.get(enpointCode);
-		List<Session> listeningSessions = new ArrayList<>();
-		List<Session> sessionsToRemove = new ArrayList<>();
 		for (Session session : sessions) {
 			if (session.isOpen()) {
-				if (username != null && session.getUserProperties().get("username").equals(username)) {
-					listeningSessions.add(session);
-				}
-			} else {
-				sessionsToRemove.add(session);
-			}
-		}
-		if (listeningSessions.size() > 0) {
-			for (Session session : listeningSessions) {
-				if (session.isOpen()) {
+				if (session.getUserProperties().get("username")!=null){
+				 if(session.getUserProperties().get("username").equals(username)) {
 					session.getAsyncRemote().sendText(txtMessage);
+				 }
 				} else {
-					sessionsToRemove.add(session);
+					log.warn("session {} has no username",session);
 				}
-			}
-		}
-		if (sessionsToRemove.size() > 0) {
-			sessions.removeAll(sessionsToRemove);
-			log.info("garbage collected {} sessions, remains {}",sessionsToRemove.size(),sessions.size());
+			} 
 		}
 	}
 
