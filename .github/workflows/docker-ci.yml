@@ -1,4 +1,4 @@
-name: Meveo-Image-CI
+name: Auto-CI-To-DockerHub
 
 # Controls when the workflow will run
 on:
@@ -9,18 +9,15 @@ on:
       - "*.*"
     paths-ignore:
       - '**.md'
-  pull_request:
-    branches:
-      - master
-      - "*.*"
-    paths-ignore:
-      - '**.md'
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+#   pull_request:
+#     branches:
+#       - master
+#       - "*.*"
+#     paths-ignore:
+#       - '**.md'
 
 jobs:
-  build:
+  build-prod:
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -70,7 +67,7 @@ jobs:
           fi
 
       # Build and push an image
-      - name: Build and push
+      - name: Build and Push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
@@ -84,3 +81,46 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+  build-dev:
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Build cache reduces the build time. For this, use of GitHub cache.
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-dev-cache
+          key: ${{ runner.os }}-buildx-dev-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-dev-
+
+      - name: Build and Push
+        id: docker_build_dev
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile.dev
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/meveo-dev:latest
+          cache-from: type=local,src=/tmp/.buildx-dev-cache
+          cache-to: type=local,dest=/tmp/.buildx-dev-cache
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build_dev.outputs.digest }}
