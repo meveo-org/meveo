@@ -1,4 +1,4 @@
-name: Meveo-Image-CI
+name: Auto-CI-To-DockerHub
 
 # Controls when the workflow will run
 on:
@@ -15,9 +15,6 @@ on:
       - "*.*"
     paths-ignore:
       - '**.md'
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
   build:
@@ -70,8 +67,8 @@ jobs:
           fi
 
       # Build and push an image
-      - name: Build and push
-        id: docker_build
+      - name: Build/Push a Prod Image
+        id: docker_build_prod
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -82,5 +79,20 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+      - name: Prod Image digest
+        run: echo ${{ steps.docker_build_prod.outputs.digest }}
+
+      - name: Build/Push a Dev Image
+        id: docker_build_dev
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile.dev
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/meveo-dev:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Dev Image digest
+        run: echo ${{ steps.docker_build_dev.outputs.digest }}
