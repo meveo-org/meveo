@@ -14,6 +14,7 @@ public class EndpointRetrieval {
     public EndpointRetrieval(){
         Endpoint endpoint = new Endpoint();
         endpoint.setCode("mytest");
+        endpoint.setBasePath("mytest");
         endpoint.setMethod(EndpointHttpMethod.GET);
         EndpointPathParameter endpointPathParameter = new EndpointPathParameter();
         EndpointParameter first = new EndpointParameter();
@@ -29,6 +30,7 @@ public class EndpointRetrieval {
 
         endpoint = new Endpoint();
         endpoint.setCode("idservice");
+        endpoint.setBasePath("idservice");
         endpoint.setMethod(EndpointHttpMethod.GET);
         endpointPathParameter = new EndpointPathParameter();
         first = new EndpointParameter();
@@ -80,15 +82,15 @@ public class EndpointRetrieval {
 
     @Test
     public void retrieveEndpoint(){
-        Endpoint endpoint = cache.getEndpointForPath("mytest/param1/param2?param3=1","GET");
+        Endpoint endpoint = cache.getEndpointForPath("/mytest/param1/param2?param3=1","GET");
         assert("mytest".equals(endpoint.getCode()));
-        endpoint = cache.getEndpointForPath("mytest2/param1/param2?param3=1","GET");
+        endpoint = cache.getEndpointForPath("/mytest2/param1/param2?param3=1","GET");
         assertNull(endpoint);
-        endpoint = cache.getEndpointForPath("idservice/param1/id/param2?param3=1","GET");
+        endpoint = cache.getEndpointForPath("/idservice/param1/id/param2?param3=1","GET");
         assert("idservice".equals(endpoint.getCode()));
-        endpoint = cache.getEndpointForPath("idservice/param1/manifest/param2?param3=1","GET");
+        endpoint = cache.getEndpointForPath("/idservice/param1/manifest/param2?param3=1","GET");
         assert("manifestservice".equals(endpoint.getCode()));
-        endpoint = cache.getEndpointForPath("idservice/param1/manifest/param2?param3=1","POST");
+        endpoint = cache.getEndpointForPath("/idservice/param1/manifest/param2?param3=1","POST");
         assert("manifestservicePost".equals(endpoint.getCode()));
     }
 }

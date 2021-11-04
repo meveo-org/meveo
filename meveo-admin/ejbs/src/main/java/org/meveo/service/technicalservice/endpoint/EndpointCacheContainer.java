@@ -18,7 +18,6 @@ package org.meveo.service.technicalservice.endpoint;
 
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -29,11 +28,11 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
 import org.infinispan.Cache;
+import org.jboss.logging.Logger;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 
 /**
  * @author Clément Bareth *
@@ -43,17 +42,23 @@ import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 @Singleton
 @Startup
 public class EndpointCacheContainer {
+
+	
+	//@Inject
+	//private Logger log;
+
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;
 
 	@Inject
 	private EndpointService endpointService;
 
-	private ConcurrentHashMap<String, Endpoint> endpointLoadingCache = new ConcurrentHashMap<>();
+	//Map of Endpoint by code
+	private Map<String, Endpoint> endpointLoadingCache = new HashMap<String, Endpoint>();
+
 
 	@PostConstruct
 	private void init() {
-		endpointLoadingCache = new ConcurrentHashMap<String, Endpoint>();
 		List<Endpoint> allEndpoints=endpointService.list();
 		for(Endpoint endpoint:allEndpoints){
 			endpoint.getService();
@@ -62,6 +67,7 @@ public class EndpointCacheContainer {
 			endpoint.getParametersMappingNullSafe().forEach(e -> {});
 			endpointLoadingCache.put(endpoint.getCode(),endpoint);
 		}
+		//log.info("endpointLoadingCache init:"+endpointLoadingCache.size()+" entries");
 		/*		CacheBuilder.newBuilder() //
 				.expireAfterAccess(24, TimeUnit.HOURS) //
 				.build(new CacheLoader<String, Endpoint>() { //
@@ -94,6 +100,7 @@ public class EndpointCacheContainer {
 
 	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
 		endpointLoadingCache.remove(endpoint.getCode());
+		//log.info("endpointLoadingCache remove"+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
 	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
@@ -104,20 +111,14 @@ public class EndpointCacheContainer {
 				endpointLoadingCache.remove(endpoint.getCode());
 			}
 		}
+		//log.info("endpointLoadingCache update "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
 	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
 		if(endpoint.isActive()) {
 			endpointLoadingCache.put(endpoint.getCode(), endpoint);
 		}
-	}
-
-	public Endpoint getEndpoint(String code) {
-		if(endpointLoadingCache.containsKey(code)){
-			return endpointLoadingCache.get(code);
-		} else {
-			return null;
-		}
+		//log.info("endpointLoadingCache add "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
 	/*
@@ -128,12 +129,14 @@ public class EndpointCacheContainer {
 		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();
 		while (it.hasNext()) {
 			Endpoint endpoint = it.next().getValue();
-			boolean sameMethod = endpoint.getMethod().getLabel().equals(method);
-			Matcher matcher = endpoint.getPathRegex().matcher(path);
-			boolean matched = matcher.matches() || matcher.lookingAt();
-			if( sameMethod && matched){
-				if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
-					result=endpoint;
+			if(endpoint.getMethod().getLabel().equals(method)){
+				if(path.startsWith("/"+endpoint.getBasePath())){
+					Matcher matcher = endpoint.getPathRegex().matcher(path);
+					if(matcher.matches() || matcher.lookingAt()){
+						if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
+							result=endpoint;
+						}
+					}
 				}
 			}
 		}
