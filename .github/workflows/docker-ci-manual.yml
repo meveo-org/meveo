@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Git branch'
+        description: 'Git branch or tag'
         required: true
         default: 'master'
       image_tag:
