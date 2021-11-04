@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
@@ -13,7 +14,7 @@
 		<version.wildfly>18.0.1.Final</version.wildfly>
 		<dbtype>generic</dbtype>
 		<releaseOption />
-		<jackson.version>2.9.10</jackson.version> <!--  Version used in Wildfly 18, impossible to update -->
+		<jackson.version>2.9.10</jackson.version> <!-- Version used in Wildfly 18, impossible to update -->
 		<scm.url>scm:git:git@github.com:meveo-org/meveo.git</scm.url>
 		<aether.version>1.1.0</aether.version>
 	</properties>
@@ -21,8 +22,8 @@
 	<scm>
 		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 
 	<modules>
 		<module>meveo-model</module>
@@ -376,13 +377,13 @@
 				<version>${jackson.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			
+
 			<dependency>
-			    <groupId>com.fasterxml.jackson.datatype</groupId>
-			    <artifactId>jackson-datatype-hibernate5</artifactId>
-			    <version>${jackson.version}</version>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-hibernate5</artifactId>
+				<version>${jackson.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>javax.interceptor</groupId>
 				<artifactId>javax.interceptor-api</artifactId>
@@ -468,8 +469,7 @@
 					<artifactId>jboss-as-maven-plugin</artifactId>
 					<version>7.5.Final</version>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -519,6 +519,11 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.2.0</version>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -571,11 +576,11 @@
 		<profile>
 			<id>wd</id>
 			<activation>
-            	<property>
-                	<name>useWdRepo</name>
-                	<value>true</value>
-            	</property>
-        	</activation>
+				<property>
+					<name>useWdRepo</name>
+					<value>true</value>
+				</property>
+			</activation>
 			<distributionManagement>
 				<repository>
 					<id>wd</id>
