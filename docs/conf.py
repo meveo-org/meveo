@@ -22,7 +22,7 @@ copyright = '2021, meveo'
 author = 'meveo'
 
 # The full version, including alpha/beta/rc tags
-release = '7.0'
+release = '6.15'
 
 
 # -- General configuration ---------------------------------------------------
