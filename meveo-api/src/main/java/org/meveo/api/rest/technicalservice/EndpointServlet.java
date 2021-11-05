@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -140,14 +141,13 @@ public class EndpointServlet extends HttpServlet {
         	}
 
         } else {
-            String requestBody = StringUtils.readBuffer(req.getReader());
-            parameters.put("REQUEST_BODY",requestBody);
-        	if (!StringUtils.isBlank(requestBody) && contentType != null) {
+        	ServletInputStream inputStream = req.getInputStream();
+        	if (inputStream != null && contentType != null && inputStream.available() > 0) {
 		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
-		            parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
+		            parameters = JacksonUtil.OBJECT_MAPPER.readValue(inputStream, new TypeReference<Map<String, Object>>() {});
 		        } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
 		            XmlMapper xmlMapper = new XmlMapper();
-		            parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
+		            parameters = xmlMapper.readValue(inputStream, new TypeReference<Map<String, Object>>() {});
 		        }
         	}
         }
