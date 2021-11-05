@@ -10,7 +10,7 @@ WORKDIR /usr/src/meveo
 COPY . .
 
 # Download all dependencies using docker cache
-RUN mvn dependency:go-offline
+#RUN mvn dependency:go-offline
 
 RUN mvn clean package -Dscm.url=${SCM} -DskipTests
 
