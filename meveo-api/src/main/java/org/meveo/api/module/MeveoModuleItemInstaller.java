@@ -334,47 +334,52 @@ public class MeveoModuleItemInstaller {
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
     	installCtx.begin(meveoModule);
-    	ModuleInstallResult result = new ModuleInstallResult();
     	
-        boolean installed = false;
-        if (!meveoModule.isDownloaded()) {
-            throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");
-        }
-
-        if (meveoModule.isInstalled()) {
-            installed = true;
-
-        } else {
-            moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
-        }
-
-        if (!installed) {
-        	
-        	try {
-        		
-	            ModuleScriptInterface moduleScript = null;
-	            if (meveoModule.getScript() != null) {
-	                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
-	            }
-	            
-	            unpackAndInstallModuleItems(result, meveoModule, moduleDto, onDuplicate);
+    	try {
+    	
+	    	ModuleInstallResult result = new ModuleInstallResult();
+	    	
+	        boolean installed = false;
+	        if (!meveoModule.isDownloaded()) {
+	            throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");
+	        }
 	
-	            meveoModule.setInstalled(true);
+	        if (meveoModule.isInstalled()) {
+	            installed = true;
 	
-	            if (moduleScript != null) {
-	                moduleScriptService.postInstallModule(moduleScript, meveoModule);
+	        } else {
+	            moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
+	        }
+	
+	        if (!installed) {
+	        	
+	        	try {
+	        		
+		            ModuleScriptInterface moduleScript = null;
+		            if (meveoModule.getScript() != null) {
+		                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
+		            }
+		            
+		            unpackAndInstallModuleItems(result, meveoModule, moduleDto, onDuplicate);
+		
+		            meveoModule.setInstalled(true);
+		
+		            if (moduleScript != null) {
+		                moduleScriptService.postInstallModule(moduleScript, meveoModule);
+		            }
+		            
+		            result.setInstalledModule(meveoModule);
+		            postInstallEvent.fire(meveoModule);
+	        	} catch(Exception e) {
+	            	throw new ModuleInstallFail(meveoModule, result, e);
 	            }
-	            
-	            result.setInstalledModule(meveoModule);
-	            postInstallEvent.fire(meveoModule);
-	            installCtx.end();
-        	} catch(Exception e) {
-            	throw new ModuleInstallFail(meveoModule, result, e);
-            }
-
-        }
-
-        return result;
+	
+	        }
+	
+	        return result;
+    	} finally {
+            installCtx.end();
+    	}
     }
 
     @SuppressWarnings("unchecked")
