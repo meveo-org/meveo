@@ -1009,9 +1009,10 @@ public class Neo4jDao {
 	                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
 	                    }else{
 	                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
-	                        t.success();
 	                    }
                     }
+                    
+                    t.success();
                     
                     return null;
                 },
