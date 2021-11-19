@@ -1100,6 +1100,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results) {
         return null;
     }
+    
+    public void removeScriptFile(T scriptInstance) {
+    	File scriptFile = findScriptFile(scriptInstance);
+    	if (scriptFile.exists()) {
+    		scriptFile.delete();
+    	}
+    }
 
     /**
      * When a script is deleted, remove the file from git repository
@@ -1217,9 +1224,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	    if (module == null) {
 	    	scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + directory);
-	    } else {
+	    } else if (moduleInstallCtx.isActive()) {
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModuleCodeInstallation() + directory);
+    	} else {
 	    	scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
 	    }
+	    
 	    if (!scriptDir.exists()) {
             scriptDir.mkdirs();
         }

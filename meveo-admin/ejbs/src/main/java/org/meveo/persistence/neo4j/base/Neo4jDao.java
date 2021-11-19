@@ -1001,15 +1001,20 @@ public class Neo4jDao {
                 createRelationshipQuery,
                 arguments,
                 (t, r) -> {
-                    final Record single = r.single();
-                    final Relationship relationship = single.get(0).asRelationship();
-                    if(relationship == null){
-                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
-                    }else{
-                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
-                        t.success();
+                    final List<Record> records = r.list();
+                    
+                    for (Record record : records) {
+	                    final Relationship relationship = record.get(0).asRelationship();
+	                    if(relationship == null){
+	                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
+	                    }else{
+	                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
+	                    }
                     }
-                    return relationship;
+                    
+                    t.success();
+                    
+                    return null;
                 },
                 e -> LOGGER.error("Error merging relationship {} on node {}", relationId, startNodeId, e)
         );

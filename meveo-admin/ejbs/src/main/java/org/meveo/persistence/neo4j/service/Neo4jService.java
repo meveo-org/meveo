@@ -116,7 +116,12 @@ import org.slf4j.LoggerFactory;
  * @lastModifiedVersion 6.4.0
  */
 public class Neo4jService implements CustomPersistenceService {
-    public static final String REPOSITORY_CODE = "$$repositoryCode$$";
+    private static final Comparator<CustomEntityTemplateUniqueConstraint> CONSTRAINT_COMPARATOR = Comparator
+	        .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
+	        .reversed()
+	        .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
+
+	public static final String REPOSITORY_CODE = "$$repositoryCode$$";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Neo4jService.class);
 
@@ -376,15 +381,10 @@ public class Neo4jService implements CustomPersistenceService {
             validateAndConvertCustomFields(cetFields, fields, uniqueFields, true);
 
             // Let's make sure that the unique constraints are well sorted by trust score and then sort by their position
-            Comparator<CustomEntityTemplateUniqueConstraint> comparator = Comparator
-                    .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
-                    .reversed()
-                    .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
-            
             List<CustomEntityTemplateUniqueConstraint> applicableConstraints = cet.getNeo4JStorageConfiguration().getUniqueConstraints()
                     .stream()
                     .filter(uniqueConstraint -> isApplicableConstraint(fields, uniqueConstraint))
-                    .sorted(comparator)
+                    .sorted(Neo4jService.CONSTRAINT_COMPARATOR)
                     .collect(Collectors.toList());
 
             final List<String> labels = getAdditionalLabels(cet);
@@ -930,8 +930,10 @@ public class Neo4jService implements CustomPersistenceService {
         // Get relationship template
         final CustomRelationshipTemplate customRelationshipTemplate = customFieldsCache.getCustomRelationshipTemplate(crtCode);
 
+        final CustomEntityTemplate endNode = customRelationshipTemplate.getEndNode();
+        
         // Extract unique fields values for the start node
-        Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getEndNode().getAppliesTo());
+        Map<String, CustomFieldTemplate> endNodeCfts = customFieldTemplateService.findByAppliesTo(endNode.getAppliesTo());
         Map<String, CustomFieldTemplate> startNodeCfts = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getStartNode().getAppliesTo());
         final Map<String, Object> endNodeUniqueFields = new HashMap<>();
         Map<String, Object> endNodeConvertedValues = validateAndConvertCustomFields(endNodeCfts, endNodeValues, endNodeUniqueFields, true);
@@ -950,9 +952,29 @@ public class Neo4jService implements CustomPersistenceService {
 
         // No unique fields has been found
         if (endNodeUniqueFields.isEmpty()) {
-            log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
-                    "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
-            throw new BusinessException("Unique field must be provided");
+        	// If no unique fields are provided / defined, retrieve the meveo_uuid of the target node using unicity rules
+        	Set<String> ids = endNode.getNeo4JStorageConfiguration().getUniqueConstraints()
+                .stream()
+                .filter(uniqueConstraint -> uniqueConstraint.getTrustScore() == 100)
+                .filter(uniqueConstraint -> isApplicableConstraint(endNodeValues, uniqueConstraint))
+                .sorted(Neo4jService.CONSTRAINT_COMPARATOR)
+                .map(uniqueConstraint -> neo4jDao.executeUniqueConstraint(neo4JConfiguration, uniqueConstraint, endNodeValues, endNode.getCode()))
+                .findFirst()
+                .orElse(Set.of());
+        	
+        	if(ids.isEmpty()) {
+	            log.error("At least one unique field must be provided for target entity [code = {}, fields = {}]. " +
+	                    "Unique fields are : {}", customRelationshipTemplate.getEndNode().getCode(), endNodeValues, endNodeUniqueFields);
+	            throw new BusinessException("Unique field must be provided");
+        	}
+        	
+        	if (ids.size() > 1) {
+        		throw new BusinessException(String.format("Multiple targets for unique relationship %s : %s.", crtCode, ids));
+        	}
+        	
+        	String id = ids.iterator().next();
+        	endNodeValues.put("meveo_uuid", id);
+        	endNodeUniqueFields.put("meveo_uuid", id);
         }
 
         // Assign the keys names

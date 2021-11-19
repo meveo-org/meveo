@@ -312,6 +312,7 @@ public class GraphQLService {
                                 .stream()
                                 .filter(customFieldTemplate -> customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY)
                                 .filter(customFieldTemplate -> customFieldTemplate.getEntityClazzCetCode().equals(endNode.getCode()))
+                                .filter(customFieldTemplate -> customFieldTemplate.getRelationshipName() != null && customFieldTemplate.getRelationshipName().equals(relationshipTemplate.getName()))
                                 .forEach(customFieldTemplate -> {
                                     GraphQLField entityRefField = new GraphQLField();
                                     entityRefField.setFieldName(customFieldTemplate.getCode());
