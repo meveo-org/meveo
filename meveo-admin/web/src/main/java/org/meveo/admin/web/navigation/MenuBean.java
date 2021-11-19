@@ -6,6 +6,7 @@ package org.meveo.admin.web.navigation;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -16,7 +17,6 @@ import javax.inject.Named;
 
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -250,7 +250,8 @@ public class MenuBean implements Serializable {
 			.forEach(category -> {
 				DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
 				
-				List<CustomEntityTemplate> firstLevelCets = category.getCustomEntityTemplates()
+				List<CustomEntityTemplate> firstLevelCets = Optional.ofNullable(category.getCustomEntityTemplates())
+						.orElse(List.of())
 						.stream()
 						.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
 						.collect(Collectors.toList());
@@ -275,7 +276,7 @@ public class MenuBean implements Serializable {
 	
 	private void addItems(DefaultSubMenu subMenu, Collection<CustomEntityTemplate> templates) {
 		for (CustomEntityTemplate cet : templates) {
-			if (cet.getSubTemplates().isEmpty()) {
+			if (cet.getSubTemplates() == null || cet.getSubTemplates().isEmpty()) {
 				DefaultMenuItem item = new DefaultMenuItem(cet.getName());
 				item.setOutcome("customEntities");
 				item.setParam("cet", cet.getCode());
