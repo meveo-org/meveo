@@ -149,6 +149,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return new HashMap<String, CustomFieldTemplate>();
         }
     }
+    
+    public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
+    	Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
+		for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
+			customFieldTemplates.putAll(findByAppliesTo(e.getAppliesTo()));
+		}
+		return customFieldTemplates;
+    }
 
     /**
      * Find a list of custom field templates corresponding to a given entity. Custom field templates are looked up in cache or retrieved from DB.

@@ -210,7 +210,7 @@ public class GraphQLService {
 
         for (CustomEntityTemplate cet : cetsByName.values()) {
 
-            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
