@@ -302,6 +302,27 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
         return null;
     }
 
+	public Collection<EntityCustomActionDto> readEcas(File directory) {
+    	List<EntityCustomActionDto> ecaDtos = new ArrayList<>();
+    	
+    	for (File cetOrCrtDir : directory.listFiles()) {
+    		if(!cetOrCrtDir.isDirectory()) {
+    			continue;
+    		}
+    		
+    		for (File cftFile : cetOrCrtDir.listFiles()) {
+    			try {
+					ecaDtos.add(JacksonUtil.read(cftFile, EntityCustomActionDto.class));
+				} catch (IOException e) {
+					log.error("Failed to read custom action file", e);
+					return null;
+				}
+    		}
+    	}
+    	
+    	return ecaDtos;
+    }
+    
 	@Override
 	public EntityCustomActionDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 		throw new UnsupportedOperationException("Use find(code, appliesTo) instead");
