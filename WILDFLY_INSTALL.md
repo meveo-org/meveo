@@ -147,7 +147,7 @@ At the end of extensions tag add the following properties.
 
 ##### Add a Datasource
 
-* Open the file WILDFLY_HOME\standalone\configuration\standalone.xml.
+* Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml.
 * Search for "subsystem xmlns="urn:jboss:domain:datasources".
 * Add the following datasource configuration.
 
@@ -257,7 +257,7 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 * Click Administration Console.
 * Login using your newly created account.
 
-A completely configured file is available for reference link:standalone.xml[here].
+A completely configured file is available for reference link:standalone.xml[here]. Note it is the standalone-full.xml but rename to standalone.xml.
 
 ### Eclipse
 
@@ -308,6 +308,7 @@ This is done inside Eclipse IDE. Since we have installed egit component from JBo
 You should have already cloned the meveo project before proceeding with these steps.
 
 * Build the meveo parent project, disregard the errors for now.
+  * `mvn clean package -DskipTests` 
 * Expand the meveo-admin-ejbs project.
 * Expand the target/generated-sources folder.
 * Right click on the java folder, choose Build Path and select Use as Source Folder.
@@ -335,9 +336,14 @@ This is another way to install the EGIT plugin in case for some reason that you 
 
 * Select file pom.xml in project meveo-model .
 * Select run as maven, and run with the following options :
-    * GOALS : liquibase dropAll liquibase:update
-    * Profiles : rebuild
-    * Attributes :  "db.url=jdbc:postgresql://localhost:5432/meveo"   "db.username=meveo" "db.password=meveo"
+    * **Goals** : liquibase dropAll liquibase:update
+    * **Profiles** : rebuild
+    * **Attributes** : 
+        * db.url=jdbc:postgresql://localhost:5432/meveo
+        * db.username=meveo
+        * db.password=meveo
+        * db.schema=public
+        * db.driver=org.postgresql.Driver
     
 #### Deploying Meveo to Wildfly
 
