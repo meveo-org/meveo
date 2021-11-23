@@ -236,7 +236,7 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 
 ##### Download Meveo Properties
 
-* Download this file [Meveo properties file](./docker/configs/meveo-admin.properties).
+* Download this file [Meveo properties file](./docker/configs/props/meveo-admin.properties).
 * Make sure to make the necessary changes depending on your local configuration. See keys like meveo.log.file, binary.storage.path and providers.rootDir.
 * Copy this file into `WILDFLY_HOME\standalone\configuration`.
 
