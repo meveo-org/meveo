@@ -147,7 +147,7 @@ At the end of extensions tag add the following properties.
 
 ##### Add a Datasource
 
-* Open the file WILDFLY_HOME\standalone\configuration\standalone.xml.
+* Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml.
 * Search for "subsystem xmlns="urn:jboss:domain:datasources".
 * Add the following datasource configuration.
 
@@ -257,7 +257,7 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 * Click Administration Console.
 * Login using your newly created account.
 
-A completely configured file is available for reference link:standalone.xml[here].
+A completely configured file is available for reference link:standalone.xml[here]. Note it is the standalone-full.xml but rename to standalone.xml.
 
 ### Eclipse
 
