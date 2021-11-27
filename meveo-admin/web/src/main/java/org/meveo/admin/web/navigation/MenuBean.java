@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -245,7 +246,9 @@ public class MenuBean implements Serializable {
 		PaginationConfiguration confCec = new PaginationConfiguration();
 		confCec.setFetchFields(List.of("customEntityTemplates"));
 		
-		customEntityCategoryService.list(confCec).stream()
+		Optional.ofNullable(customEntityCategoryService.list(confCec))
+			.stream()
+			.flatMap(Collection::stream)
 			.distinct()
 			.forEach(category -> {
 				DefaultSubMenu firstSubmenu = new DefaultSubMenu(category.getName());
