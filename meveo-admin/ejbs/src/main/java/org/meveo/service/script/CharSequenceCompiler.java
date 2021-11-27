@@ -225,6 +225,8 @@ public class CharSequenceCompiler<T> {
 	   options.add("-sourcepath");
 	   options.add(sourcePath);
 	   
+	   LOGGER.info("Compiling script with sourcepath {}", sourcePath);
+	   
 	   // Set output directory
 	   options.add("-d");
 	   options.add(outputDir.getAbsolutePath());
