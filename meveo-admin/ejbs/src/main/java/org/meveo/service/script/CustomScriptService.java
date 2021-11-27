@@ -926,7 +926,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         for (File moduleDir : baseDir.listFiles()) {
         	File javaSrcDir = new File(moduleDir, "/facets/java");
         	if(javaSrcDir.exists()) {
-        		sourcePath += javaSrcDir.getAbsolutePath() + ";";
+        		sourcePath += javaSrcDir.getAbsolutePath() + File.pathSeparatorChar;
         	}
     	}
 		return sourcePath;
