@@ -73,7 +73,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * Header "Persistence-Context-Id" indiciates the id of the persistence context we want to save the result
  * @author clement.bareth
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
- * @version 6.10
+ * @version 6.15
  */
 @WebServlet("/rest/*")
 @MultipartConfig
@@ -112,39 +112,28 @@ public class EndpointServlet extends HttpServlet {
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
 
-        if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
-        	Collection<Part> parts = req.getParts();
-        	for(var part : parts) {
-        		Object partValue;
-		        if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_JSON)) {
-		        	partValue = JacksonUtil.read(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
-		        } else if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_XML)) {
-		            XmlMapper xmlMapper = new XmlMapper();
-		            partValue = xmlMapper.readValue(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
-		        } else if(part.getSubmittedFileName() != null) {
-		        	partValue = part.getInputStream();
-		        } else {
-		        	partValue = IOUtils.toString(part.getInputStream(), StandardCharsets.UTF_8);
-		        }
-		        parameters.put(part.getName(), partValue);
-        	}
-
-        } else {
-            String requestBody = StringUtils.readBuffer(req.getReader());
-        	if (!StringUtils.isBlank(requestBody) && contentType != null) {
-		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
-		            parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
-		        } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
-		            XmlMapper xmlMapper = new XmlMapper();
-		            parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
-		        }
-        	}
-        }
+        initializeParameters(req, contentType, parameters);
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
                 .setParameters(parameters)
                 .setMethod(EndpointHttpMethod.POST)
                 .createEndpointExecution();
+
+        doRequest(endpointExecution, false);
+    }
+
+    @Override
+    @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Map<String, Object> parameters = new HashMap<>();
+        String contentType = req.getHeader("Content-Type");
+
+        initializeParameters(req, contentType, parameters);
+
+        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+            .setParameters(parameters)
+            .setMethod(EndpointHttpMethod.PUT)
+            .createEndpointExecution();
 
         doRequest(endpointExecution, false);
     }
@@ -368,4 +357,36 @@ public class EndpointServlet extends HttpServlet {
         }
     }
 
+    private void initializeParameters(HttpServletRequest req, String contentType,
+
+        Map<String, Object> parameters) throws ServletException, IOException {
+        if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
+            Collection<Part> parts = req.getParts();
+            for(var part : parts) {
+                Object partValue;
+                if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_JSON)) {
+                    partValue = JacksonUtil.read(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
+                } else if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_XML)) {
+                    XmlMapper xmlMapper = new XmlMapper();
+                    partValue = xmlMapper.readValue(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
+                } else if(part.getSubmittedFileName() != null) {
+                    partValue = part.getInputStream();
+                } else {
+                    partValue = IOUtils.toString(part.getInputStream(), StandardCharsets.UTF_8);
+                }
+                parameters.put(part.getName(), partValue);
+            }
+
+        } else {
+            String requestBody = StringUtils.readBuffer(req.getReader());
+            if (!StringUtils.isBlank(requestBody) && contentType != null) {
+                if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
+                    parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
+                } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
+                    XmlMapper xmlMapper = new XmlMapper();
+                    parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
+                }
+            }
+        }
+    }
 }
