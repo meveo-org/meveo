@@ -78,7 +78,7 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that
@@ -524,7 +524,7 @@ public class UserBean extends CustomFieldBean<User> {
 		log.debug("upload file={},autoUnziped {}", filename, autoUnzipped);
 		// FIXME: use resource bundle
 		try {
-			InputStream fileInputStream = file.getInputstream();
+			InputStream fileInputStream = file.getInputStream();
 			if (this.isAutoUnzipped()) {
 				if (!filename.endsWith(ZIP_FILE_EXTENSION)) {
 					messages.info(filename + " isn't a valid zip file!");
@@ -546,7 +546,7 @@ public class UserBean extends CustomFieldBean<User> {
 		if (file != null) {
 			log.debug("upload file={}", file);
 			try {
-				copyFile(FilenameUtils.getName(file.getFileName()), file.getInputstream());
+				copyFile(FilenameUtils.getName(file.getFileName()), file.getInputStream());
 
 				messages.info(file.getFileName() + " is uploaded to " + ((selectedFolder != null) ? selectedFolder : "Home"));
 			} catch (IOException e) {

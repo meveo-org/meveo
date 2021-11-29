@@ -30,6 +30,7 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.model.IEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.index.ElasticClient;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
     private Integer rowIndex;
 
     @Override
-    public List<T> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+    public List<T> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> filters) {
 
         if (StringUtils.isBlank(sortField) && !StringUtils.isBlank(getDefaultSortImpl())) {
             sortField = getDefaultSortImpl();
@@ -53,6 +54,9 @@ public abstract class ServiceBasedLazyDataModel<T extends IEntity> extends LazyD
         if ((sortOrder == null || sortOrder == SortOrder.UNSORTED) && getDefaultSortOrderImpl() != null) {
             sortOrder = getDefaultSortOrderImpl();
         }
+
+        FilterModel filterModel = new FilterModel(filters);
+        Map<String, Object> loadingFilters = filterModel.getFilter();
 
         String fullTextSearchValue = getFullTextSearchValue(loadingFilters);
 

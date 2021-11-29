@@ -89,7 +89,7 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1977,7 +1977,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setInputStream(uploadedBinaryFile.getInputstream());
+		params.setInputStream(uploadedBinaryFile.getInputStream());
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
@@ -2022,7 +2022,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setFilePath(cft.getFilePath());
 		params.setContentType(uploadedBinaryFile.getContentType());
 		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setInputStream(uploadedBinaryFile.getInputstream());
+		params.setInputStream(uploadedBinaryFile.getInputStream());
 		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());

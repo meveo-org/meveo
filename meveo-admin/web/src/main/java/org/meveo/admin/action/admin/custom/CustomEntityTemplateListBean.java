@@ -13,6 +13,7 @@ import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.view.CustomizedEntityLazyDataModel;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -79,7 +80,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
             }
 
             @Override
-            public List<CustomizedEntity> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+            public List<CustomizedEntity> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
 
                 List<CustomizedEntity> entities = null;
                 String query = (String) filters.get("entityName");

@@ -32,7 +32,7 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.InboundRequestService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 /**
  * Standard backing bean for {@link InboundRequest} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -225,7 +225,7 @@ public class InboundRequestBean extends UpdateMapTypeFieldBean<InboundRequest> {
         if (file == null) {
             return;
         }
-        csvReader = new CsvReader(file.getInputstream(), ';', Charset.forName("ISO-8859-1"));
+        csvReader = new CsvReader(file.getInputStream(), ';', Charset.forName("ISO-8859-1"));
         csvReader.readHeaders();
 
         ParamBean paramBean = paramBeanFactory.getInstance();

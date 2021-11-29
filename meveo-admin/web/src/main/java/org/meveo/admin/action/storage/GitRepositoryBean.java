@@ -31,7 +31,7 @@ import org.meveo.service.git.GitRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 
 /**
@@ -123,7 +123,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		UploadedFile file = event.getFile();
 		String filename = file.getFileName();
 		try {
-			InputStream inputStream = file.getInputstream();
+			InputStream inputStream = file.getInputStream();
 			GitRepositoryDto dto = gitRepositoryApi.toDto(entity);
 			gitRepositoryApi.importZip(inputStream, dto, isEdit());
 			messages.info(new BundleKey("messages", "importZip.successfull"), filename);

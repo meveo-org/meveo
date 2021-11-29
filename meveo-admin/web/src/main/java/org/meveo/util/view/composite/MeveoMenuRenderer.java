@@ -32,32 +32,32 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
         String styleClass = menu.getStyleClass();
         styleClass = (styleClass == null) ? "layout-menu" : "layout-menu " + styleClass;
         String clientId = menu.getClientId(context);
-        
+
         writer.startElement("ul", menu);
         writer.writeAttribute("id", clientId, "id");
         writer.writeAttribute("class", styleClass, "styleClass");
-        if(style != null) { 
+        if(style != null) {
             writer.writeAttribute("style", style, "style");
         }
-        
+
         if(menu.getElementsCount() > 0) {
             encodeElements(context, menu, menu.getElements());
         }
-        
+
         writer.endElement("ul");
     }
-    
+
     protected void encodeElements(FacesContext context, AbstractMenu menu, List<MenuElement> elements) throws IOException {
         int size = elements.size();
-        
+
         for (int i = 0; i < size; i++) {
             encodeElement(context, menu, elements.get(i));
         }
     }
-    
+
     protected void encodeElement(FacesContext context, AbstractMenu menu, MenuElement element) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
-        
+
         if(element.isRendered()) {
             if(element instanceof MenuItem) {
                 MenuItem menuItem = (MenuItem) element;
@@ -98,16 +98,16 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
             }
         }
     }
-    
+
     protected void encodeSubmenu(FacesContext context, AbstractMenu menu, Submenu submenu) throws IOException{
 		ResponseWriter writer = context.getResponseWriter();
         String icon = submenu.getIcon();
         String label = submenu.getLabel();
-        
+
         writer.startElement("a", null);
         writer.writeAttribute("href", "#", null);
         writer.writeAttribute("class", "menulink", null);
-        
+
         if(icon != null) {
             writer.startElement("i", null);
             writer.writeAttribute("class", icon, null);
@@ -120,7 +120,7 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
             writer.writeText(" " + label, null);
             writer.endElement("span");
         }
-               
+
         writer.endElement("a");
 
         //submenus and menuitems
@@ -145,10 +145,10 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
         if(style != null) {
             writer.writeAttribute("style", style, null);
         }
-        
+
         writer.endElement("li");
     }
-    
+
     @Override
     protected void encodeMenuItem(FacesContext context, AbstractMenu menu, MenuItem menuitem) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
@@ -162,7 +162,7 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
         writer.startElement("a", null);
         if(title != null) writer.writeAttribute("title", title, null);
         if(style != null) writer.writeAttribute("style", style, null);
-            
+
         writer.writeAttribute("class", styleClass, null);
 
         if(disabled) {
@@ -173,7 +173,7 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
             String onclick = menuitem.getOnclick();
 
             //GET
-            if(menuitem.getUrl() != null || menuitem.getOutcome() != null) {                
+            if(menuitem.getUrl() != null || menuitem.getOutcome() != null) {
                 String targetURL = getTargetURL(context, (UIOutcomeTarget) menuitem);
                 writer.writeAttribute("href", targetURL, null);
 
@@ -201,10 +201,15 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
                     idParams.add(menuitem.getId());
                     params.put(menuClientId + "_menuid", idParams);
 
-                    command = menuitem.isAjax() ? buildAjaxRequest(context, menu, (AjaxSource) menuitem, (UIForm) form, params) : buildNonAjaxRequest(context, menu, form, menuClientId, params, true);
-                } 
+                    command = menuitem.isAjax()
+                            ? buildAjaxRequest(context, menu, (AjaxSource) menuitem, (UIForm) form, params)
+                            : buildNonAjaxRequest(context, menu, form, menuClientId, params, true);
+                }
                 else {
-                    command = menuitem.isAjax() ? buildAjaxRequest(context, (AjaxSource) menuitem, (UIForm) form) : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem).getClientId(context), true);
+                    command = menuitem.isAjax()
+                            ? buildAjaxRequest(context, (AjaxSource) menuitem, (UIForm) form)
+                            : buildNonAjaxRequest(context, ((UIComponent) menuitem), form, ((UIComponent) menuitem)
+                            .getClientId(context), true);
                 }
 
                 onclick = (onclick == null) ? command : onclick + ";" + command;
@@ -219,13 +224,13 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
 
         writer.endElement("a");
 	}
-    
+
     @Override
     protected void encodeMenuItemContent(FacesContext context, AbstractMenu menu, MenuItem menuitem) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
         String icon = menuitem.getIcon();
         Object value = menuitem.getValue();
-                
+
         if(icon != null) {
             writer.startElement("i", null);
             writer.writeAttribute("class", icon, null);
@@ -247,5 +252,5 @@ public class MeveoMenuRenderer extends BaseMenuRenderer {
         writer.write("Meveo.restoreMenuState();");
         writer.endElement("script");
     }
-    
+
 }

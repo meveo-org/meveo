@@ -28,6 +28,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.base.NativePersistenceService;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -47,7 +48,9 @@ public abstract class NativeTableBasedDataModel extends LazyDataModel<Map<String
 	private Integer rowIndex;
 
 	@Override
-	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+	public List<Map<String, Object>> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> filters) {
+		FilterModel filterModel = new FilterModel(filters);
+		Map<String, Object> loadingFilters = filterModel.getFilter();
 
 		if (StringUtils.isBlank(sortField) && !StringUtils.isBlank(getDefaultSortImpl())) {
 			sortField = getDefaultSortImpl();

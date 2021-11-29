@@ -33,6 +33,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.billing.impl.CounterPeriodService;
 import org.meveo.util.view.LazyDataModelWSize;
+import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -87,7 +88,7 @@ public class CounterPeriodBean extends BaseBean<CounterPeriod> {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public List<CounterPeriod> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> loadingFilters) {
+            public List<CounterPeriod> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, FilterMeta> loadingFilters) {
                 return new ArrayList<CounterPeriod>();
             }
         };

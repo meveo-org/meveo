@@ -32,7 +32,7 @@ import org.meveo.model.storage.RemoteRepository;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public class MavenConfigurationBean implements Serializable {
 		String fileName = file.getFileName();
 		try {
 			// write the inputStream to a FileOutputStream
-			InputStream inputStream = file.getInputstream();
+			InputStream inputStream = file.getInputStream();
 			String filePath = mavenConfigurationService.createDirectory(this.groupId, this.artifactId, this.version, this.classifier);
 			filePath = filePath + File.separator + mavenConfigurationService.buildArtifactName(this.artifactId, this.version, this.classifier);
 			try (OutputStream out = new FileOutputStream(new File(filePath))) {

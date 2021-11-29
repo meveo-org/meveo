@@ -155,7 +155,7 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 		}
 		
 		String contentType = event.getFile().getContentType();
-		InputStream inputStream = event.getFile().getInputstream();
+		InputStream inputStream = event.getFile().getInputStream();
 		String fileName = event.getFile().getFileName();
 		
 		switch(contentType.trim()) {

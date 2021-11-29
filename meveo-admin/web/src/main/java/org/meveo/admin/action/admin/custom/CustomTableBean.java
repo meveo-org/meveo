@@ -59,7 +59,7 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
-import org.primefaces.model.UploadedFile;
+import org.primefaces.model.file.UploadedFile;
 
 /**
  * @author Clement Bareth
@@ -437,7 +437,7 @@ public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 				customTableService.remove(repositoryProvider.getRepository().getSqlConfigurationCode(), entity);
 			}
 
-			importFuture = customTableService.importDataAsync(getSqlConnectionCode(), entity, file.getInputstream(), appendImportedData);
+			importFuture = customTableService.importDataAsync(getSqlConnectionCode(), entity, file.getInputStream(), appendImportedData);
 			messages.info(new BundleKey("messages", "customTable.importFile.started"));
 
 		} catch (Exception e) {
