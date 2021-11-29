@@ -72,6 +72,8 @@ services:
       #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data:/tmp/meveo/binary/storage
     environment:
+      #Comment out the KEYCLOACK_URL if you are not on wsl2
+      KEYCLOAK_URL: http://host.docker.internal:8081/auth
       WILDFLY_DEBUG_ENABLE: "true"
       WILDFLY_DEBUG_PORT: 8787
       WILDFLY_CUSTOM_XMMS: "1024m"
