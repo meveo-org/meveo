@@ -48,7 +48,9 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -72,6 +74,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.jboss.weld.inject.WeldInstance;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -109,6 +112,7 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.maven.MavenClassLoader;
+import org.meveo.service.script.weld.BeanSynchronizer;
 import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +171,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
-
     
     @PostConstruct
     private void init() {
@@ -819,10 +822,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	}
     	
     	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+        final Class<ScriptInterface> scriptClass = compiledScript;
         
         ALL_SCRIPT_INTERFACES.put(
         		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
-        		() -> MeveoBeanManager.getInstance().getInstance(bean)
+        		() -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass)
 		);
         
         MeveoBeanManager.getInstance().addBean(bean);
