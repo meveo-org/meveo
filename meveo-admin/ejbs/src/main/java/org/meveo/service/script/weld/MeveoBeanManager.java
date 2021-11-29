@@ -3,8 +3,6 @@
  */
 package org.meveo.service.script.weld;
 
-import static org.jboss.weld.annotated.AnnotatedTypeValidator.validateAnnotatedType;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -20,6 +18,7 @@ import java.util.function.BiConsumer;
 
 import javax.el.ELResolver;
 import javax.el.ExpressionFactory;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.Context;
 import javax.enterprise.context.spi.Contextual;
 import javax.enterprise.context.spi.CreationalContext;
@@ -86,6 +85,7 @@ import org.jboss.weld.resources.ClassTransformer;
 import org.jboss.weld.serialization.spi.BeanIdentifier;
 import org.jboss.weld.util.LazyValueHolder;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
 
 /**
  * Wrapper for {@link BeanManagerImpl} used to instantiate scripts
@@ -1296,18 +1296,23 @@ public class MeveoBeanManager implements WeldManager {
         return bean;
 	}
 	
-	/**
-	 * Instanciate a script corresponding to the bean definition
-	 * 
-	 * @param <T> Type of the script
-	 * @param bean Bean definition for the script
-	 * @return an instance of the script
-	 */
+	public <T> T getInstance(Bean<T> bean, Class<T> scriptClass) {
+		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
+		WeldInstance<T> weldInstance = getInstance(createCreationalContext).select(scriptClass);
+		T instance = weldInstance.get();
+		
+		if (bean.getScope().equals(Dependent.class)) {
+			BeanSynchronizer beanSynchronizer = CDI.current().select(BeanSynchronizer.class).get();
+			beanSynchronizer.addDependentInstance(weldInstance, instance);
+		}
+		
+		return instance;
+	}
+	
 	public <T> T getInstance(Bean<T> bean) {
 		Context context = getContext(bean.getScope());
 		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
 		return context.get(bean, createCreationalContext);
 	}
-
-	
+		
 }
