@@ -121,6 +121,14 @@ public class EndpointCacheContainer {
 		//log.info("endpointLoadingCache add "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
+	public Endpoint getEndpoint(String code) {
+		if(endpointLoadingCache.containsKey(code)){
+			return endpointLoadingCache.get(code);
+		} else {
+			return null;
+		}
+	}
+
 	/*
 	 * returns the endpoint with largest regex matching the path
 	 */
