@@ -896,7 +896,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 return scriptErrors;
             }
         } else {
-            ScriptInterface engine = new ES5ScriptEngine(sourceCode);
+            ScriptInterface engine = new ES5ScriptEngine(sourceCode, scriptCode);
             ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
             return null;
         }
@@ -1005,7 +1005,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             if (script.getSourceTypeEnum() == JAVA) {
             	loadClassInCache(scriptCode);
             } else {
-            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript()));
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript(), scriptCode));
             }
             
             if (script.isError()) {

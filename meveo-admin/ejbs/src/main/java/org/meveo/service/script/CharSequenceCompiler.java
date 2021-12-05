@@ -13,12 +13,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
@@ -33,12 +35,9 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.maven.MavenClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Compile a String or other {@link CharSequence}, returning a Java
@@ -101,12 +100,30 @@ public class CharSequenceCompiler<T> {
 	   fileManager = compiler.getStandardFileManager(null, null, null);
 	   
       try {
-	      URL[] urls = { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() };
+    	  String classPath = ScriptInstanceService.CLASSPATH_REFERENCE.get();
+    	  List<URL> urlList = Arrays.stream(classPath.split(File.pathSeparator))
+    			  .map(path -> {
+					try {
+						return new File(path).toURI().toURL();
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return null;
+					}
+				}).collect(Collectors.toList());
+    	  urlList.add(CustomEntityTemplateService.getClassesDir(null).toURI().toURL());
+    	  
+	      URL[] urls = urlList.toArray(URL[]::new);
+	      
 	      ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
 		  urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
       } catch (MalformedURLException e) {
     	  throw new RuntimeException(e);
       }
+   }
+   
+   public static ClassLoader getUrlClassLoader() {
+	   return urlClassLoader;
    }
    
    public static <T> Class<T> getCompiledClass(final String qualifiedName) throws ClassNotFoundException {
