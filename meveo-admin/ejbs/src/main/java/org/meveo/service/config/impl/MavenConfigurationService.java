@@ -141,7 +141,7 @@ public class MavenConfigurationService implements Serializable {
      *         user's provider
      */
     public static String getM2Directory(MeveoUser currentUser) {
-        String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
+        String rootDir = ParamBean.getInstance().getChrootDir(currentUser == null ? null : currentUser.getProviderCode());
         String m2 = rootDir + M2_DIR;
         File m2Folder = new File(m2);
         if (!m2Folder.exists()) {
@@ -154,6 +154,7 @@ public class MavenConfigurationService implements Serializable {
 		d.getScriptInstances()
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
+				.filter(Objects::nonNull)
 				.forEach(module -> {
 					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
 						.getCreatedBuffer()
@@ -166,6 +167,7 @@ public class MavenConfigurationService implements Serializable {
 		d.getScriptInstances()
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
+				.filter(Objects::nonNull)
 				.forEach(module -> {
 					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
 						.getUpdatedBuffer()
@@ -342,6 +344,11 @@ public class MavenConfigurationService implements Serializable {
 	public String getM2FolderPath() {
 		MeveoUser meveoUser = currentUser.get();
 		return MavenConfigurationService.getM2Directory(meveoUser);
+	}
+	
+	public String getNodeModulesFolderPath() {
+		String rootDir = ParamBean.getInstance().getChrootDir(null);
+		return rootDir + File.separator + "node_modules";
 	}
 
 	public List<String> getMavenRepositories() {

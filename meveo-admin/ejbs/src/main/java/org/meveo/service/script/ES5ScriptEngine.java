@@ -1,16 +1,24 @@
 package org.meveo.service.script;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import javax.enterprise.inject.spi.CDI;
 
+import org.apache.commons.io.IOUtils;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.Value;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.service.config.impl.MavenConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,8 +83,36 @@ public class ES5ScriptEngine implements ScriptInterface {
 	            jsBindings.putMember("requireFunction", functionSupplier);
 	            
 	            Function<String, Value> npmRequire = (name) -> {
-	            	//TODO: load the corresponding library
-	            	return context.eval("js", null);
+	            	String m2Dir = MavenConfigurationService.getM2Directory(null);
+	            	File libFolder = Paths.get(m2Dir, "org", "webjars", "npm", name).toFile();
+	            	if (!libFolder.exists() || !libFolder.isDirectory()) {
+	            		return null;
+	            	}
+	            	
+	            	File versionFolder = libFolder.listFiles()[0];
+	            	File libFile = new File(versionFolder, name + "-" + versionFolder.getName() + ".jar");
+	            	try (JarFile jarFile = new JarFile(libFile)) {
+						
+						String basePath = "META-INF/resources/webjars/" + name + "/" + versionFolder.getName() + "/";				
+						ZipEntry packageJson = jarFile.getEntry(basePath + "package.json");					
+						
+						try (var is = jarFile.getInputStream(packageJson)) {
+							var packageJsonMap = JacksonUtil.read(is, Map.class);
+							String mainFilePath = (String) packageJsonMap.get("main");
+							ZipEntry mainFile = jarFile.getEntry(basePath + mainFilePath);
+							
+							try (var libStream = jarFile.getInputStream(mainFile)) {
+								String source = IOUtils.toString(libStream, "UTF-8");
+								var returnValue = context.eval("js", source);
+								
+								return returnValue;
+							}
+						}
+	            	} catch (IOException e) {
+						LOG.error("Failed to read file", e);
+					}
+	            	
+	            	return null;
 	            };
 	            jsBindings.putMember("require", npmRequire);
 	            

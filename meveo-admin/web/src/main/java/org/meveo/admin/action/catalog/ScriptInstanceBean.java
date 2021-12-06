@@ -717,6 +717,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		}
 
 		mavenDependency = new MavenDependency();
+		
+		if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5) {
+			mavenDependency.setGroupId("org.webjars.npm");
+		}
 		mavenDependencies.add(mavenDependency);
 		mavenDependency.getScriptInstances().add(entity);
 	}
