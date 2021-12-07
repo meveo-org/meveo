@@ -3,14 +3,11 @@ package org.meveo.admin.action.admin.custom;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,7 +41,6 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1335,7 +1331,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Override
 	public void delete(Long customEntityId) throws BusinessException {
-		super.delete(customEntityId);
+		
+		CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findById(customEntityId);
+		super.delete(customEntityId,customEntityTemplate.getCode());
+		
 	}
 
 	/**

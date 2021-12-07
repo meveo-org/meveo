@@ -41,7 +41,6 @@ import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
-import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
@@ -86,6 +85,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.api.EntityHelperBean;
@@ -197,6 +197,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private MeveoModuleService meveoModuleService;
+    
+    @Inject
+    private MeveoModuleItemService moduleItemService;
     
     @Inject
     private EntityHelperBean entityHelper;
@@ -735,6 +738,34 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         deleteInternal(id, null, true);
     }
+    
+	@ActionMethod
+	public void delete(Long id, String code) throws BusinessException {
+
+		if (deleteInternal(id, null, true))
+			deleteModuleItem(code);
+	}
+    
+    private boolean deleteModuleItem(String code) throws BusinessException {
+
+		try {
+
+			List<MeveoModuleItem> meveoModuleItems = new ArrayList<MeveoModuleItem>();
+
+			meveoModuleItems = meveoModuleService.findByItemCode(code);
+			if (meveoModuleItems != null) {
+				for (MeveoModuleItem meveoModuleItem : meveoModuleItems) {
+					log.info("Deleting entity {} with id = {}", MeveoModuleItem.class, meveoModuleItem.getId());
+					moduleItemService.remove(meveoModuleItem.getId());
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			messages.error(new BundleKey("messages", "deleteModuleItem.error"));
+			throw e;
+		}
+		
+	}
 
     /**
      * Delete Entity using it's ID. Add error message to status messages if unsuccessful.
@@ -742,48 +773,53 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      * @param id Entity id to delete
      * @param code Entity's code - just for display in error messages
      * @param setOkMessages Shall success messages be set for display
+     * @throws BusinessException 
      * @throws BusinessException business exception
      */
-    private boolean deleteInternal(Long id, String code, boolean setOkMessages) throws BusinessException {
-        try {
-            log.info("Deleting entity {} with id = {}", clazz.getName(), id);
-            getPersistenceService().remove(id);
+    
+	private boolean deleteInternal(Long id, String code, boolean setOkMessages) throws BusinessException {
+		try {
 
-            if (setOkMessages) {
-                messages.info(new BundleKey("messages", "delete.successful"));
-            }
+			log.info("Deleting entity {} with id = {}", clazz.getName(), id);
+			getPersistenceService().remove(id);
 
-            return true;
+			if (setOkMessages) {
+				messages.info(new BundleKey("messages", "delete.successful"));
+			}
 
-        } catch (Exception e) {
-        	BusinessException be = MeveoExceptionMapper.translatePersistenceException(e, clazz.getName(), String.valueOf(id));
-        	if (be!= null) {
-        		if (be instanceof ConstraintViolationException ) {
-                    String referencedBy = null;
-                    
-                    try { 
-                    	referencedBy = entityHelper.findReferencedByEntities(clazz, id);
-                    	log.info("Delete was unsuccessful because entity is used by other entities {}", referencedBy);
-                    } catch (Exception ex) {
-                    	log.error("Can't find related entities", ex);
-                    }
-                    
-                    if (referencedBy != null) {
-                        messages.error(new BundleKey("messages", "error.delete.entityUsedWDetails"), code == null ? "" : code, referencedBy);
-                    } else {
-                        messages.error(new BundleKey("messages", "error.delete.entityUsed"));
-                    }
-                    
-                    FacesContext.getCurrentInstance().validationFailed();
-                    return false;
-                }
-                
-                throw be;
-            }
+			return true;
 
-            throw e;
-        }
-    }
+		} catch (Exception e) {
+			BusinessException be = MeveoExceptionMapper.translatePersistenceException(e, clazz.getName(),
+					String.valueOf(id));
+			if (be != null) {
+				if (be instanceof ConstraintViolationException) {
+					String referencedBy = null;
+
+					try {
+						referencedBy = entityHelper.findReferencedByEntities(clazz, id);
+						log.info("Delete was unsuccessful because entity is used by other entities {}", referencedBy);
+					} catch (Exception ex) {
+						log.error("Can't find related entities", ex);
+					}
+
+					if (referencedBy != null) {
+						messages.error(new BundleKey("messages", "error.delete.entityUsedWDetails"),
+								code == null ? "" : code, referencedBy);
+					} else {
+						messages.error(new BundleKey("messages", "error.delete.entityUsed"));
+					}
+
+					FacesContext.getCurrentInstance().validationFailed();
+					return false;
+				}
+
+				throw be;
+			}
+
+			throw e;
+		}
+	}
 
     @ActionMethod
     public void delete() throws BusinessException {

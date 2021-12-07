@@ -22,7 +22,6 @@ package org.meveo.service.admin.impl;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -312,6 +311,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
         qb.addCriterion("itemCode", "=", code, true);
         qb.addCriterion("itemClass", "=", className, true);
+        try {
+            return (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<MeveoModuleItem> findByItemCode(String code) {
+        QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
+        qb.addCriterion("itemCode", "=", code, true);
         try {
             return (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
         } catch (NoResultException e) {
