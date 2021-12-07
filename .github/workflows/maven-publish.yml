@@ -6,6 +6,13 @@ name: Maven Package
 on:
   release:
     types: [created]
+    
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Git branch or tag'
+        required: true
+        default: 'master'
 
 jobs:
   build:
