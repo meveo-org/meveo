@@ -46,7 +46,7 @@ then in order for maven to find the sources, create a symbolic link in `/facet/m
 ```
 cd myModule
 mkdir -p facets/maven/src/main
-ln -s facets/java/ facets/maven/src/main/java
+ln -s ../../../java facets/maven/src/main/java
 ```
 
 you can now open the project in vscode
