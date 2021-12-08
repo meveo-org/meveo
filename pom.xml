@@ -567,7 +567,7 @@
 			</activation>
 			<distributionManagement>
 				<repository>
-					<id>meveo</id>
+					<id>github</id>
 					<name>GitHub meveo-org Apache Maven Packages</name>
 					<url>https://maven.pkg.github.com/meveo-org/meveo</url>
 				</repository>
