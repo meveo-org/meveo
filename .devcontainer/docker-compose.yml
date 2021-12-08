@@ -7,8 +7,8 @@ volumes:
   #   driver: local
   keycloak_data:
     driver: local
-  meveo_data_dev:
-    driver: local
+  #meveo_data_dev:
+  #  driver: local
   meveo_binary_data_dev:
     driver: local
 
@@ -68,12 +68,12 @@ services:
       - meveo
     volumes:
       - ..:/home/meveo
-      #- ~/meveodata/:/opt/jboss/wildfly/meveodata
-      - meveo_data_dev:/opt/jboss/wildfly/meveodata
+      - ~/meveodata/:/opt/jboss/wildfly/meveodata
+      #- meveo_data_dev:/opt/jboss/wildfly/meveodata
       #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data_dev:/tmp/meveo/binary/storage
     environment:
-      #Comment out the KEYCLOACK_URL if you are not on wsl2
+      #Comment out the KEYCLOACK_URL if you are not on wsl2 or if it dosnt work for some reason 
       KEYCLOAK_URL: http://host.docker.internal:8081/auth
       WILDFLY_DEBUG_ENABLE: "true"
       WILDFLY_DEBUG_PORT: 8787
