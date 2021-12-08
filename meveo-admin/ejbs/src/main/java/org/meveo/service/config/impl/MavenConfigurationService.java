@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -141,7 +145,7 @@ public class MavenConfigurationService implements Serializable {
      *         user's provider
      */
     public static String getM2Directory(MeveoUser currentUser) {
-        String rootDir = ParamBean.getInstance().getChrootDir(currentUser.getProviderCode());
+        String rootDir = ParamBean.getInstance().getChrootDir(currentUser == null ? null : currentUser.getProviderCode());
         String m2 = rootDir + M2_DIR;
         File m2Folder = new File(m2);
         if (!m2Folder.exists()) {
@@ -154,6 +158,7 @@ public class MavenConfigurationService implements Serializable {
 		d.getScriptInstances()
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
+				.filter(Objects::nonNull)
 				.forEach(module -> {
 					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
 						.getCreatedBuffer()
@@ -166,6 +171,7 @@ public class MavenConfigurationService implements Serializable {
 		d.getScriptInstances()
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
+				.filter(Objects::nonNull)
 				.forEach(module -> {
 					buffers.computeIfAbsent(module.getCode(), key -> new ChangeBuffer())
 						.getUpdatedBuffer()
@@ -258,7 +264,9 @@ public class MavenConfigurationService implements Serializable {
 	private void generatePom(String message, String repositoryCode) {
 		
 		GitRepository repository = gitRepositoryService.findByCode(repositoryCode);
-		
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repositoryCode);
+		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
+
 		log.debug("Generating pom.xml file");
 
 		Model model = new Model();
@@ -268,7 +276,33 @@ public class MavenConfigurationService implements Serializable {
 		model.setModelVersion("4.0.0");
 		
 		model.setBuild(new Build());
-		model.getBuild().setSourceDirectory("../java");
+		
+		try {
+			// Create symlink for java folder
+			Path javaDir = Paths.get(gitRepo.getPath(), "facets", "java");
+			Path symbolicJavaDir = Paths.get(gitRepo.getPath(), "facets", "maven", "java");
+			Files.createSymbolicLink(symbolicJavaDir, javaDir);
+		} catch (IOException e1) {
+			log.error("Failed to create symbolic link for java source");
+		}
+		
+		// Create .gitignore file
+		Path gitIgnore = Paths.get(gitRepo.getPath(), "facets", "maven", ".gitignore");
+		List<String> ignoredPatterns = List.of(
+				"src/main/java/",
+				"target/"
+			);
+		
+		for (String pattern : ignoredPatterns) {
+			try {
+				Files.write(gitIgnore, 
+						(pattern + "\n").getBytes(), 
+						StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+			} catch (IOException e) {
+				log.error("Failed to write to .gitignore", e);
+			}
+
+		}
 		
 		Properties properties = new Properties();
 		properties.setProperty("maven.compiler.target", "11");
@@ -323,12 +357,11 @@ public class MavenConfigurationService implements Serializable {
 		File pomFile = new File(repositoryDir, "/facets/maven/pom.xml");
 
 		try {
-			pomFile.getParentFile().mkdirs();
 			
 			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
 			try (FileWriter fileWriter = new FileWriter(pomFile)) {
 				xmlWriter.write(fileWriter, model);
-				gitClient.commitFiles(repository, Collections.singletonList(pomFile), message);
+				gitClient.commitFiles(repository, List.of(pomFile, gitIgnore.toFile()), message);
 			}
 
 		} catch (IOException e) {
@@ -342,6 +375,11 @@ public class MavenConfigurationService implements Serializable {
 	public String getM2FolderPath() {
 		MeveoUser meveoUser = currentUser.get();
 		return MavenConfigurationService.getM2Directory(meveoUser);
+	}
+	
+	public String getNodeModulesFolderPath() {
+		String rootDir = ParamBean.getInstance().getChrootDir(null);
+		return rootDir + File.separator + "node_modules";
 	}
 
 	public List<String> getMavenRepositories() {

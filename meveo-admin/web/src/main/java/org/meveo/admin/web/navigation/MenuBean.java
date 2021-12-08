@@ -8,13 +8,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.event.Reception;
+import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -292,7 +295,8 @@ public class MenuBean implements Serializable {
 		}
 	}
 	
-	private void cetChange(@Observes CustomEntityTemplate cet) {
+	@Transactional(value = TxType.REQUIRES_NEW)
+	private void cetChange(@Observes(during = TransactionPhase.AFTER_SUCCESS, notifyObserver = Reception.IF_EXISTS) CustomEntityTemplate cet) {
 		init();
 	}
 

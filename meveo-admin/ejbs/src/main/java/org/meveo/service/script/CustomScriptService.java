@@ -91,6 +91,7 @@ import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -896,7 +897,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 return scriptErrors;
             }
         } else {
-            ScriptInterface engine = new ES5ScriptEngine(sourceCode);
+            ScriptInterface engine = new ES5ScriptEngine(sourceCode, scriptCode);
             ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
             return null;
         }
@@ -1005,7 +1006,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             if (script.getSourceTypeEnum() == JAVA) {
             	loadClassInCache(scriptCode);
             } else {
-            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript()));
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript(), scriptCode));
             }
             
             if (script.isError()) {
@@ -1161,41 +1162,45 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @SuppressWarnings("unchecked")
     public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
-        if (commitEvent.getGitRepository().getCode().equals(meveoRepository.getCode())) {
-            for (String modifiedFile : commitEvent.getModifiedFiles()) {
-                if (modifiedFile.startsWith("facets/java") && !modifiedFile.contains("customEntities")) {
-                    String scriptCode = modifiedFile;//.replaceAll("src/main/java/(.*)\\..*$", "$1").replaceAll("/", ".");
-                    T script = findByCode(scriptCode);
-                    File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
-                    File scriptFile = new File(repositoryDir, modifiedFile);
+        for (String modifiedFile : commitEvent.getModifiedFiles()) {
+            if (modifiedFile.startsWith("facets/java") && !modifiedFile.contains("customEntities")) {
+                String scriptCode = modifiedFile.replaceAll("facets/java/(.*)\\..*$", "$1").replaceAll("/", ".");
+                T script = findByCode(scriptCode);
+                File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
+                File scriptFile = new File(repositoryDir, modifiedFile);
 
-                    if (script == null && scriptFile.exists()) {
-                        // Script has been created
-                        CustomScript scriptInstance = new ScriptInstance();
-                        scriptInstance.setCode(scriptCode);
-                        String absolutePath = scriptFile.getAbsolutePath();
-                        ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
-                        scriptInstance.setSourceTypeEnum(scriptType);
-                        scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
-                        GitRepository gitRepo = commitEvent.getGitRepository();
-                        String moduleCode = gitRepo.getCode(); 
-                        MeveoModule module = meveoModuleService.findByCode(moduleCode);
-                        if (module != null) {
-                        	moveFilesToModule(script, module);
-                        }
-                        
-                        create((T) scriptInstance);
+                if (script == null && scriptFile.exists()) {
+                    // Script has been created
+                	ScriptInstance scriptInstance = new ScriptInstance();
+                    scriptInstance.setCode(scriptCode);
+                    String absolutePath = scriptFile.getAbsolutePath();
+                    ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
+                    scriptInstance.setSourceTypeEnum(scriptType);
+                    scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
+                    GitRepository gitRepo = commitEvent.getGitRepository();
+                    String moduleCode = gitRepo.getCode(); 
+                    MeveoModule module = meveoModuleService.findByCode(moduleCode);
 
-                    } else if (script != null && !scriptFile.exists()) {
-                        // Script has been removed
-                        remove(script);
-
-                    } else if (script != null && scriptFile.exists()) {
-                        // Script has been updated
-                    	script.setScript(readScriptFile(script));
-                        update(script);
-                        compileScript(script, false);
+                    create((T) scriptInstance);
+                    
+                    if (module != null) {
+                		MeveoModuleItem moduleItem = new MeveoModuleItem();
+                		moduleItem.setMeveoModule(module);
+                		moduleItem.setItemCode(scriptCode);
+                		moduleItem.setItemClass(ScriptInstance.class.getName());
+                		
+                		meveoModuleService.addModuleItem(moduleItem, module);
                     }
+
+                } else if (script != null && !scriptFile.exists()) {
+                    // Script has been removed
+                    remove(script);
+
+                } else if (script != null && scriptFile.exists()) {
+                    // Script has been updated
+                	script.setScript(readScriptFile(script));
+                    update(script);
+                    compileScript(script, false);
                 }
             }
         }
