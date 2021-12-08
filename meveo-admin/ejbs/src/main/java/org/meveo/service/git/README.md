@@ -55,5 +55,3 @@ you can now open the project in vscode
 cd facets/maven
 code .
 ```
-ln -s /facet/java
-```
