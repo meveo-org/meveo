@@ -39,6 +39,7 @@ import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
+import org.apache.maven.model.RepositoryPolicy;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -320,7 +321,6 @@ public class MavenConfigurationService implements Serializable {
 		}
 
 		Repository ownInstance = new Repository();
-		// String contextRoot = ParamBean.getInstance().getProperty("meveo.moduleName", "meveo");
 		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo");
 		ownInstance.setId("meveo-repo");
 		if (!baseUrl.endsWith("/")) {
@@ -329,6 +329,14 @@ public class MavenConfigurationService implements Serializable {
 		//ownInstance.setUrl(baseUrl + contextRoot + "/maven");
 		ownInstance.setUrl(baseUrl + "/maven");
 		model.addRepository(ownInstance);
+		
+		Repository githubRepo = new Repository();
+		githubRepo.setId("github");
+		githubRepo.setUrl("https://maven.pkg.github.com/meveo-org/meveo");
+		RepositoryPolicy policy = new RepositoryPolicy();
+		policy.setEnabled(true);
+		githubRepo.setSnapshots(policy);
+		model.addRepository(githubRepo);
 
 		Dependency meveoDependency = new Dependency();
 		meveoDependency.setGroupId("org.meveo");
