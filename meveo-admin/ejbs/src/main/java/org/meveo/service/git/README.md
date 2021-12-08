@@ -4,21 +4,28 @@ Meveo is a git server and client.
 
 Each meveo module has a dedicated repository
 
+
+
+## Cloning a module
+
 You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
 
 buy using the command 
 ```
 git clone https://mydomain.com/meveo/git/myModule
-
 ```
 and with the credential of the admin user
 
-You can then edit your script on your local IDE (for java, the repo contains a maven pom file)  then when you push it to the meveo instance the script is compiled.
+you can add the credential directly in the clone url:
 
-## Cloning a module
+```
+git clone https://meveo.admin:adminpassword@mydomain.com/meveo/git/myModule
+```
 
 To be able to edit the scripts for a given module, you can clone it locally using the code 
 of the module as the code of the git repository.
+
+## open the module as a maven project
 
 In order to have all the meveo dependencies available locally, you should add you personal 
 github token to your maven settings.xml file.
@@ -32,4 +39,21 @@ github token to your maven settings.xml file.
     <username>GITHUB_ACCOUNT_NAME</username>
     <password>GITHUB_TOKEN</password>
 </server>
+```
+
+then in order for maven to find the sources, create a symbolic link in `/facet/maven` to the `facet/java` directory
+
+```
+cd myModule
+mkdir -p facets/maven/src/main
+ln -s facets/java/ facets/maven/src/main/java
+```
+
+you can now open the project in vscode
+
+```
+cd facets/maven
+code .
+```
+ln -s /facet/java
 ```
