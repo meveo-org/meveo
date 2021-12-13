@@ -86,6 +86,17 @@
 	                                   lineNumbers="true" required="true"/>
                 	</hftl:decorateFormField>
  				</c:if>
+ 				
+ 				<c:if test="#{scriptInstanceBean.entity.sourceTypeEnum == 'PYTHON'}">
+	                <hftl:decorateFormField label="#{messages['scriptInstance.script']}" fieldId="codeMirror" componentWidth="100">
+	                    <pe:codeMirror id="codeMirror" theme="eclipse" 
+	                    			   mode="python"
+	                    			   smartIndent="true"
+	                    			   value="#{scriptInstanceBean.entity.script}"
+	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javascriptHint);}}"
+	                                   lineNumbers="true" required="true"/>
+                	</hftl:decorateFormField>
+ 				</c:if>
 
             </h:panelGroup>
             <h:panelGroup id="scriptErrors">
