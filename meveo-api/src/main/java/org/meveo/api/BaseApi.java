@@ -46,6 +46,7 @@ import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
@@ -197,6 +198,10 @@ public abstract class BaseApi {
         }
 
         populateCustomFields(customFieldTemplates, customFieldDtos, entity, isNewEntity, checkCustomField);
+        
+        // We must call it another time to set the dependent fields
+        populateCustomFields(customFieldTemplates, customFieldDtos, entity, isNewEntity, checkCustomField);
+
     }
 
     /**
@@ -430,7 +435,7 @@ public abstract class BaseApi {
                 continue;
             }
 
-            Object valueConverted = getValueConverted(cfDto);
+            Object valueConverted = getValueConverted(cfDto, entity);
 
             // Validate that value is valid (min/max, regexp). When
             // value is a list or a map, check separately each value
@@ -609,14 +614,20 @@ public abstract class BaseApi {
      * @param cfDto cf dto.
      * @return custom field converted object.
      */
-    protected Object getValueConverted(CustomFieldDto cfDto) {
+    protected Object getValueConverted(CustomFieldDto cfDto, ICustomFieldEntity entity) {
+
 
         if (cfDto.getMapValue() != null && !cfDto.getMapValue().isEmpty()) {
             return CustomFieldValueDto.fromDTO(cfDto.getMapValue());
         } else if (cfDto.getListValue() != null && !cfDto.getListValue().isEmpty()) {
             return CustomFieldValueDto.fromDTO(cfDto.getListValue());
         } else if (cfDto.getStringValue() != null) {
-            return cfDto.getStringValue();
+        	try {
+        		return MeveoValueExpressionWrapper.evaluateExpression(cfDto.getStringValue(), Map.of("entity", entity), Object.class);
+        	} catch (ELException e) {
+        		log.error("Failed to evaluate expression {}", cfDto.getStringValue());
+        		return null;
+        	}
         } else if (cfDto.getDateValue() != null) {
             return cfDto.getDateValue();
         } else if (cfDto.getDoubleValue() != null) {
