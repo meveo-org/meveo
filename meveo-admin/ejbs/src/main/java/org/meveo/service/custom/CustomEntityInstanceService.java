@@ -505,18 +505,8 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	@Override
 	protected void persistJsonFileInModule(CustomEntityInstance entity, MeveoModule module, boolean isCreation) throws BusinessException {
 		String cetCode = entity.getCetCode();
-		CustomEntity pojo;
-		try {
-			Class<CustomEntity> pojoClass = scriptInstanceService.loadCustomEntityClass(cetCode, false, Optional.of(module.getCode()));
-			pojo = this.crossStorageApi.find(this.repositoryService.findDefaultRepository(), ((CustomEntityInstance) entity).getUuid(), pojoClass);
-		} catch (EntityDoesNotExistsException e) {
-			throw new BusinessException("File cannot be updated or created", e);
-		} catch (CharSequenceCompilerException e) {
-			throw new BusinessException("File cannot be updated or created", e);
-		}
- 			
 		
-		String ceiJson = JacksonUtil.toStringPrettyPrinted(pojo);
+		String ceiJson = JacksonUtil.toStringPrettyPrinted(entity.getCfValuesAsValues());
 		
 		MeveoModule meveoModule = meveoModuleService.findById(module.getId());
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, meveoModule.getCode());
