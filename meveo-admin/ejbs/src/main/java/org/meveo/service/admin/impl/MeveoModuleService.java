@@ -21,8 +21,8 @@ package org.meveo.service.admin.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -930,5 +931,39 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Build a jar output stream containing the maven artifact view of a module
+	 * 
+	 * @param module the input module
+	 * @param os the output stream which will be written into
+	 * @return the output stream built
+	 * @throws IOException if the output stream can't be accessed
+	 */
+	public JarOutputStream buildJar(MeveoModule module, OutputStream os) throws IOException {
+		JarOutputStream jos = new JarOutputStream(os);
+		File javaDir = GitHelper.getRepositoryDir(null, module.getCode())
+				.toPath()
+				.resolve("facets")
+				.resolve("java")
+				.toFile();
+		org.meveo.commons.utils.FileUtils.addDirectoryToZip(javaDir, jos, "");
+		return jos;
+	}
+	
+	/**
+	 * Retrieve the pom file of a given module
+	 * 
+	 * @param module the input module
+	 * @return the pom file
+	 */
+	public File findPom(MeveoModule module) {
+		return GitHelper.getRepositoryDir(null, module.getCode())
+				.toPath()
+				.resolve("facets")
+				.resolve("maven")
+				.resolve("pom.xml")
+				.toFile();
 	}
 }
