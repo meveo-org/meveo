@@ -55,3 +55,21 @@ you can now open the project in vscode
 cd facets/maven
 code .
 ```
+
+Edit your `pom.xml` file to remove the tag
+```
+    <sourceDirectory>../java</sourceDirectory>
+```
+
+and add the dependencies to dependent module.
+
+For instance if your `infrastructure` module depends in the `credentials` module with version `1.0.0`,
+assuming you already cloned and maven installed the `credentials` module locally, then add this dependency
+```
+<dependency>
+  <groupId>org.meveo</groupId>
+  <artifactId>credentials</artifactId>
+  <version>1.0.0</version>
+  <scope>provided</scope>
+</dependency>
+```
