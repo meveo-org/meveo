@@ -20,6 +20,8 @@
 package org.meveo.service.admin.impl;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
@@ -554,7 +556,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
-        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "moduleDependencies", "moduleFiles"));
         ModuleRelease moduleRelease = new ModuleRelease();
         moduleRelease.setCode(entity.getCode());
         moduleRelease.setDescription(entity.getDescription());
@@ -616,6 +618,28 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
             moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
         }
+        
+        // Before setting the next version, release the maven module inside the local .m2 repo
+        Path jarPath = Paths.get(mavenConfigurationService.getM2FolderPath(), "org", "meveo", entity.getCode(), entity.getCurrentVersion(), entity.getCode() + "-" + entity.getCurrentVersion() + ".jar");
+        File jarFile = jarPath.toFile();
+        
+        try {
+            File artifactFolder = jarFile.getParentFile();
+            if (!artifactFolder.exists()) {
+            	artifactFolder.mkdirs();
+            }
+			
+	        try (FileOutputStream fos = new FileOutputStream(jarFile)) {
+	        	try (JarOutputStream jos = this.buildJar(entity, fos)) {
+	    	        File pomFile = new File(artifactFolder, entity.getCode() + "-" + entity.getCurrentVersion() + ".pom");
+	    	        FileUtils.copyFile(this.findPom(entity), pomFile);
+	        	}
+	        }
+	        
+		} catch (IOException e) {
+			throw new BusinessException("Can't install artifact to .m2", e);
+		}
+        
         entity.setCurrentVersion(nextVersion);
         moduleRelease.setMeveoModule(entity);
         entity.getReleases().add(moduleRelease);
