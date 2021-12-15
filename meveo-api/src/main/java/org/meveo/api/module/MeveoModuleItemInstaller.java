@@ -673,6 +673,9 @@ public class MeveoModuleItemInstaller {
 	
 	private <E extends IEntity, T extends BaseEntityDto> int compare(T obj1, T obj2, Class<E> entityClass, List<MeveoModuleItemDto> dtos) {
 		ApiService<E, T> apiService = ApiUtils.getApiService(entityClass, false);
+		if (apiService == null) {
+			return 0;
+		}
 	    return apiService.compareDtos(obj1, obj2, dtos);
 	}
 	
