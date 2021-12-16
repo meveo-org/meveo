@@ -1,0 +1,17 @@
+{
+  "name": "ic.postman",
+  "version": "0.0.5-SNAPSHOT",
+  "description": "Integration testing for IC",
+  "scripts": {
+    "start": "node execute.test.js",
+    "investigation.offer-detection.create": "newman run ./collections/offerDetectionInvestigationCreation.collection.json -r cli,html --reporter-html-export ./dist/offerDetectionInvestigationCreation.report.html --bail --timeout-request 5000",
+    "manage-source-node": "newman run ./collections/ManageSourceNode.collection.json -r cli,html --reporter-html-export ./dist/offerDetectionInvestigationCreation.report.html --bail --timeout-request 5000",
+    "endpoints": "newman run ./collections/endpoints.collections.json -r cli,html --reporter-html-export ./dist/offerDetectionInvestigationCreation.report.html --bail --timeout-request 5000"
+  },
+  "author": "Webdrone",
+  "dependencies": {
+    "newman": "^4.6.0",
+    "newman-reporter-html": "^1.0.5",
+    "yargs": "^12.0.5"
+  }
+}

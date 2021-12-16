@@ -1,7 +1,9 @@
 package org.meveo.admin.action.storage;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
@@ -15,12 +17,16 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.git.GitRepositoryApi;
+import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.hierarchy.UserHierarchyLevel;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -46,6 +52,12 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	@Inject
 	private GitRepositoryApi gitRepositoryApi;
+	
+	@Inject
+	private MeveoModuleApi moduleApi;
+	
+	@Inject
+	private MeveoModuleService moduleService;
 
 	@Inject
 	private Logger log;
@@ -174,5 +186,40 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	public void setBranch(String branch) {
 		this.branch = branch;
+	}
+	
+	public boolean isModuleRepository() {
+		File gitDir = GitHelper.getRepositoryDir(currentUser, entity.getCode());
+		if (gitDir.exists() && gitDir.isDirectory()) {
+			return Arrays.stream(gitDir.list()).anyMatch("module.json"::equals);
+		}
+		return false;
+	}
+	
+	public boolean isModuleInstalled() {
+		MeveoModule module = moduleService.findByCode(entity.getCode());
+		if(module != null) {
+			return module.isInstalled();
+		}
+		return false;
+	}
+	
+	public String install() {
+		try {
+			moduleApi.install(entity);
+			messages.info("Module successfully installed");
+			return "";
+		} catch (BusinessException | MeveoApiException e) {
+			messages.error("Failed to install module: " + e.getMessage());
+			return null;
+		}
+	}
+	
+	public Long getModuleId() {
+		MeveoModule module = moduleService.findByCode(entity.getCode());
+		if(module != null) {
+			return module.getId();
+		}
+		return null;
 	}
 }

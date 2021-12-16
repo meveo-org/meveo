@@ -1,0 +1,3985 @@
+{
+	"info": {
+		"_postman_id": "49cb8366-1059-470e-a0fa-e1d751335255",
+		"name": "Cross-storage",
+		"description": "1/ Login\n\n2/ Create a CET stored in NEO4J and Postgres with properties : \n- neo4jValue : stored in neo4j\n- sqlValue : stored in postgres\n\n3/ Create a CET stored in Postgres with properties : \n- referenceValue : stored in postgres, reference to the first CET\n- ceiValue : stored in postgres, reference to the third CET\n\n4/ Create a CET stored in CEI : \n- sqlCeiValue : stored in CEI\n\n5/ Insert data\n\n6/ Retrieve data and store ids\n\n7/ Delete inserted data",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "meveo-web",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "afe07e5a-68cb-4fb0-8b75-5b6053b07dc3",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{keycloakHostname}}:443/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "https",
+							"host": [
+								"{{keycloakHostname}}"
+							],
+							"port": "443",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create CETs",
+			"item": [
+				{
+					"name": "CET in Neo4j and Sql",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoSqlCet\",\n    \"code\": \"NeoSqlCet\",\n    \"description\": \"NeoSqlCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": true\n    },\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n{\n            \"code\": \"neojValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"neojValue\",\n            \"isUnique\": true,\n            \"storages\": [\"NEO4J\"]\n        },\n        {\n            \"code\": \"sqlValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"sqlValue\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n    \t\"NEO4J\",\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CET in Neo4j and CEI (NeoCeiCet)",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoCeiCet\",\n    \"code\": \"NeoCeiCet\",\n    \"description\": \"NeoCeiCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": false\n    },\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n{\n            \"code\": \"neojValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"neojValue\",\n            \"isUnique\": true,\n            \"storages\": [\"NEO4J\"]\n        },\n        {\n            \"code\": \"ceiValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"ceiValue\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n    \t\"NEO4J\",\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CET in CEI",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CeiCet\",\n    \"code\": \"CeiCet\",\n    \"description\": \"CeiCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": false\n    },\n    \"fields\": [\n{\n            \"code\": \"ceiValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"ceiValue\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CET in Sql referencing other Cets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"PostgresCet\",\n    \"code\": \"PostgresCet\",\n    \"description\": \"PostgresCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"neoRefValue\",\n            \"fieldType\": \"ENTITY\",\n            \"storageType\": \"SINGLE\",\n            \"entityClazz\" : \"NeoSqlCet\",\n            \"valueRequired\": false,\n            \"description\": \"neoRefValue\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        },\n        {\n            \"code\": \"ceiRefValue\",\n            \"fieldType\": \"ENTITY\",\n            \"storageType\": \"SINGLE\",\n            \"entityClazz\" : \"CeiCet\",\n            \"valueRequired\": false,\n            \"description\": \"ceiRefValue\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CET in Neo4j referencing other Cets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeojCet\",\n    \"code\": \"NeojCet\",\n    \"description\": \"NeojCet\",\n    \"neo4jStorageConfiguration\": {\n    \t\"primitiveEntity\": false\n    },\n    \"fields\": [\n{\n            \"code\": \"neoRefValue\",\n            \"fieldType\": \"ENTITY\",\n            \"storageType\": \"SINGLE\",\n            \"entityClazz\" : \"NeoSqlCet\",\n            \"valueRequired\": false,\n            \"description\": \"neoRefValue\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_REF_TEST\",\n            \"storages\": [\"NEO4J\"]\n        },\n        {\n            \"code\": \"ceiRefValue\",\n            \"fieldType\": \"ENTITY\",\n            \"storageType\": \"SINGLE\",\n        \t\"relationshipName\": \"HAS_REF_TEST_CEI\",\n            \"entityClazz\" : \"CeiCet\",\n            \"valueRequired\": false,\n            \"description\": \"ceiRefValue\",\n            \"isUnique\": false,\n            \"storages\": [\"NEO4J\"]\n        }\n    ],\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update IDL",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/services/graphql/{{missionId}}/idl",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"investigation-core",
+								"services",
+								"graphql",
+								"{{missionId}}",
+								"idl"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Insert data",
+			"item": [
+				{
+					"name": "Insert data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"NeoSqlCet\",\n        \"properties\": {\n            \"neojValue\": \"MyNeo4jValue\",\n            \"sqlValue\": \"MySqlValue\"\n        }\n    },\n    {\n        \"name\": \"o2\",\n        \"type\": \"CeiCet\",\n        \"properties\": {\n        \t\"code\": \"TestCeiValue\",\n            \"ceiValue\": \"MyCeiValue\"\n        }\n    }, {\n    \t\"name\": \"o3\",\n    \t\"type\": \"PostgresCet\",\n    \t\"properties\": {\n    \t\t\"neoRefValue\": {\n    \t\t\t\"neojValue\": \"MyNeo4jValue\",\n    \t\t\t\"sqlValue\": \"MySqlValue\"\n    \t\t},\n    \t\t\"ceiRefValue\" : {\n    \t\t\t\"code\": \"TestCeiValue\"\n    \t\t}\n    \t}\n    }, \n    {\n    \t\"name\": \"o4\",\n    \t\"type\": \"NeojCet\",\n    \t\"properties\": {\n    \t\t\"neoRefValue\": {\n    \t\t\t\"neojValue\": \"MyNeo4jValue\",\n    \t\t\t\"sqlValue\": \"MySqlValue\"\n    \t\t},\n    \t\t\"ceiRefValue\" : {\n    \t\t\t\"code\": \"TestCeiValue\"\n    \t\t}\n    \t}\n    }, {\n        \"name\": \"o5\",\n        \"type\": \"NeoCeiCet\",\n        \"properties\": {\n        \t\"code\": \"NeoCeiCetTest\",\n            \"neojValue\": \"MyNeo4jValue\",\n            \"ceiValue\": \"MyCeiValue\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filters test",
+			"item": [
+				{
+					"name": "Filter on SQL Custom table column",
+					"item": [
+						{
+							"name": "Retrieve all fields stored in SQL and Neo4J  using filter on a field stored in SQL",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"",
+											"pm.test(\"neojValue and sqlValue has been returned\", function () {",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});",
+											"",
+											"var uuid = jsonData[0].uuid || jsonData[0].meveo_uuid;",
+											"pm.globals.set(\"NeoSqlCetId\", uuid);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"sqlValue\" : \"MySql*\"\n\t}\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve field stored in Neo4j using filter on a field stored in SQL",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only neojValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"    pm.expect(jsonData[0].sqlValue).to.not.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"sqlValue\" : \"MySql*\"\n\t},\n\t\"fetchFields\": [\"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve field stored in SQL using filter on a field stored in SQL",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only sqlValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.not.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"sqlValue\" : \"MySql*\"\n\t},\n\t\"fetchFields\": [\"sqlValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve fields stored in SQL and Neo4J  using filter on a field stored in SQL",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"neojValue sql value has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"sqlValue\" : \"MySql*\"\n\t},\n\t\"fetchFields\": [\"sqlValue\", \"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Filter on Neo4j value",
+					"item": [
+						{
+							"name": "Retrieve all fields stored in SQL and Neo4J  using filter on a field stored in NEO4J",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"neojValue and sqlValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"graphQlQuery\" : \"{ NeoSqlCet (neojValue: \\\"MyNeo4jValue\\\") { neojValue } }\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve field stored in Neo4J  using filter on a field stored in NEO4J",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only neojValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"    pm.expect(jsonData[0].sqlValue).to.not.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"graphQlQuery\" : \"{ NeoSqlCet (neojValue: \\\"MyNeo4jValue\\\") { neojValue } }\",\n\t\"fetchFields\" : [\"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve field stored in SQL using filter on a field stored in NEO4J",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only sqlValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.not.exist;",
+											"    pm.expect(jsonData.length).to.be.eql(1)",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"graphQlQuery\" : \"{ NeoSqlCet (neojValue: \\\"MyNeo4jValue\\\") { neojValue } }\",\n\t\"fetchFields\" : [\"sqlValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve fields stored in SQL and Neo4J using filter on a field stored in NEO4J",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"neojValue and sqlValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].sqlValue).to.eql(\"MySqlValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"graphQlQuery\" : \"{ NeoSqlCet (neojValue: \\\"MyNeo4jValue\\\") { neojValue } }\",\n\t\"fetchFields\" : [\"sqlValue\", \"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoSqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Filter on CEI Value",
+					"item": [
+						{
+							"name": "Retrieve field stored in CEI using filter on a field stored in CEI",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only neojValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"    pm.expect(jsonData[0].ceiValue).to.not.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoCeiCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve field stored in CEI using filter on a field stored in CEI",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Only ceiValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].ceiValue).to.eql(\"MyCeiValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.not.exist;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"ceiValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoCeiCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve all fields stored in CEI and Neo4J  using filter on a field stored in CEI",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"",
+											"pm.test(\"neojValue and ceiValue has been returned\", function () {",
+											"    pm.expect(jsonData[0].ceiValue).to.eql(\"MyCeiValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});",
+											"",
+											"var uuid = jsonData[0].uuid || jsonData[0].meveo_uuid;",
+											"pm.globals.set(\"NeoCeiCet\", uuid);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t}\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoCeiCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve fields stored in CEI and Neo4J  using filter on a field stored in CEI",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"neojValue and ceiValue has been returned\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData[0].ceiValue).to.eql(\"MyCeiValue\");",
+											"    pm.expect(jsonData[0].neojValue).to.eql(\"MyNeo4jValue\");",
+											"});",
+											"",
+											"pm.environment.set(\"uuidToDelete\", pm.response.json()[0].uuid);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"ceiValue\", \"neojValue\"]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoCeiCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "UUID is same in CEI and Neo4J",
+			"item": [
+				{
+					"name": "Insert data in Neo4J and CEI",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n\t{\n        \"name\": \"o5\",\n        \"type\": \"NeoCeiCet\",\n        \"properties\": {\n        \t\"code\": \"DataIntegrationTest\",\n            \"neojValue\": \"Neo4JData\",\n            \"ceiValue\": \"CEIData\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get CEI data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"uuidToDelete\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"filters\": {\n\t\t\"ceiValue\": \"CEIData\"\n\t},\n\t\"fetchFields\": [\"ceiValue\"]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeoCeiCet",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Neo4J Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"UUIDs are the same\", function () {",
+									"    var currentUUID = pm.response.json()[0].uuid;",
+									"    var ceiUUID = pm.environment.get(\"uuidToDelete\");",
+									"    pm.expect(currentUUID).to.be.eq(ceiUUID);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"fetchFields\": [\"neojValue\"],\n\t\"graphQlQuery\" : \"{ NeoCeiCet (neojValue: \\\"Neo4JData\\\") { neojValue } }\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeoCeiCet",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeojCet data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"ceiValue\"]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCeiCet/{{uuidToDelete}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeoCeiCet",
+								"{{uuidToDelete}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Data assertions",
+			"item": [
+				{
+					"name": "CeiCet node with relationship created in neo4j  ",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"ceiRefValue has been found\", function () {",
+									"    pm.expect(jsonData[0].ceiRefValue).to.exist;",
+									"});",
+									"",
+									"if(jsonData[0]) {",
+									"    pm.globals.set(\"NeoCeiCetId\", jsonData[0].meveo_uuid);",
+									"",
+									"    pm.globals.set(\"NeojCetId\", jsonData[0].uuid || jsonData[0].meveo_uuid);",
+									"    pm.globals.set(\"CeiCetId\", jsonData[0].ceiRefValue.meveo_uuid);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"graphQlQuery\" : \"{ NeojCet { ceiRefValue { meveo_uuid } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeojCet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeojCet",
+								"list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delete Test data",
+			"item": [
+				{
+					"name": "Delete PostgresCet",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/PostgresCet?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"PostgresCet"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeoSqlData",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"ceiValue\"]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoSqlCet/{{NeoSqlCetId}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeoSqlCet",
+								"{{NeoSqlCetId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeoSqlCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"TestCet\",\r\n  \"code\": \"TestCet\",\r\n  \"description\": \"TestCet\",\r\n  \"availableStorages\": [\"SQL\", \"NEO4J\"],\r\n  \"field\": [\r\n    {\r\n      \"code\": \"languageCode\",\r\n      \"storages\": [\"SQL\"],\r\n      \"fieldType\": \"STRING\",\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"creationDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ],\r\n  \"customEntityCategoryCode\": \"Test\",\r\n  \"uniqueConstraint\": [],\r\n  \"graphqlQueryFields\": []\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeoSqlCet?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"NeoSqlCet"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeoCeiCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeoCeiCet?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"NeoCeiCet"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeojCet data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"filters\" : {\n\t\t\"ceiValue\" : \"MyCeiValue\"\n\t},\n\t\"fetchFields\": [\"ceiValue\"]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeojCet/{{NeojCetId}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"NeojCet",
+								"{{NeojCetId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete NeojCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeojCet?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"NeojCet"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CeiCet",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"TestCet\",\r\n  \"code\": \"TestCet\",\r\n  \"description\": \"TestCet\",\r\n  \"availableStorages\": [\"SQL\", \"NEO4J\"],\r\n  \"field\": [\r\n    {\r\n      \"code\": \"languageCode\",\r\n      \"storages\": [\"SQL\"],\r\n      \"fieldType\": \"STRING\",\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"creationDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ],\r\n  \"customEntityCategoryCode\": \"Test\",\r\n  \"uniqueConstraint\": [],\r\n  \"graphqlQueryFields\": []\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CeiCet?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CeiCet"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "List of entity references",
+			"item": [
+				{
+					"name": "SimpleCustomTableCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"SimpleCustomTableCet\",\n    \"code\": \"SimpleCustomTableCet\",\n    \"description\": \"SimpleCustomTableCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"name\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": true,\n            \"description\": \"name\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ComplexCustomTableCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"ComplexCustomTableCet\",\n    \"code\": \"ComplexCustomTableCet\",\n    \"description\": \"ComplexCustomTableCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"referenceValues\",\n            \"fieldType\": \"ENTITY\",\n            \"storageType\": \"LIST\",\n            \"entityClazz\" : \"SimpleCustomTableCet\",\n            \"valueRequired\": true,\n            \"description\": \"referenceValues\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        },\n        {\n            \"code\": \"title\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": true,\n            \"description\": \"title\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create 2 SimpleCustomTableCet instances",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const responseJson = pm.response.json();",
+									"",
+									"pm.environment.set(\"uuid1\", responseJson[0].uuid);",
+									"pm.environment.set(\"uuid2\", responseJson[1].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"SimpleCustomTableCet\",\n        \"properties\": {\n            \"name\": \"First instance\"\n        }\n    },\n    {\n        \"name\": \"o2\",\n        \"type\": \"SimpleCustomTableCet\",\n        \"properties\": {\n        \t\"name\": \"Second instance\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create ComplexCustomTableCet instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"ComplexCustomTableCet\",\n        \"properties\": {\n            \"title\": \"First complexe instance\",\n            \"referenceValues\": [\"{{uuid1}}\", \"{{uuid2}}\"]\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve ComplexCustomTableCet  instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"referenceValues contains 2 elements\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData[0].referenceValues.length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/ComplexCustomTableCet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"ComplexCustomTableCet",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete SimpleCustomTableCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/SimpleCustomTableCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"SimpleCustomTableCet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete ComplexCustomTableCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/ComplexCustomTableCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"ComplexCustomTableCet"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Instant persistence",
+			"item": [
+				{
+					"name": "Create TestDate",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"TestDate\",\n    \"code\": \"TestDate\",\n    \"description\": \"TestDate\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": true\n    },\n    \"fields\": [\n        {\n            \"code\": \"datefield\",\n            \"fieldType\": \"DATE\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": true,\n            \"description\": \"name\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create TestPersistenceInstantScript",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"No compilation errors\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.compilationErrors.length).to.eql(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\" : \"org.meveo.script.TestPersistenceInstantScript\",\r\n  \"type\" : \"JAVA\",\r\n  \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport org.meveo.api.persistence.CrossStorageApi;\\r\\nimport org.meveo.service.script.Script;\\r\\nimport java.time.Instant;\\r\\nimport org.meveo.service.storage.RepositoryService;\\r\\nimport org.meveo.model.customEntities.TestDate;\\r\\n\\r\\npublic class TestPersistenceInstantScript extends Script {\\r\\n\\r\\n    private CrossStorageApi crossStorage = getCDIBean(CrossStorageApi.class);\\r\\n\\r\\n    private RepositoryService repoService = getCDIBean(RepositoryService.class);\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) throws BusinessException {\\r\\n        TestDate testDate = new TestDate();\\r\\n        testDate.setDatefield(Instant.now());\\r\\n        try {\\r\\n            crossStorage.createOrUpdate(repoService.findDefaultRepository(), testDate);\\r\\n        } catch (Exception e) {\\r\\n            throw new BusinessException(e);\\r\\n        }\\r\\n    }\\r\\n}\\r\\n\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						},
+						"description": "Create script A that return \"value=A\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Execute script",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/function/:code/test",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"function",
+								":code",
+								"test"
+							],
+							"variable": [
+								{
+									"key": "code",
+									"value": "org.meveo.script.TestPersistenceInstantScript"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve TestDate instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"At least one element\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.gt(0);",
+									"    ",
+									"    pm.environment.set(\"testDateUuid\", jsonData[0].uuid);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/TestDate/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"{{missionId}}",
+								"persistence",
+								"TestDate",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create TestRetrieveInstantScript",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\" : \"org.meveo.script.TestRetrieveInstantScript\",\r\n  \"type\" : \"JAVA\",\r\n  \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport org.meveo.api.persistence.CrossStorageApi;\\r\\nimport org.meveo.service.script.Script;\\r\\nimport java.time.Instant;\\r\\nimport org.meveo.service.storage.RepositoryService;\\r\\nimport org.meveo.model.customEntities.TestDate;\\r\\n\\r\\npublic class TestRetrieveInstantScript extends Script {\\r\\n\\r\\n    private CrossStorageApi crossStorage = getCDIBean(CrossStorageApi.class);\\r\\n\\r\\n    private RepositoryService repoService = getCDIBean(RepositoryService.class);\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) throws BusinessException {\\r\\n        try {\\r\\n            TestDate created = crossStorage.find(repoService.findDefaultRepository(), (String) methodContext.get(\\\"uuid\\\"), TestDate.class);\\r\\n            methodContext.put(\\\"result\\\", created.getDatefield());\\r\\n        } catch (Exception e) {\\r\\n            throw new BusinessException(e);\\r\\n        }\\r\\n    }\\r\\n}\\r\\n\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						},
+						"description": "Create script A that return \"value=A\"."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Instant is returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.epochSecond).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"uuid\": \"{{testDateUuid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/function/:code/test",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"function",
+								":code",
+								"test"
+							],
+							"variable": [
+								{
+									"key": "code",
+									"value": "org.meveo.script.TestRetrieveInstantScript"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete TestDate",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TestDate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"TestDate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script TestPersistenceInstantScript",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.TestPersistenceInstantScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.TestPersistenceInstantScript"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script TestRetrieveInstantScript",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.TestRetrieveInstantScript",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.TestRetrieveInstantScript"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "- Create CET \"TestDate\" with one field \"datefield\"\n- Create and execute a script that instanciate a new java class \"TestDate\", set the datefield to Instant.now() and persists it\n- Retrieve the uuid of the created TestDate\n- Create and execute a script that take the previous uuid in parameter and return the value of the datefield. We test that the result has been well returned\n- Remove test data",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Persist MAP value",
+			"item": [
+				{
+					"name": "Neo4J",
+					"item": [
+						{
+							"name": "Create CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"NeoCet\",\n    \"code\": \"NeoCet\",\n    \"description\": \"NeoCet\",\n    \"sqlStorageConfiguration\": null,\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n{\n            \"code\": \"mapValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"MAP\",\n            \"mapKeyType\": \"STRING\",\n            \"valueRequired\": false,\n            \"description\": \"neojValue\",\n            \"isUnique\": false,\n            \"storages\": [\"NEO4J\"]\n        },\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"sqlValue\",\n            \"isUnique\": true,\n            \"storages\": [\"NEO4J\"]\n        }\n    ],\n    \"availableStorages\": [\n    \t\"NEO4J\"\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Insert data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"NeoCet\",\n        \"properties\": {\n            \"code\": \"FirstValue\",\n            \"mapValue\": {\n            \t\"test\": \"testValue\",\n            \t\"test2\": \"testValue2\"\n            }\n        }\n    }\n]"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update IDL",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/services/graphql/{{missionId}}/idl",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"investigation-core",
+										"services",
+										"graphql",
+										"{{missionId}}",
+										"idl"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Map value is returned as expected\", function () {",
+											"    var jsonData = pm.response.json()[0];",
+											"    var expectedData = {",
+											"        test: \"testValue\",",
+											"        test2: \"testValue2\"",
+											"    };",
+											"    ",
+											"    pm.expect(JSON.stringify(jsonData.mapValue)).to.be.eq(JSON.stringify(expectedData));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"graphQlQuery\" : \"{ NeoCet (code: \\\"FirstValue\\\") { code, mapValue } }\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/NeoCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"NeoCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeoCet",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"NeoCet"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "SQL Custom table",
+					"item": [
+						{
+							"name": "Create CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": \"true\"\n    },\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n{\n            \"code\": \"mapValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"MAP\",\n            \"mapKeyType\": \"STRING\",\n            \"valueRequired\": false,\n            \"description\": \"neojValue\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        },\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"sqlValue\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n    \t\"SQL\"\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Insert data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n            \"code\": \"FirstValue\",\n            \"mapValue\": {\n            \t\"test\": \"testValue\",\n            \t\"test2\": \"testValue2\"\n            }\n        }\n    }\n]"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Map value is returned as expected\", function () {",
+											"    var jsonData = pm.response.json()[0];",
+											"    var expectedData = {",
+											"        test: \"testValue\",",
+											"        test2: \"testValue2\"",
+											"    };",
+											"    ",
+											"    pm.expect(JSON.stringify(jsonData.mapValue)).to.be.eq(JSON.stringify(expectedData));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"code\" : \"FirstValue\"\n\t}\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/SqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"SqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/SqlCet",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"SqlCet"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "SQL Single table",
+					"item": [
+						{
+							"name": "Create CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"sqlStorageConfiguration\": {\n    \t\"storeAsTable\": \"false\"\n    },\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n{\n            \"code\": \"mapValue\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"MAP\",\n            \"mapKeyType\": \"STRING\",\n            \"valueRequired\": false,\n            \"description\": \"neojValue\",\n            \"isUnique\": false,\n            \"storages\": [\"SQL\"]\n        },\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"sqlValue\",\n            \"isUnique\": true,\n            \"storages\": [\"SQL\"]\n        }\n    ],\n    \"availableStorages\": [\n    \t\"SQL\"\n    ]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Insert data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n            \"code\": \"FirstValue\",\n            \"mapValue\": {\n            \t\"test\": \"testValue\",\n            \t\"test2\": \"testValue2\"\n            }\n        }\n    }\n]"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve data",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Map value is returned as expected\", function () {",
+											"    var jsonData = pm.response.json()[0];",
+											"    var expectedData = {",
+											"        test: \"testValue\",",
+											"        test2: \"testValue2\"",
+											"    };",
+											"    ",
+											"    pm.expect(JSON.stringify(jsonData.mapValue)).to.be.eq(JSON.stringify(expectedData));",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"filters\" : {\n\t\t\"code\" : \"FirstValue\"\n\t}\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence/SqlCet/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"{{missionId}}",
+										"persistence",
+										"SqlCet",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CET",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/SqlCet",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"SqlCet"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Primitive value persistence",
+			"item": [
+				{
+					"name": "Primitive CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"PrimitiveCet\",\n    \"code\": \"PrimitiveCet\",\n    \"description\": \"PrimitiveCet\",\n    \"sqlStorageConfiguration\": null,\n    \"neo4jStorageConfiguration\": {\n        \"primitiveEntity\": true,\n        \"primitiveType\": \"STRING\"\n    },\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GraphCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"GraphCet\",\n    \"code\": \"GraphCet\",\n    \"description\": \"GraphCet\",\n    \"sqlStorageConfiguration\": null,\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        },\n        {\n            \"code\": \"primitiveValue\",\n            \"fieldType\": \"ENTITY\",\n            \"entityClazz\": \"PrimitiveCet\",\n            \"relationshipName\": \"HAS_PRIMITIVE\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"sqlValue\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert primitive value",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"o1\",\r\n        \"type\": \"PrimitiveCet\",\r\n        \"properties\": {\r\n        \t\"value\": \"MyPrimitive\"\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "{{missionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert value referencing primitive value",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"o2\",\r\n        \"type\": \"GraphCet\",\r\n        \"properties\": {\r\n        \t\"code\": \"toto\",\r\n        \t\"primitiveValue\": \"MyPrimitive\"\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "{{missionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete primitive cet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/PrimitiveCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"PrimitiveCet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete GraphCet",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/GraphCet",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"GraphCet"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"response is ok\", function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+					"});"
+				]
+			}
+		}
+	]
+}

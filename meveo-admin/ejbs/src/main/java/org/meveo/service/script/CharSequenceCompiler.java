@@ -13,12 +13,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
@@ -33,7 +35,6 @@ import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.maven.MavenClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,12 +100,30 @@ public class CharSequenceCompiler<T> {
 	   fileManager = compiler.getStandardFileManager(null, null, null);
 	   
       try {
-	      URL[] urls = { CustomEntityTemplateService.getClassesDir(null).toURI().toURL() };
+    	  String classPath = ScriptInstanceService.CLASSPATH_REFERENCE.get();
+    	  List<URL> urlList = Arrays.stream(classPath.split(File.pathSeparator))
+    			  .map(path -> {
+					try {
+						return new File(path).toURI().toURL();
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return null;
+					}
+				}).collect(Collectors.toList());
+    	  urlList.add(CustomEntityTemplateService.getClassesDir(null).toURI().toURL());
+    	  
+	      URL[] urls = urlList.toArray(URL[]::new);
+	      
 	      ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
 		  urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
       } catch (MalformedURLException e) {
     	  throw new RuntimeException(e);
       }
+   }
+   
+   public static ClassLoader getUrlClassLoader() {
+	   return urlClassLoader;
    }
    
    public static <T> Class<T> getCompiledClass(final String qualifiedName) throws ClassNotFoundException {
@@ -163,14 +182,16 @@ public class CharSequenceCompiler<T> {
     *            if the generated class is not assignable to all the optional
     *            &lt;var&gt;types&lt;/var&gt;.
     */
-   public synchronized Class<T> compile(final String qualifiedClassName,
+   public synchronized Class<T> compile(
+		 final String sourcePath,
+		 final String qualifiedClassName,
          final CharSequence javaSource,
          final DiagnosticCollector<JavaFileObject> diagnosticsList,
          final boolean isTestCompile,
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
 
-      Class<T> newClass = compile(qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
+      Class<T> newClass = compile(sourcePath, qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
       return castable(newClass, types);
    }
 
@@ -188,6 +209,7 @@ public class CharSequenceCompiler<T> {
 	 * @throws CharSequenceCompilerException if the source cannot be compiled
 	 */
    public synchronized Class<T> compile(
+		   final String sourcePath,
 		   final String qualifiedClassName,
            final CharSequence content,
            final DiagnosticCollector<JavaFileObject> diagnosticsList,
@@ -213,12 +235,15 @@ public class CharSequenceCompiler<T> {
 
 	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
 	   // javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
-	   final File repositoryDir = GitHelper.getRepositoryDir(null, "Meveo/src/main/java/");
-
+	   String pathScript = qualifiedClassName.replaceAll("\\.", "/");
+	   pathScript = pathScript.replaceAll("/+\\w+$", "");
+	   
 	   // Set source directory
 	   options.add("-sourcepath");
-	   options.add(repositoryDir.getAbsolutePath());
-
+	   options.add(sourcePath);
+	   
+	   LOGGER.info("Compiling script with sourcepath {}", sourcePath);
+	   
 	   // Set output directory
 	   options.add("-d");
 	   options.add(outputDir.getAbsolutePath());

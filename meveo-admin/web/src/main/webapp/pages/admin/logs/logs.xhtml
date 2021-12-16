@@ -16,6 +16,12 @@
 		<hftl:emptyTag></hftl:emptyTag>
 
 		<script id="refreshLogScript">
+			window.clear = function() {
+				console.log("Clearing console !");
+				const div = document.querySelector("#logsValue");
+				div.innerHTML = "";
+				return;
+			}
 
 			// Append new content to existing one and scroll to bottom
 			window.updateLogs = function(xhr, status, args) {
@@ -24,8 +30,6 @@
 					if(value !== undefined) {
 						const div = document.querySelector("#logsValue");
 						div.innerHTML += value;
-// 						hljs.initHighlighting.called = false;
-// 						hljs.initHighlighting();
 						div.scrollTop = div.scrollHeight;
 					}
 				}
@@ -63,7 +67,17 @@
 						value="#{messages['logs.viewer.offset']}" />
 					<p:inputText id="offset" value="#{logViewerBean.offset}"
 						disabled="#{logViewerBean.initialized}" />
+						
+					<p:outputLabel for="grepOptions" value="#{messages['logs.viewer.grep.options']}" />
+					<p:inputText id="grepOptions" value="#{logViewerBean.grepOptions}"/>
+						
+					<p:outputLabel for="grepPattern" value="#{messages['logs.viewer.grep.pattern']}" />
+					<p:inputText id="grepPattern" value="#{logViewerBean.grepPattern}"/>
 
+					<p:button id="clear" value="#{messages['logs.viewer.clear']}"
+						type="button"
+						onclick="return window.clear();" />
+						
 					<p:commandButton id="read" update="@form"
 						value="#{logViewerBean.initialized ?  messages['logs.viewer.refresh'] : messages['logs.viewer.read']}"
 						disabled="#{!logViewerBean.paused}"

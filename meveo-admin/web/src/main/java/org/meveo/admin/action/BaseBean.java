@@ -121,7 +121,7 @@ import com.lapis.jsfexporter.csv.CSVExportOptions;
  * @version 6.9.0
  */
 @Named
-@ViewScoped
+//@ViewScoped
 public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -525,11 +525,15 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         return backViewSave;
     }
     
-    protected void addToModule(T entity, MeveoModule module) {
+    protected void addToModule(T entity, MeveoModule module) throws BusinessException {
         BusinessEntity businessEntity = (BusinessEntity) entity;
         MeveoModuleItem item = new MeveoModuleItem(businessEntity);
         if (!module.getModuleItems().contains(item)) {
-            meveoModuleService.addModuleItem(item, module);
+            try {
+				meveoModuleService.addModuleItem(item, module);
+			} catch (BusinessException e2) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e2);
+			}
             try {
                 if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
                     module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
@@ -545,16 +549,20 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         }
     }
 
-    public void addToModule()  {
+    public void addToModule() throws BusinessException  {
         for (MeveoModule eachModule : selectedMeveoModules) {
             MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
             if (entity != null && !eachModule.equals(entity)) {
-            	addToModule(entity, module);
+            	try {
+					addToModule(entity, module);
+				} catch (BusinessException e) {
+					throw new BusinessException("Entity cannot be add or remove from the module", e);
+				}
             }
         }
     }
 
-    public void addManyToModule()  {
+    public void addManyToModule() throws BusinessException  {
         if (selectedEntities == null || selectedEntities.isEmpty()) {
             return;
         }
@@ -569,7 +577,11 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             List<String> itemExisted = new ArrayList<>();
             for (T entity : selectedEntities) {
                 if (entity != null && !eachModule.equals(entity)) {
-                	addToModule(entity, module);
+                	try {
+						addToModule(entity, module);
+					} catch (BusinessException e2) {
+						throw new BusinessException("Entity cannot be add or remove from the module", e2);
+					}
                 }
             }
         }

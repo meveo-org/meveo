@@ -1,5 +1,9 @@
 package org.meveo.service.custom;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,12 +11,22 @@ import java.util.Map;
 import javax.ejb.Stateless;
 import javax.persistence.NoResultException;
 
+import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
+import org.meveo.service.git.GitHelper;
 
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
@@ -88,4 +102,37 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
             return null;
         }
     }
+    
+	@Override
+	protected void persistJsonFileInModule(EntityCustomAction entity, MeveoModule module, boolean isCreation) throws BusinessException {
+    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+    	if(cetCode == null) {
+    		cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+    	}
+    	
+    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+    	
+    	File newDir = new File (gitDirectory, path);
+    	newDir.mkdirs();
+    	
+    	File newJsonFile = new File(newDir, entity.getCode() +".json");
+    	try {
+	    	if (isCreation) {
+	    		newJsonFile.createNewFile();
+	    	}
+	    	
+	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+	
+	    	Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
+    	}
+    	
+    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for custom action " + cetCode + "." + entity.getCode());
+	}
 }

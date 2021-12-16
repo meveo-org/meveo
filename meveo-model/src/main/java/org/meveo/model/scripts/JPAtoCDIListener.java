@@ -2,13 +2,20 @@ package org.meveo.model.scripts;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.event.qualifier.UpdatedAfterTx;
+import org.meveo.model.BaseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +42,18 @@ public class JPAtoCDIListener {
 	@Inject
 	@Removed
 	protected Event<Object> entityRemovedEventProducer;
+	
+	@Inject
+	@CreatedAfterTx
+	protected Event<Object> entityCreatedAfterTxEventProducer;
+
+	@Inject
+	@UpdatedAfterTx
+	protected Event<Object> entityUpdatedAfterTxEventProducer;
+	
+	@Inject
+	@RemovedAfterTx
+	protected Event<Object> entityRemovedAfterTxEventProducer;
 
 	@PrePersist
 	public void created(Object d) {
@@ -43,13 +62,27 @@ public class JPAtoCDIListener {
 
 	@PreUpdate
 	public void updated(Object d) {
-		log.debug("[CDI event] on update of object={}", d);
 		entityUpdatedEventProducer.fire(d);
 	}
-
+	
 	@PreRemove
 	public void removed(Object d) {
 		entityRemovedEventProducer.fire(d);
 	}
+	
+	@PostPersist
+	public void createdAfterTx(Object d) {
+		entityCreatedAfterTxEventProducer.fire(d);
+	}
 
+	@PostUpdate
+	public void updatedAfterTx(Object d) {
+		entityUpdatedAfterTxEventProducer.fire(d);
+	}
+
+	@PostRemove
+	public void removedAfterTx(Object d) {
+		entityRemovedAfterTxEventProducer.fire(d);
+	}
+	
 }

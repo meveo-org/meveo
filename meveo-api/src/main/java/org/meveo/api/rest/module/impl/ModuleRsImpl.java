@@ -35,14 +35,17 @@ import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.OnDuplicate;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.module.ModuleRs;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
+import org.meveo.service.git.GitRepositoryService;
 
 /**
  * @author Clément Bareth
@@ -56,6 +59,9 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
     @Inject
     private MeveoModuleApi moduleApi;
+    
+    @Inject
+    private GitRepositoryService gitRepositoryService;
     
     @Context
     private HttpServletResponse httpServletResponse;
@@ -150,7 +156,11 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         try {
         	//TODO: add option in query
-            moduleApi.install(moduleDto, OnDuplicate.OVERWRITE);
+        	MeveoModuleDto dto = moduleApi.findIgnoreNotFound(moduleDto.getCode());
+        	if(dto == null) {
+        		moduleApi.create(moduleDto, false);
+        	}
+            moduleApi.install(moduleDto, OnDuplicate.FAIL);
 
         } catch (Exception e) {
             processException(e, result);
@@ -254,4 +264,14 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 
         return result;
     }
+
+	@Override
+	public void installFromGitRepository(String code) throws BusinessException, MeveoApiException {
+		GitRepository repo = gitRepositoryService.findByCode(code);
+		if (repo == null) {
+			throw new IllegalArgumentException("The repository " + code + " doesn't exist");
+		} else {
+			moduleApi.install(repo);
+		}
+	}
 }

@@ -22,6 +22,9 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityInstanceAuditParameter;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.custom.CustomEntityInstanceAuditService;
 import org.slf4j.Logger;
 
@@ -43,6 +46,9 @@ public class CustomEntityInstanceObserver {
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+    @Inject
+    private BusinessServiceFinder businessServiceFinder;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityInstance cei) {
@@ -73,11 +79,25 @@ public class CustomEntityInstanceObserver {
 
 			customEntityInstanceAuditService.auditChanges(param);
 		}
+		
+		
+		BusinessService businessService = businessServiceFinder.find(cei);
+    	businessService.afterUpdateOrCreate(cei);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityInstance cei) {
+	public void onRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomEntityInstance cei) throws BusinessException {
 
 		log.debug("CEI onRemoved observer={}", cei);
+		BusinessService businessService = businessServiceFinder.find(cei);
+		MeveoModule module = businessService.findModuleOf(cei);
+    	try {
+    		if (module != null) {
+    			businessService.removeFilesFromModule(cei, module);
+    		}
+		} catch (BusinessException e) {
+			throw new BusinessException("CEI: " + cei.getCode() + " cannot be removed");
+		}
+
 	}
 }

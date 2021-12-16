@@ -2,12 +2,74 @@
 
 Meveo is a git server and client.
 
-You can clone locally a git repository hosted in a meveo instance, let say the default `Meveo` repository from an instance deployed on `https://mydomain.com/meveo` 
+Each meveo module has a dedicated repository
+
+
+
+## Cloning a module
+
+You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
 
 buy using the command 
 ```
-git clone https://mydomain.com/meveo/git/Meveo/
+git clone https://mydomain.com/meveo/git/myModule
 ```
 and with the credential of the admin user
 
-You can then edit your script on your local IDE (for java, the repo contains a maven pom file)  then when you push it to the meveo instance the script is compiled.
+you can add the credential directly in the clone url:
+
+```
+git clone https://meveo.admin:adminpassword@mydomain.com/meveo/git/myModule
+```
+
+To be able to edit the scripts for a given module, you can clone it locally using the code 
+of the module as the code of the git repository.
+
+## open the module as a maven project
+
+In order to have all the meveo dependencies available locally, you should add you personal 
+github token to your maven settings.xml file.
+
+- [Generate your token](https://github.com/settings/tokens/new) with the following permissions : `read:packages`
+- Configure the github repository in your `~/.m2/settings.xml` file : 
+
+```xml
+<server>
+    <id>github</id>
+    <username>GITHUB_ACCOUNT_NAME</username>
+    <password>GITHUB_TOKEN</password>
+</server>
+```
+
+then in order for maven to find the sources, create a symbolic link in `/facet/maven` to the `facet/java` directory
+
+```
+cd myModule
+mkdir -p facets/maven/src/main
+ln -s ../../../java facets/maven/src/main/java
+```
+
+you can now open the project in vscode
+
+```
+cd facets/maven
+code .
+```
+
+Edit your `pom.xml` file to remove the tag
+```
+    <sourceDirectory>../java</sourceDirectory>
+```
+
+and add the dependencies to dependent module.
+
+For instance if your `infrastructure` module depends in the `credentials` module with version `1.0.0`,
+assuming you already cloned and maven installed the `credentials` module locally, then add this dependency
+```
+<dependency>
+  <groupId>org.meveo</groupId>
+  <artifactId>credentials</artifactId>
+  <version>1.0.0</version>
+  <scope>provided</scope>
+</dependency>
+```

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>6.15.13-SNAPSHOT</version>
+	<version>7.0.0-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -13,20 +14,20 @@
 		<version.wildfly>18.0.1.Final</version.wildfly>
 		<dbtype>generic</dbtype>
 		<releaseOption />
-		<jackson.version>2.12.4</jackson.version>
-		<scm.url>scm:git:git@github.com:manaty/meveo.git</scm.url>
+		<jackson.version>2.9.10</jackson.version> <!-- Version used in Wildfly 18, impossible to update -->
+		<scm.url>scm:git:git@github.com:meveo-org/meveo.git</scm.url>
 		<aether.version>1.1.0</aether.version>
 	</properties>
 
 	<scm>
 		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 
 	<modules>
-		<module>meveo-security</module>
 		<module>meveo-model</module>
+		<module>meveo-security</module>
 		<module>meveo-admin</module>
 		<module>meveo-api</module>
 		<module>meveo-api-dto</module>
@@ -57,6 +58,11 @@
 	</pluginRepositories>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.unix4j</groupId>
+				<artifactId>unix4j-command</artifactId>
+				<version>0.6</version>
+			</dependency>
 			<dependency>
 				<groupId>org.eclipse.jgit</groupId>
 				<artifactId>org.eclipse.jgit.http.server</artifactId>
@@ -371,13 +377,13 @@
 				<version>${jackson.version}</version>
 				<scope>provided</scope>
 			</dependency>
-			
+
 			<dependency>
-			    <groupId>com.fasterxml.jackson.datatype</groupId>
-			    <artifactId>jackson-datatype-hibernate5</artifactId>
-			    <version>${jackson.version}</version>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-hibernate5</artifactId>
+				<version>${jackson.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>javax.interceptor</groupId>
 				<artifactId>javax.interceptor-api</artifactId>
@@ -463,8 +469,7 @@
 					<artifactId>jboss-as-maven-plugin</artifactId>
 					<version>7.5.Final</version>
 				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -516,6 +521,11 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.2.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.17</version>
 				<configuration>
@@ -557,7 +567,7 @@
 			</activation>
 			<distributionManagement>
 				<repository>
-					<id>meveo</id>
+					<id>github</id>
 					<name>GitHub meveo-org Apache Maven Packages</name>
 					<url>https://maven.pkg.github.com/meveo-org/meveo</url>
 				</repository>
@@ -566,11 +576,11 @@
 		<profile>
 			<id>wd</id>
 			<activation>
-            	<property>
-                	<name>useWdRepo</name>
-                	<value>true</value>
-            	</property>
-        	</activation>
+				<property>
+					<name>useWdRepo</name>
+					<value>true</value>
+				</property>
+			</activation>
 			<distributionManagement>
 				<repository>
 					<id>wd</id>

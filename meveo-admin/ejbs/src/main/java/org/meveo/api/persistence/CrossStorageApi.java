@@ -6,6 +6,7 @@ package org.meveo.api.persistence;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -17,6 +18,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityGraph;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -28,6 +30,10 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
+import org.meveo.service.custom.CustomEntityTemplateCompiler;
+import org.meveo.service.script.CharSequenceCompiler;
+import org.meveo.service.script.CharSequenceCompilerException;
+import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +61,7 @@ public class CrossStorageApi{
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
 	
     protected static final Logger LOGGER = LoggerFactory.getLogger(CrossStorageApi.class);
 	
@@ -91,14 +98,33 @@ public class CrossStorageApi{
 		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
 		return JacksonUtil.convert(values, cetClass);
 	}
-	
+//	/**
+//	 * Find an instance (Pojo) of a given CET
+//	 *
+//	 * @param repository the repository where the instance is stored
+//	 * @param uuid       the uuid of the instance
+//	 * @param cetCode    the code of the ce
+//	 * @return the instanc of the cet (package org.meveo.model.customentities)
+//	 * @throws EntityDoesNotExistsException the entity does not exists exception
+//	 */
+//	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+//	public Object findPojo(Repository repository, String uuid, String cetCode) throws EntityDoesNotExistsException {
+//		try {
+//			Class<?> object = customScriptService.loadCustomEntityClass(cetCode, false, Optional.empty());
+//			return find(repository, uuid, Class.forName("org.meveo.model.customEntities." + cetCode));
+//		} catch (ClassNotFoundException | CharSequenceCompilerException e) {
+//			throw new EntityDoesNotExistsException(e.getClass().getSimpleName() + " for cet: " + cetCode);
+//		}
+//		
+//	}
+
 	/**
 	 * Find an instance of a given CET
 	 *
 	 * @param repository the repository where the instance is stored
 	 * @param uuid       the uuid of the instance
 	 * @param cetCode    the code of the ce
-	 * @return the instanc of the cet
+	 * @return the instance (CustomEntityInstance) of the cet
 	 * @throws EntityDoesNotExistsException the entity does not exists exception
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)

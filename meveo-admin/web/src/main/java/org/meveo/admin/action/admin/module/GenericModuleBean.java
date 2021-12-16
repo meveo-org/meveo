@@ -269,7 +269,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public void setModuleItemEntity(BusinessEntity itemEntity) {
+	public void setModuleItemEntity(BusinessEntity itemEntity) throws BusinessException {
         if (itemEntity != null && !entity.equals(itemEntity)) {
             List<String> uuidList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(entity.getModuleItems())) {
@@ -288,7 +288,11 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 item.setAppliesTo(((CustomEntityInstance) itemEntity).getCetCode());
             }
             if (!entity.getModuleItems().contains(item)) {
-            	meveoModuleService.addModuleItem(item, entity);
+            	try {
+            		meveoModuleService.addModuleItem(item, entity);
+            	} catch (BusinessException e) {
+            		throw new BusinessException("Entity cannot be add or remove from the module", e);
+            	}
                 if (itemEntity instanceof CustomFieldTemplate) {
                     CustomFieldTemplate customFieldTemplate = (CustomFieldTemplate)itemEntity;
                     new DefaultTreeNode("item", item, getOrCreateNodeByAppliesTo(customFieldTemplate.getAppliesTo(), customFieldTemplate.getClass().getName()));

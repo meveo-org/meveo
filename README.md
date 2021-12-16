@@ -1,11 +1,11 @@
-[![Gitpod - Code Now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/manaty/meveo)
+[![Gitpod - Code Now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/meveo-org/meveo)
 
 # Meveo
 
-Meveo is a platform that allow to develop and execute enterprise back and front applications 
-It is intended to be run by Wildfly 15 with full Jakarta EE stack under licence : AGPLv3.0
+Meveo is a platform that allow to develop and execute enterprise back and front applications
+It is intended to be run by Wildfly 18 with full Jakarta EE stack under licence : AGPLv3.0
 
-Frontend framework  https://github.com/manaty/meveo-fronted.github.io
+Frontend framework  https://github.com/meveo-org/meveo-fronted.github.io
 
 Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web components.
 
@@ -32,7 +32,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
 
 ### Development
-- [Git](https://github.com/manaty/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
+- [Git](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
 
 ### Ontology
 
@@ -64,4 +64,9 @@ On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swa
 
 ## User Guide
 
-- [Documentation](https://github.com/manaty/meveo/tree/master/documentation/userguide)
+- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
+
+## Migration from versions previous to 7.0.0
+
+- The simplest solution is to uninstall / re-install all the modules
+- If the uninstall is not possible without data loss, move your git/Meveo/src/main/java folder to git/Meveo/facets/java

@@ -1,0 +1,683 @@
+{
+	"info": {
+		"_postman_id": "2d28504f-1119-4995-a481-4e48b343e6a1",
+		"name": "AuditLogs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create custom entity category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c1e5b9ee-10da-4de5-afdd-1285ad26893c",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"code\": \"DEVICES\",\n\t\"name\": \"DEVICES\"\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create laptop with devices category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b0e28d86-fe6f-4a03-b4f2-a651be661762",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Laptop\",\r\n\t\"description\": \"Laptop\",\r\n\t\"name\": \"Laptop\",\r\n\t\"audited\": true,\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": false\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create phone and devices category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "93a3bebe-b783-4b91-85e2-3c1cb1beb301",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"customEntityCategoryCode\": \"DEVICES\",\r\n\t\"code\": \"Phone\",\r\n\t\"description\": \"Phone\",\r\n\t\"name\": \"Phone\",\r\n\t\"audited\": true,\r\n\t\"availableStorages\": [\r\n\t\t\"SQL\"\r\n\t],\r\n\t\"sqlStorageConfiguration\": {\r\n\t\t\"storeAsTable\": true\r\n\t},\r\n\t\"fields\": [\r\n\t\t{\r\n\t\t\t\"code\": \"name\",\r\n\t\t\t\"description\": \"Name\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"imei\",\r\n\t\t\t\"description\": \"IMEI\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"manufacturer\",\r\n\t\t\t\"description\": \"Manufacturer\",\r\n\t\t\t\"fieldType\": \"STRING\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"isUnique\": false,\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t],\r\n\t\t\t\"summary\": true\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"quantity\",\r\n\t\t\t\"description\": \"Quantity\",\r\n\t\t\t\"fieldType\": \"LONG\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\"SQL\"],\r\n\t\t\t\"audited\": true,\r\n\t\t\t\"valueRequired\": false\r\n\t\t},\r\n\t\t{\r\n\t\t\t\"code\": \"thumbnail\",\r\n\t\t\t\"description\": \"Thumbnail\",\r\n\t\t\t\"fieldType\": \"BINARY\",\r\n\t\t\t\"storageType\": \"SINGLE\",\r\n\t\t\t\"storages\": [\r\n\t\t\t\t\"SQL\"\r\n\t\t\t]\r\n\t\t}\r\n\t]\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"entityCustomization",
+						"cet",
+						"createOrUpdate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Insert data laptop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7d46aedc-1417-4aaa-af73-f34900dc399b",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set(\"laptopUuid\", jsonData[0].uuid);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"name\": \"Lenovo z480\",\n        \"type\": \"Laptop\",\n        \"properties\": {            \n            \"imei\": \"z480\",\n            \"name\": \"z480\",\n            \"quantity\": 1\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Insert data phone",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9963009c-f0da-4589-a7c2-9e85ebf5c92a",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.environment.set(\"phoneUuid\", jsonData[0].uuid);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"name\": \"iPhone7S\",\n        \"type\": \"Phone\",\n        \"properties\": {\n            \"imei\": \"iPhone7S\",\n            \"name\": \"xxx\",\n            \"quantity\": 1\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update laptop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "327321dc-7871-4216-878b-fb314dd692ea",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"uuid\": \"{{laptopUuid}}\",\n        \"name\": \"Lenovo z480\",\n        \"type\": \"Laptop\",\n        \"properties\": {\n            \"imei\": \"z480\",\n            \"name\": \"Z480\",\n            \"manufacturer\": \"Lenovo\"\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update phone",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4d23f217-8778-4bdd-b1fb-5588034c512b",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"uuid\": \"{{phoneUuid}}\",\n        \"name\": \"iPhone7S\",\n        \"type\": \"Phone\",\n        \"properties\": {\n            \"imei\": \"iPhone7S\",\n            \"name\": \"iPhone7S\",\n            \"manufacturer\": \"Apple\"\n        }\n    }\n]"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/default/persistence",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"default",
+						"persistence"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List audit logs for laptop",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "fd437eba-2507-4965-846e-5e05a3ca8e8e",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityInstanceAudits/laptop/{{laptopUuid}}",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityInstanceAudits",
+						"Laptop",
+						"{{laptopUuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List audit logs for phone",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "dc7e56ca-6f23-4968-a802-5e92e819bbb6",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityInstanceAudits/phone/{{phoneUuid}}",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityInstanceAudits",
+						"Phone",
+						"{{phoneUuid}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete CEC with CETs",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{keycloakPassword}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{keycloakUsername}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"TestCet\",\r\n  \"code\": \"TestCet\",\r\n  \"description\": \"TestCet\",\r\n  \"field\": [\r\n    {\r\n      \"code\": \"languageCode\",\r\n      \"fieldType\": \"STRING\",\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"creationDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ],\r\n  \"customEntityCategoryCode\": \"Test\"\r\n}"
+				},
+				"url": {
+					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/DEVICES?deleteRelatedTemplates=true",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"{{webContext}}",
+						"api",
+						"rest",
+						"customEntityCategory",
+						"entity",
+						"DEVICES"
+					],
+					"query": [
+						{
+							"key": "deleteRelatedTemplates",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "53bdc9bd-f09a-4fa7-a21e-47a92162cf98",
+				"type": "text/javascript",
+				"exec": [
+					"setTimeout(function(){}, 500);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "4c4ef48a-5a11-4860-9013-b39aa658b4c8",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

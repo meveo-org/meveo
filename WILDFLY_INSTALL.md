@@ -294,7 +294,7 @@ This is done inside Eclipse IDE. Since we have installed egit component from JBo
 * Select both Git Repositories and Git Staging. Two new panels should open.
 * Open Git Repositories.
 * Right click and then select Clone a Git Repository or click the green icon in the top right corner with the same label.
-* In the URI enter git@github.com:manaty/meveo.git, click Next.
+* In the URI enter git@github.com:meveo-org/meveo.git, click Next.
 * A selection of branch that you wanted to checkout should appear. By default all branches are selected. Click Next.
 * Select the directory where you want to checkout the project, click Finish.
 * Once the cloning is done, meveo project should appear in your Git Repositories.

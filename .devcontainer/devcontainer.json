@@ -11,7 +11,7 @@
   // Set *default* container specific settings.json values on container create.
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
-    "java.home": "/usr/share/trava/dcevm-11.0.11+1"
+    "java.home": "/usr/local/openjdk-11/"
   },
 
   // Add the IDs of extensions you want installed when the container is created.

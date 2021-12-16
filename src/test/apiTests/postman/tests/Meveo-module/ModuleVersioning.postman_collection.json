@@ -1,0 +1,2306 @@
+{
+	"info": {
+		"_postman_id": "6c21356f-71c4-4b39-8d14-84f711d511a0",
+		"name": "ModuleVersioning",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Creation",
+			"item": [
+				{
+					"name": "Create CET",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ad389397-5c6e-4d4c-9b36-b83f90aeeee7",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"School\",\n    \"availableStorages\": [\n        \"SQL\"\n    ],\n    \"name\": \"School\",\n    \"description\": \"School\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": false\n    },\n    \"fields\": [\n        {\n            \"code\": \"fromYear\",\n            \"description\": \"FromYear\",\n            \"fieldType\": \"STRING\",\n            \"accountLevel\": \"CE_School\",\n            \"appliesTo\": \"CE_School\",\n            \"useInheritedAsDefaultValue\": false,\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": true,\n            \"versionable\": false,\n            \"triggerEndPeriodEvent\": false,\n            \"allowEdit\": true,\n            \"hideOnNew\": false,\n            \"maxValue\": 255,\n            \"guiPosition\": \"tab:School:0;field:2\",\n            \"isUnique\": false,\n            \"isFilter\": false,\n            \"identifier\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"toYear\",\n            \"description\": \"ToYear\",\n            \"fieldType\": \"STRING\",\n            \"accountLevel\": \"CE_School\",\n            \"appliesTo\": \"CE_School\",\n            \"useInheritedAsDefaultValue\": false,\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": true,\n            \"versionable\": false,\n            \"triggerEndPeriodEvent\": false,\n            \"allowEdit\": true,\n            \"hideOnNew\": false,\n            \"maxValue\": 255,\n            \"guiPosition\": \"tab:School:0;field:3\",\n            \"isUnique\": false,\n            \"isFilter\": false,\n            \"identifier\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"action\": []\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sub Module",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a5fb7e54-b6f3-43f7-824c-e6220002f192",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"SubModule\",\n    \"description\": \"SubModule\",\n    \"license\": \"GPL\",\n    \"currentVersion\": \"1.2.3\",\n    \"moduleFiles\": [],\n    \"moduleItems\": [\n        {\n            \"dtoClassName\": \"org.meveo.api.dto.CustomEntityTemplateDto\",\n            \"dtoData\": {\n                \"code\": \"School\",\n                \"name\": \"School\",\n                \"description\": \"School\",\n                \"actions\": [],\n                \"availableStorages\": [\n                    \"SQL\"\n                ],\n                \"sqlStorageConfiguration\": {\n                    \"storeAsTable\": false\n                },\n                \"samples\": [],\n                \"fields\": [\n                    {\n                        \"code\": \"fromYear\",\n                        \"description\": \"FromYear\",\n                        \"fieldType\": \"STRING\",\n                        \"accountLevel\": \"CE_School\",\n                        \"appliesTo\": \"CE_School\",\n                        \"useInheritedAsDefaultValue\": false,\n                        \"storageType\": \"SINGLE\",\n                        \"valueRequired\": true,\n                        \"versionable\": false,\n                        \"triggerEndPeriodEvent\": false,\n                        \"listValues\": {},\n                        \"allowEdit\": true,\n                        \"hideOnNew\": false,\n                        \"maxValue\": 255,\n                        \"contentTypes\": [],\n                        \"fileExtensions\": [],\n                        \"saveOnExplorer\": false,\n                        \"guiPosition\": \"tab:School:0;field:2\",\n                        \"identifier\": false,\n                        \"matrixColumns\": [],\n                        \"storages\": [\n                            \"SQL\"\n                        ],\n                        \"samples\": [],\n                        \"summary\": false,\n                        \"filter\": false,\n                        \"unique\": false\n                    },\n                    {\n                        \"code\": \"toYear\",\n                        \"description\": \"ToYear\",\n                        \"fieldType\": \"STRING\",\n                        \"accountLevel\": \"CE_School\",\n                        \"appliesTo\": \"CE_School\",\n                        \"useInheritedAsDefaultValue\": false,\n                        \"storageType\": \"SINGLE\",\n                        \"valueRequired\": true,\n                        \"versionable\": false,\n                        \"triggerEndPeriodEvent\": false,\n                        \"listValues\": {},\n                        \"allowEdit\": true,\n                        \"hideOnNew\": false,\n                        \"maxValue\": 255,\n                        \"contentTypes\": [],\n                        \"fileExtensions\": [],\n                        \"saveOnExplorer\": false,\n                        \"guiPosition\": \"tab:School:0;field:3\",\n                        \"identifier\": false,\n                        \"matrixColumns\": [],\n                        \"storages\": [\n                            \"SQL\"\n                        ],\n                        \"samples\": [],\n                        \"summary\": false,\n                        \"filter\": false,\n                        \"unique\": false\n                    }\n                ]\n            }\n        }\n    ]\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n  \"code\" : \"Module\",\r\n  \"description\": \"Module\",\r\n  \"license\" : \"GPL\",\r\n  \"logoPicture\" : null,\r\n  \"logoPictureFile\" : null,\r\n  \"script\" : null,\r\n  \"moduleFiles\" : [ ],\r\n  \"currentVersion\" : \"5.6.7\",\r\n  \"codeOnly\" : false,\r\n  \"moduleItems\" : [ {\r\n    \"dtoClassName\" : \"org.meveo.api.dto.module.MeveoModuleDto\",\r\n    \"dtoData\" : {\r\n      \"active\" : true,\r\n      \"code\" : \"SubModule\",\r\n      \"description\" : \"SubModule\",\r\n      \"license\" : \"GPL\",\r\n      \"moduleFiles\" : [ ],\r\n      \"currentVersion\" : \"1.2.3\",\r\n      \"transient\" : true,\r\n      \"codeOnly\" : false,\r\n      \"moduleItems\" : [ {\r\n        \"dtoClassName\" : \"org.meveo.api.dto.CustomEntityTemplateDto\",\r\n        \"dtoData\" : {\r\n          \"code\" : \"School\",\r\n          \"name\" : \"School\",\r\n          \"description\" : \"School\",\r\n          \"actions\" : [ ],\r\n          \"availableStorages\" : [ \"SQL\" ],\r\n          \"sqlStorageConfiguration\" : {\r\n            \"storeAsTable\" : false\r\n          },\r\n          \"samples\" : [ ],\r\n          \"fields\" : [ {\r\n            \"code\" : \"toYear\",\r\n            \"description\" : \"ToYear\",\r\n            \"fieldType\" : \"STRING\",\r\n            \"accountLevel\" : \"CE_School\",\r\n            \"appliesTo\" : \"CE_School\",\r\n            \"useInheritedAsDefaultValue\" : false,\r\n            \"storageType\" : \"SINGLE\",\r\n            \"valueRequired\" : true,\r\n            \"versionable\" : false,\r\n            \"triggerEndPeriodEvent\" : false,\r\n            \"listValues\" : { },\r\n            \"allowEdit\" : true,\r\n            \"hideOnNew\" : false,\r\n            \"maxValue\" : 255,\r\n            \"contentTypes\" : [ ],\r\n            \"fileExtensions\" : [ ],\r\n            \"saveOnExplorer\" : false,\r\n            \"guiPosition\" : \"tab:School:0;field:3\",\r\n            \"identifier\" : false,\r\n            \"matrixColumns\" : [ ],\r\n            \"storages\" : [ \"SQL\" ],\r\n            \"samples\" : [ ],\r\n            \"summary\" : false,\r\n            \"filter\" : false,\r\n            \"unique\" : false\r\n          }, {\r\n            \"code\" : \"fromYear\",\r\n            \"description\" : \"FromYear\",\r\n            \"fieldType\" : \"STRING\",\r\n            \"accountLevel\" : \"CE_School\",\r\n            \"appliesTo\" : \"CE_School\",\r\n            \"useInheritedAsDefaultValue\" : false,\r\n            \"storageType\" : \"SINGLE\",\r\n            \"valueRequired\" : true,\r\n            \"versionable\" : false,\r\n            \"triggerEndPeriodEvent\" : false,\r\n            \"listValues\" : { },\r\n            \"allowEdit\" : true,\r\n            \"hideOnNew\" : false,\r\n            \"maxValue\" : 255,\r\n            \"contentTypes\" : [ ],\r\n            \"fileExtensions\" : [ ],\r\n            \"saveOnExplorer\" : false,\r\n            \"guiPosition\" : \"tab:School:0;field:2\",\r\n            \"identifier\" : false,\r\n            \"matrixColumns\" : [ ],\r\n            \"storages\" : [ \"SQL\" ],\r\n            \"samples\" : [ ],\r\n            \"summary\" : false,\r\n            \"filter\" : false,\r\n            \"unique\" : false\r\n          } ]\r\n        }\r\n      } ]\r\n    }\r\n  } ]\r\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Meveo Version",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"MeveoVersion\",\n    \"description\": \"MeveoVersion\",\n    \"license\": \"GPL\",\n    \"currentVersion\": \"1.0.0\",\n    \"meveoVersionBase\": \"6.0.1\",\n    \"meveoVersionCeiling\": \"6.1.0\",\n    \"moduleFiles\": [],\n    \"moduleItems\": [\n        {\n            \"dtoClassName\": \"org.meveo.api.dto.CustomEntityTemplateDto\",\n            \"dtoData\": {\n                \"code\": \"School\",\n                \"name\": \"School\",\n                \"description\": \"School\",\n                \"actions\": [],\n                \"availableStorages\": [\n                    \"SQL\"\n                ],\n                \"sqlStorageConfiguration\": {\n                    \"storeAsTable\": false\n                },\n                \"samples\": [],\n                \"fields\": [\n                    {\n                        \"code\": \"fromYear\",\n                        \"description\": \"FromYear\",\n                        \"fieldType\": \"STRING\",\n                        \"accountLevel\": \"CE_School\",\n                        \"appliesTo\": \"CE_School\",\n                        \"useInheritedAsDefaultValue\": false,\n                        \"storageType\": \"SINGLE\",\n                        \"valueRequired\": true,\n                        \"versionable\": false,\n                        \"triggerEndPeriodEvent\": false,\n                        \"listValues\": {},\n                        \"allowEdit\": true,\n                        \"hideOnNew\": false,\n                        \"maxValue\": 255,\n                        \"contentTypes\": [],\n                        \"fileExtensions\": [],\n                        \"saveOnExplorer\": false,\n                        \"guiPosition\": \"tab:School:0;field:2\",\n                        \"identifier\": false,\n                        \"matrixColumns\": [],\n                        \"storages\": [\n                            \"SQL\"\n                        ],\n                        \"samples\": [],\n                        \"summary\": false,\n                        \"filter\": false,\n                        \"unique\": false\n                    },\n                    {\n                        \"code\": \"toYear\",\n                        \"description\": \"ToYear\",\n                        \"fieldType\": \"STRING\",\n                        \"accountLevel\": \"CE_School\",\n                        \"appliesTo\": \"CE_School\",\n                        \"useInheritedAsDefaultValue\": false,\n                        \"storageType\": \"SINGLE\",\n                        \"valueRequired\": true,\n                        \"versionable\": false,\n                        \"triggerEndPeriodEvent\": false,\n                        \"listValues\": {},\n                        \"allowEdit\": true,\n                        \"hideOnNew\": false,\n                        \"maxValue\": 255,\n                        \"contentTypes\": [],\n                        \"fileExtensions\": [],\n                        \"saveOnExplorer\": false,\n                        \"guiPosition\": \"tab:School:0;field:3\",\n                        \"identifier\": false,\n                        \"matrixColumns\": [],\n                        \"storages\": [\n                            \"SQL\"\n                        ],\n                        \"samples\": [],\n                        \"summary\": false,\n                        \"filter\": false,\n                        \"unique\": false\n                    }\n                ]\n            }\n        }\n    ]\n}",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "145efc87-587c-48f1-9784-9dd8461e4c38",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "5dee5427-8808-44f5-93e7-9067b0af3529",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Release",
+			"item": [
+				{
+					"name": "Release Module",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "52dfa1e9-8da8-4224-b8b4-5a6dc37cdafe",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/release/Module/4.7.9",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"release",
+								"Module",
+								"4.7.9"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Patch",
+			"item": [
+				{
+					"name": "Create",
+					"item": [
+						{
+							"name": "Create custom entity category devices",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "f0fba18e-3fd6-4eb3-8c3f-b61a0e104bcf",
+										"exec": [
+											"console.log(pm.response.text())",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"code\": \"DEVICES\",\n\t\"name\": \"DEVICES\"\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"customEntityCategory",
+										"entity",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet phones",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "050f5ece-8140-44dd-b36e-5d74e965964f",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"DEVICES\",\n\t\"code\": \"PHONES\",\n\t\"description\": \"Phones\",\n\t\"name\": \"Phones\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": false\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"imei\",\n\t\t\t\"description\": \"IMEI\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"isUnique\": true\n\t\t},\n\t\t{\n\t\t\t\"code\": \"manufacturer\",\n\t\t\t\"description\": \"Manufacturer\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"]\n\t\t}\n\t]\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet  tv",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "025891f3-5185-4e1a-ad8c-1b099a27cd76",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"DEVICES\",\n\t\"code\": \"TV\",\n\t\"description\": \"TV\",\n\t\"name\": \"TV\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"imei\",\n\t\t\t\"description\": \"IMEI\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": false,\n\t\t\t\"isUnique\": true\n\t\t},\n\t\t{\n\t\t\t\"code\": \"manufacturer\",\n\t\t\t\"description\": \"Manufacturer\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": false\n\t\t},\n\t\t{\n\t\t\t\"code\": \"quantity\",\n\t\t\t\"description\": \"Quantity\",\n\t\t\t\"fieldType\": \"LONG\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": false\n\t\t}\n\t]\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script on upgrade 100-120",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "089814db-9709-4a77-babb-36841442ce55",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.DeviceScript100120\",\n    \"script\" : \"package org.meveo.test.script; import org.meveo.service.script.Script; import java.util.HashMap; import java.util.Map; import org.meveo.admin.exception.BusinessException; import org.slf4j.Logger; import org.slf4j.LoggerFactory; import javax.persistence.EntityManager; import org.meveo.service.custom.CustomEntityInstanceService; public class DeviceScript100120 extends org.meveo.service.script.module.PatchScript { private Logger log = LoggerFactory.getLogger(DeviceScript100120.class); @Override public void preModuleUpgrade(Map<String, Object> methodContext) throws BusinessException { log.debug(\\\"Running patch before upgrade\\\"); CustomEntityInstanceService customEntityInstanceService = getCDIBean(CustomEntityInstanceService.class); customEntityInstanceService.getEntityManager().createNativeQuery(\\\"INSERT INTO tv (uuid, imei, manufacturer, quantity) VALUES ('BRAVIA38', 'BRAVIA38', 'SONY', '1')\\\").executeUpdate(); customEntityInstanceService.getEntityManager().createNativeQuery(\\\"INSERT INTO tv (uuid, imei, manufacturer, quantity) VALUES ('BRAVIA48', 'BRAVIA48', 'SONY', '1')\\\").executeUpdate(); } @Override public void postModuleUpgrade(Map<String, Object> methodContext) throws BusinessException { log.debug(\\\"Running patch after upgrade\\\"); } }\",\n    \"generateOutputs\": false\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script on device upgrade",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "f12e579a-9444-4c91-b669-9de664aa26e9",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.DeviceScript\",\n    \"script\" : \"package org.meveo.test.script; import java.util.HashMap; import java.util.Map; import org.meveo.admin.exception.BusinessException; import org.slf4j.Logger; import org.slf4j.LoggerFactory; public class DeviceScript extends org.meveo.service.script.module.PatchScript { private Logger log = LoggerFactory.getLogger(DeviceScript.class); @Override public void preModuleUpgrade(Map<String, Object> methodContext) throws BusinessException { log.debug(\\\"Running patch before upgrade\\\"); } @Override public void postModuleUpgrade(Map<String, Object> methodContext) throws BusinessException { log.debug(\\\"Running patch after upgrade\\\"); } }\",\n    \"generateOutputs\": false\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create module",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "0c54a964-c572-4bbf-9577-c0aa44ecb47b",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"code\":\"DeviceModule\",\r\n   \"description\":\"Device Module\",\r\n   \"license\":\"GPL\",\r\n   \"logoPicture\":null,\r\n   \"logoPictureFile\":null,\r\n   \"script\":null,\r\n   \"currentVersion\":\"1.0.0\",\r\n   \"codeOnly\":false,\r\n   \"moduleItems\":[\r\n         {\r\n            \"dtoClassName\":\"org.meveo.api.dto.CustomEntityTemplateDto\",\r\n            \"dtoData\":{\r\n               \"code\":\"TV\",\r\n               \"name\":\"TV\",\r\n               \"description\":\"TV\",\r\n               \"customEntityCategoryCode\":\"DEVICES\",\r\n               \"availableStorages\":[\r\n                  \"SQL\"\r\n               ],\r\n               \"sqlStorageConfiguration\":{\r\n                  \"storeAsTable\":false\r\n               },\r\n               \"samples\":[\r\n\r\n               ],\r\n               \"fields\":[\r\n                  {\r\n                     \"code\":\"imei\",\r\n                     \"description\":\"IMEI\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"manufacturer\",\r\n                     \"description\":\"Manufacturer\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"quantity\",\r\n                     \"description\":\"Quantity\",\r\n                     \"fieldType\":\"LONG\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  }\r\n               ],\r\n               \"actions\":[\r\n\r\n               ]\r\n            }\r\n         },\r\n         {\r\n            \"dtoClassName\":\"org.meveo.api.dto.CustomEntityTemplateDto\",\r\n            \"dtoData\":{\r\n               \"code\":\"PHONES\",\r\n               \"name\":\"Phones\",\r\n               \"description\":\"Phones\",\r\n               \"customEntityCategoryCode\":\"DEVICES\",\r\n               \"availableStorages\":[\r\n                  \"SQL\"\r\n               ],\r\n               \"sqlStorageConfiguration\":{\r\n                  \"storeAsTable\":false\r\n               },\r\n               \"samples\":[\r\n\r\n               ],\r\n               \"fields\":[\r\n                  {\r\n                     \"code\":\"imei\",\r\n                     \"description\":\"IMEI\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_PHONES\",\r\n                     \"appliesTo\":\"CE_PHONES\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"manufacturer\",\r\n                     \"description\":\"Manufacturer\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_PHONES\",\r\n                     \"appliesTo\":\"CE_PHONES\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  }\r\n               ],\r\n               \"actions\":[\r\n\r\n               ]\r\n            }\r\n         }\r\n      ]\r\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Patch",
+					"item": [
+						{
+							"name": "Create patch 1.0.0 - 1.2.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "1a76333c-2b8a-4782-a201-2e616d19381c",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstance\": {\n\t\t\"code\": \"org.meveo.test.script.DeviceScript100120\"\n\t},\n\t\"sourceVersion\": \"1.0.0\",\n\t\"targetVersion\": \"1.2.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create patch - duplicate",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "4126f506-2543-44a9-a7a5-0ecf709046f1",
+										"exec": [
+											"pm.test(\"Status code is 409\", function () {",
+											"    pm.response.to.have.status(409);",
+											"});",
+											"pm.test(\"Body matches string\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"already exists.\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstance\": {\n\t\t\"code\": \"org.meveo.test.script.DeviceScript100120\"\n\t},\n\t\"sourceVersion\": \"1.0.0\",\n\t\"targetVersion\": \"1.2.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Find",
+					"item": [
+						{
+							"name": "List modules",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "c406d6ec-6ee7-42ce-b44e-ceb47ff5e666",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Find patch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "520e28f1-c210-4d52-a0df-b0e8c0d44136",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"pm.test(\"Body matches string\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"DeviceModule\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches?moduleCode=DeviceModule&scriptInstanceCode=org.meveo.test.script.DeviceScript100120&sourceVersion=1.0.0&targetVersion=1.2.0",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									],
+									"query": [
+										{
+											"key": "moduleCode",
+											"value": "DeviceModule"
+										},
+										{
+											"key": "scriptInstanceCode",
+											"value": "org.meveo.test.script.DeviceScript100120"
+										},
+										{
+											"key": "sourceVersion",
+											"value": "1.0.0"
+										},
+										{
+											"key": "targetVersion",
+											"value": "1.2.0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Find patch - Not found",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "14c58a30-968a-4d36-8b05-5cf1e5b6996c",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstanceCode\": \"org.meveo.test.script.DeviceScript\",\n\t\"sourceVersion\": \"1.0.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches?moduleCode=DeviceModule&scriptInstanceCode=org.meveo.test.script.DeviceScript100120&sourceVersion=1.0.100",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									],
+									"query": [
+										{
+											"key": "moduleCode",
+											"value": "DeviceModule"
+										},
+										{
+											"key": "scriptInstanceCode",
+											"value": "org.meveo.test.script.DeviceScript100120"
+										},
+										{
+											"key": "sourceVersion",
+											"value": "1.0.100"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List patches",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "e8c20813-7267-41d2-bd6e-7c707d5543c8",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"pm.test(\"Body matches string\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"DeviceModule\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstanceCode\": \"org.meveo.test.script.DeviceScript\",\n\t\"sourceVersion\": \"1.0.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List patches empty",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "76e5c10d-dd6a-47df-9d8b-726aa3608098",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstanceCode\": \"org.meveo.test.script.DeviceScript\",\n\t\"sourceVersion\": \"1.0.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule1",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule1"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Upgraded Module",
+					"item": [
+						{
+							"name": "Create module updated",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "ec4f3bf7-9ee3-4e8d-a0c0-2f712ff240f6",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n   \"code\":\"DeviceModule\",\r\n   \"description\":\"Device Module\",\r\n   \"license\":\"GPL\",\r\n   \"logoPicture\":null,\r\n   \"logoPictureFile\":null,\r\n   \"script\":null,\r\n   \"currentVersion\":\"1.2.0\",\r\n   \"codeOnly\":false,\r\n   \"moduleItems\":[\r\n         {\r\n            \"dtoClassName\":\"org.meveo.api.dto.CustomEntityTemplateDto\",\r\n            \"dtoData\":{\r\n               \"code\":\"TV\",\r\n               \"name\":\"TV\",\r\n               \"description\":\"TV\",\r\n               \"customEntityCategoryCode\":\"DEVICES\",\r\n               \"availableStorages\":[\r\n                  \"SQL\"\r\n               ],\r\n               \"sqlStorageConfiguration\":{\r\n                  \"storeAsTable\":false\r\n               },\r\n               \"samples\":[\r\n\r\n               ],\r\n               \"fields\":[\r\n                  {\r\n                     \"code\":\"imei\",\r\n                     \"description\":\"IMEI\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"manufacturer\",\r\n                     \"description\":\"Manufacturer\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"quantity\",\r\n                     \"description\":\"Quantity\",\r\n                     \"fieldType\":\"LONG\",\r\n                     \"accountLevel\":\"CE_TV\",\r\n                     \"appliesTo\":\"CE_TV\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  }\r\n               ],\r\n               \"actions\":[\r\n\r\n               ]\r\n            }\r\n         },\r\n         {\r\n            \"dtoClassName\":\"org.meveo.api.dto.CustomEntityTemplateDto\",\r\n            \"dtoData\":{\r\n               \"code\":\"PHONES\",\r\n               \"name\":\"Phones\",\r\n               \"description\":\"Phones\",\r\n               \"customEntityCategoryCode\":\"DEVICES\",\r\n               \"availableStorages\":[\r\n                  \"SQL\"\r\n               ],\r\n               \"sqlStorageConfiguration\":{\r\n                  \"storeAsTable\":false\r\n               },\r\n               \"samples\":[\r\n\r\n               ],\r\n               \"fields\":[\r\n                  {\r\n                     \"code\":\"imei\",\r\n                     \"description\":\"IMEI\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_PHONES\",\r\n                     \"appliesTo\":\"CE_PHONES\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  },\r\n                  {\r\n                     \"code\":\"manufacturer\",\r\n                     \"description\":\"Manufacturer\",\r\n                     \"fieldType\":\"STRING\",\r\n                     \"accountLevel\":\"CE_PHONES\",\r\n                     \"appliesTo\":\"CE_PHONES\",\r\n                     \"useInheritedAsDefaultValue\":false,\r\n                     \"storageType\":\"SINGLE\",\r\n                     \"valueRequired\":false,\r\n                     \"versionable\":false,\r\n                     \"triggerEndPeriodEvent\":false,\r\n                     \"listValues\":{\r\n\r\n                     },\r\n                     \"allowEdit\":true,\r\n                     \"hideOnNew\":false,\r\n                     \"maxValue\":255,\r\n                     \"contentTypes\":[\r\n\r\n                     ],\r\n                     \"fileExtensions\":[\r\n\r\n                     ],\r\n                     \"saveOnExplorer\":false,\r\n                     \"identifier\":false,\r\n                     \"storages\":[\r\n                        \"SQL\"\r\n                     ],\r\n                     \"samples\":[\r\n\r\n                     ],\r\n                     \"summary\":false,\r\n                     \"filter\":false,\r\n                     \"unique\":false,\r\n                     \"matrixColumns\":[\r\n\r\n                     ]\r\n                  }\r\n               ],\r\n               \"actions\":[\r\n\r\n               ]\r\n            }\r\n         }\r\n      ]\r\n}",
+									"options": {
+										"raw": {}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create patch 1.0.0 - 1.1.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "3c6b146a-d43a-4533-8e9d-550f5ba51de6",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstance\": {\n\t\t\"code\": \"org.meveo.test.script.DeviceScript\"\n\t},\n\t\"sourceVersion\": \"1.0.0\",\n\t\"targetVersion\": \"1.1.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create patch 1.1.0 - 1.2.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "483bc7c3-8edf-4879-ac4e-e7a532c3eba5",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"moduleCode\": \"DeviceModule\",\n\t\"scriptInstance\": {\n\t\t\"code\": \"org.meveo.test.script.DeviceScript\"\n\t},\n\t\"sourceVersion\": \"1.1.0\",\n\t\"targetVersion\": \"1.2.0\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List patch",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "60d44507-60c5-4a14-9038-7cdaa3aa9ae4",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List modules",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "be0d3e99-552c-4fe7-9f82-34f4d18bbe4a",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/list",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"list"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Cleanup",
+					"item": [
+						{
+							"name": "Delete patch 1.0.0 - 1.2.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "c09906fa-2b70-4c63-8b78-7fed19c35c28",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule/org.meveo.test.script.DeviceScript100120/1.0.0/1.2.0",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule",
+										"org.meveo.test.script.DeviceScript100120",
+										"1.0.0",
+										"1.2.0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete patch 1.0.0 - 1.1.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "dbd58b13-0496-49e8-8a6b-29d998f62647",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule/org.meveo.test.script.DeviceScript/1.0.0/1.1.0",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule",
+										"org.meveo.test.script.DeviceScript",
+										"1.0.0",
+										"1.1.0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete patch 1.1.0 - 1.2.0",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2393e942-a134-4c39-8d89-45b87d52fba5",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/patches/DeviceModule/org.meveo.test.script.DeviceScript/1.1.0/1.2.0",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"patches",
+										"DeviceModule",
+										"org.meveo.test.script.DeviceScript",
+										"1.1.0",
+										"1.2.0"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script BeforeUprade",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "41c61cc0-731f-4305-b71c-e617fb34240f",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.DeviceScript",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.DeviceScript"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script DeviceScriptBeforeUpgrade100120",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "4316662a-c9cc-415c-82a4-6207b2d2a5f1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.DeviceScript100120",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.DeviceScript100120"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete module",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "6bfc54b1-240e-42fd-a7e0-a508dd6a2a0b",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/DeviceModule",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"module",
+										"DeviceModule"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet tv",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "e4f55103-773a-4e8e-a07d-164771ea651c",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/TV",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"TV"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet phones",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "8b81cd2e-a3d7-40ce-a503-bc79549f0996",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/PHONES",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"PHONES"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete CEC with CETs",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"TestCet\",\r\n  \"code\": \"TestCet\",\r\n  \"description\": \"TestCet\",\r\n  \"field\": [\r\n    {\r\n      \"code\": \"languageCode\",\r\n      \"fieldType\": \"STRING\",\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"creationDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ],\r\n  \"customEntityCategoryCode\": \"Test\"\r\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/DEVICES?deleteRelatedTemplates=true",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"customEntityCategory",
+										"entity",
+										"DEVICES"
+									],
+									"query": [
+										{
+											"key": "deleteRelatedTemplates",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"protocolProfileBehavior": {},
+					"_postman_isSubFolder": true
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Update",
+			"item": [],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Cleanup",
+			"item": [
+				{
+					"name": "Delete Meveo Version",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/MeveoVersion",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"MeveoVersion"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Module ",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/Module",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"Module"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Sub Module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/SubModule",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"SubModule"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET ",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/School",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"School"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "37fd39f5-18c8-466e-ac44-8c71ad3077be",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "b25a4319-1786-4cb1-bf83-60f7ffb98e31",
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Response code should be one of [102,200,201,202,204,403,400,404,409]\", function() {",
+					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,403,400,404,409]); ",
+					"});"
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

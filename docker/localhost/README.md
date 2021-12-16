@@ -2,7 +2,7 @@
 
 ### Start Meveo
 
-Just copy the [docker-compose.yml](https://raw.githubusercontent.com/manaty/meveo/master/docker/localhost/docker-compose.yml) file in a directory. 
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/master/docker/localhost/docker-compose.yml) file in a directory. 
 
 And then run:
 

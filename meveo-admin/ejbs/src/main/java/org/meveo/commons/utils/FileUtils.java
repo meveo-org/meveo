@@ -526,7 +526,7 @@ public final class FileUtils {
         } 
     }
 
-    public static void addToZipFile(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addToZipFile(File source, ZipOutputStream zos, String basedir) throws IOException {
 
         if (!source.exists()) {
             return;
@@ -539,7 +539,7 @@ public final class FileUtils {
         }
     }
 
-    public static void addFileToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addFileToZip(File source, ZipOutputStream zos, String basedir) throws IOException {
         if (!source.exists()) {
             return;
         }
@@ -574,7 +574,7 @@ public final class FileUtils {
         zipOut.closeEntry();
     }
 
-    public static void addDirectoryToZip(File source, ZipOutputStream zos, String basedir) throws Exception {
+    public static void addDirectoryToZip(File source, ZipOutputStream zos, String basedir) throws IOException {
         if (!source.exists()) {
             return;
         }

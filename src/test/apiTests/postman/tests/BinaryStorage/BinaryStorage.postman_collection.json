@@ -1,0 +1,3437 @@
+{
+	"info": {
+		"_postman_id": "41e0225f-9401-4931-b128-baf526af64d4",
+		"name": "BinaryStorage",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login, Repository & Binary storage",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "679ca924-8e0a-4fd2-a6d8-60b0039c32e0",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{keycloakClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{keycloakClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{keycloakHostname}}/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "https",
+							"host": [
+								"{{keycloakHostname}}"
+							],
+							"port": "443",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				},
+				{
+					"name": "IntegrationTestingStorage",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"IntegrationTestingStorage\",\n\t\"rootPath\": \"integrationStorage\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/binaries/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"binaries",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IntegrationRepository",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"code\": \"IntegrationRepository\",\n\t\"binaryStorageConfigurationCode\": \"IntegrationTestingStorage\",\n\t\"neo4jConfigurationCode\" : \"{{missionId}}\",\n\t\"sqlConfigurationCode\": \"default\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a688d771-a395-4182-b34d-06e05da76054",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "16ee6e51-0de9-4141-bfd3-a5d9fe035498",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Neo4J Binary storage",
+			"item": [
+				{
+					"name": "Neo4J CET",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "de85080f-8b05-40ce-a0e2-9a95233b6115",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoForJTestCet\",\n    \"code\": \"NeoForJTestCet\",\n    \"description\": \"NeoForJTestCet\",\n    \"availableStorages\": [\n        \"NEO4J\"\n    ],\n    \"fields\": [\n{\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        },\n        {\n            \"code\": \"singleBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"singleBinary\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_SINGLE_BINARY\",\n            \"filePath\": \"#{code}\",\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        },\n        {\n            \"code\": \"listBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"LIST\",\n            \"valueRequired\": false,\n            \"description\": \"listBinary\",\n            \"relationshipName\": \"HAS_LIST_BINARY\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        }\n    ],\n    \"customEntityCategoryCode\": \"Test\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload files",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "608d7a72-3624-4c37-b854-af9d8a03eb8e",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"NeoForJTestCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/image1.png"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/text1.txt"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/json2.json"
+								},
+								{
+									"key": "entity.listBinary",
+									"type": "file",
+									"src": "../binaries/json1.json"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update IDL",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/investigation-core/services/graphql/{{missionId}}/idl",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"investigation-core",
+								"services",
+								"graphql",
+								"{{missionId}}",
+								"idl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve created instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "747fa7c7-3df9-44cc-991f-5914b9966bf7",
+								"exec": [
+									"const uris = [];",
+									"let singleUri = [];",
+									"const jsonData = pm.response.json();",
+									"",
+									"",
+									"pm.environment.set(\"uuid\", jsonData[0].uuid);",
+									"",
+									"pm.test(\"There is 3 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(3);",
+									"    listBinary.forEach(b => uris.push(b));",
+									"});",
+									"",
+									"pm.test(\"There is a file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});",
+									"",
+									"const protocol = pm.environment.get(\"protocol\");",
+									"const hostname = pm.environment.get(\"hostname\");",
+									"const port = pm.environment.get(\"port\");",
+									"const webContext = pm.environment.get(\"webContext\");",
+									"const uuid = jsonData[0].uuid;",
+									"const requestToSend = {",
+									"  url: `${protocol}://${hostname}:${port}/${webContext}/api/rest/fileSystem/binaries/IntegrationRepository/NeoForJTestCet/${uuid}/listBinary`,",
+									"  method: 'GET'",
+									"};",
+									"",
+									"pm.sendRequest(requestToSend, function (err, response) {",
+									"    pm.test(\"File exists\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"graphQlQuery\" : \"{ NeoForJTestCet { code, singleBinary { value }, listBinary { value } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "NeoForJTestCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove 2nd file of listBinary",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"TestIntegration\",\n    \"listBinary\": [\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=0\",\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=2\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "NeoForJTestCet"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "One file has been removed from listBinary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3d0b7ac6-a871-4208-a4ab-a6a3e9aec294",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 2 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"graphQlQuery\" : \"{ NeoForJTestCet { code, singleBinary { value }, listBinary { value } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "NeoForJTestCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Put data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c5760f13-cfa5-433e-b97f-0f26fe5f2d8b",
+								"exec": [
+									"pm.response.code === 400 && console.log(pm.response.text())"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"stylesheet\",\r\n        \"type\": \"NeoForJTestCet\",\r\n        \"properties\": {\r\n        \t\"code\": \"TestIntegration\",\r\n        \t\"singleBinary\": null,\r\n        \t\"listBinary\": null\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Files have been deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f763e301-ac97-441b-8724-569b1c5b6359",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 0 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(0);",
+									"});",
+									"",
+									"pm.test(\"There is no file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.be.null;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"graphQlQuery\" : \"{ NeoForJTestCet { code, singleBinary { value }, listBinary { value } } }\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "NeoForJTestCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete created node",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4d59167f-29bd-4b1a-8cc5-ce98de5c1528",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repo/persistence/:cetCode/{{uuid}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":repo",
+								"persistence",
+								":cetCode",
+								"{{uuid}}"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cetCode",
+									"value": "NeoForJTestCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":cetCode"
+							],
+							"variable": [
+								{
+									"key": "cetCode",
+									"value": "NeoForJTestCet"
+								}
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "2b929feb-6541-47e2-8283-ac47feacc670",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "186bfa7c-998d-48f8-bdc7-51b6a5697803",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "SQL Binary storage",
+			"item": [
+				{
+					"name": "SQL Cet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5522fc1b-cd4d-49f1-9fc0-06620ea3794c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"availableStorages\": [\n        \"SQL\"\n    ],\n    \"sqlStorageConfiguration\" : {\n    \t\"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"singleBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"singleBinary\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_SINGLE_BINARY\",\n            \"filePath\": \"#{code}\",\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"listBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"LIST\",\n            \"valueRequired\": false,\n            \"description\": \"listBinary\",\n            \"relationshipName\": \"HAS_LIST_BINARY\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"customEntityCategoryCode\": \"Test\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload files",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "305636da-fe65-43fc-a977-8e9b71e50dfe",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/image1.png"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/text1.txt"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/json2.json"
+								},
+								{
+									"key": "entity.listBinary",
+									"type": "file",
+									"src": "../binaries/json1.json"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve created instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "98534c30-09aa-4bdb-8542-f0063bf36a07",
+								"exec": [
+									"const uris = [];",
+									"let singleUri = [];",
+									"const jsonData = pm.response.json();",
+									"",
+									"",
+									"pm.environment.set(\"uuid\", jsonData[0].uuid);",
+									"",
+									"pm.test(\"There is 3 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(3);",
+									"    listBinary.forEach(b => uris.push(b));",
+									"});",
+									"",
+									"pm.test(\"There is a file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});",
+									"",
+									"const protocol = pm.environment.get(\"protocol\");",
+									"const hostname = pm.environment.get(\"hostname\");",
+									"const port = pm.environment.get(\"port\");",
+									"const webContext = pm.environment.get(\"webContext\");",
+									"const uuid = jsonData[0].uuid;",
+									"const requestToSend = {",
+									"  url: `${protocol}://${hostname}:${port}/${webContext}/api/rest/fileSystem/binaries/IntegrationRepository/NeoForJTestCet/${uuid}/listBinary`,",
+									"  method: 'GET'",
+									"};",
+									"",
+									"pm.sendRequest(requestToSend, function (err, response) {",
+									"    pm.test(\"File exists\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove 2nd file of listBinary",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"TestIntegration\",\n    \"listBinary\": [\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=0\",\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=2\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "One file has been removed from listBinary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "1e2577c4-e889-4442-bb8a-06e64bbd569c",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 2 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Put data",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"stylesheet\",\r\n        \"type\": \"SqlCet\",\r\n        \"properties\": {\r\n        \t\"code\": \"TestIntegration\",\r\n        \t\"singleBinary\": null,\r\n        \t\"listBinary\": null\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Files have been deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f2f444c5-92d9-474e-b486-8d445ca40bf2",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 0 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary).to.not.exist;",
+									"});",
+									"",
+									"pm.test(\"There is no file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.not.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete created entity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e4bc3449-ac3e-411b-96b6-c16321113d69",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repo/persistence/:cetCode/{{uuid}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":repo",
+								"persistence",
+								":cetCode",
+								"{{uuid}}"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":cetCode"
+							],
+							"variable": [
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3ca23c7a-14f9-4c3a-8a80-9940151bac74",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1ec5e3f5-b8e7-4671-8273-fbdf0dcd0ea8",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "CEI Binary storage",
+			"item": [
+				{
+					"name": "SqlCei",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ff15cbe8-5ca0-499b-a6da-edb596ee036e",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"availableStorages\": [\n        \"SQL\"\n    ],\n    \"sqlStorageConfiguration\" : {\n    \t\"storeAsTable\": false\n    },\n    \"fields\": [\n{\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"singleBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"singleBinary\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_SINGLE_BINARY\",\n            \"filePath\": \"#{code}\",\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"listBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"LIST\",\n            \"valueRequired\": false,\n            \"description\": \"listBinary\",\n            \"relationshipName\": \"HAS_LIST_BINARY\",\n            \"isUnique\": false,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"customEntityCategoryCode\": \"Test\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload files",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "44d00b67-fdc1-487e-861b-3edbd1c67162",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/image1.png"
+								},
+								{
+									"key": "entity.listBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/text1.txt"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/json2.json"
+								},
+								{
+									"key": "entity.listBinary",
+									"type": "file",
+									"src": "../binaries/json1.json"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve created instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8bcc0948-af05-4da7-ac86-26e48299994e",
+								"exec": [
+									"const uris = [];",
+									"let singleUri = [];",
+									"const jsonData = pm.response.json();",
+									"",
+									"",
+									"pm.environment.set(\"uuid\", jsonData[0].uuid);",
+									"",
+									"pm.test(\"There is 3 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(3);",
+									"    listBinary.forEach(b => uris.push(b));",
+									"});",
+									"",
+									"pm.test(\"There is a file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});",
+									"",
+									"const protocol = pm.environment.get(\"protocol\");",
+									"const hostname = pm.environment.get(\"hostname\");",
+									"const port = pm.environment.get(\"port\");",
+									"const webContext = pm.environment.get(\"webContext\");",
+									"const uuid = jsonData[0].uuid;",
+									"const requestToSend = {",
+									"  url: `${protocol}://${hostname}:${port}/${webContext}/api/rest/fileSystem/binaries/IntegrationRepository/NeoForJTestCet/${uuid}/listBinary`,",
+									"  method: 'GET'",
+									"};",
+									"",
+									"pm.sendRequest(requestToSend, function (err, response) {",
+									"    pm.test(\"File exists\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove 2nd file of listBinary",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"TestIntegration\",\n    \"listBinary\": [\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=0\",\n        \"/api/rest/fileSystem/binaries/MyRepo/NeoForJTestCet/{{uuid}}/listBinary?index=2\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "One file has been removed from listBinary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e3f2b819-23b1-4d12-af77-8372255a1e7c",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 2 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary.length).to.eql(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Put data",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"stylesheet\",\r\n        \"type\": \"SqlCet\",\r\n        \"properties\": {\r\n        \t\"code\": \"TestIntegration\",\r\n        \t\"singleBinary\": null,\r\n        \t\"listBinary\": null\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Files have been deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "99d54d26-f72b-40dc-887d-1fb8e4b99117",
+								"exec": [
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"There is 0 files for listBinary\", function () {",
+									"    let listBinary = jsonData[0].listBinary;",
+									"    pm.expect(listBinary).to.not.exist;",
+									"});",
+									"",
+									"pm.test(\"There is no file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.not.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete created entity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "917ba12a-4e43-4765-982f-c87b6289e01e",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repo/persistence/:cetCode/{{uuid}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":repo",
+								"persistence",
+								":cetCode",
+								"{{uuid}}"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":cetCode"
+							],
+							"variable": [
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "81c9e6b6-8123-454c-a4cb-0395bd2e6920",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ae6d4085-15bc-4519-9a8b-4cd189db2920",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Base64 encoded string",
+			"item": [
+				{
+					"name": "SqlCei",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8af05cbf-9779-41b9-be06-ead47a1c78c0",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"availableStorages\": [\n        \"SQL\"\n    ],\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": false\n    },\n    \"fields\": [\n{\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"singleBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"singleBinary\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_SINGLE_BINARY\",\n            \"filePath\": \"#{code}\",\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"customEntityCategoryCode\": \"Test\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload plain xml",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d5f65fef-fcdf-4315-8246-6aed9806aaf2",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.singleBinary[filename=file.xml]",
+									"value": "<ArrayList>\n  <item>\n    <active>true</active>\n    <code>MyRepo</code>\n    <description>Description of my repo 1</description>\n    <neo4jConfigurationCode>localhost</neo4jConfigurationCode>\n    <dataSeparationType>PHYSICAL</dataSeparationType>\n    <path>5</path>\n  </item>\n  <item>\n    <active>true</active>\n    <code>MyRepo2</code>\n    <dataSeparationType>PHYSICAL</dataSeparationType>\n    <path>2</path>\n  </item>\n</ArrayList>\n",
+									"contentType": "application/xml",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload base64 encoded image",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6a386a3d-b6c1-44f2-a0f4-9043e9a85993",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.singleBinary[filename=image.png;encoding=base64]",
+									"value": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAxCAYAAAC78KvKAAAHDElEQVRYhbWZa2yT1xnH33OO7di5sHBR4tgJTtKSDRDQlXYwCKyMMVrG1oYCbhDQ0m2wVlrnSesqdinTKs1dq+5CQRMo+1KBKrWaonbVxrQwl7GmaBohLZcEUiDlkoRc6lCCE/xefvvgOM3FcV6HcqT/t+P3+Z3z/J9zs8bn1GKxGA0NDdTW1hIOhwkGgwSDQQKBAJWVlYRCIcLhMDU1NUQiEXRdB0C7naDRaJRIJEIwGETTtIwVCoUmBxCNRicddIwyCRyLxQiHw+N+TGgaQog7AxCJRAgEAuMHF2IouJDy8wOwLIuampoJP+TJcvHjp59i3+4/8uCKFSi7EOmC67qeMMoEH5FSsvOZZ9B1nXg8TmtLC+WBANIORLrglZWVtkYhhGD/H36PZVmYpkn/zZt8Y9myyc+AZVm2Rj4cYEHFLG72RjENg5s3PuWBry6ePEBap4/jcikly75yP2caT/BYVRVOhwMxGYCGhoZxOyspyclypQZQimVLl/CXgweRUtovx9F5H6/UlJTM9Pmo++tbrF2+nByPBzk8iBCsWrGCtosX8GRl2Rv9aIB05SaFID83l5Yzp6k/8i5T8/NRSo3oE6yqQo/HWbRggb0KGA4QjUYnLjchePibqzh6uI68nJwxQTZ8Zy23BgbYtql6DNyEAHZcLzQNl5Q0vl9PYUHBEIAQgkdWr6b1XDOGrvPk5k2ZAcRiMXudB3N+prGR4LfXIoTAoRT5eXmcPH4c0zSxLIsf7vh+ZgCRSMRW56Sz9+/Zw9lTJ3noga/hcDgo9nppvXAewzQBePvNNxJGtFMJQGZbqxDMnzuH82fPcuP6dY4eruPFXz1P57UOAAzD4EJLC4GSYnuzYHv6h5tRSu6ZM5uWUycxDANrcORJgJamJkp8PnsA6RaedGZUDgeL7r2XaE8P5jAA0zTpam9ndkWFvRTY2WrlKKlBP2zZuIH4rVtYljViHzle/x4zpk7FIQRS0xCaQBMytdKt+5qWqP0C5aJIZQ3J53RTIBzsCb84YvSWZREfGOCRJZX4nR6KVBZe5SLPMwXnFwpSSktX/0LTWOzM453smbybXTqkI7ll/F1Op+n1N7EM4zMA06T1H3X8zeXlSE4ZkZxSDrmK2HRfFf6tv6E4hbR0e74Qgp0eL+c9ZVzNvou2pHLu5qL0cvHPr40woGWanHr2eS45fLRl382V7Ls45yxm+/2P4n/it5Q8PlZautG7pOKgu5hL7lKuucu4lpVQp7uca7KYxu0/wjQMLMvCMk36P4ny4cKv051VzjV3OR3ucs4rPzsWrsP/eJjirWM17gxITaNQuvi3s5iPXTNpd5XSMah2Z4ATX1zMp5evwKABLcOkt6mZpqJZdLrLaXeV0uYqpUV62f7lh/FtfgF/Co3rAaVpzFMeTigfraqYq6pkSBeUj3N79yWCW59Nf39PDx/MWUq7mskVVcJlVUKzKOR789dSVL0LX/UuikYpbRmuUrmc1IpoFT4uCz+XhJ+rqoQP5y1ioLsbTGtE/vujvZyYvZSrWqLvx8JPkzaD7857CO/Gn1OUQlptbW3K/GuaxpMqn0ZRxEfCl5D006xNpfmFlzAH73bDAWI9Pfz3S4u4KP18JHy0CB8faDN4Yu5qCtc/l1Jaqo0oCfC0Yxp1opB64aVeeHlfFvGOczrdzWdHuB/A1A26TzfxT/8sjik/9cLLe8LLYW0a1XNWUbDuWQqrfjJGmmVZ46agUDpZ4sij0plHpXMKS5y5hJavxND1Matfb3cXW9d8i6WuKSxzTqFyUEscuZRML8FdOh9PCmnAuOf/0ec6KSU1r746GNwaCm5ZFls2rh9xPbMtgFQ+SLUD5rjdnG44PnLqTZOBm30sX7wocTnNcGOzfSISQuByKOrefgtD1zENgxu9vWxdv46KslKcdk9AqQBsH0qEoNTvZ9dzP+XG9V7i8Tiv7d+Hx+VCSZnZfWA0gJ1TcTIVUko2rFmDHo8nbs+7dzM9P5/c7GycDsfkACD9lWwEhJA4HYr6yL+4dWuAvuvXOfafo9QdOsSmR9dlZsbhALqu2/rR0DqxbRsDsRgH9u4hrusYhsG26scSAJOZAbsVoWkaSinumTeP7s5OQj/YwRsHD9DV0cHciorbfyGx9SihFIvvW0jvJz3E+vo49PoBmk+dxFdYaP9OMB6AZVkTVoVSioUL5tPT1cVAfz8v//IX7H35JbJcrswqIRVA0g9pH6Wk5MGVK4n19fG/Y8eYlp9v/13IDgAkFqhUM5Ec4Z9+9wqWZfHrn+3E6XRmvgZMBJBMx2hPJAPt2LyZp7ZszjxoJgDJlvLcIMTkVr/JACRTYnexuiMAydbW1mb7Ce+OAAwHqa2tnTRMIBC4PYDhLfl0X1NTQygUGvqvIBkoGAyO+L8gFosB8H/rdfjgeXQB9QAAAABJRU5ErkJggg==",
+									"contentType": "image/png",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve created instance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "06696716-f779-4497-8602-20a28b80b96f",
+								"exec": [
+									"const uris = [];",
+									"let singleUri = [];",
+									"const jsonData = pm.response.json();",
+									"",
+									"",
+									"pm.environment.set(\"uuid\", jsonData[0].uuid);",
+									"",
+									"pm.test(\"There is a file for singleBinary\", function () {",
+									"    pm.expect(jsonData[0].singleBinary).to.exist;",
+									"    singleUri = jsonData[0].singleBinary;",
+									"});",
+									"",
+									"const protocol = pm.environment.get(\"protocol\");",
+									"const hostname = pm.environment.get(\"hostname\");",
+									"const port = pm.environment.get(\"port\");",
+									"const webContext = pm.environment.get(\"webContext\");",
+									"const uuid = jsonData[0].uuid;",
+									"const requestToSend = {",
+									"  url: `${protocol}://${hostname}:${port}/${webContext}/api/rest/fileSystem/binaries/IntegrationRepository/NeoForJTestCet/${uuid}/listBinary`,",
+									"  method: 'GET'",
+									"};",
+									"",
+									"pm.sendRequest(requestToSend, function (err, response) {",
+									"    pm.test(\"File exists\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cet",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete created entity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "85bae61e-3939-4d18-af47-7377dfc42517",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:repo/persistence/:cetCode/{{uuid}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":repo",
+								"persistence",
+								":cetCode",
+								"{{uuid}}"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "IntegrationRepository"
+								},
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":cetCode"
+							],
+							"variable": [
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "86babd1c-8555-4c39-815b-751c95946817",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "fa09ccb3-24d5-44c3-9297-25b9702801ca",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Extensions, Content-Type and Maximum size",
+			"item": [
+				{
+					"name": "SqlCei",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "607112a8-1580-4d2c-a114-39354c9ab132",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"SqlCet\",\n    \"code\": \"SqlCet\",\n    \"description\": \"SqlCet\",\n    \"availableStorages\": [\n        \"SQL\"\n    ],\n    \"sqlStorageConfiguration\" : {\n    \t\"storeAsTable\": false\n    },\n    \"fields\": [\n{\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        },\n        {\n            \"code\": \"singleBinary\",\n            \"fieldType\": \"BINARY\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"singleBinary\",\n            \"isUnique\": false,\n            \"relationshipName\": \"HAS_SINGLE_BINARY\",\n            \"filePath\": \"#{code}\",\n            \"storages\": [\n                \"SQL\"\n            ],\n            \"fileExtensions\":[\"png\"],\n            \"maxFileSizeAllowedInKb\": 100,\n            \"contentTypes\": [\"image/png\"]\n        }\n    ],\n    \"customEntityCategoryCode\": \"Test\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bad extension & content-type",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "7a35ef1b-0617-4865-afc7-714194dceca9",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "fee9d9b5-2c84-4ffd-9675-0a3294fb5488",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/json2.json"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bad size",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e1aba3e9-a475-4787-994a-cf92f33983ff",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb5cedda-dbce-4aa8-8651-018d49fe9455",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/image2.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "File is ok",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "9c50c658-17fd-4aaf-a97d-0286e95c534c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "00f67a92-f5e8-4f51-8a73-43083e6ed1bc",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "[\n    {\n        \"name\": \"entity\",\n        \"type\": \"SqlCet\",\n        \"properties\": {\n        \t\"code\": \"TestIntegration\"\n        }\n    }\n]",
+									"contentType": "application/json",
+									"type": "text"
+								},
+								{
+									"key": "entity.singleBinary",
+									"contentType": "",
+									"type": "file",
+									"src": "../binaries/image1.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "IntegrationRepository"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CET",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:cetCode",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":cetCode"
+							],
+							"variable": [
+								{
+									"key": "cetCode",
+									"value": "SqlCet"
+								}
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "e77180da-b7e9-4c84-8a2e-6d7b456ad250",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "a5aa4841-8d7f-4eec-b567-4c13a7f095e6",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Delete Repository & Binary storage",
+			"item": [
+				{
+					"name": "IntegrationRepository",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/repositories/IntegrationRepository",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"repositories",
+								"IntegrationRepository"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "IntegrationTestingStorage",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/storages/binaries/IntegrationTestingStorage",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"storages",
+								"binaries",
+								"IntegrationTestingStorage"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3df94196-c3bb-4e57-bc4d-7343cae92828",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "2031f69f-3636-4f8f-8216-910e1b0419b0",
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"response is ok\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201,202,203,204]);",
+							"});"
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "c6782311-77eb-4ddf-8ab5-afc1d13c98cc",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "206bf983-9537-43e0-a63d-a4006d12ab71",
+				"type": "text/javascript",
+				"exec": [
+					"pm.response.code > 300 && console.log(pm.response.text())"
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}

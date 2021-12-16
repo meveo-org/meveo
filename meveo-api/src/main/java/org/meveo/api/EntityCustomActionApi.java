@@ -1,6 +1,9 @@
 package org.meveo.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +16,10 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.ScriptInstanceErrorDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -27,6 +32,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.storage.Repository;
@@ -302,6 +308,27 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
         return null;
     }
 
+	public Collection<EntityCustomActionDto> readEcas(File directory) {
+    	List<EntityCustomActionDto> ecaDtos = new ArrayList<>();
+    	
+    	for (File cetOrCrtDir : directory.listFiles()) {
+    		if(!cetOrCrtDir.isDirectory()) {
+    			continue;
+    		}
+    		
+    		for (File cftFile : cetOrCrtDir.listFiles()) {
+    			try {
+					ecaDtos.add(JacksonUtil.read(cftFile, EntityCustomActionDto.class));
+				} catch (IOException e) {
+					log.error("Failed to read custom action file", e);
+					return null;
+				}
+    		}
+    	}
+    	
+    	return ecaDtos;
+    }
+    
 	@Override
 	public EntityCustomActionDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 		throw new UnsupportedOperationException("Use find(code, appliesTo) instead");

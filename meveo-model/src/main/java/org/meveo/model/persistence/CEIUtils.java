@@ -321,12 +321,11 @@ public class CEIUtils {
 				var fieldDef = ReflectionUtils.getField(customClass, field.getKey());
 				boolean isRelationshipField = fieldDef.isAnnotationPresent(Relation.class) || CustomRelation.class.isAssignableFrom(fieldDef.getType());
 				
-				if(Collection.class.isAssignableFrom(fieldDef.getType())) {
+				if(!isRelationshipField && Collection.class.isAssignableFrom(fieldDef.getType())) {
 					Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
 					if(actualType instanceof Class && CustomRelation.class.isAssignableFrom((Class<?>) actualType)) {
 						isRelationshipField = true;
 					} else {
-						//FIXME: test if we can delete that
 						try {
 							var actualClass = Class.forName(actualType.getTypeName());
 							isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
@@ -624,6 +623,10 @@ public class CEIUtils {
 						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
 						setUUIDField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getUuid());
 						setter.invoke(instance, lazyInitInstance);
+						
+					} else if(entry.getValue() instanceof CustomEntityInstance) {
+						var customEntity = ceiToPojo((CustomEntityInstance) entry.getValue(), paramType);
+						setter.invoke(instance, customEntity);
 					}
 
 				} else {

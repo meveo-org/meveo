@@ -41,9 +41,11 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn.CustomFieldColumnUseEnum;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.service.custom.CustomEntityCategoryService;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -58,6 +60,9 @@ public class JSONSchemaGenerator {
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	@Inject
+	private CustomEntityCategoryService cecService;
 
 	abstract static class CustomTemplateProcessor {
 		abstract String code();
@@ -154,8 +159,11 @@ public class JSONSchemaGenerator {
 
 		if (!StringUtils.isBlank(categoryCode)) {
 			templates = templates.stream()
-					.filter(item -> (item.getStartNode().getCustomEntityCategory() != null && categoryCode.equals(item.getStartNode().getCustomEntityCategory().getCode()))
-							|| (item.getEndNode().getCustomEntityCategory() != null && categoryCode.equals(item.getEndNode().getCustomEntityCategory().getCode())))
+					.filter(item -> { 
+						CustomEntityCategory startNodeCategory = item.getStartNode().getCustomEntityCategory() != null ? cecService.findById(item.getStartNode().getCustomEntityCategory().getId()) : null;
+						CustomEntityCategory endNodeCategory = item.getEndNode().getCustomEntityCategory() != null ? cecService.findById(item.getEndNode().getCustomEntityCategory().getId()) : null;
+						return (startNodeCategory != null && categoryCode.equals(startNodeCategory.getCode())) || (endNodeCategory != null && categoryCode.equals(endNodeCategory.getCode()));
+					})
 					.collect(Collectors.toList());
 		}
 
@@ -275,6 +283,11 @@ public class JSONSchemaGenerator {
 		case LIST:
 			result = createArraySchema(field, createElementSchema(schemaLocation, template, field, allRefs).build());
 			break;
+			
+		case MATRIX:
+			result = ObjectSchema.builder().requiresObject(true).patternProperty("^.*$", createElementSchema(schemaLocation, template, field, allRefs).build());
+			break;
+			
 		case MAP:
 			CustomFieldMapKeyEnum mapKeyType = field.getMapKeyType();
 			switch (mapKeyType) {
@@ -292,10 +305,9 @@ public class JSONSchemaGenerator {
 							"Field has unsupported mapKey type" + ": field = " + field + ", storageType = " + field.getStorageType() + ", mapKeyType = " + mapKeyType);
 				}
 			}
-			break;
-		case MATRIX:
-			result = createArraySchema(field, createMatrixSchema(schemaLocation, field, template, allRefs).build());
-			break;
+		break;
+		
+			// result = createMatrixSchema(schemaLocation, field, template, allRefs);
 		default:
 			throw new IllegalStateException("Unknown storage type: field = " + field + ", storageType = " + field.getStorageType());
 		}
@@ -331,6 +343,7 @@ public class JSONSchemaGenerator {
 		case TEXT_AREA:
 		case LONG_TEXT:
 		case SECRET:
+		case MULTI_VALUE:
 		case STRING:
 			result = createStringSchema(field);
 			break;
@@ -343,8 +356,6 @@ public class JSONSchemaGenerator {
 		case DOUBLE:
 			result = createNumberSchema(field);
 			break;
-		case MULTI_VALUE:
-			throw new IllegalStateException("Multi-value type of field supports only matrix: field = " + field + ", storageType = " + field.getStorageType());
 		default:
 			result = createStringSchema(field);
 			break;

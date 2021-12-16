@@ -237,7 +237,7 @@ public class GitClient {
                 boolean doRm = false;
 
                 for (String missing : status.getMissing()) {
-                    if (patterns.contains(missing)) {
+                    if (patterns.contains(missing) || patterns.contains(".")) {
                         rm.addFilepattern(missing);
                         doRm = true;
                     }
