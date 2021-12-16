@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,12 +26,16 @@ import javax.ejb.Singleton;
 import javax.ejb.Timeout;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
+import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.maven.model.Build;
@@ -40,6 +43,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
+import org.apache.maven.model.io.DefaultModelReader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -51,11 +55,15 @@ import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.AfterAnyUpdate;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
@@ -64,6 +72,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.security.keycloak.MeveoUserKeyCloakImpl;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.aether.ConsoleRepositoryListener;
 import org.meveo.service.aether.ManualRepositorySystemFactory;
 import org.meveo.service.git.GitClient;
@@ -135,6 +144,9 @@ public class MavenConfigurationService implements Serializable {
 	
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+	
+	@Inject
+	private MeveoModuleService moduleService;
 
 	private javax.ejb.Timer ejbTimer;
 
@@ -153,6 +165,63 @@ public class MavenConfigurationService implements Serializable {
             m2Folder.mkdir();
         }
         return m2;
+    }
+    
+    public void addMeveoModuleDependencyToPom(@Observes @Created MeveoModuleDependency e) {
+    	MeveoModule baseModule = e.getMeveoModule();
+    	
+    	DefaultModelReader reader = new DefaultModelReader();
+    	File pomFile = moduleService.findPom(baseModule);
+
+    	try {
+			Model model = reader.read(pomFile, null);
+			
+			Dependency dependency = new Dependency();
+			dependency.setArtifactId(e.getCode());
+			dependency.setGroupId("org.meveo");
+			dependency.setVersion(e.getCurrentVersion());
+			dependency.setScope("provided");
+			model.addDependency(dependency);
+			
+			writeToPom(model, pomFile);
+			gitClient.commitFiles(baseModule.getGitRepository(), List.of(pomFile), "Add dependency " + e.getCode());
+		} catch (Exception e1) {
+			log.error("Failed to update pom.xml", e);
+		}
+    	
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public void removeMeveoModuleDependencyFromPom(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed MeveoModuleDependency e) {
+    	MeveoModule baseModule = e.getMeveoModule();
+
+    	log.debug("Removing dependency {} from pom of module {}", e.getCode(), baseModule.getCode());
+    	
+    	DefaultModelReader reader = new DefaultModelReader();
+    	File pomFile = moduleService.findPom(baseModule);
+
+    	try {
+			Model model = reader.read(pomFile, null);
+			
+			model.getDependencies().removeIf(d -> d.getArtifactId().equals(e.getCode()) &&
+					d.getGroupId().equals("org.meveo") && 
+					d.getVersion().equals(e.getCurrentVersion()));
+			
+			writeToPom(model, pomFile);
+			gitClient.commitFiles(baseModule.getGitRepository(), List.of(pomFile), "Remove dependency " + e.getCode());
+		} catch (Exception e1) {
+			log.error("Failed to update pom.xml", e);
+		}
+    }
+    
+    public void updatePomOnSave(@Observes @Updated MeveoModule module) {
+    	generatePom("Update pom", module);
+    }
+    
+    public void createPomOnCreate(@Observes @Created MeveoModule module) {
+    	if (!module.isDownloaded()) {
+    		generatePom("Create pom", module);
+    	}
     }
 
 	public void onDependencyCreated(@Observes @Created MavenDependency d) {
@@ -198,7 +267,7 @@ public class MavenConfigurationService implements Serializable {
 				schedulePomGeneration();
 			});
 	}
-
+	
 	private void schedulePomGeneration() {
 
 		if(ejbTimer != null) {
@@ -257,32 +326,46 @@ public class MavenConfigurationService implements Serializable {
 
 				currentUserProvider.reestablishAuthentication(user);
 
-				generatePom(message.toString(), moduleCode);
+				if (message.length() == 0) {
+					message.append("Update pom.xml");
+				}
+				
+				MeveoModule module = moduleService.findByCode(moduleCode, List.of("moduleDependencies"));
+
+				generatePom(message.toString(), module);
 			});
 		}
 	}
 
-	private void generatePom(String message, String repositoryCode) {
+	private void generatePom(String message, MeveoModule module) {
 		
-		GitRepository repository = gitRepositoryService.findByCode(repositoryCode);
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repositoryCode);
+		GitRepository repository = gitRepositoryService.findByCode(module.getCode());
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getCode());
 		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
 
 		log.debug("Generating pom.xml file");
-
+		
 		Model model = new Model();
 		model.setGroupId("org.meveo");//TODO: Add group id to module
-		model.setArtifactId(repositoryCode);
-		model.setVersion("1.0.0");
+		model.setArtifactId(module.getCode());
+		model.setVersion(module.getCurrentVersion());
 		model.setModelVersion("4.0.0");
 		
 		model.setBuild(new Build());
 		
+		// Create symlink for java folder
+		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
+		source.toFile().mkdirs();
+		
+		Path link = Paths.get(gitRepo.getPath(), "facets", "maven", "java");
+		Path relativeSrc = link.getParent().relativize(source);
+		
 		try {
-			// Create symlink for java folder
-			Path javaDir = Paths.get(gitRepo.getPath(), "facets", "java");
-			Path symbolicJavaDir = Paths.get(gitRepo.getPath(), "facets", "maven", "java");
-			Files.createSymbolicLink(symbolicJavaDir, javaDir);
+
+			link.getParent().toFile().mkdirs();
+			if (!link.toFile().exists()) {
+				Files.createSymbolicLink(link, relativeSrc);
+			}
 		} catch (IOException e1) {
 			log.error("Failed to create symbolic link for java source");
 		}
@@ -290,7 +373,7 @@ public class MavenConfigurationService implements Serializable {
 		// Create .gitignore file
 		Path gitIgnore = Paths.get(gitRepo.getPath(), "facets", "maven", ".gitignore");
 		List<String> ignoredPatterns = List.of(
-				"src/main/java/",
+				"src/main/java/**",
 				"target/"
 			);
 		
@@ -344,10 +427,19 @@ public class MavenConfigurationService implements Serializable {
 		meveoDependency.setVersion(Version.appVersion);
 		meveoDependency.setScope("provided");
 		model.addDependency(meveoDependency);
+		
+		module.getModuleDependencies().forEach(meveoModuleDependency -> {
+			Dependency dependency = new Dependency();
+			dependency.setGroupId("org.meveo");
+			dependency.setArtifactId(meveoModuleDependency.getCode());
+			dependency.setVersion(meveoModuleDependency.getCurrentVersion());
+			dependency.setScope("provided");
+			model.addDependency(dependency);
+		});
 
 		try {
 
-			mavenDependencyService.findModuleDependencies(repositoryCode)
+			mavenDependencyService.findModuleDependencies(module.getCode())
 					.forEach(mavenDependency -> {
 						Dependency dependency = new Dependency();
 						dependency.setGroupId(mavenDependency.getGroupId());
@@ -362,22 +454,29 @@ public class MavenConfigurationService implements Serializable {
 		}
 
 		final File repositoryDir = GitHelper.getRepositoryDir(null, repository.getCode());
-		File pomFile = new File(repositoryDir, "/facets/maven/pom.xml");
+		File pomFile = this.moduleService.findPom(module);
 
+		List<File> updatedFiles = List.of(pomFile, gitIgnore.toFile(), link.toFile());
+		
+		writeToPom(model, pomFile); 
+		
 		try {
-			
-			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
-			try (FileWriter fileWriter = new FileWriter(pomFile)) {
-				xmlWriter.write(fileWriter, model);
-				gitClient.commitFiles(repository, List.of(pomFile, gitIgnore.toFile()), message);
-			}
-
-		} catch (IOException e) {
-			log.error("Can't write to pom.xml", e);
+			gitClient.commitFiles(repository, updatedFiles, message);
 		} catch (BusinessException e) {
 			log.error("Can't commit pom.xml file", e);
 		}
 
+	}
+
+	private void writeToPom(Model model, File pomFile) {
+		try {
+			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
+			try (FileWriter fileWriter = new FileWriter(pomFile)) {
+				xmlWriter.write(fileWriter, model);
+			}
+		} catch (IOException e) {
+			log.error("Can't write to pom.xml", e);
+		}
 	}
 
 	public String getM2FolderPath() {
@@ -592,7 +691,8 @@ public class MavenConfigurationService implements Serializable {
 		File pomFile = new File(gitRepo.getPath() + File.separator + "facets" + File.separator + "maven" + File.separator + "pom.xml");
 
 		if (!pomFile.exists()) {
-			generatePom("Initialized default repository", repositoryCode);
+			MeveoModule module = moduleService.findByCode(repositoryCode, List.of("moduleDependencies"));
+			generatePom("Initialized default repository", module);
 		}
 	}
 	

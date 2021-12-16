@@ -29,64 +29,28 @@ import org.slf4j.LoggerFactory;
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
  * @version 6.10
  */
-public class JPAtoCDIListener {
-
-	private Logger log = LoggerFactory.getLogger(JPAtoCDIListener.class);
+public class JPAtoCDIListener2 {
 
 	@Inject
-	@Created
-	protected Event<Object> entityCreatedEventProducer;
-
-	@Inject
-	@Updated
-	protected Event<Object> entityUpdatedEventProducer;
-
-	@Inject
-	@Removed
-	protected Event<Object> entityRemovedEventProducer;
+	@BeforeAnyUpdate
+	protected Event<Object> beforeAnyUpdate;
 	
 	@Inject
-	@CreatedAfterTx
-	protected Event<Object> entityCreatedAfterTxEventProducer;
-
-	@Inject
-	@UpdatedAfterTx
-	protected Event<Object> entityUpdatedAfterTxEventProducer;
+	@AfterAnyUpdate
+	protected Event<Object> afterAnyUpdate;
 	
-	@Inject
-	@RemovedAfterTx
-	protected Event<Object> entityRemovedAfterTxEventProducer;
-	
-
 	@PrePersist
-	public void created(Object d) {
-		entityCreatedEventProducer.fire(d);
-	}
-
 	@PreUpdate
-	public void updated(Object d) {
-		entityUpdatedEventProducer.fire(d);
-	}
-	
 	@PreRemove
-	public void removed(Object d) {
-		entityRemovedEventProducer.fire(d);
+	public void beforeAnyUpdate(Object d) {
+		beforeAnyUpdate.fire(d);
 	}
 	
-	@PostPersist
-	public void createdAfterTx(Object d) {
-		entityCreatedAfterTxEventProducer.fire(d);
-	}
-
 	@PostUpdate
-	public void updatedAfterTx(Object d) {
-		entityUpdatedAfterTxEventProducer.fire(d);
-	}
-
+	@PostPersist
 	@PostRemove
-	public void removedAfterTx(Object d) {
-		entityRemovedAfterTxEventProducer.fire(d);
+	public void afterAnyUpdate(Object d) {
+		afterAnyUpdate.fire(d);
 	}
-	
 	
 }
