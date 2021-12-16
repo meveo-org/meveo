@@ -1,12 +1,12 @@
 # Endpoint
 
-An endpoint allows a user to expose any function (script or technical service) as a REST endpoint. The endpoint's path can be configured along with the method to access it (POST or GET), whether the execution should be synchronous or asynchronous, and map input parameters of the function to the input and/or path parameters of the endpoint.
+An endpoint allows a user to expose any function (script or technical service) as a REST endpoint. He can configure the path that will be exposed, the method to access it (POST or GET), whether the execution should be synchronous or asynchronous, and make some mappings about input parameters of the function and the input parameters of the endpoint.
 
-It can be executed in synchronous or asynchonous mode. In asynchronous mode, a unique uuid is returned which can then be used to query later.
+It can be execute in synchronous or asynchonous mode. In asynchronous mode, a random Uuid is return that can be query later.
 
 ## How to define input for a script
 
-When writing a script, any setter (methods that start with "_set_") will be considered as an input. To add description to this input, we can simply write a Javadoc for the setter.
+When writing a script, any setter (method starting by "set") will be considered as an input. To add description to this input, we can simply write a Javadoc for the setter.
 
 Some parameters are set in the input parameters indicating the delay and budget allowed for the execution :
 
@@ -38,7 +38,7 @@ import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
 
 CRUD for endpoint is available on both GUI and API.
 
-The endpoint API is **/api/rest/endpoint**. It is implemented in the class **org.meveo.api.rest.technicalservice.impl.EndpointRs** and accepts a dto of type **org.meveo.api.dto.technicalservice.endpoint.EndpointDto** for create and update REST operation.
+The endpoint API is /api/rest/endpoint. It is implemented in the class org.meveo.api.rest.technicalservice.impl.EndpointRs and accepts a dto of type org.meveo.api.dto.technicalservice.endpoint.EndpointDto for create and update REST operation.
 
 ## How to use an Endpoint
 
@@ -50,20 +50,13 @@ An endpoint is accessible via the URL <meveoURL>/rest/<endpoint.basePath><endpoi
 If the endpoint was defined as GET, the parameters must be passed as query parameters, 
 and if it was defined as POST or PUT the parameters must be passed as JSON in the body of the request.
 
-There are several headers that was defined to modify the default behavior of the endpoint:
+There are several headers that was defined to modify the default behavior of the endpoint: 
 
-- **Keep-Data:** indicates we don't want to remove the execution result from cache
-- **Wait-For-Finish:** indicates that we want to wait until one execution finishes and get results after. (Otherwise returns status 102)
-- **Persistence-Context-Id:** indicates the id of the persistence context we want to save the result
+ - **Keep-Data:** indicates we don't want to remove the execution result from cache
+ - **Wait-For-Finish:** indicates that we want to wait until one execution finishes and get results after. (Otherwise returns status 102)
+ - **Persistence-Context-Id:** indicates the id of the persistence context we want to save theresult
  
-To retrieve the result of an asynchronous request, call the servlet “**/rest/**” followed by the id previously returned
-
-## Endpoint security
-The endpoint can be configured to be secured and only allow REST clients that are authenticated.
-
-To enable this feature, the **endpointSecurityEnabled** property found in **{wildfly directory}/standalone/configuration/meveo-admin.properties** should be set to **true**. It can also be configured on the meveo admin GUI.  To do that, select **Configuration > Settings > System settings**.
-
-Once **endpointSecurityEnabled** is enabled, select the **Secured** setting on the GUI, or set it to true in the JSON configuration when using the API as shown in the examples below.
+To retrieve the result of an asynchronous request, call the servlet “/rest/” followed by the id previously returned
 
 ## Examples
 
@@ -76,10 +69,9 @@ We should first call the creation rest service `POST on /endpoint` with JSON:
 ```
 {
 	"serviceCode": "fr.score3",
-	"code": "myEndpoint",
+	"code": "get-synchronous-endpoint",
 	"synchronous": true,
 	"method": "GET",
-	"secured": true,
 	"pathParameters": [
 		{
 			"property": "companyName",
@@ -108,7 +100,7 @@ We should first call the creation rest service `POST on /endpoint` with JSON:
 }
 ```
 
-So, the endpoint generated will be accessible with GET method under **/rest/myEndpoint/theCompanyName?creationDate=2011&headOffice=Dijon** and the result will be returned once the script has been executed.
+So, the endpoint generated will be accessible with GET method under /rest/get-synchronous-endpoint/Webdrone?creationDate=2011&headOffice=Dijon and the result will be returned once the script has been executed.
 
 Both basePath and path could be set
 
@@ -119,10 +111,9 @@ We should first call the creation rest service with JSON:
 ```
 {
 	"serviceCode": "fr.score3",
-	"code": "myEndpoint",
+	"code": "post-synchronous-endpoint",
 	"synchronous": true,
 	"method": "POST",
-	"secured": true,
 	"pathParameters": [
 		{
 			"property": "companyName",
@@ -151,7 +142,7 @@ We should first call the creation rest service with JSON:
 }
 ```
 
-So, the endpoint generated will be accessible with POST method under **/rest/myEndpoint/theCompanyName**
+So, the endpoint generated will be accessible with POST method under /rest/post-asynchronous-endpoint/Webdrone
 
 The request of the body should be:
 
@@ -162,7 +153,7 @@ The request of the body should be:
 }
 ```
 
-The execution will return an UUID like **6bbb2e71-8361-4d51-887d-91c2a52d08f0** and the script will be executed. So, to retrieve the result, we need to call the endpoint **/rest/6bbb2e71-8361-4d51-887d-91c2a52d08f0**. If the execution is still not finished when we make the request, it will return with status code **102**. If we want to wait until finish and get result, we must set the header **Wait-For-Finish** to **true**.
+The execution will return an UUID like “6bbb2e71-8361-4d51-887d-91c2a52d08f0” and the script will be executed. So, to retrieve the result, we need to call the endpoint /rest/6bbb2e71-8361-4d51-887d-91c2a52d08f0. If the execution is still not finished when we make the request, it will return with code 102. If we want to wait until finish and get result, we must set the header “Wait-For-Finish” to true.
 
 ## How to get the POST or PUT body in Script
 
@@ -188,7 +179,7 @@ if you need the original body you can retrieve it from the `REQUEST_BODY` parame
 	
 ## JSONata
 
-In the field  **jsonataTransformer**  you can provide a JSONata expression to transform the output ofthe endpoint.
+In the field  jsonataTransformer  you can provide a JSONata expression to transform the output ofthe endpoint.
 	
 ## OpenAPI definition
 	
