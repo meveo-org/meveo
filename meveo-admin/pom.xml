@@ -6,7 +6,7 @@
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.15.14-SNAPSHOT</version>
+		<version>6.15.13</version>
 	</parent>
 
 	<artifactId>meveo-admin</artifactId>

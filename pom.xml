@@ -4,7 +4,7 @@
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>6.15.14-SNAPSHOT</version>
+	<version>6.15.13</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,7 +21,7 @@
 	<scm>
 		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
-		<tag>HEAD</tag>
+		<tag>6.15.13</tag>
 	</scm>
 
 	<modules>
