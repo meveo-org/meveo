@@ -21,15 +21,18 @@ package org.meveo.model.technicalservice.endpoint;
  * Available HTTP Methods for exposing a technical service.
  *
  * @author clement.bareth
+ * @author Edward P. Legaspi
  * @since 01.02.2019
+ * @version 6.15
  */
 public enum EndpointHttpMethod {
 
     GET,
     DELETE,
     POST,
-    HEAD,
-    PUT;
+    PUT,
+    PATCH,
+    HEAD;
 
     public String getLabel() {
         return this.name();
