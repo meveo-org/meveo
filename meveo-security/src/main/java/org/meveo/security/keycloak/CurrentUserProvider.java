@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -279,10 +280,19 @@ public class CurrentUserProvider {
             Instant currentInstant = Instant.ofEpochSecond(new Integer(currentUser.getAuthTime()).longValue());
             boolean newlyLoggedIn = userAuthTimeCache.updateLoggingDateIfNeeded(currentUser.getUserName(), currentInstant);
             try {
-                user = em.createNamedQuery("User.getByUsername", User.class).setParameter("username", currentUser.getUserName().toLowerCase()).getSingleResult();
+                user = em.createNamedQuery("User.getByUsername", User.class)
+                		.setParameter("username", currentUser.getUserName().toLowerCase())
+                		.getSingleResult();
 
                 if (isSessionScopeActive() && newlyLoggedIn) {
                     user.setLastLoginDate(Date.from(userAuthTimeCache.getLoggingDate(currentUser.getUserName())));
+                    em.merge(user);
+                    em.flush();
+                }
+                
+                // Update mail if it has changed
+                if (!Objects.equals(user.getEmail(), currentUser.getMail())) {
+                	user.setEmail(currentUser.getMail());
                     em.merge(user);
                     em.flush();
                 }
@@ -294,6 +304,7 @@ public class CurrentUserProvider {
             } catch (NoResultException e) {
                 user = new User();
                 user.setUserName(currentUser.getUserName().toUpperCase());
+                user.setEmail(currentUser.getMail());
                 if (currentUser.getFullName() != null) {
                     if (user.getName() == null) {
                         user.setName(new Name());

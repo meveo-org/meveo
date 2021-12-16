@@ -2,7 +2,7 @@
 
 ### Start Meveo
 
-Just copy the [docker-compose.yml](https://raw.githubusercontent.com/meveo-org/meveo/master/docker/localhost/docker-compose.yml) file in a directory. 
+Just copy the [docker-compose.yml](https://raw.githubusercontent.com/manaty/meveo/master/docker/localhost/docker-compose.yml) file in a directory. 
 
 And then run:
 
@@ -32,7 +32,7 @@ volumes:
 .....
 services:
   neo4j:
-      image: manaty/neo4j-meveo:dev-latest
+      image: manaty/neo4j-meveo:3.5.13
       container_name: neo4j
       build:
         context: ./

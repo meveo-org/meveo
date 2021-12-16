@@ -16,8 +16,8 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.regex.Matcher;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -28,14 +28,11 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
 import org.infinispan.Cache;
+import org.jboss.logging.Logger;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 /**
  * @author Clément Bareth *
@@ -46,17 +43,32 @@ import com.google.common.cache.LoadingCache;
 @Startup
 public class EndpointCacheContainer {
 
+	
+	//@Inject
+	//private Logger log;
+
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;
 
 	@Inject
 	private EndpointService endpointService;
 
-	private volatile LoadingCache<String, Endpoint> endpointLoadingCache;
+	//Map of Endpoint by code
+	private Map<String, Endpoint> endpointLoadingCache = new HashMap<String, Endpoint>();
+
 
 	@PostConstruct
 	private void init() {
-		endpointLoadingCache = CacheBuilder.newBuilder() //
+		List<Endpoint> allEndpoints=endpointService.list();
+		for(Endpoint endpoint:allEndpoints){
+			endpoint.getService();
+			endpoint.getService().getCode();
+			endpoint.getPathParametersNullSafe().forEach(e -> {});
+			endpoint.getParametersMappingNullSafe().forEach(e -> {});
+			endpointLoadingCache.put(endpoint.getCode(),endpoint);
+		}
+		//log.info("endpointLoadingCache init:"+endpointLoadingCache.size()+" entries");
+		/*		CacheBuilder.newBuilder() //
 				.expireAfterAccess(24, TimeUnit.HOURS) //
 				.build(new CacheLoader<String, Endpoint>() { //
 					@Override
@@ -71,7 +83,7 @@ public class EndpointCacheContainer {
 						;
 						return result;
 					}
-				});
+				});*/
 	}
 
 	public PendingResult getPendingExecution(String key) {
@@ -87,22 +99,47 @@ public class EndpointCacheContainer {
 	}
 
 	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
-		endpointLoadingCache.invalidate(endpoint.getCode());
+		endpointLoadingCache.remove(endpoint.getCode());
+		//log.info("endpointLoadingCache remove"+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
 	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
-		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		if(endpoint.isActive()) {
+			endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		} else{
+			if(endpointLoadingCache.containsKey(endpoint.getCode())){
+				endpointLoadingCache.remove(endpoint.getCode());
+			}
+		}
+		//log.info("endpointLoadingCache update "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
 	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
-		endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		if(endpoint.isActive()) {
+			endpointLoadingCache.put(endpoint.getCode(), endpoint);
+		}
+		//log.info("endpointLoadingCache add "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
-	public Endpoint getEndpoint(String code) {
-		try {
-			return endpointLoadingCache.getUnchecked(code);
-		} catch (CacheLoader.InvalidCacheLoadException e) {
-			return null;
+	/*
+	 * returns the endpoint with largest regex matching the path
+	 */
+	public Endpoint getEndpointForPath(String path, String method){
+		Endpoint result=null;
+		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();
+		while (it.hasNext()) {
+			Endpoint endpoint = it.next().getValue();
+			if(endpoint.getMethod().getLabel().equals(method)){
+				if(path.startsWith("/"+endpoint.getBasePath())){
+					Matcher matcher = endpoint.getPathRegex().matcher(path);
+					if(matcher.matches() || matcher.lookingAt()){
+						if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
+							result=endpoint;
+						}
+					}
+				}
+			}
 		}
+		return result;
 	}
 }

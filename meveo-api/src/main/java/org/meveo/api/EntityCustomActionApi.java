@@ -18,15 +18,20 @@ import org.meveo.api.dto.ScriptInstanceErrorDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
+import org.meveo.model.storage.Repository;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
@@ -36,16 +41,26 @@ import org.meveo.service.script.ScriptInstanceService;
  * @version 6.12
  **/
 @Stateless
-public class EntityCustomActionApi extends BaseApi {
+public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, EntityCustomActionDto> {
 
-    @Inject
+    /**
+	 * Instantiates a new EntityCustomActionApi
+	 *
+	 * @param jpaClass
+	 * @param dtoClass
+	 */
+	public EntityCustomActionApi() {
+		super(EntityCustomAction.class, EntityCustomActionDto.class);
+	}
+
+	@Inject
     private ScriptInstanceService scriptInstanceService;
 
     @Inject
-    private ScriptInstanceApi scriptInstanceApi;
-
-    @Inject
     private EntityCustomActionService entityCustomActionService;
+    
+    @Inject
+    private Repository repository;
 
     public List<ScriptInstanceErrorDto> create(EntityCustomActionDto actionDto, String appliesTo)
             throws MissingParameterException, EntityAlreadyExistsException, MeveoApiException, BusinessException {
@@ -267,8 +282,18 @@ public class EntityCustomActionApi extends BaseApi {
         IEntity entity = (IEntity) entityCustomActionService.findByEntityClassAndCode(entityClass, entityCode);
 
         Map<String, Object> context = new HashMap<String, Object>();
-
-        Map<String, Object> result = scriptInstanceService.execute(entity, action.getScript().getCode(), context);
+		Map<Object, Object> elContext = new HashMap<>(context);
+		elContext.put("entity", entity);
+		
+		action.getScriptParameters().forEach((key, value) -> {
+			try {
+				context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
+			} catch (ELException e) {
+				log.error("Failed to evaluate el for custom action", e);
+			}
+		});
+        
+        Map<String, Object> result = scriptInstanceService.execute(entity, repository, action.getScript().getCode(), context);
 
         if (result.containsKey(Script.RESULT_GUI_OUTCOME)) {
             return (String) result.get(Script.RESULT_GUI_OUTCOME);
@@ -276,5 +301,31 @@ public class EntityCustomActionApi extends BaseApi {
 
         return null;
     }
+
+	@Override
+	public EntityCustomActionDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		throw new UnsupportedOperationException("Use find(code, appliesTo) instead");
+	}
+
+	@Override
+	public EntityCustomAction createOrUpdate(EntityCustomActionDto dtoData) throws MeveoApiException, BusinessException {
+		EntityCustomAction eca = this.entityCustomActionService.findByCodeAndAppliesTo(dtoData.getCode(), dtoData.getAppliesTo());
+		if (eca == null) {
+			this.create(dtoData, dtoData.getAppliesTo());
+		} else {
+			this.update(dtoData, dtoData.getAppliesTo());
+		}
+		return eca;
+	}
+
+	@Override
+	public EntityCustomActionDto toDto(EntityCustomAction entity) throws MeveoApiException {
+		return new EntityCustomActionDto(entity);
+	}
+
+	@Override
+	public IPersistenceService<EntityCustomAction> getPersistenceService() {
+		return this.entityCustomActionService;
+	}
 
 }

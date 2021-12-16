@@ -1,5 +1,8 @@
 package org.meveo.api.rest.impl;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
@@ -16,6 +19,8 @@ import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.dto.response.PagingAndFiltering.SortOrder;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.UserRs;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.git.RSAKeyPair;
 
 /**
@@ -27,6 +32,15 @@ public class UserRsImpl extends BaseRs implements UserRs {
 
     @Inject
     private UserApi userApi;
+    
+    @Inject
+    @CurrentUser
+    private MeveoUser currentUser;
+    
+    @Override
+	public Set<String> getRoles() {
+    	return currentUser.getRoles();
+    }
 
     @Override
     public ActionStatus create(UserDto postData) {

@@ -470,6 +470,33 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
         return CustomRelationshipTemplate.getPermissionResourceName(code);
     }
 
+	/**
+	 * Gets the read permission.
+	 *
+	 * @return the read permission
+	 */
+	public String getReadPermission() {
+		return CustomRelationshipTemplate.getReadPermission(code);
+	}
+
+	/**
+	 * Gets the modify permission.
+	 *
+	 * @return the modify permission
+	 */
+	public String getModifyPermission() {
+		return CustomRelationshipTemplate.getModifyPermission(code);
+	}
+
+	/**
+	 * Gets the decrypt permission.
+	 *
+	 * @return the decrypt permission
+	 */
+	public String getDecrpytPermission() {
+		return CustomRelationshipTemplate.getDecryptPermission(code);
+	}
+
     @Override
     public int compareTo(CustomRelationshipTemplate cet1) {
         return StringUtils.compare(name, cet1.getName());
@@ -484,6 +511,36 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
     public static String getPermissionResourceName(String code) {
         return "CRT_" + code;
     }
+
+	/**
+	 * Gets the read permission.
+	 *
+	 * @param code the code
+	 * @return the read permission
+	 */
+	public static String getReadPermission(String code) {
+		return "CRT_" + code + "-read";
+	}
+
+	/**
+	 * Gets the modify permission.
+	 *
+	 * @param code the code
+	 * @return the modify permission
+	 */
+	public static String getModifyPermission(String code) {
+		return "CRT_" + code + "-modify";
+	}
+
+	/**
+	 * Gets the decrypt permission.
+	 *
+	 * @param code the code
+	 * @return the decrypt permission
+	 */
+	public static String getDecryptPermission(String code) {
+		return "CRT_" + code + "-decrypt";
+	}
 
 	@Override
 	public String toString() {

@@ -33,12 +33,13 @@
 		<h:form id="crumbmenuForm">
 			<p:breadCrumb homeDisplay="text" id="crumbmenu">
 				<p:menuitem value="#{messages['menu.services']}" disabled="true" />
-				<p:menuitem outcome="endpoint" value="#{messages['menu.endpoint']}" />
+				<p:menuitem disabled="true" value="#{messages['menu.endpoint']}" />
+				<p:menuitem outcome="endpoint" value="#{messages['menu.endpoint.rest']}" />
 				<p:menuitem
 					value="#{messages['commons.new']} #{messages['endpoint.panel']}"
 					disabled="true" rendered="#{endpointBean.entity.transient}" />
 				<p:menuitem
-					value="#{messages['endpoint.panel']} - #{endpointBean.entity.code}"
+					value="#{endpointBean.entity.code}"
 					disabled="true" rendered="#{!endpointBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
@@ -74,7 +75,7 @@
 									  itemValue="DELETE" />
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
-				<hftl:formField label="#{messages['enpoint.synchronous']}" field="synchronous" />
+				<hftl:formField label="#{messages['endpoint.synchronous']}" field="synchronous" />
 			</h:panelGrid>
 			
 			<h:panelGroup id="functionInputs">
@@ -107,8 +108,8 @@
 						label="#{messages['endpoint.pathParameter']}">
 						<p:pickList id="pickList" value="#{endpointBean.pathParametersDL}"
 							var="item" itemLabel="#{item}" itemValue="#{item}">
-							<p:ajax event="transfer"
-								update=":endpointForm:parametersMapping :endpointForm:endpointUrl" />
+							<p:ajax event="transfer" listener="#{endpointBean.onPathParametersTransfer}"
+								update=":endpointForm:parametersMapping :endpointForm:endpointUrl :endpointForm:pathId" />
 						</p:pickList>
 					</hftl:decorateFormField>
 					
@@ -185,7 +186,7 @@
 
 				<h:panelGroup layout="block" id="serializeResult" width="20">
 					<hftl:formField style="width:110%"
-						label="#{messages['enpoint.serializeResult']}"
+						label="#{messages['endpoint.serializeResult']}"
 						field="serializeResult" newLine="false"
 						rendered="#{endpointBean.entity.returnedVariableName != null}"></hftl:formField>
 				</h:panelGroup>
@@ -201,6 +202,16 @@
 			</h:panelGroup>
 
 			<h:panelGrid id="endpointUrl" columns="1">
+				<hftl:decorateFormField field="basePath" fieldId="basePathId"
+					label="#{messages['endpoint.basePath']}">
+					<p:inputText id="basePathId" value="#{endpointBean.entity.basePath}"
+						size="50" readonly="false" />
+				</hftl:decorateFormField>
+				<hftl:decorateFormField field="path" fieldId="pathId"
+					label="#{messages['endpoint.path']}">
+					<p:inputText id="pathId" value="#{endpointBean.entity.path}"
+						size="100" readonly="false" />
+				</hftl:decorateFormField>
 				<hftl:decorateFormField field="endpointUrl" fieldId="endpointUrlId"
 					label="#{messages['endpoint.accessUrl']}">
 					<p:inputText id="endpointUrlId" value="#{endpointBean.endpointUrl}"

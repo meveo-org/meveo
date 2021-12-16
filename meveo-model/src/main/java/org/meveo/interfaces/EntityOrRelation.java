@@ -138,10 +138,11 @@ public abstract class EntityOrRelation implements Serializable {
     		return property;
 		});
 		
-		if(multivalued){
+		if(multivalued) {
 			Set<Object> values = new HashSet<>((Collection<Object>) propertyInstance.getValue());
 			values.addAll((Collection<?>) value);
-		}else{
+			propertyInstance.setValue(values);
+		} else{
 			propertyInstance.setValue(value);
 		}
 		

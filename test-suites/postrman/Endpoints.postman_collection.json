@@ -1,0 +1,5363 @@
+{
+	"info": {
+		"_postman_id": "ecc1cd46-ac35-42c0-8db9-0343a7b54024",
+		"name": "Endpoints",
+		"description": "- Log\n\n- Create a connector that return page with url \"http://www.leboncoin.fr\"\n- Create a synchronous GET endpoint for that connector\n- Test the result\n\n- Create an extractor that return some odd data whatever the document\n- Create an asynchronous POST endpoint for that extractor\n- Start the execution\n- Retrieve the result\n\n- Update one endpoint\n- Delete endpoints\n- Delete extractor and connector\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.environment.get(\"variable_key\");",
+									"var json = pm.response.json();",
+									"var token = json[\"access_token\"];",
+									"var refreshToken = json[\"refresh_token\"]",
+									"pm.environment.set(\"access_token\", token);",
+									"pm.environment.set(\"refresh_token\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "{{keycloakClientId}}",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{keycloakClientSecret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{keycloak.hostname}}:{{keycloak.port}}/auth/realms/{{webContext}}/protocol/openid-connect/token",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{keycloak.hostname}}"
+							],
+							"port": "{{keycloak.port}}",
+							"path": [
+								"auth",
+								"realms",
+								"{{webContext}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						},
+						"description": "Request Keycloak and get auth token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Scripts",
+			"item": [
+				{
+					"name": "Budget header and default value",
+					"item": [
+						{
+							"name": "Create script",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.ExposedScriptTest\",\n    \"script\" : \"package org.meveo.test.script;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.model.technicalservice.endpoint.EndpointVariables;\\r\\nimport org.slf4j.Logger;\\r\\nimport org.slf4j.LoggerFactory;\\r\\nimport java.util.List;\\r\\nimport java.util.Map;\\r\\nimport java.util.HashMap;\\r\\nimport java.util.stream.Collectors;\\r\\n\\r\\npublic class ExposedScriptTest extends Script {\\r\\n\\r\\n    private String city;\\r\\n\\r\\n    private Map<String, Object> results;\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) {\\r\\n        results = new HashMap<>();\\r\\n        results.put(\\\"result\\\", \\\"The city is : \\\" + city);\\r\\n        Double maxBudget = (Double) methodContext.get(EndpointVariables.MAX_BUDGET);\\r\\n        String unit = (String) methodContext.get(EndpointVariables.BUDGET_UNIT);\\r\\n        results.put(\\\"budget\\\", \\\"The budget is \\\" + maxBudget + \\\" \\\" + unit);\\r\\n    }\\r\\n\\r\\n    public void setCity(String city) {\\r\\n        this.city = city;\\r\\n    }\\r\\n\\r\\n    public Map<String, Object> getResults() {\\r\\n        return results;\\r\\n    }\\r\\n}\\r\\n\"\n    \n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.ExposedScriptTest\",\n    \"code\": \"script-endpoint\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [],\n    \"contentType\": \"application/json\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"city\",\n            \"parameterName\" : \"CityValue\",\n            \"defaultValue\" : \"Paris\"\n    \t}\t\n\t],\n    \"returnedVariableName\": \"results\",\n    \"serializeResult\" : true\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Execute script endpoint with value and max budget",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Variable has been passed\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.result).to.eql(\"The city is : New-York\");",
+											"});",
+											"",
+											"pm.test(\"Budget has been passed\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.budget).to.eql(\"The budget is 32.0 EUR\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Budget-Max-Value",
+										"type": "text",
+										"value": "32"
+									},
+									{
+										"key": "Budget-Unit",
+										"type": "text",
+										"value": "EUR"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/script-endpoint/?CityValue=New-York",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"rest",
+										"script-endpoint",
+										""
+									],
+									"query": [
+										{
+											"key": "CityValue",
+											"value": "New-York"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Execute script endpoint with no value",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Default value has been used\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.result).to.eql(\"The city is : Paris\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/script-endpoint/",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"rest",
+										"script-endpoint",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get swagger doc",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Body matches string\", function () {",
+											"    ",
+											"    var body = JSON.parse(`{",
+											"  \"swagger\" : \"2.0\",",
+											"  \"info\" : {",
+											"    \"version\" : \"6.14.0-SNAPSHOT\",",
+											"    \"title\" : \"script-endpoint\"",
+											"  },",
+											"  \"basePath\" : \"http://localhost:8080/meveo/api/rest/\",",
+											"  \"schemes\" : [ \"https\" ],",
+											"  \"produces\" : [ \"application/json\" ],",
+											"  \"paths\" : {",
+											"    \"script-endpoint/\" : {",
+											"      \"get\" : {",
+											"        \"parameters\" : [ {",
+											"          \"name\" : \"CityValue\",",
+											"          \"in\" : \"query\",",
+											"          \"required\" : false,",
+											"          \"default\" : \"Paris\",",
+											"          \"format\" : \"object\"",
+											"        } ]",
+											"      }",
+											"    }",
+											"  },",
+											"  \"responses\" : {",
+											"    \"200\" : { }",
+											"  }",
+											"}`);",
+											"    delete body.info.version;",
+											"    delete body.basePath;",
+											"    ",
+											"    var responseJson = pm.response.json();",
+											"    delete responseJson.info.version;",
+											"    delete responseJson.basePath;",
+											"    ",
+											"    pm.expect(responseJson).to.eql(body);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/script-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"openApi",
+										"script-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script endpoint",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/script-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"script-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.ExposedScriptTest",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.ExposedScriptTest"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Delay header",
+					"item": [
+						{
+							"name": "Create timeout script",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.api.technicalservice.endpoint.TimedOutScript\",\n    \"script\" : \"package org.meveo.api.technicalservice.endpoint;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport java.util.HashMap;\\r\\nimport java.util.Map;\\r\\nimport java.util.concurrent.CompletableFuture;\\r\\nimport java.util.concurrent.ExecutionException;\\r\\n\\r\\npublic class TimedOutScript extends Script {\\r\\n\\r\\n    private int counter;\\r\\n\\r\\n    private CompletableFuture future;\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) {\\r\\n        future = CompletableFuture.runAsync(() -> {\\r\\n            while (true) {\\r\\n                counter++;\\r\\n                try {\\r\\n                    Thread.sleep(1000);\\r\\n                } catch (InterruptedException | java.util.concurrent.CancellationException e) {\\r\\n                    break;\\r\\n                }\\r\\n            }\\r\\n        });\\r\\n        try {\\r\\n            future.get();\\r\\n        } catch (InterruptedException | ExecutionException ignored) {\\r\\n        }\\r\\n    }\\r\\n\\r\\n    @Override\\r\\n    public Map<String, Object> cancel() {\\r\\n        future.cancel(true);\\r\\n        Map<String, Object> result = new HashMap<>();\\r\\n        result.put(\\\"counter\\\", counter);\\r\\n        return result;\\r\\n    }\\r\\n\\r\\n    public int getCounter() {\\r\\n        return counter;\\r\\n    }\\r\\n}\\r\\n\"\n    \n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script endpoint",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"serviceCode\": \"org.meveo.api.technicalservice.endpoint.TimedOutScript\",\n    \"code\": \"timeout-endpoint\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [],\n    \"parameterMappings\" : [],\n    \"returnedVariableName\": \"counter\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Execute script endpoint with value and max budget",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Counter is 2 or 3\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData === 2 || jsonData === 3).to.be.true",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Delay-Max-Value",
+										"type": "text",
+										"value": "2"
+									},
+									{
+										"key": "Delay-Unit",
+										"type": "text",
+										"value": "SECONDS"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/timeout-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"rest",
+										"timeout-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script endpoint",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/timeout-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"timeout-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.api.technicalservice.endpoint.TimedOutScript",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.api.technicalservice.endpoint.TimedOutScript"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Path params",
+			"item": [
+				{
+					"name": "Create ScriptForEndointTest",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"code\": \"org.meveo.endpoint.ScriptForEndointTest\",\n        \"description\": \"script to test #299\",\n        \"inputs\": [\n            {\n                \"name\": \"param1\",\n                \"type\": \"String\",\n                \"description\": null\n            },\n            {\n                \"name\": \"param2\",\n                \"type\": \"String\",\n                \"description\": null\n            }\n        ],\n        \"outputs\": [],\n        \"generateOutputs\": false,\n        \"type\": \"JAVA\",\n        \"transactionType\": \"SAME\",\n        \"script\": \"package org.meveo.endpoint;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport org.slf4j.Logger;\\r\\nimport org.slf4j.LoggerFactory;\\r\\n\\r\\npublic class ScriptForEndointTest extends Script {\\r\\n  \\r\\n\\tprivate static final Logger log = LoggerFactory.getLogger(ScriptForEndointTest.class);\\r\\n  \\r\\n\\tprivate String param1;\\r\\n  \\r\\n  \\tprivate String param2;\\r\\n\\r\\n    public void setParam1(String param1){\\r\\n      this.param1=param1;\\r\\n    }\\r\\n  \\r\\n    public void setParam2(String param2){\\r\\n      this.param2=param2;\\r\\n    }\\r\\n  \\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n      log.info(\\\"param1 :{}\\\",param1);\\r\\n      log.info(\\\"param2 :{}\\\",param2);\\r\\n      log.info(\\\"parameters :{}\\\",parameters);\\r\\n      parameters.put(\\\"param1\\\", param1);\\r\\n      parameters.put(\\\"param2\\\", param2);\\r\\n\\t}\\r\\n\\t\\r\\n}\",\n        \"executionRole\": [],\n        \"sourcingRole\": [],\n        \"mavenDependency\": [],\n        \"importScriptInstancy\": []\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ScriptForEndointTest",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/?scriptInstanceCode=org.meveo.endpoint.ScriptForEndointTest",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								""
+							],
+							"query": [
+								{
+									"key": "scriptInstanceCode",
+									"value": "org.meveo.endpoint.ScriptForEndointTest"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create endpoint 1",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"testPathParam1\",\n    \"serviceCode\": \"org.meveo.endpoint.ScriptForEndointTest\",\n    \"path\":\"/{param1}/id/{param2}\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"parameterMappings\": [],\n    \"pathParameters\": [\n            \"param1\",\n            \"param2\"\n    ],\n    \"roles\": [],\n    \"serializeResult\": false,\n    \"returnedVariableName\": \"param2\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create endpoint 2",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"testPathParam2\",\n    \"serviceCode\": \"org.meveo.endpoint.ScriptForEndointTest\",\n    \"path\":\"/{param1}/manifest/{param2}\",\n    \"basePath\":\"testBasePath\",\n    \"synchronous\": true,\n    \"method\": \"HEAD\",\n    \"parameterMappings\": [],\n    \"pathParameters\": [\n            \"param1\",\n            \"param2\"\n    ],\n    \"roles\": [],\n    \"serializeResult\": false\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get swagger doc 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Body matches string\", function () {",
+									"    ",
+									"    var body = JSON.parse(`{",
+									"  \"swagger\" : \"2.0\",",
+									"  \"info\" : {",
+									"    \"version\" : \"6.14.0-SNAPSHOT\",",
+									"    \"title\" : \"testPathParam1\"",
+									"  },",
+									"  \"basePath\" : \"http://localhost:8080/meveo/api/rest/\",",
+									"  \"schemes\" : [ \"https\" ],",
+									"  \"produces\" : [ \"application/json\" ],",
+									"  \"paths\" : {",
+									"    \"testPathParam1/{param1}/id/{param2}\" : {",
+									"      \"get\" : {",
+									"        \"parameters\" : [ ]",
+									"      },",
+									"      \"parameters\" : [ {",
+									"        \"name\" : \"param1\",",
+									"        \"in\" : \"path\",",
+									"        \"required\" : true",
+									"      }, {",
+									"        \"name\" : \"param2\",",
+									"        \"in\" : \"path\",",
+									"        \"required\" : true",
+									"      } ]",
+									"    }",
+									"  },",
+									"  \"responses\" : {",
+									"    \"200\" : { }",
+									"  }",
+									"}`);",
+									"    delete body.info.version;",
+									"    delete body.basePath;",
+									"    ",
+									"    var responseJson = pm.response.json();",
+									"    delete responseJson.info.version;",
+									"    delete responseJson.basePath;",
+									"    ",
+									"    pm.expect(responseJson).to.eql(body);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/testPathParam1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"openApi",
+								"testPathParam1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get swagger doc 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Body matches string\", function () {",
+									"    ",
+									"    var body = JSON.parse(`{",
+									"  \"swagger\" : \"2.0\",",
+									"  \"info\" : {",
+									"    \"version\" : \"6.14.0-SNAPSHOT\",",
+									"    \"title\" : \"testPathParam2\"",
+									"  },",
+									"  \"basePath\" : \"http://localhost:8080/meveo/api/rest/\",",
+									"  \"schemes\" : [ \"https\" ],",
+									"  \"produces\" : [ \"application/json\" ],",
+									"  \"paths\" : {",
+									"    \"testBasePath/{param1}/manifest/{param2}\" : {",
+									"      \"head\" : {",
+									"        \"parameters\" : [ ]",
+									"      },",
+									"      \"parameters\" : [ {",
+									"        \"name\" : \"param1\",",
+									"        \"in\" : \"path\",",
+									"        \"required\" : true",
+									"      }, {",
+									"        \"name\" : \"param2\",",
+									"        \"in\" : \"path\",",
+									"        \"required\" : true",
+									"      } ]",
+									"    }",
+									"  },",
+									"  \"responses\" : {",
+									"    \"200\" : { }",
+									"  }",
+									"}`);",
+									"    delete body.info.version;",
+									"    delete body.basePath;",
+									"    ",
+									"    var responseJson = pm.response.json();",
+									"    delete responseJson.info.version;",
+									"    delete responseJson.basePath;",
+									"    ",
+									"    pm.expect(responseJson).to.eql(body);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/testPathParam2",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"openApi",
+								"testPathParam2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list endpoints",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "call endpoint1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/testPathParam1/param1val/id/param2val",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"rest",
+								"testPathParam1",
+								"param1val",
+								"id",
+								"param2val"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "call endpoint2",
+					"request": {
+						"method": "HEAD",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/testBasePath/param1value/manifest/param2value",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"rest",
+								"testBasePath",
+								"param1value",
+								"manifest",
+								"param2value"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete endpoint 1",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/testPathParam1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"testPathParam1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete endpoint 2",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/testPathParam2",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"testPathParam2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.endpoint.ScriptForEndointTest",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.endpoint.ScriptForEndointTest"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "XML Input format",
+			"item": [
+				{
+					"name": "Create script",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\" : \"org.meveo.test.script.ExposedScriptTest\",\n    \"script\" : \"package org.meveo.test.script;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.model.technicalservice.endpoint.EndpointVariables;\\r\\nimport org.slf4j.Logger;\\r\\nimport org.slf4j.LoggerFactory;\\r\\nimport java.util.List;\\r\\nimport java.util.Map;\\r\\nimport java.util.HashMap;\\r\\nimport java.util.stream.Collectors;\\r\\n\\r\\npublic class ExposedScriptTest extends Script {\\r\\n\\r\\n    private String city;\\r\\n\\r\\n    private Map<String, Object> results;\\r\\n\\r\\n    @Override\\r\\n    public void execute(Map<String, Object> methodContext) {\\r\\n        results = new HashMap<>();\\r\\n        results.put(\\\"result\\\", \\\"The city is : \\\" + city);\\r\\n        Double maxBudget = (Double) methodContext.get(EndpointVariables.MAX_BUDGET);\\r\\n        String unit = (String) methodContext.get(EndpointVariables.BUDGET_UNIT);\\r\\n        results.put(\\\"budget\\\", \\\"The budget is \\\" + maxBudget + \\\" \\\" + unit);\\r\\n    }\\r\\n\\r\\n    public void setCity(String city) {\\r\\n        this.city = city;\\r\\n    }\\r\\n\\r\\n    public Map<String, Object> getResults() {\\r\\n        return results;\\r\\n    }\\r\\n}\\r\\n\"\n    \n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create script endpoint",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.ExposedScriptTest\",\n    \"code\": \"script-endpoint\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"pathParameters\": [],\n    \"returnedVariableName\": \"results\",\n    \"serializeResult\" : true,\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"city\",\n            \"parameterName\" : \"CityValue\",\n            \"defaultValue\" : \"Paris\"\n    \t}\t\n\t]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute script endpoint with value and max budget",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Variable has been passed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result).to.eql(\"The city is : New-York\");",
+									"});",
+									"",
+									"pm.test(\"Budget has been passed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.budget).to.eql(\"The budget is 32.0 EUR\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Budget-Max-Value",
+								"type": "text",
+								"value": "32"
+							},
+							{
+								"key": "Budget-Unit",
+								"type": "text",
+								"value": "EUR"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/xml",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<Map>\n\t<CityValue>New-York</CityValue>\n</Map>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/script-endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"rest",
+								"script-endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script endpoint",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/script-endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"script-endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.ExposedScriptTest",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.test.script.ExposedScriptTest"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Generate Endpoint Interface",
+			"item": [
+				{
+					"name": "Create CETs",
+					"item": [
+						{
+							"name": "Create script primitive",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.OpenApiGeneratePrimitiveTest\",\n    \"script\" : \"package org.meveo.test.script;\\n \\n import org.meveo.service.script.Script;\\n import java.util.HashMap;\\n import java.util.Map;\\n import org.meveo.admin.exception.BusinessException;\\n \\n public class OpenApiGeneratePrimitiveTest extends Script {\\n \\n @Override\\n public void execute(Map<String, Object> methodContext) throws BusinessException {\\n String result = getServiceCode() + \\\"=\\\" + getServiceVariable1();\\n \\n methodContext.put(RESULT_VALUE, result);\\n }\\n \\n\\nprivate Integer serviceVariable1;\\n\\npublic Integer getServiceVariable1() { \\n return serviceVariable1;\\n}\\n\\npublic void setServiceVariable1(Integer serviceVariable) { \\n serviceVariable1 = serviceVariable; \\n } \\n private String serviceCode; \\n\\n public void setServiceCode(String serviceCode) { \\nthis.serviceCode = serviceCode; \\n } \\n\\n public String getServiceCode() \\n{ return serviceCode; \\n } \\n\\n }\\n\",\n    \"generateOutputs\": false\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script object",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.OpenApiGenerateObjectTest\",\n    \"script\" : \"package org.meveo.test.script;\\n \\n import org.meveo.service.script.Script;\\n import java.util.HashMap;\\n import java.util.Map;\\n import org.meveo.admin.exception.BusinessException;\\n \\n public class OpenApiGenerateObjectTest extends Script {\\n \\n @Override\\n public void execute(Map<String, Object> methodContext) throws BusinessException {\\n String result = getServiceCode() + getServiceVariable1();\\n \\n methodContext.put(RESULT_VALUE, result);\\n }\\n \\n\\nprivate String serviceVariable1;\\n\\npublic String getServiceVariable1() { \\n return serviceVariable1;\\n}\\n\\npublic void setServiceVariable1(String serviceVariable) { \\n serviceVariable1 = serviceVariable; \\n } \\n private String serviceCode; \\n\\n public void setServiceCode(String serviceCode) { \\nthis.serviceCode = serviceCode; \\n } \\n\\n public String getServiceCode() \\n{ return serviceCode; \\n } \\n\\n }\",\n    \"samples\": [\n    \t{\n\t    \t\"inputs\": \n\t\t    \t{\n\t\t    \t\t\"firstName\": \"Edward\",\n\t\t    \t\t\"lastName\": \"Legaspi\"\n\t\t    \t},\n\t\t    \"outputs\": \n\t\t    {\n\t    \t\t\"message\": \"Hello Edward Legaspi\"\n\t    \t}\n    \t},\n    \t{\n\t    \t\"inputs\":\n\t    \t{\n\t    \t\t\"firstName\": \"Kerri\",\n\t    \t\t\"lastName\": \"Chan\"\n\t    \t},\n\t    \t\"outputs\":\n\t    \t{\n\t    \t\t\"message\": \"Hello Kerri Chan\"\n\t    \t}\n    \t}\n    ],\n    \"generateOutputs\": false\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create custom entity category",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"code\": \"crm\",\n\t\"name\": \"CRM\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"customEntityCategory",
+										"entity",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet consumption",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"CRM\",\n\t\"code\": \"Consumption\",\n\t\"description\": \"Consumption\",\n\t\"name\": \"Consumption\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t\t{\n\t\t\t\"code\": \"date\",\n\t\t\t\"description\": \"Date\",\n\t\t\t\"fieldType\": \"DATE\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": true\n\t\t},\n\t\t{\n\t\t\t\"code\": \"account\",\n\t\t\t\"description\": \"Account\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t},\n\t\t{\n\t\t\t\"code\": \"amount\",\n\t\t\t\"description\": \"Amount\",\n\t\t\t\"fieldType\": \"LONG\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t}\n\t]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet account",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"CRM\",\n\t\"code\": \"Account\",\n\t\"description\": \"Account\",\n\t\"name\": \"Account\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"accountCode\",\n\t\t\t\"description\": \"Account code\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t},\n\t\t{\n\t\t\t\"code\": \"accountType\",\n\t\t\t\"description\": \"Account type\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t}\n\t]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet account name",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"CRM\",\n\t\"code\": \"AccountName\",\n\t\"description\": \"Account Name\",\n\t\"name\": \"Account Name\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"firstName\",\n\t\t\t\"description\": \"First Name\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t},\n\t\t\n\t\t{\n\t\t\t\"code\": \"lastName\",\n\t\t\t\"description\": \"Last Name\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t}\n\t]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create cet user account",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"customEntityCategoryCode\": \"CRM\",\n\t\"code\": \"UserAccount\",\n\t\"description\": \"User Account\",\n\t\"name\": \"UserAccount\",\n\t\"availableStorages\": [\"SQL\"],\n\t\"sqlStorageConfiguration\": {\n\t\t\"storeAsTable\": true\n\t},\n\t\"fields\": [\n\t\t{\n\t\t\t\"code\": \"name\",\n\t\t\t\"description\": \"Name\",\n\t\t\t\"fieldType\": \"EMBEDDED_ENTITY\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false,\n\t\t\t\"entityClazz\": \"AccountName\"\n\t\t},\n\t\t{\n\t\t\t\"code\": \"account\",\n\t\t\t\"description\": \"account\",\n\t\t\t\"fieldType\": \"ENTITY\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false,\n\t\t\t\"entityClazz\": \"Account\"\n\t\t},\n\t\t{\n\t\t\t\"code\": \"gender\",\n\t\t\t\"description\": \"Gender\",\n\t\t\t\"fieldType\": \"STRING\",\n\t\t\t\"storageType\": \"SINGLE\",\n\t\t\t\"storages\": [\"SQL\"],\n\t\t\t\"valueRequired\": true,\n\t\t\t\"isUnique\": false\n\t\t}\n\t]\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"cet",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create script cet",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"code\" : \"org.meveo.test.script.OpenApiGenerateCetTest\",\n    \"script\" : \"package org.meveo.test.script;\\n \\nimport org.meveo.model.customEntities.Consumption; \\nimport org.meveo.model.customEntities.UserAccount; \\nimport org.meveo.model.customEntities.Account;\\n import org.meveo.service.script.Script;\\n import java.util.HashMap;\\n import java.util.Map;\\n import org.meveo.admin.exception.BusinessException;\\n \\n public class OpenApiGenerateCetTest extends Script {\\n \\n @Override\\n public void execute(Map<String, Object> methodContext) throws BusinessException {\\n String result = \\\"Hello \\\" + getServiceVariable1() + \\\" FROM SERVICE\\\";\\n \\n methodContext.put(RESULT_VALUE, result);\\n }\\n \\n\\nprivate String serviceVariable1;\\n\\npublic String getServiceVariable1() { \\n return serviceVariable1;\\n}\\n\\npublic void setServiceVariable1(String serviceVariable) { \\n serviceVariable1 = serviceVariable; \\n } \\nprivate Consumption consumption;\\n\\npublic void setConsumption(Consumption consumption) {\\nthis.consumption = consumption;\\n}\\n\\n\\npublic Consumption getConsumption() {\\nreturn consumption;\\n} \\n\\nprivate Account account;\\n\\npublic void setAccount(Account account) {\\nthis.account = account;\\n}\\n\\n\\npublic Account getAccount() {\\nreturn account;\\n} \\n\\nprivate UserAccount userAccount;\\n\\npublic void setUserAccount(UserAccount userAccount) {\\nthis.userAccount = userAccount;\\n}\\n\\n\\npublic UserAccount getUserAccount() {\\nreturn userAccount;\\n} \\n }\\n\",\n    \"generateOutputs\": false\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"createOrUpdate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get ScriptForEndointTest",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "meveo",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "meveo.admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/?scriptInstanceCode=org.meveo.test.script.OpenApiGenerateCetTest",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										""
+									],
+									"query": [
+										{
+											"key": "scriptInstanceCode",
+											"value": "org.meveo.test.script.OpenApiGenerateCetTest"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Request",
+					"item": [
+						{
+							"name": "Open API primitive",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGeneratePrimitiveTest\",\n    \"code\": \"get-OpenApiGeneratePrimitiveTest-endpoint\",\n    \"description\": \"Get OpenApiGeneratePrimitiveTest\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\",\n            \"defaultValue\" : 100\n    \t},\n    \t{\n            \"serviceParameter\": \"serviceCode\",\n            \"parameterName\" : \"qparam2\",\n            \"defaultValue\" : \"serviceCode\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"200\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGeneratePrimitiveTest-endpoint/accountCode?qparam1=200&serviceCode=MEVEO",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGeneratePrimitiveTest-endpoint",
+												"accountCode"
+											],
+											"query": [
+												{
+													"key": "qparam1",
+													"value": "200"
+												},
+												{
+													"key": "serviceCode",
+													"value": "MEVEO"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"100\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGeneratePrimitiveTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGeneratePrimitiveTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/get-OpenApiGeneratePrimitiveTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"get-OpenApiGeneratePrimitiveTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGeneratePrimitiveTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"get-OpenApiGeneratePrimitiveTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Open API object",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGenerateObjectTest\",\n    \"code\": \"get-OpenApiGenerateObjectTest-endpoint\",\n    \"description\": \"Get OpenApiGenerateObjectTest\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\",\n            \"defaultValue\" : \"android\"\n    \t},\n    \t{\n            \"serviceParameter\": \"serviceCode\",\n            \"parameterName\" : \"qparam2\",\n            \"defaultValue\" : \"serviceCode\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"iphone\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGenerateObjectTest-endpoint/accountCode?qparam1=iphone",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGenerateObjectTest-endpoint",
+												"accountCode"
+											],
+											"query": [
+												{
+													"key": "qparam1",
+													"value": "iphone"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint android",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"android\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGenerateObjectTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGenerateObjectTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/get-OpenApiGenerateObjectTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"get-OpenApiGenerateObjectTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGenerateObjectTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"get-OpenApiGenerateObjectTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Open API cet",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGenerateCetTest\",\n    \"code\": \"get-OpenApiGenerateCetTest-endpoint\",\n    \"description\": \"Get OpenApiGenerateCetTest\",\n    \"synchronous\": true,\n    \"method\": \"GET\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\",\n            \"defaultValue\" : \"android\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint 1",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"iphone\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGenerateCetTest-endpoint/accountCode?qparam1=iphone",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGenerateCetTest-endpoint",
+												"accountCode"
+											],
+											"query": [
+												{
+													"key": "qparam1",
+													"value": "iphone"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint 2",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"android\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/get-OpenApiGenerateCetTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"get-OpenApiGenerateCetTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/get-OpenApiGenerateCetTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"get-OpenApiGenerateCetTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGenerateCetTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"get-OpenApiGenerateCetTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Post Request",
+					"item": [
+						{
+							"name": "Open API primitive",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 201\", function () {",
+													"    pm.response.to.have.status(201);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGeneratePrimitiveTest\",\n    \"code\": \"post-OpenApiGeneratePrimitiveTest-endpoint\",\n    \"description\": \"Post OpenApiGeneratePrimitiveTest\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\",\n            \"defaultValue\" : 100\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"200\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"qparam1\": 200\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGeneratePrimitiveTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGeneratePrimitiveTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"100\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"qparam1\": 100\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGeneratePrimitiveTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGeneratePrimitiveTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/post-OpenApiGeneratePrimitiveTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"post-OpenApiGeneratePrimitiveTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGeneratePrimitiveTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"post-OpenApiGeneratePrimitiveTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Open API object",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 201\", function () {",
+													"    pm.response.to.have.status(201);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGenerateObjectTest\",\n    \"code\": \"post-OpenApiGenerateObjectTest-endpoint\",\n    \"description\": \"Post OpenApiGenerateObjectTest\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\",\n            \"defaultValue\" : \"android\"\n    \t},\n    \t{\n            \"serviceParameter\": \"serviceCode\",\n            \"parameterName\" : \"qparam2\",\n            \"defaultValue\" : \"serviceCode\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"iphone\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"qparam1\": \"iphone\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGenerateObjectTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGenerateObjectTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint android",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"android\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGenerateObjectTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGenerateObjectTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/post-OpenApiGenerateObjectTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"post-OpenApiGenerateObjectTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateObjectTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"post-OpenApiGenerateObjectTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Open API cet consumption",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 201\", function () {",
+													"    pm.response.to.have.status(201);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGenerateCetTest\",\n    \"code\": \"post-OpenApiGenerateCetTest-endpoint\",\n    \"description\": \"Post OpenApiGenerateCetTest\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"serviceVariable1\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\"\n    \t},\n    \t{\n            \"serviceParameter\": \"account\",\n            \"parameterName\" : \"qparam2\"\n    \t},\n    \t{\n            \"serviceParameter\": \"consumption\",\n            \"parameterName\" : \"qparam3\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint 1",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"iphone\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"qparam1\": \"iphone\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGenerateCetTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGenerateCetTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Call endpoint 2",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Body matches string\", function () {",
+													"    pm.expect(pm.response.text()).to.include(\"android\");",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\t\"qparam1\": \"android\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/post-OpenApiGenerateCetTest-endpoint/accountCode",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"rest",
+												"post-OpenApiGenerateCetTest-endpoint",
+												"accountCode"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/post-OpenApiGenerateCetTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"post-OpenApiGenerateCetTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateCetTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"post-OpenApiGenerateCetTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Open API cet account",
+							"item": [
+								{
+									"name": "Create endpoint",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 201\", function () {",
+													"    pm.response.to.have.status(201);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"serviceCode\": \"org.meveo.test.script.OpenApiGenerateCetTest\",\n    \"code\": \"post-OpenApiGenerateCetAccountTest-endpoint\",\n    \"description\": \"Post OpenApiGenerateCetAccountTest\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"pathParameters\": [\"accountCode\"],\n    \"returnedVariableName\": \"userAccount\",\n    \"parameterMappings\" : [\n    \t{\n            \"serviceParameter\": \"serviceVariable1\",\n            \"parameterName\" : \"qparam1\"\n    \t},\n    \t{\n            \"serviceParameter\": \"userAccount\",\n            \"parameterName\" : \"qparam2\"\n    \t},\n    \t{\n            \"serviceParameter\": \"consumption\",\n            \"parameterName\" : \"qparam3\"\n    \t}\n\t],\n\t\"contentType\": \"application/json\",\n\t\"roles\": [\"administrateur\"]\n}"
+										},
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get open api doc",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/x-www-form-urlencoded"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/openApi/post-OpenApiGenerateCetAccountTest-endpoint",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"openApi",
+												"post-OpenApiGenerateCetAccountTest-endpoint"
+											]
+										},
+										"description": "Request Keycloak and get auth token"
+									},
+									"response": []
+								},
+								{
+									"name": "Get endpoint js script",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"response is ok\", function () {",
+													"    pm.response.to.have.status(200);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "{{keycloakPassword}}",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "{{keycloakUsername}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateCetAccountTest-endpoint.js",
+											"protocol": "{{protocol}}",
+											"host": [
+												"{{hostname}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"{{webContext}}",
+												"api",
+												"rest",
+												"endpoint",
+												"post-OpenApiGenerateCetAccountTest-endpoint.js"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Cleanup",
+					"item": [
+						{
+							"name": "Delete post endpoint cet Account",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateCetAccountTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"post-OpenApiGenerateCetAccountTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete post endpoint cet Consumption",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateCetTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"post-OpenApiGenerateCetTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete post endpoint cet object",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGenerateObjectTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"post-OpenApiGenerateObjectTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete post endpoint cet primitive",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/post-OpenApiGeneratePrimitiveTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"post-OpenApiGeneratePrimitiveTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete get endpoint request cet",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGenerateCetTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"get-OpenApiGenerateCetTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete get endpoint  request object",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGenerateObjectTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"get-OpenApiGenerateObjectTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete get endpoint request primitive",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/get-OpenApiGeneratePrimitiveTest-endpoint",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"endpoint",
+										"get-OpenApiGeneratePrimitiveTest-endpoint"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script cet",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.OpenApiGenerateCetTest",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.OpenApiGenerateCetTest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet user account",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/UserAccount",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"UserAccount"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet user account name",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/AccountName",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"AccountName"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet user account",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Account",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"Account"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete cet consumption",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/Consumption",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"entityCustomization",
+										"entity",
+										"Consumption"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete custom entity category",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customEntityCategory/entity/crm",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"customEntityCategory",
+										"entity",
+										"crm"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script object",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.OpenApiGenerateObjectTest",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.OpenApiGenerateObjectTest"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete script primitive",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "{{keycloakPassword}}",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "{{keycloakUsername}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.test.script.OpenApiGeneratePrimitiveTest",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{hostname}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"{{webContext}}",
+										"api",
+										"rest",
+										"scriptInstance",
+										"org.meveo.test.script.OpenApiGeneratePrimitiveTest"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Multivalued inputs",
+			"item": [
+				{
+					"name": "Create MultivalueInputs script",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"org.meveo.script.MultivalueInputs\",\n    \"inputs\": [\n        {\n            \"name\": \"multi\",\n            \"type\": \"Set<String>\",\n            \"description\": null\n        },\n        {\n            \"name\": \"single\",\n            \"type\": \"String\",\n            \"description\": null\n        }\n    ],\n    \"outputs\": [],\n    \"generateOutputs\": false,\n    \"type\": \"JAVA\",\n    \"transactionType\": \"SAME\",\n    \"script\": \"package org.meveo.script;\\r\\n\\r\\nimport java.util.Map;\\r\\n\\r\\nimport org.meveo.service.script.Script;\\r\\nimport org.meveo.admin.exception.BusinessException;\\r\\nimport java.util.Set;\\r\\n\\r\\npublic class MultivalueInputs extends Script {\\r\\n\\t\\r\\n  \\tprivate Set<String> multi;\\r\\n  \\r\\n    private String single;\\r\\n  \\r\\n  \\tpublic void setMulti(Set<String> multi) {\\r\\n      this.multi = multi;\\r\\n    }\\r\\n  \\r\\n  \\tpublic void  setSingle(String single) {\\r\\n      this.single = single;\\r\\n    }\\r\\n  \\r\\n\\t@Override\\r\\n\\tpublic void execute(Map<String, Object> parameters) throws BusinessException {\\r\\n\\t\\tSystem.out.println(\\\"Multi : \\\" + multi);\\r\\n      \\tSystem.out.println(\\\"Single : \\\" + single);\\r\\n\\t}\\r\\n\\t\\r\\n}\",\n    \"executionRole\": [],\n    \"sourcingRole\": [],\n    \"mavenDependency\": [],\n    \"importScriptInstancy\": []\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create multi-value endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"test-multi\",\n    \"secured\": true,\n    \"checkPathParams\": true,\n    \"serviceCode\": \"org.meveo.script.MultivalueInputs\",\n    \"synchronous\": true,\n    \"method\": \"POST\",\n    \"parameterMappings\": [\n        {\n            \"serviceParameter\": \"single\",\n            \"multivalued\": false,\n            \"parameterName\": \"single\",\n            \"defaultValue\": null,\n            \"valueRequired\": false\n        },\n        {\n            \"serviceParameter\": \"multi\",\n            \"multivalued\": true,\n            \"parameterName\": \"multi\",\n            \"defaultValue\": null,\n            \"valueRequired\": false\n        }\n    ],\n    \"pathParameters\": [],\n    \"roles\": [],\n    \"serializeResult\": false\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute multi-value endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/xml",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"multi\": [\"1\", \"2\"],\n    \"single\" : \"toto\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/rest/test-multi",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"rest",
+								"test-multi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script endpoint",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/endpoint/test-multi",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"endpoint",
+								"test-multi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete script",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/scriptInstance/org.meveo.script.MultivalueInputs",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"scriptInstance",
+								"org.meveo.script.MultivalueInputs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Response code should be above 200\", function() {",
+					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,403]); ",
+					"});"
+				]
+			}
+		}
+	]
+}

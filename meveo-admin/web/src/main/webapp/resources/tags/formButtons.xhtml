@@ -42,8 +42,7 @@
 
 
 <cc:interface>
-	<cc:attribute name="backingBean" required="true"
-				  type="org.meveo.admin.action.BaseBean" />
+	<cc:attribute name="backingBean" required="true" type="org.meveo.admin.action.BaseBean" />
 	<cc:attribute name="edit" required="true" />
 	<cc:attribute name="killConversationOnSave" default="true" />
 	<cc:attribute name="killConversationOnBack" default="true" />
@@ -183,10 +182,20 @@
 
 		<c:if test="#{! empty customFieldDataEntryBean.getCustomActions(cc.attrs.backingBean.entity)}">
 			<ui:repeat var="customAction" value="#{customFieldDataEntryBean.getCustomActionsInDetail(cc.attrs.backingBean.entity)}">
-				<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" action="#{customFieldDataEntryBean.executeCustomAction(cc.attrs.backingBean.entity, customAction, null)}"
-								 process="@this #{cc.attrs.submitPartialProcess!=null?cc.attrs.submitPartialProcess:'@form'}" partialSubmit="#{cc.attrs.submitPartialProcess !=null}"
-								 partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" update="@form"
-								 rendered="#{exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',cc.attrs.backingBean.entity)}" />
+				<p:commandButton id="ExecuteDialogButton"
+					value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}"
+					oncomplete="PF('executeDialog').show()"
+					 rendered="#{not empty customAction.scriptParameters and exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',cc.attrs.backingBean.entity)}">
+					<c:set target="#{customEntityInstanceBean}" property="action" value="#{customAction}"/>
+					<f:param name="edit" value="#{cc.attrs.edit}" />
+				</p:commandButton>
+				<p:commandButton value="#{customAction.getLabel(customFieldDataEntryBean.currentLocale.ISO3Language)}" 
+					 action="#{customEntityInstanceBean.executeCustomAction(cc.attrs.backingBean.entity, customAction, null)}"
+					 process="@this #{cc.attrs.submitPartialProcess!=null?cc.attrs.submitPartialProcess:'@form'}" 
+					 partialSubmit="#{cc.attrs.submitPartialProcess !=null}"
+					 partialSubmitFilter="#{cc.attrs.submitPartialSubmitFilter}" 
+					 update="@form"
+					 rendered="#{empty customAction.scriptParameters and exp:evaluateToBooleanOneVariable(customAction.applicableOnEl,'entity',cc.attrs.backingBean.entity)}" />
 			</ui:repeat>
 		</c:if>
 
@@ -267,7 +276,7 @@
 
 		<p:dialog widgetVar="executeDialog" header="#{messages['jobInstance.overrideParams']}" dynamic="true" modal="true" styleClass="form-dialog" closeOnEscape="true" width="40%" appendTo="@(body)">
 			<h:form id="executeDialogForm">
-				<p:dataTable id="customParamsDataTable" value="#{jobInstanceBean.overrideParams}" resizableColumns="true" var="mapValues" paginator="false" styleClass="custom-grid" reflow="true">
+				<p:dataTable id="customParamsDataTable" value="#{cc.attrs.backingBean.overrideParams}" resizableColumns="true" var="mapValues" paginator="false" styleClass="custom-grid" reflow="true">
 					<p:column headerText="#{messages['commons.key']}">
 						<p:inputText value="#{mapValues['key']}" size="30" maxlength="100"/>
 					</p:column>
@@ -278,7 +287,7 @@
 						<p:commandButton value="#{messages['action.execute']}" process="@form @parent" partialSubmit="true"
 										 partialSubmitFilter=":not([name*='omitFromSubmit'])" update=":formId"
 										 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('executeDialog').hide()"
-										 action="#{jobInstanceBean.executeWithParameters()}">
+										 action="#{cc.attrs.backingBean.executeWithParameters()}">
 						</p:commandButton>
 						<p:commandButton value="#{messages['commons.close']}" update="@form"
 										 oncomplete="PF('executeDialog').hide()">

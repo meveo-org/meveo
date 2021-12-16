@@ -97,18 +97,7 @@
             <h:outputText value="#{field.class.name == 'java.lang.String' ? field : field.code}" />
         </c:if>
         <c:if test="#{edit}">
-            <p:autoComplete value="#{field}" required="#{cft.valueRequired}" size="30" maxlength="60" dropdown="true" placeholder="#{placeholder}" label="#{label}"
-                completeMethod="#{customFieldDataEntryBean.autocompleteEntityForCFV}" queryDelay="1000" var="e"
-                itemLabel="#{e.code}" itemValue="#{e}">
-                <f:attribute name="classname" value="#{cft.entityClazz}" />
-                <p:column width="50" headerText="#{messages['BusinessEntity.code']}">
-                    <h:outputText value="#{e.code}" />
-                </p:column>
-                <p:column width="50" headerText="#{messages['BusinessEntity.description']}">
-                    <h:outputText value="#{e.description}" />
-                </p:column>
-                <o:converter converterId="omnifaces.ListConverter" list="#{customFieldDataEntryBean.allEntityForCFV()}" />
-            </p:autoComplete>
+        	<hftl:cfEntityReference value="#{field}" cft="#{cft}" id="entityRef"/>
         </c:if>
     </c:if>
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LIST}">

@@ -175,8 +175,10 @@ public class FileSystemService {
 				showOnExplorer ? getProviderPath() : paramBeanFactory.getInstance().getProperty("binary.storage.path", "/tmp/meveo/binary/storage")
         );
 
-        rootPath.append(File.separator);
-        rootPath.append(binaryStorageConfigurationRootPath);
+		if(binaryStorageConfigurationRootPath!=null){
+        	rootPath.append(File.separator);
+        	rootPath.append(binaryStorageConfigurationRootPath);
+		}
         return rootPath.toString();
 	}
 

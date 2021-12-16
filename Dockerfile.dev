@@ -110,6 +110,19 @@ RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION
 
 
 
+### ------------------------- glowroot ----------------------------- ###
+### https://glowroot.org/
+### https://github.com/glowroot/glowroot/releases
+
+ARG GLOWROOT_VERSION=0.13.6
+
+RUN set -ex \
+    && curl -L https://github.com/glowroot/glowroot/releases/download/v${GLOWROOT_VERSION}/glowroot-${GLOWROOT_VERSION}-dist.zip > glowroot.zip \
+    && unzip glowroot.zip \
+    && rm glowroot.zip \
+    && ls ${JBOSS_HOME}/glowroot/glowroot.jar
+
+
 ### ------------------------- Configurations ----------------------------- ###
 
 
@@ -123,7 +136,7 @@ RUN mkdir -p ${JBOSS_HOME}/meveodata /tmp/meveo/binary/storage /tmp/meveo/infini
 COPY --chown=jboss:jboss docker/configs/cli ${JBOSS_HOME}/cli
 
 ### meveo configuration
-COPY --chown=jboss:jboss docker/configs/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
 COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_resources
@@ -136,7 +149,6 @@ EXPOSE 8080 8787 9990
 
 
 #install maven
-
 USER root
 
 RUN usermod -a -G jboss root
@@ -157,17 +169,18 @@ ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "/opt/jboss/wildfly/meveodata/default/.m2"
 
 
-RUN mkdir -p /usr/share/trava \
-  && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.11%2B1/Openjdk11u-dcevm-linux-x64.tar.gz  \
-  && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
-  && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
+#RUN mkdir -p /usr/share/trava \
+#  && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.11%2B1/Openjdk11u-dcevm-linux-x64.tar.gz  \
+#  && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
+#  && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
 
 
 # FIXME: make sure from the beggining of this file that those settings contain credential to access the needed server
 RUN export HOST_MVN_SETTINGS_PATH=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)/..
 COPY ${HOST_MVN_SETTINGS_PATH}/settings.xml ${MAVEN_CONFIG}/settings.xml
 
-COPY . /tmp/meveo
+USER jboss
+COPY --chown=jboss:jboss . /tmp/meveo
 RUN cd /tmp/meveo \
   && cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources \
   && ./deploy.sh
@@ -175,8 +188,8 @@ RUN cd /tmp/meveo \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo 
 
-ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.11+1
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${JAVA_HOME}/bin
+#ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.11+1
+#ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${JAVA_HOME}/bin
 
 COPY --chown=jboss:jboss /docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh

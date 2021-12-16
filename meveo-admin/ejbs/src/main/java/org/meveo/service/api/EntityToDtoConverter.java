@@ -207,6 +207,8 @@ public class EntityToDtoConverter {
             dto.setMapValue(customFieldValueToDTO((Map) value));
         } else if (value instanceof EntityReferenceWrapper) {
             dto.setEntityReferenceValue(new EntityReferenceDto((EntityReferenceWrapper) value));
+        } else if(value instanceof Boolean) {
+        	dto.setBooleanValue((boolean) value);
         }
 
         return dto;

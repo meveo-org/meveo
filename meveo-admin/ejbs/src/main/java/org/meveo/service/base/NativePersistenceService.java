@@ -1209,7 +1209,12 @@ public class NativePersistenceService extends BaseService {
 				// Declaratively fetch super-type fields
 				if(config.getSuperTypeFields() != null) {
 					for(var superTypeField : config.getSuperTypeFields()) {
-						startQuery += ", b." + superTypeField + " ";
+						String fieldName = superTypeField;
+						if (PostgresReserverdKeywords.isReserved(fieldName)) {
+							fieldName = "\"" + fieldName + "\"" ;
+						}
+						
+						startQuery += ", b." + fieldName + " ";
 					}
 				} else {
 					startQuery += ", b.*";
@@ -1228,7 +1233,13 @@ public class NativePersistenceService extends BaseService {
 			}
 		} else {
 			StringBuilder builder = new StringBuilder("select a.uuid, "); // Always return UUID
-			config.getFetchFields().forEach(s -> builder.append(s).append(", "));
+			config.getFetchFields().forEach(s -> {
+				String fieldName = s;
+				if (PostgresReserverdKeywords.isReserved(fieldName)) {
+					fieldName = "\"" + fieldName + "\"" ;
+				}
+				builder.append(fieldName).append(", ");
+			});
 			builder.delete(builder.length() - 2, builder.length());
 			startQuery = builder.append(" from {h-schema}").append(tableName).append(" a ").toString();
 			if(superType != null) {
@@ -1264,15 +1275,17 @@ public class NativePersistenceService extends BaseService {
 				if (condition != null) {
 					fields = Arrays.copyOfRange(fieldInfo, 1, fieldInfo.length);
 				}
+				
+				fieldName = "a." + fieldName;
 
 				// if ranged search - field value in between from - to values. Specifies "from"
 				// value: e.g value<=field.value
 				if ("fromRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion(fieldName, " >= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " >= ", rationalNumber, false);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion(fieldName, " >= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " >= ", filterValue, false);
 					} else if (filterValue instanceof Date) {
 						queryBuilder.addCriterionDateRangeFromTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					}  else if (filterValue instanceof Instant) {
@@ -1284,9 +1297,9 @@ public class NativePersistenceService extends BaseService {
 				} else if ("toRange".equals(condition)) {
 					if (filterValue instanceof Double) {
 						BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, true);
+						queryBuilder.addCriterion(fieldName, " <= ", rationalNumber, false);
 					} else if (filterValue instanceof Number) {
-						queryBuilder.addCriterion(fieldName, " <= ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, " <= ", filterValue, false);
 					} else if (filterValue instanceof Date) {
 						queryBuilder.addCriterionDateRangeToTruncatedToDay(fieldName, ((Date) filterValue).toInstant());
 					} else if (filterValue instanceof Instant) {
@@ -1296,7 +1309,7 @@ public class NativePersistenceService extends BaseService {
 					// Value is in field value (list)
 				} else if ("list".equals(condition)) {
 					String paramName = queryBuilder.convertFieldToParam(fieldName);
-					queryBuilder.addSqlCriterion(":" + paramName + " in elements(a." + fieldName + ")", paramName, filterValue);
+					queryBuilder.addSqlCriterion(":" + paramName + " in elements(" + fieldName + ")", paramName, filterValue);
 
 					// Field value is in value (list)
 				} else if ("inList".equals(condition) || "not-inList".equals(condition)) {
@@ -1338,8 +1351,8 @@ public class NativePersistenceService extends BaseService {
 
 					String paramName = queryBuilder.convertFieldToParam(fieldName);
 
-					String sql = "((a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or (a." + fieldName + "<=:" + paramName + " and :" + paramName + "<a."
-							+ fieldName2 + ") or (a." + fieldName + "<=:" + paramName + " and a." + fieldName2 + " IS NULL) or (a." + fieldName + " IS NULL and :" + paramName
+					String sql = "((" + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or (" + fieldName + "<=:" + paramName + " and :" + paramName + "<a."
+							+ fieldName2 + ") or (" + fieldName + "<=:" + paramName + " and a." + fieldName2 + " IS NULL) or (a." + fieldName + " IS NULL and :" + paramName
 							+ "<a." + fieldName2 + "))";
 					queryBuilder.addSqlCriterionMultiple(sql, paramName, filterValue);
 
@@ -1350,10 +1363,10 @@ public class NativePersistenceService extends BaseService {
 					String paramNameFrom = queryBuilder.convertFieldToParam(fieldName);
 					String paramNameTo = queryBuilder.convertFieldToParam(fieldName2);
 
-					String sql = "(( a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or  ( a." + fieldName + " IS NULL and a." + fieldName2 + ">:" + paramNameFrom
-							+ ") or (a." + fieldName2 + " IS NULL and a." + fieldName + "<:" + paramNameTo + ") or (a." + fieldName + " IS NOT NULL and a." + fieldName2
-							+ " IS NOT NULL and ((a." + fieldName + "<=:" + paramNameFrom + " and :" + paramNameFrom + "<a." + fieldName2 + ") or (:" + paramNameFrom + "<=a."
-							+ fieldName + " and a." + fieldName + "<:" + paramNameTo + "))))";
+					String sql = "((" + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or  (" + fieldName + " IS NULL and a." + fieldName2 + ">:" + paramNameFrom
+							+ ") or (a." + fieldName2 + " IS NULL and " + fieldName + "<:" + paramNameTo + ") or (" + fieldName + " IS NOT NULL and a." + fieldName2
+							+ " IS NOT NULL and ((" + fieldName + "<=:" + paramNameFrom + " and :" + paramNameFrom + "<a." + fieldName2 + ") or (:" + paramNameFrom + "<=a."
+							+ fieldName + " and " + fieldName + "<:" + paramNameTo + "))))";
 
 					if (filterValue.getClass().isArray()) {
 						queryBuilder.addSqlCriterionMultiple(sql, paramNameFrom, ((Object[]) filterValue)[0], paramNameTo, ((Object[]) filterValue)[1]);
@@ -1369,7 +1382,7 @@ public class NativePersistenceService extends BaseService {
 					if (filterValue instanceof String) {
 						String filterString = (String) filterValue;
 						for (String field : fields) {
-							queryBuilder.addCriterionWildcard(field, filterString, true);
+							queryBuilder.addCriterionWildcard(field, filterString, false);
 						}
 					}
 					queryBuilder.endOrClause();
@@ -1388,7 +1401,8 @@ public class NativePersistenceService extends BaseService {
 				} else if (PersistenceService.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) { // since SEARCH_WILDCARD_OR_IGNORE_CAS , then filterValue is necessary a String
-						queryBuilder.addSql("lower(a." + field + ") like '%" + String.valueOf(filterValue).toLowerCase() + "%'");
+						//lowercase functions may give different results in postgres/java => to avoid mismatch, postrges's function is the only one used. Example of mismath : Danışmanlık_İth
+						queryBuilder.addSqlCriterion("lower(a." + field + ") like concat('%', lower(:" + field + "), '%')", field, filterValue);
 					}
 					queryBuilder.endOrClause();
 
@@ -1415,9 +1429,9 @@ public class NativePersistenceService extends BaseService {
 						String filterString = (String) filterValue;
 						boolean wildcard = (filterString.indexOf("*") != -1);
 						if (wildcard) {
-							queryBuilder.addCriterionWildcard(fieldName, filterString, true, "ne".equals(condition));
+							queryBuilder.addCriterionWildcard(fieldName, filterString, false, "ne".equals(condition));
 						} else {
-							queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
+							queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterString, false);
 						}
 
 					} else if (filterValue instanceof Date) {
@@ -1427,12 +1441,12 @@ public class NativePersistenceService extends BaseService {
 						queryBuilder.addCriterionDateTruncatedToDay(fieldName, (Instant) filterValue);
 
 					} else if (filterValue instanceof Number || filterValue instanceof Boolean) {
-						queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
+						queryBuilder.addCriterion(fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, false);
 
 					} else if (filterValue instanceof Enum) {
 						if (filterValue instanceof IdentifiableEnum) {
 							String enumIdKey = new StringBuilder(fieldName).append("Id").toString();
-							queryBuilder.addCriterion(enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
+							queryBuilder.addCriterion(enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), false);
 						} else {
 							queryBuilder.addCriterionEnum(fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
 						}
@@ -1690,11 +1704,11 @@ public class NativePersistenceService extends BaseService {
 					return Boolean.parseBoolean(value.toString());
 				}
 
-			} else if (targetClass == Date.class) {
+			} else if (targetClass == Date.class || targetClass == Instant.class) {
 				if (dateVal != null || listVal != null) {
 					return value;
 				} else if (numberVal != null) {
-					return new Date(numberVal.longValue());
+					return Instant.ofEpochMilli(numberVal.longValue());
 				} else if (stringVal != null) {
 
 					// Use provided date patterns or try default patterns if they were not provided

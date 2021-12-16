@@ -159,7 +159,7 @@ public class EntityCustomizationWsImpl extends BaseWs implements EntityCustomiza
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            customEntityTemplateApi.updateEntityTemplate(postData);
+            customEntityTemplateApi.updateEntityTemplate(postData, false);
 
         } catch (Exception e) {
             super.processException(e, result);

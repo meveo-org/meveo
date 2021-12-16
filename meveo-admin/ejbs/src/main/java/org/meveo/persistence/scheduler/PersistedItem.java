@@ -28,8 +28,13 @@ public class PersistedItem extends ItemToPersist {
         super(itemToPersist.getCode(), itemToPersist.getName(), itemToPersist.getValues());
         this.uuid = uuid;
     }
+    
+	public PersistedItem(String uuid, Map<String, Object> dto) {
+		super(uuid, uuid, dto);
+        this.uuid = uuid;
+	}
 
-    public String getUuid() {
+	public String getUuid() {
         return uuid;
     }
 

@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -32,16 +30,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -59,6 +59,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -78,13 +79,16 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.CrossStorageTransaction;
+import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
 import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
@@ -102,6 +106,10 @@ import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Feature;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -173,10 +181,15 @@ public class PersistenceRs {
 	public Response list(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
 			@QueryParam("withCount") @ApiParam("If true returns the count of entities") Boolean withCount,
+			@QueryParam("singleValue") @ApiParam("Whether to return only one value") Boolean singleValue,
 			@ApiParam("Pagination configuration information") PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 		if (customEntityTemplate == null) {
 			throw new NotFoundException("Custom entity template with code " + cetCode + " does not exists");
+		}
+		
+		if (!currentUser.hasRole(customEntityTemplate.getReadPermission())) {
+			throw new ForbiddenException();
 		}
 
 		if (paginationConfiguration == null) {
@@ -208,12 +221,17 @@ public class PersistenceRs {
 			PersistenceListResult result = new PersistenceListResult();
 			result.setCount(totalCount.intValue());
 			result.setResult(entities);
-
 			return Response.ok(result).build();
 
-		} else {
-			return Response.ok(entities).build();
+		} else if(singleValue != null && singleValue) {
+			if(entities.isEmpty()) {
+				return Response.status(404).build();
+			} else {
+				return Response.ok(entities.get(0)).build();
+			}
 		}
+		
+		return Response.ok(entities).build();
 	}
 
 	@DELETE
@@ -238,23 +256,27 @@ public class PersistenceRs {
 
 		return Response.noContent().build();
 	}
+	
+	@GET
+	@Path("/{cetCode}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Search through entity")
+	public Response get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode,
+			@QueryParam("singleValue") Boolean singleValue,
+			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
+		
+		return list(base64Encode, cetCode, false, singleValue, paginationConfiguration);
+	}
 
-	/**
-	 * @param base64Encode
-	 * @param cetCode
-	 * @param uuid
-	 * @param seeDecrypted
-	 * @return
-	 * @throws EntityDoesNotExistsException
-	 * @throws IOException
-	 */
 	@GET
 	@Path("/{cetCode}/{uuid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get persistence")
-	public Map<String, Object> get(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
+	@ApiOperation(value = "Search entity by uuid")
+	public Map<String, Object> getByUuid(@HeaderParam("Base64-Encode") @ApiParam("Base 64 encode") boolean base64Encode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid,
-			@HeaderParam("See-Decrypted") boolean seeDecrypted) throws EntityDoesNotExistsException, IOException {
+			@HeaderParam("See-Decrypted") boolean seeDecrypted, 
+			@BeanParam PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException, IOException {
 
 		final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(cetCode);
 
@@ -269,8 +291,16 @@ public class PersistenceRs {
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		
 		hasAccessToRepository(repository);
+		
+		Set<String> fields = new HashSet<>(paginationConfiguration.getFetchFields());
+		Map<String, Set<String>> subFields = crossStorageService.extractSubFields(fields);
 
-		Map<String, Object> values = crossStorageService.find(repository, customEntityTemplate, uuid, true);
+		Map<String, Object> values = crossStorageService.find(repository, 
+				customEntityTemplate, 
+				uuid,
+				fields,
+				subFields,
+				true);
 
 		if (values.size() == 1 && values.containsKey("uuid")) {
 			throw new NotFoundException(cetCode + " with uuid " + uuid + " does not exists");
@@ -310,6 +340,7 @@ public class PersistenceRs {
 		cei.setCet(cache.getCustomEntityTemplate(cetCode));
 		cei.setUuid(uuid);
 		customFieldInstanceService.setCfValues(cei, cetCode, body);
+		cei.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(cei.getCfValues()));
 
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		
@@ -401,7 +432,7 @@ public class PersistenceRs {
 			}
 		}
 
-		return persist(dtos);
+		return persist(PersistenceMode.graph, dtos);
 	}
 	
 	@POST
@@ -423,11 +454,6 @@ public class PersistenceRs {
 		scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 	}
 
-	/**
-	 * @param dtos
-	 * @return
-	 * @throws CyclicDependencyException
-	 */
 	private AtomicPersistencePlan getSchedule(Collection<PersistenceDto> dtos) throws CyclicDependencyException {
 		/* Extract the entities */
 		final List<Entity> entities = dtos.stream().filter(persistenceDto -> persistenceDto.getDiscriminator().equals(EntityOrRelation.ENTITY))
@@ -452,25 +478,59 @@ public class PersistenceRs {
 		AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityOrRelations);
 		return atomicPersistencePlan;
 	}
+	
+	@POST
+	@Path("/{cetCode}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<PersistedItem> peristMany(@PathParam("cetCode") String cetCode, String body) throws EntityDoesNotExistsException, CyclicDependencyException {
+		Collection<Map<String, Object>> dtos = JacksonUtil.fromString(body, new TypeReference<Collection<Map<String, Object>>>() {});
+		dtos.forEach(dto -> dto.put("cetCode", cetCode));
+		return persist(PersistenceMode.list, dtos);
+	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Persist many entities")
-	public List<PersistedItem> persist(Collection<PersistenceDto> dtos) throws CyclicDependencyException, IOException, EntityDoesNotExistsException {
+	public List<PersistedItem> persist(
+			@HeaderParam("Persistence-Mode") @DefaultValue("graph") PersistenceMode persistenceMode, 
+			Object body) throws CyclicDependencyException, EntityDoesNotExistsException {
+		
 		final Repository repository = repositoryService.findByCode(repositoryCode);
 		hasAccessToRepository(repository);
 		
-		AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
+		if(persistenceMode.equals(PersistenceMode.graph)) {
+			Collection<PersistenceDto> dtos = JacksonUtil.convert(body, new TypeReference<Collection<PersistenceDto>>() {});
+			AtomicPersistencePlan atomicPersistencePlan = getSchedule(dtos);
+	
+			try {
+				/* Persist the entities and return 201 created response */
+				return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
+	
+			} catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
+				/* An error happened */
+				throw new ServerErrorException(Response.serverError().entity(e).build());
+			}
+			
+		} else {
+			List<PersistedItem> persistedItems = new ArrayList<>();
+			Collection<Map<String, Object>> dtos = JacksonUtil.convert(body, new TypeReference<Collection<Map<String, Object>>>() {});
+			
+			for(Map<String, Object> dto : dtos) {
+				try {
+					CustomEntityInstance cei = CEIUtils.pojoToCei(dto);
+					PersistenceActionResult result = crossStorageService.createOrUpdate(repository, cei);
+					
+					PersistedItem item = new PersistedItem(result.getBaseEntityUuid(), dto);
+					persistedItems.add(item);
+					
+				} catch (BusinessApiException | EntityDoesNotExistsException | BusinessException | IOException e) {
+					/* An error happened */
+					Response response = Response.serverError().entity(e).build();
+					throw new ServerErrorException(response);
+				}
+			}
 
-		try {
-
-			/* Persist the entities and return 201 created response */
-			return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
-
-		} catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
-
-			/* An error happened */
-			throw new ServerErrorException(Response.serverError().entity(e).build());
+			return persistedItems;
 		}
 
 	}

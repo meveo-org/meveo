@@ -24,13 +24,12 @@ export MEVEO_DB_PORT=${MEVEO_DB_PORT:-5432}
 export MEVEO_DB_NAME=${MEVEO_DB_NAME:-meveo}
 export MEVEO_DB_USERNAME=${MEVEO_DB_USERNAME:-meveo}
 export MEVEO_DB_PASSWORD=${MEVEO_DB_PASSWORD:-meveo}
-MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
 
 # Wildfly parameters
 export WILDFLY_BIND_ADDR=${WILDFLY_BIND_ADDR:-0.0.0.0}
 export WILDFLY_MANAGEMENT_BIND_ADDR=${WILDFLY_MANAGEMENT_BIND_ADDR:-0.0.0.0}
 export WILDFLY_PROXY_ADDRESS_FORWARDING=${WILDFLY_PROXY_ADDRESS_FORWARDING:-false}
-export WILDFLY_LOG_CONSOLE_LEVEL=${WILDFLY_LOG_CONSOLE_LEVEL:-INFO}
+export WILDFLY_LOG_CONSOLE_LEVEL=${WILDFLY_LOG_CONSOLE_LEVEL:-OFF}
 export WILDFLY_LOG_FILE_LEVEL=${WILDFLY_LOG_FILE_LEVEL:-INFO}
 export WILDFLY_LOG_MEVEO_LEVEL=${WILDFLY_LOG_MEVEO_LEVEL:-INFO}
 
@@ -82,7 +81,7 @@ do
     if [ $counter -gt $timeout ]; then
         ERROR=1; exit_with_error "Timeout occurred after waiting $timeout seconds for postgres"
     else
-        info "Waiting for postgres ..."
+        info "Waiting for postgres (${MEVEO_DB_HOST}:${MEVEO_DB_PORT})..."
         counter=$((counter+1))
         sleep 1
     fi
@@ -142,15 +141,76 @@ if [ "$DISABLE_LOGGING" = true ]; then
     fi
 fi
 
-# Run entrypoint scripts if need to run extra cli
+# Run the extra initial scripts:
+# This code should be launched before run the extra CLI and properties,
+# because it might need to run some scripts that export the environment variables.
 if [ -d /docker-entrypoint-initdb.d ]; then
     for f in /docker-entrypoint-initdb.d/*.sh; do
         [ -f "$f" ] && . "$f"
     done
 fi
 
+# Run the extra cli
+if [ -d /docker-entrypoint-initdb.d ]; then
+    for f in /docker-entrypoint-initdb.d/*.cli; do
+        [ -f "$f" ] && ${JBOSS_HOME}/bin/jboss-cli.sh --file=$f
+    done
+fi
+
 # Configure meveo-admin.properties
-sed -i "s|{{MEVEO_ADMIN_BASE_URL}}|${MEVEO_ADMIN_BASE_URL//:/\\\\:}|g" ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+## Store meveo-admin.properties file into the meveodata folder for keeping permanently.
+## It's because the meveodata folder is volume-mapped folder.
+if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
+    MEVEO_ADMIN_BASE_URL=${MEVEO_ADMIN_BASE_URL:-http://localhost:8080/}
+    MEVEO_ADMIN_WEB_CONTEXT=${MEVEO_ADMIN_WEB_CONTEXT:-meveo}
+
+    TMP_PROPS_INPUT="/tmp/.tmp.${RANDOM}.props"
+
+    echo "meveo.admin.baseUrl=${MEVEO_ADMIN_BASE_URL//:/\\:}" > ${TMP_PROPS_INPUT}
+    echo "meveo.admin.webContext=${MEVEO_ADMIN_WEB_CONTEXT}" >> ${TMP_PROPS_INPUT}
+    echo "" >> ${TMP_PROPS_INPUT}
+
+    # Add the extra properties files
+    if [ -d /docker-entrypoint-initdb.d ]; then
+        for props_file in /docker-entrypoint-initdb.d/*.properties; do
+            [ -f "${props_file}" ] && cat ${props_file} >> ${TMP_PROPS_INPUT}
+            ## Insert a line break for each file
+            echo "" >> ${TMP_PROPS_INPUT}
+        done
+    fi
+
+    # Generate the final proerties file.
+    if [ ! -x "${JBOSS_HOME}/props/properties-merger.sh" ]; then
+        chmod +x "${JBOSS_HOME}/props/properties-merger.sh"
+    fi
+    ${JBOSS_HOME}/props/properties-merger.sh \
+        -s ${JBOSS_HOME}/props/meveo-admin.properties \
+        -i ${TMP_PROPS_INPUT} \
+        -o ${JBOSS_HOME}/meveodata/meveo-admin.properties
+
+    rm -f ${TMP_PROPS_INPUT}
+fi
+## Create a link of meveo-admin.properties into the wildfly configuration folder.
+if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties ]; then
+    ln -s ${JBOSS_HOME}/meveodata/meveo-admin.properties ${JBOSS_HOME}/standalone/configuration/meveo-admin.properties
+fi
+
+# Configure meveo-security.properties
+## Store meveo-security.properties file into the meveodata folder for keeping permanently.
+## It's because the meveodata folder is volume-mapped folder.
+if [ ! -f ${JBOSS_HOME}/meveodata/meveo-security.properties ]; then
+    ## Generate a random string
+    random_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)
+    ## Encrypt above random string using AES-256
+    enc_string=$(echo ${random_string} | openssl enc -aes-256-cbc -a -k secret 2>/dev/null)
+    ## Create meveo-security.properties file
+    echo "meveo.security.secret="${enc_string} > ${JBOSS_HOME}/meveodata/meveo-security.properties
+fi
+
+## Create a link of meveo-security.properties into the wildfly configuration folder.
+if [ ! -f ${JBOSS_HOME}/standalone/configuration/meveo-security.properties ]; then
+    ln -s ${JBOSS_HOME}/meveodata/meveo-security.properties ${JBOSS_HOME}/standalone/configuration/meveo-security.properties
+fi
 
 system_memory_in_mb=`free -m | awk '/:/ {print $2;exit}'`
 system_cpu_cores=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
@@ -194,6 +254,24 @@ else
     info "JAVA_OPTS already set in environment; overriding default settings with values: ${JAVA_OPTS}"
 fi
 
+# Glowroot - helps you get to the root of application performance issues.
+if [ "${GLOWROOT_ENABLE}" = true ]; then
+    JAVA_OPTS="${JAVA_OPTS} -javaagent:${JBOSS_HOME}/glowroot/glowroot.jar"
+
+    if [ -f "${JBOSS_HOME}/glowroot/admin.json" ]; then
+        ## Change the bind address for the access from remote machines.
+        sed -i 's,"bindAddress": "127.0.0.1","bindAddress": "0.0.0.0",g' ${JBOSS_HOME}/glowroot/admin.json
+    else
+        cat > ${JBOSS_HOME}/glowroot/admin.json << EOL
+{
+  "web": {
+    "bindAddress": "0.0.0.0"
+  }
+}
+EOL
+    fi
+fi
+
 #
 # The extra options to pass to the Java VM.
 #
@@ -221,6 +299,8 @@ fi
 
 WILDFLY_OPTS="${WILDFLY_OPTS} -b ${WILDFLY_BIND_ADDR} -bmanagement ${WILDFLY_MANAGEMENT_BIND_ADDR}"
 if [ "${WILDFLY_DEBUG_ENABLE}" = true ]; then
+    #allow to mount /opt/jboss/wildflyForHost and use it to create server adapter in IDE
+    #cp -r ${JBOSS_HOME}/{jboss-modules.jar,bin,cli,standalone,domain,modules}  /opt/jboss/wildflyForHost
     WILDFLY_OPTS="${WILDFLY_OPTS} --debug *:${WILDFLY_DEBUG_PORT}"
 fi
 

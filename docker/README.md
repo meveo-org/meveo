@@ -2,9 +2,9 @@
 
 Using the scripts and configuration files provided here it is easy to setup instance
 
-* [either locally](./localhost)
+* [either locally](./localhost/README.md)
 
-* [or on a linux-server](./linux-server)
+* [or on a linux-server](./linux-server/README.md)
 
 # Environment variables for Meveo stack
 Meveo stack runs two docker containers: postgres container and meveo container.</br>
@@ -59,11 +59,12 @@ The following environment variables can be redefined for meveo service
 | MEVEO_DB_USERNAME | meveo | This is username for meveo database. This value should be same as the value of POSTGRES_USER in postgres service inside docker-compose.yml file |
 | MEVEO_DB_PASSWORD | meveo | This is password for meveo database. This value should be same as the value of POSTGRES_PASSWORD in postgres service inside docker-compose.yml file |
 | MEVEO_ADMIN_BASE_URL | http://localhost:8080/ | Base url for meveo admin. |
+| MEVEO_ADMIN_WEB_CONTEXT | meveo | Web Context for meveo admin. |
 | WILDFLY_CUSTOM_XMS | 1024m | for java parameter -Xms |
 | WILDFLY_CUSTOM_XMX | 2048m | for java parameter -Xmx |
 | WILDFLY_CUSTOM_XMMS | 300m | for java parameter -XX:MetaspaceSize |
 | WILDFLY_CUSTOM_XMMX | 500m | for java parameter -XX:MaxMetaspaceSize= |
-| WILDFLY_LOG_CONSOLE_LEVEL | INFO | Wildfly console log level |
+| WILDFLY_LOG_CONSOLE_LEVEL | OFF | Wildfly console log level |
 | WILDFLY_LOG_FILE_LEVEL | INFO | Wildfly server log level (means server.log file) |
 | WILDFLY_LOG_MEVEO_LEVEL | INFO | Meveo source log level |
 | WILDFLY_DEBUG_ENABLE | "false" | Add a debug option to Wildfly startup command ("true" or "false"). debug_enable could not be used with `JAVA_OPTS` together. If this value is `true`, `JAVA_OPTS` should be commented. |
@@ -71,3 +72,21 @@ The following environment variables can be redefined for meveo service
 | JAVA_OPTS | Many parameters.<br/>Need to look at code | This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored. |
 | JAVA_EXTRA_OPTS | - | The extra options to add to the default jvm options. |
 
+### APM for Meveo wildfly
+
+Meveo image installed [glowroot](https://glowroot.org).
+
+`glowroot` is a Java APM(Application Performance Management), which is the monitoring and management of performance and availability of java applications.
+
+`glowroot` helps you get to the root cause of application performance issues.
+
+By default, it is not launched. To launch it, set the env variable `GLOWROOT_ENABLE` to `true`.
+
+Like this:
+
+```yaml
+    environment:
+      GLOWROOT_ENABLE: "true"
+```
+
+It is supposed to listen to the port 4000 inside the container. To access `glowroot` UI, please configure the reverse proxy or the port mapping of the container.

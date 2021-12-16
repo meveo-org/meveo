@@ -23,21 +23,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.faces.application.FacesMessage;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -499,7 +493,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 				for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
 					MeveoModule meveoModule = meveoModuleService.getMeveoModuleByVersionModule(dependencyDto.getCode(), dependencyDto.getCurrentVersion());
 					if (meveoModule == null) {
-						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode(), getFormFieldsToFetch());
+						MeveoModule module = meveoModuleService.findByCode(dependencyDto.getCode(), Arrays.asList("releases"));
 						Set<ModuleRelease> moduleReleases = module.getReleases();
 						List<Integer> versionReleases = new ArrayList<>();
 						for (ModuleRelease moduleRelease : moduleReleases) {

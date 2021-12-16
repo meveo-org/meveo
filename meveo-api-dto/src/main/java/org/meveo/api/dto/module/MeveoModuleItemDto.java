@@ -113,6 +113,10 @@ public class MeveoModuleItemDto extends BaseEntityDto implements Comparable<Meve
 
 	@Override
 	public String toString() {
+		if(dtoData != null) {
+			return dtoData.toString();
+		}
+		
 		return "MeveoModuleItemDto [dtoClassName=" + dtoClassName + "]";
 	}
 

@@ -6,7 +6,7 @@ you only need to have docker and vscode installed on your machine (along with WS
 in you linux env (possibly WSL), clone this repo and open vscode:
 ```
 cd /home
-git clone git@github.com:meveo-org/meveo.git
+git clone git@github.com:manaty/meveo.git
 cd meveo
 code .
 ```

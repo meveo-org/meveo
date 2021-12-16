@@ -126,8 +126,9 @@ public class JSONSchemaIntoJavaClassParser {
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
                 cl.tryAddImportToParentCompilationUnit(CustomRelation.class);
+    			cl.tryAddImportToParentCompilationUnit(JsonIgnore.class);
+
                 cl.addImplementedType("CustomRelation<" + template.getStartNode().getCode() + "," + template.getEndNode().getCode() + ">");
-    			
     			cl.getMethodsByName("getUuid")
     				.stream()
     				.findFirst()
@@ -135,7 +136,6 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCrtCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
-    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
@@ -177,7 +177,8 @@ public class JSONSchemaIntoJavaClassParser {
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
                 cl.addImplementedType(CustomEntity.class);
-    			
+    			cl.tryAddImportToParentCompilationUnit(JsonIgnore.class);
+
     			cl.getMethodsByName("getUuid")
     				.stream()
     				.findFirst()
@@ -185,7 +186,6 @@ public class JSONSchemaIntoJavaClassParser {
     			
     			var getCetCode = cl.addMethod("getCetCode", Keyword.PUBLIC);
     			getCetCode.addAnnotation(Override.class);
-    			getCetCode.addAnnotation(JsonIgnore.class);
     			getCetCode.setType(String.class);
     			var getCetCodeBody = new BlockStmt();
     			getCetCodeBody.getStatements().add(new ReturnStmt('"' + template.getCode() + '"'));
@@ -262,6 +262,14 @@ public class JSONSchemaIntoJavaClassParser {
     	        	.addParameter(new Parameter(variableDeclarator.getType(), "value"))
     	        	.setBody(JavaParser.parseBlock("{\n this.value = value; \n}"));
 
+            } else {
+            	VariableDeclarator variableDeclarator = new VariableDeclarator();
+            	variableDeclarator.setType("String");
+            	
+            	// Generate constructor with the value
+            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+    	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
+    	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
             }
         }
         

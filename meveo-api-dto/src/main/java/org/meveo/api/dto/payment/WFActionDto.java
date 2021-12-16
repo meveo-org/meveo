@@ -18,6 +18,9 @@
  */
 package org.meveo.api.dto.payment;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -33,7 +36,8 @@ import io.swagger.annotations.ApiModelProperty;
  * 
  * @author anasseh
  * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.7.0
+ * @author Clément Bareth
+ * @version 6.15
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel("WFActionDto")
@@ -48,9 +52,18 @@ public class WFActionDto extends BaseEntityDto {
 	private String uuid;
 
 	/** The action el. */
-	@XmlElement(required = true)
-	@ApiModelProperty(required = true, value = "expression to trigger when condition is true")
+	@XmlElement(required = false)
+	@ApiModelProperty(required = false, value = "expression to trigger when condition is true")
+	@Deprecated
 	private String actionEl;
+	
+	@XmlElement(required = true)
+	@ApiModelProperty(required = true, value = "Script to trigger when condition is true")
+	private String actionScript;
+	
+	@XmlElement(required = false)
+	@ApiModelProperty(required = false, value = "Map representing the script parameter where the key is the paramer name and the value the el to evaluate")
+    private Map<String, String> scriptParameters = new HashMap<>();
 
 	/** The priority. */
 	@XmlElement(required = false)
@@ -78,23 +91,45 @@ public class WFActionDto extends BaseEntityDto {
 		this.actionEl = wfAction.getActionEl();
 		this.priority = wfAction.getPriority();
 		this.conditionEl = wfAction.getConditionEl();
+		if(wfAction.getActionScript() != null) {
+			this.actionScript = wfAction.getActionScript().getCode();
+		}
+		this.scriptParameters = wfAction.getScriptParameters();
+	}
+	
+	/**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		return scriptParameters;
 	}
 
 	/**
-	 * From dto.
-	 *
-	 * @param wfAction the wf action
-	 * @return the WF action
+	 * @param scriptParameters the scriptParameters to set
 	 */
-	public WFAction fromDto(WFAction wfAction) {
-		if (wfAction == null) {
-			wfAction = new WFAction();
-		}
-		wfAction.setUuid(getUuid());
-		wfAction.setActionEl(getActionEl());
-		wfAction.setPriority(getPriority());
-		wfAction.setConditionEl(getConditionEl());
-		return wfAction;
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	/**
+	 * @return the {@link #serialversionuid}
+	 */
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	/**
+	 * @return the {@link #actionScript}
+	 */
+	public String getActionScript() {
+		return actionScript;
+	}
+
+	/**
+	 * @param actionScript the actionScript to set
+	 */
+	public void setActionScript(String actionScript) {
+		this.actionScript = actionScript;
 	}
 
 	/**

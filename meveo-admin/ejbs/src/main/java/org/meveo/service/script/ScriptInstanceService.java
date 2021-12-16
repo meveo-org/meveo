@@ -313,7 +313,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		// Throw exception if a script fails to compile
 		for(var script : scripts) {
 			if(script.getError()) {
-				throw new InvalidScriptException(script.getCode(), script.getCode());
+                String message = "script "+ script.getCode() + " failed to compile. ";
+                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("<br>\n"));
+				throw new InvalidScriptException(message);
 			}
 		}
 	}

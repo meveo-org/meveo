@@ -1506,9 +1506,19 @@
             <to-view-id>/pages/admin/customEntities/customEntityDetail.xhtml</to-view-id>
             <!--            <redirect include-view-params="true"/>-->
         </navigation-case>
-         <navigation-case>
+        <navigation-case>
             <from-outcome>mavenConfiguration</from-outcome>
             <to-view-id>/pages/admin/config/mavenConfiguration.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>webSocketEndpoints</from-outcome>
+            <to-view-id>/pages/admin/endpoint/webSocketEndpoints.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>webSocketEndpointDetail</from-outcome>
+            <to-view-id>/pages/admin/endpoint/webSocketEndpointDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
     </navigation-rule>

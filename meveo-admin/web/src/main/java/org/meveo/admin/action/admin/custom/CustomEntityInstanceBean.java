@@ -2,8 +2,10 @@ package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.faces.view.ViewScoped;
@@ -11,32 +13,43 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
+import org.meveo.model.util.KeyValuePair;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityService;
+import org.meveo.service.custom.EntityCustomActionService;
+import org.meveo.service.script.CustomScriptService;
+import org.meveo.service.script.Script;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.cdi.Cookie;
@@ -80,6 +93,12 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
 	
+	@Inject
+	private transient EntityCustomActionService entityActionScriptService;
+
+	@Inject
+	private transient ScriptInstanceService scriptInstanceService;
+	
 	private Map<String, Boolean> secretToDisplayInClear = new HashMap<>();
 
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
@@ -90,6 +109,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	protected String customTableName;
 	private String uuid;
 	private String hash;
+	
+	private EntityCustomAction action;
+	private Set<KeyValuePair> overrideParams = new HashSet<>();
 
 	@Inject
 	@Cookie(name = "repository")
@@ -101,6 +123,46 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		super(CustomEntityInstance.class);
 	}
 	
+	/**
+	 * @return the {@link #action}
+	 */
+	public EntityCustomAction getAction() {
+		return action;
+	}
+
+	/**
+	 * @param action the action to set
+	 */
+	public void setAction(EntityCustomAction action) {
+		if(action == null) {
+			return;
+		}
+		
+		if(action == this.action) {
+			return;
+		}
+		
+		this.action = action;
+		
+		Map<Object, Object> elContext = new HashMap<>();
+		elContext.put("entity", entity);
+		
+		action.getScriptParameters().forEach((key, value) -> {
+			try {
+				overrideParams.add(new KeyValuePair(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class)));
+			} catch (ELException e) {
+				log.error("Failed to evaluate el for custom action", e);
+			}
+		});
+	}
+	
+	/**
+	 * @return the {@link #overrideParams}
+	 */
+	public Set<KeyValuePair> getOverrideParams() {
+		return overrideParams;
+	}
+
 	/**
 	 * @param cft the scret cft
 	 * @return whether the given secret cft should be displayed in clear on GUI
@@ -152,7 +214,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					entity.setUuid(uuid);
 
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
-//					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
+					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
 				}
 
 			} catch (Exception e) {
@@ -176,6 +238,74 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	public String getListViewName() {
 		return "customEntities";
 	}
+	
+	public void executeWithParameters() {
+		executeCustomAction(this.entity, action, null);
+		this.action = null;
+		overrideParams.clear();
+	}
+	
+	/**
+	 * Execute custom action on an entity
+	 *
+	 * @param entity            Entity to execute action on
+	 * @param action            Action to execute
+	 * @param encodedParameters Additional parameters encoded in URL like style
+	 *                          param=value&amp;param=value
+	 * @return A script execution result value from Script.RESULT_GUI_OUTCOME
+	 *         variable
+	 */
+	public String executeCustomAction(ICustomFieldEntity entity, EntityCustomAction action, String encodedParameters) {
+
+		try {
+
+			action = entityActionScriptService.findByCode(action.getCode());
+
+			Map<String, Object> context = CustomScriptService.parseParameters(encodedParameters);
+			context.put(Script.CONTEXT_ACTION, action.getCode());
+			
+			if(overrideParams != null && !overrideParams.isEmpty()) {
+				overrideParams.forEach(entry -> {
+					context.put(entry.getKey(), entry.getValue());
+				});
+			} else {
+				Map<Object, Object> elContext = new HashMap<>(context);
+				elContext.put("entity", entity);
+				
+				action.getScriptParameters().forEach((key, value) -> {
+					try {
+						context.put(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class));
+					} catch (ELException e) {
+						log.error("Failed to evaluate el for custom action", e);
+					}
+				});
+			}
+			
+			Map<String, Object> result = scriptInstanceService.execute((IEntity) entity, repository, action.getScript().getCode(), context);
+
+			// Display a message accordingly on what is set in result
+			if (result.containsKey(Script.RESULT_GUI_MESSAGE_KEY)) {
+				messages.info(new BundleKey("messages", (String) result.get(Script.RESULT_GUI_MESSAGE_KEY)));
+
+			} else if (result.containsKey(Script.RESULT_GUI_MESSAGE)) {
+				messages.info((String) result.get(Script.RESULT_GUI_MESSAGE));
+
+			} else {
+				messages.info(new BundleKey("messages", "scriptInstance.actionExecutionSuccessfull"), action.getLabel());
+			}
+
+			if (result.containsKey(Script.RESULT_GUI_OUTCOME)) {
+				return (String) result.get(Script.RESULT_GUI_OUTCOME);
+			}
+
+		} catch (BusinessException e) {
+			log.error("Failed to execute a script {} on entity {}", action.getCode(), entity, e);
+			messages.error(new BundleKey("messages", "scriptInstance.actionExecutionFailed"), action.getLabel(), e.getMessage());
+		}
+
+		return null;
+	}
+
 
 	@Override
 	@ActionMethod
@@ -194,15 +324,14 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 			customFieldDataEntryBean.saveCustomFieldsToEntity(entity, isNew);
 
-			boolean checkBeforeUpdate = crossStorageService.checkBeforeUpdate(repository, entity);
-			if (!checkBeforeUpdate) {
-				messages.error(new BundleKey("messages", "customEntityInstance.update.error"));
-				return null;
-			}
-
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
 
-			crossStorageService.createOrUpdate(repository, entity);
+			try {
+				crossStorageService.createOrUpdate(repository, entity);
+			} catch (IllegalTransitionException e) {
+				messages.error(new BundleKey("messages", "customEntityInstance.update.illegalTransition"), e.getField(), e.getFrom(), e.getTo());
+				return null;
+			}
 
 			if (killConversation) {
 				endConversation();

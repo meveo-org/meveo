@@ -2,6 +2,7 @@ package org.meveo.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.EntityCustomizationDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -43,8 +45,8 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
@@ -95,8 +97,32 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private OntologyObserver ontologyObserver;
-   
-    public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+    
+    @Override
+	public int compareDtos(CustomEntityTemplateDto obj1, CustomEntityTemplateDto obj2, List<MeveoModuleItemDto> dtos) {
+    	Map<String, CustomEntityTemplateDto> cetDtos = new HashMap<>();
+    	dtos.stream()
+    			.filter(dto -> dto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName()))
+    			.map(dto -> JacksonUtil.convert(dto.getDtoData(), CustomEntityTemplateDto.class))
+    			.forEach(dto -> cetDtos.put(dto.getCode(), dto));
+    	
+		return countAncestors(obj1, cetDtos) - countAncestors(obj2, cetDtos);
+	}
+    
+    private int countAncestors(CustomEntityTemplateDto cet, Map<String, CustomEntityTemplateDto> dtos) {
+    	int count = 0;
+    	
+    	// Retrieve child parent's in the dtos
+    	CustomEntityTemplateDto iteratbleCet = cet;
+    	while (iteratbleCet != null && iteratbleCet.getSuperTemplate() != null) {
+			count ++;
+			iteratbleCet = dtos.get(iteratbleCet.getSuperTemplate());
+    	}
+    	
+    	return count;
+    }
+    
+	public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
 
@@ -201,11 +227,14 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     private void setSuperTemplate(CustomEntityTemplateDto dto, CustomEntityTemplate cet) {
         if(dto.getSuperTemplate() != null){
             CustomEntityTemplate superTemplate = customEntityTemplateService.findByCode(dto.getSuperTemplate());
+            if(superTemplate == null) {
+            	throw new IllegalArgumentException("Can't set super template : cet with code " + dto.getSuperTemplate() + " does not exists");
+            }
             cet.setSuperTemplate(superTemplate);
         }
     }
 
-    public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
+    public CustomEntityTemplate updateEntityTemplate(CustomEntityTemplateDto dto, boolean withData) throws MeveoApiException, BusinessException {
 
         checkPrimitiveEntity(dto);
 
@@ -283,12 +312,9 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	
 			cet = customEntityTemplateService.update(cet);
 	
-	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions());
+	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions(), withData);
         
         } catch (Exception e) {
-        	if(sqlStorageAddition) {
-        		customTableCreatorService.get().removeTable(SQLStorageConfiguration.getDbTablename(cet));
-        	}
         	
         	throw e;
         }
@@ -299,6 +325,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     public void removeEntityTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
     	removeEntityTemplate(code,false);
     }
+    
     public void removeEntityTemplate(String code, boolean withData) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
@@ -322,10 +349,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		try { 
 			this.removeEntityTemplate(dto.getCode(), false);
 		} catch (EntityDoesNotExistsException e) {
-			// Make sure custom table is removed if cet was not created correctly
-	        if (dto.getSqlStorageConfiguration() != null && dto.getSqlStorageConfiguration().isStoreAsTable()) {
-	            customTableCreatorService.get().removeTable(SQLStorageConfiguration.getCetDbTablename(dto.getCode()));
-	        }			
 		}
 	}
 
@@ -359,7 +382,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         if (cet == null) {
             return create(postData);
         } else {
-            return updateEntityTemplate(postData);
+            return updateEntityTemplate(postData, false);
         }
     }
 
@@ -403,10 +426,10 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         String appliesTo = EntityCustomizationUtils.getAppliesTo(clazz, null);
 
-        synchronizeCustomFieldsAndActions(appliesTo, dto.getFields(), dto.getActions());
+        synchronizeCustomFieldsAndActions(appliesTo, dto.getFields(), dto.getActions(), false);
     }
 
-    private void synchronizeCustomFieldsAndActions(String appliesTo, List<CustomFieldTemplateDto> fields, List<EntityCustomActionDto> actions)
+    private void synchronizeCustomFieldsAndActions(String appliesTo, List<CustomFieldTemplateDto> fields, List<EntityCustomActionDto> actions, boolean withData)
             throws MeveoApiException, BusinessException {
 
         Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
@@ -439,7 +462,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         }
 
         for (CustomFieldTemplate cft : cftsToRemove) {
-            customFieldTemplateService.remove(cft.getId());
+            customFieldTemplateService.remove(cft, withData);
         }
 
         Map<String, EntityCustomAction> cetActions = entityCustomActionService.findByAppliesTo(appliesTo);
@@ -522,7 +545,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 		String entityClazz = cft.getEntityClazz();
 		if (!StringUtils.isBlank(entityClazz)) {
 			List<BusinessEntity> businessEntities = customFieldInstanceService
-					.findBusinessEntityForCFVByCode(null, entityClazz, wildcode);
+					.findBusinessEntityForCFVByCode(entityClazz, wildcode);
 			if (businessEntities != null) {
 				for (BusinessEntity be : businessEntities) {
 					result.add(new BusinessEntityDto(be));

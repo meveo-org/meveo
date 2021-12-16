@@ -1,12 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.meveo</groupId>
 		<artifactId>meveo</artifactId>
 		<relativePath>../pom.xml</relativePath>
-		<version>6.15.0-SNAPSHOT</version>
+		<version>6.15.12-SNAPSHOT</version>
 	</parent>
 	<artifactId>meveo-model</artifactId>
 	<packaging>jar</packaging>
@@ -48,6 +46,27 @@
 							<includes>
 								<include>**/org/meveo/interfaces/**</include>
 							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.5.3</version>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>meveo-model</finalName>
+							<!-- attach>false</attach> pour ne pas deployer les archives sur nexus -->
+							<descriptors>
+								<descriptor>src/main/db_resources/assemblies/db-resources-assembly.xml</descriptor>
+							</descriptors>
 						</configuration>
 					</execution>
 				</executions>

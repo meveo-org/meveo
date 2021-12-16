@@ -28,6 +28,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
@@ -186,6 +187,7 @@ public class ScriptUtils {
 	 */
 	public static List<Accessor> getGetters(final List<MethodDeclaration> methods) {
 		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.GET) || e.getNameAsString().startsWith(Accessor.IS))
+				.filter(e -> e.getAnnotationByClass(JsonIgnore.class).isEmpty())
 				.filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().isEmpty())
 				.map(methodDeclaration -> {
 					Accessor getter = new Accessor();
@@ -212,6 +214,7 @@ public class ScriptUtils {
 	 */
 	public static List<Accessor> getSetters(final List<MethodDeclaration> methods) {
 		return methods.stream().filter(e -> e.getNameAsString().startsWith(Accessor.SET))
+				.filter(e -> e.getAnnotationByClass(JsonIgnore.class).isEmpty())
 				.filter(e -> e.getModifiers().stream().anyMatch(modifier -> modifier.getKeyword().equals(Modifier.Keyword.PUBLIC))).filter(e -> e.getParameters().size() == 1)
 				.map(methodDeclaration -> {
 					Accessor setter = new Accessor();

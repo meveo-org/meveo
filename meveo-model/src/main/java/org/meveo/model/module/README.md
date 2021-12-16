@@ -10,12 +10,12 @@ This is the order in which Meveo module items are installed.
 |CustomRelationshipTemplate | 11 |
 |CustomFieldTemplate | 20 |
 |CustomEntityReference | 30 |
-|JobInstance | 40 |
 |CustomEntityInstance | 50 |
 |ScriptInstance | 60 |
 |EntityCustomAction | 70 |
 |TechnicalService | 80 |
 |TimerEntity | 101 |
+|JobInstance | 102 |
 |JobTrigger | 103 |
 |ScriptNotification | 200 |
 |WebHook | 201 |

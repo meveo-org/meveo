@@ -210,7 +210,7 @@ public class GraphQLService {
 
         for (CustomEntityTemplate cet : cetsByName.values()) {
 
-            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+            final Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
@@ -312,6 +312,7 @@ public class GraphQLService {
                                 .stream()
                                 .filter(customFieldTemplate -> customFieldTemplate.getFieldType() == CustomFieldTypeEnum.ENTITY)
                                 .filter(customFieldTemplate -> customFieldTemplate.getEntityClazzCetCode().equals(endNode.getCode()))
+                                .filter(customFieldTemplate -> customFieldTemplate.getRelationshipName() != null && customFieldTemplate.getRelationshipName().equals(relationshipTemplate.getName()))
                                 .forEach(customFieldTemplate -> {
                                     GraphQLField entityRefField = new GraphQLField();
                                     entityRefField.setFieldName(customFieldTemplate.getCode());

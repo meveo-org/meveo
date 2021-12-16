@@ -31,7 +31,7 @@ import org.slf4j.Logger;
  * This class allow web client to subscribe to WebNotifications and publish
  * messages
  */
-@Path("/sse")
+@Path("/ssenotif")
 @Singleton
 public class SseManager {
 

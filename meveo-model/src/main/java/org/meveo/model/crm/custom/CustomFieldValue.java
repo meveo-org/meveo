@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.meveo.commons.utils.CustomDateSerializer;
@@ -269,15 +270,6 @@ public class CustomFieldValue implements Serializable {
     }
 
 	public Instant getDateValue() {
-		if (dateValue != null)
-			return dateValue;
-		else if (doubleValue != null && doubleValue > 0 && !doubleValue.isInfinite() && Math.floor(doubleValue) == doubleValue) {
-			try {
-				dateValue = JacksonUtil.convert(doubleValue, Instant.class);
-			} catch (Exception e) {
-				// NOOP
-			}
-		}
 		return dateValue;
 	}
 
@@ -468,7 +460,10 @@ public class CustomFieldValue implements Serializable {
         }
         
         else {
-    	    throw new IllegalArgumentException("Unkown type for list value : " + itemClass);
+        	String classesList = "null list";
+        	if (listValue != null)
+        		classesList = (String) listValue.stream().map(v->(v!=null?v.getClass().getName():"null")).collect(Collectors.joining(" "));
+           	throw new IllegalArgumentException("Unkown type for list value : " + itemClass + " -- list infos : " + classesList);
         }
     }
 
@@ -913,6 +908,7 @@ public class CustomFieldValue implements Serializable {
             case DATE:
                 if (dateValue != null) {
                     SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+
                     return sdf.format(dateValue);
                 }
                 break;
@@ -1124,7 +1120,7 @@ public class CustomFieldValue implements Serializable {
         } else if(classes.contains(Double.class)) {
         	return Double.class;
         } else {
-        	return Object.class;
+         	return Object.class;
         }
         
     }
@@ -1246,7 +1242,8 @@ public class CustomFieldValue implements Serializable {
         return deserializedValue;
     }
 
-    public Object getValue() {
+    public Object
+    getValue() {
         if (mapStringValue != null && !mapStringValue.isEmpty()) {
             return mapStringValue;
         } else if (mapDateValue != null && !mapDateValue.isEmpty()) {
@@ -1288,6 +1285,16 @@ public class CustomFieldValue implements Serializable {
         }
 
         return null;
+    }
+
+    public Object getUnwrappedValue() {
+        Object result = getValue();
+
+        if (entityReferenceValue != null) {
+            result = entityReferenceValue.getUuid();
+        }
+
+        return result;
     }
 
     /**
@@ -1500,5 +1507,10 @@ public class CustomFieldValue implements Serializable {
             log.error("Failed to convert {} to String for CFT {}", valueToConvert, cft, e);
             return null;
         }
+    }
+
+    public void resetEntityReferenceValueForGUI() {
+        entityReferenceValueForGUI = null;
+        entityReferenceValue = null;
     }
 }

@@ -374,6 +374,8 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
         }
 
         identifier = cf.isIdentifier();
+        isFilter = cf.isFilter();
+        isUnique = cf.isUnique();
         storages = cf.getStoragesNullSafe();
         summary=cf.isSummary();
 

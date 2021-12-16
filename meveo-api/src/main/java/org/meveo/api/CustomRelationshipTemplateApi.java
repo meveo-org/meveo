@@ -13,11 +13,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
+import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -39,15 +38,15 @@ import com.google.gson.reflect.TypeToken;
 public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshipTemplate, CustomRelationshipTemplateDto> {
 
     /**
-	 * Instantiates a new CustomRelationshipTemplateApi
-	 */
-	public CustomRelationshipTemplateApi() {
-		super(CustomRelationshipTemplate.class, CustomRelationshipTemplateDto.class);
-	}
+     * Instantiates a new CustomRelationshipTemplateApi
+     */
+    public CustomRelationshipTemplateApi() {
+        super(CustomRelationshipTemplate.class, CustomRelationshipTemplateDto.class);
+    }
 
-	@Inject
+    @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
-    
+
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
@@ -59,36 +58,38 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     private CustomFieldTemplateService customFieldTemplateService;
 
 
-    private void completeCrtData(CustomRelationshipTemplate crt,CustomRelationshipTemplateDto dto) throws EntityDoesNotExistsException{
-    	if(dto.getStartNodeCode()!=null){
-    		CustomEntityTemplate startNode=customEntityTemplateService.findByCode(dto.getStartNodeCode());
+    private void completeCrtData(CustomRelationshipTemplate crt, CustomRelationshipTemplateDto dto)
+            throws EntityDoesNotExistsException {
+        if (dto.getStartNodeCode() != null) {
+            CustomEntityTemplate startNode = customEntityTemplateService.findByCode(dto.getStartNodeCode());
             if (startNode == null) {
                 throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getStartNodeCode());
             }
             crt.setStartNode(startNode);
-    	}
-    	if(dto.getEndNodeCode()!=null){
-    		 CustomEntityTemplate endNode=customEntityTemplateService.findByCode(dto.getEndNodeCode());
-    	        if (endNode == null) {
-    	            throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getEndNodeCode());
-    	        }
-    	     crt.setEndNode(endNode);
-    	}
-    	Gson gson = new GsonBuilder().create();
-        Type itemType = new TypeToken<List<String>>() {}.getType();
-    	if(dto.getStartNodeKeys()!=null && dto.getStartNodeKeys().size()>0){
-    		String startNodeKeyCodes = gson.toJson(dto.getStartNodeKeys(), itemType);
+        }
+        if (dto.getEndNodeCode() != null) {
+            CustomEntityTemplate endNode = customEntityTemplateService.findByCode(dto.getEndNodeCode());
+            if (endNode == null) {
+                throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getEndNodeCode());
+            }
+            crt.setEndNode(endNode);
+        }
+        Gson gson = new GsonBuilder().create();
+        Type itemType = new TypeToken<List<String>>() {
+        }.getType();
+        if (dto.getStartNodeKeys() != null && dto.getStartNodeKeys().size() > 0) {
+            String startNodeKeyCodes = gson.toJson(dto.getStartNodeKeys(), itemType);
             crt.setStartNodeKey(startNodeKeyCodes);
-    	}
-    	if(dto.getEndNodeKeys()!=null && dto.getEndNodeKeys().size()>0){
-    		String endNodeKeyCodes = gson.toJson(dto.getEndNodeKeys(), itemType);
+        }
+        if (dto.getEndNodeKeys() != null && dto.getEndNodeKeys().size() > 0) {
+            String endNodeKeyCodes = gson.toJson(dto.getEndNodeKeys(), itemType);
             crt.setEndNodeKey(endNodeKeyCodes);
-    	}
-    	crt.setAudited(dto.isAudited());
+        }
+        crt.setAudited(dto.isAudited());
     }
 
-    public void createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
-
+    public void createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto)
+            throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -104,14 +105,14 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 
         CustomRelationshipTemplate crt = CustomRelationshipTemplateDto.fromDTO(dto, null);
         completeCrtData(crt, dto);
-        
+
         customRelationshipTemplateService.create(crt);
 
 
     }
 
-    public void updateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
-
+    public void updateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto)
+            throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -122,15 +123,15 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         handleMissingParameters();
 
         CustomRelationshipTemplate crt = customRelationshipTemplateService
-                                   .findByCode(dto.getCode());
+                .findByCode(dto.getCode());
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
         crt = CustomRelationshipTemplateDto.fromDTO(dto, crt);
-        
+
         completeCrtData(crt, dto);
-        
+
         crt = customRelationshipTemplateService.update(crt);
 
         customRelationshipTemplateService.synchronizeStorages(crt);
@@ -138,7 +139,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
     }
 
-    public void removeCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
+    public void removeCustomRelationshipTemplate(String code) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
@@ -146,15 +147,15 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         handleMissingParameters();
 
         CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(code);
-        if (crt != null) {
-            // Related custom field templates will be removed along with CET
-            customRelationshipTemplateService.remove(crt);
-        } else {
+        if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
         }
+
+        // Related custom field templates will be removed along with CET
+        customRelationshipTemplateService.remove(crt);
     }
 
-    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code) throws EntityDoesNotExistsException, MissingParameterException {
+    public CustomRelationshipTemplateDto findCustomRelationshipTemplate(String code) throws MeveoApiException {
         if (StringUtils.isBlank(code)) {
             missingParameters.add("customEntityTemplateCode");
         }
@@ -166,13 +167,14 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         if (crt == null) {
             throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, code);
         }
-        Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
+        Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
         return CustomRelationshipTemplateDto.toDTO(crt, cetFields.values());
     }
 
-    public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData) throws MeveoApiException, BusinessException {
+    public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData)
+            throws MeveoApiException, BusinessException {
         CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(postData.getCode());
         if (crt == null) {
             createCustomRelationshipTemplate(postData);
@@ -182,29 +184,20 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     }
 
 
-
     public List<CustomRelationshipTemplateDto> listCustomRelationshipTemplates(String code) {
-
-        List<CustomRelationshipTemplate> cets;
+        List<CustomRelationshipTemplate> crts;
         if (StringUtils.isBlank(code)) {
-            cets = customRelationshipTemplateService.list();
+            crts = customRelationshipTemplateService.list();
         } else {
-            cets = customRelationshipTemplateService.findByCodeLike(code);
+            crts = customRelationshipTemplateService.findByCodeLike(code);
         }
 
-        List<CustomRelationshipTemplateDto> cetDtos = new ArrayList<>();
+        List<CustomRelationshipTemplateDto> crtDtos = new ArrayList<>();
 
-        for (CustomRelationshipTemplate crt : cets) {
-
-            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
-
-            cetDtos.add(CustomRelationshipTemplateDto.toDTO(crt, cetFields.values()));
-        }
-
-        return cetDtos;
+        return crtDtos;
     }
 
-  
+
     private void synchronizeCustomFields(String appliesTo, List<CustomFieldTemplateDto> fields)
             throws MeveoApiException, BusinessException {
 
@@ -244,42 +237,44 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 
     }
 
-	@Override
-	public CustomRelationshipTemplateDto find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
-		return findCustomRelationshipTemplate(code);
-	}
+    @Override
+    public CustomRelationshipTemplateDto find(String code) throws MeveoApiException {
+        return findCustomRelationshipTemplate(code);
+    }
 
-	@Override
-	public CustomRelationshipTemplate createOrUpdate(CustomRelationshipTemplateDto dtoData) throws MeveoApiException, BusinessException {
-		createOrUpdateCustomRelationshipTemplate(dtoData);
-		return customRelationshipTemplateService.findByCode(dtoData.getCode());
-	}
+    @Override
+    public CustomRelationshipTemplate createOrUpdate(CustomRelationshipTemplateDto dtoData)
+            throws MeveoApiException, BusinessException {
+        createOrUpdateCustomRelationshipTemplate(dtoData);
+        return customRelationshipTemplateService.findByCode(dtoData.getCode());
+    }
 
-	@Override
-	public CustomRelationshipTemplateDto toDto(CustomRelationshipTemplate entity) {
-		Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values();
-		return CustomRelationshipTemplateDto.toDTO(entity, cfts);
-	}
+    @Override
+    public CustomRelationshipTemplateDto toDto(CustomRelationshipTemplate entity) {
+        Collection<CustomFieldTemplate> cfts = customFieldTemplateService
+                .findByAppliesTo(entity.getAppliesTo()).values();
+        return CustomRelationshipTemplateDto.toDTO(entity, cfts);
+    }
 
-	@Override
-	public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws MeveoApiException {
-		return CustomRelationshipTemplateDto.fromDTO(dto, null);
-	}
+    @Override
+    public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws MeveoApiException {
+        return CustomRelationshipTemplateDto.fromDTO(dto, null);
+    }
 
-	@Override
-	public IPersistenceService<CustomRelationshipTemplate> getPersistenceService() {
-		return customRelationshipTemplateService;
-	}
+    @Override
+    public IPersistenceService<CustomRelationshipTemplate> getPersistenceService() {
+        return customRelationshipTemplateService;
+    }
 
-	@Override
-	public boolean exists(CustomRelationshipTemplateDto dto) {
-		return customRelationshipTemplateService.findByCode(dto.getCode()) != null;
-	}
+    @Override
+    public boolean exists(CustomRelationshipTemplateDto dto) {
+        return customRelationshipTemplateService.findByCode(dto.getCode()) != null;
+    }
 
-	@Override
-	public void remove(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
-		this.removeCustomRelationshipTemplate(dto.getCode());
-	}
+    @Override
+    public void remove(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
+        this.removeCustomRelationshipTemplate(dto.getCode());
+    }
 
-   
+
 }

@@ -436,6 +436,8 @@ public class CustomFieldDto {
 			return false;
 		} else if (entityReferenceValue != null && !entityReferenceValue.isEmpty()) {
 			return false;
+		} else if (booleanValue != null) {
+			return false;
 		}
 
 		return true;

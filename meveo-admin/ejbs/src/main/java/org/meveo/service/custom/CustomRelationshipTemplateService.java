@@ -94,8 +94,8 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         super.create(crt);
         
         try {
-            permissionService.createIfAbsent("modify", crt.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-            permissionService.createIfAbsent("read", crt.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+            permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
+            permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
             if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
             	customTableCreatorService.createCrtTable(crt);
             }
@@ -111,9 +111,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
         CustomRelationshipTemplate cetUpdated = super.update(crt);
-        
-        permissionService.createIfAbsent("modify", crt.getPermissionResourceName(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
-        permissionService.createIfAbsent("read", crt.getPermissionResourceName(), paramBean.getProperty("role.readAllCE", "ReadAllCE"));
+
+        permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
+        permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
         
         // SQL Storage logic
         if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
@@ -173,6 +173,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         }
 
         customFieldsCache.removeCustomRelationshipTemplate(crt);
+
+        permissionService.removeIfPresent(crt.getModifyPermission());
+        permissionService.removeIfPresent(crt.getReadPermission());
 
         super.remove(crt);
     }

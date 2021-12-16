@@ -37,6 +37,7 @@ import javax.persistence.PersistenceException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -45,6 +46,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.exceptions.InvalidCustomFieldException;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -148,7 +150,11 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @throws EntityDoesNotExistsException if entity can't be found
 	 */
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, boolean withReferences) throws EntityDoesNotExistsException {
-		return find(repository, cet, uuid, null, true);
+		return find(repository, cet, uuid, null, new HashMap<>(), true);
+	}
+	
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+		return find(repository, cet, uuid, fetchFields, new HashMap<>(), withEntityReferences);
 	}
 
 	/**
@@ -162,7 +168,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @return list of matching entities
 	 * @throws EntityDoesNotExistsException if entity does not exist
 	 */
-	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, List<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> fetchFields, Map<String, Set<String>> subFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
 		if (uuid == null) {
 			throw new IllegalArgumentException("Cannot retrieve entity by uuid without uuid");
 		}
@@ -174,14 +180,15 @@ public class CrossStorageService implements CustomPersistenceService {
 		List<String> selectFields;
 		Map<String, Object> values = new HashMap<>();
 		values.put("uuid", uuid);
+		boolean foudEntity=false;
 		
 		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo()).values();
 
 		// Retrieve only asked fields
-		if (fetchFields != null) {
+		if (fetchFields != null && !fetchFields.isEmpty()) {
 			selectFields = new ArrayList<>(fetchFields);
 
-			// No restrictions about fields - retrieve all fields
+		// No restrictions about fields - retrieve all fields
 		} else {
 			selectFields = cfts.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 		}
@@ -193,10 +200,17 @@ public class CrossStorageService implements CustomPersistenceService {
 					String repoCode = repository.getNeo4jConfiguration().getCode();
 					final Map<String, Object> existingValues = neo4jDao.findNodeById(repoCode, cet.getCode(), uuid, neo4jFields);
 					if (existingValues != null) {
+						foudEntity=true;
 						values.putAll(existingValues);
 						// We need to fetch every relationship defined as entity references
-						if(withEntityReferences) {
+						if(withEntityReferences || fetchFields != null) {
 							for(CustomFieldTemplate cft : cfts) {
+								if(!withEntityReferences && fetchFields != null) { // Skip fields not defined in fetch fields
+									if(!fetchFields.contains(cft.getCode())) {
+										continue;
+									}
+								}
+								
 								if(cft.getStoragesNullSafe().contains(DBStorageType.NEO4J) && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 									var referencedCet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 									
@@ -208,10 +222,22 @@ public class CrossStorageService implements CustomPersistenceService {
 									if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 										List<Map<String, Object>> targets = neo4jDao.findTargets(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
 										values.put(cft.getCode(), targets);
+										for (var target : targets) {
+											if(target.get("uuid") == null) {
+												target.put("uuid", target.remove("meveo_uuid"));
+											}
+										}
 										
 									} else {
 										Map<String, Object> target = neo4jDao.findTarget(repoCode, uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
-										values.put(cft.getCode(), target);
+										if(target != null) {
+											values.put(cft.getCode(), target);
+											if(target.get("uuid") == null) {
+												target.put("uuid", target.remove("meveo_uuid"));
+											} 
+										} else {
+											log.warn("Failed to retrieve target : [source={}/{}, relationship={}, target={}", uuid, cet.getCode(), cft.getRelationshipName(), referencedCet.getCode());
+										}
 									}
 								}
 							}
@@ -239,6 +265,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					final Map<String, Object> customTableValue = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, sqlFields);
 					replaceKeys(cet, sqlFields, customTableValue);
 					if(customTableValue != null) {
+						foudEntity=true;
 						values.putAll(customTableValue);
 					}
 				} else {
@@ -249,6 +276,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 					values.put("code", cei.getCode());
 					values.put("description", cei.getDescription());
+					foudEntity=true;
 					if (sqlFields != null) {
 						for (String field : sqlFields) {
 							if (cei.getCfValues() != null && cei.getCfValues().getCfValue(field) != null) {
@@ -277,11 +305,15 @@ public class CrossStorageService implements CustomPersistenceService {
 			throw new RuntimeException(e);
 		}
 
+		if(!foudEntity){
+			throw new EntityDoesNotExistsException(cet.getCode(),uuid);
+		}
+		
 		// Remove null values
 		values.values().removeIf(Objects::isNull);
 
 		// Fetch entity references
-		fetchEntityReferences(repository, cet, values);
+		fetchEntityReferences(repository, cet, values, subFields);
 
 		values = deserializeData(values, cfts);
 		
@@ -299,9 +331,9 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @return the data completed
 	 * @throws EntityDoesNotExistsException if data with given id can't be found
 	 */
-	public Map<String, Object> getMissingData(Map<String, Object> data, Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> selectFields) throws EntityDoesNotExistsException {
+	public Map<String, Object> getMissingData(Map<String, Object> data, Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> selectFields, Map<String, Set<String>> subFields) throws EntityDoesNotExistsException {
 		List<String> actualFetchField = new ArrayList<>(selectFields);
-		actualFetchField.removeAll(data.keySet());
+		actualFetchField.removeIf(entry -> data.keySet().contains(entry) && !subFields.keySet().contains(entry));
 
 		// Every field has been already retrieved
 		if (actualFetchField.isEmpty()) {
@@ -309,7 +341,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 
 		// Retrieve the missing fields
-		return find(repository, cet, uuid, actualFetchField, false);
+		return find(repository, cet, uuid, actualFetchField, subFields, false);
 	}
 
 	/**
@@ -323,19 +355,23 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
+		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
 
-		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
-
+		final Set<String> actualFetchFields;
+		// If no pagination nor fetch fields are defined, we consider that we must fetch everything
+		boolean fetchAllFields = paginationConfiguration == null || paginationConfiguration.getFetchFields() == null || paginationConfiguration.getFetchFields().isEmpty();
+		if(fetchAllFields) {
+			actualFetchFields = new HashSet<>(fields.keySet());
+		} else {
+			actualFetchFields = new HashSet<>(paginationConfiguration.getFetchFields());
+		}
+		
+		final Map<String, Set<String>> subFields = extractSubFields(actualFetchFields);
+		
 		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
-		final var fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
-
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
-
-		// If no pagination nor fetch fields are defined, we consider that we must fetch
-		// everything
-		boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
-
+		
 		// In case where only graphql query is passed, we will only use it so we won't
 		// fetch sql
 		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
@@ -350,7 +386,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				.forEach(key -> {
 					String[] fieldInfo = key.split(" ");
 					String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
-					if(fields.get(fieldName) == null && !"uuid".equals(fieldName)) {
+					if(fields.get(fieldName) == null && !"uuid".equals(fieldName) && !("code".equals(fieldName) && cet.getAvailableStorages().contains(DBStorageType.SQL) && !cet.getSqlStorageConfiguration().isStoreAsTable())) {
 						throw new IllegalArgumentException("Filter " + key + " does not match fields of " + cet.getCode());
 					}
 				});
@@ -358,13 +394,16 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		// Collect initial data
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
+			PaginationConfiguration sqlPaginationConfiguration = new PaginationConfiguration(paginationConfiguration);
+			sqlPaginationConfiguration.setFetchFields(List.copyOf(actualFetchFields));
+			
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				final List<Map<String, Object>> values = customTableService.list(repository.getSqlConfigurationCode(), cet, paginationConfiguration);
+				final List<Map<String, Object>> values = customTableService.list(repository.getSqlConfigurationCode(), cet, sqlPaginationConfiguration);
 				values.forEach(v -> replaceKeys(cet, actualFetchFields, v));
 				valuesList.addAll(values);
 
 			} else {
-				final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), cet.isStoreAsTable(), filters, paginationConfiguration);
+				final List<CustomEntityInstance> ceis = customEntityInstanceService.list(cet.getCode(), cet.isStoreAsTable(), filters, sqlPaginationConfiguration);
 				final List<Map<String, Object>> values = new ArrayList<>();
 
 				for (CustomEntityInstance cei : ceis) {
@@ -390,26 +429,20 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			String graphQlQuery;
+			Map<String, Object> graphQlVariables = new HashMap<>();
 
 			// Find by graphql if query provided
 			if (paginationConfiguration != null && paginationConfiguration.getGraphQlQuery() != null) {
 				graphQlQuery = paginationConfiguration.getGraphQlQuery();
 				graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 			} else {
-				GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(cet.getCode());
-				builder.field("meveo_uuid");
-				if(filters != null) {
-					filters.forEach(builder::filter);
-				}
-				if(actualFetchFields != null) { 
-					actualFetchFields.forEach(builder::field);
-				}
-				graphQlQuery = builder.toString();
+				graphQlQuery = generateGraphQlFromPagination(cet.getCode(), paginationConfiguration, actualFetchFields, filters, subFields)
+						.toString();
 			}
 			
 			// Check if filters contains a field not stored in Neo4J
 			var dontFilterOnNeo4J = filters != null && filters.keySet().stream()
-					.anyMatch(f -> !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
+					.anyMatch(f -> fields.get(f) != null && !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
 				
 			Map<String, Object> result = null;
 			if (!dontFilterOnNeo4J && repository.getNeo4jConfiguration() != null) {
@@ -454,18 +487,83 @@ public class CrossStorageService implements CustomPersistenceService {
 		for (Map<String, Object> data : valuesList) {
 			String uuid = (String) (data.get("uuid") != null ? data.get("uuid") : data.get("meveo_uuid"));
 
-			Collection<String> fetchFields = actualFetchFields != null ? actualFetchFields : customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
-
-			final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, fetchFields);
-			data.putAll(missingData);
+			final Map<String, Object> missingData = getMissingData(data, repository, cet, uuid, actualFetchFields, subFields);
+			if(missingData != null) {
+				data.putAll(missingData);
+			}
 		}
 		
-		Collection<CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo())
-				.values();
-		
 		return valuesList.stream()
-				.map(values -> deserializeData(values, cfts))
+				.map(values -> deserializeData(values, fields.values()))
 				.collect(Collectors.toList());
+	}
+
+	/**
+	 * @param cet
+	 * @param paginationConfiguration
+	 * @param actualFetchFields
+	 * @param filters
+	 * @return
+	 */
+	private GraphQLQueryBuilder generateGraphQlFromPagination(String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
+		GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(type);
+		builder.field("meveo_uuid");
+		if(filters != null) {
+			filters.forEach((key, value) -> {
+				if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+					if (!key.equals("uuid")) {
+						builder.filter(key, value);
+					} else {
+						builder.filter("meveo_uuid", value);
+					}
+				}
+			});
+		}
+		
+		if(actualFetchFields != null) { 
+			actualFetchFields
+				.stream()
+				.filter(field -> !field.equals("uuid"))
+				.filter(field -> !subFields.containsKey(field))
+				.forEach(builder::field);
+		}
+		
+		if(paginationConfiguration != null) {
+			if (paginationConfiguration.getNumberOfRows() != null) {
+				builder.limit(paginationConfiguration.getNumberOfRows());
+			}
+			
+			if (paginationConfiguration.getFirstRow() != null) {
+				builder.offset(paginationConfiguration.getFirstRow());
+			}
+		}
+		
+		for (var subField : subFields.entrySet()) {
+			Set<String> subFetchFields = new HashSet<>(subField.getValue());
+			Map<String, Set<String>> subSubFields = extractSubFields(subFetchFields);
+			GraphQLQueryBuilder subQuery = generateGraphQlFromPagination(null, null, subFetchFields, null, subSubFields);
+			builder.field(subField.getKey(), subQuery);
+		}
+		
+		return builder;
+	}
+
+	/**
+	 * @param actualFetchFields
+	 * @return
+	 */
+	public Map<String, Set<String>> extractSubFields(final Set<String> actualFetchFields) {
+		final Map<String, Set<String>> subFields = new HashMap<>();
+		for (var fetchField : List.copyOf(actualFetchFields)) {
+			if(fetchField.contains(".")) {
+				actualFetchFields.remove(fetchField);
+				String[] fieldQuery = fetchField.split("\\.", 2);
+				actualFetchFields.add(fieldQuery[0]);
+				subFields.computeIfAbsent(fieldQuery[0], key -> new HashSet<>())
+					.add(fieldQuery[1]);
+			}
+		}
+		return subFields;
 	}
 
 	/**
@@ -638,6 +736,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setDescription(ceiToSave.getDescription());
 		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
 		
+		if (ceiToSave.getCfValuesOld() != null && !ceiToSave.getCfValuesOld().getValuesByCode().isEmpty()) {
+			try {
+				checkBeforeUpdate(repository, ceiToSave);
+			} catch (EntityDoesNotExistsException | ELException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		if(ceiToSave.getUuid() != null) {
 			cei.setUuid(ceiToSave.getUuid());
 		}
@@ -730,7 +836,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// NEO4J Storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities);
+			uuid = createOrUpdateNeo4J(repository, ceiAfterPreEvents, customFieldTemplates, persistedEntities, foundId);
 			if (foundId == null) {
 				ceiAfterPreEvents.setUuid(uuid);
 			}
@@ -835,12 +941,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		return cei.getUuid();
 	}
 
-	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities) throws IOException, BusinessException, BusinessApiException {
+	private String createOrUpdateNeo4J(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, Set<EntityRef> persistedEntities, String foundUuid) throws IOException, BusinessException, BusinessApiException {
+		
 		String uuid = null;
-
 		CustomEntityInstance neo4jCei = new CustomEntityInstance();
 		neo4jCei.setCetCode(cei.getCetCode());
-		neo4jCei.setUuid(cei.getUuid());
+		neo4jCei.setUuid(foundUuid);
 		neo4jCei.setCet(cei.getCet());
 		
 		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
@@ -858,7 +964,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					throw new NullPointerException("Generated UUID from Neo4J cannot be null");
 				}
 
-				if (cei.getUuid() != null && !cei.getUuid().equals(uuid)) {
+				if (foundUuid != null && !foundUuid.equals(uuid)) {
 					log.error("Wrong Neo4J UUID {} for {}, should be {}", uuid, neo4jCei, cei.getUuid(), new Exception());
 				}
 
@@ -1019,6 +1125,14 @@ public class CrossStorageService implements CustomPersistenceService {
 		String uuid = ceiToUpdate.getUuid();
 		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
 
+		if (ceiToUpdate.getCfValuesOld() != null && !ceiToUpdate.getCfValuesOld().getValuesByCode().isEmpty()) {
+			try {
+				checkBeforeUpdate(repository, ceiToUpdate);
+			} catch (EntityDoesNotExistsException | ELException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
 		// Neo4j storage
 		if (cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			Map<String, Object> neo4jValues = filterValues(customFieldTemplates, values, cet, DBStorageType.NEO4J);
@@ -1221,6 +1335,9 @@ public class CrossStorageService implements CustomPersistenceService {
 					uuid = neo4JUuid;
 				}
 
+			} catch (InvalidCustomFieldException e) {
+				log.warn("Invalid custom field", e.getMessage());
+				return null;
 			} catch (ELException | BusinessException e) {
 				throw new RuntimeException(e);
 			}
@@ -1399,7 +1516,6 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (cft == null) {
 				return false;
 			}
-
 			return cft.getStoragesNullSafe().contains(storageType);
 		}).collect(Collectors.toList());
 	}
@@ -1554,11 +1670,10 @@ public class CrossStorageService implements CustomPersistenceService {
 		return null;
 	}
 
-	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values) throws EntityDoesNotExistsException {
+	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values, Map<String, Set<String>> subFields) throws EntityDoesNotExistsException {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
-			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY && cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
-								
+			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 				// Check if target is not JPA entity
 				try {
 					var session = transaction.getHibernateSession(repository.getSqlConfigurationCode());
@@ -1585,17 +1700,43 @@ public class CrossStorageService implements CustomPersistenceService {
 					continue;
 				}
 				
-				if(entry.getValue() instanceof String) {
-					Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), false);
-					values.put(cft.getCode(), refValues);
-				} else if(entry.getValue() instanceof Map) {
-					values.put(cft.getCode(), entry.getValue());
+				Set<String> fetchFields = subFields.get(cft.getCode());
+				if(fetchFields == null) {
+					continue;
 				}
+				fetchFields = new HashSet<>(fetchFields);
+				
+				Map<String, Set<String>> subSubFields = extractSubFields(fetchFields);
+
+				if (fetchFields.contains("*")) {
+					fetchFields = cache.getCustomFieldTemplates(cet.getAppliesTo()).keySet();
+				}
+				
+				if(cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+					if(entry.getValue() instanceof String) {
+						Map<String, Object> refValues = find(repository, cet, (String) entry.getValue(), fetchFields, subSubFields, false);
+						values.put(cft.getCode(), refValues);
+					} else if(entry.getValue() instanceof Map) {
+						values.put(cft.getCode(), entry.getValue());
+					}
+				} else if(cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+					if(entry.getValue() instanceof Collection) {
+						Collection<?> collection = (Collection<?>) entry.getValue();
+						if(!collection.isEmpty()) {
+							var firstItem = collection.iterator().next();
+							if(firstItem instanceof String) {
+								// List list = find(repository, cet, null);
+								//TODO
+							}
+						}
+					}
+				}
+
 			}
 		}
 	}
 
-	private void replaceKeys(CustomEntityTemplate cet, List<String> sqlFields, Map<String, Object> customTableValue) {
+	private void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
 		if (sqlFields != null && !sqlFields.isEmpty()) {
 			List<CustomFieldTemplate> cfts = sqlFields.stream().map(field -> cache.getCustomFieldTemplate(field, cet.getAppliesTo())).collect(Collectors.toList());
 
@@ -1636,51 +1777,32 @@ public class CrossStorageService implements CustomPersistenceService {
 		return map;
 	}
 	
-	public boolean checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException {
+	public void checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException, IllegalTransitionException {
 		Map<String, Set<String>> map = customEntityInstanceService.getValueCetCodeAndWfTypeFromWF();
-		if (entity.getCet().isStoreAsTable()) {
-			Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), entity.getCet(), entity.getUuid());
-			if (values != null) {
-				if (map.isEmpty()) {
-					return true;
-				}
-				for (String key : values.keySet()) {
-					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
-						if (values.get(key).equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
-							continue;
-						} else {
-							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
-								continue;
-							} else {
-								return false;
-							}
-						}
-					}
-				}
+		Map<String, Object> values = entity.getCfValuesAsValues();
+		if (values != null) {
+			if (map.isEmpty()) {
+				return;
 			}
-		} else {
-			CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(entity.getCetCode(), entity.getUuid());
-			if (customEntityInstance != null && customEntityInstance.getCfValues() != null) {
-				if (map.isEmpty()) {
-					return true;
-				}
-				for (String key : customEntityInstance.getCfValues().getValuesByCode().keySet()) {
-					if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
-						if (customEntityInstance.getCfValues().getValuesByCode().get(key).get(0).getStringValue()
-								.equals(entity.getCfValues().getValuesByCode().get(key).get(0).getStringValue())) {
-							continue;
-						} else {
-							if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
-								continue;
-							} else {
-								return false;
-							}
-						}
+			
+			for (String key : values.keySet()) {
+				if (map.keySet().contains(entity.getCetCode()) && map.get(entity.getCetCode()).contains(key)) {
+					
+					// Skip if value doesn't changes
+					if(Objects.equals(entity.getCfValuesOld().getValue(key), entity.getCfValues().getValue(key))) {
+						continue;
+					}
+					
+					if (customEntityInstanceService.transitionsFromPreviousState(key, entity)) {
+						continue;
+					} else {
+						throw new IllegalTransitionException((String) entity.getCfValuesOldNullSafe().getValue(key), 
+								(String) values.get(key), 
+								key);
 					}
 				}
 			}
 		}
-		return true;
 	}
 
 }

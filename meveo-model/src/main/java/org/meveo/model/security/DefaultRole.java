@@ -9,7 +9,9 @@ public enum DefaultRole {
 	READ_ALL_CE("ReadAllCE", -4L),
 	MARKETING("marketingManager", -5L),
 	CUSTOMER_CARE_USER("CUSTOMER_CARE_USER", -6L),
-	GIT_ADMIN("gitAdmin", -7L);
+	GIT_ADMIN("gitAdmin", -7L),
+	MODIFY_ALL_CR("ModifyAllCR", -8L),
+	READ_ALL_CR("ReadAllCR", -9L);
 	
 	private String roleName;
 	private Long id;

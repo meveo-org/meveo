@@ -22,7 +22,7 @@ import org.meveo.model.jobs.JobCategoryEnum;
 @XmlRootElement(name = "JobInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel("JobInstanceDto")
-public class JobInstanceDto extends BusinessEntityDto {
+public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobInstanceDto> {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 5166093858617578774L;
@@ -215,4 +215,24 @@ public class JobInstanceDto extends BusinessEntityDto {
         return "JobInstanceDto [jobCategory=" + jobCategory + ", jobTemplate=" + jobTemplate + ", followingJob=" + followingJob + ", parameter=" + parameter + ", active=" + isActive()
                 + ", customFields=" + customFields + ", timerCode=" + timerCode + ", runOnNodes=" + runOnNodes + ", limitToSingleNode=" + limitToSingleNode + "]";
     }
+
+	@Override
+	public int compareTo(JobInstanceDto o) {
+		if (o == null)
+			return -1;
+		if (this.getFollowingJob() == null && o.getFollowingJob() == null)
+			return 0;
+		else if (this.getFollowingJob() == null && o.getFollowingJob() != null)
+			return -1;
+		else if (this.getFollowingJob() != null && o.getFollowingJob() == null)
+			return 1;
+		else /*if (this.getFollowingJob() != null && o.getFollowingJob() != null)*/ {
+			if (this.getFollowingJob().contentEquals(o.code) )
+				return 1;
+			else if (o.getFollowingJob().contentEquals(this.code) )
+				return -1;
+			else 
+				return 0;
+		}
+	}
 }

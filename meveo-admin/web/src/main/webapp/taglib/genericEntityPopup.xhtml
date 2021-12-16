@@ -60,6 +60,7 @@
                                 isAutocomplete="true" autocompleteBean="#{customFieldTemplateBean}" autocompleteMethod="autocompleteClassNamesHuman" converter="customFieldAppliesToConverter"
                                 rendered="#{ref:isClassHasField(genericEntityPickerBean.selectedEntityClass, 'appliesTo')}" />
                         </c:if>
+                        
                         <c:if test="#{genericEntityPickerBean.selectedEntityClass!=null and (genericEntityPickerBean.selectedEntityClass.name eq 'org.meveo.model.customEntities.CustomEntityInstance')}">
                             <hftl:decorateFormField field="searchCet" componentWidth="30" label="#{messages['meveoModuleItem.customEntityTemplate']}">
                                 <p:selectOneMenu id="searchCet" value="#{genericEntityPickerBean.customEntityTemplate}" style="width:90%;">
@@ -117,8 +118,10 @@
                     </h:outputText>
                 </p:column>
             </p:dataTable>
+            
+            
             <p:dataTable id="#{id}datatableForCustomTable" var="e" paginator="true" resizableColumns="true" value="#{genericEntityPickerBean.customEntityInstances}" rows="10" selection="#{selection}" selectionMode="single"
-                         rowKey="#{e['uuid']}" lazy="false" rendered="#{genericEntityPickerBean.selectedEntityClass.name eq 'org.meveo.model.customEntities.CustomEntityInstance'}">
+                         rowKey="#{e['uuid']}" lazy="false" rendered="#{genericEntityPickerBean.customEntityTemplate != null and genericEntityPickerBean.selectedEntityClass.name eq 'org.meveo.model.customEntities.CustomEntityInstance'}">
                 <p:ajax event="rowSelect" oncomplete="PF('dlg_#{id}').hide()" update=":moduleForm:moduleItems"/>
                 <p:column headerText="#{messages['BusinessEntity.uuid']}">
                     <h:outputText value="#{e['uuid']}" />

@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>6.15.0-SNAPSHOT</version>
+	<version>6.15.12-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,14 +13,16 @@
 		<version.wildfly>18.0.1.Final</version.wildfly>
 		<dbtype>generic</dbtype>
 		<releaseOption />
-		<jackson.version>2.9.10</jackson.version>
-		<scm.url>scm:git:ssh://git@github.com/meveo-org/meveo</scm.url>
+		<jackson.version>2.12.4</jackson.version>
+		<scm.url>scm:git:git@github.com:manaty/meveo.git</scm.url>
 		<aether.version>1.1.0</aether.version>
 	</properties>
 
 	<scm>
+		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
-	</scm>
+	  <tag>HEAD</tag>
+  </scm>
 
 	<modules>
 		<module>meveo-security</module>
@@ -48,11 +48,6 @@
 			<name>Temporary Staging Repository</name>
 			<url>file://${project.groupId}</url>
 		</site>
-		<repository>
-     		<id>meveo</id>
-     		<name>GitHub meveo-org Apache Maven Packages</name>
-     		<url>https://maven.pkg.github.com/meveo-org/meveo</url>
-   		</repository>
 	</distributionManagement>
 	<pluginRepositories>
 		<pluginRepository>

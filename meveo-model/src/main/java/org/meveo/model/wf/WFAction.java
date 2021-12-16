@@ -18,6 +18,8 @@
  */
 package org.meveo.model.wf;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -35,8 +37,11 @@ import javax.validation.constraints.Size;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.EnableEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.persistence.JsonTypes;
+import org.meveo.model.scripts.ScriptInstance;
 
 @Entity
 @ExportIdentifier({ "uuid" })
@@ -53,10 +58,23 @@ public class WFAction extends EnableEntity {
     @NotNull
     private String uuid = UUID.randomUUID().toString();
 
+    @Deprecated
     @Column(name = "action_el", length = 2000)
     @Size(max = 2000)
-    @NotNull
     private String actionEl;
+    
+    //TODO : Make this field mandatory 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "action_script")
+    private ScriptInstance actionScript;
+    
+    /**
+     * Map representing the script parameter where the key is the paramer name
+     * and the value the el to evaluate
+     */
+    @Column(name = "script_parameters", columnDefinition = "text")
+    @Type(type = JsonTypes.JSON)
+    private Map<String, String> scriptParameters = new HashMap<>();
 
     @Column(name = "priority")
     private int priority;
@@ -68,8 +86,39 @@ public class WFAction extends EnableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wf_transition_id")
     private WFTransition wfTransition;
+    
+    /**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		if(scriptParameters == null) {
+			this.scriptParameters = new HashMap<>();
+		}
+		return scriptParameters;
+	}
 
-    public String getUuid() {
+	/**
+	 * @param scriptParameters the scriptParameters to set
+	 */
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	/**
+	 * @return the {@link #actionScript}
+	 */
+	public ScriptInstance getActionScript() {
+		return actionScript;
+	}
+
+	/**
+	 * @param actionScript the actionScript to set
+	 */
+	public void setActionScript(ScriptInstance actionScript) {
+		this.actionScript = actionScript;
+	}
+
+	public String getUuid() {
         return uuid;
     }
 

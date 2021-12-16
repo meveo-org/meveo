@@ -8,6 +8,32 @@ It can be executed in synchronous or asynchonous mode. In asynchronous mode, a u
 
 When writing a script, any setter (methods that start with "_set_") will be considered as an input. To add description to this input, we can simply write a Javadoc for the setter.
 
+Some parameters are set in the input parameters indicating the delay and budget allowed for the execution :
+
+ - maxBudget (Double)  : come from request header **Budget-Max-Value** 
+ - budgetUnit (String) : in Joule if not set, come from header **Budget-Unit**
+ - maxDelay (Long)  : come from request header **Delay-Max-Value** 
+ - delayUnit ([TimeUnit](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/TimeUnit.html)) : in Second if not set, come from header **Delay-Unit**
+ 
+It is the responsibility of the Script to implement that its execution is done within the given budget and delay.
+
+In case the script is executed in an asynchronous way, then after the max delay in case the execute method has not yet returned
+then the cancel method of the script is called. It should stop the execution and return immediatly the current result.
+
+If the script extends [EndpointScript](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/EndpointScript.java)
+then the [EndpointRequest](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) is set , and in case the call is synchronous the EndpointResponse is set.
+If the script does not extend EndpointScript then the request (and response in synchronous case) are set
+in the parameters `request` and `response` respectively.
+
+```
+import org.meveo.api.rest.technicalservice.impl.EndpointRequest;
+	
+   public void execute(Map<String, Object> parameters) throws BusinessException {
+	EndpointRequest req = (EndpointRequest) parameters.get("request");
+	...
+   }
+```
+
 ## GUI and API
 
 CRUD for endpoint is available on both GUI and API.
@@ -18,11 +44,11 @@ The endpoint API is **/api/rest/endpoint**. It is implemented in the class **org
 
 See class org.meveo.api.rest.technicalservice.EndpointServlet.
 
-The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with **/rest/**, followed by the name of the endpoint, and the path parameter in the order defined in the configuration. An endpoint is accessible via the URL **{meveoURL}/rest/{endpointCode}**. 
+The path to access the exposed endpoint depends on the configuration of the endpoint itself. It will always start with "/rest/", followed by the basePath of the endpoint (which is its code if not overriden), and the path parameter (wichi is just the ordered list of path parameters if not overridem).
+An endpoint is accessible via the URL <meveoURL>/rest/<endpoint.basePath><endpoint.path>.
 
-> e.g. http://localhost:8080/meveo/rest/myEndpoint/pathParam1/pathParam2
-
-If the endpoint was defined as GET, the parameters must be passed as query parameters, and if it was defined as POST the parameters must be passed as JSON in the body of the request.
+If the endpoint was defined as GET, the parameters must be passed as query parameters, 
+and if it was defined as POST or PUT the parameters must be passed as JSON in the body of the request.
 
 There are several headers that was defined to modify the default behavior of the endpoint:
 
@@ -45,7 +71,7 @@ For the following examples, let’s consider that we have three setters defined,
 
 ### GET Synchronous endpoint
 
-We should first call the creation rest service with JSON: 
+We should first call the creation rest service `POST on /endpoint` with JSON: 
 
 ```
 {
@@ -83,6 +109,8 @@ We should first call the creation rest service with JSON:
 ```
 
 So, the endpoint generated will be accessible with GET method under **/rest/myEndpoint/theCompanyName?creationDate=2011&headOffice=Dijon** and the result will be returned once the script has been executed.
+
+Both basePath and path could be set
 
 ### POST Asynchronous endpoint
 
@@ -136,7 +164,7 @@ The request of the body should be:
 
 The execution will return an UUID like **6bbb2e71-8361-4d51-887d-91c2a52d08f0** and the script will be executed. So, to retrieve the result, we need to call the endpoint **/rest/6bbb2e71-8361-4d51-887d-91c2a52d08f0**. If the execution is still not finished when we make the request, it will return with status code **102**. If we want to wait until finish and get result, we must set the header **Wait-For-Finish** to **true**.
 
-## How to get the POST body in Script
+## How to get the POST or PUT body in Script
 
 The POST body parameters are added into the context map parameter of the Script's execute method. In our example above, if we call the POST API with the following JSON body:
 
@@ -154,6 +182,14 @@ context.get("creationDate");
 context.get("headOffice");
 ```
 
+if you need the original body you can retrieve it from the `REQUEST_BODY` parameter.
+
+	
+	
 ## JSONata
 
-In the field **jsonataTransformer** it is possible to provide a JSONata expression to transform the output of the endpoint.
+In the field  **jsonataTransformer**  you can provide a JSONata expression to transform the output ofthe endpoint.
+	
+## OpenAPI definition
+	
+Go to ```GET /meveo/api/rest/endpoint/openApi/{code}```

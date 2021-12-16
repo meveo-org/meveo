@@ -69,8 +69,10 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 				for (GroupedCustomField groupedCustomField : groupedCustomFields.get(i).getChildren()) {
 					List<CustomFieldTemplate> list = new ArrayList<>();
 					if (groupedCustomField != null) {
-						CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
-						list.add(cft);
+						if(groupedCustomField.getData() instanceof CustomFieldTemplate) {
+							CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
+							list.add(cft);
+						}
 					}
 					i++;
 					customFieldTemplateList.addAll(list);
@@ -155,12 +157,12 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 						customEntityInstance.setDescription((String) entity.get("description"));
 						customFieldInstanceService.setCfValues(customEntityInstance, customEntityTemplate.getCode(), entity);
 					}
-					customFieldDataEntryBean.executeCustomAction(customEntityInstance, action, null);
+					executeCustomAction(customEntityInstance, action, null);
 				}
 				setSelectedValues(null);
 
 			} else {
-				customFieldDataEntryBean.executeCustomAction(null, action, null);
+				executeCustomAction(null, action, null);
 			}
 
 		} catch (BusinessException e) {

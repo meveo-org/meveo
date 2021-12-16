@@ -19,6 +19,7 @@
 package org.meveo.admin.action.admin.module;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
@@ -66,6 +67,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
     
 	@Override
 	public void delete() throws BusinessException {
+		entity = meveoModuleService.findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 		if(entity.isInstalled()) {
 			try {
 				moduleApi.uninstall(entity.getCode(), MeveoModule.class, true);

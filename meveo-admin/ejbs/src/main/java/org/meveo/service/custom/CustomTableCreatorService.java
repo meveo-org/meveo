@@ -606,16 +606,7 @@ public class CustomTableCreatorService implements Serializable {
 								// Check if field already exist in table
 								try (ResultSet res = meta.getColumns(null, database.getDefaultSchemaName(), dbTableName, dbFieldname)) {
 									if(res.next()) {
-										String type = res.getString("TYPE_NAME");
-										int size = res.getInt("COLUMN_SIZE");
-										if(size != 0) {
-											type += "(" + size + ")";
-										}
-										
-										// Field definition must match the existing field
-										if(!column.getType().toLowerCase().equals(type)) {
-											throw new BusinessException("Field defintion for " + cft + " does not match existing column in table " + dbTableName);
-										}
+										checkTypeMatches(dbTableName, cft, column, res.getString("TYPE_NAME"), res.getInt("COLUMN_SIZE"));
 										
 									} else {
 										// Create the field
@@ -628,16 +619,51 @@ public class CustomTableCreatorService implements Serializable {
 
 							} catch (Exception e) {
 								log.error("Failed to add field {} to custom table {}", dbFieldname, dbTableName, e);
-								throw new SQLException(e);
+								throw new SQLException(String.format("Failed to add field %s to custom table %s : ",dbFieldname, dbTableName) + e.getMessage(), e);
 							}
 						});
 					}).get(1, TimeUnit.MINUTES);
 					
 				} catch (InterruptedException | ExecutionException | TimeoutException e) {
-					log.error("Failed to add field {} to custom table {} within 1 minute", e);
+					log.error("Failed to add field {} to custom table {} within 1 minute",dbFieldname, dbTableName, e);
 					throw new RuntimeException(e);
 				}
 			}
+		}
+	}
+
+	/**
+	 * @param dbTableName Name of the table
+	 * @param cft		  Custom field template to match
+	 * @param column      Computed column definition 
+	 * @param typeName	  Actual type name of the column
+	 * @param typeSize	  Actual size of the column
+	 * @throws BusinessException if the computed type and the actual type doesn't match
+	 */
+	private void checkTypeMatches(String dbTableName, CustomFieldTemplate cft, AddColumnConfig column, String typeName, int typeSize) throws BusinessException {
+		String type = typeName;
+		switch (type) {
+			case "int8" : 
+				type = "bigint";
+				break;
+			case "int4" : 
+				type = "int";
+				break;
+			case "timestamp" :
+				type = "datetime";
+				break;
+			case "text" :
+				// NOOP
+				break;
+			default : 
+				if(typeSize != 0) {
+					type += "(" + typeSize + ")";
+				}
+		}
+		
+		// Field definition must match the existing field
+		if(!column.getType().toLowerCase().equals(type)) {
+			throw new BusinessException("Field defintion for " + cft + " (" + column.getType().toLowerCase() + ") does not match existing column in table " + dbTableName + " (" + type + ")");
 		}
 	}
 
@@ -1039,6 +1065,10 @@ public class CustomTableCreatorService implements Serializable {
 		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
 			return "text";
 		}
+		
+		if(cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
+			return "text";
+		}
 
 		switch (fieldType) {
 		case DATE:
@@ -1052,10 +1082,11 @@ public class CustomTableCreatorService implements Serializable {
 		case EXPRESSION:
 		case MULTI_VALUE:
 		case STRING:
-		case TEXT_AREA:
 		case ENTITY:
 		case LIST:
 			return "varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")";
+		case TEXT_AREA:
+			return "text";
 		// Store serialized
 		case CHILD_ENTITY:
 		case EMBEDDED_ENTITY:

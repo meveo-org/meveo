@@ -1,0 +1,62 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+                xmlns:p="http://primefaces.org/ui"
+                template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{wsEndpointBean.objectId}"/>
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+
+        <hftl:entityPopup id="searchFuncionPopup"
+                          header="#{messages['endpoint.search.endpoint.service']}"
+                          backingBean="#{functionBean}"
+                          searchField1Label="#{messages['BusinessEntity.code']}"
+                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                          column1="code" selection="#{wsEndpointBean.entity.service}"
+                          column2Label="#{messages['BusinessEntity.description']}"
+                          column2="description" column3="class" column3Child="simpleName"
+                          column3Label="Type" selectionListenerBean="#{wsEndpointBean}"
+                          selectionListenerMethod="onFunctionChange"
+                          updateField=":wsEndpointForm:serviceId :wsEndpointForm:serviceId_text">
+        </hftl:entityPopup>
+
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.services']}" disabled="true"/>
+                <p:menuitem outcome="endpoint" value="#{messages['menu.endpoint']}" disabled="true" />
+                <p:menuitem outcome="webSocketEndpoints" value="#{messages['menu.endpoint.webSocket']}" />
+                <p:menuitem
+                        value="#{messages['commons.new']} #{messages['endpoint.webSocket']}"
+                        disabled="true" rendered="#{wsEndpointBean.entity.transient}"/>
+                <p:menuitem
+                        value="#{wsEndpointBean.entity.code}"
+                        disabled="true" rendered="#{!wsEndpointBean.entity.transient}"/>
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel formId="wsEndpointForm"
+                        label="#{messages['endpoint.webSocket']}" showAddModuleButton="true"
+                        backingBean="#{wsEndpointBean}" killConversationOnSave="true">
+            <h:panelGrid columns="4">
+                <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true"
+                                validateUnique="true"/>
+                <hftl:formField label="#{messages['BusinessEntity.description']}" field="description"/>
+                <hftl:formField id="serviceId" label="#{messages['endpoint.code']}"
+                                field="service" valueLabelField="code" required="true" popup="true"
+                                popupId="searchFuncionPopup" allowEdit="true"
+                                displayOneLine="false" componentWidth="100"
+                                actionListenerBean="#{wsEndpointBean}"
+                                actionListenerMethod="onFunctionChange"/>
+                <hftl:formField label="#{messages['endpoint.webSocket.secured']}" field="secured"/>
+            </h:panelGrid>
+
+        </hftl:formPanel>
+    </ui:define>
+
+</ui:composition>

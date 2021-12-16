@@ -64,40 +64,40 @@
 				field="priority" />
 
 			<!--  Function selection -->
-			<hftl:formField id="functionSelectId"
-				label="#{messages['entity.notification.scriptInstance']}"
-				field="function" valueLabelField="code" required="true" popup="true"
-				popupId="functionPopup" />
+<!--			<hftl:formField id="functionSelectId"-->
+<!--				label="#{messages['entity.notification.scriptInstance']}"-->
+<!--				field="function" valueLabelField="code" required="true" popup="true"-->
+<!--				popupId="functionPopup" />-->
 
 			<!--  Summary of function inputs -->
-			<h:panelGroup id="functionInputs">
-				<hftl:decorateFormField
-					label="#{messages['entity.notification.scriptParams']}"
-					rendered="#{webNotificationBean.entity.function.hasInputs()}"
-					newLine="true" componentWidth="100%">
-					<p:dataTable id="inputs_table"
-						value="${webNotificationBean.entity.function.inputs}"
-						resizableColumns="true" var="item" paginator="false"
-						styleClass="custom-grid" reflow="true">
-						<p:column
-							headerText="#{messages['entity.notification.scriptParams.name']}">
-							<h:outputText value="#{item.name}" />
-						</p:column>
-						<p:column
-							headerText="#{messages['entity.notification.scriptParams.type']}">
-							<h:outputText value="#{item.type}" />
-						</p:column>
-						<p:column
-							headerText="#{messages['entity.notification.scriptParams.description']}">
-							<h:outputText
-								value="#{item.description != null ? item.description : ''}" />
-						</p:column>
-					</p:dataTable>
-				</hftl:decorateFormField>
-			</h:panelGroup>
+<!--			<h:panelGroup id="functionInputs">-->
+<!--				<hftl:decorateFormField-->
+<!--					label="#{messages['entity.notification.scriptParams']}"-->
+<!--					rendered="#{webNotificationBean.entity.function.hasInputs()}"-->
+<!--					newLine="true" componentWidth="100%">-->
+<!--					<p:dataTable id="inputs_table"-->
+<!--						value="${webNotificationBean.entity.function.inputs}"-->
+<!--						resizableColumns="true" var="item" paginator="false"-->
+<!--						styleClass="custom-grid" reflow="true">-->
+<!--						<p:column-->
+<!--							headerText="#{messages['entity.notification.scriptParams.name']}">-->
+<!--							<h:outputText value="#{item.name}" />-->
+<!--						</p:column>-->
+<!--						<p:column-->
+<!--							headerText="#{messages['entity.notification.scriptParams.type']}">-->
+<!--							<h:outputText value="#{item.type}" />-->
+<!--						</p:column>-->
+<!--						<p:column-->
+<!--							headerText="#{messages['entity.notification.scriptParams.description']}">-->
+<!--							<h:outputText-->
+<!--								value="#{item.description != null ? item.description : ''}" />-->
+<!--						</p:column>-->
+<!--					</p:dataTable>-->
+<!--				</hftl:decorateFormField>-->
+<!--			</h:panelGroup>-->
 
-			<hftl:formField label="#{messages['entity.notification.params']}"
-				field="params" newLine="true" componentWidth="100%" />
+<!--			<hftl:formField label="#{messages['entity.notification.params']}"-->
+<!--				field="params" newLine="true" componentWidth="100%" />-->
 
 			<hftl:formField label="#{messages['enableEntity.disabled']}"
 				doNotShowOnNew="true" allowEdit="false" field="disabled"

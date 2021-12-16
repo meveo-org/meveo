@@ -20,6 +20,7 @@ import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.service.script.Script;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ExposedScriptTest extends Script {
 
@@ -34,6 +35,9 @@ public class ExposedScriptTest extends Script {
         Double maxBudget = (Double) methodContext.get(EndpointVariables.MAX_BUDGET);
         String unit = (String) methodContext.get(EndpointVariables.BUDGET_UNIT);
         methodContext.put("budget", "The budget is " + maxBudget + " " + unit);
+        Long maxDelay = (Long) methodContext.get(EndpointVariables.MAX_DELAY);
+        TimeUnit delayUnit = (TimeUnit) methodContext.get(EndpointVariables.DELAY_UNIT);
+        methodContext.put("delay", "The delay is " + maxDelay + " " + delayUnit);
     }
 
     public void setCity(String city){

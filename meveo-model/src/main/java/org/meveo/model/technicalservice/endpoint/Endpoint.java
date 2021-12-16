@@ -19,11 +19,11 @@ package org.meveo.model.technicalservice.endpoint;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -63,7 +63,8 @@ import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 		+ "INNER JOIN e.service as service " + "LEFT JOIN e.pathParameters as pathParameter "
 		+ "LEFT JOIN e.parametersMapping as parameterMapping " + "WHERE service.code = :serviceCode "
 		+ "AND (pathParameter.endpointParameter.parameter = :propertyName OR parameterMapping.endpointParameter.parameter = :propertyName)"),
-		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId") })
+		@NamedQuery(name = "Endpoint.deleteByService", query = "DELETE from Endpoint e WHERE e.service.id=:serviceId"),
+		@NamedQuery(name = "Endpoint.deleteById", query = "DELETE from Endpoint e WHERE e.id=:endpointId")})
 @ImportOrder(5)
 @ExportIdentifier({ "code" })
 @ModuleItem(value = "Endpoint", path = "endpoints")
@@ -74,6 +75,12 @@ public class Endpoint extends BusinessEntity {
 	private static final long serialVersionUID = 6561905332917884613L;
 	
 	public static final String ENDPOINT_INTERFACE_JS = "EndpointInterface";
+
+	public static final Pattern basePathPattern = Pattern.compile("[a-zA-Z0-9_\\-.]+");
+
+	public static final Pattern pathPattern = Pattern.compile("[a-zA-Z0-9_\\-./\\{\\}]+");
+
+	public static final Pattern pathParamPattern = Pattern.compile("\\{[a-zA-Z0-9_\\-./]+\\}");
 	
 	/** Whether endpoint is accessible without logging */
 	@Column(name = "secured", nullable = false)
@@ -146,12 +153,39 @@ public class Endpoint extends BusinessEntity {
 	@Column(name = "content_type")
 	private String contentType;
 
+
+	@Column(name = "base_path")
+	private String basePath;
+
+	/**
+	 * The path in swagger form like /organizations/{orgId}/members/{memberId}
+	 * to be added to the base path to form the relative URL of the endpoint
+	 */
+	@Column(name = "path")
+	private String path;
+
+	@Transient
+	Pattern pathRegex;
+
+	public void setCode(String code){
+		Matcher matcher = basePathPattern.matcher(code);
+		if(matcher.matches()) {
+			this.code = code;
+		} else {
+			throw new RuntimeException("invalid code");
+		}
+	}
+
 	public String getContentType() {
+		if(contentType==null){
+			contentType="application/json";
+		}
 		return contentType;
 	}
 
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+		getContentType();
 	}
 
 	public void setSerializeResult(boolean serializeResult) {
@@ -240,12 +274,71 @@ public class Endpoint extends BusinessEntity {
 		this.isSecured = isSecured;
 	}
 
+	public String getBasePath() {
+		if(basePath==null){
+			basePath=code;
+			pathRegex=null;
+		}
+		return basePath;
+	}
+
+	public void setBasePath(String basePath) {
+		if(basePath == null){
+			this.basePath=code;
+			pathRegex=null;
+		} else {
+			/* check that the basepath is valid */
+			Matcher matcher = basePathPattern.matcher(basePath);
+			if(matcher.matches()) {
+				this.basePath = basePath;
+				pathRegex=null;
+			} else {
+				throw new RuntimeException("invalid basePath");
+			}
+		}
+	}
+
+	public String getPath() {
+		if (path == null) {
+			String sep = "";
+			final StringBuilder endpointPath = new StringBuilder("/");
+			if (pathParameters != null) {
+				for (EndpointPathParameter endpointPathParameter : pathParameters) {
+					endpointPath.append(sep).append("{").append(endpointPathParameter).append("}");
+					sep = "/";
+				}
+			}
+			path = endpointPath.toString();
+			pathRegex = null;
+		}
+		
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+		pathRegex = null;
+		getPath();
+	}
+
 	@Transient
+	/*
+	* returns the endpoint url relative to the meveo base url
+	 */
 	public String getEndpointUrl() {
-		final StringBuilder endpointUrl = new StringBuilder("/rest/" + code);
-		pathParameters
-				.forEach(endpointPathParameter -> endpointUrl.append("/{").append(endpointPathParameter).append("}"));
-		return endpointUrl.toString();
+		return getBasePath()+getPath();
+	}
+
+	@Transient
+	public Pattern getPathRegex(){
+		if(pathRegex==null){
+			String pattern = "/"+getBasePath()+getPath().replaceAll("\\{","(?<").replaceAll("\\}", ">[^/]+)");
+			if(pattern.endsWith("/")){
+				pattern+="?";
+			}
+			pathRegex=Pattern.compile(pattern);
+		}
+		return pathRegex;
 	}
 
 	public void addPathParameter(EndpointPathParameter endpointPathParameter) {

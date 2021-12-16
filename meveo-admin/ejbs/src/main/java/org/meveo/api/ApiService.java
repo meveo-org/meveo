@@ -1,7 +1,10 @@
 package org.meveo.api;
 
+import java.util.List;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
@@ -63,5 +66,13 @@ public interface ApiService<E extends IEntity, T extends BaseEntityDto> {
      * @throws BusinessException business exception.
      */
     E createOrUpdate(T dtoData) throws MeveoApiException, BusinessException;
+    
+    default int compareDtos (T obj1, T obj2, List<MeveoModuleItemDto> dtos) {
+    	if (obj1 instanceof Comparable && obj2 instanceof Comparable) {
+        	return ((Comparable<T>) obj1).compareTo(obj2);
+    	} else {
+    		return 0;
+    	}
+    }
 
 }

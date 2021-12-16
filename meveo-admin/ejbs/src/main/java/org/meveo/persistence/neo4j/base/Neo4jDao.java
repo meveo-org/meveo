@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.meveo.event.qualifier.Created;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
 import org.meveo.persistence.CrossStorageTransaction;
@@ -84,6 +85,10 @@ public class Neo4jDao {
     @Inject
     @Updated
     private Event<Neo4jRelationship> edgeUpdatedEvent;
+    
+    @Inject
+    @Removed
+    private Event<Neo4jRelationship> edgeRemovedEvent;
 
     @Inject
     @Created
@@ -113,7 +118,7 @@ public class Neo4jDao {
     					LOGGER.warn("findTarget: Multiple results found for query \n{}\nand uuid {}", query, sourceId);
     				}
     				
-    				return list.get(0).get(0).asMap();
+    				return new HashMap<>(list.get(0).get(0).asMap());
     			}
 			);
     }
@@ -128,7 +133,7 @@ public class Neo4jDao {
     	return cypherHelper.execute(repo, 
     			query.toString(), 
     			Collections.singletonMap("uuid", sourceId),
-    			(t, r) -> r.list().stream().map(record -> record.get(0).asMap()).collect(Collectors.toList())
+    			(t, r) -> r.list().stream().map(record -> new HashMap<>(record.get(0).asMap())).collect(Collectors.toList())
 			);
     }
 
@@ -293,20 +298,40 @@ public class Neo4jDao {
         );
     }
 
-    /**
-     * Remove a relation using its UUID
-     *
-     * @param neo4jconfiguration Repository code
-     * @param label              Label of the relation to remove
-     * @param uuid               UUID of the relation to remove
-     */
-    public void removeRelation(String neo4jconfiguration, String label, String uuid) {
+	/**
+	 * Remove a relation using its UUID
+	 *
+	 * @param neo4jconfiguration Repository code
+	 * @param startLabel         Label of the start node
+	 * @param type               Label of the relation to remove
+	 * @param endLabel           Label of the end node
+	 * @param uuid               UUID of the relation to remove
+	 */
+    public void removeRelation(String neo4jconfiguration, String startLabel, String type, String endLabel, String uuid) {
         StringBuilder queryBuilder = new StringBuilder()
-                .append("MATCH ()-[n:").append(label).append("]-() \n")
-                .append("WHERE n.meveo_uuid = $uuid")
-                .append("DELETE n ;");
+                .append("MATCH (:" + startLabel + ")-[n:").append(type).append("]-(:" + endLabel + ") \n")
+                .append("WHERE n.meveo_uuid = $uuid \n")
+                .append("RETURN n;");
+        
+        StringBuilder deleteQuery =  new StringBuilder().append("MATCH (:" + startLabel + ")-[n:").append(type).append("]-(:" + endLabel + ") WHERE ID(n) = $id DETACH DELETE n");
 
-        cypherHelper.execute(neo4jconfiguration, queryBuilder.toString(), Collections.singletonMap("uuid", uuid));
+
+       List<Neo4jRelationship> relationsRemoved = cypherHelper.execute(neo4jconfiguration, 
+        		queryBuilder.toString(), 
+        		Collections.singletonMap("uuid", uuid),
+        		(tx, result) -> {
+        			return result.stream()
+        					.map(r -> new Neo4jRelationship(r.get(0).asRelationship(), neo4jconfiguration))
+        					.collect(Collectors.toList());
+        		});
+       
+       relationsRemoved.forEach(rel -> {
+    	   cypherHelper.execute(neo4jconfiguration, 
+    			   deleteQuery.toString(),
+           		Collections.singletonMap("id", rel.id())
+       		);
+  			edgeRemovedEvent.fire(rel);
+       });
     }
 
     /**
@@ -526,11 +551,11 @@ public class Neo4jDao {
 
         Set<String> fieldsKeys = new HashSet<>(uniqueFields.keySet());
         Map<String, Object> fieldValues = new HashMap<>();
-
+        
         if (uniqueFields.isEmpty()) {
             if (uuid != null) {
                 fieldsKeys.add("meveo_uuid");
-                fieldValues.put("meveo_uuid", uuid);
+            	fieldValues.put("meveo_uuid", uuid);
             } else {
                 throw new IllegalArgumentException("Can't merge nodes without unique fields");
             }
@@ -572,7 +597,7 @@ public class Neo4jDao {
             final StatementResult result = transaction.run(resolvedStatement, fieldValues);
             List<Record> results = result.list();
 
-            if(results.size() > 0) {
+            if(results.size() > 1) {
                 LOGGER.warn("Multiple nodes affected by merge.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues);
             }
 
@@ -976,15 +1001,20 @@ public class Neo4jDao {
                 createRelationshipQuery,
                 arguments,
                 (t, r) -> {
-                    final Record single = r.single();
-                    final Relationship relationship = single.get(0).asRelationship();
-                    if(relationship == null){
-                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
-                    }else{
-                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
-                        t.success();
+                    final List<Record> records = r.list();
+                    
+                    for (Record record : records) {
+	                    final Relationship relationship = record.get(0).asRelationship();
+	                    if(relationship == null){
+	                        LOGGER.error("Relationship not created.\nParams: {}\nRequest: {}", arguments, createRelationshipQuery);
+	                    }else{
+	                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
+	                    }
                     }
-                    return relationship;
+                    
+                    t.success();
+                    
+                    return null;
                 },
                 e -> LOGGER.error("Error merging relationship {} on node {}", relationId, startNodeId, e)
         );

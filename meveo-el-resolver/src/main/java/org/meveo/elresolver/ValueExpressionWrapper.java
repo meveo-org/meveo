@@ -204,7 +204,7 @@ public class ValueExpressionWrapper {
 
         } catch (Exception e) {
             log.warn("EL {} throw error with variables {}", expression, userMap, e);
-            throw new ELException("Error while evaluating expression " + expression + " : " + e.getMessage());
+            throw new ELException("Error while evaluating expression " + expression, e);
         }
         return result;
     }
@@ -244,7 +244,8 @@ public class ValueExpressionWrapper {
 
     protected ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
         Map<String, Object> additionalSources = getAdditionalSources(expression, userMap);
-        userMap.putAll(additionalSources);
+        if (!additionalSources.isEmpty())
+        	userMap.putAll(additionalSources);
         simpleELResolver = new SimpleELResolver(userMap);
         final VariableMapper variableMapper = new SimpleVariableMapper();
         if(functionMapper == null) {

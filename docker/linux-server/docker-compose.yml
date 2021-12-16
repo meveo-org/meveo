@@ -2,61 +2,77 @@ version: '3.5'
 
 volumes:
   postgres_data:
-      driver: local
+    driver: local
+  keycloak_data:
+    driver: local
   meveo_data:
-      driver: local
+    driver: local
   meveo_binary_data:
-      driver: local
+    driver: local
 
 services:
   postgres:
-      image: postgres:${POSTGRES_VERSION}
-      container_name: ${STACK_NAME}-postgres
-      networks:
-        - meveo
-      restart: unless-stopped
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-      environment:
-        POSTGRES_DB: ${DB_DATABASE}
-        POSTGRES_USER: ${DB_USER}
-        POSTGRES_PASSWORD: ${DB_PASSWORD}
-      ports:
-        - 5432:5432
+    image: postgres:${POSTGRES_VERSION}
+    container_name: ${STACK_NAME}-postgres
+    networks:
+      - meveo
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 5432:5432
+  keycloak:
+    image: manaty/keycloak
+    container_name: ${STACK_NAME}-keycloak
+    networks:
+      - meveo
+    restart: unless-stopped
+    volumes:
+      - keycloak_data:/opt/jboss/keycloak/standalone/data/keycloakdb
+    environment:
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_ID}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASS}
   meveo:
-      image: manaty/wildfly-meveo:${MEVEO_VERSION}
-      container_name: ${STACK_NAME}-meveo
-      networks:
-        - meveo
-      volumes:
-        - meveo_data:/opt/jboss/wildfly/meveodata
-        - meveo_binary_data:/tmp/meveo/binary/storage
-      environment:
-        KEYCLOAK_URL: https://${KC_SERVER}/auth
-        WILDFLY_PROXY_ADDRESS_FORWARDING: "true"
-        #WILDFLY_CUSTOM_XMX: 2048m
-        MEVEO_DB_NAME: ${DB_DATABASE}
-        MEVEO_DB_USERNAME: ${DB_USER}
-        MEVEO_DB_PASSWORD: ${DB_PASSWORD}
-        MEVEO_ADMIN_BASE_URL: https://${DOMAIN_NAME}/
-      expose:
-        - 8080
-      depends_on:
-        - postgres
+    image: manaty/wildfly-meveo:${MEVEO_VERSION}
+    container_name: ${STACK_NAME}-meveo
+    networks:
+      - meveo
+    volumes:
+      - meveo_data:/opt/jboss/wildfly/meveodata
+      - meveo_binary_data:/tmp/meveo/binary/storage
+    environment:
+      KEYCLOAK_URL: https://${KC_SERVER}/auth
+      WILDFLY_PROXY_ADDRESS_FORWARDING: "true"
+      #WILDFLY_CUSTOM_XMX: 2048m
+      MEVEO_DB_NAME: ${DB_DATABASE}
+      MEVEO_DB_USERNAME: ${DB_USER}
+      MEVEO_DB_PASSWORD: ${DB_PASSWORD}
+      MEVEO_ADMIN_BASE_URL: https://${DOMAIN_NAME}/
+    expose:
+      - 8080
+    depends_on:
+      - postgres
+      - keycloak
   nginx:
-      image: nginx:${NGINX_VERSION}
-      container_name: ${STACK_NAME}-nginx
-      networks:
-        - meveo
-      volumes:
-        - /home/${SERVER_NAME}/conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-        - /home/${SERVER_NAME}/conf/ssl/domain.crt:/etc/ssl/domain.crt:ro
-        - /home/${SERVER_NAME}/conf/ssl/domain.key:/etc/ssl/domain.key:ro
-      ports:
-        - 80:80
-        - 443:443
-      depends_on:
-        - meveo
+    image: nginx:${NGINX_VERSION}
+    container_name: ${STACK_NAME}-nginx
+    networks:
+      - meveo
+    volumes:
+      - /home/${SERVER_NAME}/conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/${SERVER_NAME}/conf/ssl/domain.crt:/etc/ssl/domain.crt:ro
+      - /home/${SERVER_NAME}/conf/ssl/domain.key:/etc/ssl/domain.key:ro
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - keycloak
+      - meveo
 
 networks:
   meveo:

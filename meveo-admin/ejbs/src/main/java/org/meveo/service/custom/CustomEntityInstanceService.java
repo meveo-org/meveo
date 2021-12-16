@@ -2,6 +2,7 @@ package org.meveo.service.custom;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -49,11 +51,7 @@ import com.ibm.icu.math.BigDecimal;
  * 
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
- * @deprecated This service is now exclusively use by
- *             {@link CrossStorageService} and this service should now be use
- *             for managing {@link CustomEntityInstance}.
  */
-@Deprecated(since = "6.13")
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
 
@@ -186,9 +184,16 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 		final List<CustomEntityInstance> resultList = qb.getTypedQuery(getEntityManager(), CustomEntityInstance.class).getResultList();
 
-		if (values != null && !values.isEmpty()) {
+		var ownValues = new HashMap<>(values);
+		for (var entry : values.entrySet()) {
+			if (entry.getValue() instanceof EntityReferenceWrapper) {
+				ownValues.remove(entry.getKey());
+			}
+		}
+			
+		if (ownValues != null && !ownValues.isEmpty()) {
 			return resultList.stream()
-					.filter(customEntityInstance -> filterOnValues(values, customEntityInstance))
+					.filter(customEntityInstance -> filterOnValues(ownValues, customEntityInstance))
 					.collect(Collectors.toList());
 		}
 
@@ -236,6 +241,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 			if (filterValue.getValue() == null) {
 				continue;
+			}
+			
+			if(filterValue.getValue() instanceof Collection) {
+				continue; //FIXME
 			}
 
 			String[] fieldInfo = filterValue.getKey().split(" ");
@@ -317,44 +326,60 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	public boolean transitionsFromPreviousState(String cftCode, CustomEntityInstance instance) throws ELException {
 		Workflow workflow = workflowService.findByCetCodeAndWFType(instance.getCetCode(), cftCode);
-		CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(cftCode, "CE_" + instance.getCetCode());
 		if (workflow != null) {
-			List<String> conditionEls = new ArrayList<>();
 			List<WFTransition> transitions = new ArrayList<>();
 			List<String> statusWF = new ArrayList<>();
 			List<WFTransition> wfTransitions = workflow.getTransitions();
 			if (CollectionUtils.isNotEmpty(wfTransitions)) {
 				for (WFTransition wfTransition : wfTransitions) {
 					wfTransition = wfTransitionService.findById(wfTransition.getId());
-					transitions.add(wfTransition);
-					statusWF.add(wfTransition.getToStatus());
-					if (wfTransition.getConditionEl() != null) {
-						conditionEls.add(wfTransition.getConditionEl());
+					
+					boolean isTransitionApplicable = MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance);
+					String targetStatus = instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue();
+					String startStatus = (String) instance.getCfValuesOldNullSafe().getValue(cftCode);
+					
+					boolean isSameTargetStatus = wfTransition.getToStatus().equals(targetStatus);
+					boolean isSameStartStatus = wfTransition.getFromStatus().equals(startStatus);
+					if(isTransitionApplicable && isSameTargetStatus && isSameStartStatus) {
+						transitions.add(wfTransition);
+						statusWF.add(wfTransition.getToStatus());
 					}
+					
 				}
 			}
-			if (CollectionUtils.isNotEmpty(statusWF)) {
-				if (!statusWF.contains(instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue())) {
-					return false;
-				}
+			
+			if (CollectionUtils.isEmpty(transitions)) {
+				log.debug("Update refused because no transition matched");
+				return false;
 			}
-			if (customFieldTemplate.getApplicableOnEl() != null && CollectionUtils.isNotEmpty(transitions)) {
-				if (!CollectionUtils.isNotEmpty(conditionEls) || !conditionEls.contains(customFieldTemplate.getApplicableOnEl())) {
-					return false;
-				} else {
-					for (WFTransition wfTransition : transitions) {
-						if (wfTransition.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance) && CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
-							for (WFAction action : wfTransition.getWfActions()) {
-								action = wfActionService.findById(action.getId());
-								if (action.getConditionEl() != null && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
-									workflowService.executeExpression(action.getActionEl(), instance);
+			
+			for (WFTransition wfTransition : transitions) {
+				if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
+					for (WFAction action : wfTransition.getWfActions()) {
+						WFAction wfAction = wfActionService.findById(action.getId());
+						if (action.getConditionEl() == null || MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
+							Object actionResult;
+							
+							if (wfAction.getActionScript() != null) {
+                            	try {
+									actionResult = workflowService.executeActionScript(instance, wfAction);
+								} catch (BusinessException e) {
+									log.error("Error execution workflow action script", e);
 								}
-							}
+                            } else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+	                            actionResult = workflowService.executeExpression(wfAction.getActionEl(), instance);
+                            } else {
+                            	log.error("WFAction {} has no action EL or action script", wfAction.getId());
+                            	continue;
+                            }
+							
+							//TODO: Log action result ?
 						}
 					}
 				}
 			}
 		}
+		
 		return true;
 	}
 

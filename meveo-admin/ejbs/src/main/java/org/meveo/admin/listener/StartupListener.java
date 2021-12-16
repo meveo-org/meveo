@@ -40,12 +40,14 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
 import org.meveo.model.storage.Repository;
@@ -123,8 +125,8 @@ public class StartupListener {
 			
 			// A default Repository and SQL Configuration should be genarated/updated at Meveo first initialization
 			try {
+				// defaultSqlConfiguration
 				SqlConfiguration defaultSqlConfiguration;
-				Repository defaultRepository;
 				defaultSqlConfiguration = sqlConfigurationService.findByCode(SqlConfiguration.DEFAULT_SQL_CONNECTION);
 				if (defaultSqlConfiguration == null) {
 					defaultSqlConfiguration = new SqlConfiguration();
@@ -135,13 +137,29 @@ public class StartupListener {
 					setSqlConfiguration(defaultSqlConfiguration);
 					sqlConfigurationService.update(defaultSqlConfiguration);
 				}
-				defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
-				if (defaultRepository == null) {
+
+				//defaultNeo4jConfiguration
+				Neo4JConfiguration defaultNeo4jConfiguration = neo4jConfigurationService.findByCode(Neo4JConfiguration.DEFAULT_NEO4J_CONNECTION);
+				if (defaultNeo4jConfiguration == null) {
+					defaultNeo4jConfiguration = neo4jConnectionProvider.getDefaultConfiguration();
+					if (defaultNeo4jConfiguration != null) {
+						neo4jConfigurationService.create(defaultNeo4jConfiguration);
+					}
+				} 
+				
+				
+				Repository defaultRepository = repositoryService.findByCode(Repository.DEFAULT_REPOSITORY);
+				if (defaultRepository == null) {					
 					defaultRepository = new Repository();
 					defaultRepository.setCode(Repository.DEFAULT_REPOSITORY);
 					defaultRepository.setSqlConfiguration(defaultSqlConfiguration);
+					defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
 					repositoryService.create(defaultRepository);
 					log.info("Created default repository");
+				} else if (defaultNeo4jConfiguration != null && defaultRepository.getNeo4jConfiguration() == null) {
+					defaultRepository.setNeo4jConfiguration(defaultNeo4jConfiguration);
+					repositoryService.update(defaultRepository);
+					log.info("Updated default repository");
 				}
 			} catch (BusinessException e) {
 				log.error("Cannot create default repository", e);
@@ -204,6 +222,8 @@ public class StartupListener {
 				log.error("Can't read / write .gitignore file");
 			} catch (BusinessException e) {
 				log.error("Can't commit .gitignore file", e);
+			} catch(JGitInternalException e){
+				log.error("Can't commit .gitignore file, it is probably corrupted, you might want to delete it and restart meveo", e);
 			}
 
 			// Create default pom file

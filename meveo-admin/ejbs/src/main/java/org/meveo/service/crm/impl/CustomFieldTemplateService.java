@@ -141,6 +141,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return new HashMap<String, CustomFieldTemplate>();
         }
     }
+    
+    public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
+    	Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
+		for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
+			customFieldTemplates.putAll(findByAppliesTo(e.getAppliesTo()));
+		}
+		return customFieldTemplates;
+    }
 
     /**
      * Find a list of custom field templates corresponding to a given entity. Custom field templates are looked up in cache or retrieved from DB.
@@ -202,10 +210,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
         try {
-        	var field = findByCodeAndAppliesTo(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
+        	String calculatedAppliesToValue = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
+        	CustomFieldTemplate field = null;
+			if (calculatedAppliesToValue!=null)
+				field = findByCodeAndAppliesTo(code, calculatedAppliesToValue);
+			else
+				log.error("Can not calculate applicable AppliesToValue for entity of {} class.", entity.getClass().getSimpleName());
             if(field == null && entity instanceof CustomEntityInstance) {
             	var cet = ((CustomEntityInstance) entity).getCet();
-            	if(cet.getSuperTemplate() != null) {
+            	if(cet.getSuperTemplate() != null && cet.getSuperTemplate().getAppliesTo() != null) {
             		return findByCodeAndAppliesTo(code, cet.getSuperTemplate().getAppliesTo());
             	}
             }
@@ -647,8 +660,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      */
     private void checkIdentifierTypeAndUniqueness(CustomFieldTemplate cft) throws ValidationException {
         if(cft.isIdentifier()){
-            if(cft.getFieldType() != CustomFieldTypeEnum.STRING && cft.getFieldType() != CustomFieldTypeEnum.LONG){
-                throw new ValidationException("Identifier field can only be String or Long !");
+            if(cft.getFieldType() != CustomFieldTypeEnum.STRING && cft.getFieldType() != CustomFieldTypeEnum.LONG && cft.getFieldType() != CustomFieldTypeEnum.EXPRESSION){
+                throw new ValidationException(cft.getAppliesTo() + ": Identifier field can only be String or Long !");
             }
 
             final Map<String, CustomFieldTemplate> fields = findByAppliesTo(cft.getAppliesTo());
@@ -656,7 +669,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                     .stream()
                     .anyMatch(customFieldTemplate -> customFieldTemplate.isIdentifier() && !customFieldTemplate.getCode().equals(cft.getCode()));
             if(identifierAlreadyExist){
-                throw new ValidationException("An other field has already been defined as identifier !");
+                throw new ValidationException(cft.getAppliesTo() + " An other field has already been defined as identifier !");
             }
         }
     }

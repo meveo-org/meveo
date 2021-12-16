@@ -271,11 +271,22 @@ public class WorkflowService extends BusinessService<Workflow> {
                     for (WFAction wfAction : listWFAction) {
                         if (matchExpression(wfAction.getConditionEl(), entity)) {
                             log.debug("Processing action: {} on entity {}", wfAction);
-                            Object actionResult = executeExpression(wfAction.getActionEl(), entity);
+                            
+                            Object actionResult;
+                            if (wfAction.getActionScript() != null) {
+                            	actionResult = executeActionScript(entity, wfAction);
+                            } else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+	                            actionResult = executeExpression(wfAction.getActionEl(), entity);
+                            }  else {
+                            	log.error("WFAction {} has no action EL or action script", wfAction.getId());
+                            	continue;
+                            }
+                            
                             log.trace("Workflow action executed. Action {}, entity {}", wfAction, entity);
                             if (entity.equals(actionResult)) {
                                 entity = (BusinessEntity) actionResult;
                             }
+                            
                             if (workflow.isEnableHistory()) {
                                 WorkflowHistoryAction wfHistoryAction = new WorkflowHistoryAction();
                                 wfHistoryAction.setAction(wfAction.getActionEl());
@@ -305,6 +316,28 @@ public class WorkflowService extends BusinessService<Workflow> {
 
         return entity;
     }
+
+	public Object executeActionScript(BusinessEntity entity, WFAction wfAction) throws BusinessException {
+		Object actionResult;
+		Map<String, Object> context = new HashMap<>();
+		context.put("entity", entity);
+		
+		Map<Object, Object> elMap = new HashMap<>(context);
+		wfAction.getScriptParameters().forEach((paramKey, paramValue) -> {
+			if(paramValue != null) {
+				try {
+					Object evaluatedValue = MeveoValueExpressionWrapper.evaluateExpression(paramValue, elMap, Object.class);
+					context.put(paramKey, evaluatedValue);
+				} catch (ELException e) {
+					log.error("Failed to evaluate value for EL {}", paramValue);
+				}
+			}
+		});
+		
+		scriptInstanceService.execute(wfAction.getActionScript().getCode(), context);
+		actionResult = context.get("result");
+		return actionResult;
+	}
 
     /**
      * Return the workflowType class by name.

@@ -32,6 +32,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -118,10 +119,12 @@ public class CEIUtils {
 				if(singleRelationField.isPresent()) {
 					singleRelationField.ifPresent(field -> {
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, customRelation);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) { 
+							try {
+								setter.invoke(sourceEntity, customRelation);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					});
 					continue;
@@ -159,10 +162,12 @@ public class CEIUtils {
 					} else {
 						// Relation is mono valued
 						var setter = findSetter(field.getName(), sourceEntity.getClass());
-						try {
-							setter.invoke(sourceEntity, targetEntity);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							LOG.error("Can't set value", e);
+						if(setter != null) {
+							try {
+								setter.invoke(sourceEntity, targetEntity);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								LOG.error("Can't set value", e);
+							}
 						}
 					}
 
@@ -318,11 +323,16 @@ public class CEIUtils {
 				
 				if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 					Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-					try {
-						var actualClass = Class.forName(actualType.getTypeName());
-						isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
-					} catch (ClassNotFoundException e) {
-						isRelationshipField = false;
+					if(actualType instanceof Class && CustomRelation.class.isAssignableFrom((Class<?>) actualType)) {
+						isRelationshipField = true;
+					} else {
+						//FIXME: test if we can delete that
+						try {
+							var actualClass = Class.forName(actualType.getTypeName());
+							isRelationshipField = CustomRelation.class.isAssignableFrom(actualClass);
+						} catch (ClassNotFoundException e) {
+							isRelationshipField = false;
+						}
 					}
 				}
 				
@@ -347,6 +357,7 @@ public class CEIUtils {
 				if(value.isPresent() && (value.get() instanceof Collection)) {
 					if(!isCollectionOfCustomRelation(fieldDef)) {
 						// Case where the field is a collection of custom entity annotated with @Relation
+						
 						Collection<CustomEntity> customEntitiesValue = (Collection<CustomEntity>) value.get();
 						 
 						subEntities.addAll(customEntitiesValue);
@@ -449,11 +460,15 @@ public class CEIUtils {
 	private static boolean isCollectionOfCustomRelation(Field fieldDef) {
 		if(Collection.class.isAssignableFrom(fieldDef.getType())) {
 			Type actualType = ((ParameterizedType) fieldDef.getGenericType()).getActualTypeArguments()[0];
-			try {
-				var actualClass = Class.forName(actualType.getTypeName());
-				return CustomRelation.class.isAssignableFrom(actualClass);
-			} catch (ClassNotFoundException e) {
-				return false;
+			if(actualType instanceof Class) {
+				return CustomRelation.class.isAssignableFrom((Class<?>) actualType);
+			} else {
+				try {
+					var actualClass = Class.forName(actualType.getTypeName());
+					return CustomRelation.class.isAssignableFrom(actualClass);
+				} catch (ClassNotFoundException e) {
+					return false;
+				}
 			}
 		}
 		return false;
@@ -462,6 +477,11 @@ public class CEIUtils {
 	public static CustomEntityInstance fromMap(Map<String, Object> map, CustomEntityTemplate cet) {
 		var cei = pojoToCei(map);
 		cei.setCet(cet);
+		
+		if(cet != null && cet.getSqlStorageConfiguration() != null && !cet.getSqlStorageConfiguration().isStoreAsTable()) {
+			cei.setCode((String) map.get("code"));
+		}
+		
 		return cei;
 	}
 
@@ -500,10 +520,12 @@ public class CEIUtils {
 			});
 		}
 
-		// JacksonUtil.convert(pojo, GenericTypeReferences.MAP_STRING_OBJECT);
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setUuid((String) pojoAsMap.get("uuid"));
-		cei.setCetCode(pojo.getClass().getSimpleName());
+		cei.setCetCode((String) pojoAsMap.get("cetCode"));
+		if(cei.getCetCode() == null) {
+			cei.setCetCode(pojo.getClass().getSimpleName());
+		}
 		CustomFieldValues customFieldValues = new CustomFieldValues();
 		pojoAsMap.forEach(customFieldValues::setValue);
 		cei.setCfValues(customFieldValues);
@@ -579,16 +601,30 @@ public class CEIUtils {
 			T instance = clazz.getDeclaredConstructor().newInstance();
 			for (var entry : value.entrySet()) {
 				var setter = findSetter(entry.getKey(), clazz);
-
+				if(setter == null) {
+					continue;
+				}
+				
 				Object lazyInitInstance = null;
 
 				Class<?> paramType = setter.getParameters()[0].getType();
 
 				// if type extends CustomEntity set the UUID
 				if (CustomEntity.class.isAssignableFrom(paramType)) {
-					lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
-					setUUIDField(lazyInitInstance, (String) entry.getValue());
-					setter.invoke(instance, lazyInitInstance);
+					if (entry.getValue() instanceof String) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, (String) entry.getValue());
+						setter.invoke(instance, lazyInitInstance);
+						
+					} else if (entry.getValue() instanceof Map) {
+						var customEntity = deserialize((Map<String, Object>) entry.getValue(), paramType);
+						setter.invoke(instance, customEntity);
+
+					} else if (entry.getValue() instanceof EntityReferenceWrapper) {
+						lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+						setUUIDField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getUuid());
+						setter.invoke(instance, lazyInitInstance);
+					}
 
 				} else {
 					try {
@@ -623,7 +659,7 @@ public class CEIUtils {
 	}
 
 	private static Method findSetter(String fieldName, Class<?> clazz) {
-		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElseThrow(() -> new IllegalArgumentException("No setter found for field " + fieldName + " in " + clazz));
+		return Stream.of(clazz.getMethods()).filter(m -> m.getName().toUpperCase().equals("SET" + fieldName.toUpperCase())).findFirst().orElse(null);
 	}
 
 }
