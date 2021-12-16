@@ -29,7 +29,6 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -40,9 +39,6 @@ import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -80,27 +76,6 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
     public CustomFieldTemplateApi() {
 		super(CustomFieldTemplate.class, CustomFieldTemplateDto.class);
 	}
-    
-    public List<CustomFieldTemplateDto> readCfts(File directory) {
-    	List<CustomFieldTemplateDto> cftDtos = new ArrayList<>();
-    	
-    	for (File cetOrCrtDir : directory.listFiles()) {
-    		if(!cetOrCrtDir.isDirectory()) {
-    			continue;
-    		}
-    		
-    		for (File cftFile : cetOrCrtDir.listFiles()) {
-    			try {
-					cftDtos.add(JacksonUtil.read(cftFile, CustomFieldTemplateDto.class));
-				} catch (IOException e) {
-					log.error("Failed to read cft file", e);
-					return null;
-				}
-    		}
-    	}
-    	
-    	return cftDtos;
-    }
 
     /**
 	 * Creates a new CustomFieldTemplate using the given data.
@@ -178,25 +153,13 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
     }
 
     private boolean checkAppliesToExisted (String appliesTo) {
-    	if(appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-    		return customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(appliesTo)) != null;
-    	} else if (appliesTo.startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-    		return customRelationshipTemplateService.findByCode(CustomRelationshipTemplate.getCodeFromAppliesTo(appliesTo)) != null;
-    	} else {
-            CustomizedEntityFilter filter = new CustomizedEntityFilter();
-            filter.setCustomEntityTemplatesOnly(false);
-            filter.setIncludeNonManagedEntities(true);
-            filter.setIncludeParentClassesOnly(true);
-            
-            List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
-            for (CustomizedEntity customizedEntity : entities) {
-            	String entityApliesTo = EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode());
-                if (entityApliesTo.equals(appliesTo)) {
-                	return true;
+        if (CollectionUtils.isNotEmpty(getCustomizedEntitiesAppliesTo())) {
+            for (String applyTo: getCustomizedEntitiesAppliesTo()) {
+                if (applyTo.equals(appliesTo)) {
+                    return true;
                 }
             }
-    	}
-    	
+        }
         return false;
     }
 
@@ -249,7 +212,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
             }
         }
 
-        if (!checkAppliesToExisted(appliesTo)) {
+        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
             throw new InvalidParameterException("appliesTo", appliesTo);
         }
 
@@ -284,11 +247,11 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 
         handleMissingParameters();
 
-        if (!checkAppliesToExisted(appliesTo)) {
+        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
         	return;
         }
 
-        CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesToNoCache(code, appliesTo);
+        CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(code, appliesTo);
         if (cft != null) {
             customFieldTemplateService.remove(cft.getId());
         }
@@ -314,7 +277,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 
         handleMissingParameters();
 
-        if (!checkAppliesToExisted(appliesTo)) {
+        if (!getCustomizedEntitiesAppliesTo().contains(appliesTo)) {
             throw new InvalidParameterException("appliesTo", appliesTo);
         }
 
@@ -642,6 +605,29 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 		}
 		return crt;
 	}
+
+    private List<String> getCustomizedEntitiesAppliesTo() {
+        List<String> cftAppliesto = new ArrayList<>();
+        CustomizedEntityFilter filter = new CustomizedEntityFilter();
+        filter.setCustomEntityTemplatesOnly(false);
+        filter.setIncludeNonManagedEntities(true);
+        filter.setIncludeParentClassesOnly(true);
+        List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
+        
+        for (CustomizedEntity customizedEntity : entities) {
+            cftAppliesto.add(EntityCustomizationUtils.getAppliesTo(customizedEntity.getEntityClass(), customizedEntity.getEntityCode()));
+        }
+        
+        for(var cet : cache.getCustomEntityTemplates()) {
+        	cftAppliesto.add(cet.getAppliesTo());
+        }
+        
+        for(var crt : cache.getCustomRelationshipTemplates()) {
+        	cftAppliesto.add(crt.getAppliesTo());
+        }
+        
+        return cftAppliesto;
+    }
 
 	@SuppressWarnings("unused")
 	private void validateSamples(CustomFieldTemplate template) {

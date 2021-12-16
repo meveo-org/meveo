@@ -71,7 +71,7 @@
 					entityId="#{gitRepositoryBean.entity.id}" />
 			</h:panelGrid>
 
-			<h:panelGrid id="actions" columns="3">
+			<h:panelGrid id="actions" columns="2">
 				<p:commandButton id="push"
 					value="#{messages['gitRepositories.push']}"
 					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
@@ -82,17 +82,6 @@
 					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
 					oncomplete="PF('pullRemoteDlg').show()" immediate="true"
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
-				<p:commandButton id="install-module"
-					value="#{messages['gitRepositories.install']}"
-					rendered="#{gitRepositoryBean.isModuleRepository()}"
-					disabled="#{gitRepositoryBean.isModuleInstalled()}"
-					action="#{gitRepositoryBean.install()}">
-				</p:commandButton>
-				<p:button id="meveoModuleDetailButton"
-					rendered="#{gitRepositoryBean.getModuleId() != null}"
-					outcome="meveoModuleDetail" icon="ui-icon-search">
-					<f:param name="meveoModuleId" value="#{gitRepositoryBean.getModuleId()}" />
-				</p:button>
 			</h:panelGrid>
 
 			<ui:param name="buttons" value="true" />
@@ -120,7 +109,6 @@
 						outcome="#{gitRepositoryBean.back()}" />
 					<p:commandButton
 						rendered="#{'Meveo' != gitRepositoryBean.entity.code}"
-						disabled="#{gitRepositoryBean.isModuleInstalled()}"
 						icon="ui-icon-trash" value="#{messages['commons.delete']}"
 						action="#{gitRepositoryBean.deleteWithBack}" immediate="true"
 						update="@form">

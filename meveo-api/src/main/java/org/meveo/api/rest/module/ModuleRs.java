@@ -43,7 +43,6 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.api.rest.module.impl.ModuleUploadForm;
@@ -131,16 +130,6 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/install")
 	@ApiOperation(value = "Instance meveo module")
 	ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
-	
-	/**
-	 * 
-	 * @param code code of the Git repository
-	 * @throws BusinessException
-	 * @throws MeveoApiException
-	 */
-	@POST
-	@Path("/install/from/git/{code}")
-	void installFromGitRepository(@PathParam("code") String code) throws BusinessException, MeveoApiException;
 
 	/**
 	 * Find a Meveo's module with a given code

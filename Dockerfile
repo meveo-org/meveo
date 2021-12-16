@@ -7,10 +7,9 @@ ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git"
 
 WORKDIR /usr/src/meveo
 
-COPY . .
+VOLUME /root/.m2
 
-# Download all dependencies using docker cache
-#RUN mvn dependency:go-offline
+COPY . .
 
 RUN mvn clean package -Dscm.url=${SCM} -DskipTests
 

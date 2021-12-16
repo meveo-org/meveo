@@ -16,9 +16,6 @@
 package org.meveo.service.technicalservice.endpoint;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -32,12 +29,9 @@ import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.security.DefaultPermission;
 import org.meveo.model.security.DefaultRole;
@@ -46,7 +40,6 @@ import org.meveo.security.permission.RequirePermission;
 import org.meveo.security.permission.SecuredEntity;
 import org.meveo.security.permission.Whitelist;
 import org.meveo.service.base.BusinessService;
-import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 
@@ -60,16 +53,6 @@ import org.meveo.service.git.MeveoRepository;
  */
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
-	
-	@Inject
-	private ESGenerator esGenerator;
-	
-	@Inject
-	private GitClient gitClient;
-
-	@Inject
-	@MeveoRepository
-	private GitRepository meveoRepository;
 
 	public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
 	public static final String ENDPOINTS_CLIENT = "endpoints";
@@ -82,6 +65,9 @@ public class EndpointService extends BusinessService<Endpoint> {
 	@EJB
 	private KeycloakAdminClientService keycloakAdminClientService;
 
+	@Inject
+	@MeveoRepository
+	private GitRepository meveoRepository;
 
 	public static String getEndpointPermission(Endpoint endpoint) {
 		return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
@@ -214,7 +200,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 */
 	public boolean isEndpointScriptExists(Endpoint endpoint) {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-		final File endpointDir = new File(repositoryDir, "/facets/javascript/endpoints/");
+		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
 		File f = new File(endpointDir, endpoint.getCode() + ".js");
 
 		return f.exists() && !f.isDirectory();
@@ -233,43 +219,17 @@ public class EndpointService extends BusinessService<Endpoint> {
 
 		return f.exists() && !f.isDirectory();
 	}
-	
+
 	public File getScriptFile(Endpoint endpoint) {
-		File repositoryDir;
-		MeveoModule module = this.findModuleOf(endpoint);
-		if (module == null) {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-		} else {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-		}
-		final File endpointDir = new File(repositoryDir, "/facets/javascript/endpoints/");
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File endpointDir = new File(repositoryDir, "/endpoints/" + endpoint.getCode());
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
 	}
 	
 	public File getBaseScriptFile() {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
-		final File endpointFile = new File(repositoryDir, "/facets/javascript/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
+		final File endpointFile = new File(repositoryDir, "/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
 		return endpointFile;
-	}
-	
-	/**
-	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
-	 */
-	@Override
-	public void addFilesToModule(Endpoint entity, MeveoModule module) throws BusinessException {
-		super.addFilesToModule(entity, module);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
-    	
-    	File newJsFile = new File (gitDirectory, path);
-    	
-    	try {
-    		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
 	}
 }

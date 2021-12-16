@@ -136,7 +136,7 @@ public class MeveoModuleItemInstaller {
 	
 	@Inject
 	private Repository currentRepository;
-	
+    
     /**
      * Uninstall the module and disables it items
      * 
@@ -199,9 +199,7 @@ public class MeveoModuleItemInstaller {
             
             if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
                 var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
-                if(cet != null) {
-                	crossStorageService.remove(currentRepository, cet, item.getItemCode());
-                }
+                crossStorageService.remove(currentRepository, cet, item.getItemCode());
             	continue;
 			}
             
@@ -333,53 +331,48 @@ public class MeveoModuleItemInstaller {
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
-    	installCtx.begin(meveoModule);
+    	installCtx.begin();
+    	ModuleInstallResult result = new ModuleInstallResult();
     	
-    	try {
-    	
-	    	ModuleInstallResult result = new ModuleInstallResult();
-	    	
-	        boolean installed = false;
-	        if (!meveoModule.isDownloaded()) {
-	            throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");
-	        }
-	
-	        if (meveoModule.isInstalled()) {
-	            installed = true;
-	
-	        } else {
-	            moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
-	        }
-	
-	        if (!installed) {
-	        	
-	        	try {
-	        		
-		            ModuleScriptInterface moduleScript = null;
-		            if (meveoModule.getScript() != null) {
-		                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
-		            }
-		            
-		            unpackAndInstallModuleItems(result, meveoModule, moduleDto, onDuplicate);
-		
-		            meveoModule.setInstalled(true);
-		
-		            if (moduleScript != null) {
-		                moduleScriptService.postInstallModule(moduleScript, meveoModule);
-		            }
-		            
-		            result.setInstalledModule(meveoModule);
-		            postInstallEvent.fire(meveoModule);
-	        	} catch(Exception e) {
-	            	throw new ModuleInstallFail(meveoModule, result, e);
+        boolean installed = false;
+        if (!meveoModule.isDownloaded()) {
+            throw new ActionForbiddenException(meveoModule.getClass(), moduleDto.getCode(), "install", "Module with the same code is being developped locally, can not overwrite it.");
+        }
+
+        if (meveoModule.isInstalled()) {
+            installed = true;
+
+        } else {
+            moduleDto = MeveoModuleUtils.moduleSourceToDto(meveoModule);
+        }
+
+        if (!installed) {
+        	
+        	try {
+        		
+	            ModuleScriptInterface moduleScript = null;
+	            if (meveoModule.getScript() != null) {
+	                moduleScript = moduleScriptService.preInstallModule(meveoModule.getScript().getCode(), meveoModule);
 	            }
+	            
+	            unpackAndInstallModuleItems(result, meveoModule, moduleDto, onDuplicate);
 	
-	        }
+	            meveoModule.setInstalled(true);
 	
-	        return result;
-    	} finally {
-            installCtx.end();
-    	}
+	            if (moduleScript != null) {
+	                moduleScriptService.postInstallModule(moduleScript, meveoModule);
+	            }
+	            
+	            result.setInstalledModule(meveoModule);
+	            postInstallEvent.fire(meveoModule);
+	            installCtx.end();
+        	} catch(Exception e) {
+            	throw new ModuleInstallFail(meveoModule, result, e);
+            }
+
+        }
+
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -500,7 +493,7 @@ public class MeveoModuleItemInstaller {
 							skipped = true;
 							break;
 						case FAIL:
-							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getAppliesTo() + "." + cft.getCode());
+							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getCode());
 						default:
 							break;
 						}
@@ -742,17 +735,15 @@ public class MeveoModuleItemInstaller {
 			for (MeveoModuleItemDto moduleItemDto : new ArrayList<>(moduleDto.getModuleItems())) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
 					CustomEntityTemplateDto cet = JacksonUtil.convert(moduleItemDto.getDtoData(), CustomEntityTemplateDto.class);
-					if (cet.getFields() != null) {
-						for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
-							MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
-							cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
-							cftModuleItem.setDtoData(cftData);
-							cftData.setAppliesTo("CE_" + cet.getCode());
-							moduleDto.getModuleItems().add(cftModuleItem);
-							
-							cet.getFields().remove(cftData);
-							moduleItemDto.setDtoData(cet);
-						}
+					for (CustomFieldTemplateDto cftData : new ArrayList<>(cet.getFields())) {
+						MeveoModuleItemDto cftModuleItem = new MeveoModuleItemDto();
+						cftModuleItem.setDtoClassName(CustomFieldTemplateDto.class.getName());
+						cftModuleItem.setDtoData(cftData);
+						cftData.setAppliesTo("CE_" + cet.getCode());
+						moduleDto.getModuleItems().add(cftModuleItem);
+
+						cet.getFields().remove(cftData);
+						moduleItemDto.setDtoData(cet);
 					}
 					
 					// Also put entity custom action outside of the cet
@@ -835,22 +826,17 @@ public class MeveoModuleItemInstaller {
 	 * 
 	 * @param dto         CustomEntityTemplateDto instance
 	 * @param meveoModule where module item is added
-	 * @throws BusinessException 
 	 */
-	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
+	private void addCftToModuleItem(CustomEntityTemplateDto dto, MeveoModule meveoModule) {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomEntityTemplate.CFT_PREFIX + "_" + dto.getCode(), null);
-				try {
-					meveoModuleService.addModuleItem(itemDto, meveoModule);
-				} catch (BusinessException e) {
-					throw new BusinessException(e.getCause());
-				}
+				meveoModuleService.addModuleItem(itemDto, meveoModule);
 			}
 		}
 	}
 	
-	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) throws BusinessException {
+	private void addCftToModuleItem(CustomRelationshipTemplateDto dto, MeveoModule meveoModule) {
 		if (dto.getFields() != null && !dto.getFields().isEmpty()) {
 			for (CustomFieldTemplateDto cftDto : dto.getFields()) {
 				MeveoModuleItem itemDto = new MeveoModuleItem(cftDto.getCode(), CustomFieldTemplate.class.getName(), CustomRelationshipTemplate.CRT_PREFIX + "_" + dto.getCode(), null);

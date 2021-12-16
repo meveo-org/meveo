@@ -18,23 +18,23 @@
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
         <repository>
-          <id>github</id>
+          <id>meveo</id>
           <name>GitHub meveo-org Apache Maven Packages</name>
           <url>https://maven.pkg.github.com/meveo-org/meveo</url>
         </repository>
-        <repository>
-          <id>jboss-repo</id>
-          <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-        </repository>
+		<repository>
+			<id>jboss-repo</id>
+			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+		</repository>
       </repositories>
     </profile>
   </profiles>
 
   <servers>
     <server>
-      <id>github</id>
-      <username>${env.GITHUB_ACTOR}</username>
-      <password>${env.GITHUB_TOKEN}</password>
+      <id>meveo</id>
+      <username>set your github username</username>
+      <password>set your token</password>
     </server>
   </servers>
 </settings>

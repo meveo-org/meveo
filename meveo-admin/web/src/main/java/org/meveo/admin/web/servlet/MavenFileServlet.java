@@ -1,5 +1,7 @@
 package org.meveo.admin.web.servlet;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -8,13 +10,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedOutputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
@@ -28,10 +34,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.config.impl.MavenConfigurationService;
 
 /**
@@ -58,9 +62,6 @@ public class MavenFileServlet extends HttpServlet {
 	@Inject
 	@CurrentUser
 	private MeveoUser currentUser;
-	
-	@Inject
-	private MeveoModuleService moduleService;
 	
 	private String userPath;
 
@@ -148,41 +149,13 @@ public class MavenFileServlet extends HttpServlet {
 		}
 
 		initUserPath();
-		
-		// Initialize response.
-		response.reset();
-		response.setBufferSize(DEFAULT_BUFFER_SIZE);
 
 		// URL-decode the file name (might contain spaces and on) and prepare file
 		// object.
 		File file = new File(userPath, URLDecoder.decode(requestedFile, "UTF-8"));
-		String requestedFileName = FilenameUtils.getBaseName(requestedFile);
-		
-		// Check whether requested file is a meveo module
-		int indexOf = requestedFileName.lastIndexOf("-");
-		MeveoModule module = null;
-		
-		if (indexOf > -1 && !"maven-metadata".equalsIgnoreCase(requestedFileName)) {
-			String artifactName = requestedFileName.substring(0, indexOf);
-			String version = requestedFileName.substring(indexOf + 1);
-			module = moduleService.findByCode(artifactName);
-			if (!module.getCurrentVersion().equalsIgnoreCase(version)) {
-				module = null;
-			}
-		}
-		
-		JarOutputStream jos = null;
-		if (module != null) {
-			if (file.getName().contains("pom")) {
-				file = moduleService.findPom(module);
-			} else if (file.getName().endsWith("jar")){
-				jos = moduleService.buildJar(module, response.getOutputStream());
-			}
-		}
-		
-		
+
 		// Check if file actually exists in filesystem.
-		if (!file.exists() && jos == null) {
+		if (!file.exists()) {
 			File realFile = new File(System.getProperty("jboss.server.config.dir")).getAbsoluteFile();
 			File deploymentDir = realFile.getParentFile().getParentFile();
 			String path = deploymentDir.getAbsolutePath() + File.separator + "modules" + File.separator + "system" + File.separator + "layers" + File.separator + "base";
@@ -382,6 +355,8 @@ public class MavenFileServlet extends HttpServlet {
 		}
 
 		// Initialize response.
+		response.reset();
+		response.setBufferSize(DEFAULT_BUFFER_SIZE);
 		response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileName + "\"");
 		response.setHeader("Accept-Ranges", "bytes");
 		response.setHeader("ETag", eTag);
@@ -398,7 +373,7 @@ public class MavenFileServlet extends HttpServlet {
 		try {
 			// Open streams.
 			input = new RandomAccessFile(file, "r");
-			output = jos != null ? jos : response.getOutputStream();
+			output = response.getOutputStream();
 
 			if (ranges.isEmpty() || ranges.get(0) == full) {
 

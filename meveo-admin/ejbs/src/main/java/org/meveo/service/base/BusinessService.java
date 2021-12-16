@@ -19,19 +19,6 @@
  */
 package org.meveo.service.base;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-
 import org.apache.commons.io.FileUtils;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
@@ -39,27 +26,25 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.api.persistence.CrossStorageApi;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
-import org.meveo.model.CustomEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.git.GitRepository;
+import org.meveo.service.git.GitHelper;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.service.admin.impl.MeveoModuleService;
-import org.meveo.service.git.GitClient;
-import org.meveo.service.git.GitHelper;
-import org.meveo.service.git.GitRepositoryService;
-import org.meveo.service.git.MeveoRepository;
-import org.meveo.service.script.CharSequenceCompilerException;
-import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.storage.RepositoryService;
+
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 
 /**
  * @author phung
@@ -71,16 +56,6 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	protected EntitySerializer businessEntitySerializer;
-	
-	@Inject
-	protected GitClient gitClient;
-	
-	@Inject
-	protected GitRepositoryService gitRepositoryService;
-	
-	@Inject
-	@MeveoRepository
-	protected GitRepository meveoRepository;
 	
     /**
      * Find entity by code - strict match.
@@ -225,23 +200,22 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     			CustomFieldTemplate entityCtf = (CustomFieldTemplate) entity;
     			
 				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass AND mi.appliesTo = :appliesTo");
+	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType AND m.appliesTo = :appliesTo");
 	    		q.setParameter("code", entityCtf.getCode());
-	    		q.setParameter("itemClass", entityCtf.getClass().getName());
+	    		q.setParameter("itemType", entityCtf.getClass().getName());
 	    		q.setParameter("appliesTo", entityCtf.getAppliesTo());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
     		}else {
 				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass");
+	    		Query q = session.createQuery("SELECT m.module FROM ModuleItem m WHERE m.code = :code AND m.itemType = :itemType");
 	    		q.setParameter("code", entity.getCode());
-	    		q.setParameter("itemClass", entity.getClass().getName());
+	    		q.setParameter("itemType", entity.getClass().getName());
 	    		if (!(q.getResultList().isEmpty())) {
 	    			module = (MeveoModule) q.getResultList().get(0);
 	    		}
     		}
-    		if (module != null) { String cc = module.getGitRepository().getCode(); }
 		}
     	return module;
     }
@@ -254,22 +228,20 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws BusinessException if the folder is not deleted
      */
     public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
+    	BusinessEntityDto businessEntityDto = new BusinessEntityDto(entity);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + ".json";
+    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
-    			FileUtils.forceDelete(directoryToRemove);
-    			
+    			FileUtils.deleteDirectory(directoryToRemove);
     		} catch (IOException e) {
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
     	}
-    	List<String> pattern = new ArrayList<String>();
-    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
     }
+    
     /**
      * Create the entity in the dedicated module
      * 
@@ -278,43 +250,20 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws IOException BusinessException
      * @throws BusinessException if serialization of entity fails
      */
-    public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
-    	persistJsonFileInModule( entity,  module, true);
-    }
-
-    @Override
-    public void afterUpdateOrCreate(P entity) throws BusinessException {
-    	MeveoModule module = findModuleOf(entity);
-    	if(module!=null) {
-    		persistJsonFileInModule( entity,  module, false);
-    	}
-	}
-
-    protected void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
+    public void addFilesToModule(P entity, MeveoModule module) throws IOException, BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	String path = businessEntityDto.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode();
     	
     	File newDir = new File (gitDirectory, path);
+    	
     	newDir.mkdirs();
     	
-    	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
-    	try {
-	    	if (isCreation) {
-	    		newJsonFile.createNewFile();
-	    	}
-	    	
-	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-	
-	    	Files.write(newJsonFile.toPath(), strToBytes);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be updated or created", e);
-    	}
+    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
     	
-    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+    	Files.write(newDir.toPath(), strToBytes);
     }
     
     /**
@@ -334,6 +283,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
 	    addFilesToModule(entity, module);
     }
+
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
 
     public P findByCodeLazy(String code) {

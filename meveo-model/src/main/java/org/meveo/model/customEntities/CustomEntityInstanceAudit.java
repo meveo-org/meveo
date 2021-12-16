@@ -1,7 +1,6 @@
 package org.meveo.model.customEntities;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +17,7 @@ public class CustomEntityInstanceAudit {
 	private String uuid;
 	private String ceiUuid;
 	private String user;
-	private Date eventDate;
+	private LocalDateTime eventDate;
 	private CustomEntityInstanceAuditType action;
 	private String field;
 	private Object oldValue;
@@ -62,11 +61,11 @@ public class CustomEntityInstanceAudit {
 		this.user = user;
 	}
 
-	public Date getEventDate() {
+	public LocalDateTime getEventDate() {
 		return eventDate;
 	}
 
-	public void setEventDate(Date eventDate) {
+	public void setEventDate(LocalDateTime eventDate) {
 		this.eventDate = eventDate;
 	}
 

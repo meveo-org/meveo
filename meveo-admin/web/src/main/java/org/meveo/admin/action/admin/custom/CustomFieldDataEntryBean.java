@@ -352,7 +352,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			String cetCode = ((CustomEntityInstance) entity).getCetCode();
 			CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
 			for (CustomEntityTemplate e = cet.getSuperTemplate(); e != null; e = e.getSuperTemplate()) {
-				customFieldTemplates.putAll(customFieldTemplateService.findByAppliesTo(e.getAppliesTo()));
+				customFieldTemplates.putAll(customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()));
 			}
 		}
 		

@@ -130,14 +130,6 @@ public class JacksonUtil {
         return OBJECT_MAPPER.readValue(value, clazz);
     }
     
-    public static <T> T read(File value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
-        return OBJECT_MAPPER.readValue(value, clazz);
-    }
-    
-    public static <T> T read(InputStream value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
-        return OBJECT_MAPPER.readValue(value, clazz);
-    }
-    
     public static <T> T read(InputStream value, TypeReference<T> clazz) throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(value, clazz);
     }

@@ -33,7 +33,7 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
-import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.PersistenceService;
 
 /**
  * User Hierarchy Level service implementation.
@@ -42,7 +42,7 @@ import org.meveo.service.base.BusinessService;
  * @version 6.13
  */
 @Stateless
-public class UserHierarchyLevelService extends BusinessService<UserHierarchyLevel> {
+public class UserHierarchyLevelService extends PersistenceService<UserHierarchyLevel> {
 
 	@SuppressWarnings("unchecked")
 	public List<UserHierarchyLevel> findRoots() {

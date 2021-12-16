@@ -49,7 +49,7 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
     private Instance<FunctionService<?, ?>> fnServiceInst;
 	
 	@Override
-	public void afterUpdateOrCreate(Function executable) {}
+	protected void afterUpdateOrCreate(Function executable) {}
 
 	@Override
 	protected void validate(Function executable) {}

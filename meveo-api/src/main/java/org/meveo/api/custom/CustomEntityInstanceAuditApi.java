@@ -14,12 +14,9 @@ import org.meveo.api.dto.custom.CustomEntityInstanceAuditsResponseDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityInstanceAudit;
 import org.meveo.model.customEntities.CustomEntityInstanceAudit.CustomEntityInstanceAuditType;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.custom.CustomEntityInstanceAuditService;
 import org.primefaces.model.SortOrder;
@@ -48,20 +45,18 @@ public class CustomEntityInstanceAuditApi extends BaseApi {
 
 		List<Map<String, Object>> auditLogs = customEntityInstanceAuditService.list(SqlConfiguration.DEFAULT_SQL_CONNECTION, CustomEntityTemplate.AUDIT_PREFIX + cet,
 				paginationConfig);
-		
+
 		result.setPaging(pagingAndFiltering);
 		result.getPaging().setTotalNumberOfRecords(
 				(int) customEntityInstanceAuditService.count(SqlConfiguration.DEFAULT_SQL_CONNECTION, CustomEntityTemplate.AUDIT_PREFIX + cet, paginationConfig));
 
 		if (auditLogs != null) {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S");
 			auditLogs.forEach(e -> {
-				CustomEntityInstance cei = CEIUtils.pojoToCei(e);
-				CustomFieldValues cfValues = cei.getCfValues();
-				
 				CustomEntityInstanceAudit audit = new CustomEntityInstanceAudit();
 				audit.setAction(CustomEntityInstanceAuditType.valueOf(e.get("action").toString()));
 				audit.setCeiUuid(e.get("cei_uuid").toString());
-				audit.setEventDate(cfValues.getCfValue("event_date").getDateValueOld());
+				audit.setEventDate(LocalDateTime.parse(e.get("event_date").toString(), formatter));
 				audit.setField(e.get("field").toString());
 				audit.setUser(e.get("user").toString());
 				if (e.containsKey("new_value")) {

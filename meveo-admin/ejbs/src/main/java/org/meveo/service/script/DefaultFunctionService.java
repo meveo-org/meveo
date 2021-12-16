@@ -37,7 +37,7 @@ public class DefaultFunctionService extends FunctionService<Function, ScriptInte
 	}
 
 	@Override
-	public void afterUpdateOrCreate(Function executable) {
+	protected void afterUpdateOrCreate(Function executable) {
 	}
 
 	@Override

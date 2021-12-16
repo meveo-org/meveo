@@ -3,19 +3,6 @@
 ## Custom action
 A custom action is script that can be called on an entity ether by API of from meveo admin.
 
-you can use expression language (EL) to set the input parameters of the script call from the entity,
-for instance this EL will retrieve the value of the field "name"
-```
-#{entity.cfValues.getCfValue("name")}
-```
-
-You can display the custom action conditionally by setting an EL in the "Show on condition" field.
-For instance this EL allow to display the custom action button only if the field "name " of the entity is not null
-```
-#{entity.cfValues.getCfValue("name") ne null}
-```
-
-
 The entity instance on which the action is called is set in the context variable `CONTEXT_ENTITY`
 
 The code of the custom action executed is in the variable `CONTEXT_ACTION`

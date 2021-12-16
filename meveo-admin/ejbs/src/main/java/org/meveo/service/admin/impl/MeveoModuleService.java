@@ -20,15 +20,8 @@
 package org.meveo.service.admin.impl;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -52,7 +44,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
@@ -80,7 +71,6 @@ import org.meveo.event.qualifier.Removed;
 import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.ModulePostInstall;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -95,12 +85,8 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.security.PasswordUtils;
-import org.meveo.service.base.BusinessService;
-import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.communication.impl.MeveoInstanceService;
-import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
-import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
@@ -119,9 +105,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     private MeveoInstanceService meveoInstanceService;
     
     @Inject
-    private MavenConfigurationService mavenConfigurationService;
-    
-    @Inject
     private MeveoModuleItemService meveoModuleItemService;
 
     @Inject
@@ -135,9 +118,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private GitClient gitClient;
-    
-    @Inject
-    private BusinessServiceFinder businessServiceFinder;
 
     /**
      * Add missing dependencies of each module item
@@ -344,53 +324,29 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * Add module item with differentiate if appliesTo is null or not
      * 
      * @param meveoModuleItem Module item
-     * @throws BusinessException 
-     * @throws IOException 
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
+    public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) {
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
     	}
     	
-    	List<MeveoModuleItem> existingItems = new ArrayList<MeveoModuleItem>();
+    	List<MeveoModuleItem> testEmptyModule;
     	if (meveoModuleItem.getAppliesTo() == null) {
-    		existingItems = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
+    		testEmptyModule = this.findByCodeAndItemType(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass());
     	}else {
-    		existingItems = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
-    	}
-    	
-    	if (meveoModuleItem.getItemEntity() == null) {
-    		loadModuleItem(meveoModuleItem);
-    	}
-    	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
-    	
-    	// Throw an error if the item belongs to another module other than the Meveo module
-    	boolean belongsToModule = existingItems.stream().anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo") && !item.getMeveoModule().getCode().equals(module.getCode()));
-    	if (belongsToModule) {
-    		throw new IllegalArgumentException(meveoModuleItem.toString() + " already belongs to module " + existingItems.get(0).getMeveoModule().getCode());
+    		testEmptyModule = this.findModuleItem(meveoModuleItem.getItemCode(), meveoModuleItem.getItemClass(), meveoModuleItem.getAppliesTo());
     	}
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
-    	if (existingItems.isEmpty() || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
-    		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
-    			module.getModuleItems().add(meveoModuleItem);
-    			meveoModuleItem.setMeveoModule(module);
-    		} catch (BusinessException | IOException e2) {
-				throw new BusinessException("Entity cannot be add or remove from the module", e2);
-    		}
-    	} else {
-    		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
-    		    MeveoModule moduleToRemove = businessService.findModuleOf(meveoModuleItem.getItemEntity());
-    		    moduleToRemove.removeItem(meveoModuleItem);
-    		    module.getModuleItems().add(meveoModuleItem);
-				meveoModuleItem.setMeveoModule(module);
-    		} catch (BusinessException | IOException e) {
-				throw new BusinessException("Entity cannot be add or remove from the module", e);
-			}
+    	if (testEmptyModule.isEmpty() || testEmptyModule.get(0).getMeveoModule().getCode().equals(module.getCode())) {
+    		module.getModuleItems().add(meveoModuleItem);
+    		meveoModuleItem.setMeveoModule(module);
+    	}else {
+    		throw new IllegalArgumentException(
+    			"Module Item with code: "+ meveoModuleItem.getItemCode()+ ", (appliesTo: "+
+    			meveoModuleItem.getAppliesTo()+") already exist on module: "+testEmptyModule.get(0).getMeveoModule().getCode()
+    		);
     	}
     }
     
@@ -556,7 +512,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
-        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "moduleDependencies", "moduleFiles"));
+        entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
         ModuleRelease moduleRelease = new ModuleRelease();
         moduleRelease.setCode(entity.getCode());
         moduleRelease.setDescription(entity.getDescription());
@@ -618,28 +574,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
             }
             moduleRelease.setModuleSource(JacksonUtil.toString(moduleReleaseDto));
         }
-        
-        // Before setting the next version, release the maven module inside the local .m2 repo
-        Path jarPath = Paths.get(mavenConfigurationService.getM2FolderPath(), "org", "meveo", entity.getCode(), entity.getCurrentVersion(), entity.getCode() + "-" + entity.getCurrentVersion() + ".jar");
-        File jarFile = jarPath.toFile();
-        
-        try {
-            File artifactFolder = jarFile.getParentFile();
-            if (!artifactFolder.exists()) {
-            	artifactFolder.mkdirs();
-            }
-			
-	        try (FileOutputStream fos = new FileOutputStream(jarFile)) {
-	        	try (JarOutputStream jos = this.buildJar(entity, fos)) {
-	    	        File pomFile = new File(artifactFolder, entity.getCode() + "-" + entity.getCurrentVersion() + ".pom");
-	    	        FileUtils.copyFile(this.findPom(entity), pomFile);
-	        	}
-	        }
-	        
-		} catch (IOException e) {
-			throw new BusinessException("Can't install artifact to .m2", e);
-		}
-        
         entity.setCurrentVersion(nextVersion);
         moduleRelease.setMeveoModule(entity);
         entity.getReleases().add(moduleRelease);
@@ -872,7 +806,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return List.of("gitRepository");
+    	return null;
     }
     
     /**
@@ -885,34 +819,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	var repo = new GitRepository();
     	repo.setCode(meveoModule.getCode());
     	repo.setDescription(meveoModule.getDescription());
-    	
-    	if (this.gitRepositoryService.findByCode(meveoModule.getCode()) == null) {
-			this.gitRepositoryService.create(repo);
-			this.gitClient.checkout(repo, "master", true);
-			meveoModule.setGitRepository(repo);
-    		
-    	} else {
-    		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
-    	}
+    	this.gitRepositoryService.create(repo);
+    	this.gitClient.checkout(repo, meveoModule.getCurrentVersion(), true);
+    	meveoModule.setGitRepository(repo);
     }
-    
-	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
-    	MeveoModule thinModule;
-    	
-    	// Generate module.json file
-		try {
-			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
-			thinModule.setCode(module.getCode());
-			thinModule.setModuleItems(null);
-			
-			addFilesToModule(thinModule, module);
-		} catch (Exception e) {
-			throw new BusinessException(e);
-		}
-		
-		// Generate maven facet if file does not exists yet
-		mavenConfigurationService.createDefaultPomFile(module.getCode());
-	}
     
     /**
      * Remove the GitRepository corresponding to the meveo module deleted
@@ -931,63 +841,5 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
 		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-	}
-	
-	/**
-	 * Copy the module files into the git directory if they are not present yet
-	 * 
-	 * @param module the installed module
-	 * @throws IOException if a file / directory can't be copied
-	 */
-	public void copyFilesToGitDirectory(@Observes @ModulePostInstall MeveoModule module) throws IOException {
-		if(!CollectionUtils.isEmpty(module.getModuleFiles())) {
-			String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
-			for (String filePath : module.getModuleFiles()) {
-				Path source = Paths.get(chrootDir, filePath);
-				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getCode()).getAbsolutePath(), filePath);
-				if(!Files.exists(target) && Files.exists(source)) {
-					Files.createDirectories(target);
-					if (Files.isDirectory(target)) {
-						FileUtils.copyDirectory(source.toFile(), target.toFile());
-					} else {
-						Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Build a jar output stream containing the maven artifact view of a module
-	 * 
-	 * @param module the input module
-	 * @param os the output stream which will be written into
-	 * @return the output stream built
-	 * @throws IOException if the output stream can't be accessed
-	 */
-	public JarOutputStream buildJar(MeveoModule module, OutputStream os) throws IOException {
-		JarOutputStream jos = new JarOutputStream(os);
-		File javaDir = GitHelper.getRepositoryDir(null, module.getCode())
-				.toPath()
-				.resolve("facets")
-				.resolve("java")
-				.toFile();
-		org.meveo.commons.utils.FileUtils.addDirectoryToZip(javaDir, jos, "");
-		return jos;
-	}
-	
-	/**
-	 * Retrieve the pom file of a given module
-	 * 
-	 * @param module the input module
-	 * @return the pom file
-	 */
-	public File findPom(MeveoModule module) {
-		return GitHelper.getRepositoryDir(null, module.getCode())
-				.toPath()
-				.resolve("facets")
-				.resolve("maven")
-				.resolve("pom.xml")
-				.toFile();
 	}
 }

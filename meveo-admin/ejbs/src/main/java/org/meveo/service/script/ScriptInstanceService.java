@@ -19,30 +19,23 @@
  */
 package org.meveo.service.script;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Priority;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
@@ -50,12 +43,8 @@ import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.commons.utils.StringUtils;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.jpa.JpaAmpNewTx;
-import org.meveo.model.BaseEntity;
 import org.meveo.model.ModulePostInstall;
-import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.FunctionServiceFor;
@@ -64,10 +53,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
-import org.meveo.service.git.GitClient;
-import org.meveo.service.git.GitHelper;
-import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.weld.MeveoBeanManager;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -79,49 +65,21 @@ import org.meveo.service.git.MeveoRepository;
 public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
 	@Inject
-	private ModuleInstallationContext moduleInstallationContext;
-	
-	@Inject
 	private MavenDependencyService mdService;
 	
 	@Inject
 	private ScriptInstanceExecutor scriptExecutor;
 	
-	@Inject
-	private GitClient gitClient;
-	
-	@Inject
-	@MeveoRepository
-	private GitRepository meveoRepository;
-	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
-    	if (StringUtils.isBlank(script.getScript()) && this.moduleInstallationContext.isActive()) {
-    		File repoDir = GitHelper.getRepositoryDir(null, this.moduleInstallationContext.getModuleCodeInstallation());
-    		String pathScript = script.getCode().replaceAll("\\.", "/");
-    		pathScript = pathScript.replaceAll("/+\\w+$", "");
-    		String scriptFileDir = "facets/java/" + pathScript + ".java";
-    		File javaSource = new File(repoDir, scriptFileDir);
-    		try {
-	    		if (javaSource.exists()) {
-	    			String scriptText = Files.readString(javaSource.toPath());
-	    			script.setScript(scriptText);
-	    		}
-			} catch (IOException e) {
-				throw new BusinessException(e);
-			}
-    	}
 		super.beforeUpdateOrCreate(script);
-		
         // Fetch maven dependencies
         Set<MavenDependency> mavenDependencies = new HashSet<>();
         for(MavenDependency md : script.getMavenDependenciesNullSafe()) {
         	MavenDependency persistentMd = mdService.find(md.getBuiltCoordinates());
         	if(persistentMd != null) {
         		mavenDependencies.add(persistentMd);
-        		persistentMd.getScriptInstances().add(script);
         	} else {
-        		md.getScriptInstances().add(script);
         		getEntityManager().persist(md);
         		mavenDependencies.add(md);
         	}
@@ -130,10 +88,10 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	}
     
 	@Override
-	public void afterUpdateOrCreate(ScriptInstance script) throws BusinessException {
+	protected void afterUpdateOrCreate(ScriptInstance script) {
 		super.afterUpdateOrCreate(script);
 		
-		mdService.removeOrphans(script);
+		mdService.removeOrphans();
 	}
 
 
@@ -344,7 +302,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	 * @param module installed module
 	 * @throws InvalidScriptException if one of the script can't be compiled
 	 */
-	public void postModuleInstall(@Observes @ModulePostInstall @Priority(2) MeveoModule module) throws InvalidScriptException {
+	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws InvalidScriptException {
 		var scripts = module.getModuleItems().stream()
 			.filter(item -> item.getItemClass().equals(ScriptInstance.class.getName()))
 			.map(item -> findByCode(item.getItemCode()))
@@ -356,35 +314,10 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		for(var script : scripts) {
 			if(script.getError()) {
                 String message = "script "+ script.getCode() + " failed to compile. ";
-                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
+                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("<br>\n"));
 				throw new InvalidScriptException(message);
 			}
 		}
-	}
-	
-	/**
-	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
-	 */
-	@Override
-	public void addFilesToModule(ScriptInstance entity, MeveoModule module) throws BusinessException {
-		super.addFilesToModule(entity, module);
-		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
-		if (extension == ".java") {
-			String path = entity.getCode().replaceAll("\\.", "/");
-	    	
-			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/java/");
-			String pathNewFile = path + ".java";
-			
-			File newFile = new File(gitDirectory, pathNewFile);
-			
-			try {
-				FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
-			} catch (IOException e) {
-				throw new BusinessException("File cannot be write", e);
-			}
-			
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
-		}	
 	}
 
 }

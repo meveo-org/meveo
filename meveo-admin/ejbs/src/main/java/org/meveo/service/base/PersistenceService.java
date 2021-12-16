@@ -81,7 +81,6 @@ import org.meveo.model.UniqueEntity;
 import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.filter.Filter;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -183,7 +182,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
 	@EJB
 	private CustomFieldInstanceService customFieldInstanceService;
-	
+
 	@Inject
 	protected ParamBeanFactory paramBeanFactory;
 
@@ -381,7 +380,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		return entity;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void remove(E entity) throws BusinessException {
 		
@@ -394,15 +392,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 			}
 			
 			getEntityManager().remove(entity);
-			
-			if (entity instanceof BusinessEntity) {
-				BusinessService businessService = (BusinessService) this;
-				MeveoModule meveoModule = businessService.findModuleOf((BusinessEntity) entity);
-				if (meveoModule != null) {
-					businessService.removeFilesFromModule((BusinessEntity) entity, meveoModule);
-				}
-			}
-			
+
 			if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
 				entityRemovedAfterTxEventProducer.fire((BaseEntity) entity);
 			}
@@ -508,8 +498,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 
 		postUpdate(entity);
-		
-		afterUpdateOrCreate(entity);
 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
@@ -523,8 +511,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		preUpdate(entity);
 
 		postUpdate(entity);
-		
-		afterUpdateOrCreate(entity);
 
 		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		
@@ -579,8 +565,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (entity instanceof ICustomFieldEntity) {
 			customFieldInstanceService.scheduleEndPeriodEvents((ICustomFieldEntity) entity);
 		}
-		
-		afterUpdateOrCreate(entity);
 
 		log.trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
 	}
@@ -811,14 +795,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @param entity The entity to create or update
 	 */
 	protected void beforeUpdateOrCreate(E entity) throws BusinessException {
-	}
-	
-	/**
-	 * Action to execute after update or create an entity
-	 *
-	 * @param entity The entity to create or update
-	 */
-	public void afterUpdateOrCreate(E entity) throws BusinessException {
 	}
 
 	/**

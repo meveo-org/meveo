@@ -5,8 +5,6 @@ package org.meveo.service.admin.impl;
 
 import javax.enterprise.context.RequestScoped;
 
-import org.meveo.model.module.MeveoModule;
-
 /**
  * 
  * @author clement.bareth
@@ -16,8 +14,6 @@ import org.meveo.model.module.MeveoModule;
 @RequestScoped
 public class ModuleInstallationContext {
 
-	private String ModuleCodeInstallation = "";
-	
 	private boolean active;
 	
 	/**
@@ -27,17 +23,11 @@ public class ModuleInstallationContext {
 		return active;
 	}
 	
-	public String getModuleCodeInstallation() {
-		return this.ModuleCodeInstallation;
-	}
-	
 	/**
 	 * Declares the installation of a module
-	 * @param module in the process of being installed
 	 */
-	public void begin(MeveoModule module) {
+	public void begin() {
 		active = true;
-		this.ModuleCodeInstallation = module.getCode();
 	}
 	
 	/**
@@ -45,6 +35,5 @@ public class ModuleInstallationContext {
 	 */
 	public void end() {
 		active = false;
-		this.ModuleCodeInstallation = "";
 	}
 }

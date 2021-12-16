@@ -165,14 +165,10 @@ Body used for pagination, fields to retrieve, sorting and filtering
  "numberOfRows":1,
  "fetchFields":["customFieldCode1","customFieldCode2.subField1","customFieldCode3.*"],
  "sortField":"customFieldCode1",
- "ordering":"ASCENDING", 
- "filters":"{\"customFieldCode1\":\"value1\"}"
-
+ "ordering":"ASCENDING"
 }
 ```
 ordering is one of  ASCENDING,DESCENDING,UNSORTED
-
-filters must be a string, not a json object.
 
 ### Response 
 body : either an array of serialized entities of type `:cet` if `withCount==false` or an  object with properties `count`, that givens the total number of entities  and `result` the list of entities

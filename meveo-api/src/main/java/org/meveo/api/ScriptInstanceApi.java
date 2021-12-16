@@ -1,6 +1,7 @@
 package org.meveo.api;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,13 +25,13 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
+import org.meveo.api.storage.RepositoryDto;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
@@ -45,9 +46,6 @@ import org.meveo.service.script.ScriptInstanceService;
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
 
-	@Inject
-	private ModuleInstallationContext moduleInstallationContext;
-	
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
 
@@ -199,14 +197,14 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	public void checkDtoAndUpdateCode(CustomScriptDto dto) throws BusinessApiException, MissingParameterException, InvalidParameterException {
 
-		if (StringUtils.isBlank(dto.getScript()) && !this.moduleInstallationContext.isActive()) {
+		if (StringUtils.isBlank(dto.getScript())) {
 			missingParameters.add("script");
 		}
 
 		handleMissingParameters();
 
 		if (dto.getType() == ScriptSourceTypeEnum.JAVA) {
-			String scriptCode = StringUtils.isBlank(dto.getScript()) ? dto.getCode() : ScriptInstanceService.getFullClassname(dto.getScript());
+			String scriptCode = ScriptInstanceService.getFullClassname(dto.getScript());
 			if (!StringUtils.isBlank(dto.getCode()) && !dto.getCode().equals(scriptCode)) {
 				throw new BusinessApiException("The code and the canonical script class name must be identical");
 			}

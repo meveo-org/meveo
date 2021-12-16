@@ -21,11 +21,11 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -48,7 +48,6 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -57,7 +56,6 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.ICustomFieldEntity;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -66,7 +64,6 @@ import org.meveo.model.customEntities.CrudEventListenerScript;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -76,9 +73,6 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.crm.impl.JSONSchemaGenerator;
-import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
-import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.index.ElasticClient;
@@ -86,7 +80,6 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.javaparser.ast.CompilationUnit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -102,7 +95,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private final static String CLASSES_DIR = "/classes";
     
     private static boolean useCETCache = true;
-	
+
     /**
      * @param currentUser the current meveo user
      * @return the directory where the classes are stored
@@ -176,18 +169,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     private SqlConfigurationService sqlConfigurationService;
     
-    @Inject
-    private JSONSchemaIntoJavaClassParser jSONSchemaIntoJavaClassParser;
-    
-    @Inject
-    private JSONSchemaGenerator jSONSchemaGenerator;
-    
-    @Inject
-    private GitClient gitClient;
-    
-    @Inject
-    private CustomEntityTemplateCompiler cetCompiler;
-	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
@@ -328,13 +309,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     /**
      * 
      * @param cetCode code of the custom entity template
-     * @return the json schema of the custom entity template
+     * @return the json scema of the custom entity template
      * @throws IOException if a file can't be written / read
      */
     @SuppressWarnings("unchecked")
 	public String getJsonSchemaContent(String cetCode) throws IOException {
 
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/json");
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/src/main/java/org/meveo/model/customEntities");
         File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -455,7 +436,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Override
     public List<CustomEntityTemplate> list(PaginationConfiguration config) {
 
-        if (useCETCache && (config.getFetchFields() == null || config.getFetchFields().isEmpty()) && (config.getFilters() == null || config.getFilters().isEmpty()
+        if (useCETCache && (config.getFilters() == null || config.getFilters().isEmpty()
                 || (config.getFilters().size() == 1 && config.getFilters().get("disabled") != null && !(boolean) config.getFilters().get("disabled")))) {
             List<CustomEntityTemplate> cets = new ArrayList<>(customFieldsCache.getCustomEntityTemplates());
 
@@ -773,38 +754,5 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @PostConstruct
     private void init() {
         useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
-    }
-    
-	/**
-	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
-	 */
-    @Override
-    public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
-    	super.addFilesToModule(entity, module);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
-    	String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
-    	
-    	File newJavaFile = new File (gitDirectory, pathJavaFile);
-    	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
-    	
-    	try {
-    		FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
-    	
-    	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
-    	
-    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
-
-    	try {
-    		FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
 }

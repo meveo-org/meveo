@@ -3,10 +3,8 @@ package org.meveo.model.scripts;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -197,7 +195,10 @@ public abstract class CustomScript extends Function {
 
 	@Override
 	public List<FunctionIO> getInputs() {
-		List<FunctionIO> inputs = Optional.ofNullable(setters).orElse(List.of()).stream().map(s -> {
+		if (setters == null) {
+			return new ArrayList<>();
+		}
+		List<FunctionIO> inputs = setters.stream().map(s -> {
 			FunctionIO inp = new FunctionIO();
 			inp.setDescription(s.getDescription());
 			inp.setName(s.getName());
@@ -218,7 +219,10 @@ public abstract class CustomScript extends Function {
 
 	@Override
 	public List<FunctionIO> getOutputs() {
-		List<FunctionIO> outputs = Optional.ofNullable(getters).orElse(List.of()).stream().map(s -> {
+		if (setters == null) {
+			return new ArrayList<>();
+		}
+		List<FunctionIO> outputs = getters.stream().map(s -> {
 			FunctionIO inp = new FunctionIO();
 			inp.setDescription(s.getDescription());
 			inp.setName(s.getName());

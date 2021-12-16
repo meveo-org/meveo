@@ -99,8 +99,9 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         executable.setCode(code);
     }
 
-    private void publish(T executable, CrudActionEnum action) throws BusinessException {
+    private void publish(T executable, CrudActionEnum action) {
     	
+        afterUpdateOrCreate(executable);
         clusterEventPublisher.publishEvent(executable, action);
     }
 
@@ -118,10 +119,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      *
      * @param executable Function that was just created or updated
      */
-    @Override
-    public void afterUpdateOrCreate(T executable) throws BusinessException {
-    	super.afterUpdateOrCreate(executable);
-    }
+    protected abstract void afterUpdateOrCreate(T executable);
 
     /**
      * Validates the executable
@@ -161,8 +159,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     
     @Override
     public void create(T executable) throws BusinessException {
-        beforeUpdateOrCreate(executable);
-    	validateAndSetCode(executable);
+        validateAndSetCode(executable);
         super.create(executable);
         publish(executable, CrudActionEnum.create);
     }
@@ -170,8 +167,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     @Override
     public T update(T executable) throws BusinessException {
         
-        beforeUpdateOrCreate(executable);
     	validateAndSetCode(executable);
+        beforeUpdateOrCreate(executable);
         executable = super.update(executable);        
         publish(executable, CrudActionEnum.update);
         

@@ -884,4 +884,5 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	public boolean exists(CustomEntityTemplateDto dto) {
 		return customEntityTemplateService.findByCode(dto.getCode()) != null;
 	}
+
 }

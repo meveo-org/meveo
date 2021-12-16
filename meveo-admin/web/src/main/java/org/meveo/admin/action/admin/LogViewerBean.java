@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -16,11 +13,9 @@ import javax.inject.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.Messages;
 import org.meveo.commons.utils.ParamBean;
+import org.meveo.util.FileTail;
 import org.primefaces.PrimeFaces;
 import org.slf4j.Logger;
-import org.unix4j.Unix4j;
-import org.unix4j.unix.grep.GrepOption;
-import org.unix4j.unix.grep.GrepOptions;
 
 /**
  * Bean for managing the log viewer.
@@ -46,13 +41,11 @@ public class LogViewerBean implements Serializable {
 
 	private Integer offset = 5000;
 
+	private volatile FileTail fileTail = null;
+
 	private boolean paused = true;
 
 	private boolean initialized;
-	
-	private String grepOptions;
-	
-	private String grepPattern;
 
 	public LogViewerBean() {
 		super();
@@ -69,6 +62,11 @@ public class LogViewerBean implements Serializable {
 
 		try {
 			if (logFile != null) {
+				/* Create new tail only if file has changed */
+				if (fileTail == null || !fileTail.getFileName().equals(logFile)) {
+					fileTail = new FileTail(logFile, offset);
+				}
+
 				this.paused = false;
 				this.initialized = true;
 				read();
@@ -83,6 +81,7 @@ public class LogViewerBean implements Serializable {
 
 	public void stop() {
 		this.paused = true;
+
 	}
 
 	public void setLogFile(String logFile) {
@@ -98,38 +97,25 @@ public class LogViewerBean implements Serializable {
 	}
 
 	public void read() throws FileNotFoundException, IOException {
-		String readValue;
-		if (StringUtils.isBlank(grepPattern)) {
-			readValue = Unix4j.tail(offset, logFile).toStringResult();
-		} else {
-			// Parse options
-			GrepOptions options = null;
-			if (!StringUtils.isBlank(grepOptions)) {
-				List<String> optionsAsStrs = Arrays.stream(grepOptions.split(" "))
-						.map(optionAsStr -> {
-							if (optionAsStr.startsWith("-")) {
-								return optionAsStr.substring(1);
-							} else if (optionAsStr.startsWith("--")) {
-								return optionAsStr.substring(2);
-							} else {
-								return optionAsStr;
-							}
-						}).collect(Collectors.toList());
-				options = GrepOption.CONVERTER.convert(optionsAsStrs);
-			}
-			
-			if(options == null) {
-				options = GrepOptions.EMPTY;
-			}
-			
-			if (offset == null || offset == 0) {
-				readValue = Unix4j.grep(options, grepPattern, logFile).toStringResult();
-			} else {
-				readValue = Unix4j.tail(offset, logFile).grep(options, grepPattern).toStringResult();
+
+		if (logFile != null) {
+			if (fileTail == null) {
+				synchronized (this) {
+					if (fileTail == null) {
+						fileTail = new FileTail(logFile, offset);
+						this.initialized = true;
+					}
+				}
 			}
 		}
-		
-		PrimeFaces.current().ajax().addCallbackParam("value", readValue);
+
+		synchronized (fileTail) {
+			if (fileTail != null) {
+				fileTail.read();
+				PrimeFaces.current().ajax().addCallbackParam("value", fileTail.getAsString());
+			}
+		}
+
 	}
 
 	public boolean isPaused() {
@@ -147,34 +133,5 @@ public class LogViewerBean implements Serializable {
 	public boolean isInitialized() {
 		return initialized;
 	}
-
-	/**
-	 * @param grepOptions the grepOptions to set
-	 */
-	public void setGrepOptions(String grepOptions) {
-		this.grepOptions = grepOptions;
-	}
-
-	/**
-	 * @param grepPattern the grepPattern to set
-	 */
-	public void setGrepPattern(String grepPattern) {
-		this.grepPattern = grepPattern;
-	}
-
-	/**
-	 * @return the {@link #grepOptions}
-	 */
-	public String getGrepOptions() {
-		return grepOptions;
-	}
-
-	/**
-	 * @return the {@link #grepPattern}
-	 */
-	public String getGrepPattern() {
-		return grepPattern;
-	}
-	
 
 }
