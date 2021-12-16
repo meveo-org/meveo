@@ -1,6 +1,9 @@
 package org.meveo.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.storage.Repository;

@@ -133,10 +133,15 @@ public class JacksonUtil {
     public static <T> T read(InputStream value, TypeReference<T> clazz) throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(value, clazz);
     }
+    
+    public static <T> T read(File value, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.readValue(value, clazz);
+    }
 
     @SuppressWarnings("unchecked")
     public static <T> T clone(T value) {
         return fromString(toString(value), (Class<T>) value.getClass());
     }
+
 
 }
