@@ -66,8 +66,7 @@ public class MavenDependencyService {
 
 		try {
 			return query.getSingleResult();
-			//FIXME: @ClementBareth  this always fail when installing a module with script having maven dependency because the script is not saved
-		} catch (Exception e) {
+		} catch (NoResultException e) {
 			return null;
 		}
 	}
