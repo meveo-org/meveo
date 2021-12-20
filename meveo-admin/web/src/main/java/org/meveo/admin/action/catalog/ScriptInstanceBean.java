@@ -91,6 +91,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 	private static final long serialVersionUID = 1L;
 	private static final String JAVA = "java";
 	private static final String ES5 = "es5";
+	private static final String PYTHON = "python";
 
 	/**
 	 * Injected @{link ScriptInstance} service. Extends
@@ -600,10 +601,13 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 		rootNode.setExpanded(isExpand);
 		List<ScriptInstanceDto> javaScriptInstances = null;
 		List<ScriptInstanceDto> es5ScriptInstances = null;
+		List<ScriptInstanceDto> pythonScriptInstances = null;
 		if (CollectionUtils.isNotEmpty(scriptInstances)) {
 			javaScriptInstances = scriptInstances.stream().filter(e -> e.getType() == ScriptSourceTypeEnum.JAVA).collect(Collectors.toList());
 			es5ScriptInstances = scriptInstances.stream().filter(e -> e.getType() == ScriptSourceTypeEnum.ES5).collect(Collectors.toList());
+			pythonScriptInstances = scriptInstances.stream().filter(e -> e.getType() == ScriptSourceTypeEnum.PYTHON).collect(Collectors.toList());
 		}
+		
 		if (CollectionUtils.isNotEmpty(javaScriptInstances)) {
 			TreeNode rootJava = new DefaultTreeNode("document", new ScriptInstanceNode(JAVA, JAVA), rootNode);
 			rootJava.setExpanded(isExpand);
@@ -613,6 +617,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 				createTree(JAVA, nodes, rootJava, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
 			}
 		}
+		
 		if (CollectionUtils.isNotEmpty(es5ScriptInstances)) {
 			TreeNode rootEs5 = new DefaultTreeNode("document", new ScriptInstanceNode(ES5, ES5), rootNode);
 			rootEs5.setExpanded(isExpand);
@@ -620,6 +625,16 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 				String[] fullNames = scriptInstance.getCode().split("\\.");
 				List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
 				createTree(ES5, nodes, rootEs5, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
+			}
+		}
+		
+		if (CollectionUtils.isNotEmpty(pythonScriptInstances)) {
+			TreeNode rootPython = new DefaultTreeNode("document", new ScriptInstanceNode(PYTHON, PYTHON), rootNode);
+			rootPython.setExpanded(isExpand);
+			for (ScriptInstanceDto scriptInstance : pythonScriptInstances) {
+				String[] fullNames = scriptInstance.getCode().split("\\.");
+				List<String> nodes = new LinkedList<>(Arrays.asList(fullNames));
+				createTree(PYTHON, nodes, rootPython, scriptInstance.getCode(), scriptInstance.getId(), scriptInstance.getError(), isExpand);
 			}
 		}
 

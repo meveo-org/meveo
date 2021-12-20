@@ -551,6 +551,11 @@
 			<artifactId>neo4j-java-driver</artifactId>
 			<version>1.7.5</version>
 		</dependency>
+		<dependency><!-- FIXME: Study if we can make this optional by dynamic download of the jar -->
+		    <groupId>org.python</groupId>
+		    <artifactId>jython-standalone</artifactId>
+		    <version>2.7.2</version>
+		</dependency>
 		<dependency>
             <groupId>org.graalvm.sdk</groupId>
             <artifactId>graal-sdk</artifactId>

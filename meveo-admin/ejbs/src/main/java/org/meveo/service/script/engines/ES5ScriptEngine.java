@@ -1,4 +1,4 @@
-package org.meveo.service.script;
+package org.meveo.service.script.engines;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,8 @@ import org.graalvm.polyglot.Value;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,22 +67,9 @@ public class ES5ScriptEngine implements ScriptInterface {
 	            Supplier<Boolean> isInterruptedSupplier = () -> isInterrupted.get();
 	            jsBindings.putMember("isInterrupted", isInterruptedSupplier);
 	            
-	            Function<String, ?> cdiSupplier = (name) -> {
-	            	try {
-	            		Class<?> beanClass = Class.forName(name);
-		            	return CDI.current().select(beanClass).get();
-	            	} catch (Exception e) {
-	            		LOG.error("Service not found", e);
-	            		return null;
-	            	}
-	            };
-	            jsBindings.putMember("requireService", cdiSupplier);
-	            
-	            Function<String, ScriptInterface> functionSupplier = (name) -> {
-	            	ScriptInstanceService scriptService = CDI.current().select(ScriptInstanceService.class).get();
-	            	return scriptService.getExecutionEngine(name, methodContext);
-	            };
-	            jsBindings.putMember("requireFunction", functionSupplier);
+	            jsBindings.putMember("requireService", JavaBindings.CDI_SUPPLIER);
+
+	            jsBindings.putMember("requireFunction", JavaBindings.FUNCTION_SUPPLIER);
 	            
 	            Function<String, Value> npmRequire = (name) -> {
 	            	String m2Dir = MavenConfigurationService.getM2Directory(null);

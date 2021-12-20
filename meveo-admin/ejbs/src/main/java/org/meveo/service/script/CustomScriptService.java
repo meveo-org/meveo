@@ -48,9 +48,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -74,7 +72,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
-import org.jboss.weld.inject.WeldInstance;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -112,8 +109,9 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.engines.ES5ScriptEngine;
+import org.meveo.service.script.engines.PythonScriptEngine;
 import org.meveo.service.script.maven.MavenClassLoader;
-import org.meveo.service.script.weld.BeanSynchronizer;
 import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -249,7 +247,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Override
     protected void validate(T script) throws BusinessException {
-        if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 || this.moduleInstallCtx.isActive()) {
+        if (script.getSourceTypeEnum() != ScriptSourceTypeEnum.JAVA || this.moduleInstallCtx.isActive()) {
             return;
         }
         String className = getClassName(script.getScript());
@@ -896,11 +894,16 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
                 return scriptErrors;
             }
-        } else {
+        } else if (sourceType == ScriptSourceTypeEnum.ES5) {
             ScriptInterface engine = new ES5ScriptEngine(sourceCode, scriptCode);
             ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
             return null;
+        } else if (sourceType == ScriptSourceTypeEnum.PYTHON) {
+            ScriptInterface engine = new PythonScriptEngine(sourceCode, scriptCode);
+            ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
         }
+        
+        return null;
     }
 
     /**
@@ -1005,8 +1008,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             
             if (script.getSourceTypeEnum() == JAVA) {
             	loadClassInCache(scriptCode);
-            } else {
+            } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5){
             	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript(), scriptCode));
+            } else if( script.getSourceTypeEnum() == ScriptSourceTypeEnum.PYTHON) {
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new PythonScriptEngine(script.getScript(), scriptCode));
             }
             
             if (script.isError()) {
