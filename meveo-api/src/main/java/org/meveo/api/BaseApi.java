@@ -435,7 +435,7 @@ public abstract class BaseApi {
                 continue;
             }
 
-            Object valueConverted = getValueConverted(cfDto, entity);
+            Object valueConverted = getValueConverted(cfDto);
 
             // Validate that value is valid (min/max, regexp). When
             // value is a list or a map, check separately each value
@@ -614,7 +614,7 @@ public abstract class BaseApi {
      * @param cfDto cf dto.
      * @return custom field converted object.
      */
-    protected Object getValueConverted(CustomFieldDto cfDto, ICustomFieldEntity entity) {
+    protected Object getValueConverted(CustomFieldDto cfDto) {
 
 
         if (cfDto.getMapValue() != null && !cfDto.getMapValue().isEmpty()) {
@@ -622,12 +622,7 @@ public abstract class BaseApi {
         } else if (cfDto.getListValue() != null && !cfDto.getListValue().isEmpty()) {
             return CustomFieldValueDto.fromDTO(cfDto.getListValue());
         } else if (cfDto.getStringValue() != null) {
-        	try {
-        		return MeveoValueExpressionWrapper.evaluateExpression(cfDto.getStringValue(), Map.of("entity", entity), Object.class);
-        	} catch (ELException e) {
-        		log.error("Failed to evaluate expression {}", cfDto.getStringValue());
-        		return null;
-        	}
+        	return cfDto.getStringValue();
         } else if (cfDto.getDateValue() != null) {
             return cfDto.getDateValue();
         } else if (cfDto.getDoubleValue() != null) {
