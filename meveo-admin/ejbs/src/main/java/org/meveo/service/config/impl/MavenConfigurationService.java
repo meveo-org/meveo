@@ -167,53 +167,6 @@ public class MavenConfigurationService implements Serializable {
         return m2;
     }
     
-    public void addMeveoModuleDependencyToPom(@Observes @Created MeveoModuleDependency e) {
-    	MeveoModule baseModule = e.getMeveoModule();
-    	
-    	DefaultModelReader reader = new DefaultModelReader();
-    	File pomFile = moduleService.findPom(baseModule);
-
-    	try {
-			Model model = reader.read(pomFile, null);
-			
-			Dependency dependency = new Dependency();
-			dependency.setArtifactId(e.getCode());
-			dependency.setGroupId("org.meveo");
-			dependency.setVersion(e.getCurrentVersion());
-			dependency.setScope("provided");
-			model.addDependency(dependency);
-			
-			writeToPom(model, pomFile);
-			gitClient.commitFiles(baseModule.getGitRepository(), List.of(pomFile), "Add dependency " + e.getCode());
-		} catch (Exception e1) {
-			log.error("Failed to update pom.xml", e);
-		}
-    	
-    }
-    
-    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void removeMeveoModuleDependencyFromPom(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed MeveoModuleDependency e) {
-    	MeveoModule baseModule = e.getMeveoModule();
-
-    	log.debug("Removing dependency {} from pom of module {}", e.getCode(), baseModule.getCode());
-    	
-    	DefaultModelReader reader = new DefaultModelReader();
-    	File pomFile = moduleService.findPom(baseModule);
-
-    	try {
-			Model model = reader.read(pomFile, null);
-			
-			model.getDependencies().removeIf(d -> d.getArtifactId().equals(e.getCode()) &&
-					d.getGroupId().equals("org.meveo") && 
-					d.getVersion().equals(e.getCurrentVersion()));
-			
-			writeToPom(model, pomFile);
-			gitClient.commitFiles(baseModule.getGitRepository(), List.of(pomFile), "Remove dependency " + e.getCode());
-		} catch (Exception e1) {
-			log.error("Failed to update pom.xml", e);
-		}
-    }
-    
     public void updatePomOnSave(@Observes @Updated MeveoModule module) {
     	generatePom("Update pom", module);
     }
