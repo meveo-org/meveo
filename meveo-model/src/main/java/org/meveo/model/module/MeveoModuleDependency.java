@@ -23,7 +23,6 @@ import org.meveo.model.scripts.JPAtoCDIListener;
  * @lastModifiedVersion 6.9.0
  */
 @Entity 
-@EntityListeners(JPAtoCDIListener.class)
 @Table(name = "meveo_module_dependency")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "meveo_module_dependency_seq")})

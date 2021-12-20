@@ -872,7 +872,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     }
     
     public List<String> getLazyLoadedProperties() {
-    	return List.of("gitRepository");
+    	return List.of("gitRepository", "patches");
     }
     
     /**
