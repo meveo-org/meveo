@@ -51,7 +51,7 @@ import org.meveo.model.ModuleItem;
  */
 @Entity
 @Cacheable
-@ModuleItem(path = "permission", value = "Permission")
+@ModuleItem(path = "permissions", value = "Permission")
 @ExportIdentifier("name")
 @Table(name = "adm_permission")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
