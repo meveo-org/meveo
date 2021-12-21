@@ -39,7 +39,7 @@ import org.meveo.model.ModuleItem;
  */
 @Entity
 @Cacheable
-@ModuleItem(path = "Role", value = "Roles")
+@ModuleItem(path = "roles", value = "Role")
 @ExportIdentifier({ "name" })
 @Table(name = "adm_role")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
