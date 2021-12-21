@@ -27,7 +27,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ModuleItem;
 
 /**
  * Entity that represents system role.
@@ -37,6 +39,7 @@ import org.meveo.model.ExportIdentifier;
  */
 @Entity
 @Cacheable
+@ModuleItem(path = "roles", value = "Role")
 @ExportIdentifier({ "name" })
 @Table(name = "adm_role")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
@@ -45,7 +48,7 @@ import org.meveo.model.ExportIdentifier;
 			@NamedQuery(name = "Role.getAllRoles", query = "select r from org.meveo.model.security.Role r LEFT JOIN r.permissions p", hints = {
 	        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) 
 		})
-public class Role extends BaseEntity {
+public class Role extends BusinessEntity {
 
     private static final long serialVersionUID = -2309961042891712685L;
 
