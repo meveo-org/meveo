@@ -24,7 +24,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -52,14 +51,14 @@ import org.meveo.model.ModuleItem;
  */
 @Entity
 @Cacheable
-@ModuleItem(path = "Permission", value = "Permissions")
+@ModuleItem(path = "permission", value = "Permission")
 @ExportIdentifier("name")
 @Table(name = "adm_permission")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_permission_seq"), })
 @NamedQueries({ @NamedQuery(name = "Permission.getPermission", query = "select p from Permission p where p.permission=:permission", hints = {
         @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
-public class Permission extends BusinessEntity implements IEntity<Long>, Serializable  {
+public class Permission extends BusinessEntity implements Serializable  {
     private static final long serialVersionUID = 2884657784984355718L;
 
     @Id
@@ -87,16 +86,6 @@ public class Permission extends BusinessEntity implements IEntity<Long>, Seriali
     @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinColumn(name = "category")
     private PermissionCategory category;
-    
-    @Column(name = "code", nullable = false, length = 255)
-    @Size(max = 255, min = 1)
-    @NaturalId
-    protected String code;
-    
-    @Column(name = "description", nullable = true, length = 255)
-    @Size(max = 255)
-    protected String description;
-
     
     public PermissionCategory getCategory() {
     	return category;

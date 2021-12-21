@@ -62,12 +62,6 @@ public class Role extends BusinessEntity {
     @Size(max = 255)
     @NotNull
     private String description;
-    
-
-    @Column(name = "code", nullable = false, length = 255)
-    @Size(max = 255, min = 1)
-    @NaturalId
-    protected String code;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "adm_role_permission", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
