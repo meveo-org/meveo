@@ -57,7 +57,7 @@
 			<h:panelGroup>
 				<p:commandButton id="deleteCec" icon="ui-icon-trash"
 					update="deleteCECForm" value="#{messages['commons.delete']}"
-					rendered="#{customEntityCategoryBean.entity.code != null}"
+					rendered="#{customEntityCategoryBean.canUserUpdateEntity() and customEntityCategoryBean.entity.code != null}"
 					oncomplete="PF('deleteCECDlg').show()">
 					<f:setPropertyActionListener
 						target="#{customEntityCategoryBean.entity}" value="#{entity}" />

@@ -3,15 +3,22 @@ package org.meveo.admin.action.audit;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.audit.logging.configuration.AuditConfiguration;
 import org.meveo.audit.logging.configuration.AuditConfigurationProvider;
 import org.meveo.audit.logging.core.AuditContext;
@@ -21,7 +28,10 @@ import org.meveo.audit.logging.handler.ConsoleAuditHandler;
 import org.meveo.audit.logging.handler.DBAuditHandler;
 import org.meveo.audit.logging.handler.FileAuditHandler;
 import org.meveo.audit.logging.handler.Handler;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.util.view.PagePermission;
 import org.primefaces.model.DualListModel;
 import org.slf4j.Logger;
 
@@ -43,12 +53,17 @@ public class AuditConfigurationBean implements Serializable {
 	@Inject
 	private AuditConfigurationProvider auditConfigurationProvider;
 
+	@Inject
+	@CurrentUser
+	protected MeveoUser currentUser;
+
 	private List<Class<? extends IPersistenceService>> serviceClasses;
 	private Class<? extends IPersistenceService> selectedClass;
 	private DualListModel<String> handlers;
 	private DualListModel<MethodWithParameter> methods = new DualListModel<>();
 	private List<ClassAndMethods> selectedClassAndMethods = new ArrayList<>();
 	private ClassAndMethods selectedClassAndMethod;
+	private Map<String, Boolean> writeAccessMap;
 
 	@PostConstruct
 	private void init() {
@@ -130,6 +145,27 @@ public class AuditConfigurationBean implements Serializable {
 
 		messages.info(new BundleKey("messages", "update.successful"));
 	}
+
+	public boolean canUserUpdateEntity() {
+		if (this.writeAccessMap == null) {
+				writeAccessMap = Collections.synchronizedMap(new HashMap<String, Boolean>());
+		}
+		ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
+		HttpServletRequest request = (HttpServletRequest) context.getRequest();
+		String requestURI = request.getRequestURI();
+
+		if (writeAccessMap.get(requestURI) == null) {
+				boolean hasWriteAccess = false;
+				try {
+						hasWriteAccess = PagePermission.getInstance().hasWriteAccess(request, currentUser);
+				} catch (BusinessException e) {
+						log.error("Error encountered checking for write access to {}", requestURI, e);
+						hasWriteAccess = false;
+				}
+				writeAccessMap.put(requestURI, hasWriteAccess);
+		}
+		return writeAccessMap.get(requestURI);
+}
 
 	public AuditConfiguration getAuditConfiguration() {
 		return AuditContext.getInstance().getAuditConfiguration();

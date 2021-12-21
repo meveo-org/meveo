@@ -70,7 +70,9 @@
 							<p:commandButton id="addClass"
 								value="#{messages['action.addClass']}"
 								update=":#{p:component('classSelection')} :#{p:component('classAndMethodsPanel')} :#{p:component('messages')}"
-								actionListener="#{auditConfigurationBean.addClass}" />
+								actionListener="#{auditConfigurationBean.addClass}"
+								rendered="#{auditConfigurationBean.canUserUpdateEntity()}"
+							/>
 						</h:panelGroup>
 
 					</p:panel>
@@ -107,7 +109,9 @@
 						<h:panelGroup layout="block" styleClass="form-panel-actions">
 							<p:commandButton value="#{messages['action.save']}"
 								update=":#{p:component('messages')}"
-								actionListener="#{auditConfigurationBean.saveOrUpdate}" />
+								actionListener="#{auditConfigurationBean.saveOrUpdate}"
+								rendered="#{auditConfigurationBean.canUserUpdateEntity()}"
+							/>
 						</h:panelGroup>
 					</p:panel>
 

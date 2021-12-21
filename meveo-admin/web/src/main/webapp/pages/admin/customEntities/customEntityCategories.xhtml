@@ -44,12 +44,16 @@
 				permission="#{currentUser.hasRole('administrationManagement')}"
 				renderAddModule="true" renderDeleteLink="false">
 				<h:panelGroup>
-					<p:commandButton id="deleteCec" immediate="true"
-						icon="ui-icon-trash" oncomplete="PF('deleteCECDlg').show()"
-						update="deleteCECForm">
+					<p:commandButton
+						id="deleteCec"
+						immediate="true"
+						icon="ui-icon-trash"
+						oncomplete="PF('deleteCECDlg').show()"
+						update="deleteCECForm"
+						rendered="#{customEntityCategoryListBean.canUserUpdateEntity()}"
+					>
 						<f:setPropertyActionListener
 							target="#{customEntityCategoryListBean.entity}" value="#{entity}" />
-						<!--<p:confirm header="#{messages['commons.confirmationHeader']}" message="#{messages['commons.confirmDelete']}" icon="ui-icon-alert" />-->
 					</p:commandButton>
 					<p:dialog widgetVar="deleteCECDlg"
 						header="#{messages['commons.confirmationHeader']}" dynamic="true"

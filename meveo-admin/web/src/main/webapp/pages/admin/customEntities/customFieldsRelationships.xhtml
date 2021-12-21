@@ -108,7 +108,7 @@
                     <h:outputText value="#{messages['commons.no']}"
                                   rendered="#{(node.type == 'field' or node.type == 'action') and entity.active != null and entity.active.toString() == 'false'}" />
                 </p:column>
-                <p:column headerText="#{messages['commons.actions']}" width="12%">
+                <p:column headerText="#{messages['commons.actions']}" width="12%" rendered="#{customEntityTemplateBean.canUserUpdateEntity()}">
                     <h:panelGroup rendered="#{node.type == 'tab'}">
                         <p:tooltip for="editTabBtn" value="#{messages['commons.edit']}"
                                    showEffect="slide" hideEffect="slide" />
@@ -403,17 +403,22 @@
 
                 </p:column>
                 <f:facet name="footer">
-                    <p:commandButton id="addTab"
-                                     value="#{messages['customizedEntities.addNewTab']}"
-                                     oncomplete="PF('groupDialog').show()"
-                                     actionListener="#{customEntityTemplateBean.newTab()}"
-                                     update=":groupForm">
-                    </p:commandButton>
-                    <p:commandButton id="addAction"
-                                     value="#{messages['customizedEntities.addAction']}"
-                                     oncomplete="PF('actionDialog').show()"
-                                     actionListener="#{entityCustomActionBean.newEntity()}"
-                                     update=":actionForm">
+                    <p:commandButton
+                        id="addTab"
+                        value="#{messages['customizedEntities.addNewTab']}"
+                        oncomplete="PF('groupDialog').show()"
+                        actionListener="#{customEntityTemplateBean.newTab()}"
+                        update=":groupForm"
+                        rendered="#{customEntityTemplateBean.canUserUpdateEntity()}"
+                    />
+                    <p:commandButton
+                        id="addAction"
+                        value="#{messages['customizedEntities.addAction']}"
+                        oncomplete="PF('actionDialog').show()"
+                        actionListener="#{entityCustomActionBean.newEntity()}"
+                        update=":actionForm"
+                        rendered="#{customEntityTemplateBean.canUserUpdateEntity()}"
+                    >
                         <f:setPropertyActionListener
                                 target="#{entityCustomActionBean.backViewSave}"
                                 value="customizedEntity" />
