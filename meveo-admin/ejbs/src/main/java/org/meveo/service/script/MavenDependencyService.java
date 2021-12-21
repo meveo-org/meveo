@@ -62,7 +62,9 @@ public class MavenDependencyService {
 	public MavenDependency find(String coordinates) {
 		String queryString = "from MavenDependency where lower(coordinates) = :coordinates ";
 
-		TypedQuery<MavenDependency> query = emWrapper.getEntityManager().createQuery(queryString, MavenDependency.class).setParameter("coordinates", coordinates.toLowerCase());
+		TypedQuery<MavenDependency> query = emWrapper.getEntityManager()
+				.createQuery(queryString, MavenDependency.class)
+				.setParameter("coordinates", coordinates.toLowerCase());
 
 		try {
 			return query.getSingleResult();
@@ -86,9 +88,9 @@ public class MavenDependencyService {
 	 * @param script The updated / deleted script
 	 */
 	public void removeOrphans(ScriptInstance script) {
-		
-		String query = "SELECT md FROM MavenDependency md \n" 
-				+ "WHERE md.scriptInstances IS EMPTY";
+			
+		String query = "FROM MavenDependency as md \n" +
+						"WHERE NOT EXISTS (SELECT 1 FROM ScriptInstance si INNER JOIN si.mavenDependencies as md2 WHERE md.id = md2.id)";
 		
 		EntityManager entityManager = emWrapper.getEntityManager();
 		List<MavenDependency> dependencies = entityManager.createQuery(query, MavenDependency.class)

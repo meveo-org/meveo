@@ -737,7 +737,6 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 			mavenDependency.setGroupId("org.webjars.npm");
 		}
 		mavenDependencies.add(mavenDependency);
-		mavenDependency.getScriptInstances().add(entity);
 	}
 	
     public List<FunctionIO> getScriptInputs(ScriptInstance script) {

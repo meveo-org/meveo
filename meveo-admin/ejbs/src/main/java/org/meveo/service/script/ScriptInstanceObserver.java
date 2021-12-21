@@ -16,6 +16,7 @@ import javax.transaction.Transactional.TxType;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.scripts.ScriptInstance;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class ScriptInstanceObserver {
 	 * Remove orphan maven dependencies
 	 */
 	@Transactional
-	public void onScriptDeleted(@Observes @Removed ScriptInstance si) {
+	public void onScriptDeleted(@Observes @RemovedAfterTx ScriptInstance si) {
 		mavenDependencyService.removeOrphans(si);
 	}
 	

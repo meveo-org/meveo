@@ -119,9 +119,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
         	MavenDependency persistentMd = mdService.find(md.getBuiltCoordinates());
         	if(persistentMd != null) {
         		mavenDependencies.add(persistentMd);
-        		persistentMd.getScriptInstances().add(script);
         	} else {
-        		md.getScriptInstances().add(script);
         		getEntityManager().persist(md);
         		mavenDependencies.add(md);
         	}

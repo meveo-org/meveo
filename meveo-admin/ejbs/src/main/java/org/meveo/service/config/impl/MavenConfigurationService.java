@@ -178,7 +178,7 @@ public class MavenConfigurationService implements Serializable {
     }
 
 	public void onDependencyCreated(@Observes @Created MavenDependency d) {
-		d.getScriptInstances()
+		mavenDependencyService.findRelatedScripts(d)
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
 				.filter(Objects::nonNull)
@@ -191,7 +191,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public void onDependencyUpdated(@Observes @Updated MavenDependency d) {
-		d.getScriptInstances()
+		mavenDependencyService.findRelatedScripts(d)
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
 				.filter(Objects::nonNull)
