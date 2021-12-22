@@ -78,21 +78,5 @@
 			<column name="script_parameters" type="${type.json}"/>
 		</addColumn>
 	</changeSet>
-	
-	<changeSet id="437 - Possibility to add Role and Permission entities to a module" author="Fahad khan">
-		<addColumn tableName="adm_role">
-			<column name="code" type="varchar(255)">
-				<constraints nullable="false"/>
-			</column>
-		</addColumn>
-		<addColumn tableName="adm_permission">
-			<column name="code" type="varchar(255)">
-				<constraints nullable="false"/>
-			</column>
-			<column name="description" type="varchar(255)">
-				<constraints nullable="false"/>
-			</column>
-		</addColumn>
-	</changeSet>
 
 </databaseChangeLog>
