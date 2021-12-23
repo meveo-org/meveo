@@ -70,6 +70,11 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @CollectionTable(name = "module_files", joinColumns = { @JoinColumn(name = "module_id") })
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
+    
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "meveo_module_source", joinColumns = { @JoinColumn(name = "id") })
+    @Column(name = "module_source")
+    private String moduleSource;
     /**
      * A list of order items. Not modifiable once started processing.
      */
@@ -106,9 +111,6 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Type(type="numeric_boolean")
     @Column(name = "installed")
     private boolean installed;
-
-    @Column(name = "module_source", nullable = false, columnDefinition = "TEXT")
-    private String moduleSource;
 
     @Column(name = "current_version")
     @Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
@@ -223,7 +225,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     }
 
     public boolean isDownloaded() {
-        return !StringUtils.isBlank(moduleSource);
+        return !(moduleSource == null);
     }
 
 	public String getCurrentVersion() {
