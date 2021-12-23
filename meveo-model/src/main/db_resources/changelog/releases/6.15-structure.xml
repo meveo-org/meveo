@@ -78,5 +78,15 @@
 			<column name="script_parameters" type="${type.json}"/>
 		</addColumn>
 	</changeSet>
-
+	
+	<changeSet id="467 - Store module json on external table" author="Arthur Grenier">
+		<createTable tableName="meveo_module_source">
+			<column name="id" type="bigint">
+				<constraints foreignKeyName="fk_id_module" referencedTableName="meveo_module" referencedColumnNames="id"/>
+			</column>
+			<column name="module_source" type="{type.json}"/>
+		</createTable>
+		<sql>UPDATE meveo_module_source SET module_source = (SELECT module_source FROM meveo_module WHERE meveo_module_source.id = meveo_module.id);</sql>
+		<dropColumn tableName="meveo_module" columnName="module_source"/>
+	</changeSet>
 </databaseChangeLog>
