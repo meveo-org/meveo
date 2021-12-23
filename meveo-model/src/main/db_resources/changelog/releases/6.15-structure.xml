@@ -84,9 +84,9 @@
 			<column name="id" type="bigint">
 				<constraints foreignKeyName="fk_id_module" referencedTableName="meveo_module" referencedColumnNames="id"/>
 			</column>
-			<column name="module_source" type="{type.json}"/>
+			<column name="module_source" type="${type.json}"/>
 		</createTable>
-		<sql>UPDATE meveo_module_source SET module_source = (SELECT module_source FROM meveo_module WHERE meveo_module_source.id = meveo_module.id);</sql>
+		<sql>INSERT INTO meveo_module_source (id, module_source) SELECT id, module_source FROM meveo_module</sql>
 		<dropColumn tableName="meveo_module" columnName="module_source"/>
 	</changeSet>
 </databaseChangeLog>
