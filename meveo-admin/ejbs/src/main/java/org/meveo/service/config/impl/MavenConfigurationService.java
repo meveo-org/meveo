@@ -406,7 +406,6 @@ public class MavenConfigurationService implements Serializable {
 			log.error("Error retrieving maven dependencies", e);
 		}
 
-		final File repositoryDir = GitHelper.getRepositoryDir(null, repository.getCode());
 		File pomFile = this.moduleService.findPom(module);
 
 		List<File> updatedFiles = List.of(pomFile, gitIgnore.toFile(), link.toFile());
