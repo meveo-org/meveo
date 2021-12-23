@@ -151,7 +151,7 @@ public class MenuBean implements Serializable {
 				addItem(storages, "binaryStorageConfigurations", "binaryStorageConfiguration.title");
 				addItem(storages, "sqlConfigurations", "repository.sqlConfiguration");
 				addItem(storages, "neo4jConfigurations", "repository.neo4jConfiguration");
-				addItem(storages, "gitRepositories", "repository.neo4jConfiguration");
+				addItem(storages, "gitRepositories", "menu.gitRepositories");
 			}
 			
 			if (currentUser.hasRole("superAdminManagement")) {
