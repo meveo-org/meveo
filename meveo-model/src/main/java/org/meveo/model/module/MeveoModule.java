@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Cacheable;
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -16,19 +16,21 @@ import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
@@ -59,6 +61,7 @@ import org.meveo.model.scripts.ScriptInstance;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_module_seq"), })
 @NamedQueries({@NamedQuery(name = "MeveoModule.deleteModule", query = "DELETE from MeveoModule m where m.id=:id and m.version=:version")})
 @Inheritance(strategy = InheritanceType.JOINED)
+@SecondaryTable(name = "meveo_module_source", pkJoinColumns = @PrimaryKeyJoinColumn(referencedColumnName = "id"))
 public class MeveoModule extends BusinessEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -71,9 +74,9 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
     
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "meveo_module_source", joinColumns = { @JoinColumn(name = "id") })
-    @Column(name = "module_source")
+    @Lob() @Basic(fetch=FetchType.LAZY)
+    @Column(name = "module_source", table = "meveo_module_source", columnDefinition = "TEXT")
+    @Type(type = "org.hibernate.type.TextType")
     private String moduleSource;
     /**
      * A list of order items. Not modifiable once started processing.
