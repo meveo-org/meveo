@@ -64,13 +64,6 @@
 				</h:panelGroup>
 			</h:panelGrid>
 
-			<h:panelGrid columns="2">
-				<hftl:entityPermissions permission="git-write" varName="gitWrite"
-					entityId="#{gitRepositoryBean.entity.id}" />
-				<hftl:entityPermissions permission="git-read" varName="gitRead"
-					entityId="#{gitRepositoryBean.entity.id}" />
-			</h:panelGrid>
-
 			<h:panelGrid id="actions" columns="3">
 				<p:commandButton id="push"
 					value="#{messages['gitRepositories.push']}"

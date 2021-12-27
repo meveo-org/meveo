@@ -5,6 +5,5 @@
  <interceptors>
    <class>org.meveo.audit.logging.core.AuditInterceptor</class>
    <class>org.meveo.jpa.JpaAmpNewTxInterceptor</class>
-   <class>org.meveo.security.permission.PermissionInterceptor</class>
  </interceptors>
 </beans>

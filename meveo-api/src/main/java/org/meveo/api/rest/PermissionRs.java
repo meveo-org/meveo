@@ -38,27 +38,4 @@ public interface PermissionRs extends IBaseRs {
 	@ApiOperation(value = "List of permissions")
 	PermissionResponseDto list();
 
-	@Path("/whitelist")
-	@PUT
-	@ApiOperation(value = "Add to white list information")
-	void addToWhiteList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id,
-			@FormParam("role") @ApiParam("Role") String role);
-
-	@Path("/blacklist")
-	@PUT
-	@ApiOperation(value = "Add to black list information")
-	void addToBlackList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id,
-			@FormParam("role") @ApiParam("Role") String role);
-
-	@Path("/whitelist")
-	@DELETE
-	@ApiOperation(value = "Remove from white list by permission and id and role")
-	void removeFromWhiteList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id,
-			@FormParam("role") @ApiParam("Role") String role);
-
-	@Path("/blacklist")
-	@DELETE
-	@ApiOperation(value = "Remove from black list by permission and id and role")
-	void removeFromBlackList(@FormParam("permission") @ApiParam("Permission") String permission, @FormParam("id") @ApiParam("Id") String id,
-			@FormParam("role") @ApiParam("Role") String role);
 }

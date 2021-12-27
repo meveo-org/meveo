@@ -30,7 +30,7 @@ public class UserNotAuthorizedException extends RuntimeException {
 	}
 	
 	public UserNotAuthorizedException() {
-		super("User is not allowed to access this ressource.");
+		super("User is not allowed to access this resource.");
 	}
 
 }

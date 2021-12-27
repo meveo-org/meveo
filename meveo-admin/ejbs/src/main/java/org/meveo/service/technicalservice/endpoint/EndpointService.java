@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -34,17 +33,12 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.keycloak.client.KeycloakAdminClientService;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.security.DefaultPermission;
 import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.security.permission.RequirePermission;
-import org.meveo.security.permission.SecuredEntity;
-import org.meveo.security.permission.Whitelist;
+import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
@@ -61,28 +55,21 @@ import org.meveo.service.git.MeveoRepository;
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
 	
-	@Inject
-	private ESGenerator esGenerator;
+	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
 	
 	@Inject
 	private GitClient gitClient;
+	
+	@Inject
+	private PermissionService permissionService;
 
 	@Inject
 	@MeveoRepository
 	private GitRepository meveoRepository;
 
-	public static final String EXECUTE_ALL_ENDPOINTS = "Execute_All_Endpoints";
-	public static final String ENDPOINTS_CLIENT = "endpoints";
-	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
-	public static final String ENDPOINT_MANAGEMENT = "endpointManagement";
-
 	@Context
 	private HttpServletRequest request;
-
-	@EJB
-	private KeycloakAdminClientService keycloakAdminClientService;
-
-
+	
 	public static String getEndpointPermission(Endpoint endpoint) {
 		return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
 	}
@@ -112,32 +99,6 @@ public class EndpointService extends BusinessService<Endpoint> {
 				.getResultList();
 	}
 	
-	private void validatePath(Endpoint entity) throws BusinessException {
-		/* check that the path is valid */
-		if (entity.getPath() != null) {
-			Matcher matcher = Endpoint.pathParamPattern.matcher(entity.getPath());
-			int i = 0;
-			while (matcher.find()) {
-				String param = matcher.group();
-				String paramName = param.substring(1, param.length() - 1);
-				if (entity.getPathParameters().size() > i) {
-					String actualParam = entity.getPathParameters().get(i).toString();
-					if (!paramName.equals(actualParam)) {
-						throw new BusinessException(entity.getCode() +" endpoint is invalid. " +(i + 1) + "th path param is expected to be " + entity.getPathParameters().get(i) + " while actual value is " + paramName);
-					}
-					i++;
-
-				} else {
-					throw new BusinessException(entity.getCode() +" endpoint is invalid. Unexpected param " + paramName);
-				}
-			}
-
-			if (entity.getPathParameters().size() > i) {
-				throw new BusinessException(entity.getCode() +" endpoint is invalid. Missing param " + entity.getPathParameters().get(i));
-			}
-		}
-	}
-
 	/**
 	 * Create a new endpoint in database. Also create associated client and roles in
 	 * keycloak.
@@ -145,45 +106,27 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @param entity Endpoint to create
 	 */
 	@Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
-	public void create(@Whitelist(DefaultRole.ADMIN) Endpoint entity) throws BusinessException {
-
-		// Create client if not exitsts
-		// keycloakAdminClientService.createClient(ENDPOINTS_CLIENT);
-
-		// String endpointPermission = getEndpointPermission(entity);
-
-		// Create endpoint permission and add it to Execute_All_Endpoints composite
-		// keycloakAdminClientService.addToComposite(ENDPOINTS_CLIENT,
-		// endpointPermission, EXECUTE_ALL_ENDPOINTS);
-
-		// Create endpointManagement role in default client if not exists
-		// KeycloakAdminClientConfig keycloakConfig = KeycloakUtils.loadConfig();
-		// keycloakAdminClientService.createRole(keycloakConfig.getClientId(),
-		// ENDPOINT_MANAGEMENT);
-
-		// Add endpoint role and selected composite roles
-//		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-//			for (String compositeRole : entity.getRoles()) {
-//				keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-//						endpointPermission, compositeRole);
-//			}
-//		}
-//
-//		// Add Execute_All_Endpoints to endpointManagement composite if not already in
-//		keycloakAdminClientService.addToCompositeCrossClient(ENDPOINTS_CLIENT, keycloakConfig.getClientId(),
-//				EXECUTE_ALL_ENDPOINTS, ENDPOINT_MANAGEMENT);
-
+	public void create(Endpoint entity) throws BusinessException {
 		validatePath(entity);
-		
 		super.create(entity);
+		
+		if (entity.isSecured()) {
+	        permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
+		}
 	}
 	
 	@Override
 	public Endpoint update(Endpoint entity) throws BusinessException {
-		
 		validatePath(entity);
-		return super.update(entity);
+		Endpoint endpoint = super.update(entity);
+		
+		if (entity.isSecured()) {
+	        permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
+		} else {
+			permissionService.removeIfPresent(getEndpointPermission(entity));
+		}
+		
+		return endpoint;
 	}
 
 	/**
@@ -192,17 +135,9 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @param entity Endpoint to remove
 	 */
 	@Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
-	public void remove(@SecuredEntity(remove = true) Endpoint entity) throws BusinessException {
+	public void remove( Endpoint entity) throws BusinessException {
 		super.remove(entity);
-//		String role = getEndpointPermission(entity);
-//		keycloakAdminClientService.removeRole(ENDPOINTS_CLIENT, role);
-//		if (CollectionUtils.isNotEmpty(entity.getRoles())) {
-//			for (String compositeRole : entity.getRoles()) {
-//				keycloakAdminClientService.removeRoleInCompositeRole(role, compositeRole);
-//			}
-//		}
-//		keycloakAdminClientService.removeRole(role);
+		permissionService.removeIfPresent(getEndpointPermission(entity));
 	}
 
 	/**
@@ -266,10 +201,36 @@ public class EndpointService extends BusinessService<Endpoint> {
     	File newJsFile = new File (gitDirectory, path);
     	
     	try {
-    		FileUtils.write(newJsFile, this.esGenerator.generateFile(entity), StandardCharsets.UTF_8);
+    		FileUtils.write(newJsFile, ESGenerator.generateFile(entity), StandardCharsets.UTF_8);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
 		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
+	}
+	
+	private void validatePath(Endpoint entity) throws BusinessException {
+		/* check that the path is valid */
+		if (entity.getPath() != null) {
+			Matcher matcher = Endpoint.pathParamPattern.matcher(entity.getPath());
+			int i = 0;
+			while (matcher.find()) {
+				String param = matcher.group();
+				String paramName = param.substring(1, param.length() - 1);
+				if (entity.getPathParameters().size() > i) {
+					String actualParam = entity.getPathParameters().get(i).toString();
+					if (!paramName.equals(actualParam)) {
+						throw new BusinessException(entity.getCode() +" endpoint is invalid. " +(i + 1) + "th path param is expected to be " + entity.getPathParameters().get(i) + " while actual value is " + paramName);
+					}
+					i++;
+
+				} else {
+					throw new BusinessException(entity.getCode() +" endpoint is invalid. Unexpected param " + paramName);
+				}
+			}
+
+			if (entity.getPathParameters().size() > i) {
+				throw new BusinessException(entity.getCode() +" endpoint is invalid. Missing param " + entity.getPathParameters().get(i));
+			}
+		}
 	}
 }

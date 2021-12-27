@@ -86,10 +86,6 @@
         <source>customFields.xhtml</source>
     </tag>
     <tag>
-    	<tag-name>entityPermissions</tag-name>
-    	<source>entityPermissions.xhtml</source>
-    </tag>
-    <tag>
         <tag-name>customFieldFormOrPanel</tag-name>
         <source>customFieldFormOrPanel.xhtml</source>
     </tag>

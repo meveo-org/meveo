@@ -12,7 +12,6 @@ import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
-import org.meveo.admin.action.admin.EntityPermissionBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
@@ -65,9 +64,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	@Inject
 	private GitClient gitClient;
 
-	@Inject // TODO: test that solution
-	private EntityPermissionBean entityPermissionBean;
-
 	private String username;
 
 	private String password;
@@ -91,8 +87,6 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		if (result == null) {
 			FacesContext.getCurrentInstance().validationFailed();
 		}
-
-		entityPermissionBean.save();
 
 		return result;
 	}
