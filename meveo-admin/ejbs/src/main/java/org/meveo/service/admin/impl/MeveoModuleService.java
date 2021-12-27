@@ -894,6 +894,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	} else {
     		meveoModule.setGitRepository(this.gitRepositoryService.findByCode(meveoModule.getCode()));
     	}
+            
+        if (!meveoModule.isDownloaded()) {
+    		mavenConfigurationService.generatePom("Create pom", meveoModule,repo);
+    	}
+    
     }
     
 	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {

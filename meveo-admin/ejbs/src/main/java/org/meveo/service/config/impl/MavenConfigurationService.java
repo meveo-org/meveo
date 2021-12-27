@@ -170,12 +170,7 @@ public class MavenConfigurationService implements Serializable {
     public void updatePomOnSave(@Observes @Updated MeveoModule module) {
     	generatePom("Update pom", module);
     }
-    
-    public void createPomOnCreate(@Observes @Created MeveoModule module) {
-    	if (!module.isDownloaded()) {
-    		generatePom("Create pom", module);
-    	}
-    }
+
 
 	public void onDependencyCreated(@Observes @Created MavenDependency d) {
 		mavenDependencyService.findRelatedScripts(d)
@@ -291,8 +286,12 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	private void generatePom(String message, MeveoModule module) {
-		
 		GitRepository repository = gitRepositoryService.findByCode(module.getCode());
+		generatePom(message,  module, repository);
+	}
+
+	public void generatePom(String message, MeveoModule module,GitRepository repository) {
+
 		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getCode());
 		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
 
