@@ -51,7 +51,7 @@ import org.meveo.model.ModuleItem;
  */
 @Entity
 @Cacheable
-@ModuleItem(path = "permission", value = "Permission")
+@ModuleItem(path = "permissions", value = "Permission")
 @ExportIdentifier("name")
 @Table(name = "adm_permission")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
@@ -113,6 +113,7 @@ public class Permission extends BusinessEntity implements Serializable  {
 
     public void setPermission(String permission) {
         this.permission = permission;
+        this.setCode(permission);
     }
 
     public String getName() {
@@ -121,6 +122,7 @@ public class Permission extends BusinessEntity implements Serializable  {
 
     public void setName(String name) {
         this.name = name;
+        this.setDescription(name);
     }
 
     @Override

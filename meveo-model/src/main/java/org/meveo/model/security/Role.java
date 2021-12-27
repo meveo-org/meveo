@@ -49,7 +49,6 @@ import org.meveo.model.ModuleItem;
 	        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) 
 		})
 public class Role extends BusinessEntity {
-
     private static final long serialVersionUID = -2309961042891712685L;
 
     @Column(name = "role_name", nullable = false, length = 255)
