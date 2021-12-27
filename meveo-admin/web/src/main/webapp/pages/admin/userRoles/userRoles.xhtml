@@ -35,7 +35,7 @@
 			<hftl:column label="#{messages['role.description']}"
 				field="description" />
 			<hftl:column label="#{messages['role.permissions']}"
-				field="permissions" valueLabelField="name" isList="true" />
+				field="permissions" valueLabelField="name" isList="true" maxHeight="100px"/>
 
 			<hftl:actionsColumn
 				permission="#{currentUser.hasRole('administrationManagement')}" />

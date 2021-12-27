@@ -78,5 +78,21 @@
 			<column name="script_parameters" type="${type.json}"/>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="#318 - Generate permissions linked to endpoints" author="Clément Bareth">
+		<dropTable tableName="entity_permission"/>
+		<sql>INSERT INTO adm_permission (id, name, permission, category) SELECT nextval('adm_permission_seq'), 'Execute_Endpoint_' || endpoint.code, 'Execute_Endpoint_' || endpoint.code, null FROM service_endpoint as endpoint WHERE endpoint.secured = 1</sql>
+		<sql>INSERT INTO adm_role (id, version, role_description, role_name) VALUES (-10, 0, 'Role that has execution permission for all endpoints', 'Execute_All_Endpoints')</sql>
+		<insert tableName="adm_role_role">
+			<column name="role_id" valueNumeric="-1"></column>
+			<column name="child_role_id" valueNumeric="-10"></column>
+		</insert>
+		<sql>INSERT INTO adm_role_permission (role_id, permission_id) SELECT -10, permission.id FROM adm_permission as permission WHERE permission.permission LIKE 'Execute_Endpoint_%'</sql>
+	</changeSet>
+	
+	<changeSet id="Remove CRT roles (replaced previously by permissions)" author="Clément Bareth">
+		<sql>DELETE FROM adm_user_role USING adm_role WHERE adm_user_role.role_id = adm_role.id AND adm_role.role_name LIKE 'CRT_%'</sql>
+		<sql>DELETE FROM adm_role WHERE role_name LIKE 'CRT_%'</sql>
+	</changeSet>
 
 </databaseChangeLog>

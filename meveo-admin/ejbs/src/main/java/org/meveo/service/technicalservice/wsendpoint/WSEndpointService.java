@@ -32,12 +32,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.security.DefaultPermission;
-import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
-import org.meveo.security.permission.RequirePermission;
-import org.meveo.security.permission.SecuredEntity;
-import org.meveo.security.permission.Whitelist;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -93,8 +88,7 @@ public class WSEndpointService extends BusinessService<WSEndpoint> {
 	 * @param entity Endpoint to create
 	 */
 	@Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
-	public void create(@Whitelist(DefaultRole.ADMIN) WSEndpoint entity) throws BusinessException {
+	public void create(WSEndpoint entity) throws BusinessException {
 		super.create(entity);
 	}
 
@@ -105,8 +99,7 @@ public class WSEndpointService extends BusinessService<WSEndpoint> {
 	 * @param entity Endpoint to remove
 	 */
 	@Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
-	public void remove(@SecuredEntity(remove = true) WSEndpoint entity) throws BusinessException {
+	public void remove(WSEndpoint entity) throws BusinessException {
 		super.remove(entity);
 	}
 

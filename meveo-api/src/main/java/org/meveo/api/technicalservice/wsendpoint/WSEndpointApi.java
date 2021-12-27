@@ -34,10 +34,7 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.security.DefaultPermission;
-import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
-import org.meveo.security.permission.AuthorizationService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
@@ -57,17 +54,6 @@ public class WSEndpointApi extends BaseCrudApi<WSEndpoint, WSEndpointDto> {
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
 
-	//@Inject
-	//private ESGeneratorService esGeneratorService;
-
-	//@Inject
-	//private SwaggerDocService swaggerDocService;
-
-	//@Inject
-	//private EndpointSchemaService endpointRequestSchemaService;
-	
-	@Inject
-	private AuthorizationService authService;
 
 	public WSEndpointApi() {
 		super(WSEndpoint.class, WSEndpointDto.class);
@@ -243,14 +229,7 @@ public class WSEndpointApi extends BaseCrudApi<WSEndpoint, WSEndpointDto> {
 		if(!endpoint.isSecured()) {
 			return true;
 		}
-		
-		try {
-			authService.checkAuthorization(DefaultPermission.EXECUTE_ENDPOINT, DefaultRole.ADMIN, endpoint.getId());
-		} catch (UserNotAuthorizedException e) {
-			return false;
-		}
-		
-		return true;
+		return currentUser.hasRole(WSEndpointService.getEndpointPermission(endpoint));
 	}
 
 	@Override

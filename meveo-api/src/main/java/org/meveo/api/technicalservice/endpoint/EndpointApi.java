@@ -52,14 +52,11 @@ import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.security.DefaultPermission;
-import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
-import org.meveo.security.permission.AuthorizationService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
@@ -98,9 +95,6 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
 	
-	@Inject
-	private AuthorizationService authService;
-
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
 	}
@@ -683,13 +677,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return true;
 		}
 		
-		try {
-			authService.checkAuthorization(DefaultPermission.EXECUTE_ENDPOINT, DefaultRole.ADMIN, endpoint.getId());
-		} catch (UserNotAuthorizedException e) {
-			return false;
-		}
-		
-		return true;
+		return currentUser.hasRole(EndpointService.getEndpointPermission(endpoint));
 	}
 
 	@Override

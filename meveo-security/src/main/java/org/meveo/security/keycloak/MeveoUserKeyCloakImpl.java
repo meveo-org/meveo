@@ -56,9 +56,7 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
     		String forcedUserName, 
     		String forcedProvider, 
     		Set<String> additionalRoles,
-            Map<String, Set<String>> roleToPermissionMapping,
-            Map<String, List<String>> whiteList, 
-            Map<String, List<String>> blackList
+            Map<String, Set<String>> roleToPermissionMapping
         ) {
 
         if (securityContext.getCallerPrincipal() instanceof KeycloakPrincipal) {
@@ -122,9 +120,6 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
                 this.roles.addAll(roleToPermissionMapping.get(roleName));
             }
         }
-        
-        this.whiteList = whiteList;
-        this.blackList = blackList;
     }
 
     @Override
