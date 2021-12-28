@@ -187,9 +187,9 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
             try {
                 entity = query.getSingleResult();
-                
-            } catch (NoResultException | NonUniqueResultException e) {
-                log.error("Failed to find a module item {}. Reason: {}. This item will be removed from module", item, e.getClass().getSimpleName());
+            } catch (NoResultException e) {
+            	return;
+            } catch (NonUniqueResultException e) {
                 return;
             } catch (Exception e) {
                 log.error("Failed to find a module item {}", item, e);
@@ -197,6 +197,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
         }
         
+        // getEntityManager().detach(entity);
         item.setItemEntity(entity);
     }
     

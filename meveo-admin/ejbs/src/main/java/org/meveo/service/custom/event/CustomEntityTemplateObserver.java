@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.CreatedAfterTx;
-import org.meveo.event.qualifier.RemovedAfterTx;
+import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -45,7 +45,7 @@ public class CustomEntityTemplateObserver {
 	private RepositoryService repositoryService;
 	
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onCetDeleted(@Observes(during = TransactionPhase.AFTER_SUCCESS) @RemovedAfterTx CustomEntityTemplate cet) {
+	public void onCetDeleted(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved CustomEntityTemplate cet) {
 
 		log.debug("CET onDeleted observer={}", cet);
 		if (cet.isAudited()) {

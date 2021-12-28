@@ -79,6 +79,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected GitRepositoryService gitRepositoryService;
 	
 	@Inject
+	protected MeveoModuleService meveoModuleService;
+	
+	@Inject
 	@MeveoRepository
 	protected GitRepository meveoRepository;
 	
@@ -219,6 +222,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      */
     @SuppressWarnings({ "rawtypes" })
 	public MeveoModule findModuleOf(P entity) {
+    	if (!entity.getClass().isAnnotationPresent(ModuleItem.class)) {
+    		return null;
+    	}
+    	
     	MeveoModule module = null;
     	if (entity != null) {
     		if (entity instanceof CustomFieldTemplate) {
@@ -243,6 +250,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		}
     		if (module != null) { String cc = module.getGitRepository().getCode(); }
 		}
+    	
+    	if (module == null) {
+    		module = meveoModuleService.findByCode("Meveo");
+    	}
+    	
     	return module;
     }
     
@@ -327,13 +339,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws BusinessException 
      * @throws IOException BusinessException
      */
-    public void moveFilesToModule(P entity, MeveoModule module) throws BusinessException, IOException {
-    	MeveoModule currentModule = findModuleOf(entity);
-    	if (currentModule != null) {
-    		removeFilesFromModule(entity, currentModule);
-    	}
-	    addFilesToModule(entity, module);
+    public void moveFilesToModule(P entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+		removeFilesFromModule(entity, oldModule);
+	    addFilesToModule(entity, newModule);
     }
+    
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
 
     public P findByCodeLazy(String code) {
