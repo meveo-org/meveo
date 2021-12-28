@@ -1337,14 +1337,15 @@ public class NativePersistenceService extends BaseService {
 						queryBuilder.addCriterion(fieldName, " <= ", filterValue, false);
 						queryBuilder.addCriterion(fieldName2, " >= ", filterValue, false);
 					}
-					if (filterValue instanceof Date) {
-						Date value = (Date) filterValue;
+					if ((filterValue instanceof Date) || (filterValue instanceof Instant)) {
+						Date value = (filterValue instanceof Date ) ? (Date) filterValue:(Date.from((Instant)filterValue));
 						Calendar c = Calendar.getInstance();
 						c.setTime(value);
 						int year = c.get(Calendar.YEAR);
 						int month = c.get(Calendar.MONTH);
 						int date = c.get(Calendar.DATE);
 						c.set(year, month, date, 0, 0, 0);
+						c.set(Calendar.MILLISECOND, 0);
 						value = c.getTime();
 						queryBuilder.addCriterion(fieldName, "<=", value, false);
 						queryBuilder.addCriterion(fieldName2, ">=", value, false);
