@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.RolesDto;
@@ -136,5 +137,10 @@ public interface RoleRs extends IBaseRs {
 	@Path("/external")
 	@ApiOperation(value = "List external roles")
 	RolesDto listExternalRoles();
+	
+	@DELETE
+	@Path("/{role}/{permission}")
+	@ApiOperation("Remove a permission from a role")
+	void removePermissionFromRole(@PathParam("role") String role, @PathParam("permission") String permission) throws BusinessException;
 
 }
