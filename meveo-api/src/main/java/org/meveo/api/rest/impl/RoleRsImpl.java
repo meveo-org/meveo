@@ -4,6 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.RoleApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -122,5 +123,10 @@ public class RoleRsImpl extends BaseRs implements RoleRs {
 
         return result;
     }
+
+	@Override
+	public void removePermissionFromRole(String role, String permission) throws BusinessException {
+		roleApi.removePermissionFromRole(role, permission);
+	}
     
 }

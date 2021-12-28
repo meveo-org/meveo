@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -277,6 +278,15 @@ public class RoleApi extends BaseApi {
 
     public List<RoleDto> listExternalRoles(HttpServletRequest httpServletRequest) throws BusinessException {
         return keycloakAdminClientService.listRoles(httpServletRequest);
+    }
+    
+    @Transactional
+    public void removePermissionFromRole(String roleName, String permission) throws BusinessException {
+    	Role role = roleService.findByName(roleName);
+    	boolean removed = role.getPermissions().removeIf(p -> p.getPermission().equals(permission));
+    	if (removed) {
+    		roleService.update(role);
+    	}
     }
 
 }
