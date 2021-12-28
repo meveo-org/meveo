@@ -309,8 +309,9 @@ To retrieve a list of entities, follow the steps above but at the end, call `Cro
 ```java
 Repository defaultRepo = repositoryService.findDefaultRepository();
 List<MyCet> ceis = crossStorageApi.find(defaultRepo, MyCet.class)
-    .by("valueOne", "test") // Optional
+    .by("fieldOne", "filterValue") // Optional
     .fetch("relationshipOne") // Optional
+    .orderBy("fieldTwo",true) //Optional order by field, true for ascending, false for descending
     .getResults();
 
 System.out.println("Found MyCet instances: " + ceis);
