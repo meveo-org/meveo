@@ -36,7 +36,7 @@ import org.meveo.event.qualifier.InboundRequestReceived;
 import org.meveo.event.qualifier.Processed;
 import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.RemovedAfterTx;
+import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.event.qualifier.Terminated;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
@@ -311,7 +311,7 @@ public class DefaultObserver {
 	}
 	
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onEntityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @RemovedAfterTx BaseEntity e) throws BusinessException {
+	public void onEntityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} after tx removed", e.getClass().getName(), e.getId());
 		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
 	}

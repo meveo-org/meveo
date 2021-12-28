@@ -4,6 +4,7 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -18,11 +19,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.scripts.JPAtoCDIListener;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -39,6 +40,7 @@ import org.meveo.model.ExportIdentifier;
 	@NamedQuery(name = "MeveoModuleItem.synchronizeCftCreate", query = "SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass"), //
 	@NamedQuery(name = "MeveoModuleItem.synchronizeCftDelete", query = "DELETE FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass")
 })
+@EntityListeners(JPAtoCDIListener.class)
 public class MeveoModuleItem extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
