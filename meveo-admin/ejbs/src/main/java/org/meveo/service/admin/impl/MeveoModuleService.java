@@ -372,10 +372,12 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		throw new IllegalArgumentException(meveoModuleItem.toString() + " already belongs to module " + existingItems.get(0).getMeveoModule().getCode());
     	}
     	
+    	MeveoModule meveoModule = this.findByCode("Meveo");
+    	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
     	if (existingItems.isEmpty() || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
     			module.getModuleItems().add(meveoModuleItem);
     			meveoModuleItem.setMeveoModule(module);
     		} catch (BusinessException | IOException e2) {
@@ -383,7 +385,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		}
     	} else {
     		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
     		    MeveoModule moduleToRemove = businessService.findModuleOf(meveoModuleItem.getItemEntity());
     		    moduleToRemove.removeItem(meveoModuleItem);
     		    module.getModuleItems().add(meveoModuleItem);
