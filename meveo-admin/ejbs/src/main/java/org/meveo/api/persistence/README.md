@@ -317,7 +317,8 @@ System.out.println("Found MyCet instances: " + ceis);
 ```
 
 The `by` method add a filter. 
-In the most simple case its key is the field code and the value is the value it must be equal to, but it can represent, in SQL starage case several different type of filters by setting the key format in the form `condition field1 field2` or `condition field1 field2-fieldN`
+In the most simple case its key is the field code and the value is the value it must be equal to (the value can also be "IS_NULL" or "IS_NOT_NULL").
+But it can represent, in SQL storage case several different type of filters by setting the key format in the form `condition field1 field2` or `condition field1 field2 ... fieldN`
 
 Conditions supported:
 - fromRange : filter records where the field is greater or equal to some value. Ex: `by("fromRange age",22)` is translated to `age >= 22` note that when the value is an Instant or a Date, the time part (hour,min,sec) is set to 0
@@ -327,6 +328,13 @@ Conditions supported:
 - not-inList : filter records where the field's value is not in the value list. Ex: `by("not-inList color",List.of("blue","red"))` is translated to `color IN (:param)` with `param=['blue','red']`
 - minmaxRange:  filter records where the value is between the 2 fields' values. Ex: `by("minmaxRange minHeight maxHeight ",22)` is translated to `minHeight<=22 AND maxHeight>=22`. Note that for Date value the hour,min, sec are set to 0 
 - minmaxOptionalRange: same as minmaxRange except that its ok for one of the field to be null
+- overlapOptionalRange: similar to minmaxOptionalRange but the value is here an Array or List of 2 values and we filter overlapping of this value range and the range of the 2 field's value. Ex:  Ex: `by("overlapOptionalRange minHeight maxHeight",List.of(18,70))` filter record where the range `[minHeight,maxHeight]` overlaps `[18,70]`
+- likeCriterias : filter records where the one of the fields' value match the value (possibly with wildcard `*`).Ex: `by("likeCriterias code description","*val")` is translated to `code like '%val' OR description like '%val'` and `by("likeCriterias code description","val")` is translated to `code = 'val' OR description = 'val'` 
+- wildcardOr : filter records where the one of the fields' value is like the value.Ex: `by("likeCriterias code description","val")` is translated to `code like '%val%' OR description like '%val%'`
+- wildcardOrIgnoreCase: same as wildcardOr but comparison ignores the case
+- SQL: expect the value to be a SQL WHERE statement with or without parameters. Ex: by("SQL",new String[]{"WHERE code=:param1","param1","valueOfparam1"})`
+
+- ne : test not equal. Ex:"ne code"
 
 
 
