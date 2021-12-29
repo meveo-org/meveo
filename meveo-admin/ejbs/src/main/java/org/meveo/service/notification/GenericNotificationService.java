@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -60,6 +62,7 @@ public class GenericNotificationService extends BusinessService<Notification> {
      * @param entityOrEvent Entity involved or event containing the entity involved
      * @return A list of notifications
      */
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public List<Notification> getApplicableNotifications(NotificationEventTypeEnum eventType, Object entityOrEvent) {
 
         if (useNotificationCache) {
@@ -100,6 +103,7 @@ public class GenericNotificationService extends BusinessService<Notification> {
      * @return A list of notifications
      */
     @SuppressWarnings("unchecked")
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public List<Notification> getApplicableNotificationsNoCache(NotificationEventTypeEnum eventType, Object entityOrEvent) {
 
         Object entity = null;

@@ -266,21 +266,23 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws BusinessException if the folder is not deleted
      */
     public void removeFilesFromModule(P entity, MeveoModule module) throws BusinessException {
-    	
+    	if (module == null) {
+    		return;
+    	}
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + ".json";
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
     			FileUtils.forceDelete(directoryToRemove);
-    			
+    	    	List<String> pattern = new ArrayList<String>();
+    	    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
+    	    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
     		} catch (IOException e) {
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
     	}
-    	List<String> pattern = new ArrayList<String>();
-    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+
     }
     /**
      * Create the entity in the dedicated module
