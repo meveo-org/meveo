@@ -920,21 +920,17 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		// Generate maven facet if file does not exists yet
 		mavenConfigurationService.createDefaultPomFile(module.getCode());
 	}
+	
+	
     
-    /**
-     * Remove the GitRepository corresponding to the meveo module deleted
-     * 
-     * @param meveoModule meveo module removed
-     * @throws BusinessException business exception
-     */
-    public void onMeveoModuleRemoved (@Observes @Removed MeveoModule meveoModule) throws BusinessException {
+    @Override
+	public void remove(MeveoModule meveoModule) throws BusinessException {
+		super.remove(meveoModule);
+		
     	if (meveoModule.getGitRepository() != null) {
-    		var repo = meveoModule.getGitRepository();
-    		if  (repo.getId() != null) {
-    			this.gitRepositoryService.remove(repo.getId());
-    		}
+			this.gitRepositoryService.remove(meveoModule.getGitRepository());
     	}
-    }
+	}
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
 		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
