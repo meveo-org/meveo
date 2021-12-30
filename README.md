@@ -4,6 +4,17 @@
 
 Meveo is a platform that allow to develop and execute enterprise back and front applications. [Watch an introduction video](https://vimeo.com/661171888)
 
+It allow you to create and deploy at runtime with fine grained security :
+- Data model, putting part of your entities in RDBMS, Neo4j, Infinispan, Elastic search
+- Business logic (functions in java, js, python with management of their dependencies)
+- API (REST, websocket)
+- Notifications (triggering emails, webhooks, custom function ..)
+- Workflows
+- Tests
+
+Speeding up the conception of apps. 
+
+
 It is intended to be run by Wildfly 18 with full Jakarta EE stack under licence : AGPLv3.0
 
 Frontend framework  https://github.com/meveo-org/meveo-fronted.github.io
