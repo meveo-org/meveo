@@ -109,10 +109,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
         } else if (CustomEntityInstance.class.getName().equals(item.getItemClass()) && item.getAppliesTo() != null) {
             CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
-            if (customEntityTemplate == null) {
-            	return;
-            }
-            
             Map<String, Object> ceiTable;
             
         	try {
