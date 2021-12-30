@@ -14,7 +14,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.CreatedAfterTx;
-import org.meveo.event.qualifier.PostRemoved;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -76,7 +76,7 @@ public class CustomRelationshipTemplateObserver {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void onCrtDeleted(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved CustomRelationshipTemplate crt) {
+	public void onCrtDeleted(@Observes(during = TransactionPhase.AFTER_SUCCESS) @RemovedAfterTx CustomRelationshipTemplate crt) {
 
 		log.debug("CRT onDeleted observer={}", crt);
 		if (crt.isAudited()) {
