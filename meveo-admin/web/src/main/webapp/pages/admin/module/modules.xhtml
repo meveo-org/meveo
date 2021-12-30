@@ -152,8 +152,18 @@
                 <h:panelGrid id="deleteFile" columns="1">
                     #{messages['commons.confirmDelete']}
                     <hftl:decorateFormField label="#{messages['meveoModule.deleteFiles']}" fieldId="deleteFiles" componentWidth="70">
-                        <p:selectBooleanCheckbox id="deleteFiles" value="#{meveoModuleListBean.deleteFiles}" >
+                        <p:selectBooleanCheckbox id="deleteFiles" value="#{meveoModuleListBean.moduleUninstall.removeFiles}" >
                             <p:ajax event="change" update=":deleteDialogForm:deleteFile" />
+                        </p:selectBooleanCheckbox>
+                    </hftl:decorateFormField>
+                    <hftl:decorateFormField label="#{messages['meveoModule.removeData']}" fieldId="removeData" componentWidth="70">
+                        <p:selectBooleanCheckbox id="removeData" value="#{meveoModuleListBean.moduleUninstall.removeData}" >
+                            <p:ajax event="change" update=":deleteDialogForm:removeData" />
+                        </p:selectBooleanCheckbox>
+                    </hftl:decorateFormField>
+                    <hftl:decorateFormField label="#{messages['meveoModule.removeItems']}" fieldId="removeItems" componentWidth="70">
+                        <p:selectBooleanCheckbox id="removeItems" value="#{meveoModuleListBean.moduleUninstall.removeItems}" >
+                            <p:ajax event="change" update=":deleteDialogForm:removeItems" />
                         </p:selectBooleanCheckbox>
                     </hftl:decorateFormField>
                 </h:panelGrid>

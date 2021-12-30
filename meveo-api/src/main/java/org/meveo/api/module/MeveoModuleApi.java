@@ -105,6 +105,7 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -460,7 +461,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		if (meveoModule.isInstalled()) {
 			try {
-				uninstall(meveoModule.getCode(), MeveoModule.class, false);
+				uninstall(MeveoModule.class, ModuleUninstall.of(meveoModule));
 			} catch (MeveoApiException e) {
 				throw new BusinessException(e);
 			}
@@ -471,7 +472,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	}
 
-	public void delete(String code, boolean deleteFiles) throws EntityDoesNotExistsException, BusinessException, IOException {
+	public void delete(String code, ModuleUninstall moduleUninstall) throws EntityDoesNotExistsException, BusinessException, IOException {
 
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(code);
 		
@@ -488,14 +489,14 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		if (meveoModule.isInstalled()) {
 			try {
-				uninstall(meveoModule.getCode(), MeveoModule.class, true);
+				uninstall(MeveoModule.class, moduleUninstall.withModule(meveoModule));
 			} catch (MeveoApiException e) {
 				throw new BusinessException(e);
 			}
 		}
 		
 		meveoModuleService.remove(meveoModule);
-		if (CollectionUtils.isNotEmpty(moduleFiles) && deleteFiles) {
+		if (CollectionUtils.isNotEmpty(moduleFiles) && moduleUninstall.removeFiles()) {
 			meveoModuleService.removeFilesIfModuleIsDeleted(moduleFiles);
 		}
 		removeModulePicture(logoPicture);
@@ -588,8 +589,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModule uninstall(String code, Class<? extends MeveoModule> moduleClass, boolean remove) throws MeveoApiException, BusinessException {
-
+	public MeveoModule uninstall(Class<? extends MeveoModule> moduleClass, ModuleUninstall uninstall) throws MeveoApiException, BusinessException {
+		String code = uninstall.moduleCode();
 		if (StringUtils.isBlank(code)) {
 			missingParameters.add("code");
 			handleMissingParameters();
@@ -612,7 +613,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new BusinessException("Unable to uninstall a referenced module.");
 		}
 
-		return meveoModuleItemInstaller.uninstall(meveoModule, remove);
+		return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
 	}
 
 	
@@ -1429,6 +1430,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@Override
 	public void remove(MeveoModuleDto dto) throws MeveoApiException, BusinessException {
-		uninstall(dto.getCode(), MeveoModule.class, true);
+		uninstall(MeveoModule.class, ModuleUninstall.of(dto.getCode()));
 	}
 }

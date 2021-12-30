@@ -40,6 +40,8 @@ import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
@@ -57,6 +59,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModulePostUninstall;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -72,7 +75,9 @@ import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleHelper;
 import org.meveo.service.admin.impl.PermissionService;
+import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
@@ -838,4 +843,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	}
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
+    
+	public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
+		if (event.removeData() && event.removeItems()) {
+			moduleHelper.getEntities(event.module(), CustomEntityTemplate.class)
+				.forEach(this::removeData);
+		}
+	}
 }

@@ -48,6 +48,7 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.api.rest.module.impl.ModuleUploadForm;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
+import org.meveo.service.admin.impl.ModuleUninstall;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -109,7 +110,7 @@ public interface ModuleRs extends IBaseRs {
 	@DELETE
 	@Path("/{code}")
 	@ApiOperation(value = "Remove meveo module by code")
-	ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code,@QueryParam("deleteFiles") @ApiParam("Delete the module files") @DefaultValue("false") boolean deleteFiles);
+	ActionStatus delete(@PathParam("code") @ApiParam("Code of the module") String code, @BeanParam ModuleUninstall moduleUninstall);
 
 	/**
 	 * List all Meveo's modules
