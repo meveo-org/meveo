@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e1e6d948-b174-40aa-b23d-7905e1a613e0",
+		"_postman_id": "d86f336e-484f-4525-ac95-132ce8b04c53",
 		"name": "Modules",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -2722,7 +2722,7 @@
 									"script": {
 										"exec": [
 											"pm.test(\"Illegal Argument Excpeption\", () => {\r",
-											"    pm.expect(pm.response.code).to.equal(400);\r",
+											"    pm.expect(pm.response.code).to.equal(409);\r",
 											"});\r",
 											"\r",
 											"pm.test(\"Impossible to add more than one ModuleItem\", function () {\r",
@@ -2847,7 +2847,7 @@
 									"script": {
 										"exec": [
 											"pm.test(\"Illegal Argument Excpeption\", () => {\r",
-											"    pm.expect(pm.response.code).to.equal(400);\r",
+											"    pm.expect(pm.response.code).to.equal(409);\r",
 											"});\r",
 											"\r",
 											"pm.test(\"Impossible to add more than one ModuleItem\", function () {\r",
@@ -4738,7 +4738,7 @@
 				"type": "text/javascript",
 				"exec": [
 					"pm.test(\"Response code should be above 200\", function() {",
-					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,400,403,404]); ",
+					"   pm.expect(pm.response.code).to.be.oneOf([102,200,201,202,204,400,403,404,409]); ",
 					"});"
 				]
 			}
