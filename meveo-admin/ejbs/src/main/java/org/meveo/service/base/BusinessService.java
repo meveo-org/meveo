@@ -21,10 +21,12 @@ package org.meveo.service.base;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -37,12 +39,16 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
@@ -51,6 +57,9 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.CharSequenceCompilerException;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 
 /**
  * @author phung
@@ -275,16 +284,27 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
 
     }
+    /**
+     * Create the entity in the dedicated module
+     * 
+     * @param entity belonging to the module
+     * @param module corresponding to the entity
+     * @throws IOException BusinessException
+     * @throws BusinessException if serialization of entity fails
+     */
+    public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
+    	persistJsonFileInModule( entity,  module, true);
+    }
 
     @Override
     public void afterUpdateOrCreate(P entity) throws BusinessException {
     	MeveoModule module = findModuleOf(entity);
-    	if(module != null) {
-    		addFilesToModule(entity,  module);
+    	if(module!=null) {
+    		persistJsonFileInModule( entity,  module, false);
     	}
 	}
 
-    public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
+    protected void persistJsonFileInModule(P entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
@@ -296,7 +316,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	
     	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
     	try {
-	    	if (!newJsonFile.exists()) {
+	    	if (isCreation) {
 	    		newJsonFile.createNewFile();
 	    	}
 	    	

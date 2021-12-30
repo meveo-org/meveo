@@ -722,7 +722,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
 	@Override
-	public void addFilesToModule(CustomFieldTemplate entity, MeveoModule module) throws BusinessException {
+	protected void persistJsonFileInModule(CustomFieldTemplate entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
@@ -735,7 +735,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	
     	File newJsonFile = new File(newDir, entity.getCode() +".json");
     	try {
-	    	if (!newJsonFile.exists()) {
+	    	if (isCreation) {
 	    		newJsonFile.createNewFile();
 	    	}
 	    	

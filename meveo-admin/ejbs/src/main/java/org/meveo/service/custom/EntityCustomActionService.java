@@ -104,7 +104,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
     }
     
 	@Override
-	public void addFilesToModule(EntityCustomAction entity, MeveoModule module) throws BusinessException {
+	protected void persistJsonFileInModule(EntityCustomAction entity, MeveoModule module, boolean isCreation) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
     	
@@ -121,7 +121,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
     	
     	File newJsonFile = new File(newDir, entity.getCode() +".json");
     	try {
-	    	if (!newJsonFile.exists()) {
+	    	if (isCreation) {
 	    		newJsonFile.createNewFile();
 	    	}
 	    	

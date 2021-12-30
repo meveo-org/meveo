@@ -57,6 +57,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -774,38 +775,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
     }
     
-	@Override
-	public void removeFilesFromModule(CustomEntityTemplate cet, MeveoModule module) throws BusinessException {
-		super.removeFilesFromModule(cet, module);
-		
-		final File cetJsonDir = cetCompiler.getJsonCetDir(cet, module);
-        final File cetJavaDir = cetCompiler.getJavaCetDir(cet, module);
-        final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
-        List<File> fileList = new ArrayList<>();
-
-        final File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
-        if (schemaFile.exists()) {
-            schemaFile.delete();
-            fileList.add(schemaFile);
-        }
-
-        final File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
-        if (javaFile.exists()) {
-            javaFile.delete();
-            fileList.add(javaFile);
-        }
-
-        final File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
-        if (classFile.exists()) {
-            classFile.delete();
-        }
-        
-        if(!fileList.isEmpty()) {
-        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
-        }
-		
-	}
-
 	/**
 	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
 	 */

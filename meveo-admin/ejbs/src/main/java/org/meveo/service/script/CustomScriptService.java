@@ -940,6 +940,30 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 		return sourcePath;
 	}
     
+
+    public Class<CustomEntity> loadCustomEntityClass(String cetCode, boolean isTestCompile, Optional<String> module) throws CharSequenceCompilerException {
+         String fullClassName = "org.meveo.model.customEntities." + cetCode;
+        try {
+    		return CharSequenceCompiler.getCompiledClass(fullClassName);
+    	} catch (ClassNotFoundException e) {
+	        String classPath = CLASSPATH_REFERENCE.get();
+	        CharSequenceCompiler<CustomEntity> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+	        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
+	        File sourceFile = new File(
+	        		customEntityTemplateCompiler.getJavaCetDir(customEntityTemplateService.findByCode(cetCode)), 
+	        		cetCode + ".java");
+	        
+	
+	        try {
+				String sourceContent = org.apache.commons.io.FileUtils.readFileToString(sourceFile, StandardCharsets.UTF_8);
+				return compiler.compile(getSourcePath(), fullClassName, sourceContent, errs, isTestCompile, CustomEntity.class);
+			} catch (IOException e1) {
+				throw new CharSequenceCompilerException(e.getMessage(), null, e, errs);
+			}
+    	}
+    }
+
+
     /**
      * Find the script class for a given script code
      *

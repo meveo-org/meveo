@@ -53,8 +53,7 @@ public class ModuleObserver {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Transactional(value = TxType.REQUIRES_NEW)
-	public void onItemDelete(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved MeveoModuleItem item, BusinessServiceFinder bsf, MeveoModuleService moduleService) {
+	public void onItemDelete(@Observes @PostRemoved MeveoModuleItem item, BusinessServiceFinder bsf, MeveoModuleService moduleService) {
 		MeveoModule meveoModule = moduleService.findById(item.getMeveoModule().getId());
 		// Module has been deleted, so as the git repository and it's items so we don't need to remove them
 		if (meveoModule == null) {
