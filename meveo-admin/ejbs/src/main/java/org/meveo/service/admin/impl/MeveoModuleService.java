@@ -20,7 +20,6 @@
 package org.meveo.service.admin.impl;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -62,6 +61,7 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.EntityAlreadyLinkedToModule;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
@@ -369,7 +369,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	// Throw an error if the item belongs to another module other than the Meveo module
     	boolean belongsToModule = existingItems.stream().anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo") && !item.getMeveoModule().getCode().equals(module.getCode()));
     	if (belongsToModule) {
-    		throw new IllegalArgumentException(meveoModuleItem.toString() + " already belongs to module " + existingItems.get(0).getMeveoModule().getCode());
+    		throw new EntityAlreadyLinkedToModule(meveoModuleItem, existingItems.get(0).getMeveoModule());
     	}
     	
     	MeveoModule meveoModule = this.findByCode("Meveo");
