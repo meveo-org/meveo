@@ -97,42 +97,14 @@ public class CustomEntityTemplateCompiler {
         return javaFile;
 	}
 
-    /**
-     * Create the java source file for a given CET
-     * 
-     * @param templateSchema the json schema of the CET
-     * @param cet The custom entity template
-     * @return the java source file
-     * @throws BusinessException if the file can't be written
-     */
-	public File generateCETSourceFile(String templateSchema, CustomEntityTemplate cet) throws BusinessException {
-		log.info("Generating source file for {}", cet);
-		
-		final File cetJavaDir = getJavaCetDir(cet);
-        final CompilationUnit compilationUnit = jsonSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(templateSchema, cet);
-        File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
-        if (javaFile.exists()) {
-            javaFile.delete();
-        }
-        
-        try {
-			FileUtils.write(javaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			throw new BusinessException("Can't write to file", e);
-		}
-        
-        return javaFile;
-	}
-	
 	/**
 	 * @return the directory where custom entity templates source files are stored
 	 */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public File getJsonCetDir(CustomEntityTemplate cet) {
+	public File getJsonCetDir(CustomEntityTemplate cet, MeveoModule module) {
     	String path;
     	File repositoryDir;
     	BusinessService businessService = businessServiceFinder.find(cet);
-    	MeveoModule module = businessService.findModuleOf(cet);
     	if (module == null) {
 	        repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/json/");
 	        path = "";
@@ -144,11 +116,10 @@ public class CustomEntityTemplateCompiler {
    	}
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public File getJavaCetDir(CustomEntityTemplate cet) {
+	public File getJavaCetDir(CustomEntityTemplate cet, MeveoModule module) {
     	String path;
     	File repositoryDir;
     	BusinessService businessService = businessServiceFinder.find(cet);
-    	MeveoModule module = businessService.findModuleOf(cet);
     	if (module == null) {
     		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/java/");
     		path = "org/meveo/model/customEntities";//+ cet.getClass().getAnnotation(ModuleItem.class).path();
