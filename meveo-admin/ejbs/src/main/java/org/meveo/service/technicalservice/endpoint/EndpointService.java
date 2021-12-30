@@ -205,19 +205,9 @@ public class EndpointService extends BusinessService<Endpoint> {
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode()+" in the module: "+ module.getCode());
 	}
 	
-	@Override
-	public void removeFilesFromModule(Endpoint entity, MeveoModule module) throws BusinessException {
-		super.removeFilesFromModule(entity, module);
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
-    	File jsFile = new File (gitDirectory, path);
-    	jsFile.delete();
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), "Remove JS script for Endpoint: " + entity.getCode());
-	}
-
 	private void validatePath(Endpoint entity) throws BusinessException {
 		/* check that the path is valid */
 		if (entity.getPath() != null) {

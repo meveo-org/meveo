@@ -503,19 +503,20 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
     }
 
 	@Override
-	public void addFilesToModule(CustomEntityInstance entity, MeveoModule module) throws BusinessException {
+	protected void persistJsonFileInModule(CustomEntityInstance entity, MeveoModule module, boolean isCreation) throws BusinessException {
 		String cetCode = entity.getCetCode();
 		
 		String ceiJson = JacksonUtil.toStringPrettyPrinted(entity.getCfValuesAsValues());
 		
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+		MeveoModule meveoModule = meveoModuleService.findById(module.getId());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, meveoModule.getCode());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
     	File newDir = new File(gitDirectory, path);
-    	newDir.mkdirs();
+    	boolean check = newDir.mkdirs();
     	
     	File newJsonFile = new File(gitDirectory, path + "/" + entity.getCode() + ".json");
     	try {
-    		if (!newJsonFile.exists()) {
+    		if (isCreation) {
     			newJsonFile.createNewFile();
     		}
     		
@@ -524,7 +525,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+		gitClient.commitFiles(meveoModule.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
 	}
     
     

@@ -61,7 +61,7 @@ import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.PostRemoved;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -166,7 +166,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	protected Event<BaseEntity> entityUpdatedAfterTxEventProducer;
 	
 	@Inject
-	@PostRemoved
+	@RemovedAfterTx
 	protected Event<BaseEntity> entityRemovedAfterTxEventProducer;
 
 	@Inject

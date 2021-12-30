@@ -47,7 +47,6 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.RemoteRepository;
@@ -56,7 +55,6 @@ import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
@@ -115,9 +113,6 @@ public class StartupListener {
     
     @Inject
     private Neo4jConnectionProvider neo4jConnectionProvider;
-    
-    @Inject
-    private MeveoModuleService meveoModuleService;
     
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -178,7 +173,7 @@ public class StartupListener {
 							false,
 							GitRepositoryService.MEVEO_DIR.getDefaultRemoteUsername(),
 							GitRepositoryService.MEVEO_DIR.getClearDefaultRemotePassword());
-					
+
 					log.info("Created Meveo GIT repository");
 
 				} catch (BusinessException e) {
@@ -196,12 +191,6 @@ public class StartupListener {
 				} catch (BusinessException e) {
 					log.error("Cannot create Meveo Git folder", e);
 				}
-			}
-			
-			try {
-				createMeveoModule(meveoRepo);
-			} catch (BusinessException e2) {
-				log.error("Failed to create main Meveo module");
 			}
 			
 			// Generate .gitignore file
@@ -317,20 +306,6 @@ public class StartupListener {
 		sqlConfiguration.setInitialized(true);
 		
 		return sqlConfiguration;
-	}
-	
-	private void createMeveoModule(GitRepository meveoRepository) throws BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCode("Meveo");
-		if (meveoModule == null) {
-			meveoModule = new MeveoModule();
-			meveoModule.setCode("Meveo");
-			meveoModule.setCurrentVersion("1.0.0");
-			meveoModule.setInstalled(true);
-			meveoModule.setDescription("Main module");
-			meveoModule.setGitRepository(meveoRepository);
-			meveoModuleService.create(meveoModule);
-		}
-		
 	}
 
 }

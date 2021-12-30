@@ -19,6 +19,6 @@ import javax.inject.Qualifier;
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.12
  */
-public @interface PostRemoved {
+public @interface RemovedAfterTx {
 
 }

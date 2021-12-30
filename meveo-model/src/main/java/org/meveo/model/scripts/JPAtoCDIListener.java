@@ -14,6 +14,7 @@ import org.meveo.event.qualifier.BeforeAnyUpdate;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.event.qualifier.RemovedAfterTx;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.BaseEntity;
@@ -53,7 +54,7 @@ public class JPAtoCDIListener {
 	protected Event<Object> entityUpdatedAfterTxEventProducer;
 	
 	@Inject
-	@org.meveo.event.qualifier.PostRemoved
+	@RemovedAfterTx
 	protected Event<Object> entityRemovedAfterTxEventProducer;
 	
 

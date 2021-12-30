@@ -20,6 +20,7 @@
 package org.meveo.service.admin.impl;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -61,7 +62,6 @@ import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.exception.EntityAlreadyLinkedToModule;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
@@ -369,15 +369,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	// Throw an error if the item belongs to another module other than the Meveo module
     	boolean belongsToModule = existingItems.stream().anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo") && !item.getMeveoModule().getCode().equals(module.getCode()));
     	if (belongsToModule) {
-    		throw new EntityAlreadyLinkedToModule(meveoModuleItem, existingItems.get(0).getMeveoModule());
+    		throw new IllegalArgumentException(meveoModuleItem.toString() + " already belongs to module " + existingItems.get(0).getMeveoModule().getCode());
     	}
-    	
-    	MeveoModule meveoModule = this.findByCode("Meveo");
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
     	if (existingItems.isEmpty() || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     			module.getModuleItems().add(meveoModuleItem);
     			meveoModuleItem.setMeveoModule(module);
     		} catch (BusinessException | IOException e2) {
@@ -385,7 +383,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		}
     	} else {
     		try {
-    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
+    		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), module);
     		    MeveoModule moduleToRemove = businessService.findModuleOf(meveoModuleItem.getItemEntity());
     		    moduleToRemove.removeItem(meveoModuleItem);
     		    module.getModuleItems().add(meveoModuleItem);
@@ -920,17 +918,21 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		// Generate maven facet if file does not exists yet
 		mavenConfigurationService.createDefaultPomFile(module.getCode());
 	}
-	
-	
     
-    @Override
-	public void remove(MeveoModule meveoModule) throws BusinessException {
-		super.remove(meveoModule);
-		
+    /**
+     * Remove the GitRepository corresponding to the meveo module deleted
+     * 
+     * @param meveoModule meveo module removed
+     * @throws BusinessException business exception
+     */
+    public void onMeveoModuleRemoved (@Observes @Removed MeveoModule meveoModule) throws BusinessException {
     	if (meveoModule.getGitRepository() != null) {
-			this.gitRepositoryService.remove(meveoModule.getGitRepository());
+    		var repo = meveoModule.getGitRepository();
+    		if  (repo.getId() != null) {
+    			this.gitRepositoryService.remove(repo.getId());
+    		}
     	}
-	}
+    }
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
 		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));

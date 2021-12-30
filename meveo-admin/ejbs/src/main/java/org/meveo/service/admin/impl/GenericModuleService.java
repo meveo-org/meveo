@@ -109,10 +109,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
         } else if (CustomEntityInstance.class.getName().equals(item.getItemClass()) && item.getAppliesTo() != null) {
             CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
-            if (customEntityTemplate == null) {
-            	return;
-            }
-            
             Map<String, Object> ceiTable;
             
         	try {
@@ -191,9 +187,9 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
             try {
                 entity = query.getSingleResult();
-            } catch (NoResultException e) {
-            	return;
-            } catch (NonUniqueResultException e) {
+                
+            } catch (NoResultException | NonUniqueResultException e) {
+                log.error("Failed to find a module item {}. Reason: {}. This item will be removed from module", item, e.getClass().getSimpleName());
                 return;
             } catch (Exception e) {
                 log.error("Failed to find a module item {}", item, e);
@@ -201,7 +197,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             }
         }
         
-        // getEntityManager().detach(entity);
         item.setItemEntity(entity);
     }
     
