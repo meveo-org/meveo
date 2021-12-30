@@ -186,4 +186,8 @@ The inbound request's response (part of http response code 200) can be enriched 
 * response body - content to send as response body
 
 Note: Inbound request processing is available with Script type notifications ONLY.
- 
+
+
+## Integration with modules
+
+When a notification is installed using a module, it won't be triggered for the entities of the module during the installation
