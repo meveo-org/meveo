@@ -185,7 +185,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public boolean isModuleRepository() {
 		File gitDir = GitHelper.getRepositoryDir(currentUser, entity.getCode());
 		if (gitDir.exists() && gitDir.isDirectory()) {
-			return Arrays.stream(gitDir.list()).anyMatch("module.json"::equals);
+			return Arrays.stream(gitDir.list()).anyMatch((entity.getCode() + ".json")::equals);
 		}
 		return false;
 	}
