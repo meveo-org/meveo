@@ -46,6 +46,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.ObservableEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.mediation.MeveoFtpFile;
 import org.meveo.model.module.MeveoModule;
@@ -313,58 +314,93 @@ public class DefaultObserver {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onEntityRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} after tx removed", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
+		
 		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onEntityCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} after tx created", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
+		
 		checkEvent(NotificationEventTypeEnum.CREATED, e, true);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onEntityUpdated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @UpdatedAfterTx BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} after tx updated", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.UPDATED, e, true);
 	}
 	
 	public void onEntityCreate(@Observes @Created BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} created", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.CREATED, e);
 	}
 
 	public void onEntityUpdate(@Observes @Updated BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} updated", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.UPDATED, e);
 	}
 
 	public void onEntityRemove(@Observes(during = TransactionPhase.BEFORE_COMPLETION) @Removed BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} removed", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.REMOVED, e);
 	}
 
 	public void onEntityDisable(@Observes @Disabled BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} disabled", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.DISABLED, e);
 	}
 
 	public void onEntityEnable(@Observes @Enabled BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} enabled", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.ENABLED, e);
 	}
 
 	public void onEntityTerminate(@Observes @Terminated BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} terminated", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.TERMINATED, e);
 	}
 
 	public void onEntityProcess(@Observes @Processed BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} processed", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.PROCESSED, e);
 	}
 
 	public void onEntityRejecte(@Observes @Rejected BaseEntity e) throws BusinessException {
 		log.debug("Defaut observer : Entity {} with id {} rejected", e.getClass().getName(), e.getId());
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+			return;
+		}
 		checkEvent(NotificationEventTypeEnum.REJECTED, e);
 	}
 
