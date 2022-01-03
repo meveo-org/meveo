@@ -147,21 +147,21 @@
                 </ui:define>
             </hftl:decorateFormPanel>
         </p:dialog>
-        <p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="150" width="400">
+        <p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="250" width="400">
             <h:form id="deleteDialogForm">
                 <h:panelGrid id="deleteFile" columns="1">
                     #{messages['commons.confirmDelete']}
-                    <hftl:decorateFormField label="#{messages['meveoModule.deleteFiles']}" fieldId="deleteFiles" componentWidth="70">
+                    <hftl:decorateFormField label="#{messages['meveoModule.deleteFiles']}" fieldId="deleteFiles" componentWidth="100">
                         <p:selectBooleanCheckbox id="deleteFiles" value="#{meveoModuleListBean.moduleUninstall.removeFiles}" >
                             <p:ajax event="change" update=":deleteDialogForm:deleteFile" />
                         </p:selectBooleanCheckbox>
                     </hftl:decorateFormField>
-                    <hftl:decorateFormField label="#{messages['meveoModule.removeData']}" fieldId="removeData" componentWidth="70">
+                    <hftl:decorateFormField label="#{messages['meveoModule.removeData']}" fieldId="removeData" componentWidth="100">
                         <p:selectBooleanCheckbox id="removeData" value="#{meveoModuleListBean.moduleUninstall.removeData}" >
                             <p:ajax event="change" update=":deleteDialogForm:removeData" />
                         </p:selectBooleanCheckbox>
                     </hftl:decorateFormField>
-                    <hftl:decorateFormField label="#{messages['meveoModule.removeItems']}" fieldId="removeItems" componentWidth="70">
+                    <hftl:decorateFormField label="#{messages['meveoModule.remove']}" fieldId="removeItems" componentWidth="100">
                         <p:selectBooleanCheckbox id="removeItems" value="#{meveoModuleListBean.moduleUninstall.removeItems}" >
                             <p:ajax event="change" update=":deleteDialogForm:removeItems" />
                         </p:selectBooleanCheckbox>

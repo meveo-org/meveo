@@ -78,6 +78,9 @@ public class ModuleUninstall {
 		return opts;
 	}
 	
+	
+	
+
 	public static ModuleUninstallBuilder builder() {
 		return new ModuleUninstallBuilder();
 	}
@@ -92,7 +95,6 @@ public class ModuleUninstall {
 		opts.moduleCode = options.moduleCode == null && options.module != null ? options.module.getCode() : null;
 		return new ModuleUninstallBuilder(opts);
 	}
-	
 	
 	public static class ModuleUninstallBuilder {
 		ModuleUninstall options;
@@ -163,6 +165,91 @@ public class ModuleUninstall {
 			}
 			
 			return options;
+		}
+		
+
+		/**
+		 * @return the {@link #removeFiles}
+		 */
+		public boolean isRemoveFiles() {
+			return options.removeFiles;
+		}
+
+		/**
+		 * @param removeFiles the removeFiles to set
+		 */
+		public void setRemoveFiles(boolean removeFiles) {
+			this.options.removeFiles = removeFiles;
+		}
+
+		/**
+		 * @return the {@link #removeData}
+		 */
+		public boolean isRemoveData() {
+			return options.removeData;
+		}
+
+		/**
+		 * @param removeData the removeData to set
+		 */
+		public void setRemoveData(boolean removeData) {
+			this.options.removeData = removeData;
+		}
+
+		/**
+		 * @return the {@link #removeItems}
+		 */
+		public boolean isRemoveItems() {
+			return options.removeItems;
+		}
+
+		/**
+		 * @param removeItems the removeItems to set
+		 */
+		public void setRemoveItems(boolean removeItems) {
+			this.options.removeItems = removeItems;
+		}
+
+		/**
+		 * @return the {@link #childModule}
+		 */
+		public boolean isChildModule() {
+			return options.childModule;
+		}
+
+		/**
+		 * @param childModule the childModule to set
+		 */
+		public void setChildModule(boolean childModule) {
+			this.options.childModule = childModule;
+		}
+
+		/**
+		 * @return the {@link #module}
+		 */
+		public MeveoModule getModule() {
+			return options.module;
+		}
+
+		/**
+		 * @param module the module to set
+		 */
+		public void setModule(MeveoModule module) {
+			this.options.module = module;
+		}
+
+		/**
+		 * @return the {@link #moduleCode}
+		 */
+		public String getModuleCode() {
+			return options.moduleCode;
+		}
+
+		/**
+		 * @param moduleCode the moduleCode to set
+		 */
+		public void setModuleCode(String moduleCode) {
+			this.options.moduleCode = moduleCode;
 		}
 		
 	}
