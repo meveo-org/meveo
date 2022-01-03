@@ -49,6 +49,7 @@ import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.ModulePostUninstall;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
@@ -67,6 +68,7 @@ import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
+import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
@@ -137,41 +139,20 @@ public class MeveoModuleItemInstaller {
 	@Inject
 	private Repository currentRepository;
 	
-    /**
-     * Uninstall the module and disables it items
-     * 
-     * @param module the module to uninstall
-     * @return the uninstalled module
-     * @throws BusinessException if an error occurs
-     */
-    public MeveoModule uninstall(MeveoModule module) throws BusinessException {
-        return uninstall(module, false, false);
-    }
-
+	@Inject
+	@ModulePostUninstall
+	private Event<ModuleUninstall> uninstallEvent;
+	
 	/**
 	 * Uninstall the module and disables it items
 	 * 
-	 * @param module      the module to uninstall
-	 * @param removeItems if true, module items will be deleted and not disabled
-	 * @return the uninstalled module
-	 * @throws BusinessException if an error occurs
-	 */
-    public MeveoModule uninstall(MeveoModule module, boolean removeItems) throws BusinessException {
-        return uninstall(module, false, removeItems);
-    }
-
-	/**
-	 * Uninstall the module and disables it items
-	 * 
-	 * @param module      the module to uninstall
-	 * @param childModule whether the module is a child module
-	 * @param removeItems if true, module items will be deleted and not disabled
+	 * @param options The parameters to use during uninstall
 	 * @return the uninstalled module
 	 * @throws BusinessException if an error occurs
 	 */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private MeveoModule uninstall(MeveoModule module, boolean childModule, boolean removeItems) throws BusinessException {
-
+    public MeveoModule uninstall(ModuleUninstall options) throws BusinessException {
+    	MeveoModule module = options.module();
         ModuleScriptInterface moduleScript = null;
         if (module.getScript() != null) {
             moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
@@ -212,7 +193,10 @@ public class MeveoModuleItemInstaller {
             
             try {
                 if (itemEntity instanceof MeveoModule) {
-                    uninstall((MeveoModule) itemEntity, true, removeItems);
+                	var childOptions = ModuleUninstall.builder(options)
+                			.childModule(true)
+                			.module((MeveoModule) itemEntity);
+                    uninstall(childOptions.build());
                 } else if(itemEntity instanceof CustomFieldTemplate) {
                 	customFieldTemplateApi.remove(itemEntity.getCode(), ((CustomFieldTemplate) itemEntity).getAppliesTo());
                 } else if(itemEntity instanceof EntityCustomAction) {
@@ -229,7 +213,7 @@ public class MeveoModuleItemInstaller {
                         continue;
                     }
                     
-                    if(removeItems) {
+                    if(options.removeItems()) {
 						// Handle case where the install script is bundled in the module items
 						if(moduleScript != null && itemEntity.getCode().equals(moduleScript.getClass().getName())) {
 							scriptInstanceService.disable((ScriptInstance) itemEntity);
@@ -308,14 +292,15 @@ public class MeveoModuleItemInstaller {
         	}
         }
 
+        MeveoModule moduleUpdated;
         // Remove if it is a child module
-        if (childModule) {
+        if (options.childModule()) {
         	meveoModuleService.remove(module);
-            return null;
+        	moduleUpdated = null;
 
         // Otherwise mark it uninstalled and clear module items
         } else {
-            MeveoModule moduleUpdated = module;
+            moduleUpdated = module;
             module.setInstalled(false);
             // moduleUpdated.getModuleItems().clear();
 
@@ -326,9 +311,10 @@ public class MeveoModuleItemInstaller {
             	moduleUpdated = meveoModuleService.update(module);
             }
             
-			return moduleUpdated;
         }
         
+        uninstallEvent.fire(options);
+        return moduleUpdated;
     }
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
@@ -399,7 +385,7 @@ public class MeveoModuleItemInstaller {
 
     	if(dto instanceof MeveoModuleDto) {
         	MeveoModule subModule = meveoModuleService.findByCodeWithFetchEntities(((MeveoModuleDto) dto).getCode());
-    		uninstall(subModule);
+    		uninstall(ModuleUninstall.of(subModule));
     		
     	} else if(dto instanceof CustomFieldTemplateDto) {
     		try {

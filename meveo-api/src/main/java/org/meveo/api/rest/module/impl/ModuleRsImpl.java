@@ -45,6 +45,7 @@ import org.meveo.api.rest.module.ModuleRs;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
+import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.git.GitRepositoryService;
 
 /**
@@ -91,10 +92,10 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public ActionStatus delete(String code, boolean deleteFiles) {
+    public ActionStatus delete(String code, ModuleUninstall moduleUninstall) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
         try {
-            moduleApi.delete(code, deleteFiles);
+            moduleApi.delete(code, moduleUninstall);
         } catch (Exception e) {
             processException(e, result);
         }
@@ -174,7 +175,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.uninstall(code, MeveoModule.class, remove);
+            moduleApi.uninstall(MeveoModule.class, ModuleUninstall.of(code));
 
         } catch (Exception e) {
             processException(e, result);
