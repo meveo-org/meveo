@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -16,11 +15,11 @@ import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.PrimaryKeyJoinColumn;
@@ -74,10 +73,9 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
     
-    @Lob() @Basic(fetch=FetchType.LAZY)
-    @Column(name = "module_source", table = "meveo_module_source", columnDefinition = "TEXT")
-    @Type(type = "org.hibernate.type.TextType")
-    private String moduleSource;
+    @OneToOne(mappedBy = "meveoModuleSource")
+    @JoinColumn(name = "module_source")
+    private MeveoModuleSource moduleSource;
     /**
      * A list of order items. Not modifiable once started processing.
      */
@@ -220,11 +218,13 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     }
 
     public void setModuleSource(String moduleSource) {
-        this.moduleSource = moduleSource;
+        MeveoModuleSource meveoModuleSource = new MeveoModuleSource();
+        meveoModuleSource.setModuleSource(moduleSource);
+        this.moduleSource = meveoModuleSource;
     }
 
     public String getModuleSource() {
-        return moduleSource;
+        return this.moduleSource.getModuleSource();
     }
 
     public boolean isDownloaded() {
