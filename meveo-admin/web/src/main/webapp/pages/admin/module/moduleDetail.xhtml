@@ -292,10 +292,15 @@
                     	message="#{messages['meveoModule.confirmUninstall']}" 
                     	header="#{messages['meveoModule.uninstall']}">
                        		<h:panelGrid columns="1" cellpadding="5">
-                    			<h:outputLabel for="remove" value="Remove items : " />
-                       			<p:selectBooleanButton value="#{meveoModuleBean.remove}" id="remove" 
+                       			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeItems}" id="remove" 
                        				onIcon="ui-icon-check" offIcon="ui-icon-close"
                        				offLabel="Disable items" onLabel="Remove items"/>
+                    			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeData}"
+                    				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                    				offLabel="Keep custom tables" onLabel="Delete custom tables"/>
+                    			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeFiles}"
+                    				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                    				offLabel="Keep module files" onLabel="Delete module files"/>
                        		</h:panelGrid>
 
  	                       <h:form style="float: right">

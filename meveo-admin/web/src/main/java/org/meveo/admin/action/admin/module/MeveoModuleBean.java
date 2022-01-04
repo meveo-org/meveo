@@ -105,6 +105,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	private String selectedFolder;
 	private String selectedFileName;
 	private boolean currentDirEmpty;
+	private boolean removeDataSchema;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -114,6 +115,23 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		super(MeveoModule.class);
 	}
 	
+	
+	/**
+	 * @return the {@link #removeDataSchema}
+	 */
+	public boolean isRemoveDataSchema() {
+		return removeDataSchema;
+	}
+
+	/**
+	 * @param removeDataSchema the removeDataSchema to set
+	 */
+	public void setRemoveDataSchema(boolean removeDataSchema) {
+		this.removeDataSchema = removeDataSchema;
+	}
+
+
+
 	@Override
 	public BaseCrudApi<MeveoModule, MeveoModuleDto> getBaseCrudApi() {
 		return meveoModuleApi;

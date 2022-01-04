@@ -13,6 +13,15 @@ code .
 
 This will open vscode and since the repo contain a `.devcontainer/devcontainer.json` vscode will propose you to be reopened in a container.
 
+If you just want to run meveo locally you can simply run the docker-compose file :
+```
+cd .devcontainer
+docker-compose up -d
+```
+
+then open in browser `http://localhost:8080/meveo` and login `meveo.admin/meveo`
+
+
 by default it will build the image completely but if you are working on the master branch (or a branch you created from it) then you can speedup
 the build by changing in `.devcontainer/docker-compose.yml` the following lines
 ```

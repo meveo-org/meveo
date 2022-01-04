@@ -28,20 +28,4 @@ public class PermissionRsImpl extends BaseRs implements PermissionRs {
         return result;
     }
 
-	public void addToWhiteList(String permission, String id, String role) {
-		permissionApi.addToWhiteList(permission, id, role);
-	}
-
-	public void addToBlackList(String permission, String id, String role) {
-		permissionApi.addToBlackList(permission, id, role);
-	}
-
-	public void removeFromWhiteList(String permission, String id, String role) {
-		permissionApi.removeEntityPermission(permission, id, role);
-	}
-
-	public void removeFromBlackList(String permission, String id, String role) {
-		permissionApi.removeEntityPermission(permission, id, role);
-	}
-
 }

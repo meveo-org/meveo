@@ -168,15 +168,9 @@ public class CurrentUserProvider {
 
         MeveoUserKeyCloakImpl user;
 
-        long start = System.currentTimeMillis();
         List<Role> availableRoles = em.createQuery("select distinct r from org.meveo.model.security.Role r LEFT JOIN r.permissions p ",
-//        		+ "where not r.name like 'CET%' and not r.name like 'CRT%'", 
         		Role.class)
         		.getResultList();
-        
-        // Aggregate whitelists and blacklists
-        Map<String, List<String>> whiteList = new HashMap<>();
-        Map<String, List<String>> blackList = new HashMap<>();
         
         Set<String> additionalRoles = getAdditionalRoles(username, em);
         
@@ -198,37 +192,13 @@ public class CurrentUserProvider {
             }
         }
         
-        try {
-        	availableRoles.forEach(role -> {
-        		if(!role.getName().startsWith("CET") && ! role.getName().startsWith("CRT") && allRoles.contains(role.getName())) {
-        			
-	        		Map<String, List<String>> roleWhiteList = getWhiteList(em, role);
-	        		Map<String, List<String>> roleBlacklist = getBlackList(em, role);
-	        		
-	        		roleWhiteList.forEach((permission, ids) -> {
-	        			whiteList.computeIfAbsent(permission, p -> new ArrayList<>()).addAll(ids);
-	        		});
-	        		
-	        		roleBlacklist.forEach((permission, ids) -> {
-	        			blackList.computeIfAbsent(permission, p -> new ArrayList<>()).addAll(ids);
-	        		});
-        		}
-
-        	});
-        	
-        } catch(Exception e) {
-        	log.error("Error retrieve black and white list of user {}", username, e);
-        }
-        
         // User was forced authenticated, so need to lookup the rest of user information
 		if (!(ctx.getCallerPrincipal() instanceof KeycloakPrincipal) && getForcedUsername() != null) {
             user = new MeveoUserKeyCloakImpl(ctx, 
             		getForcedUsername(), 
             		getCurrentTenant(), 
             		additionalRoles, 
-            		getRoleToPermissionMapping(providerCode, em, availableRoles),
-            		whiteList,
-            		blackList
+            		getRoleToPermissionMapping(providerCode, em, availableRoles)
         		);
 
         } else {
@@ -236,9 +206,7 @@ public class CurrentUserProvider {
             		null, 
             		null, 
             		additionalRoles, 
-            		getRoleToPermissionMapping(providerCode, em, availableRoles),
-            		whiteList,
-            		blackList
+            		getRoleToPermissionMapping(providerCode, em, availableRoles)
         		);
         }
         

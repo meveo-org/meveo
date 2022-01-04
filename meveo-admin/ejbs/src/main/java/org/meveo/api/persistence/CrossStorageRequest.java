@@ -19,6 +19,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.primefaces.model.SortOrder;
 
 /**
  * 
@@ -70,6 +71,12 @@ public class CrossStorageRequest<T> {
 		return this;
 	}
 	
+	public CrossStorageRequest<T> orderBy(String orderField,boolean ascending){
+		this.configuration.setSortField(orderField);
+		this.configuration.setOrdering(ascending ? SortOrder.ASCENDING:SortOrder.DESCENDING);
+		return this;
+	}
+
 	/**
 	 * Filters the results on the given field, applying a LIKE query
 	 * 

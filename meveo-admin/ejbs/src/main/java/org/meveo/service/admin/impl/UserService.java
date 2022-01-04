@@ -38,10 +38,8 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.admin.User;
 import org.meveo.model.filter.Filter;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
-import org.meveo.model.security.DefaultPermission;
 import org.meveo.model.security.Role;
 import org.meveo.model.storage.Repository;
-import org.meveo.security.permission.RequirePermission;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
@@ -65,7 +63,6 @@ public class UserService extends PersistenceService<User> {
     private RepositoryService repositoryService;
 
     @Override
-	@RequirePermission(oneOf = { DefaultPermission.USER_MANAGEMENT, DefaultPermission.USER_SELF_MANAGEMENT })
     public void create(User user) throws UsernameAlreadyExistsException, BusinessException {
 
         if (isUsernameExists(user.getUserName())) {
@@ -78,7 +75,6 @@ public class UserService extends PersistenceService<User> {
     }
 
     @Override
-	@RequirePermission(oneOf = { DefaultPermission.USER_MANAGEMENT, DefaultPermission.USER_SELF_MANAGEMENT })
     public User update(User user) throws UsernameAlreadyExistsException, BusinessException {
         if (isUsernameExists(user.getUserName(), user.getId())) {
             getEntityManager().refresh(user);
@@ -91,7 +87,6 @@ public class UserService extends PersistenceService<User> {
     }
 
     @Override
-	@RequirePermission(oneOf = { DefaultPermission.USER_MANAGEMENT, DefaultPermission.USER_SELF_MANAGEMENT })
     public void remove(User user) throws BusinessException {
         super.remove(user);
     }

@@ -34,6 +34,7 @@ import org.meveo.api.module.OnDuplicate;
 import org.meveo.api.ws.ModuleWs;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
+import org.meveo.service.admin.impl.ModuleUninstall;
 
 /**
  * @author Clément Bareth
@@ -147,7 +148,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.uninstall(code, MeveoModule.class, false);
+            moduleApi.uninstall(MeveoModule.class, ModuleUninstall.of(code));
 
         } catch (Exception e) {
             processException(e, result);

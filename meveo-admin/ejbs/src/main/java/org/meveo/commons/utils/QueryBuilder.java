@@ -881,8 +881,11 @@ public class QueryBuilder {
     public String convertFieldToParam(String fieldname) {
         fieldname = fieldname.replace(".", "_").replace("(", "_").replace(")", "_");
         StringBuilder newField = new StringBuilder(fieldname);
-        while (params.containsKey(newField.toString())) {
-            newField = new StringBuilder(fieldname).append("_" + String.valueOf(new Random().nextInt(100)));
+        if (params.containsKey(newField.toString())) {
+            int randInt = new Random().nextInt(100);
+            do {
+                newField = new StringBuilder(fieldname).append("_" + randInt++);
+            } while(params.containsKey(newField.toString()));
         }
         return newField.toString();
     }

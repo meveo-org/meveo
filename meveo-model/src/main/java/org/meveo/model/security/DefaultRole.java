@@ -11,7 +11,8 @@ public enum DefaultRole {
 	CUSTOMER_CARE_USER("CUSTOMER_CARE_USER", -6L),
 	GIT_ADMIN("gitAdmin", -7L),
 	MODIFY_ALL_CR("ModifyAllCR", -8L),
-	READ_ALL_CR("ReadAllCR", -9L);
+	READ_ALL_CR("ReadAllCR", -9L),
+	EXECUTE_ALL_ENDPOINTS("Execute_All_Endpoints", -10L);
 	
 	private String roleName;
 	private Long id;

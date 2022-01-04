@@ -8,8 +8,8 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.model.scripts.CustomScript;
 import org.meveo.service.script.ScriptInterface;
-import org.python.core.PyCode;
 import org.python.util.PythonInterpreter;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +21,13 @@ import org.slf4j.LoggerFactory;
  */
 public class PythonScriptEngine implements ScriptInterface {
 	
-    private String script;
+    private CustomScript script;
     private AtomicBoolean isInterrupted = new AtomicBoolean(false);
     public Map<String, Object> methodContext;
     private String code;
 	
-    public PythonScriptEngine(String script, String code) {
+    public PythonScriptEngine(CustomScript script) {
         this.script = script;
-        this.code = code;
-        
-
-        
     }
 
 	@Override
@@ -59,7 +55,7 @@ public class PythonScriptEngine implements ScriptInterface {
         	interp.set("require", null); //TODO: python module imports
         	
         	
-        	interp.exec(script);
+        	interp.exec(script.getScript());
         }
         
 	}

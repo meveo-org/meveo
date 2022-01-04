@@ -1,7 +1,6 @@
 package org.meveo.model.security;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Cacheable;
@@ -14,7 +13,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.QueryHint;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -69,31 +67,8 @@ public class Role extends BaseEntity {
     @JoinTable(name = "adm_role_role", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "child_role_id"))
     private Set<Role> roles = new HashSet<Role>();
     
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
-    private List<WhiteListEntry> whiteList;
-    
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
-    private List<BlackListEntry> blackList;
-
     public Role() {
     }
-
-
-	public List<WhiteListEntry> getWhiteList() {
-		return whiteList;
-	}
-
-	public void setWhiteList(List<WhiteListEntry> whiteList) {
-		this.whiteList = whiteList;
-	}
-
-	public List<BlackListEntry> getBlackList() {
-		return blackList;
-	}
-
-	public void setBlackList(List<BlackListEntry> blackList) {
-		this.blackList = blackList;
-	}
 
 	public String getName() {
         return name;

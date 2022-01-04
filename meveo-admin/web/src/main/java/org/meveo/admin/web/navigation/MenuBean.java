@@ -102,7 +102,7 @@ public class MenuBean implements Serializable {
 		
 		DefaultSubMenu tests = addSubMenu(services, "tests", "menu.tests");
 		addItem(tests, "testResults", "menu.function.tests", "allTests");
-		addItem(tests, "categoryTests", "menu.funciton.category.tests", "testsByCategory");
+		addItem(tests, "categoryTests", "menu.function.category.tests", "testsByCategory");
 		
 		addItem(services, "workflows", "menu.workflow");
 		addItem(services, "filters", "menu.filters");

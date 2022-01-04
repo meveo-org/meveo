@@ -179,8 +179,19 @@ if you need the original body you can retrieve it from the `REQUEST_BODY` parame
 	
 ## JSONata
 
-In the field  jsonataTransformer  you can provide a JSONata expression to transform the output ofthe endpoint.
+In the field  jsonataTransformer  you can provide a JSONata expression to transform the output of the endpoint.
 	
 ## OpenAPI definition
 	
 Go to ```GET /meveo/api/rest/endpoint/openApi/{code}```
+
+## Access management
+
+To execute a secure endpoint (secured = true), a user needs to have the corresponding permission. The name of this permission follows the pattern `Execute_Endpoint_{endpointCode}`.
+It is generated whenever we create a secured endpoint.
+
+When we update an endpoint from secure to unsecure, the permission is deleted. Inversely, from unesecure to secure, the permission is created.
+
+Once the permission is created, it is added to the role `Execute_All_Endpoints`. This role also belongs by default to the `administrateur` role.
+
+It is possible to completely disable endpoint security by setting the meveo-admin property `endpointSecurityEnabled` to `false`

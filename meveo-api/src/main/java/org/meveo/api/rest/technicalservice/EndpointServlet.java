@@ -31,7 +31,6 @@ import java.util.concurrent.Future;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -49,12 +48,9 @@ import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.security.DefaultPermission;
-import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
-import org.meveo.security.permission.RequirePermission;
 import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
@@ -95,7 +91,6 @@ public class EndpointServlet extends HttpServlet {
     private EndpointExecutionFactory endpointExecutionFactory;
 
     @Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
 
@@ -108,13 +103,11 @@ public class EndpointServlet extends HttpServlet {
     }
 
     @Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doPutPost(req, resp,EndpointHttpMethod.POST);
     }
 
     @Override
-    @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doPutPost(req, resp,EndpointHttpMethod.PUT);
     }
@@ -162,7 +155,6 @@ public class EndpointServlet extends HttpServlet {
     }
 
     @Override
-	@RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
@@ -174,7 +166,6 @@ public class EndpointServlet extends HttpServlet {
     }
 
     @Override
-    @RequirePermission(value = DefaultPermission.EXECUTE_ENDPOINT, orRole = DefaultRole.ADMIN)
     protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)

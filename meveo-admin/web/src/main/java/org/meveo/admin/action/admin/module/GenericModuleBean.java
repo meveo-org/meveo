@@ -69,6 +69,8 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.admin.impl.ModuleUninstall.ModuleUninstallBuilder;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
@@ -122,6 +124,9 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     // Properties used to force user to reload page between installation and uninstallation
     private boolean showInstallBtn;
 	private boolean showUninstallBtn;
+	
+	protected ModuleUninstallBuilder moduleUninstall = ModuleUninstall.builder();
+	
 
     public GenericModuleBean() {
 
@@ -136,8 +141,22 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     public void init() {
         root = new DefaultTreeNode("Root");
     }
+    
+    /**
+	 * @return the {@link #moduleUninstall}
+	 */
+	public ModuleUninstallBuilder getModuleUninstall() {
+		return moduleUninstall;
+	}
 
-    public OnDuplicate getOnDuplicate() {
+	/**
+	 * @param moduleUninstall the moduleUninstall to set
+	 */
+	public void setModuleUninstall(ModuleUninstallBuilder moduleUninstall) {
+		this.moduleUninstall = moduleUninstall;
+	}
+
+	public OnDuplicate getOnDuplicate() {
 		return onDuplicate;
 	}
 
@@ -721,7 +740,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return;
             }
 
-            entity = (T) moduleApi.uninstall(entity.getCode(), MeveoModule.class, remove);
+            moduleUninstall.module(entity);
+            entity = (T) moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {

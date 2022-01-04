@@ -39,6 +39,7 @@ import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.ModuleUninstall;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
@@ -70,7 +71,8 @@ public class MeveoModuleListBean extends MeveoModuleBean {
 		entity = meveoModuleService.findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 		if(entity.isInstalled()) {
 			try {
-				moduleApi.uninstall(entity.getCode(), MeveoModule.class, true);
+				moduleUninstall.module(entity);
+				moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
 			} catch (MeveoApiException e) {
 				throw new BusinessException(e);
 			}

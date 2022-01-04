@@ -70,4 +70,14 @@ for (let cet of cetList) {
 }
 
 const testFunction = requireFunction("org.meveo.script.DefaultScript");
-testFunction.execute(methodContext);```
+testFunction.execute(methodContext);
+```
+
+### Defining outputs
+
+Currently, every output has to be defined manually. 
+
+To write an output there is two ways : 
+* either write in the methodContext map : `methodContext.put('outputname', outputvalue)` 
+* or just declare a variable with the same name than the output : `var outputname = outputvalue`
+
