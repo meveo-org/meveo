@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -20,15 +19,17 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
@@ -59,6 +60,7 @@ import org.meveo.model.scripts.ScriptInstance;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_module_seq"), })
 @NamedQueries({@NamedQuery(name = "MeveoModule.deleteModule", query = "DELETE from MeveoModule m where m.id=:id and m.version=:version")})
 @Inheritance(strategy = InheritanceType.JOINED)
+@SecondaryTable(name = "meveo_module_source", pkJoinColumns = @PrimaryKeyJoinColumn(referencedColumnName = "id"))
 public class MeveoModule extends BusinessEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -70,6 +72,10 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @CollectionTable(name = "module_files", joinColumns = { @JoinColumn(name = "module_id") })
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
+    
+	@OneToOne(mappedBy = "meveoModule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, targetEntity = MeveoModuleSource.class)
+//    @JoinColumn(name = "module_source", referencedColumnName = "module_id")
+    private MeveoModuleSource meveoModuleSource;
     /**
      * A list of order items. Not modifiable once started processing.
      */
@@ -106,9 +112,6 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Type(type="numeric_boolean")
     @Column(name = "installed")
     private boolean installed;
-
-    @Column(name = "module_source", nullable = false, columnDefinition = "TEXT")
-    private String moduleSource;
 
     @Column(name = "current_version")
     @Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
@@ -215,15 +218,26 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     }
 
     public void setModuleSource(String moduleSource) {
-        this.moduleSource = moduleSource;
+    	if (moduleSource != null) {
+	    	MeveoModuleSource meveoModuleSource = new MeveoModuleSource();
+	        meveoModuleSource.setModuleSource(moduleSource);
+	        meveoModuleSource.setMeveoModule(this);
+	        this.meveoModuleSource = meveoModuleSource;
+    	} else {
+    		this.meveoModuleSource.setModuleSource(moduleSource);
+    	}
     }
 
     public String getModuleSource() {
-        return moduleSource;
+    	if (this.meveoModuleSource != null) {
+    		return this.meveoModuleSource.getModuleSource();
+    	} else {
+    		return null;
+    	}
     }
 
-    public boolean isDownloaded() {
-        return !StringUtils.isBlank(moduleSource);
+	public boolean isDownloaded() {
+        return !(meveoModuleSource == null);
     }
 
 	public String getCurrentVersion() {

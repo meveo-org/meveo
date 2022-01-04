@@ -79,6 +79,22 @@
 		</addColumn>
 	</changeSet>
 	
+
+  <changeSet id="467 - Store module json on external table" author="Arthur Grenier">
+		<createTable tableName="meveo_module_source">
+			<column name="id" type="bigint">
+				<constraints foreignKeyName="fk_id_module" referencedTableName="meveo_module" referencedColumnNames="id"/>
+			</column>
+			<column name="module_source" type="${type.json}"/>
+		</createTable>
+		<sql>INSERT INTO meveo_module_source (id, module_source) SELECT id, module_source FROM meveo_module</sql>
+		<dropColumn tableName="meveo_module" columnName="module_source"/>
+	</changeSet>
+	<changeSet id="Add constraint for module_id" author="Arthur Grenier">
+		<addUniqueConstraint tableName="meveo_module_source" columnNames="id" />
+		<addNotNullConstraint tableName="meveo_module_source" columnName="id" />
+	</changeSet>
+
 	<changeSet id="#318 - Generate permissions linked to endpoints" author="Clément Bareth">
 		<dropTable tableName="entity_permission"/>
 		<sql>INSERT INTO adm_permission (id, name, permission, category) SELECT nextval('adm_permission_seq'), 'Execute_Endpoint_' || endpoint.code, 'Execute_Endpoint_' || endpoint.code, null FROM service_endpoint as endpoint WHERE endpoint.secured = 1</sql>

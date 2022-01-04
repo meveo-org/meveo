@@ -15,6 +15,14 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.hibernate.orm.tooling</groupId>
+				<artifactId>hibernate-enhance-maven-plugin</artifactId>
+				<version>5.0.4.Final</version>
+				<configuration>
+					<enableLazyInitialization>true</enableLazyInitialization>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
