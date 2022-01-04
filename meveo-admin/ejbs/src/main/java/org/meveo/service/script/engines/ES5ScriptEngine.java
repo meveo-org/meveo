@@ -10,16 +10,14 @@ import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import javax.enterprise.inject.spi.CDI;
-
 import org.apache.commons.io.IOUtils;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.Value;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.scripts.CustomScript;
 import org.meveo.service.config.impl.MavenConfigurationService;
-import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,16 +27,14 @@ import org.slf4j.LoggerFactory;
  */
 public class ES5ScriptEngine implements ScriptInterface {
 	
-    private String script;
+    private CustomScript script;
     private AtomicBoolean isInterrupted = new AtomicBoolean(false);
-    public Map<String, Object> methodContext;
-    private String code;
+    private Map<String, Object> methodContext;
     
     private static Logger LOG = LoggerFactory.getLogger(ES5ScriptEngine.class);
 
-    public ES5ScriptEngine(String script, String code) {
+    public ES5ScriptEngine(CustomScript script) {
         this.script = script;
-        this.code = code;
     }
 
     @Override
@@ -105,10 +101,22 @@ public class ES5ScriptEngine implements ScriptInterface {
 	            };
 	            jsBindings.putMember("require", npmRequire);
 	            
-	            Logger scriptLogger = LoggerFactory.getLogger(code);
+	            Logger scriptLogger = LoggerFactory.getLogger(script.getCode());
 	            jsBindings.putMember("log", scriptLogger);
 	            
-	            context.eval("js", script);
+	            context.eval("js", script.getScript());
+	            
+	            script.getOutputs().forEach(output -> {
+	            	var member = jsBindings.getMember(output.getName());
+	            	if (member != null && methodContext.get(output.getName()) == null) {
+	            		try {
+	            			var outputValue = JacksonUtil.convert(member.as(Object.class), Object.class);
+		            		methodContext.put(output.getName(), outputValue);
+	            		} catch (Exception e) {
+	            			scriptLogger.error("Unserializable output : {}", output.getName());
+	            		}
+	            	}
+	            });
 	            
 			}
 	

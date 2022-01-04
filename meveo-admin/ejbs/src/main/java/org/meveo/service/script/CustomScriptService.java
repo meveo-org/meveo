@@ -588,12 +588,53 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	List<ScriptInstanceError> scriptErrors = addScriptDependencies(script);
         
         if(scriptErrors==null || scriptErrors.isEmpty()){
-            scriptErrors = compileScript(
-        		script.getCode(), 
-        		script.getSourceTypeEnum(), 
-        		source, 
-        		script.isActive(), 
-        		testCompile);
+        	
+            if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
+                log.debug("Compile script {}", script.getCode());
+
+                try {
+                    if (!testCompile) {
+                        clearCompiledScripts(script.getCode());
+                    }
+
+                    Class<ScriptInterface> compiledScript;
+                    compiledScript = compileJavaSource(script.getCode(), testCompile);
+
+                } catch (CharSequenceCompilerException e) {
+                    log.error("Failed to compile script {}. Compilation errors:", script.getCode());
+
+                    List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
+                    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
+                        if ("ERROR".equals(diagnostic.getKind().name())) {
+                            ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
+                            scriptInstanceError.setMessage(diagnostic.getMessage(Locale.getDefault()));
+                            scriptInstanceError.setLineNumber(diagnostic.getLineNumber());
+                            scriptInstanceError.setColumnNumber(diagnostic.getColumnNumber());
+                            if(diagnostic.getSource() != null) {
+                            	scriptInstanceError.setSourceFile(diagnostic.getSource().toString());
+                            } else {
+                            	scriptInstanceError.setSourceFile("No source file");
+                            }
+                            
+                            scriptErrors.add(scriptInstanceError);
+                            log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), script.getCode(), diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getMessage(Locale.getDefault()));
+                        }
+                    }
+
+                } catch (Exception e) {
+                    log.error("Failed while compiling script", e);
+                    scriptErrors = new ArrayList<>();
+                    ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
+                    scriptInstanceError.setMessage(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+                    scriptErrors.add(scriptInstanceError);
+                }
+            } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5) {
+                ScriptInterface engine = new ES5ScriptEngine(script);
+                ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), script.getCode()), () -> engine);
+            } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.PYTHON) {
+                ScriptInterface engine = new PythonScriptEngine(script);
+                ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), script.getCode()), () -> engine);
+            }
         }
         
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
@@ -833,78 +874,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         log.debug("Compiled script {} added to compiled interface map", scriptCode);
     }
 
-	/**
-     * Compile script. DOES NOT update script entity status. Successfully compiled
-     * script is added to a compiled script cache if active and not in test
-     * compilation mode.
-     *
-     * @param scriptCode  Script entity code
-     * @param sourceType  Source code language type
-     * @param sourceCode  Source code
-     * @param isActive    Is script active. It will compile it anyway. Will clear
-     *                    but not overwrite existing compiled script cache.
-     * @param testCompile Is it a compilation for testing purpose. Won't clear nor
-     *                    overwrite existing compiled script cache.
-     * @return A list of compilation errors if not compiled
-     */
-    private List<ScriptInstanceError> compileScript(String scriptCode, ScriptSourceTypeEnum sourceType, String sourceCode, boolean isActive, boolean testCompile) {
-        if (sourceType == ScriptSourceTypeEnum.JAVA) {
-            log.debug("Compile script {}", scriptCode);
-
-            try {
-                if (!testCompile) {
-                    clearCompiledScripts(scriptCode);
-                }
-
-                Class<ScriptInterface> compiledScript;
-                compiledScript = compileJavaSource(sourceCode, testCompile);
-
-                return null;
-
-            } catch (CharSequenceCompilerException e) {
-                log.error("Failed to compile script {}. Compilation errors:", scriptCode);
-
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-
-                List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
-                for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
-                    if ("ERROR".equals(diagnostic.getKind().name())) {
-                        ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-                        scriptInstanceError.setMessage(diagnostic.getMessage(Locale.getDefault()));
-                        scriptInstanceError.setLineNumber(diagnostic.getLineNumber());
-                        scriptInstanceError.setColumnNumber(diagnostic.getColumnNumber());
-                        if(diagnostic.getSource() != null) {
-                        	scriptInstanceError.setSourceFile(diagnostic.getSource().toString());
-                        } else {
-                        	scriptInstanceError.setSourceFile("No source file");
-                        }
-                        
-                        scriptErrors.add(scriptInstanceError);
-                        log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), scriptCode, diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getMessage(Locale.getDefault()));
-                    }
-                }
-                return scriptErrors;
-
-            } catch (Exception e) {
-                log.error("Failed while compiling script", e);
-                List<ScriptInstanceError> scriptErrors = new ArrayList<>();
-                ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
-                scriptInstanceError.setMessage(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-                scriptErrors.add(scriptInstanceError);
-
-                return scriptErrors;
-            }
-        } else if (sourceType == ScriptSourceTypeEnum.ES5) {
-            ScriptInterface engine = new ES5ScriptEngine(sourceCode, scriptCode);
-            ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-            return null;
-        } else if (sourceType == ScriptSourceTypeEnum.PYTHON) {
-            ScriptInterface engine = new PythonScriptEngine(sourceCode, scriptCode);
-            ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), scriptCode), () -> engine);
-        }
-        
-        return null;
-    }
 
     /**
      * Compile java Source script
@@ -985,9 +954,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             if (script.getSourceTypeEnum() == JAVA) {
             	loadClassInCache(scriptCode);
             } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5){
-            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script.getScript(), scriptCode));
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new ES5ScriptEngine(script));
             } else if( script.getSourceTypeEnum() == ScriptSourceTypeEnum.PYTHON) {
-            	ALL_SCRIPT_INTERFACES.put(key, () -> new PythonScriptEngine(script.getScript(), scriptCode));
+            	ALL_SCRIPT_INTERFACES.put(key, () -> new PythonScriptEngine(script));
             }
             
             if (script.isError()) {
