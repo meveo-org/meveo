@@ -73,9 +73,9 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
     
-    @OneToOne(mappedBy = "meveoModule")
-    @JoinColumn(name = "module_source")
-    private MeveoModuleSource moduleSource;
+	@OneToOne(mappedBy = "meveoModule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, targetEntity = MeveoModuleSource.class)
+//    @JoinColumn(name = "module_source", referencedColumnName = "module_id")
+    private MeveoModuleSource meveoModuleSource;
     /**
      * A list of order items. Not modifiable once started processing.
      */
@@ -218,17 +218,26 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     }
 
     public void setModuleSource(String moduleSource) {
-        MeveoModuleSource meveoModuleSource = new MeveoModuleSource();
-        meveoModuleSource.setModuleSource(moduleSource);
-        this.moduleSource = meveoModuleSource;
+    	if (moduleSource != null) {
+	    	MeveoModuleSource meveoModuleSource = new MeveoModuleSource();
+	        meveoModuleSource.setModuleSource(moduleSource);
+	        meveoModuleSource.setMeveoModule(this);
+	        this.meveoModuleSource = meveoModuleSource;
+    	} else {
+    		this.meveoModuleSource.setModuleSource(moduleSource);
+    	}
     }
 
     public String getModuleSource() {
-        return this.moduleSource.getModuleSource();
+    	if (this.meveoModuleSource != null) {
+    		return this.meveoModuleSource.getModuleSource();
+    	} else {
+    		return null;
+    	}
     }
 
-    public boolean isDownloaded() {
-        return !(moduleSource == null);
+	public boolean isDownloaded() {
+        return !(meveoModuleSource == null);
     }
 
 	public String getCurrentVersion() {

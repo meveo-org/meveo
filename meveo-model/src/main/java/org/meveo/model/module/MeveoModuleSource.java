@@ -3,19 +3,14 @@ package org.meveo.model.module;
 import java.io.Serializable;
 
 import javax.persistence.Table;
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
-import org.hibernate.annotations.Type;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.ObservableEntity;
 
 /**
  * Json of a meveo module storage
@@ -24,18 +19,17 @@ import org.meveo.model.ObservableEntity;
  *
  */
 @Entity
-@ObservableEntity
 @Table (name = "meveo_module_source")
-public class MeveoModuleSource extends BusinessEntity implements Serializable {
+public class MeveoModuleSource implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-    @OneToOne(mappedBy = "meveoModuleSource", fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id")
+    @Id
     private MeveoModule meveoModule;
     
-	@OneToOne(mappedBy = "meveoModuleSource", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Column(name = "module_source", table = "module_source", columnDefinition = "TEXT")
+    @Column(name = "module_source", columnDefinition = "TEXT")
     private String moduleSource;
 	
 	public void setModuleSource(String moduleSource) {
@@ -44,5 +38,13 @@ public class MeveoModuleSource extends BusinessEntity implements Serializable {
 	
 	public String getModuleSource() {
 		return this.moduleSource;
+	}
+	
+	public void setMeveoModule (MeveoModule meveoModule) {
+		this.meveoModule = meveoModule;
+	}
+	
+	public MeveoModule getMeveoModule() {
+		return this.meveoModule;
 	}
 }
