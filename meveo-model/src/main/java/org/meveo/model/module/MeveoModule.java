@@ -73,7 +73,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Column(name = "module_file")
     private Set<String> moduleFiles = new HashSet<>();
     
-    @OneToOne(mappedBy = "meveoModuleSource")
+    @OneToOne(mappedBy = "meveoModule")
     @JoinColumn(name = "module_source")
     private MeveoModuleSource moduleSource;
     /**

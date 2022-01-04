@@ -30,14 +30,12 @@ public class MeveoModuleSource extends BusinessEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "meveoModuleSource", fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id")
     private MeveoModule meveoModule;
     
 	@OneToOne(mappedBy = "meveoModuleSource", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Lob() @Basic(fetch=FetchType.LAZY)
     @Column(name = "module_source", table = "module_source", columnDefinition = "TEXT")
-    @Type(type = "org.hibernate.type.TextType")
     private String moduleSource;
 	
 	public void setModuleSource(String moduleSource) {
