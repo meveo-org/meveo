@@ -406,6 +406,9 @@ public class MeveoModuleItemInstaller {
 			}
     		
     	} else {
+    		if(dto == null) {
+            	throw new IllegalArgumentException("dto is null");
+    		}
     		
             String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
             Class<?> entityClass = MODULE_ITEM_TYPES.get(moduleItemName);

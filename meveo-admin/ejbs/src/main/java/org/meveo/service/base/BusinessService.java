@@ -286,7 +286,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();

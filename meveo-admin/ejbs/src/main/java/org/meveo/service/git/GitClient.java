@@ -38,7 +38,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
+import org.eclipse.jgit.api.RebaseCommand.Operation;
 import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -248,7 +250,7 @@ public class GitClient {
                 }
 
                 if (status.hasUncommittedChanges()) {
-                    git.commit().setMessage(message)
+                    RevCommit commit = git.commit().setMessage(message)
                             .setAuthor(user.getUserName(), user.getMail())
                             .setCommitter(user.getUserName(), user.getMail())
                             .call();
@@ -258,8 +260,10 @@ public class GitClient {
                     modifiedFiles.addAll(status.getChanged());
                     modifiedFiles.addAll(status.getModified());
                     modifiedFiles.addAll(status.getRemoved());
+                    
+                    List<DiffEntry> diffs = getDiffs(gitRepository, commit);
 
-                    commitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+                    commitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
 
                 }
 
@@ -388,6 +392,14 @@ public class GitClient {
         keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
+        	String branch = git.getRepository().getBranch();
+        	
+        	// Make sure we don't have any uncommitted files
+            git.reset()
+	            .setMode(ResetType.HARD)
+	        	.setRef("HEAD")
+	            .call();
+            
             PullCommand pull = git.pull();
             pull = pull.setRebase(true);
             pull = pull.setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES);
@@ -402,16 +414,22 @@ public class GitClient {
 			}
 			
             pull.call();
+            
+            if(git.getRepository().getRepositoryState().isRebasing()) {
+            	git.rebase().setOperation(Operation.ABORT).call();
+                git.reset().setMode(ResetType.HARD).setRef("origin/" + branch).call();
+            }
 
             try (RevWalk rw = new RevWalk(git.getRepository())) {
                 ObjectId head = git.getRepository().resolve(Constants.HEAD);
                 RevCommit headCommitAfterPull = rw.parseCommit(head);
 
                 // Fire commit received event if commits are different and Meveo repository is concerned
-                if(gitRepository.getCode().equals(meveoRepository.getCode()) && !headCommitBeforePull.getId().equals(headCommitAfterPull.getId())) {
-                    Set<String> modifiedFiles = getModifiedFiles(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
+                if(!headCommitBeforePull.getId().equals(headCommitAfterPull.getId())) {
+                    var diffs = getDiffs(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
+                	Set<String> modifiedFiles = getModifiedFiles(diffs);
                     if(modifiedFiles != null && !modifiedFiles.isEmpty()) {
-                        gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+                        gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
                     }
                 }
             }
@@ -710,7 +728,7 @@ public class GitClient {
      * @param commit        The commit to analyze
      * @return the list of files modified
      */
-    public Set<String> getModifiedFiles(GitRepository gitRepository, RevCommit commit) throws BusinessException {
+    public List<DiffEntry> getDiffs(GitRepository gitRepository, RevCommit commit) throws BusinessException {
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasReadRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -724,7 +742,8 @@ public class GitClient {
             Repository repository = git.getRepository();
             try(RevWalk rw = new RevWalk(repository)) {
 	            RevCommit parent = rw.parseCommit(commit.getParent(0).getId());
-                return getModifiedFiles(repository, parent, commit);
+	            var diffs = getDiffs(repository, parent, commit);
+                return diffs;
             }
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
@@ -766,6 +785,15 @@ public class GitClient {
             keyLock.unlock(gitRepository.getCode());
         }
     }
+    
+    protected List<DiffEntry> getDiffs(Repository repository, RevCommit leftCommit, RevCommit rightCommit) throws IOException {
+        try(DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            df.setRepository(repository);
+            df.setDiffComparator(RawTextComparator.DEFAULT);
+            df.setDetectRenames(true);
+            return df.scan(leftCommit.getTree(), rightCommit.getTree());
+        }
+    }
 
     /**
      * Compute difference between two commits for a given repository
@@ -775,18 +803,12 @@ public class GitClient {
      * @param rightCommit Right commit to compare
      * @return the modified files between the two commits
      */
-    protected Set<String> getModifiedFiles(Repository repository, RevCommit leftCommit, RevCommit rightCommit) throws IOException {
+    public Set<String> getModifiedFiles(List<DiffEntry> diffs) throws IOException {
         Set<String> modifiedFiles = new HashSet<>();
 
-        try(DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
-            df.setRepository(repository);
-            df.setDiffComparator(RawTextComparator.DEFAULT);
-            df.setDetectRenames(true);
-            List<DiffEntry> diffs = df.scan(leftCommit.getTree(), rightCommit.getTree());
-            for (DiffEntry diff : diffs) {
-                modifiedFiles.add(diff.getNewPath());
-                modifiedFiles.add(diff.getOldPath());
-            }
+        for (DiffEntry diff : diffs) {
+            modifiedFiles.add(diff.getNewPath());
+            modifiedFiles.add(diff.getOldPath());
         }
 
         return modifiedFiles;

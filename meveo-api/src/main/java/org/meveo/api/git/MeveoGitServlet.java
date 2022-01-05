@@ -217,8 +217,9 @@ public class MeveoGitServlet extends GitServlet {
         if(gitActionType == GitActionType.WRITE && req.getMethod().equals("POST")) {
             try {
                 RevCommit headCommit = gitClient.getHeadCommit(gitRepository);
-                Set<String> modifiedFiles = gitClient.getModifiedFiles(gitRepository, headCommit);
-                gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles));
+                var diffs = gitClient.getDiffs(gitRepository, headCommit);
+                Set<String> modifiedFiles = gitClient.getModifiedFiles(diffs);
+                gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
 
             } catch (Exception e) {
                 try {

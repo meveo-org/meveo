@@ -187,14 +187,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
             createTree(module, itemsToRemove);
             
-            if(!itemsToRemove.isEmpty()) {
-            	itemsToRemove.forEach(module::removeItem);
-            	try {
-					meveoModuleService.update(module);
-				} catch (BusinessException e) {
-					log.error("Can't remove items {} from module {}", itemsToRemove, module, e);
-				}
-            }
             // If module was downloaded, show module items from meveoModule.moduleSource
         } else {
             try {

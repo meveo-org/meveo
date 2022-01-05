@@ -37,6 +37,9 @@ public class MeveoModuleItemDto extends BaseEntityDto implements Comparable<Meve
 	@XmlElement(required = true)
 	@ApiModelProperty(required = true, value = "Linked list value representation of this object when module is uninstalled. Otherwise, it represents the object.")
 	private Object dtoData;
+	
+	@XmlElement(required = false)
+	private String appliesTo;
 
 	public MeveoModuleItemDto() {
 		super();
@@ -46,6 +49,20 @@ public class MeveoModuleItemDto extends BaseEntityDto implements Comparable<Meve
 		super();
 		this.dtoClassName = dtoClassName;
 		this.dtoData = dtoData;
+	}
+	
+	/**
+	 * @return the {@link #appliesTo}
+	 */
+	public String getAppliesTo() {
+		return appliesTo;
+	}
+
+	/**
+	 * @param appliesTo the appliesTo to set
+	 */
+	public void setAppliesTo(String appliesTo) {
+		this.appliesTo = appliesTo;
 	}
 
 	public String getDtoClassName() {
