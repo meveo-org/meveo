@@ -113,6 +113,7 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.admin.impl.ModuleUninstall.ModuleUninstallBuilder;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -338,7 +339,25 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return entityDtoNamebyPath;
 	}
 	
-	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName, boolean getFromDb) {
+	public MeveoModuleItem getExistingItemFromFile(File directory, String fileName) {
+		String[] paths = fileName.split("/");
+		String directoryName = paths[0];
+		String itemCode = FilenameUtils.getBaseName(fileName);
+		
+		Class<?> itemClass = getItemClassByPath(directoryName);
+		boolean hasAppliesToField = ReflectionUtils.isClassHasField(itemClass, "appliesTo");
+		String appliesTo = null;
+		if (hasAppliesToField) {
+			appliesTo = paths[paths.length - 2];
+		}
+		
+		return meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)
+				.stream()
+				.findFirst()
+				.orElse(null);
+	}
+	
+	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName) {
 		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
 		
 		String[] paths = fileName.split("/");
@@ -346,43 +365,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		String itemCode = FilenameUtils.getBaseName(fileName);
 		String dtoClassName = entityDtoNamebyPath.get(directoryName);
 		
-		if (!getFromDb) {
-			File entityFile = new File(directory, fileName);
-			try {
-				Map<String, Object> data = JacksonUtil.read(entityFile, GenericTypeReferences.MAP_STRING_OBJECT);
-				return new MeveoModuleItemDto(dtoClassName, data);
-			} catch (IOException e) {
-				log.error("Failed to read data", e);
-			}
-		} else {
-			Class<?> itemClass = getItemClassByPath(directoryName);
-			boolean hasAppliesToField = ReflectionUtils.isClassHasField(itemClass, "appliesTo");
-			MeveoModuleItem moduleItem;
-			String appliesTo = null;
-			if (hasAppliesToField) {
-				appliesTo = paths[paths.length - 2];
-			}
-			
-			moduleItem = meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)
-					.stream()
-					.findFirst()
-					.orElse(null);
-			
-			try {
-				if (moduleItem == null) {
-					throw new org.meveo.exceptions.EntityDoesNotExistsException("Unknown module item " + itemCode);
-				}
-				BaseEntityDto dto = getEntityDto(Set.of(), moduleItem);
-				if (dto == null) {
-					log.warn("Module item not found {}", moduleItem);
-					return null;
-				}
-				var itemDto = new MeveoModuleItemDto(dtoClassName, dto);
-				itemDto.setAppliesTo(appliesTo);
-				return itemDto;
-			} catch (ClassNotFoundException | org.meveo.exceptions.EntityDoesNotExistsException | MeveoApiException e) {
-				log.error("Entity not found", e);
-			}
+		File entityFile = new File(directory, fileName);
+		try {
+			Map<String, Object> data = JacksonUtil.read(entityFile, GenericTypeReferences.MAP_STRING_OBJECT);
+			return new MeveoModuleItemDto(dtoClassName, data);
+		} catch (IOException e) {
+			log.error("Failed to read data", e);
 		}
 		
 		return null;
@@ -1050,12 +1038,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		meveoModuleService.addModuleItem(moduleItem, module);
 
-        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
-        if(api instanceof BaseCrudApi) {
-        	BaseCrudApi crudApi = (BaseCrudApi) api;
-        	crudApi.addToModule(moduleItem.getItemEntity(), module);
-        }
-		
 		meveoModuleService.update(module);
 
 		return toDto(module);
@@ -1078,19 +1060,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
 		moduleItem.setAppliesTo(appliesTo);
-		meveoModuleService.loadModuleItem(moduleItem);
-		
 		module.removeItem(moduleItem);
-		
-        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
-        if(api instanceof BaseCrudApi) {
-        	BaseCrudApi crudApi = (BaseCrudApi) api;
-        	crudApi.removeFromModule(moduleItem.getItemEntity(), module);
-        }
-        
 		meveoModuleService.update(module);
-
-
 		return toDto(module);
 	}
 
@@ -1540,14 +1511,21 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 		
 		File directory = GitHelper.getRepositoryDir(null, module.getCode());
-		MeveoModuleItemDto item;
+		MeveoModuleItemDto itemDto;
+		MeveoModuleItem item;
+		ModuleUninstall options = ModuleUninstall.builder()
+			.module(module)
+			.removeData(true)
+			.removeItems(true)
+			.removeFiles(true)
+			.build();
 		
 		for (DiffEntry diff : event.getDiffs()) {
 
 			switch (diff.getChangeType()) {
 			case ADD:
-				item = getItemDtoFromFile(directory, diff.getNewPath(), false);
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, item, OnDuplicate.FAIL);
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
 				break;
 				
 			case COPY:
@@ -1555,31 +1533,29 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				break;
 				
 			case DELETE:
-				String[] paths = diff.getOldPath().split("/");
-				item = getItemDtoFromFile(directory, diff.getOldPath(), true);
+				item = getExistingItemFromFile(directory, diff.getOldPath());
 				if (item != null) {
-					meveoModuleItemInstaller.uninstallItemDto(module, item);
-					removeFromModule(module.getCode(),paths[paths.length - 1], getItemTypeByPath(paths[0]), item.getAppliesTo());
+					module.removeItem(item);
+					meveoModuleItemInstaller.uninstallItem(options, null, item);
 				}
 				break;
 				
 			case MODIFY:
-				item = getItemDtoFromFile(directory, diff.getNewPath(), false);
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, item, OnDuplicate.OVERWRITE);
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
 				break;
 				
 			case RENAME:
-				String[] paths2 = diff.getOldPath().split("/");
-
 				// Remove
-				item = getItemDtoFromFile(directory, diff.getOldPath(), true);
+				item = getExistingItemFromFile(directory, diff.getOldPath());
 				if (item != null) {
-					meveoModuleItemInstaller.uninstallItemDto(module, item);
-					removeFromModule(module.getCode(),paths2[paths2.length - 1], getItemTypeByPath(paths2[0]), item.getAppliesTo());
+					module.removeItem(item);
+					meveoModuleItemInstaller.uninstallItem(options, null, item);
 				}
+				
 				// Add
-				item = getItemDtoFromFile(directory, diff.getNewPath(), false);
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, item, OnDuplicate.FAIL);
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
 				break;
 				
 			default:
@@ -1587,5 +1563,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 			}
 		}
+		
+		meveoModuleService.update(module);
 	}
 }

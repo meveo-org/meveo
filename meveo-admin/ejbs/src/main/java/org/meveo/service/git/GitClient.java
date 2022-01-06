@@ -376,8 +376,6 @@ public class GitClient {
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
      */
     public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
-        RevCommit headCommitBeforePull = getHeadCommit(gitRepository);
-
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -394,12 +392,8 @@ public class GitClient {
         try (Git git = Git.open(repositoryDir)) {
         	String branch = git.getRepository().getBranch();
         	
-        	// Make sure we don't have any uncommitted files
-            git.reset()
-	            .setMode(ResetType.HARD)
-	        	.setRef("HEAD")
-	            .call();
-            
+            RevCommit headCommitBeforePull = getHeadCommit(gitRepository);
+
             PullCommand pull = git.pull();
             pull = pull.setRebase(true);
             pull = pull.setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES);
@@ -429,7 +423,16 @@ public class GitClient {
                     var diffs = getDiffs(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
                 	Set<String> modifiedFiles = getModifiedFiles(diffs);
                     if(modifiedFiles != null && !modifiedFiles.isEmpty()) {
-                        gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
+                    	try {
+                    		gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
+                    	} catch (Exception e) {
+                    		// Roll-back repository state
+                    		git.reset()
+                    			.setRef(headCommitBeforePull.getName())
+                    			.setMode(ResetType.HARD)
+                    			.call();
+                    		throw new BusinessException(e);
+                    	}
                     }
                 }
             }

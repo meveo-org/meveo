@@ -546,6 +546,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
     
     public void removeData(CustomEntityTemplate cet) {
+    	if (cet == null) {
+    		return;
+    	}
+    	
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
 
