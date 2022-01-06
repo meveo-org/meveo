@@ -42,7 +42,6 @@ import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -59,8 +58,6 @@ import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 
 import com.github.javaparser.ast.CompilationUnit;
-
-import org.meveo.service.custom.CustomRelationshipTemplateService;
 
 /**
  * Class used for persisting CustomRelationshipTemplate entities
@@ -100,6 +97,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+    
+    @Inject
+    private CustomEntityTemplateService cetService;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -129,6 +129,15 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        
+        // Synchronize start and end CETs
+        CustomEntityTemplate startCet = crt.getStartNode();
+        MeveoModule cetModule = cetService.findModuleOf(startCet);
+        cetService.addFilesToModule(startCet, cetModule);
+        CustomEntityTemplate endCrt = crt.getEndNode();
+        MeveoModule cet2Module = cetService.findModuleOf(endCrt);
+        cetService.addFilesToModule(endCrt, cet2Module);
+        
     }
 
     @Override
@@ -159,6 +168,13 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
         customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
+        CustomEntityTemplate startCet = crt.getStartNode();
+        MeveoModule cetModule = cetService.findModuleOf(startCet);
+        cetService.addFilesToModule(startCet, cetModule);
+        CustomEntityTemplate endCrt = crt.getEndNode();
+        MeveoModule cet2Module = cetService.findModuleOf(endCrt);
+        cetService.addFilesToModule(endCrt, cet2Module);
+        
         return cetUpdated;
     }
 
@@ -204,6 +220,13 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         permissionService.removeIfPresent(crt.getReadPermission());
 
         super.remove(crt);
+        
+        CustomEntityTemplate startCet = crt.getStartNode();
+        MeveoModule cetModule = cetService.findModuleOf(startCet);
+        cetService.addFilesToModule(startCet, cetModule);
+        CustomEntityTemplate endCrt = crt.getEndNode();
+        MeveoModule cet2Module = cetService.findModuleOf(endCrt);
+        cetService.addFilesToModule(endCrt, cet2Module);
     }
 
     /**

@@ -84,7 +84,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     
     @Inject
     private CrossStorageService crossStorageService;
-
+    
     static boolean useCFTCache = true;
 
     @PostConstruct
@@ -341,8 +341,19 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
 
 		elasticClient.updateCFMapping(cft);
+		
+		// Synchronize CET / CRT POJO
+        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
+            customEntityTemplateService.addFilesToModule(cet, cetModule);
+        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
+            customRelationshipTemplateService.addFilesToModule(crt, cetModule);
+        }
 	}
-
+    
 	/**
 	 * @param cft
 	 * @throws BusinessException
@@ -418,6 +429,17 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
+        
+        // Synchronize CET / CRT POJO
+        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
+            customEntityTemplateService.addFilesToModule(cet, cetModule);
+        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
+            customRelationshipTemplateService.addFilesToModule(crt, cetModule);
+        }
 
         return cftUpdated;
     }
@@ -459,6 +481,17 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	            customTableCreatorService.removeField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
+		
+		// Synchronize CET / CRT POJO
+        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
+            customEntityTemplateService.addFilesToModule(cet, cetModule);
+        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
+            customRelationshipTemplateService.addFilesToModule(crt, cetModule);
+        }
 		
     }
 
