@@ -218,7 +218,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     }
 
     public void setModuleSource(String moduleSource) {
-    	if (moduleSource == null) {
+    	if (this.meveoModuleSource == null) {
 	    	MeveoModuleSource meveoModuleSource = new MeveoModuleSource();
 	        meveoModuleSource.setModuleSource(moduleSource);
 	        meveoModuleSource.setMeveoModule(this);
