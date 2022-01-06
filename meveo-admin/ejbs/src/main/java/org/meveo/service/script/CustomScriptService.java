@@ -598,7 +598,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     }
 
                     Class<ScriptInterface> compiledScript;
-                    compiledScript = compileJavaSource(script.getCode(), testCompile);
+                    compiledScript = compileJavaSource(script.getScript(), testCompile);
 
                 } catch (CharSequenceCompilerException e) {
                     log.error("Failed to compile script {}. Compilation errors:", script.getCode());
