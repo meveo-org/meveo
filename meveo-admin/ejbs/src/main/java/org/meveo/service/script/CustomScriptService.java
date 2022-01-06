@@ -656,7 +656,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 }
 			}
 		}
-        return null;
+        return new ArrayList<>();
     }
 
     /**
