@@ -724,7 +724,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	@Override
 	public void addFilesToModule(CustomFieldTemplate entity, MeveoModule module) throws BusinessException {
     	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
     	

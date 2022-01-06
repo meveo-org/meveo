@@ -16,18 +16,22 @@
 
 package org.meveo.event.qualifier.git;
 
-import org.meveo.model.git.GitRepository;
-
+import java.util.List;
 import java.util.Set;
+
+import org.eclipse.jgit.diff.DiffEntry;
+import org.meveo.model.git.GitRepository;
 
 public class CommitEvent {
 
     private final GitRepository gitRepository;
     private final Set<String> modifiedFiles;
+    private final List<DiffEntry> diffs;
 
-    public CommitEvent(GitRepository gitRepository, Set<String> modifiedFiles) {
+    public CommitEvent(GitRepository gitRepository, Set<String> modifiedFiles, List<DiffEntry> diffs) {
         this.gitRepository = gitRepository;
         this.modifiedFiles = modifiedFiles;
+        this.diffs = diffs;
     }
 
     public GitRepository getGitRepository() {
@@ -37,4 +41,12 @@ public class CommitEvent {
     public Set<String> getModifiedFiles() {
         return modifiedFiles;
     }
+
+	/**
+	 * @return the {@link #diffs}
+	 */
+	public List<DiffEntry> getDiffs() {
+		return diffs;
+	}
+    
 }

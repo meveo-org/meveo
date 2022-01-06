@@ -31,8 +31,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,9 +49,12 @@ import javax.ejb.EJBTransactionRolledbackException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -71,18 +74,24 @@ import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.git.CommitEvent;
+import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -94,8 +103,6 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
-import org.meveo.model.module.ModuleLicenseEnum;
-import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -106,6 +113,7 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.admin.impl.ModuleUninstall.ModuleUninstallBuilder;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -235,6 +243,80 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new BusinessException("Can't read module descriptor", e1);
 		}
 		
+		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
+		
+		for (File directory : repoDir.listFiles()) {
+			if (!directory.isDirectory()) {
+				continue;
+			}
+			String directoryName = directory.getName();
+			String dtoClassName = entityDtoNamebyPath.get(directoryName);
+			if (dtoClassName == null) {
+				continue;
+			}
+			
+			//TODO: Custom action special case
+			if(directoryName.equals("entityCustomActions")) {
+				entityCustomActionApi.readEcas(directory)
+					.stream()
+					.map(ecaDto -> new MeveoModuleItemDto(ecaDto.getClass().getName(), ecaDto))
+					.forEach(moduleDto.getModuleItems()::add);
+				
+			} else if (directoryName.equals("customFieldTemplates")) {
+				customFieldTemplateApi.readCfts(directory)
+					.stream()
+					.map(cftDto -> new MeveoModuleItemDto(CustomFieldTemplateDto.class.getName(), cftDto))
+					.forEach(moduleDto.getModuleItems()::add);
+			
+			} else if (directoryName.equals("customEntityInstances")) {
+				ceiApi.readCeis(directory)
+					.stream()
+					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
+					.forEach(moduleDto.getModuleItems()::add);
+
+			} else {
+				for (File entityFile : directory.listFiles()) {
+					try {
+						String entityFileName = entityFile.getName();
+						if (entityFileName.endsWith("-schema.json")) {
+							continue;
+						}
+						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
+						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
+						moduleDto.getModuleItems().add(moduleItemDto);
+					} catch (IOException e) {
+						log.error("Can't read entityFile", e);
+					}
+				}
+			}
+		}
+		
+		return moduleDto;
+	}
+	
+	private Class<?> getItemClassByPath(String directoryName) {
+		return MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values()
+				.stream()
+				.filter(itemType -> itemType.getAnnotation(ModuleItem.class).path().equals(directoryName))
+				.findFirst()
+				.orElse(null);
+	}
+	
+	private String getItemTypeByPath(String directoryName) {
+		return MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values()
+				.stream()
+				.map(itemType -> itemType.getAnnotation(ModuleItem.class))
+				.filter(itemType -> itemType.path().equals(directoryName))
+				.map(ModuleItem::value)
+				.findFirst()
+				.orElse(null);
+	}
+
+	/**
+	 * @return
+	 */
+	protected Map<String, String> getEntitiesPathsMapping() {
 		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
 		
 		MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values().forEach(clazz -> {
@@ -254,55 +336,44 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				log.error("Can't retrieve dto class for {}",clazz.getName(), e);
 			}
 		});
+		return entityDtoNamebyPath;
+	}
+	
+	public MeveoModuleItem getExistingItemFromFile(File directory, String fileName) {
+		String[] paths = fileName.split("/");
+		String directoryName = paths[0];
+		String itemCode = FilenameUtils.getBaseName(fileName);
 		
-		for (File file : repoDir.listFiles()) {
-			if (!file.isDirectory()) {
-				continue;
-			}
-			String fileName = file.getName();
-			String dtoClassName = entityDtoNamebyPath.get(fileName);
-			if (dtoClassName == null) {
-				continue;
-			}
-			
-			//TODO: Custom action special case
-			if(fileName.equals("entityCustomActions")) {
-				entityCustomActionApi.readEcas(file)
-					.stream()
-					.map(ecaDto -> new MeveoModuleItemDto(ecaDto.getClass().getName(), ecaDto))
-					.forEach(moduleDto.getModuleItems()::add);
-				
-			} else if (fileName.equals("customFieldTemplates")) {
-				customFieldTemplateApi.readCfts(file)
-					.stream()
-					.map(cftDto -> new MeveoModuleItemDto(CustomFieldTemplateDto.class.getName(), cftDto))
-					.forEach(moduleDto.getModuleItems()::add);
-			
-			} else if (fileName.equals("customEntityInstances")) {
-				ceiApi.readCeis(file)
-					.stream()
-					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
-					.forEach(moduleDto.getModuleItems()::add);
-
-			} else {
-				for (File entityFile : file.listFiles()) {
-					try {
-						String entityFileName = entityFile.getName();
-						if (entityFileName.endsWith("-schema.json")) {
-							continue;
-						}
-						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
-						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
-						moduleDto.getModuleItems().add(moduleItemDto);
-					} catch (IOException e) {
-						log.error("Can't read entityFile", e);
-					}
-				}
-			}
+		Class<?> itemClass = getItemClassByPath(directoryName);
+		boolean hasAppliesToField = ReflectionUtils.isClassHasField(itemClass, "appliesTo");
+		String appliesTo = null;
+		if (hasAppliesToField) {
+			appliesTo = paths[paths.length - 2];
 		}
 		
-		return moduleDto;
+		return meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)
+				.stream()
+				.findFirst()
+				.orElse(null);
+	}
+	
+	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName) {
+		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
+		
+		String[] paths = fileName.split("/");
+		String directoryName = paths[0];
+		String itemCode = FilenameUtils.getBaseName(fileName);
+		String dtoClassName = entityDtoNamebyPath.get(directoryName);
+		
+		File entityFile = new File(directory, fileName);
+		try {
+			Map<String, Object> data = JacksonUtil.read(entityFile, GenericTypeReferences.MAP_STRING_OBJECT);
+			return new MeveoModuleItemDto(dtoClassName, data);
+		} catch (IOException e) {
+			log.error("Failed to read data", e);
+		}
+		
+		return null;
 	}
 	
 	public void registerModulePackage(String packageName) {
@@ -805,71 +876,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			for (MeveoModuleItem item : moduleItems) {
 
 				try {
-					BaseEntityDto itemDto = null;
-
-					if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
-						// we will only add a cft if it's not a field of a cet contained in the module
-						if (!StringUtils.isBlank(item.getAppliesTo())) {
-							String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
-							
-							boolean isCetInModule = moduleItems.stream()
-									.filter(moduleItem -> moduleItem.getItemClass().equals(CustomEntityTemplate.class.getName()))
-									.anyMatch(moduleItem -> moduleItem.getItemCode().equals(cetCode));
-							
-							if (!isCetInModule) {
-								itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-							}
-
-						} else {
-							itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-						}
-
-					} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
-						EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
-						itemDto = entityCustomActionDto;
-
-					} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
-						try {
-				            CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
-
-							Map<String, Object> ceiTable;
-				        	try {
-				        		ceiTable = crossStorageService.find(
-				    				repositoryService.findDefaultRepository(), // XXX: Maybe we will need to parameterize this or search in all repositories ?
-				    				customEntityTemplate,
-				    				item.getItemCode(),
-				    				false	// XXX: Maybe it should also be a parameter
-				    			);
-				        	} catch (EntityDoesNotExistsException e) {
-				        		ceiTable = null;
-				        	}
-							
-							//Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
-							CustomEntityInstance customEntityInstance = new CustomEntityInstance();
-							customEntityInstance.setUuid((String) ceiTable.get("uuid"));
-							customEntityInstance.setCode((String) ceiTable.get("uuid"));
-							customEntityInstance.setCetCode(item.getAppliesTo());
-							customEntityInstance.setCet(customEntityTemplateService.findByCode(item.getAppliesTo()));
-							customFieldInstanceService.setCfValues(customEntityInstance, item.getAppliesTo(), ceiTable);
-							itemDto = CustomEntityInstanceDto.toDTO(customEntityInstance, entityToDtoConverter.getCustomFieldsDTO(customEntityInstance, true));
-						} catch (BusinessException e) {
-							log.error(e.getMessage());
-						}
-					} else {
-						Class clazz = Class.forName(item.getItemClass());
-						if (clazz.isAnnotationPresent(VersionedEntity.class)) {
-							ApiVersionedService apiService = ApiUtils.getApiVersionedService(item.getItemClass(), true);
-							itemDto = apiService.findIgnoreNotFound(
-									item.getItemCode(), 
-									item.getValidity() != null ? item.getValidity().getFrom() : null,
-									item.getValidity() != null ? item.getValidity().getTo() : null
-								);
-
-						} else {
-							ApiService apiService = ApiUtils.getApiService(clazz, true);
-							itemDto = apiService.findIgnoreNotFound(item.getItemCode());
-						}
-					}
+					BaseEntityDto itemDto = getEntityDto(moduleItems, item);
 					if (itemDto != null) {
 						moduleDto.addModuleItem(itemDto);
 
@@ -894,6 +901,85 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 
 		return moduleDto;
+	}
+
+	/**
+	 * @param moduleItems
+	 * @param item
+	 * @return
+	 * @throws MissingParameterException
+	 * @throws InvalidParameterException
+	 * @throws ClassNotFoundException
+	 * @throws MeveoApiException
+	 * @throws EntityDoesNotExistsException
+	 */
+	protected BaseEntityDto getEntityDto(Set<MeveoModuleItem> moduleItems, MeveoModuleItem item) throws MissingParameterException, InvalidParameterException, ClassNotFoundException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		BaseEntityDto itemDto = null;
+
+		if (item.getItemClass().equals(CustomFieldTemplate.class.getName())) {
+			// we will only add a cft if it's not a field of a cet contained in the module
+			if (!StringUtils.isBlank(item.getAppliesTo())) {
+				String cetCode = EntityCustomizationUtils.getEntityCode(item.getAppliesTo());
+				
+				boolean isCetInModule = moduleItems.stream()
+						.filter(moduleItem -> moduleItem.getItemClass().equals(CustomEntityTemplate.class.getName()))
+						.anyMatch(moduleItem -> moduleItem.getItemCode().equals(cetCode));
+				
+				if (!isCetInModule) {
+					itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+				}
+
+			} else {
+				itemDto = customFieldTemplateApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+			}
+
+		} else if (item.getItemClass().equals(EntityCustomAction.class.getName())) {
+			EntityCustomActionDto entityCustomActionDto = entityCustomActionApi.findIgnoreNotFound(item.getItemCode(), item.getAppliesTo());
+			itemDto = entityCustomActionDto;
+
+		} else if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+			try {
+		        CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(item.getAppliesTo());
+
+				Map<String, Object> ceiTable;
+		    	try {
+		    		ceiTable = crossStorageService.find(
+						repositoryService.findDefaultRepository(), // XXX: Maybe we will need to parameterize this or search in all repositories ?
+						customEntityTemplate,
+						item.getItemCode(),
+						false	// XXX: Maybe it should also be a parameter
+					);
+		    	} catch (EntityDoesNotExistsException e) {
+		    		ceiTable = null;
+		    	}
+				
+				//Map<String, Object> ceiTable = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, item.getAppliesTo(), item.getItemCode());
+				CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+				customEntityInstance.setUuid((String) ceiTable.get("uuid"));
+				customEntityInstance.setCode((String) ceiTable.get("uuid"));
+				customEntityInstance.setCetCode(item.getAppliesTo());
+				customEntityInstance.setCet(customEntityTemplateService.findByCode(item.getAppliesTo()));
+				customFieldInstanceService.setCfValues(customEntityInstance, item.getAppliesTo(), ceiTable);
+				itemDto = CustomEntityInstanceDto.toDTO(customEntityInstance, entityToDtoConverter.getCustomFieldsDTO(customEntityInstance, true));
+			} catch (BusinessException e) {
+				log.error(e.getMessage());
+			}
+		} else {
+			Class clazz = Class.forName(item.getItemClass());
+			if (clazz.isAnnotationPresent(VersionedEntity.class)) {
+				ApiVersionedService apiService = ApiUtils.getApiVersionedService(item.getItemClass(), true);
+				itemDto = apiService.findIgnoreNotFound(
+						item.getItemCode(), 
+						item.getValidity() != null ? item.getValidity().getFrom() : null,
+						item.getValidity() != null ? item.getValidity().getTo() : null
+					);
+
+			} else {
+				ApiService apiService = ApiUtils.getApiService(clazz, true);
+				itemDto = apiService.findIgnoreNotFound(item.getItemCode());
+			}
+		}
+		return itemDto;
 	}
 
 
@@ -952,12 +1038,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		meveoModuleService.addModuleItem(moduleItem, module);
 
-        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
-        if(api instanceof BaseCrudApi) {
-        	BaseCrudApi crudApi = (BaseCrudApi) api;
-        	crudApi.addToModule(moduleItem.getItemEntity(), module);
-        }
-		
 		meveoModuleService.update(module);
 
 		return toDto(module);
@@ -980,19 +1060,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleItem.setItemCode(itemCode);
 		moduleItem.setItemClass(itemClassName);
 		moduleItem.setAppliesTo(appliesTo);
-		meveoModuleService.loadModuleItem(moduleItem);
-		
 		module.removeItem(moduleItem);
-		
-        var api = ApiUtils.getApiService(moduleItem.getItemEntity().getClass(), true);
-        if(api instanceof BaseCrudApi) {
-        	BaseCrudApi crudApi = (BaseCrudApi) api;
-        	crudApi.removeFromModule(moduleItem.getItemEntity(), module);
-        }
-        
 		meveoModuleService.update(module);
-
-
 		return toDto(module);
 	}
 
@@ -1431,5 +1500,70 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	@Override
 	public void remove(MeveoModuleDto dto) throws MeveoApiException, BusinessException {
 		uninstall(MeveoModule.class, ModuleUninstall.of(dto.getCode()));
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateModuleOnCommitReceived(@Observes @CommitReceived CommitEvent event) throws IllegalArgumentException, MeveoApiException, BusinessException, Exception {
+		// Make sure the git repo is linked to a module
+		MeveoModule module = this.meveoModuleService.findByCode(event.getGitRepository().getCode());
+		if (module == null) {
+			return;
+		}
+		
+		File directory = GitHelper.getRepositoryDir(null, module.getCode());
+		MeveoModuleItemDto itemDto;
+		MeveoModuleItem item;
+		ModuleUninstall options = ModuleUninstall.builder()
+			.module(module)
+			.removeData(true)
+			.removeItems(true)
+			.removeFiles(true)
+			.build();
+		
+		for (DiffEntry diff : event.getDiffs()) {
+
+			switch (diff.getChangeType()) {
+			case ADD:
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				break;
+				
+			case COPY:
+				//NOOP
+				break;
+				
+			case DELETE:
+				item = getExistingItemFromFile(directory, diff.getOldPath());
+				if (item != null) {
+					module.removeItem(item);
+					meveoModuleItemInstaller.uninstallItem(options, null, item);
+				}
+				break;
+				
+			case MODIFY:
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
+				break;
+				
+			case RENAME:
+				// Remove
+				item = getExistingItemFromFile(directory, diff.getOldPath());
+				if (item != null) {
+					module.removeItem(item);
+					meveoModuleItemInstaller.uninstallItem(options, null, item);
+				}
+				
+				// Add
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
+				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				break;
+				
+			default:
+				break;
+				
+			}
+		}
+		
+		meveoModuleService.update(module);
 	}
 }

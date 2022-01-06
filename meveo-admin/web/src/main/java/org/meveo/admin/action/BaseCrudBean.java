@@ -205,7 +205,6 @@ public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> e
 
 	@Override
 	public void addToModule(T entity, MeveoModule module) throws BusinessException {
-		baseCrudApi.addToModule(entity, module);
 		try {
 			super.addToModule(entity, module);
 		} catch (BusinessException e) {

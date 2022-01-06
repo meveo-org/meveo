@@ -187,14 +187,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
             createTree(module, itemsToRemove);
             
-            if(!itemsToRemove.isEmpty()) {
-            	itemsToRemove.forEach(module::removeItem);
-            	try {
-					meveoModuleService.update(module);
-				} catch (BusinessException e) {
-					log.error("Can't remove items {} from module {}", itemsToRemove, module, e);
-				}
-            }
             // If module was downloaded, show module items from meveoModule.moduleSource
         } else {
             try {
@@ -349,12 +341,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
             moduleItemEntity = itemEntity;
             
-            // Retrieve corresponding API to check for any additional operations
-            var api = ApiUtils.getApiService(itemEntity.getClass(), true);
-            if(api instanceof BaseCrudApi) {
-            	BaseCrudApi crudApi = (BaseCrudApi) api;
-            	crudApi.addToModule(itemEntity, entity);
-            }
         }
     }
 
@@ -435,14 +421,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             parent.getParent().getChildren().remove(parent);
         }
         entity.removeItem(item);
-        
-        // Retrieve corresponding API to check for any additional operations
-        var api = ApiUtils.getApiService(item.getItemEntity().getClass(), true);
-        if(api instanceof BaseCrudApi) {
-        	BaseCrudApi crudApi = (BaseCrudApi) api;
-        	crudApi.removeFromModule(item.getItemEntity(), entity);
-        }
-        
     }
 
     public void publishModule() {

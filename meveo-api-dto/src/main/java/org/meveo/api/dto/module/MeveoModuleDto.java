@@ -82,7 +82,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@XmlElementWrapper(name = "moduleItems")
 	@XmlElement(name = "moduleItem")
 	@JsonProperty("moduleItems")
-	private List<MeveoModuleItemDto> moduleItems;
+	private List<MeveoModuleItemDto> moduleItems = new ArrayList<>();
 		
 	/** The module dependencies. */
 	@ApiModelProperty("List of module dependencies information")

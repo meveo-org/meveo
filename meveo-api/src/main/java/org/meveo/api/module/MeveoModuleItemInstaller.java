@@ -176,107 +176,7 @@ public class MeveoModuleItemInstaller {
         }
         
         for (MeveoModuleItem item : moduleItems) {
-            BusinessEntity itemEntity = item.getItemEntity();
-            
-            if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
-                var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
-                if(cet != null) {
-                	crossStorageService.remove(currentRepository, cet, item.getItemCode());
-                }
-            	continue;
-			}
-            
-            if (itemEntity == null) {
-            	log.error("Failed to load item {}, it won't be uninstalled");
-                continue;
-            }
-            
-            try {
-                if (itemEntity instanceof MeveoModule) {
-                	var childOptions = ModuleUninstall.builder(options)
-                			.childModule(true)
-                			.module((MeveoModule) itemEntity);
-                    uninstall(childOptions.build());
-                } else if(itemEntity instanceof CustomFieldTemplate) {
-                	customFieldTemplateApi.remove(itemEntity.getCode(), ((CustomFieldTemplate) itemEntity).getAppliesTo());
-                } else if(itemEntity instanceof EntityCustomAction) {
-                	entityCustomActionApi.remove(itemEntity.getCode(), ((EntityCustomAction) itemEntity).getAppliesTo());
-                } else {
-
-                    // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
-                    // superclasses)
-                    Class clazz = itemEntity.getClass();
-                    BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(clazz, true);
-
-                    if (api == null) {
-                        log.error("Failed to find implementation of api for class {}", item.getItemClass());
-                        continue;
-                    }
-                    
-                    if(options.removeItems()) {
-						// Handle case where the install script is bundled in the module items
-						if(moduleScript != null && itemEntity.getCode().equals(moduleScript.getClass().getName())) {
-							scriptInstanceService.disable((ScriptInstance) itemEntity);
-							continue;
-						}
-						
-                        if (itemEntity instanceof Endpoint) {
-                            Endpoint endpoint = (Endpoint) itemEntity;
-                            if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
-                            	meveoModuleService.getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
-                                        .setParameter("endpointId", endpoint.getId())
-                                        .executeUpdate();
-                            }
-                            if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
-                            	meveoModuleService.getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
-                                        .setParameter("endpointId", endpoint.getId())
-                                        .executeUpdate();
-                            }
-                            Function service = concreteFunctionService.findById(endpoint.getService().getId());
-                            meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteById")
-                                    .setParameter("endpointId", endpoint.getId())
-                                    .executeUpdate();
-                            log.info("uninstalled endpoint {} / {}", endpoint.getClass(), endpoint.getId());
-                        } else {
-                        	log.info("Uninstalling module item {}", item);
-							if (itemEntity instanceof ScriptInstance) {
-								List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
-								ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
-								if (CollectionUtils.isNotEmpty(entityCustomActions)) {
-									for (EntityCustomAction entityCustomAction : entityCustomActions) {
-										if (entityCustomAction.getScript().equals(scriptInstance)) {
-											entityCustomActionService.remove(entityCustomAction);
-										}
-									}
-								}
-							}
-                        	api.getPersistenceService().remove(itemEntity);
-                        }
-                        
-					} else {
-						
-						if(api.getPersistenceService() instanceof PersistenceService) {
-							try {
-								((PersistenceService) api.getPersistenceService()).disableNoMerge(itemEntity);
-							} catch (Exception e) {
-								log.error("Failed to disable {}", itemEntity);
-							}
-						}
-					}
-
-                }
-                
-            } catch (Exception e) {
-            	Throwable cause = e;
-            	if (e instanceof EJBTransactionRolledbackException && e.getCause() != null) {
-            		while (! (cause instanceof SQLException) && cause.getCause() != null) {
-            			cause = cause.getCause();
-            		}
-            		if (! (cause instanceof SQLException))
-            			cause = e.getCause();
-            	}
-                throw new BusinessException("Failed to uninstall/disable module item " + item + " (cause : "+ cause.getMessage() + ")",e);
-            }
+            uninstallItem(options, moduleScript, item);
         }
 
         if (moduleScript != null) {
@@ -316,6 +216,114 @@ public class MeveoModuleItemInstaller {
         uninstallEvent.fire(options);
         return moduleUpdated;
     }
+
+	public void uninstallItem(ModuleUninstall options, ModuleScriptInterface moduleScript, MeveoModuleItem item) throws BusinessException {
+		if (item.getItemEntity() == null) {
+			meveoModuleService.loadModuleItem(item);
+		}
+		
+		BusinessEntity itemEntity = item.getItemEntity();
+		
+		if (item.getItemClass().equals(CustomEntityInstance.class.getName()) && item.getAppliesTo() != null) {
+		    var cet = customEntityTemplateService.findByCode(item.getAppliesTo());
+		    if(cet != null) {
+		    	crossStorageService.remove(currentRepository, cet, item.getItemCode());
+		    }
+			return;
+		}
+		
+		if (itemEntity == null) {
+			log.error("Failed to load item {}, it won't be uninstalled");
+		    return;
+		}
+		
+		try {
+		    if (itemEntity instanceof MeveoModule) {
+		    	var childOptions = ModuleUninstall.builder(options)
+		    			.childModule(true)
+		    			.module((MeveoModule) itemEntity);
+		        uninstall(childOptions.build());
+		    } else if(itemEntity instanceof CustomFieldTemplate) {
+		    	customFieldTemplateApi.remove(itemEntity.getCode(), ((CustomFieldTemplate) itemEntity).getAppliesTo());
+		    } else if(itemEntity instanceof EntityCustomAction) {
+		    	entityCustomActionApi.remove(itemEntity.getCode(), ((EntityCustomAction) itemEntity).getAppliesTo());
+		    } else {
+
+		        // Find API service class first trying with item's classname and then with its super class (a simplified version instead of trying various class
+		        // superclasses)
+		        Class clazz = itemEntity.getClass();
+		        BaseCrudApi api = (BaseCrudApi) ApiUtils.getApiService(clazz, true);
+
+		        if (api == null) {
+		            log.error("Failed to find implementation of api for class {}", item.getItemClass());
+		            return;
+		        }
+		        
+		        if(options.removeItems()) {
+					// Handle case where the install script is bundled in the module items
+					if(moduleScript != null && itemEntity.getCode().equals(moduleScript.getClass().getName())) {
+						scriptInstanceService.disable((ScriptInstance) itemEntity);
+						return;
+					}
+					
+		            if (itemEntity instanceof Endpoint) {
+		                Endpoint endpoint = (Endpoint) itemEntity;
+		                if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
+		                	meveoModuleService.getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
+		                            .setParameter("endpointId", endpoint.getId())
+		                            .executeUpdate();
+		                }
+		                if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
+		                	meveoModuleService.getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
+		                            .setParameter("endpointId", endpoint.getId())
+		                            .executeUpdate();
+		                }
+		                Function service = concreteFunctionService.findById(endpoint.getService().getId());
+		                meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteById")
+		                        .setParameter("endpointId", endpoint.getId())
+		                        .executeUpdate();
+		                log.info("uninstalled endpoint {} / {}", endpoint.getClass(), endpoint.getId());
+		            } else {
+		            	log.info("Uninstalling module item {}", item);
+						if (itemEntity instanceof ScriptInstance) {
+							List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
+							ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
+							if (CollectionUtils.isNotEmpty(entityCustomActions)) {
+								for (EntityCustomAction entityCustomAction : entityCustomActions) {
+									if (entityCustomAction.getScript().equals(scriptInstance)) {
+										entityCustomActionService.remove(entityCustomAction);
+									}
+								}
+							}
+						}
+		            	api.getPersistenceService().remove(itemEntity);
+		            }
+		            
+				} else {
+					
+					if(api.getPersistenceService() instanceof PersistenceService) {
+						try {
+							((PersistenceService) api.getPersistenceService()).disableNoMerge(itemEntity);
+						} catch (Exception e) {
+							log.error("Failed to disable {}", itemEntity);
+						}
+					}
+				}
+
+		    }
+		    
+		} catch (Exception e) {
+			Throwable cause = e;
+			if (e instanceof EJBTransactionRolledbackException && e.getCause() != null) {
+				while (! (cause instanceof SQLException) && cause.getCause() != null) {
+					cause = cause.getCause();
+				}
+				if (! (cause instanceof SQLException))
+					cause = e.getCause();
+			}
+		    throw new BusinessException("Failed to uninstall/disable module item " + item + " (cause : "+ cause.getMessage() + ")",e);
+		}
+	}
     
     public ModuleInstallResult install(MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
     	installEvent.fire(meveoModule);
@@ -365,62 +373,6 @@ public class MeveoModuleItemInstaller {
 	        return result;
     	} finally {
             installCtx.end();
-    	}
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional(TxType.REQUIRES_NEW)
-	public void uninstallItemDto(MeveoModule meveoModule, MeveoModuleItemDto moduleItemDto) throws BusinessException {
-    	Class<? extends BaseEntityDto> dtoClass;
-		
-    	try {
-			dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-		} catch (ClassNotFoundException e) {
-			throw new BusinessException("Can't find DTO class", e);
-		}
-		
-		BaseEntityDto dto = JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
-		
-		log.info("Uninstalling item {}", dto);
-
-    	if(dto instanceof MeveoModuleDto) {
-        	MeveoModule subModule = meveoModuleService.findByCodeWithFetchEntities(((MeveoModuleDto) dto).getCode());
-    		uninstall(ModuleUninstall.of(subModule));
-    		
-    	} else if(dto instanceof CustomFieldTemplateDto) {
-    		try {
-				customFieldTemplateApi.remove(dto.getCode(), ((CustomFieldTemplateDto) dto).getAppliesTo());
-			} catch (EntityDoesNotExistsException e) {
-				// Do nothing
-			} catch (MeveoApiException e) {
-				throw new BusinessException("Can't remove cft " + dto, e);
-			}
-    		
-    	} else if (dto instanceof EntityCustomActionDto) { 
-    		try {
-				entityCustomActionApi.remove(dto.getCode(), ((EntityCustomActionDto) dto).getAppliesTo());
-			} catch (EntityDoesNotExistsException e) {
-				// Do nothing
-			} catch (MissingParameterException e) {
-				throw new BusinessException(e);
-			}
-    		
-    	} else {
-    		
-            String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
-            Class<?> entityClass = MODULE_ITEM_TYPES.get(moduleItemName);
-            if(entityClass == null) {
-            	throw new IllegalArgumentException(moduleItemName + " is not a module item" );
-            }
-            
-		    ApiService<?,BaseEntityDto> apiService = ApiUtils.getApiService(entityClass, true);
-		    try {
-				apiService.remove(dto);
-		    } catch (EntityDoesNotExistsException e) {
-				// Do nothing
-			} catch (MeveoApiException e) {
-				throw new BusinessException("Can't remove dto " + dto, e);
-			}
     	}
     }
 	

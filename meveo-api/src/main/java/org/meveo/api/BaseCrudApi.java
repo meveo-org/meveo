@@ -438,25 +438,5 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	public Set<File> getFileImport() {
 		return fileImport;
 	}
-
-	/**
-	 * Additional operation to be done when adding an entity to a module
-	 *  
-	 * @param entity The entity to add
-	 * @param module The module to update
-	 */
-	public void addToModule(E entity, MeveoModule module) {
-		//NOOP by default
-	}
-	
-	/**
-	 * Additional operation to be done when removing an entity from a module
-	 *  
-	 * @param entity The entity to remove
-	 * @param module The module to update
-	 */
-	public void removeFromModule(E entity, MeveoModule module) {
-		//NOOP by default
-	}
 	
 }
