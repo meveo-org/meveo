@@ -90,6 +90,7 @@
 		<sql>INSERT INTO meveo_module_source (id, module_source) SELECT id, module_source FROM meveo_module</sql>
 		<dropColumn tableName="meveo_module" columnName="module_source"/>
 	</changeSet>
+	
 	<changeSet id="Add constraint for module_id" author="Arthur Grenier">
 		<addUniqueConstraint tableName="meveo_module_source" columnNames="id" />
 		<addNotNullConstraint tableName="meveo_module_source" columnName="id" />
