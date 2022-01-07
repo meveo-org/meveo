@@ -30,7 +30,6 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
-import org.meveo.api.observers.OntologyObserver;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
@@ -95,9 +94,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private Instance<CustomTableCreatorService> customTableCreatorService;
-    
-    @Inject
-    private OntologyObserver ontologyObserver;
     
     @Override
 	public int compareDtos(CustomEntityTemplateDto obj1, CustomEntityTemplateDto obj2, List<MeveoModuleItemDto> dtos) {
