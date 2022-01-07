@@ -110,7 +110,6 @@ public class MenuBean implements Serializable {
 		DefaultSubMenu notifications = addSubMenu(services, "notifications", "menu.notifications");
 		addItem(notifications, "notifications", "menu.notifications", "internalNotifications");
 		addItem(notifications, "webHooks", "menu.webHooks", "webHooks");
-		addItem(notifications, "webHooks", "menu.webHooks", "webHooks");
 		addItem(notifications, "emailNotifications", "menu.emailNotifications", "emailNotifications");
 		addItem(notifications, "jobTriggers", "menu.jobTriggers", "jobTriggers");
 		addItem(notifications, "webNotifications", "menu.webNotifications", "webNotifications");

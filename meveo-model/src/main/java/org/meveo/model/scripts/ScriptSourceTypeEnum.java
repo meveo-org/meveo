@@ -21,7 +21,7 @@ package org.meveo.model.scripts;
 
 public enum ScriptSourceTypeEnum {	
         JAVA(1, "scriptSourceTypeEnum.JAVA"),
-        PYTHON(2, "Python"),
+        PYTHON(2, "scriptSourceTypeEnum.Python"),
         ES5(7, "scriptSourceTypeEnum.ES5");
 	    
 

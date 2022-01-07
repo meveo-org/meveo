@@ -151,21 +151,17 @@
             <h:form id="deleteDialogForm">
                 <h:panelGrid id="deleteFile" columns="1">
                     #{messages['commons.confirmDelete']}
-                    <hftl:decorateFormField label="#{messages['meveoModule.deleteFiles']}" fieldId="deleteFiles" componentWidth="100">
-                        <p:selectBooleanCheckbox id="deleteFiles" value="#{meveoModuleListBean.moduleUninstall.removeFiles}" >
-                            <p:ajax event="change" update=":deleteDialogForm:deleteFile" />
-                        </p:selectBooleanCheckbox>
-                    </hftl:decorateFormField>
-                    <hftl:decorateFormField label="#{messages['meveoModule.removeData']}" fieldId="removeData" componentWidth="100">
-                        <p:selectBooleanCheckbox id="removeData" value="#{meveoModuleListBean.moduleUninstall.removeData}" >
-                            <p:ajax event="change" update=":deleteDialogForm:removeData" />
-                        </p:selectBooleanCheckbox>
-                    </hftl:decorateFormField>
-                    <hftl:decorateFormField label="#{messages['meveoModule.remove']}" fieldId="removeItems" componentWidth="100">
-                        <p:selectBooleanCheckbox id="removeItems" value="#{meveoModuleListBean.moduleUninstall.removeItems}" >
-                            <p:ajax event="change" update=":deleteDialogForm:removeItems" />
-                        </p:selectBooleanCheckbox>
-                    </hftl:decorateFormField>
+                       <h:panelGrid columns="1" cellpadding="5">
+                			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeItems}" id="remove" 
+                 				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                 				offLabel="Disable module items" onLabel="Delete module items"/>
+               			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeData}"
+               				onIcon="ui-icon-check" offIcon="ui-icon-close"
+               				offLabel="Keep custom tables" onLabel="Delete custom tables"/>
+               			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeFiles}"
+               				onIcon="ui-icon-check" offIcon="ui-icon-close"
+               				offLabel="Keep module files" onLabel="Delete module files"/>
+                  		</h:panelGrid>
                 </h:panelGrid>
                 <h:panelGroup layout="block" styleClass="form-panel-actions">
                     <p:commandButton action="#{meveoModuleListBean.deleteModuleFile()}" immediate="true" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
