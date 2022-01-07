@@ -48,6 +48,7 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.internal.storage.file.WindowCache;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
@@ -55,6 +56,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.SubmoduleConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
@@ -127,6 +129,8 @@ public class GitClient {
         }
 
         final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        WindowCache.reconfigure(new WindowCacheConfig());
+        
         if (repoDir.exists()) {
             keyLock.lock(gitRepository.getCode());
             try {
