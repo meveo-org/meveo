@@ -65,10 +65,11 @@
 						style="width:150px;" required="true">
 						<f:selectItem itemLabel="#{messages['endpoint.selectMethod']}"
 							itemValue="#{null}" noSelectionOption="true" />
-						<f:selectItem itemLabel="#{messages['endpoint.GET']}"
-							itemValue="GET" />
-						<f:selectItem itemLabel="#{messages['endpoint.POST']}"
-							itemValue="POST" />
+						<f:selectItem itemLabel="GET" itemValue="GET" />
+						<f:selectItem itemLabel="POST" itemValue="POST" />
+						<f:selectItem itemLabel="PUT" itemValue="PUT" />
+						<f:selectItem itemLabel="DELETE" itemValue="DELETE" />
+						<f:selectItem itemLabel="HEAD" itemValue="HEAD" />
 					</p:selectOneMenu>
 				</hftl:decorateFormField>
 				<hftl:formField label="#{messages['endpoint.synchronous']}" field="synchronous" />
