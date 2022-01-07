@@ -710,10 +710,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     public void uninstall() {
         try {
 
-            if (!entity.isDownloaded()) {
-                return;
-
-            } else if (!entity.isInstalled()) {
+            if (!entity.isInstalled()) {
                 messages.warn(new BundleKey("messages", "meveoModule.notInstalled"));
                 return;
             }
