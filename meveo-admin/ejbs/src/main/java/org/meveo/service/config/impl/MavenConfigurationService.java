@@ -291,7 +291,8 @@ public class MavenConfigurationService implements Serializable {
 	}
 
 	public void generatePom(String message, MeveoModule module,GitRepository repository) {
-
+		//TODO: Avoid this code when module just got uninstalled
+		
 		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getCode());
 		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
 
@@ -319,7 +320,7 @@ public class MavenConfigurationService implements Serializable {
 				Files.createSymbolicLink(link, relativeSrc);
 			}
 		} catch (IOException e1) {
-			log.error("Failed to create symbolic link for java source");
+			log.error("Failed to create symbolic link for java source", e1);
 		}
 		
 		// Create .gitignore file

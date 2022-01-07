@@ -357,13 +357,15 @@ public class MeveoModuleItemInstaller {
 		            unpackAndInstallModuleItems(result, meveoModule, moduleDto, onDuplicate);
 		
 		            meveoModule.setInstalled(true);
-		
+		            
 		            if (moduleScript != null) {
 		                moduleScriptService.postInstallModule(moduleScript, meveoModule);
 		            }
 		            
 		            result.setInstalledModule(meveoModule);
 		            postInstallEvent.fire(meveoModule);
+		            
+		            meveoModuleService.update(meveoModule);
 	        	} catch(Exception e) {
 	            	throw new ModuleInstallFail(meveoModule, result, e);
 	            }
