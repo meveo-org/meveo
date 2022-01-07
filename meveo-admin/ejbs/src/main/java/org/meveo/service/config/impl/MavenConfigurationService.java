@@ -309,7 +309,7 @@ public class MavenConfigurationService implements Serializable {
 		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
 		source.toFile().mkdirs();
 		
-		Path link = Paths.get(gitRepo.getPath(), "facets", "maven", "java");
+		Path link = Paths.get(gitRepo.getPath(), "facets", "maven", "src", "main", "java");
 		Path relativeSrc = link.getParent().relativize(source);
 		
 		try {
