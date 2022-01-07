@@ -66,6 +66,7 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
+import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
@@ -993,4 +994,31 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				.resolve("pom.xml")
 				.toFile();
 	}
+
+	@Override
+	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
+		BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
+    	
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	
+    	File newJsonFile = new File(gitDirectory, "module.json");
+    	try {
+	    	if (!newJsonFile.exists()) {
+	    		newJsonFile.createNewFile();
+	    	}
+	    	
+	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
+	
+	    	Files.write(newJsonFile.toPath(), strToBytes);
+    	} catch (IOException e) {
+    		throw new BusinessException("File cannot be updated or created", e);
+    	}
+    	
+    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), "Add module descriptor file");
+
+	}
+	
+	
 }
