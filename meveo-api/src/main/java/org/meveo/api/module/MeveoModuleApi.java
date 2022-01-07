@@ -340,11 +340,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 	
 	public MeveoModuleItem getExistingItemFromFile(File directory, String fileName) {
+		if (!fileName.endsWith(".json")) {
+			return null;
+		}
+		
 		String[] paths = fileName.split("/");
 		String directoryName = paths[0];
 		String itemCode = FilenameUtils.getBaseName(fileName);
 		
 		Class<?> itemClass = getItemClassByPath(directoryName);
+		if (itemClass == null) {
+			return null;
+		}
+		
 		boolean hasAppliesToField = ReflectionUtils.isClassHasField(itemClass, "appliesTo");
 		String appliesTo = null;
 		if (hasAppliesToField) {
@@ -358,12 +366,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 	
 	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName) {
+		if (!fileName.endsWith(".json")) {
+			return null;
+		}
+		
 		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
 		
 		String[] paths = fileName.split("/");
 		String directoryName = paths[0];
-		String itemCode = FilenameUtils.getBaseName(fileName);
 		String dtoClassName = entityDtoNamebyPath.get(directoryName);
+
+		if (dtoClassName == null) {
+			return null;
+		}
 		
 		File entityFile = new File(directory, fileName);
 		try {
@@ -1525,7 +1540,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			switch (diff.getChangeType()) {
 			case ADD:
 				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				if (itemDto != null) {
+					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				}
 				break;
 				
 			case COPY:
@@ -1542,7 +1559,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 			case MODIFY:
 				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
+				if (itemDto != null) {
+					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
+				}
 				break;
 				
 			case RENAME:
@@ -1555,7 +1574,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 				// Add
 				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				if (itemDto != null) { 
+					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+				}
 				break;
 				
 			default:
