@@ -331,15 +331,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     /**
      * 
-     * @param cetCode code of the custom entity template
+     * @param cet the custom entity template
      * @return the json schema of the custom entity template
      * @throws IOException if a file can't be written / read
      */
     @SuppressWarnings("unchecked")
-	public String getJsonSchemaContent(String cetCode) throws IOException {
+	public String getJsonSchemaContent(CustomEntityTemplate cet) throws IOException {
 
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/json");
-        File file = new File(cetDir.getAbsolutePath(), cetCode + ".json");
+    	MeveoModule module = this.findModuleOf(cet);
+        final File cetDir = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/json");
+        File file = new File(cetDir.getAbsolutePath(), cet.getCode() + "-schema.json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);

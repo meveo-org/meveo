@@ -634,7 +634,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             return Response.status(404).entity("Custom entity template " + cetCode + " was not found").build();
         } else {
             try {
-                String jsonSchema = customEntityTemplateService.getJsonSchemaContent(cetCode);
+                String jsonSchema = customEntityTemplateService.getJsonSchemaContent(customEntityTemplate);
                 return Response.ok(jsonSchema).build();
             } catch (Exception e) {
                 return Response.status(404).entity(e.getMessage()).build();
