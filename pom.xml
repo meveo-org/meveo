@@ -50,12 +50,6 @@
 			<url>file://${project.groupId}</url>
 		</site>
 	</distributionManagement>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>opencast-public</id>
-			<url>https://nexus.opencast.org/nexus/content/repositories/public/</url>
-		</pluginRepository>
-	</pluginRepositories>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
