@@ -540,4 +540,12 @@ public class PostgresReserverdKeywords {
 	public static boolean isReserved(String word) {
 		return RESERVED_KEYWORDS.contains(word.toUpperCase());
 	}
+	
+	public static String escapeAndFormat(String word) {
+		if (isReserved(word)) {
+			return "\"" + word.toLowerCase() + "\"";
+		} else {
+			return word;
+		}
+	}
 }
