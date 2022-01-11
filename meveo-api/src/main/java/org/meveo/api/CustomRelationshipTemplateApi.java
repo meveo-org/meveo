@@ -107,7 +107,8 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         completeCrtData(crt, dto);
 
         customRelationshipTemplateService.create(crt);
-
+        
+        synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
 
     }
 
