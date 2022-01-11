@@ -1,0 +1,568 @@
+{
+	"info": {
+		"_postman_id": "6cd0d617-4ec2-47a5-987b-b4b0e816285c",
+		"name": "Neo4j persistence",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Date persistence using instant",
+			"item": [
+				{
+					"name": "Cet A in neo4j",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoCetA\",\n    \"code\": \"NeoCetA\",\n    \"description\": \"NeoCetA\",\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cet B in neo4j",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoCetB\",\n    \"code\": \"NeoCetB\",\n    \"description\": \"NeoCetB\",\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CRT A->B",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"CRTA_B\",\r\n  \"availableStorages\": [\"NEO4J\"],\r\n  \"name\": \"HAS_B\",\r\n  \"isUnique\": false,\r\n  \"startNodeCode\": \"NeoCetA\",\r\n  \"endNodeCode\": \"NeoCetB\",\r\n  \"sourceNameSingular\": \"b\",\r\n  \"fields\": [\r\n    {\r\n      \"code\": \"processDate\",\r\n      \"fieldType\": \"DATE\",\r\n      \"storages\": [\"NEO4J\"],\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"processDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/crt/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customRelationshipTemplate",
+								"crt",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update IDL",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/graphql/:repo/idl",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"graphql",
+								":repo",
+								"idl"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "{{missionId}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Put data",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Encoding",
+								"value": "gzip",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"a\",\r\n        \"type\":\"NeoCetA\",\r\n        \"properties\": {\r\n            \"code\": \"A\"\r\n        }\r\n    }, \r\n    {\r\n        \"name\": \"b\",\r\n        \"type\":\"NeoCetB\",\r\n        \"properties\": {\r\n            \"code\": \"B\"\r\n        }\r\n    }, {\r\n        \"name\": \"ac\",\r\n        \"type\": \"CRTA_B\",\r\n        \"properties\": {\r\n            \"processDate\": 1641899947981\r\n        },\r\n        \"source\": \"a\",\r\n        \"target\": \"b\"\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/neo4j/persist/entities?neo4jConfiguration={{missionId}}",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"neo4j",
+								"persist",
+								"entities"
+							],
+							"query": [
+								{
+									"key": "neo4jConfiguration",
+									"value": "{{missionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Process date returned\", function () {\r",
+									"    pm.expect(pm.response.text()).to.include(\"1641899947981\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/graphql",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"query\": \"{ NeoCetA { code, bRelations { processDate } } } \",\r\n    \"variables\": {}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/services/graphql/:repo",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"services",
+								"graphql",
+								":repo"
+							],
+							"variable": [
+								{
+									"key": "repo",
+									"value": "{{missionId}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CRT",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"CRTA_B\",\r\n  \"availableStorages\": [\"NEO4J\"],\r\n  \"name\": \"HAS_B\",\r\n  \"isUnique\": false,\r\n  \"startNodeCode\": \"NeoCetA\",\r\n  \"endNodeCode\": \"NeoCetB\",\r\n  \"fields\": [\r\n    {\r\n      \"code\": \"processDate\",\r\n      \"fieldType\": \"DATE\",\r\n      \"storages\": [\"NEO4J\"],\r\n      \"storageType\": \"SINGLE\",\r\n      \"valueRequired\": false,\r\n      \"description\": \"processDate\",\r\n      \"isUnique\": false\r\n    }\r\n  ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/relationship/CRTA_B/NeoCetA/NeoCetB",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customRelationshipTemplate",
+								"relationship",
+								"CRTA_B",
+								"NeoCetA",
+								"NeoCetB"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Cet A",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"NeoCetB\",\n    \"code\": \"NeoCetB\",\n    \"description\": \"NeoCetB\",\n    \"neo4jStorageConfiguration\": {},\n    \"fields\": [\n        {\n            \"code\": \"code\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"code\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"NEO4J\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"NEO4J\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeoCetA?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"NeoCetA"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete cet B",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/NeoCetB?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"NeoCetB"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
