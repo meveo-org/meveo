@@ -148,15 +148,29 @@ public class Neo4jDao {
         StringBuilder query = new StringBuilder()
         		.append("DROP CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
+        
+        StringBuilder checkConstraintQuery = new StringBuilder()
+        		.append("CALL db.constraints() YIELD description \n")
+        		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
+        		.append("'\n RETURN COUNT(*) ");
 
         try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
-	        cypherHelper.update(
-        		neo4jConfiguration,
-        		query.toString(),
-        		null,
-        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
-        		tx
-    		);
+        	Long exists = cypherHelper.execute(
+    			neo4jConfiguration,
+    			checkConstraintQuery.toString(),
+    			Map.of(),
+                (transaction, result) -> result.single().get(0).asLong()
+            );
+        	
+            if (exists != 0) {
+		        cypherHelper.update(
+	        		neo4jConfiguration,
+	        		query.toString(),
+	        		null,
+	        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
+	        		tx
+	    		);
+            }
         }
     }
 
@@ -171,15 +185,29 @@ public class Neo4jDao {
         StringBuilder query = new StringBuilder()
         		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
         		.append("ASSERT n.").append(property).append(" IS UNIQUE");
+        
+        StringBuilder checkConstraintQuery = new StringBuilder()
+        		.append("CALL db.constraints() YIELD description \n")
+        		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
+        		.append("'\n RETURN COUNT(*) ");
 
         try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
-	        cypherHelper.update(
+        	Long exists = cypherHelper.execute(
+    			neo4jConfiguration,
+    			checkConstraintQuery.toString(),
+    			Map.of(),
+                (transaction, result) -> result.single().get(0).asLong()
+            );
+        	
+        	if (exists == 0) {
+		        cypherHelper.update(
 	        		neo4jConfiguration,
 	        		query.toString(),
 	        		null,
 	        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
 	        		tx
 	    		);
+        	}
         }
     }
 

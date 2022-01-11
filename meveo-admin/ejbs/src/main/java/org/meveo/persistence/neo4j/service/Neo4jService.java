@@ -176,6 +176,9 @@ public class Neo4jService implements CustomPersistenceService {
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
     
+    @Inject
+    private Repository defaultRepository;
+    
     /**
      * Remove all data concerned with the CET
      *
@@ -244,11 +247,17 @@ public class Neo4jService implements CustomPersistenceService {
      *
      * @return the list of neo4j repositories available
      */
-    public List<String> getRepositoriesCode(){
-
-        return emWrapper.getEntityManager()
+    public Set <String> getRepositoriesCode(){
+        List<String> codeList = emWrapper.getEntityManager()
                 .createQuery("SELECT c.code from Neo4JConfiguration c WHERE c.disabled = false", String.class)
                 .getResultList();
+        
+        Set<String> codes = new HashSet<>(codeList);
+        if (defaultRepository.getNeo4jConfiguration() != null) {
+        	codes.add(defaultRepository.getNeo4jConfiguration().getCode());
+        }
+        
+        return codes;
     }
 
 
