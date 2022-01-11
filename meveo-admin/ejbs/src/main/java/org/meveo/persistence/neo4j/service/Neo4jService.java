@@ -18,10 +18,12 @@ package org.meveo.persistence.neo4j.service;
 
 import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,8 +48,6 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
-
-import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -109,6 +109,8 @@ import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * @author Rachid AITYAAZZA
@@ -1325,6 +1327,25 @@ public class Neo4jService implements CustomPersistenceService {
                     if (cft.isUnique() && uniqueFields != null) {
                         uniqueFields.put(cft.getCode(), fieldValue);
                     }
+                }
+                
+                if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
+                	if (fieldValue instanceof Number) {
+                        convertedFields.put(cft.getCode(), ((Number) fieldValue).longValue());
+                	} else if (fieldValue instanceof String) {
+                        convertedFields.put(cft.getCode(), Long.parseLong((String) fieldValue));
+                	} else if (fieldValue instanceof Date) {
+                        convertedFields.put(cft.getCode(), ((Date) fieldValue).getTime());
+                	} else if(fieldValue instanceof Instant) {
+                        convertedFields.put(cft.getCode(), ((Instant) fieldValue).toEpochMilli());
+                	}
+                	
+                	if (fieldValue != null) {
+                        if (cft.isUnique() && uniqueFields != null) {
+                            uniqueFields.put(cft.getCode(), convertedFields.get(cft.getCode()));
+                        }
+                	}
+                	
                 }
                 
                 
