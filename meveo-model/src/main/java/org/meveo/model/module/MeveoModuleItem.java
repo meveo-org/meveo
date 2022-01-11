@@ -1,5 +1,7 @@
 package org.meveo.model.module;
 
+import java.util.Optional;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
@@ -108,7 +110,10 @@ public class MeveoModuleItem extends BaseEntity {
     }
 
     public String getItemClass() {
-        return itemClass;
+    	// Strip off the class name after the first $ in case of proxied item type that occurs in rare cases
+        return Optional.ofNullable(itemClass)
+        		.map(s -> s.replaceFirst("([^$]*).*", "$1"))
+        		.orElse(null);
     }
 
     public void setItemClass(String itemClass) {
@@ -117,12 +122,12 @@ public class MeveoModuleItem extends BaseEntity {
 
     public String getItemClassSimpleName() {
         try {
-            final Entity annotation = Class.forName(itemClass).getAnnotation(Entity.class);
+            final Entity annotation = Class.forName(getItemClass()).getAnnotation(Entity.class);
             if (org.apache.commons.lang3.StringUtils.isNotBlank(annotation.name())) {
                 return annotation.name();
 
-            } else if (itemClass != null) {
-                return itemClass.substring(itemClass.lastIndexOf('.') + 1);
+            } else if (getItemClass() != null) {
+                return getItemClass().substring(getItemClass().lastIndexOf('.') + 1);
             }
         } catch (ClassNotFoundException e) {
             //NOOP
