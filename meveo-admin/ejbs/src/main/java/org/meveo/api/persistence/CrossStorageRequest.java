@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -48,7 +49,11 @@ public class CrossStorageRequest<T> {
 	}
 	
 	public CrossStorageRequest<T> by(String field, Object value) {
-		configuration.getFilters().put(field, value);
+		if (value instanceof CustomEntity) {
+			configuration.getFilters().put(field, ((CustomEntity) value).getUuid());
+		} else {
+			configuration.getFilters().put(field, value);
+		}
 		return this;
 	}
 	
