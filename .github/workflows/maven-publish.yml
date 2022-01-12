@@ -4,6 +4,11 @@
 name: Maven Package
 
 on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
   release:
     types: [created]
     
