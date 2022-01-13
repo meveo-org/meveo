@@ -27,12 +27,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.config.impl.MavenConfigurationService;
+import org.slf4j.Logger;
 
 /**
  * Allows the user to download a jar file from Meveo. Directory hierarchy is
@@ -61,6 +63,9 @@ public class MavenFileServlet extends HttpServlet {
 	
 	@Inject
 	private MeveoModuleService moduleService;
+	
+	@Inject
+	private Logger log;
 	
 	private String userPath;
 
@@ -394,79 +399,96 @@ public class MavenFileServlet extends HttpServlet {
 		// Prepare streams.
 		RandomAccessFile input = null;
 		OutputStream output = null;
+		
+		if (jos != null) {
+			jos.finish();
+			jos.flush();
+		} else {
+			try {
+				// Open streams.
+				input = file.exists() ? new RandomAccessFile(file, "r") : null;
+				output = jos != null ? jos : response.getOutputStream();
 
-		try {
-			// Open streams.
-			input = new RandomAccessFile(file, "r");
-			output = jos != null ? jos : response.getOutputStream();
+				if (ranges.isEmpty() || ranges.get(0) == full) {
 
-			if (ranges.isEmpty() || ranges.get(0) == full) {
+					// Return full file.
+					Range r = full;
+					response.setContentType(contentType);
 
-				// Return full file.
-				Range r = full;
-				response.setContentType(contentType);
+					if (content) {
+						if (acceptsGzip) {
+							// The browser accepts GZIP, so GZIP the content.
+							response.setHeader("Content-Encoding", "gzip");
+							output = new GZIPOutputStream(output, DEFAULT_BUFFER_SIZE);
+						} else {
+							// Content length is not directly predictable in case of GZIP.
+							// So only add it if there is no means of GZIP, else browser will hang.
+							response.setHeader("Content-Length", String.valueOf(r.length));
+						}
 
-				if (content) {
-					if (acceptsGzip) {
-						// The browser accepts GZIP, so GZIP the content.
-						response.setHeader("Content-Encoding", "gzip");
-						output = new GZIPOutputStream(output, DEFAULT_BUFFER_SIZE);
-					} else {
-						// Content length is not directly predictable in case of GZIP.
-						// So only add it if there is no means of GZIP, else browser will hang.
-						response.setHeader("Content-Length", String.valueOf(r.length));
+						// Copy full range.
+						if (jos == null) {
+							copy(input, output, r.start, r.length);
+						}
 					}
 
-					// Copy full range.
-					copy(input, output, r.start, r.length);
-				}
+				} else if (ranges.size() == 1) {
 
-			} else if (ranges.size() == 1) {
+					// Return single part of file.
+					Range r = ranges.get(0);
+					response.setContentType(contentType);
+					response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
+					response.setHeader("Content-Length", String.valueOf(r.length));
+					response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
 
-				// Return single part of file.
-				Range r = ranges.get(0);
-				response.setContentType(contentType);
-				response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
-				response.setHeader("Content-Length", String.valueOf(r.length));
-				response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-
-				if (content) {
-					// Copy single part range.
-					copy(input, output, r.start, r.length);
-				}
-
-			} else {
-
-				// Return multiple parts of file.
-				response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
-				response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-
-				if (content) {
-					// Cast back to ServletOutputStream to get the easy println methods.
-					ServletOutputStream sos = (ServletOutputStream) output;
-
-					// Copy multi part range.
-					for (Range r : ranges) {
-						// Add multipart boundary and header fields for every range.
-						sos.println();
-						sos.println("--" + MULTIPART_BOUNDARY);
-						sos.println("Content-Type: " + contentType);
-						sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
-
-						// Copy single part range of multi part range.
+					if (content && jos == null) {
+						// Copy single part range.
 						copy(input, output, r.start, r.length);
 					}
 
-					// End with multipart boundary.
-					sos.println();
-					sos.println("--" + MULTIPART_BOUNDARY + "--");
+				} else {
+
+					// Return multiple parts of file.
+					response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
+					response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+
+					if (content) {
+						// Cast back to ServletOutputStream to get the easy println methods.
+						ServletOutputStream sos = (ServletOutputStream) output;
+
+						// Copy multi part range.
+						for (Range r : ranges) {
+							// Add multipart boundary and header fields for every range.
+							sos.println();
+							sos.println("--" + MULTIPART_BOUNDARY);
+							sos.println("Content-Type: " + contentType);
+							sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+
+							// Copy single part range of multi part range.
+							if (jos == null) {
+								copy(input, output, r.start, r.length);
+							}
+						}
+
+						// End with multipart boundary.
+						sos.println();
+						sos.println("--" + MULTIPART_BOUNDARY + "--");
+					}
+				}
+				
+			} catch (Exception e) {
+				log.error("Failure while writing response", e);
+			} finally {
+				// Gently close streams.
+				close(output);
+				
+				if (input != null) {
+					close(input);
 				}
 			}
-		} finally {
-			// Gently close streams.
-			close(output);
-			close(input);
 		}
+
+		
 	}
 
 	// Helpers (can be refactored to public utility class)

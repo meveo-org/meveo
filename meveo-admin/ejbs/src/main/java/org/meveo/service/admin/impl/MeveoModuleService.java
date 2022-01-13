@@ -976,7 +976,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				.resolve("facets")
 				.resolve("java")
 				.toFile();
-		org.meveo.commons.utils.FileUtils.addDirectoryToZip(javaDir, jos, "");
+		for (File f : javaDir.listFiles()) {
+			if (f.isDirectory()) {
+				org.meveo.commons.utils.FileUtils.addDirectoryToZip(f, jos, null);
+			} else {
+				org.meveo.commons.utils.FileUtils.addFileToZip(f, jos, null);
+			}
+		}
 		return jos;
 	}
 	
