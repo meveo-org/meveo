@@ -217,6 +217,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		return null;
     	}
     	
+    	//XXX: This part of code will break the sub-modules mechanism, but it seems it isn't used anymore
+    	if (entity instanceof MeveoModule) {
+    		return (MeveoModule) entity;
+    	}
+    	
     	MeveoModule module = null;
     	if (entity != null) {
     		if (entity instanceof CustomFieldTemplate) {
