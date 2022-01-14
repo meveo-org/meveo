@@ -362,8 +362,7 @@ public class MavenConfigurationService implements Serializable {
 		if (!baseUrl.endsWith("/")) {
 			baseUrl = baseUrl + "/";
 		}
-		//ownInstance.setUrl(baseUrl + contextRoot + "/maven");
-		ownInstance.setUrl(baseUrl + "/maven");
+		ownInstance.setUrl(baseUrl + System.getProperty("meveo.moduleName", "meveo") + "/maven");
 		model.addRepository(ownInstance);
 		
 		Repository githubRepo = new Repository();
