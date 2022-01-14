@@ -353,10 +353,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			return null;
 		}
 		
-		boolean hasAppliesToField = ReflectionUtils.isClassHasField(itemClass, "appliesTo");
 		String appliesTo = null;
-		if (hasAppliesToField) {
-			appliesTo = paths[paths.length - 2];
+		if (paths.length > 2) {
+			appliesTo = paths[1];
 		}
 		
 		return meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)

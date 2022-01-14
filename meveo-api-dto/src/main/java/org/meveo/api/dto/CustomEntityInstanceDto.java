@@ -53,6 +53,8 @@ public class CustomEntityInstanceDto extends BaseEntityDto implements Serializab
     /** The custom fields. */
     @ApiModelProperty("Custom fields information")
     private CustomFieldsDto customFields;
+    
+    private String uuid;
 
     /**
      * Instantiates a new custom entity instance dto.
@@ -60,8 +62,26 @@ public class CustomEntityInstanceDto extends BaseEntityDto implements Serializab
     public CustomEntityInstanceDto() {
     	super();
     }
-
+    
     /**
+	 * @return the {@link #uuid}
+	 */
+	public String getUuid() {
+		return uuid;
+	}
+
+
+
+	/**
+	 * @param uuid the uuid to set
+	 */
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+
+
+	/**
      * Gets the code.
      *
      * @return the code

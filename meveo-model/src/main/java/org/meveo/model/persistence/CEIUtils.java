@@ -542,6 +542,7 @@ public class CEIUtils {
 	public static <T> T ceiToPojo(CustomEntityInstance cei, Class<T> pojoClass) {
 		Map<String, Object> pojoValues = cei.getCfValuesAsValues();
 		pojoValues.put("uuid", cei.getUuid());
+		pojoValues.put("cetCode", cei.getCetCode());
 		return deserialize(pojoValues, pojoClass);
 	}
 
@@ -588,6 +589,21 @@ public class CEIUtils {
 				throw new RuntimeException(e);
 			}
 		}).orElse(null);
+	}
+	
+	public static String serialize(CustomEntityInstance entity) {
+		Map<String, Object> values = entity.getCfValuesAsValues();
+		values.put("uuid", entity.getUuid());
+		values.put("cetCode", entity.getCetCode());
+		
+		// Serialize references
+		Map.copyOf(values).forEach((key, value) -> {
+			if (value instanceof EntityReferenceWrapper) {
+				values.put(key, ((EntityReferenceWrapper) value).getUuid());
+			}
+		});
+		
+		return JacksonUtil.toStringPrettyPrinted(values);
 	}
 
 	/**

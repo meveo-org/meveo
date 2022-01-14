@@ -43,6 +43,8 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
@@ -222,29 +224,37 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		return (MeveoModule) entity;
     	}
     	
+    	String appliesTo = null;
+    	if (entity instanceof CustomFieldTemplate) {
+    		appliesTo = ((CustomFieldTemplate) entity).getAppliesTo();
+    	} else if (entity instanceof EntityCustomAction) {
+    		appliesTo = ((CustomFieldTemplate) entity).getAppliesTo();
+    	} else if (entity instanceof CustomEntityInstance) {
+    		appliesTo = ((CustomEntityInstance) entity).getCetCode();
+    	}
+    	
+    	String code;
+    	if (entity instanceof CustomEntityInstance) {
+    		code = ((CustomEntityInstance) entity).getUuid();
+    	} else {
+    		code = entity.getCode();
+    	}
+    	
+    	
     	MeveoModule module = null;
     	if (entity != null) {
-    		if (entity instanceof CustomFieldTemplate) {
-    			CustomFieldTemplate entityCtf = (CustomFieldTemplate) entity;
-    			
-				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass AND mi.appliesTo = :appliesTo");
-	    		q.setParameter("code", entityCtf.getCode());
-	    		q.setParameter("itemClass", entityCtf.getClass().getName());
-	    		q.setParameter("appliesTo", entityCtf.getAppliesTo());
-	    		if (!(q.getResultList().isEmpty())) {
-	    			module = (MeveoModule) q.getResultList().get(0);
-	    		}
-    		}else {
-				Session session = this.getEntityManager().unwrap(Session.class);
-	    		Query q = session.createQuery("SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode = :code AND mi.itemClass = :itemClass");
-	    		q.setParameter("code", entity.getCode());
-	    		q.setParameter("itemClass", entity.getClass().getName());
-	    		if (!(q.getResultList().isEmpty())) {
-	    			module = (MeveoModule) q.getResultList().get(0);
-	    		}
-    		}
-    		if (module != null) { String cc = module.getGitRepository().getCode(); }
+			Session session = this.getEntityManager().unwrap(Session.class);
+    		Query<MeveoModule> q = session.createQuery(
+    				"SELECT mi.meveoModule "
+    				+ "FROM MeveoModuleItem mi "
+    				+ "	WHERE mi.itemCode = :code "
+    				+ "	AND mi.itemClass = :itemClass "
+    				+ "	AND mi.appliesTo = :appliesTo",
+    				MeveoModule.class);
+    		q.setParameter("code", code);
+    		q.setParameter("itemClass", entity.getClass().getName());
+    		q.setParameter("appliesTo", appliesTo);
+    		module = q.getResultStream().findFirst().orElse(null);
 		}
     	
     	if (module == null) {

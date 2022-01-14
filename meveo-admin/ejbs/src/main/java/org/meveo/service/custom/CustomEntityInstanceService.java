@@ -39,6 +39,7 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
@@ -489,17 +490,14 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	@Override
 	public void addFilesToModule(CustomEntityInstance entity, MeveoModule module) throws BusinessException {
 		String cetCode = entity.getCetCode();
-		Map<String, Object> values = entity.getCfValuesAsValues();
-		values.put("uuid", entity.getUuid());
-		
-		String ceiJson = JacksonUtil.toStringPrettyPrinted(values);
+		String ceiJson = CEIUtils.serialize(entity);
 		
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
     	File newDir = new File(gitDirectory, path);
     	newDir.mkdirs();
     	
-    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getCode() + ".json");
+    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getUuid() + ".json");
     	try {
     		if (!newJsonFile.exists()) {
     			newJsonFile.createNewFile();

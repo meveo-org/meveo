@@ -31,15 +31,14 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
+import org.meveo.api.dto.CustomFieldsDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
-import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -58,6 +57,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
@@ -69,6 +69,7 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.api.EntityToDtoConverter;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.EntityCustomActionService;
@@ -142,6 +143,9 @@ public class MeveoModuleItemInstaller {
 	@Inject
 	@ModulePostUninstall
 	private Event<ModuleUninstall> uninstallEvent;
+	
+	@Inject
+	private EntityToDtoConverter entityDtoConverter;
 	
 	/**
 	 * Uninstall the module and disables it items
@@ -395,6 +399,14 @@ public class MeveoModuleItemInstaller {
 			CustomEntityTemplate customEntityTemplate = null;
 			if (dto instanceof CustomEntityInstanceDto) {
 				customEntityTemplate = customEntityTemplateService.findByCode(((CustomEntityInstanceDto) dto).getCetCode());
+				if (((CustomEntityInstanceDto) dto).getCustomFields() == null) {
+					// Comes as pojo, must populate the dto fields 
+					CustomEntityInstance cei = CEIUtils.pojoToCei(moduleItemDto.getDtoData());
+					cei.setCet(customEntityTemplate);
+					cei.setCetCode(customEntityTemplate.getCode());
+					CustomFieldsDto customFields = entityDtoConverter.getCustomFieldsDTO(cei, true, true);
+					((CustomEntityInstanceDto) dto).setCustomFields(customFields);
+				}
 			}
 			
 		    try {
@@ -409,7 +421,11 @@ public class MeveoModuleItemInstaller {
 
 		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && (customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J))) {
                     CustomEntityInstance cei = new CustomEntityInstance();
-                    cei.setUuid(dto.getCode());
+                    cei.setUuid(((CustomEntityInstanceDto) dto).getUuid());
+                    if (cei.getUuid() == null) {
+                    	cei.setCode(dto.getCode());
+                    }
+                    
                     cei.setCetCode(customEntityTemplate.getCode());
                     cei.setCet(customEntityTemplate);
                     
@@ -422,7 +438,9 @@ public class MeveoModuleItemInstaller {
                     
                     crossStorageService.createOrUpdate(currentRepository, cei);
                     
-					moduleItem = new MeveoModuleItem(dto.getCode(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
+					moduleItem = new MeveoModuleItem(cei.getUuid(), CustomEntityInstance.class.getName(), cei.getCetCode(), null);
+					moduleItem.setItemEntity(cei);
+					
 					meveoModuleService.addModuleItem(moduleItem, meveoModule);
                 } else if (dto instanceof CustomFieldTemplateDto) {
 	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;

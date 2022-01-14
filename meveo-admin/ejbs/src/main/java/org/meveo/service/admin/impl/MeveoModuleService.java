@@ -69,6 +69,7 @@ import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -1003,8 +1004,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	@Override
 	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
-		BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
+		MeveoModuleDto dto = new MeveoModuleDto(entity);
+		dto.setModuleItems(null);
+		
+    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
     	
