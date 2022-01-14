@@ -489,8 +489,10 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 	@Override
 	public void addFilesToModule(CustomEntityInstance entity, MeveoModule module) throws BusinessException {
 		String cetCode = entity.getCetCode();
+		Map<String, Object> values = entity.getCfValuesAsValues();
+		values.put("uuid", entity.getUuid());
 		
-		String ceiJson = JacksonUtil.toStringPrettyPrinted(entity.getCfValuesAsValues());
+		String ceiJson = JacksonUtil.toStringPrettyPrinted(values);
 		
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
