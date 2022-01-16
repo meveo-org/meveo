@@ -53,15 +53,6 @@
 					</p:outputPanel>
 				</p:tab>
 
-				<p:tab title="#{messages['customer.tab.information']}">
-					<hftl:formPanel ajaxSubmit="true" formId="requiredForm"
-									submitPartialProcess=":tabView" edit="#{param.uuid == null}"
-									backingBean="#{customEntityInstanceBean}" showFormButtons="false">
-						<hftl:formField label="#{messages['BusinessEntity.uuid']}"
-										field="uuid" required="false" validateCode="false"/>
-					</hftl:formPanel>
-				</p:tab>
-
 				<hftl:customFields backingBean="#{customEntityInstanceBean}"
 					messagesId=":tabView:informationForm:messages" renderForm="true"
 					enctype="multipart/form-data" />
