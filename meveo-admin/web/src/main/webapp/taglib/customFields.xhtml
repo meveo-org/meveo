@@ -69,7 +69,13 @@
         <c:set var="renderTab" value="#{cfTab.hasVisibleCustomFields(entity, cfValueHolder)}" />
 
         <p:tab title="#{tabLabel}" rendered="#{renderTab}">
-        
+
+            <c:if test="#{cfTabStatus.index == 0}">
+                <h:panelGroup>
+                    <hftl:formField label="#{messages['BusinessEntity.uuid']}" field="uuid" required="false" validateCode="false"/>
+                </h:panelGroup>
+            </c:if>
+
             <c:if test="#{renderForm}">
                 <h:form enctype="#{enctype}" id="#{prefix}_form_group_#{cfTabStatus.index}">
                     <h:panelGroup id="form_panel">
