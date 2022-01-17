@@ -652,6 +652,7 @@ public class CustomTableCreatorService implements Serializable {
 			case "timestamp" :
 				type = "datetime";
 				break;
+			case "numeric":
 			case "text" :
 				// NOOP
 				break;
@@ -659,6 +660,10 @@ public class CustomTableCreatorService implements Serializable {
 				if(typeSize != 0) {
 					type += "(" + typeSize + ")";
 				}
+		}
+		
+		if (column.getType().toLowerCase().contains(type)) { 
+			return;
 		}
 		
 		// Field definition must match the existing field
