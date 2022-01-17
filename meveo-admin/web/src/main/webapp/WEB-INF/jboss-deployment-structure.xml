@@ -22,6 +22,7 @@
             <module name="org.keycloak.keycloak-core"/>
             <module name="org.jboss.vfs"/>
             <module name="org.dom4j" export="true"/>
+            <module name="org.postgresql" export="true"/>
         </dependencies>
     </deployment>
 </jboss-deployment-structure>
