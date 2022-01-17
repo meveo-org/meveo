@@ -228,7 +228,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if (entity instanceof CustomFieldTemplate) {
     		appliesTo = ((CustomFieldTemplate) entity).getAppliesTo();
     	} else if (entity instanceof EntityCustomAction) {
-    		appliesTo = ((CustomFieldTemplate) entity).getAppliesTo();
+    		appliesTo = ((EntityCustomAction) entity).getAppliesTo();
     	} else if (entity instanceof CustomEntityInstance) {
     		appliesTo = ((CustomEntityInstance) entity).getCetCode();
     	}
