@@ -597,9 +597,9 @@ public class CEIUtils {
 		values.put("cetCode", entity.getCetCode());
 		
 		// Serialize references
-		Map.copyOf(values).forEach((key, value) -> {
-			if (value instanceof EntityReferenceWrapper) {
-				values.put(key, ((EntityReferenceWrapper) value).getUuid());
+		values.entrySet().forEach(entry -> {
+			if (entry.getValue() instanceof EntityReferenceWrapper) {
+				entry.setValue(((EntityReferenceWrapper) entry.getValue()).getUuid());
 			}
 		});
 		
