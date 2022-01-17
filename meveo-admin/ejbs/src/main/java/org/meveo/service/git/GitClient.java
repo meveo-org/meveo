@@ -171,6 +171,8 @@ public class GitClient {
                 final CloneCommand cloneCommand = Git.cloneRepository()
                         .setURI(gitRepository.getRemoteOrigin())
                         .setDirectory(repoDir);
+                if (gitRepository.getDefaultBranch() != null)
+                	cloneCommand.setBranch(gitRepository.getDefaultBranch());
                 cloneCommand.setCloneSubmodules(true);
                 if(gitRepository.getRemoteOrigin().startsWith("http")) {
                     CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
