@@ -166,7 +166,7 @@ Body used for pagination, fields to retrieve, sorting and filtering
  "fetchFields":["customFieldCode1","customFieldCode2.subField1","customFieldCode3.*"],
  "sortField":"customFieldCode1",
  "ordering":"ASCENDING", 
- "filters":"{\"customFieldCode1\":\"value1\"}"
+ "filters":{"customFieldCode1":"value1"}
 
 }
 ```
