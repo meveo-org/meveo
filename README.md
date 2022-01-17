@@ -2,7 +2,7 @@
 
 # Meveo
 
-Meveo is a platform that allow to develop and execute enterprise back and front applications. [Watch an introduction video](https://vimeo.com/661171888)
+[Meveo](https://meveo.org) is a platform that allow to develop and execute enterprise back and front applications. [Watch an introduction video](https://vimeo.com/661171888)
 
 It allow you to create and deploy at runtime with fine grained security :
 - Data model, putting part of your entities in RDBMS, Neo4j, Infinispan, Elastic search
