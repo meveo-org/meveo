@@ -510,7 +510,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		builder.field("meveo_uuid");
 		if(filters != null) {
 			filters.forEach((key, value) -> {
-				if(!value.equals("**")) { //FIXME: Dirty hack, must be fixed at higher level
+				if(!"**".equals(value)) { //FIXME: Dirty hack, must be fixed at higher level
 					if (!key.equals("uuid")) {
 						builder.filter(key, value);
 					} else {
