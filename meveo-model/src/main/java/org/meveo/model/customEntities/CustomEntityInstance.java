@@ -81,16 +81,6 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private CustomFieldValues cfValuesOld = new CustomFieldValues();
-	
-	
-
-	@Override
-	public String getUuid() {
-		if (StringUtils.isNotBlank(code) && StringUtils.isNotBlank(cetCode)) {
-			return cetCode + ":" + code;
-		}
-		return super.getUuid();
-	}
 
 	@Override
 	public boolean equals(Object obj) {
