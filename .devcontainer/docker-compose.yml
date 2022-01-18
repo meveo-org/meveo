@@ -7,8 +7,8 @@ volumes:
   #   driver: local
   keycloak_data:
     driver: local
-  #meveo_data_dev:
-  #  driver: local
+  meveo_data_dev:
+    driver: local
   meveo_binary_data_dev:
     driver: local
 
@@ -67,9 +67,9 @@ services:
     networks:
       - meveo
     volumes:
-      - ..:/home/meveo
-      - ~/meveodata/:/opt/jboss/wildfly/meveodata
-      #- meveo_data_dev:/opt/jboss/wildfly/meveodata
+      #- ..:/home/meveo
+      #- ~/meveodata/:/opt/jboss/wildfly/meveodata
+      - meveo_data_dev:/opt/jboss/wildfly/meveodata
       #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data_dev:/tmp/meveo/binary/storage
     environment:
@@ -79,6 +79,7 @@ services:
       WILDFLY_DEBUG_PORT: 8787
       WILDFLY_CUSTOM_XMMS: "1024m"
       WILDFLY_CUSTOM_XMMX: "2048m"
+      #NEO4J_HOST_AND_PORT: "neo4j:7687"
       #JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
     ports:
       - 8080:8080
