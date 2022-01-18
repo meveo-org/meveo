@@ -202,11 +202,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	                entityCustomActionApi.createOrUpdate(actionDto, cet.getAppliesTo());
 	            }
 	        }
-	        
-	        // Manually trigger actions on cet creation
-	        cet.setInDraft(false);
-            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
-            customEntityTemplateService.addFilesToModule(cet, cetModule);
         
 		} catch (BusinessException | MeveoApiException e) {
 			throw e;
