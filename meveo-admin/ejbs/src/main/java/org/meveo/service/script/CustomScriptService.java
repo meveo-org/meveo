@@ -170,7 +170,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
-    
+	
+	@Inject
+	private ScriptInstanceService self;
+	
     @PostConstruct
     private void init() {
         if(mavenConfigurationService.getM2FolderPath() != null) {
@@ -344,7 +347,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     @Override
     protected Map<String, Object> buildResultMap(ScriptInterface engine, Map<String, Object> context) {
-        CustomScript script = this.findByCode(engine.getClass().getName());
+        CustomScript script = self.findByCodeNewTx(engine.getClass().getName(), List.of());
 
         if (script == null) {
             // The script is probably not a Java script and we cannot retrieve its code

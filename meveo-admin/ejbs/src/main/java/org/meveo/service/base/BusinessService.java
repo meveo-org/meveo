@@ -26,9 +26,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.io.FileUtils;
 import org.hibernate.LockOptions;
@@ -115,6 +119,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @return A single entity matching code
      */
     public P findByCode(String code, List<String> fetchFields) {
+        return findByCode(code, fetchFields, null, null, null);
+    }
+    
+    @Transactional(value = TxType.REQUIRES_NEW)
+    @TransactionAttribute(value = TransactionAttributeType.REQUIRES_NEW)
+    public P findByCodeNewTx(String code, List<String> fetchFields) {
         return findByCode(code, fetchFields, null, null, null);
     }
 
