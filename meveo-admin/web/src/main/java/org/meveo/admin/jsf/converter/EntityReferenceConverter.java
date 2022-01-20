@@ -1,6 +1,7 @@
 package org.meveo.admin.jsf.converter;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,11 +64,12 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
 			return null;
 		}
+		
 		String stringUuid = null;
 		if (uuid instanceof EntityReferenceWrapper) {
 			EntityReferenceWrapper entityReferenceWrapper = (EntityReferenceWrapper) uuid;
 			return entityReferenceWrapper.getCode();
-		} else {
+		} else if (uuid instanceof String) {
 			stringUuid = (String) uuid;
 		}
 
@@ -77,7 +79,15 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 					.build(new FieldRepresentationLoader(cetCode));
 		});
 
-		return cetCache.getUnchecked(stringUuid);
+		if (stringUuid != null) {
+			return cetCache.getUnchecked(stringUuid);
+		} else if (uuid instanceof Collection){
+			return ((Collection<String>) uuid).stream()
+					.map(cetCache::getUnchecked)
+					.collect(Collectors.joining(",", "[", "]"));
+		}
+		
+		return null;
 	}
 
 	private class FieldRepresentationLoader extends CacheLoader<String, String> {
