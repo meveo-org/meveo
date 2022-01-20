@@ -56,6 +56,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public String getAsString(FacesContext context, UIComponent component, Object uuid) {
 		CustomFieldTemplate field = (CustomFieldTemplate) component.getAttributes().get("field");
@@ -82,9 +83,22 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		if (stringUuid != null) {
 			return cetCache.getUnchecked(stringUuid);
 		} else if (uuid instanceof Collection){
-			return ((Collection<String>) uuid).stream()
-					.map(cetCache::getUnchecked)
-					.collect(Collectors.joining(",", "[", "]"));
+			Collection<?> uuids = (Collection<?>) uuid;
+			if (uuids.isEmpty()) {
+				return "[]";
+			}
+			
+			Object firstItem = uuids.iterator().next();
+			if (firstItem instanceof String) {
+				return ((Collection<String>) uuid).stream()
+						.map(cetCache::getUnchecked)
+						.collect(Collectors.joining(",", "[", "]"));
+			} else if (firstItem instanceof EntityReferenceWrapper) {
+				return ((Collection<EntityReferenceWrapper>) uuid).stream()
+						.map(EntityReferenceWrapper::getUuid)
+						.map(cetCache::getUnchecked)
+						.collect(Collectors.joining(",", "[", "]"));
+			}
 		}
 		
 		return null;
