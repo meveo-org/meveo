@@ -297,6 +297,9 @@ public class NativePersistenceService extends BaseService {
 		uniqueValues.forEach((key, value) -> {
 			key = PostgresReserverdKeywords.escapeAndFormat(key);
 			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
+				if(value instanceof EntityReferenceWrapper) {
+					value = ((EntityReferenceWrapper) value).getUuid();
+				}
 				if(i.get() == 1) {
 					q.append("WHERE a." + key + " = ?\n");
 				} else {
