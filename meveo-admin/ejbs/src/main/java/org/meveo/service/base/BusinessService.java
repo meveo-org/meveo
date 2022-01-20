@@ -244,16 +244,18 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	MeveoModule module = null;
     	if (entity != null) {
 			Session session = this.getEntityManager().unwrap(Session.class);
-    		Query<MeveoModule> q = session.createQuery(
-    				"SELECT mi.meveoModule "
+			String query = "SELECT mi.meveoModule "
     				+ "FROM MeveoModuleItem mi "
     				+ "	WHERE mi.itemCode = :code "
     				+ "	AND mi.itemClass = :itemClass "
-    				+ "	AND mi.appliesTo = :appliesTo",
+    				+ (appliesTo != null ? "	AND mi.appliesTo = :appliesTo" : "");
+			
+    		Query<MeveoModule> q = session.createQuery(
+    				query,
     				MeveoModule.class);
     		q.setParameter("code", code);
     		q.setParameter("itemClass", entity.getClass().getName());
-    		q.setParameter("appliesTo", appliesTo);
+    		if (appliesTo != null) q.setParameter("appliesTo", appliesTo);
     		module = q.getResultStream().findFirst().orElse(null);
 		}
     	
