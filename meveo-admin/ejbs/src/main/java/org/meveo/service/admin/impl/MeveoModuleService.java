@@ -74,6 +74,7 @@ import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.commons.utils.EjbUtils;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -1013,13 +1014,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	
     	File newJsonFile = new File(gitDirectory, "module.json");
     	try {
-	    	if (!newJsonFile.exists()) {
-	    		newJsonFile.createNewFile();
-	    	}
-	    	
-	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-	
-	    	Files.write(newJsonFile.toPath(), strToBytes);
+    		MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}

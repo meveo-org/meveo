@@ -49,6 +49,7 @@ import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.commons.utils.EjbUtils;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
@@ -376,7 +377,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			File newFile = new File(gitDirectory, pathNewFile);
 			
 			try {
-				FileUtils.write(newFile, entity.getScript(), StandardCharsets.UTF_8);
+				MeveoFileUtils.writeAndPreserveCharset(entity.getScript(), newFile);
 			} catch (IOException e) {
 				throw new BusinessException("File cannot be write", e);
 			}

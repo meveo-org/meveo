@@ -25,6 +25,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.ModuleItem;
@@ -772,13 +773,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     	
     	File newJsonFile = new File(newDir, entity.getCode() +".json");
     	try {
-	    	if (!newJsonFile.exists()) {
-	    		newJsonFile.createNewFile();
-	    	}
-	    	
-	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-	
-	    	Files.write(newJsonFile.toPath(), strToBytes);
+    		MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}

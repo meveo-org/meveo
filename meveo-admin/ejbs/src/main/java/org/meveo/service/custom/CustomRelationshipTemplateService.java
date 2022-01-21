@@ -41,6 +41,7 @@ import org.apache.commons.io.FileUtils;
 import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -396,7 +397,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
     	
     	try {
-    		FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    		MeveoFileUtils.writeAndPreserveCharset(this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), newJsonSchemaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
@@ -407,7 +408,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
     	try {
-    		FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJavaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}

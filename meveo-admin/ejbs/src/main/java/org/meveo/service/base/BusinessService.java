@@ -41,6 +41,7 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.QueryBuilder.QueryLikeStyleEnum;
 import org.meveo.commons.utils.StringUtils;
@@ -323,13 +324,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	
     	File newJsonFile = new File(gitDirectory, path+"/"+entity.getCode()+".json");
     	try {
-	    	if (!newJsonFile.exists()) {
-	    		newJsonFile.createNewFile();
-	    	}
-	    	
-	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-	
-	    	Files.write(newJsonFile.toPath(), strToBytes);
+	    	MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}

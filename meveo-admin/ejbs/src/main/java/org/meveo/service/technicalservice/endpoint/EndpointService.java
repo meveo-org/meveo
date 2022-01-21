@@ -33,6 +33,7 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.scripts.Function;
@@ -201,7 +202,7 @@ public class EndpointService extends BusinessService<Endpoint> {
     	File newJsFile = new File (gitDirectory, path);
     	
     	try {
-    		FileUtils.write(newJsFile, ESGenerator.generateFile(entity), StandardCharsets.UTF_8);
+    		MeveoFileUtils.writeAndPreserveCharset(ESGenerator.generateFile(entity), newJsFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}

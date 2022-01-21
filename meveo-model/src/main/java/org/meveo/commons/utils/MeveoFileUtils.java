@@ -16,7 +16,11 @@
 
 package org.meveo.commons.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -40,6 +44,30 @@ public class MeveoFileUtils {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         }
         return contentBuilder.toString();
+    }
+    
+    public static Charset getCharset(File file) throws IOException {
+    	try (var fileStream = new FileInputStream(file)) {
+    		try (var fileReader = new InputStreamReader(fileStream)) {
+    			return Charset.forName(fileReader.getEncoding());
+    		}
+    	}
+    }
+    
+    public static void writeAndPreserveCharset(String content, File file) throws IOException {
+    	if (!file.getParentFile().exists()) {
+    		file.getParentFile().mkdirs();
+    	}
+    	
+    	Charset charset;
+    	if (!file.exists()) {
+    		file.createNewFile();
+    		charset = StandardCharsets.UTF_8;
+    	} else {
+    		charset = MeveoFileUtils.getCharset(file);
+    	}
+    	
+    	Files.writeString(file.toPath(), content, charset);
     }
 
 }

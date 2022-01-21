@@ -29,6 +29,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.ModuleItem;
@@ -499,12 +500,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
     	
     	File newJsonFile = new File(gitDirectory, path + "/" + entity.getUuid() + ".json");
     	try {
-    		if (!newJsonFile.exists()) {
-    			newJsonFile.createNewFile();
-    		}
-    		
-    		byte[] strToBytes = ceiJson.getBytes(StandardCharsets.UTF_8);
-    		Files.write(newJsonFile.toPath(), strToBytes);
+    		MeveoFileUtils.writeAndPreserveCharset(ceiJson, newJsonFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}

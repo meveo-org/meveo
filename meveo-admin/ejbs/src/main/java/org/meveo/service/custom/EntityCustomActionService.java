@@ -13,6 +13,7 @@ import javax.persistence.NoResultException;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.ModuleItem;
@@ -121,13 +122,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
     	
     	File newJsonFile = new File(newDir, entity.getCode() +".json");
     	try {
-	    	if (!newJsonFile.exists()) {
-	    		newJsonFile.createNewFile();
-	    	}
-	    	
-	    	byte[] strToBytes = businessEntityDtoSerialize.getBytes();
-	
-	    	Files.write(newJsonFile.toPath(), strToBytes);
+	    	MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be updated or created", e);
     	}

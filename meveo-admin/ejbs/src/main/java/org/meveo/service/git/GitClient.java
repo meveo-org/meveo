@@ -43,6 +43,7 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -256,20 +257,25 @@ public class GitClient {
                 }
 
                 if (status.hasUncommittedChanges()) {
-                    RevCommit commit = git.commit().setMessage(message)
-                            .setAuthor(user.getUserName(), user.getMail())
-                            .setCommitter(user.getUserName(), user.getMail())
-                            .call();
-
-                    Set<String> modifiedFiles = new HashSet<>();
-                    modifiedFiles.addAll(status.getAdded());
-                    modifiedFiles.addAll(status.getChanged());
-                    modifiedFiles.addAll(status.getModified());
-                    modifiedFiles.addAll(status.getRemoved());
-                    
-                    List<DiffEntry> diffs = getDiffs(gitRepository, commit);
-
-                    commitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
+                	try {
+	                    RevCommit commit = git.commit().setMessage(message)
+	                            .setAuthor(user.getUserName(), user.getMail())
+	                            .setAllowEmpty(false)
+	                            .setCommitter(user.getUserName(), user.getMail())
+	                            .call();
+	
+	                    Set<String> modifiedFiles = new HashSet<>();
+	                    modifiedFiles.addAll(status.getAdded());
+	                    modifiedFiles.addAll(status.getChanged());
+	                    modifiedFiles.addAll(status.getModified());
+	                    modifiedFiles.addAll(status.getRemoved());
+	                    
+	                    List<DiffEntry> diffs = getDiffs(gitRepository, commit);
+	
+	                    commitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
+                	} catch (EmptyCommitException e) {
+                		// NOOP
+                	}
 
                 }
 

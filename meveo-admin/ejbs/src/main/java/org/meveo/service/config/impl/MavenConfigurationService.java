@@ -53,6 +53,7 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.AfterAnyUpdate;
@@ -330,15 +331,11 @@ public class MavenConfigurationService implements Serializable {
 				"target/"
 			);
 		
-		for (String pattern : ignoredPatterns) {
-			try {
-				Files.write(gitIgnore, 
-						(pattern + "\n").getBytes(), 
-						StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-			} catch (IOException e) {
-				log.error("Failed to write to .gitignore", e);
-			}
-
+		String gitIgnoreFile = String.join("\n", ignoredPatterns);
+		try {
+			MeveoFileUtils.writeAndPreserveCharset(gitIgnoreFile, gitIgnore.toFile());
+		} catch (IOException e1) {
+			log.error("Failed to create gitignore", e1);
 		}
 		
 		Properties properties = new Properties();

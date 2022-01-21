@@ -54,6 +54,7 @@ import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.QueryBuilder;
@@ -831,10 +832,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
     	
     	try {
-    		FileUtils.write(newJsonSchemaFile, this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), StandardCharsets.UTF_8);
+    		MeveoFileUtils.writeAndPreserveCharset(this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), newJsonSchemaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
+    	
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
     	
     	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
@@ -842,10 +844,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
     	try {
-    		FileUtils.write(newJavaFile, compilationUnit.toString(), StandardCharsets.UTF_8);
+    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJsonSchemaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
+    	
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
     
