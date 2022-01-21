@@ -564,4 +564,9 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 		this.audited = audited;
 	}
 
+	@Override
+	public String getDbTableName() {
+		return SQLStorageConfiguration.getDbTablename(this);
+	}
+
 }

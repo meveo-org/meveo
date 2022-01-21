@@ -5,5 +5,7 @@ public interface CustomModelObject {
 	String getAppliesTo();
 
 	String getCode();
+	
+	String getDbTableName();
 
 }

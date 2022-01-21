@@ -1040,7 +1040,6 @@ public class CrossStorageService implements CustomPersistenceService {
 	}
 
 	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-		String tableName = cei.getTableName();
 		String sqlUUID = null;
 		
 		Map<String, Object> oldCfValues = new HashMap<>();
@@ -1059,7 +1058,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		if(sqlUUID == null) {
 			Map<String, Object> sqlValues = filterValues(cfts, cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL, false);
-			sqlUUID = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), tableName, sqlValues, cfts.values());
+			sqlUUID = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cei.getCet(), sqlValues, cfts.values());
 		}
 		
 		if (sqlUUID != null) {
@@ -1255,13 +1254,12 @@ public class CrossStorageService implements CustomPersistenceService {
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
 		Map<String, Object> valuesFilters = cei.getValuesNullSafe();
-		Map<String, CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
 
 		// SQL
 		if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 			// Custom table
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 				if(cei.getUuid() != null) {
 					try {
 						Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
@@ -1293,7 +1291,7 @@ public class CrossStorageService implements CustomPersistenceService {
 						throw new IllegalArgumentException("No unique values provided");
 					}
 					
-					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), dbTablename, uniqueValues, cfts.values());
+					uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cet, uniqueValues, cfts.values());
 				}
 				
 			} else {

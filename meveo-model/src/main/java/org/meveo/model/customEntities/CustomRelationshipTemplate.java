@@ -46,6 +46,8 @@ import org.meveo.model.ObservableEntity;
 import org.meveo.model.billing.RelationshipDirectionEnum;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JsonTypes;
+import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.sql.SqlConfiguration;
 
 /**
  * The Class CustomRelationshipTemplate.
@@ -570,6 +572,11 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 
 	public void setAudited(boolean audited) {
 		this.audited = audited;
+	}
+
+	@Override
+	public String getDbTableName() {
+		return SQLStorageConfiguration.getDbTablename(this);
 	}
 
 }

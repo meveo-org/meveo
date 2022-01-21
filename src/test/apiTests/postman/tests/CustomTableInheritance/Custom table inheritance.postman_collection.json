@@ -1,1256 +1,1679 @@
 {
 	"info": {
-		"_postman_id": "4a702e0d-f5b5-48e5-9268-732740a93a11",
+		"_postman_id": "ae59a0dd-b5f7-4cfd-ada2-dd52a443fd78",
 		"name": "Custom table inheritance",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Create parent template",
-			"event": [
+			"name": "Basic usage",
+			"item": [
 				{
-					"listen": "test",
-					"script": {
-						"id": "c149e461-32a8-43c2-8e83-a3086a5e8a5a",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+					"name": "Create parent template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
 						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Accept",
-						"type": "text",
-						"value": "application/json"
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"ParentTemplate\",\r\n    \"name\": \"ParentTemplate\",\r\n    \"description\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"completed\",\r\n            \"description\": \"completed\",\r\n            \"fieldType\": \"BOOLEAN\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        },\r\n        {\r\n            \"code\": \"value\",\r\n            \"description\": \"value\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
 					},
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"code\": \"ParentTemplate\",\r\n    \"name\": \"ParentTemplate\",\r\n    \"description\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"completed\",\r\n            \"description\": \"completed\",\r\n            \"fieldType\": \"BOOLEAN\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        },\r\n        {\r\n            \"code\": \"value\",\r\n            \"description\": \"value\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"response": []
 				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						"entityCustomization",
-						"cet",
-						"createOrUpdate"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create child template",
-			"event": [
 				{
-					"listen": "test",
-					"script": {
-						"id": "9d461788-b64a-4125-b5b6-5dec782c7bf9",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+					"name": "Create child template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
 						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Accept",
-						"type": "text",
-						"value": "application/json"
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"ChildTemplate\",\r\n    \"name\": \"ChildTemplate\",\r\n    \"description\": \"ChildTemplate\",\r\n    \"superTemplate\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"description\",\r\n            \"description\": \"description\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
 					},
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"code\": \"ChildTemplate\",\r\n    \"name\": \"ChildTemplate\",\r\n    \"description\": \"ChildTemplate\",\r\n    \"superTemplate\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"description\",\r\n            \"description\": \"description\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"response": []
 				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						"entityCustomization",
-						"cet",
-						"createOrUpdate"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Insert data in child table",
-			"event": [
 				{
-					"listen": "test",
-					"script": {
-						"id": "c4351ef2-ea91-4928-91b9-3fae065b01ce",
-						"exec": [
-							"pm.test(\"Successful POST request\", function () {\r",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
-							"});\r",
-							"\r",
-							"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence"
-					],
-					"variable": [
+					"name": "Insert data in child table",
+					"event": [
 						{
-							"key": "project",
-							"value": "default"
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
 						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Retrieve inserted data",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "e4086db6-e788-4d9a-84e4-c68177f11e6b",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.description).to.eql(\"My first task\");\r",
-							"    pm.expect(jsonData.completed).to.eql(false);\r",
-							"    pm.expect(jsonData.value).to.eql(\"FirstTask\");\r",
-							"});"
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
 						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
 						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
 						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update data",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "81b9fc04-a0cc-4e9b-a798-35894af18b6f",
-						"exec": [
-							"pm.test(\"Status code is 204\", function () {\r",
-							"    pm.response.to.have.status(204);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"completed\": true,\r\n    \"value\": \"FirstTaskUpdated\",\r\n    \"description\": \"My first task updated\"\r\n}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Retrieve updated data",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "52f1fafc-b123-4606-a5e5-6c5e97ad6916",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.description).to.eql(\"My first task updated\");\r",
-							"    pm.expect(jsonData.completed).to.eql(true);\r",
-							"    pm.expect(jsonData.value).to.eql(\"FirstTaskUpdated\");\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Remove row in parent table",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "3a244800-270d-4c33-90f3-3708cc86417d",
-						"exec": [
-							"pm.test(\"Status code is 204\", function () {\r",
-							"    pm.response.to.have.status(204);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ParentTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Check child row has been deleted",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "bdcedffd-5e50-458f-9847-b0286e9e5cbd",
-						"exec": [
-							"pm.test(\"Status code is 404\", function () {\r",
-							"    pm.response.to.have.status(404);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Insert data in child table 2",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "48fa552c-1503-4cab-8acc-2d93b10c3fe7",
-						"exec": [
-							"pm.test(\"Successful POST request\", function () {\r",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
-							"});\r",
-							"\r",
-							"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Remove row in child table",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "2332137c-e139-4578-9d19-59475d472dac",
-						"exec": [
-							"pm.test(\"Status code is 204\", function () {\r",
-							"    pm.response.to.have.status(204);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Check parent row has been deleted",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "e0317753-f644-417e-b6e6-05fae9dd537d",
-						"exec": [
-							"pm.test(\"Status code is 404\", function () {\r",
-							"    pm.response.to.have.status(404);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						":uuid"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ParentTemplate"
-						},
-						{
-							"key": "uuid",
-							"value": "{{uuid}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Insert data 1",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "08db10e8-2c2e-48f1-9280-7f7bebeaf0f8",
-						"exec": [
-							"pm.test(\"Successful POST request\", function () {\r",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
-							"});\r",
-							"\r",
-							"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask1\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Insert data 2",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "8213b413-2da7-4bf1-bd94-6b80f8c66e00",
-						"exec": [
-							"pm.test(\"Successful POST request\", function () {\r",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
-							"});\r",
-							"\r",
-							"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask2\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List data - no filters",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "915987dc-1b9f-431d-8e58-c34174c2f65b",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.length).to.eql(2);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						"list"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List data - with filters on child table",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "25d6b900-b7f1-4cbd-8b55-6743c476e733",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.length).to.eql(2);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"filters\": { \r\n        \"description\": \"My first task\"\r\n    }\r\n}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						"list"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List data - with filters on parent table",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "4832902b-6da9-4399-93a5-21576edffcc6",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.length).to.eql(1);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"filters\": { \r\n        \"value\": \"FirstTask1\",\r\n        \"completed\": false\r\n    }\r\n}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						"list"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List data - select parent field",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "1df67355-c40e-4191-93f1-78519f2004d0",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.length).to.eql(2);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"fetchFields\": [\"value\"]\r\n}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						"list"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List data - select child field",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "798af9ac-c6e6-4d61-acdd-fc003e650183",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"pm.test(\"Json body matches\", function () {\r",
-							"    var jsonData = pm.response.json();\r",
-							"    pm.expect(jsonData.length).to.eql(2);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"fetchFields\": [\"description\"]\r\n}"
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						":project",
-						"persistence",
-						":cet",
-						"list"
-					],
-					"variable": [
-						{
-							"key": "project",
-							"value": "default"
-						},
-						{
-							"key": "cet",
-							"value": "ChildTemplate"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete child template",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "ad5d9ba3-06ce-4ec4-ab90-638757f31d74",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Accept",
-						"type": "text",
-						"value": "application/json"
 					},
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"response": []
 				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						"entityCustomization",
-						"entity",
-						":template"
-					],
-					"variable": [
+				{
+					"name": "Retrieve inserted data",
+					"event": [
 						{
-							"key": "template",
-							"value": "ChildTemplate"
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.description).to.eql(\"My first task\");\r",
+									"    pm.expect(jsonData.completed).to.eql(false);\r",
+									"    pm.expect(jsonData.value).to.eql(\"FirstTask\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
 						}
 					],
-					"query": [
-						{
-							"key": "withData",
-							"value": "true"
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
 						}
-					]
+					},
+					"response": []
+				},
+				{
+					"name": "Update data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"completed\": true,\r\n    \"value\": \"FirstTaskUpdated\",\r\n    \"description\": \"My first task updated\"\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve updated data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.description).to.eql(\"My first task updated\");\r",
+									"    pm.expect(jsonData.completed).to.eql(true);\r",
+									"    pm.expect(jsonData.value).to.eql(\"FirstTaskUpdated\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove row in parent table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ParentTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check child row has been deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert data in child table 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove row in child table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check parent row has been deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/:uuid",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								":uuid"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ParentTemplate"
+								},
+								{
+									"key": "uuid",
+									"value": "{{uuid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert data 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask1\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert data 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask2\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data - no filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(2);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data - with filters on child table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(2);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"filters\": { \r\n        \"description\": \"My first task\"\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data - with filters on parent table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(1);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"filters\": { \r\n        \"value\": \"FirstTask1\",\r\n        \"completed\": false\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data - select parent field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(2);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"fetchFields\": [\"value\"]\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data - select child field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Json body matches\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(2);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"fetchFields\": [\"description\"]\r\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete child template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":template"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "template",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete parent template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":template"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "template",
+									"value": "ParentTemplate"
+								}
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "Delete parent template",
-			"event": [
+			"name": "Parent table has unique fields",
+			"item": [
 				{
-					"listen": "test",
-					"script": {
-						"id": "81c6dd12-e6a0-4426-b4f5-0a3d3b17ca16",
-						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+					"name": "Create parent template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
 						],
-						"type": "text/javascript"
-					}
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"ParentTemplate\",\r\n    \"name\": \"ParentTemplate\",\r\n    \"description\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"completed\",\r\n            \"description\": \"completed\",\r\n            \"fieldType\": \"BOOLEAN\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        },\r\n        {\r\n            \"code\": \"value\",\r\n            \"description\": \"value\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"unique\": true,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create child template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"ChildTemplate\",\r\n    \"name\": \"ChildTemplate\",\r\n    \"description\": \"ChildTemplate\",\r\n    \"superTemplate\": \"ParentTemplate\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"sqlStorageConfiguration\": {\r\n        \"storeAsTable\": true\r\n    },\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"description\",\r\n            \"description\": \"description\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insert data in child table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update data in child table",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"uuid\", pm.response.json()[0].uuid);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"type\": \"ChildTemplate\",\n        \"name\": \"ChildTemplate\",\n        \"properties\": {\n            \"completed\" : false,\n            \"value\": \"FirstTask\",\n            \"description\": \"My first task 2\"\n        }\n    }\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Only one row with correct description\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.length).to.eql(1);\r",
+									"\r",
+									"    pm.expect(jsonData[0].description).to.eql(\"My first task 2\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence/:cet/list",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence",
+								":cet",
+								"list"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default"
+								},
+								{
+									"key": "cet",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete child template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":template"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "template",
+									"value": "ChildTemplate"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete parent template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template?withData=true",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								":template"
+							],
+							"query": [
+								{
+									"key": "withData",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "template",
+									"value": "ParentTemplate"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Accept",
-						"type": "text",
-						"value": "application/json"
-					},
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"type": "text",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/:template",
-					"protocol": "{{protocol}}",
-					"host": [
-						"{{hostname}}"
-					],
-					"port": "{{port}}",
-					"path": [
-						"{{webContext}}",
-						"api",
-						"rest",
-						"entityCustomization",
-						"entity",
-						":template"
-					],
-					"variable": [
-						{
-							"key": "template",
-							"value": "ParentTemplate"
-						}
-					],
-					"query": [
-						{
-							"key": "withData",
-							"value": "true"
-						}
-					]
-				}
-			},
-			"response": []
+			"description": "*   Parent cet have a unique field\n*   We try to insert data in the child table multiple time with the unique field always being the same\n*   The row should be created on first call, and updated on second call"
 		}
 	],
 	"auth": {
@@ -1272,7 +1695,6 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "7ff64f62-23a6-4905-bb36-b30a58057ea5",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1282,13 +1704,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "ad4dda0b-2df9-4cec-8fd1-f4ee2dade804",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

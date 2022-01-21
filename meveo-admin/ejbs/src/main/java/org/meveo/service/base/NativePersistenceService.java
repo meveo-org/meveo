@@ -59,7 +59,9 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -79,6 +81,7 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
@@ -261,13 +264,17 @@ public class NativePersistenceService extends BaseService {
 
 	/**
 	 * Find a record uuid in table using its exact values
-	 *
-	 * @param tableName   Table name where the record is stored
+	 * 
+	 * @param sqlConnectionCode Code of the sql configuration
+	 * @param customTemplate Template related to the table
 	 * @param queryValues Values used to filter the result
+	 * @param fields 
 	 * @return The uuid of the record if it was found or null if it was not
 	 */
-	public String findIdByUniqueValues(String sqlConnectionCode, String tableName, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
-		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
+	public String findIdByUniqueValues(String sqlConnectionCode, CustomModelObject customTemplate, Map<String, Object> queryValues, Collection<CustomFieldTemplate> fields) {
+		String result = null;
+		
+		String tableName = PostgresReserverdKeywords.escapeAndFormat(customTemplate.getDbTableName());
 
 		if(queryValues.isEmpty()) {
 			throw new IllegalArgumentException("Query values should not be empty");
@@ -283,50 +290,64 @@ public class NativePersistenceService extends BaseService {
 		for(CustomFieldTemplate cft : fields) {
 			if(cft.isUnique()) {
 				Object uniqueValue = Optional.ofNullable(queryValues.get(cft.getCode())).orElse(queryValues.get(cft.getDbFieldname()));
-				if(uniqueValue != null) {
+				// Don't use inherited values
+				if(uniqueValue != null && cft.getAppliesTo().equals(customTemplate.getAppliesTo())) {
 					uniqueValues.put(cft.getDbFieldname(), uniqueValue);
 				}
 			}
 		}
 		
 		if(uniqueValues.isEmpty()) {
-			return null;
-		}
-		
-		AtomicInteger i = new AtomicInteger(1);
-		uniqueValues.forEach((key, value) -> {
-			key = PostgresReserverdKeywords.escapeAndFormat(key);
-			if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
-				if(value instanceof EntityReferenceWrapper) {
-					value = ((EntityReferenceWrapper) value).getUuid();
+			result = null;
+		} else {
+			AtomicInteger i = new AtomicInteger(1);
+			uniqueValues.forEach((key, value) -> {
+				key = PostgresReserverdKeywords.escapeAndFormat(key);
+				if (!(value instanceof Collection) && !(value instanceof File) && !(value instanceof Map)) {
+					if(value instanceof EntityReferenceWrapper) {
+						value = ((EntityReferenceWrapper) value).getUuid();
+					}
+					if(i.get() == 1) {
+						q.append("WHERE a." + key + " = ?\n");
+					} else {
+						q.append("AND a." + key + " = ?\n");
+					}
+					queryParamers.put(i.getAndIncrement(), value);
 				}
-				if(i.get() == 1) {
-					q.append("WHERE a." + key + " = ?\n");
-				} else {
-					q.append("AND a." + key + " = ?\n");
-				}
-				queryParamers.put(i.getAndIncrement(), value);
-			}
-		});
-		
-		QueryBuilder builder = new QueryBuilder();
-		builder.setSqlString(q.toString());
-		
-		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
-		NativeQuery<Map<String, Object>> query = builder.getNativeQuery(session, true);
-		queryParamers.forEach((k, v) -> query.setParameter(k, v));
-		
-		try {
-			Map<String, Object> singleResult = query.getSingleResult();
-			return (String) singleResult.get("uuid");
-		
-		} catch (NoResultException | NonUniqueResultException e) {
-			return null;
+			});
 			
-		} catch (Exception e) {
-			log.error("Error executing query {}", query.getQueryString());
-			throw e;
+			QueryBuilder builder = new QueryBuilder();
+			builder.setSqlString(q.toString());
+			
+			Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+			NativeQuery<Map<String, Object>> query = builder.getNativeQuery(session, true);
+			queryParamers.forEach((k, v) -> query.setParameter(k, v));
+			
+			try {
+				Map<String, Object> singleResult = query.getSingleResult();
+				result = (String) singleResult.get("uuid");
+			
+			} catch (NoResultException | NonUniqueResultException e) {
+				result = null;
+				
+			} catch (Exception e) {
+				log.error("Error executing query {}", query.getQueryString());
+				throw e;
+			}
 		}
+		
+		if (result == null && customTemplate instanceof CustomEntityTemplate) {
+			CustomEntityTemplate cet = (CustomEntityTemplate) customTemplate;
+			CustomEntityTemplate superTemplate = cet.getSuperTemplate();
+			if (superTemplate != null) {
+				if (HibernateUtils.isLazyLoaded(superTemplate)) {
+					superTemplate = customEntityTemplateService.findById(superTemplate.getId(), List.of("superTemplate"));
+				}
+				result = findIdByUniqueValues(sqlConnectionCode, superTemplate, queryValues, fields);
+			}
+		}
+		
+		return result;
 	}
 
 	/**

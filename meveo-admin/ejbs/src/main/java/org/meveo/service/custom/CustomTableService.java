@@ -457,7 +457,7 @@ public class CustomTableService extends NativePersistenceService {
                 if(append) {
                 	lineValues = convertValue(lineValues, cfts, true, null);
                 	replaceEntityreferences(sqlConnectionCode, fields, entityReferencesCache, lineValues);
-                	String uuid = findIdByUniqueValues(sqlConnectionCode, dbTableName, lineValues, fields);
+                	String uuid = findIdByUniqueValues(sqlConnectionCode, cet, lineValues, fields);
                 	if(uuid == null) {
                 		final String tablename = SQLStorageConfiguration.getDbTablename(cet);
                 		super.createInNewTx(sqlConnectionCode, tablename, lineValues);
@@ -665,14 +665,14 @@ public class CustomTableService extends NativePersistenceService {
 		    final Optional<CustomFieldTemplate> templateOptional = fields.stream().filter(f -> f.getDbFieldname().equals(key)).findFirst();
 
 		    if (templateOptional.isPresent() && templateOptional.get().getFieldType() == CustomFieldTypeEnum.ENTITY) {
-		    	String entityRefTableName = SQLStorageConfiguration.getCetDbTablename(templateOptional.get().getEntityClazzCetCode());
+		    	CustomEntityTemplate entityRef = customEntityTemplateService.findByCode(templateOptional.get().getEntityClazzCetCode());
 		        // Try to retrieve record first
 		        String uuid = entityReferencesCache.computeIfAbsent(key, k -> new HashMap<>())
 		                .computeIfAbsent(
 		                        (String) value,
 		                        serializedValues -> {
 		                            Map<String, Object> entityRefValues = JacksonUtil.fromString(serializedValues, GenericTypeReferences.MAP_STRING_OBJECT);
-		                            return findIdByUniqueValues(sqlConnectionCode, entityRefTableName, entityRefValues, fields);
+		                            return findIdByUniqueValues(sqlConnectionCode, entityRef, entityRefValues, fields);
 		                        }
 		                );
 
