@@ -2475,7 +2475,7 @@ public class CustomFieldInstanceService extends BaseService {
 			CustomFieldTemplate codeCft = cfTemplateService.findByCodeAndAppliesTo("code", appliesTo);
 			if(codeCft != null) {
 				CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-				Map<String, Object> result = crossStorageService.find(repository, 
+				Map<String, Object> result = crossStorageService.findById(repository, 
 						refCet, 
 						uuid,
 						Collections.singletonList("code"), 

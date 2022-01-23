@@ -17,6 +17,8 @@
  */
 package org.meveo.model.customEntities;
 
+import java.util.Map;
+
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -37,8 +39,11 @@ import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.util.PersistenceUtils;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -75,6 +80,9 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private CustomEntityTemplate cet;
+	
+	@Transient
+	private Map<String, CustomFieldTemplate> fieldTemplates;
 
 	@Transient
 	private String tableName;
@@ -174,6 +182,24 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	public void setCfValuesOld(CustomFieldValues cfValuesOld) {
 		this.cfValuesOld = cfValuesOld;
+	}
+
+	/**
+	 * @return the {@link #fieldTemplates}
+	 */
+	public Map<String, CustomFieldTemplate> getFieldTemplates() {
+		return fieldTemplates;
+	}
+
+	/**
+	 * @param fieldTemplates the fieldTemplates to set
+	 */
+	public void setFieldTemplates(Map<String, CustomFieldTemplate> fieldTemplates) {
+		this.fieldTemplates = fieldTemplates;
+	}
+	
+	public Map<String, Object> getValues(DBStorageType storageType) {
+		return PersistenceUtils.filterValues(fieldTemplates, getCfValuesAsValues(), cet, storageType);
 	}
 	
 }

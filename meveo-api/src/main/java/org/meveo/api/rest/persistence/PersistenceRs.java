@@ -295,7 +295,7 @@ public class PersistenceRs {
 		Set<String> fields = new HashSet<>(paginationConfiguration.getFetchFields());
 		Map<String, Set<String>> subFields = crossStorageService.extractSubFields(fields);
 
-		Map<String, Object> values = crossStorageService.find(repository, 
+		Map<String, Object> values = crossStorageService.findById(repository, 
 				customEntityTemplate, 
 				uuid,
 				fields,

@@ -2,8 +2,16 @@ package org.meveo.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -13,6 +21,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.meveo.model.IEntity;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.persistence.DBStorageType;
 
 /**
  * JPA utility classes.
@@ -102,5 +114,70 @@ public class PersistenceUtils {
 	public static String getTableName(Class<?> c) {
 
 		return c.getAnnotation(Table.class).name();
+	}
+	
+	public static Map<String, Object> filterValues(Map<String, CustomFieldTemplate> cfts, Map<String, Object> values, CustomModelObject cet, DBStorageType storageType) {
+		return filterValues(cfts, values, cet, storageType, false);
+	}
+
+	public static Map<String, Object> filterValues(Map<String, CustomFieldTemplate> cfts, Map<String, Object> values, CustomModelObject cet, DBStorageType storageType, boolean isRequiredOnly) {
+		Map<String, Object> filteredValues = new HashMap<>();
+
+		values.entrySet().stream().filter(entry -> {
+			// Always include UUID
+			if (entry.getKey().equals("uuid")) {
+				return true;
+			}
+
+			// For CEI storage, always include code
+			if (cet instanceof CustomEntityTemplate && entry.getKey().equals("code") && storageType == DBStorageType.SQL && !((CustomEntityTemplate) cet).getSqlStorageConfiguration().isStoreAsTable()) {
+				return true;
+			}
+
+			CustomFieldTemplate cft = cfts.get(entry.getKey());
+
+			if(cft == null) {
+				return false;
+			}
+			
+			if(isRequiredOnly) {
+				if(!cft.isValueRequired() && !cft.isUnique()) {
+					return false;
+				}
+			}
+
+			return cft.getStoragesNullSafe().contains(storageType);
+		}).forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
+
+		return filteredValues;
+	}
+	
+	public static List<String> filterFields(Collection<String> fields, Map<String, CustomFieldTemplate> customFieldTemplates, DBStorageType storageType) {
+		// If fields are null return all avaiblable fields for the given storage
+		if (fields == null) {
+			return new ArrayList<>();
+		}
+
+		return fields.stream().filter(entry -> {
+			CustomFieldTemplate cft = customFieldTemplates.get(entry);
+			if (cft == null) {
+				return false;
+			}
+			return cft.getStoragesNullSafe().contains(storageType);
+		}).collect(Collectors.toList());
+	}
+	
+	public static Map<String, Set<String>> extractSubFields(final Set<String> actualFetchFields) {
+		final Map<String, Set<String>> subFields = new HashMap<>();
+		for (var fetchField : List.copyOf(actualFetchFields)) {
+			if(fetchField.contains(".")) {
+				actualFetchFields.remove(fetchField);
+				String[] fieldQuery = fetchField.split("\\.", 2);
+				actualFetchFields.add(fieldQuery[0]);
+				subFields.computeIfAbsent(fieldQuery[0], key -> new HashSet<>())
+					.add(fieldQuery[1]);
+			}
+		}
+		return subFields;
 	}
 }

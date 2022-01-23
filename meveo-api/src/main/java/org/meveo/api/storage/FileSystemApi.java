@@ -63,7 +63,7 @@ public class FileSystemApi extends BaseApi {
 			}
 
 			// Retrieve the entity
-			Map<String, Object> values = crossStorageService.find(repository, 
+			Map<String, Object> values = crossStorageService.findById(repository, 
 					cet, 
 					uuid, 
 					Collections.singletonList(cftCode),

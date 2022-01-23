@@ -18,6 +18,8 @@ package org.meveo.persistence.neo4j.service;
 
 import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
+import javax.ejb.EJBException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
@@ -49,6 +52,7 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -59,6 +63,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.CETUtils;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -93,11 +98,14 @@ import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.ApplicationProvider;
+import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
@@ -178,6 +186,15 @@ public class Neo4jService implements CustomPersistenceService {
     
     @Inject
     private Repository defaultRepository;
+    
+	@Inject
+	private CustomFieldInstanceService customFieldInstanceService;
+	
+	@Inject
+	private FileSystemService fileSystemService;
+	
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
     
     /**
      * Remove all data concerned with the CET
