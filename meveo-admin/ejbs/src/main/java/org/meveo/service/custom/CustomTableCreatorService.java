@@ -29,6 +29,7 @@ import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -195,6 +196,7 @@ public class CustomTableCreatorService implements Serializable {
 			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
 			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
 			uniqueConstraint.setTableName(tableName);
+			uniqueConstraint.setConstraintName("uk_" + tableName);
 			changeset.addChange(uniqueConstraint);
 		}
 
