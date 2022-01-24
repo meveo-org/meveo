@@ -79,55 +79,17 @@
 						message="#{messages['commons.confirmDelete']}"
 						icon="ui-icon-alert" />
 				</p:commandButton>
-			</p:column>
-			
-<!-- 			action="#{field.getListValue().remove(path['value'])}" -->
-			
-<!-- 			<p:remoteCommand action="#{customFieldDataEntryBean.filesToDeleteOnExit.add(path['value'])}" /> -->
-			
-<!-- 									update=":#{p:component(of:concat(fieldPrefix, 'binaryFileUploadForm'))}" -->
-			
+			</p:column>	
 
 			<c:if test="#{!inherited}">
 				<f:facet name="footer" layout="block">
-					<p:commandButton immediate="true"
-						onclick="PF('#{dlgBinary}').show();"
-						value="#{messages['action.uploadBinary']}" />
-				</f:facet>
-			</c:if>
-		</p:dataTable>
-	</hftl:decorateFormField>
-
-	<p:dialog id="#{fieldPrefix}#{dlgBinary}" header="" widgetVar="#{dlgBinary}" minHeight="300" minWidth="500">
-		
-			<p:messages id="#{fieldPrefix}binaryFileUploadMessages"></p:messages>
-
-			<p:panelGrid columns="1" layout="grid" style="width: 500px">
-			
-				<hftl:decorateFormField for="#{fieldPrefix}repository" 
-					fieldId="#{fieldPrefix}repository"
-					label="#{messages['binary.repository']}">
-					
-					<p:selectOneMenu id="#{fieldPrefix}repository" 
-						value="#{customFieldDataEntryBean.repository}" 
-						immediate="true">
-						
-						<hftl:objectConverter/>
-						<f:selectItem itemValue="#{null}" itemLabel="" />
-						<f:selectItems value="#{repositoryListBean.listActive()}" var="e" itemValue="#{e}" itemLabel="#{e.code}" />
-						<p:ajax event="valueChange" update="#{fieldPrefix}repository"/>
-						
-					</p:selectOneMenu>
-					
-				</hftl:decorateFormField>
-				
 				<p:fileUpload id="#{fieldPrefix}fileUpload"
 					required="#{cft.valueRequired and !hasInheritedValue}"
 					rendered="#{edit and !disabled}" label="#{cft.description}"
 					fileUploadListener="#{customFieldDataEntryBean.handleFileUpload}"
 					mode="advanced"
-					multiple="true"
-					oncomplete="PF('#{dlgBinary}').hide();"
+					auto="true"
+					multiple="false"
 					update=":#{p:component(of:concat(fieldPrefix, '_customFields_binaries'))}" >
 					
 					<f:attribute name="uuid" value="#{entity.uuid}" />
@@ -137,8 +99,11 @@
 					<f:attribute name="isSingle" value="false" />
 					
 				</p:fileUpload>
-			</p:panelGrid>
-	</p:dialog>
+				</f:facet>
+			</c:if>
+		</p:dataTable>
+	</hftl:decorateFormField>
+
 </ui:composition>
 
 </html>

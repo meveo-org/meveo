@@ -60,40 +60,18 @@
 		<p:inputText id="#{viewBinaryId}" type="hidden"
 			value="#{field.stringValue}"></p:inputText>
 
-		<p:commandButton type="button" onclick="PF('#{dlgBinary}').show();"
-			value="#{messages['action.uploadBinary']}"></p:commandButton>
-	</hftl:decorateFormField>
-
-	<p:dialog id="#{fieldPrefix}#{dlgBinary}" header=""
-		widgetVar="#{dlgBinary}" minHeight="300" minWidth="500">
-		<h:form id="#{fieldPrefix}binaryFileUploadForm"
-			enctype="multipart/form-data" style="width: 100%">
-			<p:messages id="#{fieldPrefix}binaryFileUploadMessages"></p:messages>
-
-			<p:panelGrid columns="1" layout="grid" style="width: 500px">
-				<hftl:decorateFormField for="#{fieldPrefix}repository"
-					label="#{messages['binary.repository']}">
-					<p:selectOneMenu id="#{fieldPrefix}repository"
-						value="#{customFieldDataEntryBean.repository}">
-						<hftl:objectConverter />
-						<f:selectItem itemValue="#{null}" itemLabel="" />
-						<f:selectItems value="#{repositoryListBean.listActive()}" var="e"
-							itemValue="#{e}" itemLabel="#{e.code}" />
-					</p:selectOneMenu>
-				</hftl:decorateFormField>
-				<p:fileUpload id="#{fieldPrefix}FileUpload"
-					value="#{customFieldDataEntryBean.uploadedBinaryFile}"
-					mode="simple" skinSimple="true"
+		<p:fileUpload id="#{fieldPrefix}FileUpload-#{cft.code}"
+					uuid="#{entity.uuid}" cft="#{cft}" cfv="#{field}" cetCode="#{entity.cetCode}"
+					value="#{customFieldDataEntryBean.binaries[cft.code]}"
+					mode="advanced" auto="true" skinSimple="true" 
+					process="@this"
+					update="@form"
+					fileUploadListener="#{customFieldDataEntryBean.handleFileUpload}"
 					required="#{cft.valueRequired and !hasInheritedValue}"
 					rendered="#{edit and !disabled}" label="#{cft.description}" />
-			</p:panelGrid>
-			<h:panelGroup layout="block" styleClass="form-panel-actions">
-				<p:commandButton id="#{fieldPrefix}uploadButton"
-					value="#{messages['action.save']}" ajax="false"
-					action="#{customFieldDataEntryBean.uploadBinaryFile(entity.uuid, entity.cetCode, cft, field)}" />
-			</h:panelGroup>
-		</h:form>
-	</p:dialog>
+					
+	</hftl:decorateFormField>
+
 
 </ui:composition>
 
