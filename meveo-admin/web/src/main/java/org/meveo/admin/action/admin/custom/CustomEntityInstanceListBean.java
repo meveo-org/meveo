@@ -82,6 +82,10 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 			summaryFields = customFieldTemplateList.stream().filter(CustomFieldTemplate::isSummary).collect(Collectors.toList());
 			filterFields = customFieldTemplateList.stream().filter(CustomFieldTemplate::isFilter).collect(Collectors.toList());
 		}
+		
+		if (this.repository == null) {
+			this.repository = getDefaultRepository();
+		}
 	}
 
 	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
