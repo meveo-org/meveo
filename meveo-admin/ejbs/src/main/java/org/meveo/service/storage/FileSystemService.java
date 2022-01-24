@@ -31,6 +31,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.slf4j.Logger;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -48,6 +49,9 @@ public class FileSystemService {
 	
 	@Inject
 	private RepositoryService repositoryService;
+	
+	@Inject
+	private Logger log;
 	
 	/**
 	 * Remove the folders corresponding to a given field
@@ -242,11 +246,10 @@ public class FileSystemService {
 		String storage = getStoragePath(params, values);
 		File directory = new File(storage);
 		if(directory.exists() && directory.isDirectory()) {
-			final File[] files = directory.listFiles();
-			if(files != null) {
-				for (File file : files) {
-					file.delete();
-				}
+			try {
+				org.apache.commons.io.FileUtils.deleteDirectory(directory);
+			} catch (IOException e) {
+				log.error("Failed to delete dir", e);
 			}
 		}
 	}
@@ -321,7 +324,7 @@ public class FileSystemService {
                     delete(binaryStoragePathParam, previousValues);
                     binariesSaved.put(field, null);	// Null value indicate we remove those binaries
                     
-            	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) != null) {
+            	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) instanceof File) {
 					// Remove old file
                     if (previousValues != null && previousValues.get(field.getCode()) != null) {
                         Object oldFile = previousValues.get(field.getCode());

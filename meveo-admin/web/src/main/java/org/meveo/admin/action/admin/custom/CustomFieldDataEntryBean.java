@@ -193,7 +193,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	private List<BusinessEntity> availableEntities = new ArrayList<>();
 
-	private transient UploadedFile uploadedBinaryFile;
+	private transient Map<String, UploadedFile> binaries = new HashMap<>();
+	
 	private transient Repository repository;
 	private Map<String, Object> tempValues = new HashMap<>();
 
@@ -1085,7 +1086,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	 */
 	public Map<String, List<CustomFieldValue>> saveCustomFieldsToEntity(ICustomFieldEntity entity, String uuid, boolean duplicateCFI, boolean isNewEntity,
 			boolean removedOriginalCFI, boolean isSaveEntity) throws BusinessException, ELException {
-
+		
 		Map<String, List<CustomFieldValue>> newValuesByCode = new HashMap<>();
 
 		CustomFieldValueHolder entityFieldsValues = getFieldValueHolderByUUID(uuid);
@@ -1106,24 +1107,6 @@ public class CustomFieldDataEntryBean implements Serializable {
 				}
 
 				for (CustomFieldValue cfValue : entityFieldsValues.getValues(cft)) {
-
-					// if (duplicateCFI) {
-					// if (removedOriginalCFI) {
-					// List<CustomFieldInstance> cfisToBeRemove =
-					// customFieldInstanceService.getCustomFieldInstances(entity,
-					// cfValue.getCode());
-					// if (cfisToBeRemove != null) {
-					// for (CustomFieldInstance cfiToBeRemove : cfisToBeRemove) {
-					// customFieldInstanceService.remove(cfiToBeRemove);
-					// }
-					// }
-					// }
-					//
-					// customFieldInstanceService.detach(cfValue);
-					// cfValue.setId(null);
-					// cfValue.setAppliesToEntity(entity.getUuid());
-					// }
-
 					// Not saving empty values unless template has a default value or is versionable
 					// (to prevent that for SINGLE type CFT with a default value, value is
 					// instantiates automatically)
@@ -1951,67 +1934,38 @@ public class CustomFieldDataEntryBean implements Serializable {
 		}
 	}
 
-	public UploadedFile getUploadedBinaryFile() {
-		return uploadedBinaryFile;
+	/**
+	 * @return the {@link #binaries}
+	 */
+	public Map<String, UploadedFile> getBinaries() {
+		return binaries;
 	}
 
-	public void setUploadedBinaryFile(UploadedFile uploadedBinaryFile) {
-		this.uploadedBinaryFile = uploadedBinaryFile;
-	}
-
-	@ActionMethod
-	public void uploadBinaryFile(String uuid, String cetCode, CustomFieldTemplate cft, CustomFieldValue fieldValue) throws BusinessException, IOException {
-
-		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
-
-		if (fieldValue.getStringValue() != null) {
-			filesToDeleteOnExit.add(fieldValue.getStringValue());
-		}
-
-		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		params.setShowOnExplorer(cft.isSaveOnExplorer());
-		params.setRootPath(rootPath);
-		params.setCetCode(cetCode);
-		params.setUuid(uuid);
-		params.setCftCode(cft.getCode());
-		params.setFilePath(cft.getFilePath());
-		params.setContentType(uploadedBinaryFile.getContentType());
-		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setInputStream(uploadedBinaryFile.getInputstream());
-		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
-		params.setFileExtensions(cft.getFileExtensions());
-		params.setContentTypes(cft.getContentTypes());
-		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
-
-		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
-
-		log.debug("binary path={}", rootPath);
-
-		fieldValue.setStringValue(rootPath);
-
-		initAfterUpload();
+	/**
+	 * @param binaries the binaries to set
+	 */
+	public void setBinaries(Map<String, UploadedFile> binaries) {
+		this.binaries = binaries;
 	}
 
 	public void handleFileUpload(FileUploadEvent event) throws BusinessException, IOException {
 
 		log.debug("handleFileUpload {}", event.getFile().getFileName());
+		String uuid = (String) event.getComponent().getAttributes().get("uuid");
+		CustomFieldTemplate cft = (CustomFieldTemplate) event.getComponent().getAttributes().get("cft");
 
-		uploadedBinaryFile = event.getFile();
-
-		log.info("" + repository);
-
+		var file = event.getFile();
+		binaries.put(cft.getCode(),  event.getFile());
+		
 		if (repository != null) {
 			repository = repositoryService.retrieveIfNotManaged(repository);
 		}
 
 		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
 
-		String uuid = (String) event.getComponent().getAttributes().get("uuid");
 		String cetCode = (String) event.getComponent().getAttributes().get("cetCode");
-		CustomFieldTemplate cft = (CustomFieldTemplate) event.getComponent().getAttributes().get("cft");
 		CustomFieldValue cfv = (CustomFieldValue) event.getComponent().getAttributes().get("cfv");
-		String strIsSingle = (String) event.getComponent().getAttributes().get("isSingle");
-		boolean isSingle = Boolean.parseBoolean(strIsSingle);
+		boolean isSingle = !cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && !cft.getStorageType().equals(CustomFieldStorageTypeEnum.MAP);
 
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
 		params.setShowOnExplorer(cft.isSaveOnExplorer());
@@ -2020,14 +1974,15 @@ public class CustomFieldDataEntryBean implements Serializable {
 		params.setUuid(uuid);
 		params.setCftCode(cft.getCode());
 		params.setFilePath(cft.getFilePath());
-		params.setContentType(uploadedBinaryFile.getContentType());
-		params.setFilename(uploadedBinaryFile.getFileName());
-		params.setInputStream(uploadedBinaryFile.getInputstream());
-		params.setFileSizeInBytes(uploadedBinaryFile.getSize());
+		params.setContentType(file.getContentType());
+		params.setFilename(file.getFileName());
+		params.setInputStream(file.getInputstream());
+		params.setFileSizeInBytes(file.getSize());
 		params.setFileExtensions(cft.getFileExtensions());
 		params.setContentTypes(cft.getContentTypes());
 		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
 
+		// FIXME: Maybe here he takes the existing values and somehow delete them
 		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
 
 		log.debug("binary path={}", rootPath);
@@ -2054,8 +2009,8 @@ public class CustomFieldDataEntryBean implements Serializable {
 	}
 
 	private void initAfterUpload() {
-		uploadedBinaryFile = null;
-		repository = null;
+		// inaries = new HashMap<>();
+		// repository = null;
 	}
 
 	public Repository getRepository() {

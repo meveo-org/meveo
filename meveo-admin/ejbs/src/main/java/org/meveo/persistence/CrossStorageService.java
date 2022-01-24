@@ -1424,6 +1424,9 @@ public class CrossStorageService implements CustomPersistenceService {
 				listener.postRemove(cetClassInstance);
 			}
 			
+			// Delete binaries
+			fileSystemService.delete(repository, cet, uuid);
+			
 			transaction.commitTransaction(repository);
 		
 		} catch(Exception e) {
