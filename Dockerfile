@@ -137,20 +137,20 @@ RUN curl -O https://jdbc.postgresql.org/download/postgresql-${POSTGRESQL_VERSION
 
 ### ------------------------- Wildfly-Exporter module ----------------------------- ###
 
-ARG WILDFLY_EXPORTER_MODULE=wildfly_exporter_module-0.0.5.jar
-ARG WILDFLY_EXPORTER_SERVLET=wildfly_exporter_servlet-0.0.5.war
+# ARG WILDFLY_EXPORTER_MODULE=wildfly_exporter_module-0.0.5.jar
+# ARG WILDFLY_EXPORTER_SERVLET=wildfly_exporter_servlet-0.0.5.war
 
-# Add a module jar file to wildfly
-# https://github.com/nlighten/wildfly_exporter#add-exporter-module-jars-to-wildfly
-COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_MODULE} ${JBOSS_HOME}/modules/${WILDFLY_EXPORTER_MODULE}
-RUN cd ${JBOSS_HOME}/modules \
-    && jar -xvf ${WILDFLY_EXPORTER_MODULE} \
-    && rm -rf META-INF \
-    && rm -f ${WILDFLY_EXPORTER_MODULE}
+# # Add a module jar file to wildfly
+# # https://github.com/nlighten/wildfly_exporter#add-exporter-module-jars-to-wildfly
+# COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_MODULE} ${JBOSS_HOME}/modules/${WILDFLY_EXPORTER_MODULE}
+# RUN cd ${JBOSS_HOME}/modules \
+#     && jar -xvf ${WILDFLY_EXPORTER_MODULE} \
+#     && rm -rf META-INF \
+#     && rm -f ${WILDFLY_EXPORTER_MODULE}
 
-# Add a deployment war file for the metrics servlet
-# https://github.com/nlighten/wildfly_exporter#deploy-exporter-servlet
-COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_SERVLET} ${JBOSS_HOME}/standalone/deployments/metrics.war
+# # Add a deployment war file for the metrics servlet
+# # https://github.com/nlighten/wildfly_exporter#deploy-exporter-servlet
+# COPY --chown=jboss:jboss docker/configs/wildfly_exporter/${WILDFLY_EXPORTER_SERVLET} ${JBOSS_HOME}/standalone/deployments/metrics.war
 
 
 

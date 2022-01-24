@@ -4,12 +4,17 @@ FROM openjdk:11.0.7-jdk-slim-buster
 
 ### ------------------------- base ------------------------- ###
 # Install packages necessary
-# procps : for 'free' command
-# iputils-ping : for 'ping' command
-# iproute2 : for 'ip' command
-# postgresql-client : for 'pg_isready' command
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends apt-transport-https ca-certificates curl jsvc unzip procps iputils-ping iproute2 postgresql-client git \
+    && apt-get install -y --no-install-recommends \
+        apt-transport-https ca-certificates curl jsvc unzip \
+# procps : for 'free' command
+        procps \
+# iputils-ping : for 'ping' command
+        iputils-ping \
+# iproute2 : for 'ip' command
+        iproute2 \
+# postgresql-client : for 'pg_isready' command
+        postgresql-client \
 # java.lang.UnsatisfiedLinkError: /usr/local/openjdk-11/lib/libfontmanager.so: libfreetype.so.6: cannot open shared object file: No such file or directory
 # java.lang.NoClassDefFoundError: Could not initialize class sun.awt.X11FontManager
 # https://github.com/docker-library/openjdk/pull/235#issuecomment-424466077
@@ -139,7 +144,7 @@ COPY --chown=jboss:jboss docker/configs/cli ${JBOSS_HOME}/cli
 COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 
 ### Changelog files for Liquibase
-COPY --chown=jboss:jboss docker/configs/db_resources /opt/jboss/liquibase/db_resources
+COPY --chown=jboss:jboss meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources/changelog
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
@@ -148,13 +153,18 @@ ENV LAUNCH_JBOSS_IN_BACKGROUND true
 EXPOSE 8080 8787 9990
 
 
-#install maven
+# Switch to root user in order to install git and maven
 USER root
-
 RUN usermod -a -G jboss root
 
+# Install git
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# Install maven
 ARG MAVEN_VERSION=3.6.3
-ARG USER_HOME_DIR="/root"
 ARG SHA=c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0
 ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
@@ -165,33 +175,25 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
   && rm -f /tmp/apache-maven.tar.gz \
   && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
+# Switch again to jboss user for launching meveo with jboss user.
+USER jboss
+
 ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "/opt/jboss/wildfly/meveodata/default/.m2"
-
-
-#RUN mkdir -p /usr/share/trava \
-#  && curl -fsSL -o /tmp/java11-openjdk-dcevm-linux.tar.gz https://github.com/TravaOpenJDK/trava-jdk-11-dcevm/releases/download/dcevm-11.0.11%2B1/Openjdk11u-dcevm-linux-x64.tar.gz  \
-#  && tar -xzf /tmp/java11-openjdk-dcevm-linux.tar.gz -C /usr/share/trava \
-#  && rm -f /tmp/java11-openjdk-dcevm-linux.tar.gz
-
 
 # FIXME: make sure from the beggining of this file that those settings contain credential to access the needed server
 RUN export HOST_MVN_SETTINGS_PATH=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)/..
 COPY ${HOST_MVN_SETTINGS_PATH}/settings.xml ${MAVEN_CONFIG}/settings.xml
 
-USER jboss
 COPY --chown=jboss:jboss . /tmp/meveo
 RUN cd /tmp/meveo \
-  && cp -r meveo-model/src/main/db_resources/changelog /opt/jboss/liquibase/db_resources \
+# Build meveo source and deploy meveo.war
   && ./deploy.sh
 #RUN chown jboss:jboss ./meveo-admin/web/target/meveo.war \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
-#RUN rm -Rf /tmp/meveo 
+#RUN rm -Rf /tmp/meveo
 
-#ENV JAVA_HOME=/usr/share/trava/dcevm-11.0.11+1
-#ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${JAVA_HOME}/bin
-
-COPY --chown=jboss:jboss /docker/docker-entrypoint.sh /
+COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
