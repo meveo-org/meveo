@@ -175,13 +175,6 @@ public class CustomTableCreatorService implements Serializable {
 		uuidColumn.setType("varchar(255)");
 		uuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
-		// Unique constraint if CRT is unique
-		if (crt.isUnique()) {
-			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
-			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
-			uniqueConstraint.setTableName(tableName);
-			changeset.addChange(uniqueConstraint);
-		}
 
 		// Table creation
 		CreateTableChange createTableChange = new CreateTableChange();
@@ -196,6 +189,15 @@ public class CustomTableCreatorService implements Serializable {
 		addPrimaryKeyChange.setColumnNames(uuidColumn.getName());
 		addPrimaryKeyChange.setTableName(tableName);
 		changeset.addChange(addPrimaryKeyChange);
+		
+		// Unique constraint if CRT is unique
+		if (crt.isUnique()) {
+			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
+			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+			uniqueConstraint.setTableName(tableName);
+			changeset.addChange(uniqueConstraint);
+		}
+
 
 		// Source foreign key if source cet is a custom table
 		if (crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
