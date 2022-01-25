@@ -49,6 +49,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.validation.Valid;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
@@ -66,10 +67,8 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
-import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -351,7 +350,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @throws IOException 
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
+	public void addModuleItem(@Valid MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
