@@ -59,7 +59,6 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -92,6 +91,7 @@ import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -152,6 +152,9 @@ public class NativePersistenceService extends BaseService {
 	
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
+	
+	@Inject
+	private CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -393,8 +396,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
-		return create(sqlConnectionCode, cei, returnId, false, cfts.values(), true);
+		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? cache.getCustomFieldTemplates(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
+		return create(sqlConnectionCode, cei, returnId, false, cfts, true);
 	}
 
 	/**
@@ -415,27 +418,19 @@ public class NativePersistenceService extends BaseService {
 		CustomEntityTemplate cet = cei.getCet();
 		
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
+				.filter(cft -> cft.getAppliesTo().equals(cet.getAppliesTo()))
+				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
 		convertedValues.put("uuid", cei.getUuid());
 		convertedValues = serializeValues(convertedValues, cftsMap);
 		
 		// If template has parent, create the data in this parent first
-		// XXX: Possible limitation : will handle only one level of hierarchy
 		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentFields = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
-			
-			var parentData = new HashMap<String, Object>();
-			// Only insert parent data
-			 convertedValues.entrySet().stream()
-			 	.filter(x -> x.getKey().equals("uuid") || parentFields.containsKey(x.getKey()))
-				.forEach(x -> parentData.put(x.getKey(), x.getValue()));
-			
-			var tableName = tableName(cet.getSuperTemplate());
-			var uuid = create(sqlConnectionCode, tableName, parentData, true);
-			
-			// Remove already inserted keys
-			parentData.keySet().forEach(convertedValues::remove);
+			CustomEntityInstance parentCei = new CustomEntityInstance();
+			parentCei.setCet(cet.getSuperTemplate());
+			parentCei.setCfValues(cei.getCfValues());
+			var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
 			convertedValues.put("uuid", uuid);
 		}
 		
@@ -1927,7 +1922,7 @@ public class NativePersistenceService extends BaseService {
                     		.findFirst();
 
                     if(!customFieldTemplateOpt.isPresent()){
-                        throw new ValidationException("No custom field template for " + fieldName + " was found");
+                    	continue;
                     }
 
                     CustomFieldTemplate customFieldTemplate = customFieldTemplateOpt.get();

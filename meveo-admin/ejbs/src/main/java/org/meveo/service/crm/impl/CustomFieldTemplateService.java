@@ -222,17 +222,22 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      * @return Custom field template or NULL if not found
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
+    	
         try {
         	String calculatedAppliesToValue = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
         	CustomFieldTemplate field = null;
-			if (calculatedAppliesToValue!=null)
+			if (calculatedAppliesToValue != null) {
 				field = findByCodeAndAppliesTo(code, calculatedAppliesToValue);
-			else
+			} else {
 				log.error("Can not calculate applicable AppliesToValue for entity of {} class.", entity.getClass().getSimpleName());
+			}
+			
             if(field == null && entity instanceof CustomEntityInstance) {
             	var cet = ((CustomEntityInstance) entity).getCet();
-            	if(cet.getSuperTemplate() != null && cet.getSuperTemplate().getAppliesTo() != null) {
-            		return findByCodeAndAppliesTo(code, cet.getSuperTemplate().getAppliesTo());
+            	if (cet.getSuperTemplate() != null && cet.getSuperTemplate().getAppliesTo() != null) {
+            		CustomEntityInstance parentCei = new CustomEntityInstance();
+            		parentCei.setCet(cet.getSuperTemplate());
+            		return findByCodeAndAppliesTo(code, parentCei);
             	}
             }
         	return field;
@@ -240,6 +245,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         } catch (CustomFieldException e) {
             log.error("Can not determine applicable CFT type for entity of {} class.", entity.getClass().getSimpleName());
         }
+        
         return null;
     }
 

@@ -2412,8 +2412,7 @@ public class CustomFieldInstanceService extends BaseService {
 		if(entity instanceof CustomEntityInstance) {
 			var cei = (CustomEntityInstance) entity;
 			if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
-				var parentCfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getSuperTemplate().getAppliesTo());
-				parentCfts.forEach(cetFields::putIfAbsent);
+				cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
 			}
 		}
 		
