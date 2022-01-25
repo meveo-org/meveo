@@ -21,6 +21,7 @@ import javax.persistence.Query;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
+import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.api.dto.BaseEntityDto;
@@ -154,6 +155,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
     	Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
 		for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
+			if (HibernateUtils.isLazyLoaded(e)) {
+				e = customEntityTemplateService.findById(e.getId(), List.of("superTemplate"));
+			}
 			findByAppliesTo(e.getAppliesTo()).forEach(customFieldTemplates::putIfAbsent);	// Preserve overriden cfts
 		}
 		return customFieldTemplates;
