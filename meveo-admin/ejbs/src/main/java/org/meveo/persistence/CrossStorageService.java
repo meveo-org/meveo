@@ -1199,7 +1199,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 
 		String sourceUUID = findEntityId(repository, sourceValues, startNode);
-		String targetUUUID = findEntityId(repository, sourceValues, endNode);
+		String targetUUUID = findEntityId(repository, targetValues, endNode);
 
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
