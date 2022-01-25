@@ -1203,7 +1203,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			String relationUuid = customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUUID, targetUUUID, relationValues);
 			return new PersistenceActionResult(relationUuid);
 		}
 
@@ -1230,7 +1230,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			String relationUuid = customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUuid, targetUuid, relationValues);
 			return new PersistenceActionResult(relationUuid);
 
 		}

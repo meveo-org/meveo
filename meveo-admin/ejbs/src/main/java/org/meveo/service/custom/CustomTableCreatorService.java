@@ -162,12 +162,12 @@ public class CustomTableCreatorService implements Serializable {
 
 		// Source column
 		ColumnConfig sourceColumn = new ColumnConfig();
-		sourceColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
+		sourceColumn.setName(SQLStorageConfiguration.getSourceColumnName(crt));
 		sourceColumn.setType("varchar(255)");
 
 		// Target column
 		ColumnConfig targetColumn = new ColumnConfig();
-		targetColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
+		targetColumn.setName(SQLStorageConfiguration.getTargetColumnName(crt));
 		targetColumn.setType("varchar(255)");
 
 		// UUID column
@@ -208,7 +208,7 @@ public class CustomTableCreatorService implements Serializable {
 			sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
 			sourceFkChange.setReferencedColumnNames(UUID);
 			sourceFkChange.setBaseTableName(tableName);
-			sourceFkChange.setReferencedTableName(sourceColumn.getName());
+			sourceFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
 			changeset.addChange(sourceFkChange);
 		}
 
@@ -219,7 +219,7 @@ public class CustomTableCreatorService implements Serializable {
 			targetFkChange.setBaseColumnNames(targetColumn.getName());
 			targetFkChange.setReferencedColumnNames(UUID);
 			targetFkChange.setBaseTableName(tableName);
-			targetFkChange.setReferencedTableName(targetColumn.getName());
+			targetFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
 			changeset.addChange(targetFkChange);
 		}
 

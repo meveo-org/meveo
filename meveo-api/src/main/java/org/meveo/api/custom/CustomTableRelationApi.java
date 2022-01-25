@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Any;
 import javax.inject.Inject;
@@ -42,10 +43,12 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.storage.RepositoryService;
 import org.primefaces.model.SortOrder;
 
 /**
@@ -70,6 +73,16 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
     
     @Inject
     private CustomTableService customTableService;
+    
+    @Inject
+    private RepositoryService repositoryService;
+    
+    private Repository defaultRepository;
+    
+    @PostConstruct
+    public void init() {
+    	defaultRepository = this.repositoryService.findDefaultRepository();
+    }
 	
     /**
      * Create new records in a custom table for a given relationship
@@ -87,7 +100,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
 
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
-        	customTableRelationService.createRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	customTableRelationService.createRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
     }
     
@@ -103,7 +116,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
 		
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
-        	customTableRelationService.updateRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	customTableRelationService.updateRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
 	}
 
@@ -116,9 +129,9 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
         	if(customTableRelationService.exists(crt, record.getStartUuid(), record.getEndUuid(), record.getValues())) {
-        		customTableRelationService.updateRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        		customTableRelationService.updateRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         	}else {
-        		customTableRelationService.createRelation(crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        		customTableRelationService.createRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         	}
         }
 	}

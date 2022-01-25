@@ -44,6 +44,14 @@ public class SQLStorageConfiguration implements Serializable {
 	@Column(name = "store_as_table", nullable = false)
 	@NotNull
 	private boolean storeAsTable = true;
+	
+	public boolean isStoreAsTable() {
+		return storeAsTable;
+	}
+
+	public void setStoreAsTable(boolean storeAsTable) {
+		this.storeAsTable = storeAsTable;
+	}
 
 	/**
 	 * Get a database field name derived from a code value. Lowercase and spaces
@@ -78,12 +86,12 @@ public class SQLStorageConfiguration implements Serializable {
 		return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
 	}
 
-	public boolean isStoreAsTable() {
-		return storeAsTable;
+	public static String getSourceColumnName(CustomRelationshipTemplate crt) {
+		return "source_" + getDbTablename(crt.getStartNode());
 	}
-
-	public void setStoreAsTable(boolean storeAsTable) {
-		this.storeAsTable = storeAsTable;
+	
+	public static String getTargetColumnName(CustomRelationshipTemplate crt) {
+		return "target_" + getDbTablename(crt.getEndNode());
 	}
 
 }
