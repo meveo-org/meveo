@@ -422,8 +422,10 @@ public class MeveoModuleItemInstaller {
 		        } else if (dto instanceof CustomEntityInstanceDto && customEntityTemplate != null && (customEntityTemplate.isStoreAsTable() || customEntityTemplate.storedIn(DBStorageType.NEO4J))) {
                     CustomEntityInstance cei = new CustomEntityInstance();
                     cei.setUuid(((CustomEntityInstanceDto) dto).getUuid());
+                    // Use code as a fallback for UUID
                     if (cei.getUuid() == null) {
                     	cei.setCode(dto.getCode());
+                    	cei.setUuid(dto.getCode());
                     }
                     
                     cei.setCetCode(customEntityTemplate.getCode());
