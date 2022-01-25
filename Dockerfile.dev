@@ -175,9 +175,6 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
   && rm -f /tmp/apache-maven.tar.gz \
   && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
-# Switch again to jboss user for launching meveo with jboss user.
-USER jboss
-
 ENV MAVEN_HOME /usr/share/maven
 ENV MAVEN_CONFIG "/opt/jboss/wildfly/meveodata/default/.m2"
 
