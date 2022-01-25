@@ -97,6 +97,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.ApplicationProvider;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.Record;
@@ -177,7 +178,7 @@ public class Neo4jService implements CustomPersistenceService {
     private CustomFieldsCacheContainerProvider customFieldsCache;
     
     @Inject
-    private Repository defaultRepository;
+    private RepositoryService repositoryService;
     
     /**
      * Remove all data concerned with the CET
@@ -253,6 +254,7 @@ public class Neo4jService implements CustomPersistenceService {
                 .getResultList();
         
         Set<String> codes = new HashSet<>(codeList);
+        Repository defaultRepository = repositoryService.findDefaultRepository();
         if (defaultRepository.getNeo4jConfiguration() != null) {
         	codes.add(defaultRepository.getNeo4jConfiguration().getCode());
         }

@@ -6,12 +6,14 @@ package org.meveo.service.script.maven;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.meveo.admin.listener.MeveoInitializer;
 import org.meveo.admin.listener.StartupListener;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.scripts.MavenDependency;
+import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
 
@@ -25,12 +27,12 @@ import org.slf4j.Logger;
  */
 public class MavenClassPathInitializer implements MeveoInitializer {
 
-	@Inject
-	@MeveoJpa
-	private EntityManagerWrapper entityManagerWrapper;
 	
 	@Inject
 	private ScriptInstanceService scriptService;
+	
+	@Inject
+	private MavenDependencyService mavenDependencyService;
 	
 	@Inject
 	private Logger log;
@@ -38,9 +40,7 @@ public class MavenClassPathInitializer implements MeveoInitializer {
 	@Override
 	public void init() throws Exception {
 		log.info("Adding maven dependencies to classpath");
-		List<MavenDependency> resultList = entityManagerWrapper.getEntityManager()
-			.createQuery("FROM MavenDependency", MavenDependency.class)
-			.getResultList();
+		List<MavenDependency> resultList = mavenDependencyService.list();
 		scriptService.addMavenLibrariesToClassPath(resultList);
 		log.info("Added {} libraries to class path", resultList.size());
 	}
