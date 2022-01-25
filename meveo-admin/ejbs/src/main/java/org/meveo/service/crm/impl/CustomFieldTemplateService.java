@@ -154,7 +154,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
     	Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
 		for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
-			customFieldTemplates.putAll(findByAppliesTo(e.getAppliesTo()));
+			findByAppliesTo(e.getAppliesTo()).forEach(customFieldTemplates::putIfAbsent);	// Preserve overriden cfts
 		}
 		return customFieldTemplates;
     }

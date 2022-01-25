@@ -131,7 +131,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @throws BusinessException failed creating the entity
 	 */
 	public String create(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+		Collection<CustomFieldTemplate> cfts = (cet.getSuperTemplate() == null ? customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet)).values();
 		cei.setCet(cet);
 		return create(sqlConnectionCode, cei, true, true, cfts, true);
 	}

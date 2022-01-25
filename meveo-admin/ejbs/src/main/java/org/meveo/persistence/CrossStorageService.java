@@ -748,7 +748,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			cei.setUuid(ceiToSave.getUuid());
 		}
 				
-		final Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
+		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? cache.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
 		cei.setCet(cet);
 
 		// Create referenced entities and set UUIDs in the values
