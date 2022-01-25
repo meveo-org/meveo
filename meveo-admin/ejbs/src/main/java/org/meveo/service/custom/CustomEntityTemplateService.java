@@ -844,7 +844,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
     	try {
-    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJsonSchemaFile);
+    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJavaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
