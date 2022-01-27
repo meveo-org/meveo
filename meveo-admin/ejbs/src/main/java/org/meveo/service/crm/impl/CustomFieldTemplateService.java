@@ -234,10 +234,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			
             if(field == null && entity instanceof CustomEntityInstance) {
             	var cet = ((CustomEntityInstance) entity).getCet();
-            	if (cet.getSuperTemplate() != null && cet.getSuperTemplate().getAppliesTo() != null) {
-            		CustomEntityInstance parentCei = new CustomEntityInstance();
-            		parentCei.setCet(cet.getSuperTemplate());
-            		return findByCodeAndAppliesTo(code, parentCei);
+            	if (cet.getSuperTemplate() != null) {
+            		var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+            		if (parentCet.getAppliesTo() != null) {
+            	  		CustomEntityInstance parentCei = new CustomEntityInstance();
+                		parentCei.setCet(parentCet);
+                		return findByCodeAndAppliesTo(code, parentCei);
+            		}
             	}
             }
         	return field;
@@ -432,9 +435,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.updateField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
+				//FIXME: add sql code in param
+	            customTableCreatorService.updateField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
 			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStoragesNullSafe()!= null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(null, SQLStorageConfiguration.getDbTablename(crt), cft);
+				customTableCreatorService.removeField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
 			}
 		}
 

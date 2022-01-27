@@ -425,13 +425,17 @@ public class NativePersistenceService extends BaseService {
 		convertedValues.put("uuid", cei.getUuid());
 		convertedValues = serializeValues(convertedValues, cftsMap);
 		
+		
 		// If template has parent, create the data in this parent first
-		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			CustomEntityInstance parentCei = new CustomEntityInstance();
-			parentCei.setCet(cet.getSuperTemplate());
-			parentCei.setCfValues(cei.getCfValues());
-			var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
-			convertedValues.put("uuid", uuid);
+		if(cet.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			if (parentTemplate.storedIn(DBStorageType.SQL)) {
+				CustomEntityInstance parentCei = new CustomEntityInstance();
+				parentCei.setCet(parentTemplate);
+				parentCei.setCfValues(cei.getCfValues());
+				var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
+				convertedValues.put("uuid", uuid);	
+			}
 		}
 		
 		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
@@ -941,6 +945,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param tableName Table name to update
 	 * @throws BusinessException General exception
 	 */
+	@SuppressWarnings("unchecked")
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template) throws BusinessException {
 		var tableName = tableName(template);
 		
@@ -950,20 +955,24 @@ public class NativePersistenceService extends BaseService {
 				.createNativeQuery("delete from {h-schema}" + tableName(subT))
 				.executeUpdate());
 		
+		// Gather uuids to delete
+		List<String> uuids = getEntityManager(sqlConnectionCode)
+				.createNativeQuery("SELECT uuid FROM {h-schema}"+ tableName, String.class)
+				.getResultList();
+		
 		// Remove in own table
 		getEntityManager(sqlConnectionCode)
-			.createNativeQuery("delete from {h-schema}" + tableName)
+			.createNativeQuery("delete from {h-schema}" + tableName + "WHERE uuid IN ?")
+			.setParameter(1, uuids)
 			.executeUpdate();
 		
 		// Remove in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			getEntityManager(sqlConnectionCode)
-			.createNativeQuery("delete from {h-schema}" + parentTable)
-			.executeUpdate();
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			if (parentTemplate.storedIn(DBStorageType.SQL)) {
+				remove(sqlConnectionCode, parentTemplate, uuids);
+			}
 		}
-		//TODO: remove all data from sub tables
-		//TODO: remove deleted rows from super-tables
 	}
 
 	/**
@@ -973,7 +982,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids       A set of record identifiers
 	 * @throws BusinessException General exception
 	 */
-	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Set<String> ids) throws BusinessException {
+	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Collection<String> ids) throws BusinessException {
 		// Remove record in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
 		subTemplates.forEach(subT -> removeRecords(sqlConnectionCode, tableName(subT), ids));
@@ -982,18 +991,17 @@ public class NativePersistenceService extends BaseService {
 		removeRecords(sqlConnectionCode, tableName(template), ids);
 		
 		// Remove record in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			removeRecords(sqlConnectionCode, parentTable, ids);
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			remove(sqlConnectionCode, parentTemplate, ids);
+		} else {
+			for (String id : ids) {
+				CustomTableRecord record = new CustomTableRecord();
+				record.setCetCode(template.getCode());
+				record.setUuid(id);
+				customTableRecordRemoved.fire(record);
+			}
 		}
-
-		for (String id : ids) {
-			CustomTableRecord record = new CustomTableRecord();
-			record.setCetCode(template.getCode());
-			record.setUuid(id);
-			customTableRecordRemoved.fire(record);
-		}
-		
 	}
 
 	/**
@@ -1010,7 +1018,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param tableName
 	 * @param ids
 	 */
-	private void removeRecords(String sqlConnectionCode, String tableName, Set<String> ids) {
+	private void removeRecords(String sqlConnectionCode, String tableName, Collection<String> ids) {
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -1030,15 +1038,15 @@ public class NativePersistenceService extends BaseService {
 		removeRecord(sqlConnectionCode, uuid, tableName(template));
 		
 		// Remove record in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			removeRecord(sqlConnectionCode, uuid, parentTable);
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			remove(sqlConnectionCode, parentTemplate, uuid);
+		} else {
+			CustomTableRecord record = new CustomTableRecord();
+			record.setCetCode(template.getCode());
+			record.setUuid(uuid);
+			customTableRecordRemoved.fire(record);
 		}
-		
-		CustomTableRecord record = new CustomTableRecord();
-		record.setCetCode(template.getCode());
-		record.setUuid(uuid);
-		customTableRecordRemoved.fire(record);
 	}
 
 	private void removeRecord(String sqlConnectionCode, String uuid, String tableName) {
