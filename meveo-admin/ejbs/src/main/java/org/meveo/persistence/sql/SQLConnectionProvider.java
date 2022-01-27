@@ -21,6 +21,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.meveo.commons.utils.StringUtils;
@@ -146,19 +147,25 @@ public class SQLConnectionProvider {
 
 		} else {
 			Configuration config = new Configuration();
-			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
-			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
-			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
+			
+			if (sqlConfiguration.getUrl()!= null && sqlConfiguration.getUrl().startsWith("java:")) {
+				config.setProperty("hibernate.connection.datasource", sqlConfiguration.getUrl());
+			} else {
+				config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
+				config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
+				config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
+				if(sqlConfiguration.getClearPassword() == null) {
+					String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
+					var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());
+					config.setProperty("hibernate.connection.password", clearPwd);
+				} else {
+					config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
+				}				
+			}
 			config.setProperty("hibernate.generate_statistics", "true");
 			config.setProperty("hibernate.jmx.enabled", "true");
 	
-			if(sqlConfiguration.getClearPassword() == null) {
-				String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
-				var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());
-				config.setProperty("hibernate.connection.password", clearPwd);
-			} else {
-				config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
-			}
+			
 			
 			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
 				config.setProperty("hibernate.default_schema", sqlConfiguration.getSchema());
