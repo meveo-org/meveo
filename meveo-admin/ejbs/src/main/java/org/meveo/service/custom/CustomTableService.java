@@ -905,8 +905,9 @@ public class CustomTableService extends NativePersistenceService {
 		}
 		
 		if(cet.getSuperTemplate() != null) {
-			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
-			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(cet.getSuperTemplate()));
+			CustomEntityTemplate parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(parentCet.getAppliesTo());
+			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(parentCet));
 			paginationConfiguration.setSuperTypeFields(parentCfts.keySet());
 		}
 		
@@ -1003,7 +1004,8 @@ public class CustomTableService extends NativePersistenceService {
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
         var cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
 		if(cet.getSuperTemplate() != null) {
-			var parentCfts = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
+			var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			var parentCfts = customFieldTemplateService.findByAppliesTo(parentCet.getAppliesTo());
 			parentCfts.forEach(cfts::putIfAbsent);
 		}
         
