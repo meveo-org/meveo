@@ -21,7 +21,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.meveo.commons.utils.StringUtils;
@@ -149,7 +148,9 @@ public class SQLConnectionProvider {
 			Configuration config = new Configuration();
 			
 			if (sqlConfiguration.getUrl()!= null && sqlConfiguration.getUrl().startsWith("java:")) {
-				config.setProperty("hibernate.connection.datasource", sqlConfiguration.getUrl());
+				config.setProperty(org.hibernate.cfg.AvailableSettings.DATASOURCE, sqlConfiguration.getUrl());
+				config.setProperty( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE, "RESOURCE_LOCAL");
+				//config.setProperty( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, "org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl");
 			} else {
 				config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
 				config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());

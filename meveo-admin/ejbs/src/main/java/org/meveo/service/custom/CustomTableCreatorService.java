@@ -1213,7 +1213,8 @@ public class CustomTableCreatorService implements Serializable {
 				try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
 					ps.executeUpdate();
 					if (!StringUtils.isBlank(sqlConfigurationCode)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+							connection.commit();
 					}
 				}
 			});

@@ -91,7 +91,6 @@ import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
-import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -152,9 +151,6 @@ public class NativePersistenceService extends BaseService {
 	
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
-	
-	@Inject
-	private CustomFieldInstanceService customFieldInstanceService;
 
 	@Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -541,7 +537,8 @@ public class NativePersistenceService extends BaseService {
 
 					ps.executeUpdate();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
 				}
 			});
@@ -689,7 +686,8 @@ public class NativePersistenceService extends BaseService {
 					}
 					preparedStatement.executeBatch();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
 
 				} catch (SQLException e) {
@@ -815,7 +813,8 @@ public class NativePersistenceService extends BaseService {
 
 					ps.executeUpdate();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
 
 				} catch (Exception e) {
@@ -873,7 +872,8 @@ public class NativePersistenceService extends BaseService {
 				
 				statement.executeUpdate();
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					connection.commit();
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.commit();
 				}
 				
 				CustomTableRecord record = new CustomTableRecord();
