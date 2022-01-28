@@ -879,6 +879,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 	protected BaseEntityDto getDto(CustomEntityTemplate entity) throws BusinessException {
 		CustomEntityTemplateDto dto = (CustomEntityTemplateDto) super.getDto(entity);
 		dto.setFields(null);
+		dto.setActions(null);
 		return dto;
 	}
 	
