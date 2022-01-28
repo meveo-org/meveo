@@ -270,7 +270,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		module = q.getResultStream().findFirst().orElse(null);
 		}
     	
-    	if (module == null) {
+    	if (module == null && !(entity instanceof CustomEntityInstance)) {
     		module = meveoModuleService.findByCode("Meveo");
     	}
     	
