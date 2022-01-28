@@ -53,6 +53,8 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
@@ -858,4 +860,26 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 				.forEach(this::removeData);
 		}
 	}
+	
+	@Override
+	public void moveFilesToModule(CustomEntityTemplate entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+		super.moveFilesToModule(entity, oldModule, newModule);
+		
+		// Move CFTs and CEAs at the same time
+		for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
+		}
+		
+		for (EntityCustomAction cea : entityCustomActionService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			entityCustomActionService.moveFilesToModule(cea, oldModule, newModule);
+		}
+	}
+
+	@Override
+	protected BaseEntityDto getDto(CustomEntityTemplate entity) throws BusinessException {
+		CustomEntityTemplateDto dto = (CustomEntityTemplateDto) super.getDto(entity);
+		dto.setFields(null);
+		return dto;
+	}
+	
 }

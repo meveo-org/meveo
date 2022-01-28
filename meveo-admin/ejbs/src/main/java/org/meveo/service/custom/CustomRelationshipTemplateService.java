@@ -21,7 +21,6 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,13 +36,15 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.apache.commons.io.FileUtils;
 import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
@@ -414,4 +415,21 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	}
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the crt java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
+	
+	@Override
+	public void moveFilesToModule(CustomRelationshipTemplate entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+		super.moveFilesToModule(entity, oldModule, newModule);
+		
+		// Move CFTs at the same time
+		for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
+		}
+	}
+	
+	@Override
+	protected BaseEntityDto getDto(CustomRelationshipTemplate entity) throws BusinessException {
+		CustomRelationshipTemplateDto dto = (CustomRelationshipTemplateDto) super.getDto(entity);
+		dto.setFields(null);
+		return dto;
+	}
 }

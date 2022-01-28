@@ -313,7 +313,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	}
 
     public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
-    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+    	BaseEntityDto businessEntityDto = getDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
@@ -362,6 +362,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 				.using("code", code);
 		
 		return query.getReference();
+    }
+    
+    protected BaseEntityDto getDto(P entity) throws BusinessException {
+    	return businessEntitySerializer.serialize(entity);
     }
 
 }
