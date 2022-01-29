@@ -219,7 +219,7 @@ public class SqlConfiguration extends BusinessEntity {
 		else if (url == null)
 			return false;
 		else 
-			isXaResource = url.startsWith("java:");
+			isXaResource = false;
 		return isXaResource;
 	}
 	

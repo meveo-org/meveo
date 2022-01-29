@@ -1210,13 +1210,23 @@ public class CustomTableCreatorService implements Serializable {
 		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConfigurationCode)) {
 
 			hibernateSession.doWork(connection -> {
+				if (!StringUtils.isBlank(sqlConfigurationCode)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
 					ps.executeUpdate();
 					if (!StringUtils.isBlank(sqlConfigurationCode)) {
 						if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
 							connection.commit();
 					}
-				}
+				} catch (Exception e) {
+					if (!sqlConfigurationCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+							connection.rollback();
+					}
+					throw e;
+				}				
 			});
 		}
 	}

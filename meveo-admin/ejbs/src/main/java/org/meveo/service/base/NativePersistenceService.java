@@ -463,16 +463,16 @@ public class NativePersistenceService extends BaseService {
 	 *                          updated with 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
-	public String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+	public String create(String sqlConnectionCode, String tableName_, Map<String, Object> values, boolean returnId) throws BusinessException {
 		if("null".equals(values.get(FIELD_ID))) {
 			values.remove(FIELD_ID);
 		}
 		
-		if (tableName == null) {
+		if (tableName_ == null) {
 			throw new BusinessException("Table name must not be null");
 		}
 
-		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
+		final String tableName = PostgresReserverdKeywords.escapeAndFormat(tableName_);
 
 		if (values == null || values.isEmpty()) {
 			throw new IllegalArgumentException("No values to insert");
@@ -481,7 +481,7 @@ public class NativePersistenceService extends BaseService {
 		StringBuilder sql = new StringBuilder();
 		try {
 
-			Object uuid = values.get(FIELD_ID);
+			final Object uuid = values.get(FIELD_ID);
 
 			sql.append("insert into ").append(tableName);
 			StringBuilder fields = new StringBuilder();
@@ -520,7 +520,10 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}				
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -540,6 +543,12 @@ public class NativePersistenceService extends BaseService {
 						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
 							connection.commit();
 					}
+				} catch (Exception e) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
+					throw e;
 				}
 			});
 
@@ -571,10 +580,10 @@ public class NativePersistenceService extends BaseService {
 					query.setParameter(fieldName, fieldValue);
 				}
 
-				uuid = query.getSingleResult();
-				values.put(FIELD_ID, uuid);
+				Object newUuid = query.getSingleResult();
+				values.put(FIELD_ID, newUuid);
 
-				return (String) uuid;
+				return (String) newUuid;
 
 			} else {
 				return null;
@@ -637,7 +646,10 @@ public class NativePersistenceService extends BaseService {
 
 			@Override
 			public void execute(Connection connection) throws SQLException {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
@@ -692,6 +704,10 @@ public class NativePersistenceService extends BaseService {
 
 				} catch (SQLException e) {
 					log.error("Failed to bulk insert with sql {}\n", sql, e);
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
 					throw e;
 				}
 			}
@@ -799,7 +815,10 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -819,6 +838,10 @@ public class NativePersistenceService extends BaseService {
 
 				} catch (Exception e) {
 					log.error("Native SQL update failed: {}", e.getMessage());
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
 				}
 			});
 
@@ -861,6 +884,10 @@ public class NativePersistenceService extends BaseService {
 		
 		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 		session.doWork(connection -> {
+			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+					connection.setAutoCommit(false);
+			}
 			try (var statement = connection.prepareStatement(sql.toString())){
 				
 				if(finalValue == null) {
@@ -883,6 +910,10 @@ public class NativePersistenceService extends BaseService {
 
 			} catch (Exception e) {
 				log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.rollback();
+				}
 				throw e;
 			}
 		});
