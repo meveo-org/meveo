@@ -61,7 +61,11 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database field name
 	 */
 	public static String getCetDbTablename(String code) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
+		String tableName = BaseEntity.cleanUpAndLowercaseCodeOrId(code);
+		if (tableName.length() > 63) {
+			return tableName.substring(0, 63);
+		}
+		return tableName;
 	}
 
 	/**
@@ -72,7 +76,7 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database field name
 	 */
 	public static String getDbTablename(CustomEntityTemplate cet) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(cet.getCode());
+		return getCetDbTablename(cet.getCode());
 	}
 
 	/**
@@ -83,7 +87,11 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database table name
 	 */
 	public static String getDbTablename(CustomRelationshipTemplate crt) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
+		String tableName = BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
+		if (tableName.length() > 63) {
+			return tableName.substring(0, 63);
+		}
+		return tableName;
 	}
 
 	public static String getSourceColumnName(CustomRelationshipTemplate crt) {
