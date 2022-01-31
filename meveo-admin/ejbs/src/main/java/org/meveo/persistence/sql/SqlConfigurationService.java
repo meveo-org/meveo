@@ -161,17 +161,17 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 	}
 	
 	public void initializeModuleDatabase(String moduleCode, String sqlConfCode) throws BusinessException {
-		MeveoModule module = meveoModuleService.findByCode("p2p-hits-analysis");
+		MeveoModule module = meveoModuleService.findByCode(moduleCode);
 		Set<MeveoModuleItem> moduleItems = module.getModuleItems();
 		
 		List<String> moduleCrtCodes = moduleItems.stream()
-				.filter(item -> item.getItemClass().equals("org.meveo.model.customEntities.CustomRelationshipTemplate"))
+				.filter(item -> item.getItemClass().equals(CustomRelationshipTemplate.class.getName()))
 				.distinct()
 				.map(item -> item.getItemCode())
 				.collect(Collectors.toList());
 		
 		List<String> moduleCetCodes = moduleItems.stream()
-				.filter(item -> item.getItemClass().equals("org.meveo.model.customEntities.CustomEntityTemplate"))
+				.filter(item -> item.getItemClass().equals(CustomEntityTemplate.class.getName()))
 				.distinct()
 				.map(item -> item.getItemCode())
 				.collect(Collectors.toList());
