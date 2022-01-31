@@ -288,13 +288,6 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 				continue;
 			}
 			
-			// Skip CET if table already exists
-			if(!entity.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION) && 
-					jpaReferenceMatrix.getOrDefault(cet.getCode(), false)) {
-				skippedCets.add(cet.getCode());
-				continue;
-			}
-			
 			Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo());
 			
 			// Skip CET if it has reference to a skipped entity
