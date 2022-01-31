@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -16,17 +18,22 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
 
 /**
@@ -59,6 +66,9 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 
 	@Inject
 	private SqlConfigurationService sqlConfigurationService;
+	
+	@Inject
+	private CustomRelationshipTemplateService customRelationshipTemplateService;
 	
 	/**
 	 * Gets the {@link SQLStorageConfiguration#schema}
@@ -148,6 +158,46 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 		qb.addCriterion("disabled", "=", false, true);
 
 		return qb.getQuery(getEntityManager()).getResultList();
+	}
+	
+	public void initializeModuleDatabase(String moduleCode, String sqlConfCode) throws BusinessException {
+		MeveoModule module = meveoModuleService.findByCode(moduleCode);
+		Set<MeveoModuleItem> moduleItems = module.getModuleItems();
+		
+		List<String> moduleCrtCodes = moduleItems.stream()
+				.filter(item -> item.getItemClass().equals(CustomRelationshipTemplate.class.getName()))
+				.distinct()
+				.map(item -> item.getItemCode())
+				.collect(Collectors.toList());
+		
+		List<String> moduleCetCodes = moduleItems.stream()
+				.filter(item -> item.getItemClass().equals(CustomEntityTemplate.class.getName()))
+				.distinct()
+				.map(item -> item.getItemCode())
+				.collect(Collectors.toList());
+		
+		List<CustomEntityTemplate> moduleCets = new ArrayList<CustomEntityTemplate>();
+		moduleCetCodes.forEach(moduleCetCode -> {
+			moduleCets.add(customEntityTemplateService.findByCode(moduleCetCode));
+		});
+		
+		List<CustomRelationshipTemplate> moduleCrts = new ArrayList<CustomRelationshipTemplate>();
+		moduleCrtCodes.forEach(moduleCrtCode -> {
+			moduleCrts.add(customRelationshipTemplateService.findByCode(moduleCrtCode));
+		});
+		
+		for(CustomEntityTemplate moduleCet : moduleCets) {			
+			customTableCreatorService.createTable(sqlConfCode, moduleCet);
+		}
+	
+		for(CustomRelationshipTemplate moduleCrt : moduleCrts) {				
+			try {
+				customTableCreatorService.createCrtTable(sqlConfCode, moduleCrt);
+			} catch (BusinessException e) {
+				log.error("Couldn't create CRT table", e);
+				throw e;
+			}
+		}
 	}
 
 	/**
