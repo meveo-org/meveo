@@ -127,7 +127,7 @@ public class CustomTableCreatorService implements Serializable {
 			return sqlConnectionProvider.getEntityManager(sqlConfigurationCode);
 		}
 	}
-
+	
 	/**
 	 * Create a table with two columns referencing source and target custom tables
 	 * 
@@ -135,7 +135,7 @@ public class CustomTableCreatorService implements Serializable {
 	 * @throws BusinessException if the {@link CustomRelationshipTemplate} is not
 	 *                           configured to be stored in a custom table
 	 */
-	public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+	public boolean createCrtTable(String sqlConnectionCode, CustomRelationshipTemplate crt) throws BusinessException {
 		if (crt.getAvailableStorages() == null || !crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 			throw new BusinessException("CustomRelationshipTemplate " + crt.getCode() + " is not configured to be stored in a custom table");
 		}
@@ -227,7 +227,12 @@ public class CustomTableCreatorService implements Serializable {
 
 		EntityManager em = getEntityManager(null);
 
-		Session hibernateSession = em.unwrap(Session.class);
+		Session hibernateSession;
+		if(!StringUtils.isBlank(sqlConnectionCode)) {			
+			hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
+		} else {			
+			hibernateSession = em.unwrap(Session.class);
+		}
 
 		AtomicBoolean created = new AtomicBoolean();
 		created.set(true);
@@ -255,6 +260,10 @@ public class CustomTableCreatorService implements Serializable {
 		});
 
 		return created.get();
+	}
+	
+	public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+		return createCrtTable(null, crt);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
