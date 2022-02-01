@@ -860,6 +860,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
 		var cfts = customFieldTemplateService.findByAppliesToNoCache(entity.getAppliesTo());
 		var actions = entityCustomActionService.findByAppliesTo(entity.getAppliesTo());
+		
+		// Avoid lazy initialization problems
+		if (entity.getCustomEntityCategory() != null) {
+			entity.setCustomEntityCategory(customEntityCategoryService.findById(entity.getCustomEntityCategory().getId()));
+		}
+		
 		return toDTO(entity, cfts.values(), actions.values());
 	}
 
