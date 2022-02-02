@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,24 +25,20 @@ import javax.ejb.Singleton;
 import javax.ejb.Timeout;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
-import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
-import org.apache.maven.model.io.DefaultModelReader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -53,18 +48,16 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.config.MavenConfigurationDto;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.MavenUtils;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.event.qualifier.AfterAnyUpdate;
 import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
@@ -290,7 +283,7 @@ public class MavenConfigurationService implements Serializable {
 		GitRepository repository = gitRepositoryService.findByCode(module.getCode());
 		generatePom(message,  module, repository);
 	}
-
+	
 	public void generatePom(String message, MeveoModule module,GitRepository repository) {
 		//TODO: Avoid this code when module just got uninstalled
 		
@@ -299,13 +292,17 @@ public class MavenConfigurationService implements Serializable {
 
 		log.debug("Generating pom.xml file");
 		
-		Model model = new Model();
+		File pomFile = this.moduleService.findPom(module);
+		final Model model = MavenUtils.readModel(pomFile);
+		 
 		model.setGroupId("org.meveo");//TODO: Add group id to module
 		model.setArtifactId(module.getCode());
 		model.setVersion(module.getCurrentVersion());
 		model.setModelVersion("4.0.0");
 		
-		model.setBuild(new Build());
+		if (model.getPomFile() == null) {
+			model.setBuild(new Build());
+		}
 		
 		// Create symlink for java folder
 		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
@@ -346,12 +343,54 @@ public class MavenConfigurationService implements Serializable {
 		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
 		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
 			for (RemoteRepository remoteRepository : remoteRepositories) {
-				Repository repositoryMaven = new Repository();
-				repositoryMaven.setId(remoteRepository.getCode());
-				repositoryMaven.setUrl(remoteRepository.getUrl());
-				model.addRepository(repositoryMaven);
+				MavenUtils.addRepository(model, remoteRepository);
 			}
 		}
+		
+		// Include meveo bom
+		DependencyManagement dependencyManagement = new DependencyManagement();
+		model.setDependencyManagement(dependencyManagement);
+		
+		Dependency meveoBom = new Dependency();
+		meveoBom.setGroupId("org.meveo");
+		meveoBom.setArtifactId("meveo");
+		meveoBom.setType("pom");
+		meveoBom.setScope("import");
+		meveoBom.setVersion(System.getProperty("meveo.version", Version.appVersion));
+		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoBom);
+		
+		Dependency wildflyBom = new Dependency();
+		wildflyBom.setGroupId("org.wildfly.bom");
+		wildflyBom.setArtifactId("wildfly-jakartaee8-with-tools");
+		wildflyBom.setType("pom");
+		wildflyBom.setScope("import");
+		wildflyBom.setVersion("18.0.1.Final");
+		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom);
+		
+		Dependency wildflyBom2 = new Dependency();
+		wildflyBom2.setGroupId("org.wildfly.bom");
+		wildflyBom2.setArtifactId("wildfly-jakartaee8");
+		wildflyBom2.setType("pom");
+		wildflyBom2.setScope("import");
+		wildflyBom2.setVersion("18.0.1.Final");
+		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom2);
+		
+		Dependency wildflyBom3 = new Dependency();
+		wildflyBom3.setGroupId("org.wildfly");
+		wildflyBom3.setArtifactId("wildfly-feature-pack");
+		wildflyBom3.setType("pom");
+		wildflyBom3.setScope("import");
+		wildflyBom3.setVersion("18.0.1.Final");
+		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom3);
+		
+		// Use maven pkg repo before meveo instance repo
+		Repository githubRepo = new Repository();
+		githubRepo.setId("github");
+		githubRepo.setUrl("https://maven.pkg.github.com/meveo-org/meveo");
+		RepositoryPolicy policy = new RepositoryPolicy();
+		policy.setEnabled(true);
+		githubRepo.setSnapshots(policy);
+		MavenUtils.addRepository(model, githubRepo);
 
 		Repository ownInstance = new Repository();
 		String baseUrl = ParamBean.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo");
@@ -360,49 +399,37 @@ public class MavenConfigurationService implements Serializable {
 			baseUrl = baseUrl + "/";
 		}
 		ownInstance.setUrl(baseUrl + System.getProperty("meveo.moduleName", "meveo") + "/maven");
-		model.addRepository(ownInstance);
+		MavenUtils.addRepository(model, ownInstance);
 		
-		Repository githubRepo = new Repository();
-		githubRepo.setId("github");
-		githubRepo.setUrl("https://maven.pkg.github.com/meveo-org/meveo");
-		RepositoryPolicy policy = new RepositoryPolicy();
-		policy.setEnabled(true);
-		githubRepo.setSnapshots(policy);
-		model.addRepository(githubRepo);
-
 		Dependency meveoDependency = new Dependency();
 		meveoDependency.setGroupId("org.meveo");
 		meveoDependency.setArtifactId("meveo-api");
-		meveoDependency.setVersion(Version.appVersion);
+		meveoDependency.setVersion(System.getProperty("meveo.version", Version.appVersion));
 		meveoDependency.setScope("provided");
-		model.addDependency(meveoDependency);
+		MavenUtils.addOrUpdateDependency(model, meveoDependency);
 		
 		module.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
 			dependency.setGroupId("org.meveo");
 			dependency.setArtifactId(meveoModuleDependency.getCode());
 			dependency.setVersion(meveoModuleDependency.getCurrentVersion());
-			dependency.setScope("provided");
-			model.addDependency(dependency);
+			dependency.setScope("compile");
+			MavenUtils.addOrUpdateDependency(model, dependency);
 		});
 
 		try {
-
 			mavenDependencyService.findModuleDependencies(module.getCode())
-					.forEach(mavenDependency -> {
-						Dependency dependency = new Dependency();
-						dependency.setGroupId(mavenDependency.getGroupId());
-						dependency.setArtifactId(mavenDependency.getArtifactId());
-						dependency.setVersion(mavenDependency.getVersion());
-						dependency.setScope("provided");
-						model.addDependency(dependency);
-					});
-
+				.forEach(mavenDependency -> {
+					Dependency dependency = new Dependency();
+					dependency.setGroupId(mavenDependency.getGroupId());
+					dependency.setArtifactId(mavenDependency.getArtifactId());
+					dependency.setVersion(mavenDependency.getVersion());
+					dependency.setScope("provided");
+					MavenUtils.addOrUpdateDependency(model, dependency);
+				});
 		} catch (Exception e) {
 			log.error("Error retrieving maven dependencies", e);
 		}
-
-		File pomFile = this.moduleService.findPom(module);
 
 		List<File> updatedFiles = List.of(pomFile, gitIgnore.toFile(), link.toFile());
 		
