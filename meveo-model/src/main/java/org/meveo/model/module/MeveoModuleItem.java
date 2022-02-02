@@ -39,7 +39,6 @@ import org.meveo.model.scripts.JPAtoCDIListener;
 @NamedQueries({
 	@NamedQuery(name = "MeveoModuleItem.deleteByModule", query = "DELETE FROM MeveoModuleItem WHERE meveoModule=:meveoModule"), //
 	@NamedQuery(name = "MeveoModuleItem.delete", query = "DELETE FROM MeveoModuleItem WHERE itemCode=:itemCode AND itemClass=:itemClass"), //
-	@NamedQuery(name = "MeveoModuleItem.synchronizeCftCreate", query = "SELECT mi.meveoModule FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass"), //
 	@NamedQuery(name = "MeveoModuleItem.synchronizeCftDelete", query = "DELETE FROM MeveoModuleItem mi WHERE mi.itemCode=:itemCode AND mi.itemClass=:itemClass")
 })
 @EntityListeners(JPAtoCDIListener.class)

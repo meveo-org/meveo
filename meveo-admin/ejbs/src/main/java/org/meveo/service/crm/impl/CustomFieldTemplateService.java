@@ -41,12 +41,14 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -86,6 +88,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     
     @Inject
     private CrossStorageService crossStorageService;
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallCtx;
     
     static boolean useCFTCache = true;
 
@@ -356,15 +361,26 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		elasticClient.updateCFMapping(cft);
 		
+		MeveoModule relatedModule = null;
 		// Synchronize CET / CRT POJO
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
-            customEntityTemplateService.addFilesToModule(cet, cetModule);
+            relatedModule = customEntityTemplateService.findModuleOf(cet);
+            customEntityTemplateService.addFilesToModule(cet, relatedModule);
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
         	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
-            customRelationshipTemplateService.addFilesToModule(crt, cetModule);
+        	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+            customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
+        }
+        
+        // We only do this sync in case the CFT is created outside of a module installation context
+        if (relatedModule != null && !moduleInstallCtx.isActive()) {
+        	MeveoModuleItem mi = new MeveoModuleItem();
+			mi.setMeveoModule(relatedModule);
+			mi.setAppliesTo(cft.getAppliesTo());
+			mi.setItemClass(CustomFieldTemplate.class.getName());
+			mi.setItemCode(cft.getCode());
+        	meveoModuleService.addModuleItem(mi, relatedModule);
         }
 	}
     

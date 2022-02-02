@@ -515,44 +515,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         return query.getResultList();
     }
 
-
-	@SuppressWarnings("unchecked")
-	public void onCftCreated(@Observes @Created CustomFieldTemplate cft) throws BusinessException {
-		String cetCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftCreate");
-		q = q.setParameter("itemCode", cetCode);
-		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
-
-		try {
-			List<MeveoModule> modules = q.getResultList();
-			if (modules != null && !modules.isEmpty()) {
-				for (MeveoModule module : modules) {
-					// check if item already exists
-					Optional<MeveoModuleItem> moduleItem = Optional.empty();
-					if (module.getModuleItems() != null && !module.getModuleItems().isEmpty()) {
-						Predicate<MeveoModuleItem> isCft = e -> e.getItemClass().equals(CustomFieldTemplate.class.getName());
-						Predicate<MeveoModuleItem> isExisting = e -> e.getAppliesTo().equals(cft.getAppliesTo()) && e.getItemCode().equals(cft.getCode());
-
-						moduleItem = module.getModuleItems().stream().filter(isCft).filter(isExisting).findAny();
-					}
-
-					if (!moduleItem.isPresent()) {
-						MeveoModuleItem mi = new MeveoModuleItem();
-						mi.setMeveoModule(module);
-						mi.setAppliesTo(cft.getAppliesTo());
-						mi.setItemClass(CustomFieldTemplate.class.getName());
-						mi.setItemCode(cft.getCode());
-						meveoModuleItemService.create(mi);
-					}
-				}
-			}
-
-		} catch (NoResultException e) {
-
-		}
-	}
-
-	public void onCftDeleted(@Observes @Removed CustomFieldTemplate cft) {
+    public void onCftDeleted(@Observes @Removed CustomFieldTemplate cft) {
 		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftDelete");
 		q = q.setParameter("itemCode", cft.getCode());
 		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
