@@ -1176,7 +1176,7 @@ public class Neo4jService implements CustomPersistenceService {
                     if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
                         fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, String.class);
                     } else {
-                        fieldValue = cft.getDefaultValue();
+                        fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, Object.class);
                     }
                 }
 
