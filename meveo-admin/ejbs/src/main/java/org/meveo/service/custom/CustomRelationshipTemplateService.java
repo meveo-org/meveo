@@ -158,13 +158,13 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         	// Create the custom fields for the table if the table has been created
         	if(created) {
         		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(crt.getAppliesTo()).values()) {
-    				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+    				customTableCreatorService.addField(crt, cft);
         		}
         	}
         }else {
             // Remove table if storage previously contained SQL
             if(customFieldsCache.getCustomRelationshipTemplate(crt.getCode()).getAvailableStorages().contains(DBStorageType.SQL)) {
-                customTableCreatorService.removeTable(null, SQLStorageConfiguration.getDbTablename(crt));
+                customTableCreatorService.removeTable(crt);
             }
         }
 

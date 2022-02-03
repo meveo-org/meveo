@@ -107,6 +107,7 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.storage.Repository;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
@@ -195,12 +196,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public ModuleInstallResult install(GitRepository repo) throws BusinessException, MeveoApiException {
+	public ModuleInstallResult install(List<String> repositories, GitRepository repo) throws BusinessException, MeveoApiException {
 		
 		ModuleInstallResult result = null;
 		
 		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
-		result = install(moduleDto, OnDuplicate.SKIP);
+		result = install(repositories, moduleDto, OnDuplicate.SKIP);
 		
 		// Copy module files to file explorer
 		try {
@@ -212,21 +213,39 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return result;
 	}
 	
-	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+	/**
+	 * @param repositories Code of the repositories where to install the module data
+	 * @param moduleDto	 Serialiazed module
+	 * @param onDuplicate Action to realize on execution
+	 * @return the installation summary
+	 */
+	public ModuleInstallResult install(List<String> repositories, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
+		
+		List<Repository> storageRepositories = new ArrayList<>();
+		if (repositories == null || repositories.isEmpty()) {
+			storageRepositories.add(repositoryService.findDefaultRepository());
+		} else {
+			repositories.forEach(repository -> {
+				var storageRepo = repositoryService.findByCode(repository);
+				if (storageRepo != null) {
+					storageRepositories.add(storageRepo);
+				} else {
+					throw new IllegalArgumentException("Can't install module " + moduleDto.getCode() + " on non-existant repositories" + repository);
+				}
+			});
+		}
+
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
+		// Update installed repositories
+		meveoModule.setRepositories(storageRepositories);
+		
 		try {
 			return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
 		} catch (ModuleInstallFail e) {
-    		log.warn("Failed to install module {}, uninstalling items", meveoModule);
-    		
-//    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
-//    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
-//    		}
-//    		
     		throw e.getException();
 		}
 	}
@@ -700,8 +719,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
 	}
-
-	
 
 	public void parseModuleInfoOnlyFromDto(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 

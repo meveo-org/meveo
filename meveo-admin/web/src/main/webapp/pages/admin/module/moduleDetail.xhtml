@@ -15,7 +15,7 @@
     <ui:define name="body">
     
     	<o:importConstants type="org.meveo.api.module.OnDuplicate" />
-
+    	
 		<p:dialog id="addPatchPopup"
 			header="#{messages['meveoModule.patch.add']}"
 			widgetVar="dlg_addPatchPopup" dynamic="true" modal="true"
@@ -246,26 +246,32 @@
                     	onclick="PF('installDialog').show()"
                         rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed and meveoModuleBean.showInstallBtn}"/>
                         
-                        <p:confirmDialog id="installDialog" widgetVar="installDialog" message="On duplicate resource : " header="#{messages['meveoModule.install']}">
+                        <p:confirmDialog id="installDialog" widgetVar="installDialog" message="Installation parameters " header="#{messages['meveoModule.install']}">
 		                  	<h:form id="installForm">
-			                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+		                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+			                       <hftl:decorateFormField label="On duplicated items :" componentWidth="100" newLine="true">
 										<p:selectOneMenu value="#{meveoModuleBean.onDuplicate}">
 											<f:selectItems value="#{OnDuplicate.values()}"/>
-										</p:selectOneMenu>	                       
-									</h:form >
+										</p:selectOneMenu>
+									</hftl:decorateFormField>
+									
+				                    <hftl:decorateFormField label="Repositories :" componentWidth="100" newLine="true">
+										<p:pickList value="#{meveoModuleBean.repositories}" var="repo" itemLabel="#{repo.code}" itemValue=#{repo}/>
+									</hftl:decorateFormField>										                    
+								</h:form >
 			                       
-			                       <h:form >
-				                       <p:commandButton process="@(#installForm) @this"
-				                         id="install_btn"
-				                         update="@form"
-				                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
-				                         value="#{messages['meveoModule.install']}" 
-				                         onclick="doInstall()"/>
-				                         
-									   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
-			                  	   </h:form >
-		                  	   </h:form>
-		                   </p:confirmDialog>
+		                       <h:form >
+			                       <p:commandButton process="@(#installForm) @this"
+			                         id="install_btn"
+			                         update="@form"
+			                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
+			                         value="#{messages['meveoModule.install']}" 
+			                         onclick="doInstall()"/>
+			                         
+								   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		                  	   </h:form >
+	                  	   </h:form>
+	                   </p:confirmDialog>
                    
 		                   <p:remoteCommand id="doInstall"
 											action="#{meveoModuleBean.install}"

@@ -1,5 +1,9 @@
 package org.meveo.model.customEntities;
 
+import java.util.List;
+
+import org.meveo.model.storage.Repository;
+
 public interface CustomModelObject {
 	
 	String getAppliesTo();
@@ -7,5 +11,7 @@ public interface CustomModelObject {
 	String getCode();
 	
 	String getDbTableName();
+	
+	List<Repository> getRepositories();
 
 }

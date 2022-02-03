@@ -345,7 +345,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom entity template {} was not found", entityCode);
 			
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(cet), cft);
+				customTableCreatorService.addField(cet, cft);
 			}
 			
 		// CF Applies to a CRT
@@ -355,7 +355,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                 log.warn("Custom relationship template {} was not found", entityCode);
                 
             } else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-                customTableCreatorService.addField(SQLStorageConfiguration.getDbTablename(crt), cft);
+                customTableCreatorService.addField(crt, cft);
             }
         }
 
@@ -424,10 +424,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom entity template {} was not found", entityCode);
 				
 			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.updateField(SQLStorageConfiguration.getDbTablename(cet), cft);
+	            customTableCreatorService.updateField(cet, cft);
 			
 			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStoragesNullSafe() != null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+				customTableCreatorService.removeField(cet, cft);
 			}
 			
 			// Move files from / to file explorer if isSaveOnExplorer attribute has changed
@@ -452,9 +452,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 				//FIXME: add sql code in param
-	            customTableCreatorService.updateField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
+	            customTableCreatorService.updateField(crt, cft);
 			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStoragesNullSafe()!= null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
+				customTableCreatorService.removeField(crt, cft);
 			}
 		}
 
@@ -492,7 +492,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(cet == null) {
 				log.warn("Custom entity template {} was not found", entityCode);
 			} else if (withData && cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-	            customTableCreatorService.removeField(SQLStorageConfiguration.getDbTablename(cet), cft);
+	            customTableCreatorService.removeField(cet, cft);
 			}
 			
 			if(cft.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
@@ -509,7 +509,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			if(crt == null) {
 				log.warn("Custom relationship template {} was not found", entityCode);
 			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.removeField("default", SQLStorageConfiguration.getDbTablename(crt), cft);
+	            customTableCreatorService.removeField(crt, cft);
 			}
 		}
 		

@@ -3,8 +3,12 @@ package org.meveo.admin.action.storage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -22,6 +26,7 @@ import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
@@ -29,6 +34,7 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
@@ -69,9 +75,16 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	private String password;
 
 	private String branch;
+	
+	protected DualListModel<Repository> repositories;
 
 	public GitRepositoryBean() {
 		super(GitRepository.class);
+	}
+	
+	@PostConstruct
+	public void init() {
+        repositories = new DualListModel<>(repositoryService.list(), new ArrayList<>());
 	}
 
 	@ActionMethod
@@ -139,6 +152,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		}
 		return null;
 	}
+	
+	/**
+	 * @return the {@link #repositories}
+	 */
+	public DualListModel<Repository> getRepositories() {
+		return repositories;
+	}
 
 	@Override
 	protected String getListViewName() {
@@ -202,7 +222,12 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public String install() {
 		try {
-			moduleApi.install(entity);
+			List<String> repos = repositories.getTarget()
+					.stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			
+			moduleApi.install(repos, entity);
 			messages.info("Module successfully installed");
 			return "";
 		} catch (BusinessException | MeveoApiException e) {

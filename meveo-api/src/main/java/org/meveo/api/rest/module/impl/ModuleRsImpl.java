@@ -152,7 +152,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
     @Override
-    public ActionStatus install(MeveoModuleDto moduleDto) {
+    public ActionStatus install(MeveoModuleDto moduleDto, List<String> repositories) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
@@ -161,7 +161,7 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         	if(dto == null) {
         		moduleApi.create(moduleDto, false);
         	}
-            moduleApi.install(moduleDto, OnDuplicate.FAIL);
+            moduleApi.install(repositories, moduleDto, OnDuplicate.FAIL);
 
         } catch (Exception e) {
             processException(e, result);
@@ -267,12 +267,12 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
     }
 
 	@Override
-	public void installFromGitRepository(String code) throws BusinessException, MeveoApiException {
+	public void installFromGitRepository(String code, List<String> repositories) throws BusinessException, MeveoApiException {
 		GitRepository repo = gitRepositoryService.findByCode(code);
 		if (repo == null) {
 			throw new IllegalArgumentException("The repository " + code + " doesn't exist");
 		} else {
-			moduleApi.install(repo);
+			moduleApi.install(repositories, repo);
 		}
 	}
 }

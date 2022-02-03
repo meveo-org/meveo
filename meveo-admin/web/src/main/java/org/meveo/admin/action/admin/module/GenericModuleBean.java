@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
@@ -46,8 +47,6 @@ import org.meveo.admin.action.catalog.ScriptInstanceBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ModuleUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.api.ApiUtils;
-import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -67,6 +66,7 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleUninstall;
@@ -78,6 +78,7 @@ import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.CroppedImage;
 import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.DualListModel;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.TreeNode;
@@ -125,6 +126,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     private boolean showInstallBtn;
 	private boolean showUninstallBtn;
 	
+	protected DualListModel<Repository> repositories;
+	
 	protected ModuleUninstallBuilder moduleUninstall = ModuleUninstall.builder();
 	
 
@@ -140,9 +143,17 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     @PostConstruct
     public void init() {
         root = new DefaultTreeNode("Root");
+        repositories = new DualListModel<>(repositoryService.list(), new ArrayList<>());
     }
     
     /**
+	 * @return the {@link #repository}
+	 */
+	public DualListModel<Repository> getRepositories() {
+		return repositories;
+	}
+
+	/**
 	 * @return the {@link #moduleUninstall}
 	 */
 	public ModuleUninstallBuilder getModuleUninstall() {
@@ -696,7 +707,12 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 			}
 		}
 
-		var result = moduleApi.install(moduleDto, onDuplicate);
+		List<String> repos = repositories.getTarget()
+				.stream()
+				.map(Repository::getCode)
+				.collect(Collectors.toList());
+		
+		var result = moduleApi.install(repos, moduleDto, onDuplicate);
 		messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
 		messages.info(result.toString());
 

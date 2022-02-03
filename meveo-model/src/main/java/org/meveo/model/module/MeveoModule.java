@@ -2,6 +2,7 @@ package org.meveo.model.module;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -15,6 +16,8 @@ import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -42,6 +45,7 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.storage.Repository;
 
 /**
  * Meveo module has CETs, CFTs, CEIs, filters, scripts, jobs, notifications, endpoints
@@ -74,8 +78,8 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     private Set<String> moduleFiles = new HashSet<>();
     
 	@OneToOne(mappedBy = "meveoModule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, targetEntity = MeveoModuleSource.class)
-//    @JoinColumn(name = "module_source", referencedColumnName = "module_id")
     private MeveoModuleSource meveoModuleSource;
+	
     /**
      * A list of order items. Not modifiable once started processing.
      */
@@ -99,6 +103,14 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "git_repository_id")
     private GitRepository gitRepository;
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "meveo_module_storage_repository",
+        joinColumns = @JoinColumn(name = "module_id"),
+        inverseJoinColumns = @JoinColumn(name = "repo_id")
+    )
+    private List<Repository> repositories;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "module_license", nullable = false)
@@ -128,7 +140,7 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     @Type(type="numeric_boolean")
     @Column(name = "is_in_draft")
     private boolean isInDraft = true;
-
+    
     @PrePersist()
     @PreUpdate()
     public void processDisabled() {
@@ -137,6 +149,11 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     		setDisabled(true);
     	} else if(isDownloaded() && installed) {
     		setDisabled(false);
+    	}
+    	
+    	// Remove relation with repository when the module is not installed
+    	if (!installed) {
+    		this.repositories = null;
     	}
     }
 
@@ -327,4 +344,19 @@ public class MeveoModule extends BusinessEntity implements Serializable {
 	public void setPatches(Set<MeveoModulePatch> patches) {
 		this.patches = patches;
 	}
+
+	/**
+	 * @return the {@link #repositories}
+	 */
+	public List<Repository> getRepositories() {
+		return repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<Repository> repositories) {
+		this.repositories = repositories;
+	}
+	
 }
