@@ -3,14 +3,11 @@ package org.meveo.admin.action.admin.custom;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,6 +33,7 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -44,7 +42,6 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +104,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private Mutation mutation = new Mutation();
 
 	private DualListModel<DBStorageType> availableStoragesDM;
+	
+	private DualListModel<Repository> repositoresDM;
 
 	private Map<String, List<CustomEntityTemplate>> listMap;
 
@@ -132,6 +131,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
+		List<Repository> availableRepos = repositoryService.list();
+		availableRepos.removeIf(entity.getRepositories()::contains);
+		repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
 	}
 
 	@Override
@@ -154,6 +156,13 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	 */
 	public boolean isCustomEntityTemplate() {
 		return entityClassName == null || CustomEntityTemplate.class.getName().equals(entityClassName);
+	}
+	
+	/**
+	 * @return the {@link #repositoresDM}
+	 */
+	public DualListModel<Repository> getRepositoresDM() {
+		return repositoresDM;
 	}
 
 	/**

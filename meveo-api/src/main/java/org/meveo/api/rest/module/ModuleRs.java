@@ -131,17 +131,18 @@ public interface ModuleRs extends IBaseRs {
 	@PUT
 	@Path("/install")
 	@ApiOperation(value = "Instance meveo module")
-	ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto);
+	ActionStatus install(@ApiParam("Meveo module information") MeveoModuleDto moduleDto, @QueryParam("repository") List<String> repositories);
 	
 	/**
 	 * 
 	 * @param code code of the Git repository
+	 * @param repositories The codes of the repositories to install data
 	 * @throws BusinessException
 	 * @throws MeveoApiException
 	 */
 	@POST
 	@Path("/install/from/git/{code}")
-	void installFromGitRepository(@PathParam("code") String code) throws BusinessException, MeveoApiException;
+	void installFromGitRepository(@PathParam("code") String code, @QueryParam("repository") List<String> repositories) throws BusinessException, MeveoApiException;
 
 	/**
 	 * Find a Meveo's module with a given code

@@ -86,6 +86,11 @@
                             </p:pickList>
                         </hftl:decorateFormField>
                     </h:panelGroup>
+                    <h:panelGroup id="repositories">
+						<hftl:decorateFormField componentWidth="100%" label="Repositories">
+							<p:pickList id="pickList" value="#{customRelationshipTemplateBean.repositoriesDM}" var="item" itemLabel="#{item.code}" itemValue="#{item}"/>
+						</hftl:decorateFormField>
+					</h:panelGroup>
                 </h:panelGrid>
 
                 <h:panelGroup id="group">

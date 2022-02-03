@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 /**
@@ -100,6 +101,18 @@ public class SQLStorageConfiguration implements Serializable {
 	
 	public static String getTargetColumnName(CustomRelationshipTemplate crt) {
 		return "target_" + getDbTablename(crt.getEndNode());
+	}
+
+	/**
+	 * @param template
+	 * @return
+	 */
+	public static String getDbTablename(CustomModelObject template) {
+		if (template instanceof CustomEntityTemplate) {
+			return getDbTablename((CustomEntityTemplate) template);
+		} else {
+			return getDbTablename((CustomRelationshipTemplate) template);
+		}
 	}
 
 }

@@ -23,6 +23,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -55,6 +56,8 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
 
     private DualListModel<DBStorageType> availableStoragesDM;
+    
+	private DualListModel<Repository> repositoresDM;
 
     private EntityCustomAction selectedEntityAction;
 
@@ -73,6 +76,9 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         customRelationshipTemplates = customRelationshipTemplateService.list();
         customEntityTemplates = customEntityTemplateService.list();
         customEntityTemplates.sort(Comparator.comparing(CustomEntityTemplate::getCode));
+		List<Repository> availableRepos = repositoryService.list();
+		availableRepos.removeIf(entity.getRepositories()::contains);
+		repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
     }
 
     @Override
@@ -105,8 +111,15 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         }
         return false;
     }
+    
+    /**
+	 * @return the {@link #repositoresDM}
+	 */
+	public DualListModel<Repository> getRepositoresDM() {
+		return repositoresDM;
+	}
 
-    public void setDisplayNeo4j(boolean displayNeo4j) {
+	public void setDisplayNeo4j(boolean displayNeo4j) {
         this.displayNeo4j = displayNeo4j;
     }
 

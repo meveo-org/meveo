@@ -103,6 +103,8 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@XmlElement(name = "moduleFile")
 	@JsonProperty("moduleFiles")
 	private List<String> moduleFiles;
+	
+	private String repository;
 
 	/**
 	 * Instantiates a new meveo module dto.
@@ -377,4 +379,19 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	public void setInDraft(boolean isInDraft) {
 		this.isInDraft = isInDraft;
 	}
+
+	/**
+	 * @return the {@link #repository}
+	 */
+	public String getRepository() {
+		return repository;
+	}
+
+	/**
+	 * @param repository the repository to set
+	 */
+	public void setRepository(String repository) {
+		this.repository = repository;
+	}
+	
 }

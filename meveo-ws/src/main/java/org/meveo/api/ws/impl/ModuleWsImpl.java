@@ -35,6 +35,7 @@ import org.meveo.api.ws.ModuleWs;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.storage.RepositoryService;
 
 /**
  * @author Clément Bareth
@@ -47,7 +48,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
 
     @Inject
     private MeveoModuleApi moduleApi;
-
+    
     @Override
     public ActionStatus create(MeveoModuleDto moduleDto) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
@@ -134,7 +135,7 @@ public class ModuleWsImpl extends BaseWs implements ModuleWs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            moduleApi.install(moduleDto, OnDuplicate.OVERWRITE);
+            moduleApi.install(null, moduleDto, OnDuplicate.OVERWRITE);
 
         } catch (Exception e) {
             processException(e, result);

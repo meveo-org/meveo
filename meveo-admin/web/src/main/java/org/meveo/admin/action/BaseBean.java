@@ -41,7 +41,6 @@ import javax.enterprise.context.Conversation;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ValueChangeEvent;
-import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
@@ -83,6 +82,7 @@ import org.meveo.model.filter.Filter;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.storage.Repository;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -94,6 +94,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.filter.FilterService;
 import org.meveo.service.index.ElasticClient;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.EntityCustomizationUtils;
@@ -172,6 +173,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private EndpointApi endpointApi;
+    
+    @Inject
+    protected RepositoryService repositoryService;
 
     /** Search filters. */
     protected Map<String, Object> filters = new HashMap<String, Object>();
@@ -1452,4 +1456,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     public boolean isHasParams() {
         return hasParams;
     }
+    
+	public List<Repository> listRepositories() {
+		List<Repository> result = repositoryService.list();
+		return result;
+	}
 }

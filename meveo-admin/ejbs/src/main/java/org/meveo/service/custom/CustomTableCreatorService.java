@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.Lock;
@@ -29,7 +30,6 @@ import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -41,12 +41,15 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
@@ -117,7 +120,7 @@ public class CustomTableCreatorService implements Serializable {
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
-
+	
 	private EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		if (StringUtils.isBlank(sqlConfigurationCode)) {
@@ -263,7 +266,19 @@ public class CustomTableCreatorService implements Serializable {
 	}
 	
 	public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
-		return createCrtTable(null, crt);
+		return crt.getRepositories()
+			.stream()
+			.map(Repository::getSqlConfigurationCode)
+			.map(code -> {
+				try {
+					return createCrtTable(code, crt);
+				} catch (BusinessException e) {
+					log.error("Failed to create table", e);
+					return false;
+				}
+			})
+			.reduce((old, newState) -> old && newState)
+			.orElse(false);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -1139,11 +1154,9 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 */
 	public void createTable(CustomEntityTemplate template) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
-			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				createTable(e.getCode(), template);
+		template.getRepositories().forEach(e -> {
+			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				createTable(e.getSqlConfiguration().getCode(), template);
 			}
 		});
 	}
@@ -1154,11 +1167,10 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void addField(String dbTablename, CustomFieldTemplate cft) {
-		sqlConfigurationService.listActiveAndInitialized()
-			.stream()
-			.filter(e -> !cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)))
-			.forEach(e -> addField(e.getCode(), dbTablename, cft));
+	public void addField(CustomModelObject template, CustomFieldTemplate cft) {
+        template.getRepositories().stream()
+				.filter(e -> !cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)))
+				.forEach(e -> addField(e.getSqlConfiguration().getCode(), SQLStorageConfiguration.getDbTablename(template), cft));
 	}
 
 	/**
@@ -1167,13 +1179,11 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void updateField(String dbTablename, CustomFieldTemplate cft) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
+	public void updateField(CustomModelObject template, CustomFieldTemplate cft) {
+        template.getRepositories().forEach(e -> {
 			// non entity field
-			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				updateField(e.getCode(), dbTablename, cft);
+			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				updateField(e.getSqlConfiguration().getCode(), SQLStorageConfiguration.getDbTablename(template), cft);
 			}
 		});
 	}
@@ -1183,10 +1193,12 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
-	public void removeTable(String dbTablename) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> removeTable(e.getCode(), dbTablename));
+	public void removeTable(CustomModelObject template) {
+		List<SqlConfiguration> sqlConfigs = template.getRepositories()
+				.stream()
+				.map(Repository::getSqlConfiguration)
+				.collect(Collectors.toList());
+		sqlConfigs.forEach(e -> removeTable(e.getCode(), SQLStorageConfiguration.getDbTablename(template)));
 	}
 
 	/**
@@ -1195,13 +1207,14 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void removeField(String dbTablename, CustomFieldTemplate cft) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
+	public void removeField(CustomModelObject template, CustomFieldTemplate cft) {
+		template.getRepositories()
+			.stream()
+			.map(Repository::getSqlConfiguration)
+			.forEach(e -> {
 			// non entity field
 			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				removeField(e.getCode(), dbTablename, cft);
+				removeField(e.getCode(), SQLStorageConfiguration.getDbTablename(template), cft);
 			}
 		});
 
