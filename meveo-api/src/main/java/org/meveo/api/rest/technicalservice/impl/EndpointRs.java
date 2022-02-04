@@ -143,7 +143,9 @@ public class EndpointRs extends BaseRs implements IEndpointRs {
 	 */
 	@Override
 	public Response generateOpenApiJson(String code) {
-		return endpointApi.generateOpenApiJson(uriContextInfo.getBaseUri().toString(), code);
+		final URI contextUri =URI.create(uriContextInfo.getAbsolutePath().toString()).resolve(httpServletRequest.getContextPath());
+		String basePath=contextUri.toString()+"/rest/";
+		return endpointApi.generateOpenApiJson(basePath, code);
 	}
 
 	/**
