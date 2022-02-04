@@ -105,7 +105,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private DualListModel<DBStorageType> availableStoragesDM;
 	
-	private DualListModel<Repository> repositoresDM;
+	private DualListModel<Repository> repositoriesDM;
 
 	private Map<String, List<CustomEntityTemplate>> listMap;
 
@@ -131,16 +131,19 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		customEntityTemplates = customEntityTemplateService.list();
 		cetConfigurations = customEntityTemplateService.getCETForConfiguration();
 		customEntityCategories = customEntityCategoryService.list();
-		List<Repository> availableRepos = repositoryService.list();
-		availableRepos.removeIf(entity.getRepositories()::contains);
-		repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
 	}
 
 	@Override
 	public CustomEntityTemplate initEntity() {
-
 		CustomEntityTemplate entity = super.initEntity();
 		entity.getCustomEntityCategory();
+		
+		if (entity != null) {
+			List<Repository> availableRepos = repositoryService.list();
+			availableRepos.removeIf(entity.getRepositories()::contains);
+			repositoriesDM = new DualListModel<>(availableRepos, entity.getRepositories());
+		}
+		
 		return entity;
 	}
 
@@ -159,10 +162,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	}
 	
 	/**
-	 * @return the {@link #repositoresDM}
+	 * @return the {@link #repositoriesDM}
 	 */
-	public DualListModel<Repository> getRepositoresDM() {
-		return repositoresDM;
+	public DualListModel<Repository> getRepositoriesDM() {
+		return repositoriesDM;
+	}
+	
+	/**
+	 * @param repositoriesDM the repositoriesDM to set
+	 */
+	public void setRepositoriesDM(DualListModel<Repository> repositoriesDM) {
+		this.repositoriesDM = repositoriesDM;
 	}
 
 	/**

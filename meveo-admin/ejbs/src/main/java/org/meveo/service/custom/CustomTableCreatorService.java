@@ -393,6 +393,8 @@ public class CustomTableCreatorService implements Serializable {
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createTable(String sqlConnectionCode, CustomEntityTemplate template, boolean createSequence) {
+		executePostgreSqlExtension(sqlConnectionCode);
+		
 		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
 		
 		List<Change> pgChanges = new ArrayList<>();

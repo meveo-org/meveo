@@ -1,5 +1,7 @@
 package org.meveo.api.rest.custom.impl;
 
+import java.util.List;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
@@ -45,10 +47,11 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     private EntityCustomActionApi entityCustomActionApi;
 
     @Override
-    public ActionStatus createEntityTemplate(CustomEntityTemplateDto dto) {
+    public ActionStatus createEntityTemplate(CustomEntityTemplateDto dto, List<String> repositories) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
+        	dto.setRepositories(repositories);
             customEntityTemplateApi.create(dto);
 
         } catch (BusinessException | MeveoApiException e) {
@@ -100,13 +103,14 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     }
 
     @Override
-    public ActionStatus createOrUpdateEntityTemplate(CustomEntityTemplateDto dto, boolean withData) {
+    public ActionStatus createOrUpdateEntityTemplate(CustomEntityTemplateDto dto, boolean withData, List<String> repositories) {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
         	
             var cet = customEntityTemplateApi.findIgnoreNotFound(dto.getCode());
             if (cet == null) {
+            	dto.setRepositories(repositories);
                 customEntityTemplateApi.create(dto);
             } else {
                 customEntityTemplateApi.updateEntityTemplate(dto, withData);
@@ -354,7 +358,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 	 * @see org.meveo.api.rest.custom.EntityCustomizationRs#createOrUpdateCustumizedEntityTemplate(org.meveo.api.dto.CustomEntityTemplateDto)
 	 */
 	@Override
-	public ActionStatus createOrUpdateCustumizedEntityTemplate(CustomEntityTemplateDto dto) {
-		return this.createOrUpdateEntityTemplate(dto, false);
+	public ActionStatus createOrUpdateCustumizedEntityTemplate(CustomEntityTemplateDto dto, List<String> repositories) {
+		return this.createOrUpdateEntityTemplate(dto, false, repositories);
 	}
 }

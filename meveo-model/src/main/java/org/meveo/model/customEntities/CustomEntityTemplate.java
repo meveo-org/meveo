@@ -173,7 +173,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 * @return the {@link #repositories}
 	 */
 	public List<Repository> getRepositories() {
-		return repositories;
+		if (this.repositories == null) {
+			this.repositories = new ArrayList<>();
+		}
+		return this.repositories;
 	}
 
 	/**

@@ -170,6 +170,9 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	 * @return the {@link #repositories}
 	 */
 	public List<Repository> getRepositories() {
+		if (repositories == null) {
+			this.repositories = new ArrayList<>();
+		}
 		return repositories;
 	}
 

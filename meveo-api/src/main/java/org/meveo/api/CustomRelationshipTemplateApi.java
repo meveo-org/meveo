@@ -20,10 +20,12 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.storage.RepositoryService;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,13 +52,17 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
 
-
     @Inject
     private CustomFieldTemplateApi customFieldTemplateApi;
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
+    @Inject
+    private RepositoryService repositoryService;
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallationContext;
 
     private void completeCrtData(CustomRelationshipTemplate crt, CustomRelationshipTemplateDto dto)
             throws EntityDoesNotExistsException {
@@ -103,8 +109,14 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
             throw new EntityAlreadyExistsException(CustomRelationshipTemplate.class, dto.getCode());
         }
 
-        CustomRelationshipTemplate crt = CustomRelationshipTemplateDto.fromDTO(dto, null);
+        CustomRelationshipTemplate crt = fromDto(dto);
         completeCrtData(crt, dto);
+        
+        // Override repositories on module installation
+        if (moduleInstallationContext.isActive()) {
+        	crt.setRepositories(new ArrayList<>());
+        	crt.getRepositories().addAll(moduleInstallationContext.getRepositories());
+        }
 
         customRelationshipTemplateService.create(crt);
         
@@ -259,7 +271,25 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 
     @Override
     public CustomRelationshipTemplate fromDto(CustomRelationshipTemplateDto dto) throws MeveoApiException {
-        return CustomRelationshipTemplateDto.fromDTO(dto, null);
+        var crt = CustomRelationshipTemplateDto.fromDTO(dto, null);
+        
+        // Parse repositories where to create the CRT data
+        if (crt.getRepositories() == null || crt.getRepositories().isEmpty()) {
+	        if (dto.getRepositories() == null || dto.getRepositories().isEmpty()) {
+	        	crt.setRepositories(List.of(repositoryService.findDefaultRepository()));
+	        } else {
+	        	crt.setRepositories(new ArrayList<>());
+	        	dto.getRepositories().forEach(repository -> {
+					var storageRepo = repositoryService.findByCode(repository);
+					if (storageRepo != null) {
+						crt.getRepositories().add(storageRepo);
+					} else {
+						throw new IllegalArgumentException("Repository " + repository + " does not exists");
+					}
+				});
+	        }
+        }
+        return crt;
     }
 
     @Override

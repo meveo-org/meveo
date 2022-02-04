@@ -1,5 +1,7 @@
 package org.meveo.api.rest.custom;
 
+import java.util.List;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -42,7 +44,7 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
 	@POST
 	@Path("/relationship/")
 	@ApiOperation(value = "Create custom relationship template information")
-	ActionStatus createCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto);
+	ActionStatus createCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto, @QueryParam("repository") List<String> repositories);
 
 	/**
 	 * Update custom relationship template definition
@@ -92,6 +94,6 @@ public interface CustomRelationshipTemplateRs extends IBaseRs {
 	@POST
 	@Path("/crt/createOrUpdate")
 	@ApiOperation(value = "Create or update custom relationship template information")
-	ActionStatus createOrUpdateCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto);
+	ActionStatus createOrUpdateCustomRelationshipTemplate(@ApiParam("Custom relationship template information") CustomRelationshipTemplateDto dto, @QueryParam("repository") List<String> repositories);
 
 }

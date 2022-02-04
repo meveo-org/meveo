@@ -16,6 +16,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -118,6 +119,9 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
      * Whether this entity is audited or not
      */
 	private boolean audited = false;
+	
+    @JsonIgnore
+    private List<String> repositories;
     
     public CustomRelationshipTemplateDto() {
     	super();
@@ -125,6 +129,20 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
 
     // ------------------------------------------------- Setters and Getters ------------------------------------------
 
+    /**
+	 * @return the {@link #repositories}
+	 */
+	public List<String> getRepositories() {
+		return repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<String> repositories) {
+		this.repositories = repositories;
+	}
+	
     public String getGraphQlTypeName() {
         return graphQlTypeName;
     }

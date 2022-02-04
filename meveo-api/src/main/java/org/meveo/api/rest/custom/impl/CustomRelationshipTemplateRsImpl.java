@@ -1,5 +1,7 @@
 package org.meveo.api.rest.custom.impl;
 
+import java.util.List;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
@@ -30,11 +32,11 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
     
     
     @Override
-	public ActionStatus createCustomRelationshipTemplate(
-			CustomRelationshipTemplateDto dto) {
+	public ActionStatus createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto, List<String> repositories) {
     	 ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
          try {
+        	 dto.setRepositories(repositories);
              customRelationshipTemplateApi.createCustomRelationshipTemplate(dto);
 
          } catch (MeveoApiException e) {
@@ -132,11 +134,11 @@ public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRe
 	}
 
 	@Override
-	public ActionStatus createOrUpdateCustomRelationshipTemplate(
-			CustomRelationshipTemplateDto dto) {
+	public ActionStatus createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto, List<String> repositories) {
 		  ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
 	        try {
+	        	dto.setRepositories(repositories);
 	            customRelationshipTemplateApi.createOrUpdateCustomRelationshipTemplate(dto);
 	        } catch (MeveoApiException e) {
 	            result.setErrorCode(e.getErrorCode());
