@@ -76,9 +76,6 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         customRelationshipTemplates = customRelationshipTemplateService.list();
         customEntityTemplates = customEntityTemplateService.list();
         customEntityTemplates.sort(Comparator.comparing(CustomEntityTemplate::getCode));
-		List<Repository> availableRepos = repositoryService.list();
-		availableRepos.removeIf(entity.getRepositories()::contains);
-		repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
     }
 
     @Override
@@ -115,8 +112,20 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     /**
 	 * @return the {@link #repositoresDM}
 	 */
-	public DualListModel<Repository> getRepositoresDM() {
+	public DualListModel<Repository> getRepositoriesDM() {
+		if (repositoresDM == null) {
+			List<Repository> availableRepos = repositoryService.list();
+			availableRepos.removeIf(entity.getRepositories()::contains);
+			repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
+		}
 		return repositoresDM;
+	}
+	
+	/**
+	 * @param repositoresDM the repositoresDM to set
+	 */
+	public void setRepositoresDM(DualListModel<Repository> repositoresDM) {
+		this.repositoresDM = repositoresDM;
 	}
 
 	public void setDisplayNeo4j(boolean displayNeo4j) {

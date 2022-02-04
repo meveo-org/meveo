@@ -195,6 +195,8 @@ public class MeveoModuleItemInstaller {
         		scriptInstanceService.remove(moduleScriptInstance);
         	}
         }
+        
+        uninstallEvent.fire(options);
 
         MeveoModule moduleUpdated;
         // Remove if it is a child module
@@ -206,6 +208,7 @@ public class MeveoModuleItemInstaller {
         } else {
             moduleUpdated = module;
             module.setInstalled(false);
+            module.setRepositories(null);
             // moduleUpdated.getModuleItems().clear();
 
             /* In case the module is uninstalled because of installation failure
@@ -217,7 +220,6 @@ public class MeveoModuleItemInstaller {
             
         }
         
-        uninstallEvent.fire(options);
         return moduleUpdated;
     }
 

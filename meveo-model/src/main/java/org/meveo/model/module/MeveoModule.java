@@ -150,11 +150,6 @@ public class MeveoModule extends BusinessEntity implements Serializable {
     	} else if(isDownloaded() && installed) {
     		setDisabled(false);
     	}
-    	
-    	// Remove relation with repository when the module is not installed
-    	if (!installed) {
-    		this.repositories = null;
-    	}
     }
 
     public Set<MeveoModuleItem> getModuleItems() {

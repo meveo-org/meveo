@@ -11,11 +11,11 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.persistence.Neo4JStorageConfigurationDto;
-import org.meveo.model.CustomEntity;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -115,7 +115,24 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 
     private String transientCrudEventListenerScript;
     
+    @JsonIgnore
+    private List<String> repositories;
+    
     /**
+	 * @return the {@link #repositories}
+	 */
+	public List<String> getRepositories() {
+		return repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<String> repositories) {
+		this.repositories = repositories;
+	}
+
+	/**
 	 * @return the {@link #isEqualFn}
 	 */
 	public String getIsEqualFn() {

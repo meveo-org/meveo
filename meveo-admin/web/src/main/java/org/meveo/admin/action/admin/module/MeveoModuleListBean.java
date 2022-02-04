@@ -156,12 +156,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
     public void downloadAndInstallModule() {
         if (selectedModuleDto != null) {
             try {
-        		List<String> repos = repositories.getTarget()
-        				.stream()
-        				.map(Repository::getCode)
-        				.collect(Collectors.toList());
-        		
-                moduleApi.install(repos, selectedModuleDto, OnDuplicate.OVERWRITE);
+                moduleApi.install(repositoriesDM.getTarget(), selectedModuleDto, OnDuplicate.OVERWRITE);
                 messages.info(new BundleKey("messages", "meveoModule.installSuccess"), selectedModuleDto.getCode());
 
             } catch (ActionForbiddenException e) {

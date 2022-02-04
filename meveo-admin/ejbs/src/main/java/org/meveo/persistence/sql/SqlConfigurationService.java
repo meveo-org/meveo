@@ -25,6 +25,7 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
@@ -160,7 +161,9 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 		return qb.getQuery(getEntityManager()).getResultList();
 	}
 	
-	public void initializeModuleDatabase(String moduleCode, String sqlConfCode) throws BusinessException {
+	public List<CustomModelObject> initializeModuleDatabase(String moduleCode, String sqlConfCode) throws BusinessException {
+		List<CustomModelObject> initializedItems = new ArrayList<>();
+		
 		MeveoModule module = meveoModuleService.findByCode(moduleCode);
 		Set<MeveoModuleItem> moduleItems = module.getModuleItems();
 		
@@ -186,6 +189,9 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 			moduleCrts.add(customRelationshipTemplateService.findByCode(moduleCrtCode));
 		});
 		
+		initializedItems.addAll(moduleCets);
+		initializedItems.addAll(moduleCrts);
+
 		for(CustomEntityTemplate moduleCet : moduleCets) {			
 			customTableCreatorService.createTable(sqlConfCode, moduleCet);
 		}
@@ -198,6 +204,8 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 				throw e;
 			}
 		}
+		
+		return initializedItems;
 	}
 
 	/**

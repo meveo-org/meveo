@@ -898,7 +898,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
-		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "repositories"));
 	}
 	
 	/**

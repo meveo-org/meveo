@@ -76,6 +76,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.index.ElasticClient;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.TransferEvent;
 import org.primefaces.model.CroppedImage;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
@@ -126,7 +127,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     private boolean showInstallBtn;
 	private boolean showUninstallBtn;
 	
-	protected DualListModel<Repository> repositories;
+	protected DualListModel<String> repositoriesDM;
 	
 	protected ModuleUninstallBuilder moduleUninstall = ModuleUninstall.builder();
 	
@@ -143,14 +144,23 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     @PostConstruct
     public void init() {
         root = new DefaultTreeNode("Root");
-        repositories = new DualListModel<>(repositoryService.list(), new ArrayList<>());
+        repositoriesDM = new DualListModel<>(repositoryService.list().stream()
+    			.map(Repository::getCode)
+    			.collect(Collectors.toList()), new ArrayList<>());
     }
     
     /**
 	 * @return the {@link #repository}
 	 */
-	public DualListModel<Repository> getRepositories() {
-		return repositories;
+	public DualListModel<String> getRepositoriesDM() {
+		return repositoriesDM;
+	}
+	
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositoriesDM(DualListModel<String> repositories) {
+		this.repositoriesDM = repositories;
 	}
 
 	/**
@@ -685,6 +695,10 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             return null;
     	}
     }
+    
+	public void onRepositoryChange() {
+		log.info("test", repositoriesDM.getTarget());
+	}
 
 	public MeveoModule install(MeveoModule module, OnDuplicate onDuplicate) throws Exception {
 
@@ -707,12 +721,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 			}
 		}
 
-		List<String> repos = repositories.getTarget()
-				.stream()
-				.map(Repository::getCode)
-				.collect(Collectors.toList());
-		
-		var result = moduleApi.install(repos, moduleDto, onDuplicate);
+		var result = moduleApi.install(repositoriesDM.getTarget(), moduleDto, onDuplicate);
 		messages.info(new BundleKey("messages", "meveoModule.installSuccess"), moduleDto.getCode());
 		messages.info(result.toString());
 
