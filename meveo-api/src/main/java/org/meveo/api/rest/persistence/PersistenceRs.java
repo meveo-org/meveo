@@ -104,11 +104,10 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
+import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonFormat.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.swagger.annotations.Api;
@@ -293,7 +292,7 @@ public class PersistenceRs {
 		hasAccessToRepository(repository);
 		
 		Set<String> fields = new HashSet<>(paginationConfiguration.getFetchFields());
-		Map<String, Set<String>> subFields = crossStorageService.extractSubFields(fields);
+		Map<String, Set<String>> subFields = PersistenceUtils.extractSubFields(fields);
 
 		Map<String, Object> values = crossStorageService.findById(repository, 
 				customEntityTemplate, 

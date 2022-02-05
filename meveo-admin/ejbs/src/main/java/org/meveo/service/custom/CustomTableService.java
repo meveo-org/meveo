@@ -384,11 +384,7 @@ public class CustomTableService extends NativePersistenceService {
 		log.info("Fetching {} with uuid {}", field.getCode(), id);
 		CustomEntityTemplate cet = customFieldsCacheContainerProvider.getCustomEntityTemplate(field.getEntityClazzCetCode());
 		Map<String, Object> entityRefValues;
-		try {
-			entityRefValues = findById(sqlConnectionCode, cet, (String) id);
-		} catch (EntityDoesNotExistsException e) {
-			return null;
-		}
+		entityRefValues = findById(sqlConnectionCode, cet, (String) id);
 		entityRefValues.remove("uuid");				// We don't want to save the uuid
 		return JacksonUtil.toString(entityRefValues);
 	}
