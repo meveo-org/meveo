@@ -230,7 +230,9 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<String> binariesPaths) {
+	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) {
+		List<String> binariesPaths = binaries.stream().map(File::getPath).collect(Collectors.toList());
+
 		neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft);
 		neo4jService.addBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft, binariesPaths);
 	}
@@ -345,6 +347,11 @@ public class Neo4jStorageImpl implements StorageImpl {
 		return valueList;
 	}
 	
+	@Override
+	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+		return neo4jService.count(repository, cet, paginationConfiguration);
+	}
+
 	private GraphQLQueryBuilder generateGraphQlFromPagination(String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
 		GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(type);
 		builder.field("meveo_uuid");

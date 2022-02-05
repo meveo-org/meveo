@@ -23,6 +23,21 @@ public class StorageQuery {
 	private Repository repository;
 	private Set<String> fetchFields;
 	private Map<String, Set<String>> subFields;
+	private boolean fetchAllFields;
+	
+	/**
+	 * @return the {@link #fetchAllFields}
+	 */
+	public boolean isFetchAllFields() {
+		return fetchAllFields;
+	}
+	
+	/**
+	 * @param fetchAllFields the fetchAllFields to set
+	 */
+	public void setFetchAllFields(boolean fetchAllFields) {
+		this.fetchAllFields = fetchAllFields;
+	}
 	/**
 	 * @return the {@link #filters}
 	 */

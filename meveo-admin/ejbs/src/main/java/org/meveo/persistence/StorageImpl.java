@@ -3,11 +3,13 @@
  */
 package org.meveo.persistence;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -29,9 +31,11 @@ public interface StorageImpl {
 
 	void update(Repository repository, CustomEntityInstance cei) throws BusinessException;
 	
-	void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<String> paths);
+	void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException;
 	
 	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException;
+	
+	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration);
 	
 	DBStorageType getStorageType();
 }

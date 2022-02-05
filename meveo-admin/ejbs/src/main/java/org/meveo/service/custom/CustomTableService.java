@@ -919,7 +919,7 @@ public class CustomTableService extends NativePersistenceService {
 		}
 	}
 
-    public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid) throws EntityDoesNotExistsException {
+    public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid) {
         return findById(sqlConnectionCode, cet, uuid, null);
     }
 
@@ -932,7 +932,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @return the converted row data
 	 */
 	@SuppressWarnings("deprecation")
-	public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid, List<String> selectFields) throws EntityDoesNotExistsException {
+	public Map<String, Object> findById(String sqlConnectionCode, CustomEntityTemplate cet, String uuid, List<String> selectFields)  {
 		var selectFieldsCopy = selectFields == null ? null : new ArrayList<>(selectFields);
 		
 		// Retrieve fields of the template
