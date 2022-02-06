@@ -16,10 +16,116 @@
 
 package org.meveo.model.persistence;
 
+import java.util.List;
+import java.util.Objects;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import org.meveo.model.scripts.ScriptInstance;
+
 /**
  * Enumeration class that represent the data storage handled by the application
  */
-public enum DBStorageType {
-    SQL,
-    NEO4J
+@Entity
+@Table(name = "db_storage_type")
+public class DBStorageType {
+	
+	public static final DBStorageType SQL;
+	public static final DBStorageType NEO4J;
+	
+	static {
+		SQL = new DBStorageType();
+		SQL.code = "SQL";
+		SQL.storageImplName = "org.meveo.persistence.impl.SQLStorageImpl";
+		
+		NEO4J = new DBStorageType();
+		NEO4J.code = "NEO4J";
+		NEO4J.storageImplName = "org.meveo.persistence.impl.Neo4jStorageImpl";
+	}
+	
+	public static DBStorageType valueOf(String name) {
+		return List.of(SQL, NEO4J).stream()
+			.filter(e -> e.code.equals(name))
+			.findFirst()
+			.orElse(null);
+	}
+	
+	@Id
+	@Column(name = "code")
+	private String code;
+	
+	@Column(name = "storage_impl_name")
+	private String storageImplName;
+	
+	@ManyToOne
+	@JoinColumn(name = "storage_impl_script_id")
+	private ScriptInstance storageImplScript;
+	
+	public String name() {
+		return this.code;
+	}
+
+	/**
+	 * @return the {@link #code}
+	 */
+	public String getCode() {
+		return code;
+	}
+
+	/**
+	 * @param code the code to set
+	 */
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	/**
+	 * @return the {@link #storageImplName}
+	 */
+	public String getStorageImplName() {
+		return storageImplName;
+	}
+
+	/**
+	 * @param storageImplName the storageImplName to set
+	 */
+	public void setStorageImplName(String storageImplName) {
+		this.storageImplName = storageImplName;
+	}
+
+	/**
+	 * @return the {@link #storageImplScript}
+	 */
+	public ScriptInstance getStorageImplScript() {
+		return storageImplScript;
+	}
+
+	/**
+	 * @param storageImplScript the storageImplScript to set
+	 */
+	public void setStorageImplScript(ScriptInstance storageImplScript) {
+		this.storageImplScript = storageImplScript;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(code);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DBStorageType other = (DBStorageType) obj;
+		return Objects.equals(code, other.code);
+	}
 }

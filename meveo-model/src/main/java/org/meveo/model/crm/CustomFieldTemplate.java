@@ -40,6 +40,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -335,8 +337,10 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     private boolean identifier;
 
     /** Storage where the cft value will be stored. */
-    @Column(name = "storages", columnDefinition = "TEXT")
-    @Type(type = JsonTypes.JSON_LIST)
+//    @Column(name = "storages", columnDefinition = "TEXT")
+//    @Type(type = JsonTypes.JSON_LIST)
+	@ManyToMany
+	@JoinTable(name = "cft_db_storage", inverseJoinColumns = @JoinColumn(name = "cft_id"), joinColumns = @JoinColumn(name = "db_storage_code"))
     List<DBStorageType> storages = new ArrayList<>();
 
     /**

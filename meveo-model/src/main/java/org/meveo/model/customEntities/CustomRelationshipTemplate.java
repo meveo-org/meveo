@@ -26,6 +26,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -96,8 +98,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	@Column(name = "DIRECTION", length = 100)
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
     
-    @Column(name = "available_storages", columnDefinition = "TEXT")
-    @Type(type = JsonTypes.JSON_LIST)
+//    @Column(name = "available_storages", columnDefinition = "TEXT")
+//    @Type(type = JsonTypes.JSON_LIST)
+	@ManyToMany
+	@JoinTable(name = "crt_db_storage", inverseJoinColumns = @JoinColumn(name = "crt_id"), joinColumns = @JoinColumn(name = "db_storage_code"))
     private List<DBStorageType> availableStorages;
 
     /**
