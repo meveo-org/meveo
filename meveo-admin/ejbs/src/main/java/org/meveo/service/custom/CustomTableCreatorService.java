@@ -228,39 +228,32 @@ public class CustomTableCreatorService implements Serializable {
 
 		dbLog.addChangeSet(changeset);
 
-		EntityManager em = getEntityManager(null);
-
-		Session hibernateSession;
-		if(!StringUtils.isBlank(sqlConnectionCode)) {			
-			hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode);
-		} else {			
-			hibernateSession = em.unwrap(Session.class);
-		}
-
 		AtomicBoolean created = new AtomicBoolean();
 		created.set(true);
 
-		hibernateSession.doWork(connection -> {
-
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
-
-			} catch (MigrationFailedException e) {
-				if (e.getMessage().toLowerCase().contains("precondition")) {
-					created.set(false);
-				} else {
-					throw new HibernateException(e);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			hibernateSession.doWork(connection -> {
+	
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+	
+				} catch (MigrationFailedException e) {
+					if (e.getMessage().toLowerCase().contains("precondition")) {
+						created.set(false);
+					} else {
+						throw new HibernateException(e);
+					}
+				} catch (Exception e) {
+					log.error("Failed to create a custom table {}", tableName, e);
+					throw new SQLException(e);
 				}
-			} catch (Exception e) {
-				log.error("Failed to create a custom table {}", tableName, e);
-				throw new SQLException(e);
-			}
-
-		});
+	
+			});
+		}
 
 		return created.get();
 	}
