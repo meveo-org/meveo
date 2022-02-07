@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -105,7 +106,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	private DualListModel<DBStorageType> availableStoragesDM;
 	
-	private DualListModel<Repository> repositoriesDM;
+	private DualListModel<String> repositoriesDM;
 
 	private Map<String, List<CustomEntityTemplate>> listMap;
 
@@ -139,9 +140,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		entity.getCustomEntityCategory();
 		
 		if (entity != null) {
-			List<Repository> availableRepos = repositoryService.list();
-			availableRepos.removeIf(entity.getRepositories()::contains);
-			repositoriesDM = new DualListModel<>(availableRepos, entity.getRepositories());
+			List<String> availableRepos = repositoryService.list()
+					.stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			List<String> entityRepos = entity.getRepositories().stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			availableRepos.removeIf(entityRepos::contains);
+			repositoriesDM = new DualListModel<>(availableRepos, entityRepos);
 		}
 		
 		return entity;
@@ -164,14 +171,14 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	/**
 	 * @return the {@link #repositoriesDM}
 	 */
-	public DualListModel<Repository> getRepositoriesDM() {
+	public DualListModel<String> getRepositoriesDM() {
 		return repositoriesDM;
 	}
 	
 	/**
 	 * @param repositoriesDM the repositoriesDM to set
 	 */
-	public void setRepositoriesDM(DualListModel<Repository> repositoriesDM) {
+	public void setRepositoriesDM(DualListModel<String> repositoriesDM) {
 		this.repositoriesDM = repositoriesDM;
 	}
 
@@ -337,6 +344,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
 		String message = entity.isTransient() ? "save.successful" : "update.successful";
+		List<Repository> repositories = repositoriesDM.getTarget()
+				.stream()
+				.map(repositoryService::findByCode)
+				.collect(Collectors.toList());
+		entity.setRepositories(repositories);
 
 		try {
 			entity = saveOrUpdate(entity);

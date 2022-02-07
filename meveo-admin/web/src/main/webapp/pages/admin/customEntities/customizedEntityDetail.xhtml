@@ -103,8 +103,7 @@
 					</h:panelGroup>
 					<h:panelGroup id="repositories">
 						<hftl:decorateFormField componentWidth="100%" label="Repositories">
-							<p:pickList id="pickListRepo" value="#{customEntityTemplateBean.repositoriesDM}" var="item" itemLabel="#{item.code}" itemValue="#{item}">
-								<o:converter converterId="omnifaces.ListConverter" list="#{customEntityTemplateBean.listRepositories()}" />
+							<p:pickList id="pickListRepo" value="#{customEntityTemplateBean.repositoriesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
 							</p:pickList>
 						</hftl:decorateFormField>
 					</h:panelGroup>
