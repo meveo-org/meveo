@@ -254,25 +254,18 @@
 			oncomplete="PF('exportDialog').hide()" />
 
 		<p:confirmDialog id="installDialog" widgetVar="installDialog" message="Installation parameters " header="#{messages['meveoModule.install']}">
-			<h:form id="installForm">
-				<h:form style="margin-top: 5px; margin-bottom: 5px;">
-					<hftl:decorateFormField label="Repository :" componentWidth="100" newLine="true">
-						<p:pickList value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo}" itemValue="#{repo}"/>
-					</hftl:decorateFormField>
-				</h:form>
+			<h:form style="margin-top: 5px; margin-bottom: 5px;">
+				<hftl:decorateFormField fieldId="repoPickList" label="Repository :" componentWidth="100" newLine="true">
+					<p:pickList id="repoPickList" value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo}" itemValue="#{repo}"/>
+				</hftl:decorateFormField>
+				<p:commandButton process="@form @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+					value="#{messages['meveoModule.install']}"
+					action="#{gitRepositoryBean.install}"
+					/>
 
-				<h:form>
-					<p:commandButton process="@(#installForm) @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
-						value="#{messages['meveoModule.install']}" onclick="doInstall()" />
-
-					<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
-						icon="ui-icon-close" />
-						
-					<p:remoteCommand id="doInstall"
-										action="#{gitRepositoryBean.install}"
-										resetValues="installForm"
-										name="doInstall" update="@form" />
-				</h:form>
+				<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
+					icon="ui-icon-close" />
+					
 			</h:form>
 		</p:confirmDialog>
 	</ui:define>
