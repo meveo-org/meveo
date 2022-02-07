@@ -76,7 +76,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	private String branch;
 	
-	protected DualListModel<Repository> repositories;
+	protected DualListModel<String> repositories;
 
 	public GitRepositoryBean() {
 		super(GitRepository.class);
@@ -84,7 +84,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	@PostConstruct
 	public void init() {
-        repositories = new DualListModel<>(repositoryService.list(), new ArrayList<>());
+        repositories = new DualListModel<>(repositoryService.list().stream().map(Repository::getCode).collect(Collectors.toList()), new ArrayList<>());
 	}
 
 	@ActionMethod
@@ -156,7 +156,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	/**
 	 * @return the {@link #repositories}
 	 */
-	public DualListModel<Repository> getRepositories() {
+	public DualListModel<String> getRepositories() {
 		return repositories;
 	}
 
@@ -222,10 +222,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public String install() {
 		try {
-			List<String> repos = repositories.getTarget()
-					.stream()
-					.map(Repository::getCode)
-					.collect(Collectors.toList());
+			List<String> repos = repositories.getTarget();
 			
 			moduleApi.install(repos, entity);
 			messages.info("Module successfully installed");

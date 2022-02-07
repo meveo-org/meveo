@@ -257,7 +257,7 @@
 			<h:form id="installForm">
 				<h:form style="margin-top: 5px; margin-bottom: 5px;">
 					<hftl:decorateFormField label="Repository :" componentWidth="100" newLine="true">
-						<p:pickList value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo.code}" itemValue=#{repo}/>
+						<p:pickList value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo}" itemValue="#{repo}"/>
 					</hftl:decorateFormField>
 				</h:form>
 
