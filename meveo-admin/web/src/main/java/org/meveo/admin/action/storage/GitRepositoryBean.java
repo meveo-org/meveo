@@ -223,10 +223,16 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public String install() {
 		try {
 			List<String> repos = repositories.getTarget();
-			
-			moduleApi.install(repos, entity);
-			messages.info("Module successfully installed");
-			return "";
+			if (!repos.isEmpty()) {
+				moduleApi.install(repos, entity);
+				messages.info("Module successfully installed");
+				return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
+
+			} else {
+				messages.error("At least one repository should be selected");
+				return "";
+			}
+
 		} catch (BusinessException | MeveoApiException e) {
 			messages.error("Failed to install module: " + e.getMessage());
 			return null;
@@ -239,5 +245,12 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			return module.getId();
 		}
 		return null;
+	}
+	
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(DualListModel<String> repositories) {
+		this.repositories = repositories;
 	}
 }
