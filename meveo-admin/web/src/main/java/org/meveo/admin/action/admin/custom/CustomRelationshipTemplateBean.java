@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
@@ -57,7 +58,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     private DualListModel<DBStorageType> availableStoragesDM;
     
-	private DualListModel<Repository> repositoresDM;
+	private DualListModel<String> repositoriesDM;
 
     private EntityCustomAction selectedEntityAction;
 
@@ -80,6 +81,12 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+		List<Repository> repositories = repositoriesDM.getTarget()
+				.stream()
+				.map(repositoryService::findByCode)
+				.collect(Collectors.toList());
+		entity.setRepositories(repositories);
+		
         String returnView =  super.saveOrUpdate(killConversation);
         customRelationshipTemplateService.synchronizeStorages(getEntity());
         return returnView;
@@ -112,20 +119,26 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     /**
 	 * @return the {@link #repositoresDM}
 	 */
-	public DualListModel<Repository> getRepositoriesDM() {
-		if (repositoresDM == null) {
-			List<Repository> availableRepos = repositoryService.list();
-			availableRepos.removeIf(entity.getRepositories()::contains);
-			repositoresDM = new DualListModel<>(availableRepos, entity.getRepositories());
+	public DualListModel<String> getRepositoriesDM() {
+		if (repositoriesDM == null) {
+			List<String> availableRepos = repositoryService.list()
+					.stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			List<String> entityRepos = entity.getRepositories().stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			availableRepos.removeIf(entityRepos::contains);
+			repositoriesDM = new DualListModel<>(availableRepos, entityRepos);
 		}
-		return repositoresDM;
+		return repositoriesDM;
 	}
 	
 	/**
 	 * @param repositoresDM the repositoresDM to set
 	 */
-	public void setRepositoresDM(DualListModel<Repository> repositoresDM) {
-		this.repositoresDM = repositoresDM;
+	public void setRepositoriesDM(DualListModel<String> repositoresDM) {
+		this.repositoriesDM = repositoresDM;
 	}
 
 	public void setDisplayNeo4j(boolean displayNeo4j) {
