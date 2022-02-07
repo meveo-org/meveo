@@ -267,6 +267,11 @@
 
 					<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
 						icon="ui-icon-close" />
+						
+					<p:remoteCommand id="doInstall"
+										action="#{gitRepositoryBean.install}"
+										resetValues="installForm"
+										name="doInstall" update="@form" />
 				</h:form>
 			</h:form>
 		</p:confirmDialog>
