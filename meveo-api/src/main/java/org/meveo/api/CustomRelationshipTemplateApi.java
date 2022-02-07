@@ -120,7 +120,10 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 
         customRelationshipTemplateService.create(crt);
         
-        synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
+        // CFTs will be handled by module installation
+        if (!moduleInstallationContext.isActive()) {
+        	synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
+        }
 
     }
 
@@ -149,7 +152,10 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
 
         customRelationshipTemplateService.synchronizeStorages(crt);
 
-        synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
+        // CFTs will be handled by module installation
+        if (!moduleInstallationContext.isActive()) {
+        	synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
+        }
     }
 
     public void removeCustomRelationshipTemplate(String code) throws MeveoApiException, BusinessException {
@@ -230,7 +236,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
                 }
 
                 // Old field is no longer needed. Remove by id, as CFT might come detached from cache
-                if (!found) {
+                if (!found && cft != null) {
                     cftsToRemove.add(cft);
                 }
             }
@@ -242,7 +248,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         } else {
             cftsToRemove.addAll(cetFields.values());
         }
-
+        
         for (CustomFieldTemplate cft : cftsToRemove) {
             customFieldTemplateService.remove(cft.getId());
         }
