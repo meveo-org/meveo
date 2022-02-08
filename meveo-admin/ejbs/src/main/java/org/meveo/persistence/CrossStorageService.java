@@ -61,7 +61,6 @@ import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.graphql.GraphQLQueryBuilder;
 import org.meveo.persistence.neo4j.base.Neo4jDao;

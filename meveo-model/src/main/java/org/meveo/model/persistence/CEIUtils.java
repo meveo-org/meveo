@@ -68,11 +68,18 @@ public class CEIUtils {
 		}
 		objectsToHash.add(cei.getUuid());
 
-		cei.getCfValuesAsValues().forEach((key, value) -> {
-			if (value != null && cfts.get(key) != null && cfts.get(key).getFieldType() != CustomFieldTypeEnum.SECRET) {
-				objectsToHash.add(value);
+		var values = cei.getCfValuesAsValues();
+		values.entrySet().forEach(e -> {
+			if (e.getValue() instanceof Instant) {
+				e.setValue(((Instant) e.getValue()).toEpochMilli());
 			}
 		});
+		cfts.values().stream()
+			.sorted((cft1, cft2) -> cft1.getCode().compareTo(cft2.getCode()))
+			.filter(cft -> !cft.getFieldType().equals(CustomFieldTypeEnum.SECRET))
+			.map(cft -> values.get(cft.getCode()))
+			.filter(java.util.Objects::nonNull)
+			.forEach(objectsToHash::add);
 
 		return PasswordUtils.getSalt(objectsToHash.toArray());
 	}
