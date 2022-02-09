@@ -868,22 +868,23 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     }
     
+    
 	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
-    	MeveoModule thinModule;
-    	
-    	// Generate module.json file
-		try {
-			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
-			thinModule.setCode(module.getCode());
-			thinModule.setModuleItems(null);
-			
-			addFilesToModule(thinModule, module);
-		} catch (Exception e) {
-			throw new BusinessException(e);
-		}
-		
-		// Generate maven facet if file does not exists yet
-		mavenConfigurationService.createDefaultPomFile(module.getCode());
+//    	MeveoModule thinModule;
+//    	
+//    	// Generate module.json file
+//		try {
+//			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
+//			thinModule.setCode(module.getCode());
+//			thinModule.setModuleItems(null);
+//			
+//			addFilesToModule(thinModule, module);
+//		} catch (Exception e) {
+//			throw new BusinessException(e);
+//		}
+//		
+//		// Generate maven facet if file does not exists yet
+//		mavenConfigurationService.createDefaultPomFile(module.getCode());
 	}
 	
 	
@@ -967,7 +968,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	@Override
 	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
-		MeveoModuleDto dto = new MeveoModuleDto(entity);
+		MeveoModuleDto dto = new MeveoModuleDto(findByCodeWithFetchEntities(entity.getCode()));
 		dto.setModuleItems(null);
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
