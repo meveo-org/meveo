@@ -147,22 +147,8 @@ public class CustomTableCreatorService implements Serializable {
 
 		DatabaseChangeLog dbLog = new DatabaseChangeLog("path");
 
-		ChangeSet changeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
-
-		// Make sure table does not exists before creating it
-		TableExistsPrecondition tableExistsPrecondition = new TableExistsPrecondition();
-		tableExistsPrecondition.setTableName(tableName);
-
-		NotPrecondition notPrecondition = new NotPrecondition();
-		notPrecondition.addNestedPrecondition(tableExistsPrecondition);
-
-		PreconditionContainer precondition = new PreconditionContainer();
-		precondition.setOnError(ErrorOption.HALT);
-		precondition.setOnFail(FailOption.HALT);
-		precondition.addNestedPrecondition(notPrecondition);
-
-		changeset.setPreconditions(precondition);
-
+		List<Change> changeset = new ArrayList<>();
+		
 		// Source column
 		ColumnConfig sourceColumn = new ColumnConfig();
 		sourceColumn.setName(SQLStorageConfiguration.getSourceColumnName(crt));
@@ -179,65 +165,124 @@ public class CustomTableCreatorService implements Serializable {
 		uuidColumn.setType("varchar(255)");
 		uuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
-
 		// Table creation
 		CreateTableChange createTableChange = new CreateTableChange();
 		createTableChange.setTableName(tableName);
 		createTableChange.addColumn(sourceColumn);
 		createTableChange.addColumn(targetColumn);
 		createTableChange.addColumn(uuidColumn);
-		changeset.addChange(createTableChange);
-
-		// Primary key constraint addition
-		AddPrimaryKeyChange addPrimaryKeyChange = new AddPrimaryKeyChange();
-		addPrimaryKeyChange.setColumnNames(uuidColumn.getName());
-		addPrimaryKeyChange.setTableName(tableName);
-		changeset.addChange(addPrimaryKeyChange);
-		
-		// Unique constraint if CRT is unique
-		if (crt.isUnique()) {
-			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
-			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
-			uniqueConstraint.setTableName(tableName);
-			uniqueConstraint.setConstraintName("uk_" + tableName);
-			changeset.addChange(uniqueConstraint);
-		}
-
-
-		// Source foreign key if source cet is a custom table
-		if (crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
-			AddForeignKeyConstraintChange sourceFkChange = new AddForeignKeyConstraintChange();
-			sourceFkChange.setBaseColumnNames(sourceColumn.getName());
-			sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
-			sourceFkChange.setReferencedColumnNames(UUID);
-			sourceFkChange.setBaseTableName(tableName);
-			sourceFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
-			changeset.addChange(sourceFkChange);
-		}
-
-		// Target foreign key if target cet is a custom table
-		if (crt.getEndNode().getSqlStorageConfiguration() != null && crt.getEndNode().getSqlStorageConfiguration().isStoreAsTable()) {
-			AddForeignKeyConstraintChange targetFkChange = new AddForeignKeyConstraintChange();
-			targetFkChange.setConstraintName(targetColumn.getName() + "_fk");
-			targetFkChange.setBaseColumnNames(targetColumn.getName());
-			targetFkChange.setReferencedColumnNames(UUID);
-			targetFkChange.setBaseTableName(tableName);
-			targetFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
-			changeset.addChange(targetFkChange);
-		}
-
-		dbLog.addChangeSet(changeset);
+		changeset.add(createTableChange);
 
 		AtomicBoolean created = new AtomicBoolean();
 		created.set(true);
 
 		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
 			hibernateSession.doWork(connection -> {
+				DatabaseMetaData meta = connection.getMetaData();
 	
 				Database database;
 				try {
 					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 					setSchemaName(database);
+					
+					boolean sourceOrTargetColDidNotExist = false;
+
+					// Check table does not exists
+					try (var res = meta.getTables(null, database.getDefaultSchemaName(), tableName, new String[] { "TABLE" })) {
+						if (res.next()) {
+							changeset.remove(createTableChange);
+							
+							// if uuid field does not exists, add it
+							try (ResultSet res2 = meta.getColumns(null, database.getDefaultSchemaName(), tableName, "uuid")) {
+								if(!res2.next()) {
+									AddColumnConfig addUuidCol = new AddColumnConfig();
+									addUuidCol.setName(uuidColumn.getName());
+									addUuidCol.setType(uuidColumn.getType());
+									
+									AddColumnChange pgUuidColChange = new AddColumnChange();
+									pgUuidColChange.setTableName(tableName);
+									pgUuidColChange.setColumns(List.of((addUuidCol)));
+									changeset.add(pgUuidColChange);
+								}
+							}
+							
+							
+							// if source field does not exists, add it
+							try (ResultSet res2 = meta.getColumns(null, database.getDefaultSchemaName(), tableName, sourceColumn.getName())) {
+								if(!res2.next()) {
+									sourceOrTargetColDidNotExist = true;
+									AddColumnConfig addSourceField = new AddColumnConfig();
+									addSourceField.setName(sourceColumn.getName());
+									addSourceField.setType(sourceColumn.getType());
+									
+									AddColumnChange addSourceFieldChange = new AddColumnChange();
+									addSourceFieldChange.setTableName(tableName);
+									addSourceFieldChange.setColumns(List.of((addSourceField)));
+									changeset.add(addSourceFieldChange);
+								}
+							}
+							
+							// if target field does not exists, add it
+							try (ResultSet res2 = meta.getColumns(null, database.getDefaultSchemaName(), tableName, targetColumn.getName())) {
+								if(!res2.next()) {
+									sourceOrTargetColDidNotExist = true;
+									AddColumnConfig addTargetField = new AddColumnConfig();
+									addTargetField.setName(targetColumn.getName());
+									addTargetField.setType(targetColumn.getType());
+									addTargetField.setDefaultValueComputed(targetColumn.getDefaultValueComputed());
+									
+									AddColumnChange addTargetFieldChange = new AddColumnChange();
+									addTargetFieldChange.setTableName(tableName);
+									addTargetFieldChange.setColumns(List.of((addTargetField)));
+									changeset.add(addTargetFieldChange);
+								}
+							}
+						}
+					}
+					
+					if (sourceOrTargetColDidNotExist) {
+						// Primary key constraint addition
+						AddPrimaryKeyChange addPrimaryKeyChange = new AddPrimaryKeyChange();
+						addPrimaryKeyChange.setColumnNames(uuidColumn.getName());
+						addPrimaryKeyChange.setTableName(tableName);
+						changeset.add(addPrimaryKeyChange);
+					}
+					
+					// Unique constraint if CRT is unique
+					if (crt.isUnique() && sourceOrTargetColDidNotExist) {
+						AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
+						uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+						uniqueConstraint.setTableName(tableName);
+						uniqueConstraint.setConstraintName("uk_" + tableName);
+						changeset.add(uniqueConstraint);
+					}
+
+					// Source foreign key if source cet is a custom table
+					if (sourceOrTargetColDidNotExist && crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
+						AddForeignKeyConstraintChange sourceFkChange = new AddForeignKeyConstraintChange();
+						sourceFkChange.setBaseColumnNames(sourceColumn.getName());
+						sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
+						sourceFkChange.setReferencedColumnNames(UUID);
+						sourceFkChange.setBaseTableName(tableName);
+						sourceFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
+						changeset.add(sourceFkChange);
+					}
+
+					// Target foreign key if target cet is a custom table
+					if (sourceOrTargetColDidNotExist && crt.getEndNode().getSqlStorageConfiguration() != null && crt.getEndNode().getSqlStorageConfiguration().isStoreAsTable()) {
+						AddForeignKeyConstraintChange targetFkChange = new AddForeignKeyConstraintChange();
+						targetFkChange.setConstraintName(targetColumn.getName() + "_fk");
+						targetFkChange.setBaseColumnNames(targetColumn.getName());
+						targetFkChange.setReferencedColumnNames(UUID);
+						targetFkChange.setBaseTableName(tableName);
+						targetFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
+						changeset.add(targetFkChange);
+					}
+					
+					ChangeSet liquibaseChangeset = new ChangeSet(tableName + "_CT_CP_" + System.currentTimeMillis(), "Meveo", false, false, "meveo", "", "", dbLog);
+					changeset.forEach(liquibaseChangeset::addChange);
+					dbLog.addChangeSet(liquibaseChangeset);
+
 					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
 					liquibase.update(new Contexts(), new LabelExpression());
 	
