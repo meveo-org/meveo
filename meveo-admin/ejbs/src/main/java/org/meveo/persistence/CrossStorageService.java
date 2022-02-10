@@ -827,9 +827,14 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		for (Object e : entitiesToCreate) {
 			if (e instanceof Map) {
+				Map<String, Object> map = (Map<String, Object>) e;
 				CustomEntityInstance cei = new CustomEntityInstance();
 				cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
-				cei.setCode((String) ((Map<?, ?>) e).get("code"));
+				cei.setCode((String) map.get("code"));
+				String uuid = (String) map.get("uuid");
+				if (uuid != null) {
+					cei.setUuid(uuid);
+				}
 
 				customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
 
