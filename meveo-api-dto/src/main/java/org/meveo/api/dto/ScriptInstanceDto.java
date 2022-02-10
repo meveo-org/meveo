@@ -2,6 +2,8 @@ package org.meveo.api.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -9,15 +11,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class ScriptInstanceDto.
@@ -115,8 +120,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
 
     @Override
     public String toString() {
-        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", category=" + getCategory() + "script=" + getScript() + ", executionRoles="
-                + executionRoles + ", sourcingRoles=" + sourcingRoles + "]";
+        return "ScriptInstanceDto [code=" + getCode() + ", description=" + getDescription() + ", type=" + getType() + ", category=" + getCategory() + "]";
     }
 
     /**
@@ -126,6 +130,15 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public List<RoleDto> getExecutionRoles() {
         return executionRoles;
+    }
+    
+    @JsonGetter("executionRoles")
+    public List<String> getExecutionRolesJson() {
+    	return Optional.ofNullable(this.executionRoles)
+    			.orElse(null)
+    			.stream()
+    			.map(RoleDto::getName)
+    			.collect(Collectors.toList());
     }
 
     /**
@@ -144,6 +157,15 @@ public class ScriptInstanceDto extends CustomScriptDto {
      */
     public List<RoleDto> getSourcingRoles() {
         return sourcingRoles;
+    }
+    
+    @JsonGetter("sourcingRoles")
+    public List<String> getSourcingRolesJson() {
+    	return Optional.ofNullable(this.sourcingRoles)
+    			.orElse(null)
+    			.stream()
+    			.map(RoleDto::getName)
+    			.collect(Collectors.toList());
     }
 
     /**
