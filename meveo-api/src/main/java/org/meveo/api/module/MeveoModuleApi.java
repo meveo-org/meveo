@@ -1346,8 +1346,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			in.close();
 			out.flush();
 			out.close();
-
-			log.debug("New file created!");
 		} catch (Exception e) {
 			log.error("Failed saving file. ", e);
 		}
