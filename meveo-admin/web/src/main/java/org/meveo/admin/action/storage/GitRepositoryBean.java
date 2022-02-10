@@ -226,17 +226,15 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			if (!repos.isEmpty()) {
 				moduleApi.install(repos, entity);
 				messages.info("Module successfully installed");
-				return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
-
 			} else {
 				messages.error("At least one repository should be selected");
-				return "";
 			}
 
 		} catch (BusinessException | MeveoApiException e) {
 			messages.error("Failed to install module: " + e.getMessage());
-			return null;
 		}
+		
+		return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
 	}
 	
 	public Long getModuleId() {
