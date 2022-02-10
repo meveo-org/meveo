@@ -129,6 +129,6 @@ public class RemoteRepositoryApi extends BaseCrudApi<RemoteRepository, RemoteRep
 
   @Override
   public IPersistenceService<RemoteRepository> getPersistenceService() {
-    return null;
+    return remoteRepositoryService;
   }
 }

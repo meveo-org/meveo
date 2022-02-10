@@ -21,6 +21,7 @@ import org.meveo.model.ModuleItemOrder;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "remote_repository_seq"), })
 @ModuleItem(value = "RemoteRepository", path = "remoteRepositories")
+@ModuleItemOrder(50)
 @ExportIdentifier({ "code"})
 public class RemoteRepository extends BusinessEntity {
 
