@@ -105,12 +105,14 @@
 			</p:tabView>
 
 			<h:form id="formId">
-				<p:growl id="messages" showDetail="true" autoUpdate="true" />
+				<p:growl id="messages" autoUpdate="true" />
 				<hf:formButtons backingBean="#{customEntityInstanceBean}"
 					edit="#{customEntityInstanceBean.edit}" ajaxSubmit="true"
 					submitUpdate=":panelContent" showAddModuleButton="false"
 					showEditButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
 					showEnableDisableButton="#{currentUser.hasRole(customEntityInstanceBean.customEntityTemplate.modifyPermission)}"
+					id="buttons"
+					formId="formId"
 					submitPartialProcess="tabView" killConversationOnSave="false" />
 			</h:form>
 		</p:panel>

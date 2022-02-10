@@ -53,6 +53,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.cdi.Cookie;
+import org.primefaces.PrimeFaces;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
 
@@ -147,13 +148,16 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		Map<Object, Object> elContext = new HashMap<>();
 		elContext.put("entity", entity);
 		
-		action.getScriptParameters().forEach((key, value) -> {
+		overrideParams.clear();
+		this.action.getScriptParameters().forEach((key, value) -> {
 			try {
 				overrideParams.add(new KeyValuePair(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class)));
 			} catch (ELException e) {
 				log.error("Failed to evaluate el for custom action", e);
 			}
 		});
+		
+		PrimeFaces.current().ajax().update("formId:buttons:executeDialog");
 	}
 	
 	/**
