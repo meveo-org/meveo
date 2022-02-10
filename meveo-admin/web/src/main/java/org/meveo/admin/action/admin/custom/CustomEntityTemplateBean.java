@@ -152,6 +152,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 					.map(Repository::getCode)
 					.collect(Collectors.toList());
 			availableRepos.removeIf(entityRepos::contains);
+			if (entityRepos.isEmpty()) {
+				entityRepos.add("default");
+				availableRepos.remove("default");
+			}
 			repositoriesDM = new DualListModel<>(availableRepos, entityRepos);
 		}
 		
