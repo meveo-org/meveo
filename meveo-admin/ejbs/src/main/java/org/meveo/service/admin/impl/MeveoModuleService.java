@@ -36,9 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
 
@@ -52,7 +50,6 @@ import javax.persistence.TypedQuery;
 import javax.validation.Valid;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.io.FileUtils;
@@ -106,7 +103,7 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
-import org.meveo.util.EntityCustomizationUtils;
+import org.meveo.service.script.ScriptInstanceService;
 
 /**
  * EJB for managing MeveoModule entities
@@ -140,6 +137,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private BusinessServiceFinder businessServiceFinder;
+    
+    @Inject
+    private ScriptInstanceService scriptInstanceService;
 
     /**
      * Add missing dependencies of each module item
@@ -968,7 +968,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	@Override
 	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
-		MeveoModuleDto dto = new MeveoModuleDto(findByCodeWithFetchEntities(entity.getCode()));
+		// Fetch entities for special serialization
+		MeveoModule newModule = findByCodeWithFetchEntities(entity.getCode());
+		getEntityManager().detach(newModule);
+		if (newModule.getScript() != null) {
+			newModule.setScript(scriptInstanceService.findById(newModule.getScript().getId(), List.of("sourcingRoles", "executionRoles")));
+		}
+		
+		MeveoModuleDto dto = new MeveoModuleDto(newModule);
 		dto.setModuleItems(null);
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
