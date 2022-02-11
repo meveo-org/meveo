@@ -422,6 +422,7 @@
 						<arguments>${releaseOption}</arguments>
 						<checkModificationExcludes>
 							<checkModificationExclude>pom.xml</checkModificationExclude>
+							<checkModificationExclude>settings.xml</checkModificationExclude>
 						</checkModificationExcludes>
 					</configuration>
 				</plugin>
