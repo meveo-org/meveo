@@ -30,14 +30,7 @@ jobs:
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
-    - name: Configure Git user
-      run: |
-        git config user.email "wdeploy@webdrone.com"
-        git config user.name "wdeploy"
-        git config user.username "wdeploy"
-        git config user.password "${{ github.token }}"
-
     - name: Maven release
-      run: mvn release:prepare release:perform -B -e -U -s $GITHUB_WORKSPACE/settings.xml --file pom.xml -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }}-SNAPSHOT -DautoVersionSubmodules=true -Dtag=${{ github.event.inputs.releaseVersion }} -DreleaseOption="-DskipTests=true -Dmaven.javadoc.skip=true" -Dresume=false -Dmaven.site.skip=true -DgenerateReports=false -Dmaven.javadoc.skip=true -Dpassword=${{ github.token }}
+      run: mvn release:prepare release:perform -B -e -U -s $GITHUB_WORKSPACE/settings.xml --file pom.xml -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }}-SNAPSHOT -DautoVersionSubmodules=true -Dtag=${{ github.event.inputs.releaseVersion }} -DreleaseOption="-DskipTests=true -Dmaven.javadoc.skip=true" -Dresume=false -Dmaven.site.skip=true -DgenerateReports=false -Dmaven.javadoc.skip=true -Dusername=wdeploy -Dpassword=${{ github.token }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
