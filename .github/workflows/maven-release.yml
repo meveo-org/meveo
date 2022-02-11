@@ -1,6 +1,3 @@
-# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
-# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
-
 name: Maven Release
 
 on:
@@ -34,10 +31,6 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Maven release
-      run: mvn release:prepare release:perform -B -s $GITHUB_WORKSPACE/settings.xml --file pom.xml \ 
-      -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \ 
-      -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }} \
-      -DautoVersionSubmodules=true \
-      -Dtag=${{ github.event.inputs.releaseVersion }}
+      run: mvn release:prepare release:perform -B -s $GITHUB_WORKSPACE/settings.xml --file pom.xml -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }} -DautoVersionSubmodules=true -Dtag=${{ github.event.inputs.releaseVersion }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
