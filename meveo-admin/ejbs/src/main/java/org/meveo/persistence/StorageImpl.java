@@ -14,6 +14,8 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 
@@ -36,6 +38,24 @@ public interface StorageImpl {
 	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException;
 	
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration);
+	
+	public void cetCreated(CustomEntityTemplate cet);
+	
+	public void crtCreated(CustomRelationshipTemplate crt) throws BusinessException;
+	
+	public void cftCreated(CustomModelObject template, CustomFieldTemplate cft);
+	
+	public void cetUpdated(CustomEntityTemplate oldCet, CustomEntityTemplate cet);
+	
+	public void crtUpdated(CustomRelationshipTemplate cet) throws BusinessException;
+	
+	public void cftUpdated(CustomModelObject template, CustomFieldTemplate oldCft, CustomFieldTemplate cft);
+	
+	public void removeCft(CustomModelObject template, CustomFieldTemplate cft);
+	
+	public void removeCet(CustomEntityTemplate cet);
+	
+	public void removeCrt(CustomRelationshipTemplate crt);
 	
 	DBStorageType getStorageType();
 }

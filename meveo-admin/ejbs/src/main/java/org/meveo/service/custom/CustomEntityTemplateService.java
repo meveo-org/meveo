@@ -73,8 +73,8 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.neo4j.service.Neo4jService;
-import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
+import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleHelper;
 import org.meveo.service.admin.impl.ModuleUninstall;
@@ -146,17 +146,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomEntityCategoryService customEntityCategoryService;
 
     @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
-
-    @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
     
-    @Inject
-    private CustomTableCreatorService customTableCreatorService;
-
     @Inject
     private ElasticClient elasticClient;
     
@@ -168,9 +162,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private GitRepository meveoRepository;
 
     @Inject
-    private Neo4jService neo4jService;
-
-    @Inject
     private ParamBeanFactory paramBeanFactory;
 
     @Inject
@@ -178,9 +169,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
-    
-    @Inject
-    private SqlConfigurationService sqlConfigurationService;
     
     @Inject
     private JSONSchemaIntoJavaClassParser jSONSchemaIntoJavaClassParser;
@@ -193,6 +181,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+    
+    @Inject
+    private Neo4jStorageImpl neo4jStorageImpl;
+    
+    @Inject
+    private SQLStorageImpl sqlStorageImpl;
 	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -210,9 +204,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(cet);
-        }
 
         elasticClient.createCETMapping(cet);
 
@@ -226,14 +217,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 createPrimitiveCft(cet);
             }
 
-            // Create neoj4 indexes
-            if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-                neo4jService.addUUIDIndexes(cet);
-            }
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        
+        sqlStorageImpl.cetCreated(cet);
+        neo4jStorageImpl.cetCreated(cet);
     }
 
     /**
@@ -553,17 +542,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     		return;
     	}
     	
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(cet);
-
-        } else if (cet.getSqlStorageConfiguration() != null) {
-            customEntityInstanceService.removeByCet(cet.getCode());
-        }
-
-        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.removeCet(cet);
-            neo4jService.removeUUIDIndexes(cet);
-        }
+    	neo4jStorageImpl.removeCet(cet);
+    	sqlStorageImpl.removeCet(cet);
     }
 
     @Override
@@ -685,25 +665,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
 
-        // Synchronize neoj4 indexes
-        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.addUUIDIndexes(cet);
-        } else {
-            neo4jService.removeUUIDIndexes(cet);
-        }
-        
-        var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
-        
-        // Handle SQL inheritance
-        if(cet.storedIn(DBStorageType.SQL)) {
-        	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
-        		// Inheritance removed
-        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
-        	} else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
-        		// Inheritance added
-        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
-        	}
-        }
+        neo4jStorageImpl.cetUpdated(oldValue, cet);
+        sqlStorageImpl.cetUpdated(oldValue, cet);
 
         return cetUpdated;
     }

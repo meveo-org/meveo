@@ -32,6 +32,8 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
@@ -43,10 +45,10 @@ import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
+import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
-import org.slf4j.Logger;
 
 /**
  * 
@@ -75,9 +77,6 @@ public class SQLStorageImpl implements StorageImpl {
 	private CustomFieldInstanceService customFieldInstanceService;
 	
 	@Inject
-	private Logger log;
-	
-	@Inject
 	private FileSystemService fileSystemService;
 	
     @Inject
@@ -87,6 +86,12 @@ public class SQLStorageImpl implements StorageImpl {
     @Inject
     @Created
     private Event<CustomEntityInstance> customEntityInstanceCreate;
+    
+    @Inject
+    private CustomTableCreatorService customTableCreatorService;
+    
+    @Inject
+    private CustomFieldsCacheContainerProvider customFieldsCache;
 
 	@Override
 	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
@@ -502,6 +507,124 @@ public class SQLStorageImpl implements StorageImpl {
 		}
 
 		return cei.getUuid();
+	}
+
+	@Override
+	public void cetCreated(CustomEntityTemplate cet) {
+        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+	        customTableCreatorService.createTable(cet);
+        }
+	}
+
+	@Override
+	public void crtCreated(CustomRelationshipTemplate crt) throws BusinessException {
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	customTableCreatorService.createCrtTable(crt);
+        }
+	}
+
+	@Override
+	public void cftCreated(CustomModelObject template, CustomFieldTemplate cft) {
+		if (template.getAvailableStorages().contains(DBStorageType.SQL)) {
+			if (template instanceof CustomEntityTemplate) {
+				CustomEntityTemplate cet = (CustomEntityTemplate) template;
+				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+					customTableCreatorService.addField(template, cft);
+				}
+			} else {
+				customTableCreatorService.addField(template, cft);
+			}
+		}
+
+		
+	}
+
+	@Override
+	public void removeCft(CustomModelObject template, CustomFieldTemplate cft) {
+		if (template.getAvailableStorages().contains(DBStorageType.SQL)) {
+			if (template instanceof CustomEntityTemplate) {
+				CustomEntityTemplate cet = (CustomEntityTemplate) template;
+				 if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+		            customTableCreatorService.removeField(cet, cft);
+				}
+			} else {
+	            customTableCreatorService.removeField(template, cft);
+			}
+		}
+		
+	}
+
+	@Override
+	public void removeCet(CustomEntityTemplate cet) {
+		if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+            customTableCreatorService.removeTable(cet);
+	    } else if (cet.getSqlStorageConfiguration() != null) {
+	        customEntityInstanceService.removeByCet(cet.getCode());
+	    }
+	}
+
+	@Override
+	public void removeCrt(CustomRelationshipTemplate crt) {
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	for (Repository r : crt.getRepositories()) {
+                customTableCreatorService.removeTable(r.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(crt));
+        	}
+        }
+	}
+
+	@Override
+	public void cetUpdated(CustomEntityTemplate oldCet, CustomEntityTemplate cet) {
+        var sqlConfs = cet.getRepositories();
+        
+        // Handle SQL inheritance
+        if(cet.storedIn(DBStorageType.SQL)) {
+        	if(oldCet.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
+        		// Inheritance removed
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        	} else if(oldCet.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
+        		// Inheritance added
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        	}
+        }
+	}
+
+	@Override
+	public void crtUpdated(CustomRelationshipTemplate crt) throws BusinessException {
+        // SQL Storage logic
+        if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+        	boolean created = customTableCreatorService.createCrtTable(crt);
+        	// Create the custom fields for the table if the table has been created
+        	if(created) {
+        		for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(crt.getAppliesTo()).values()) {
+    				customTableCreatorService.addField(crt, cft);
+        		}
+        	}
+        }else {
+            // Remove table if storage previously contained SQL
+            if(customFieldsCache.getCustomRelationshipTemplate(crt.getCode()).getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.removeTable(crt);
+            }
+        }
+	}
+
+	@Override
+	public void cftUpdated(CustomModelObject template, CustomFieldTemplate oldCft, CustomFieldTemplate cft) {
+		if (template instanceof CustomEntityTemplate) {
+			CustomEntityTemplate cet = (CustomEntityTemplate) template;
+			if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+	            customTableCreatorService.updateField(cet, cft);
+			
+			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && oldCft != null && oldCft.getStoragesNullSafe() != null && oldCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
+				customTableCreatorService.removeField(cet, cft);
+			}
+		} else {
+			if (template.getAvailableStorages().contains(DBStorageType.SQL)) {
+	            customTableCreatorService.updateField(template, cft);
+			} else if(!template.getAvailableStorages().contains(DBStorageType.SQL) && oldCft.getStoragesNullSafe()!= null && oldCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
+				customTableCreatorService.removeField(template, cft);
+			}
+		}
+		
 	}
 
 

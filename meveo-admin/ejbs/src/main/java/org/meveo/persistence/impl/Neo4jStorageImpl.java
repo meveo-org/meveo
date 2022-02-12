@@ -30,6 +30,8 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.PersistenceActionResult;
@@ -44,12 +46,6 @@ import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 
-/**
- * 
- * @author heros
- * @since 
- * @version
- */
 public class Neo4jStorageImpl implements StorageImpl {
 	
 	@Inject
@@ -69,7 +65,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	
 	@Inject
 	private Logger log;
-
+	
 	@Override
 	public String findEntityIdByValues(Repository repository, CustomEntityInstance cei) {
 		try {
@@ -393,6 +389,64 @@ public class Neo4jStorageImpl implements StorageImpl {
 		}
 		
 		return builder;
+	}
+
+	@Override
+	public void cetCreated(CustomEntityTemplate cet) {
+        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+        	neo4jService.addUUIDIndexes(cet);
+        }
+		
+	}
+
+	@Override
+	public void crtCreated(CustomRelationshipTemplate crt) {
+		// NOOP
+		
+	}
+
+	@Override
+	public void cftCreated(CustomModelObject template, CustomFieldTemplate cft) {
+		// NOOP
+		
+	}
+
+	@Override
+	public void removeCft(CustomModelObject template, CustomFieldTemplate cft) {
+		// NOOP
+	}
+
+	@Override
+	public void removeCet(CustomEntityTemplate cet) {
+        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.removeCet(cet);
+            neo4jService.removeUUIDIndexes(cet);
+        }
+	}
+
+	@Override
+	public void removeCrt(CustomRelationshipTemplate crt) {
+		// NOOP
+	}
+
+	@Override
+	public void cetUpdated(CustomEntityTemplate oldCet, CustomEntityTemplate cet) {
+        // Synchronize neoj4 indexes
+        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+            neo4jService.addUUIDIndexes(cet);
+        } else {
+            neo4jService.removeUUIDIndexes(cet);
+        }
+	}
+
+	@Override
+	public void crtUpdated(CustomRelationshipTemplate cet) {
+		// NOOP
+	}
+
+	@Override
+	public void cftUpdated(CustomModelObject template, CustomFieldTemplate oldCft, CustomFieldTemplate cft) {
+		// NOOP
 	}
 
 
