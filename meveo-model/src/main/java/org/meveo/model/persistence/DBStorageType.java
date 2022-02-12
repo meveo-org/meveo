@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -62,7 +63,7 @@ public class DBStorageType {
 	@Column(name = "storage_impl_name")
 	private String storageImplName;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "storage_impl_script_id")
 	private ScriptInstance storageImplScript;
 	

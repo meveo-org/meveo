@@ -294,6 +294,15 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(StorageQuery query) throws EntityDoesNotExistsException {
+		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(query.getCet().getAppliesTo());
+
+		// Check if filters contains a field not stored in Neo4J
+		var dontFilterOnNeo4J = query.getFilters() != null && query.getFilters().keySet().stream()
+				.anyMatch(f -> fields.get(f) != null && !fields.get(f).getStorages().contains(DBStorageType.NEO4J));
+		
+		if (dontFilterOnNeo4J) {
+			return null;
+		}
 		
 		String graphQlQuery;
 		List<Map<String, Object>> valueList = new ArrayList<>();
@@ -344,7 +353,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 	
 	@Override
-	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 		return neo4jService.count(repository, cet, paginationConfiguration);
 	}
 
@@ -447,6 +456,22 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	public void cftUpdated(CustomModelObject template, CustomFieldTemplate oldCft, CustomFieldTemplate cft) {
 		// NOOP
+	}
+
+	@Override
+	public PersistenceActionResult addCRTByUuids(Repository repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
+		// Neo4J Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
+			try {
+				return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
+			} catch (BusinessException e) {
+				throw e;
+			} catch (ELException e) {
+				throw new BusinessException(e);
+			}
+		}
+		
+		return null;
 	}
 
 

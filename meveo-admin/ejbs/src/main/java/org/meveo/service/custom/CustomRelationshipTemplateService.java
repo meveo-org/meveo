@@ -48,8 +48,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.persistence.impl.Neo4jStorageImpl;
-import org.meveo.persistence.impl.SQLStorageImpl;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -97,10 +96,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     private CustomEntityTemplateService cetService;
     
     @Inject
-    private Neo4jStorageImpl neo4jStorageImpl;
-    
-    @Inject
-    private SQLStorageImpl sqlStorageImpl;
+    private DBStorageTypeService dbStorageTypeService;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -124,8 +120,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
             permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
             permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
             
-            sqlStorageImpl.crtCreated(crt);
-            neo4jStorageImpl.crtCreated(crt);
+            for (var storage : crt.getAvailableStorages()) {
+            	dbStorageTypeService.findImplementation(storage).crtCreated(crt);
+            }
  
             customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
         } catch (Exception e) {
@@ -152,8 +149,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
         permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
         permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
         
-        sqlStorageImpl.crtUpdated(crt);
-        neo4jStorageImpl.crtUpdated(crt);
+        for (var storage : crt.getAvailableStorages()) {
+        	dbStorageTypeService.findImplementation(storage).crtUpdated(crt);
+        }
 
         customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
@@ -199,8 +197,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
             customFieldTemplateService.remove(cft.getId());
         }
 
-        sqlStorageImpl.removeCrt(crt);
-        neo4jStorageImpl.removeCrt(crt);
+        for (var storage : crt.getAvailableStorages()) {
+        	dbStorageTypeService.findImplementation(storage).removeCrt(crt);
+        }
         
         customFieldsCache.removeCustomRelationshipTemplate(crt);
 

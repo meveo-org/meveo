@@ -11,6 +11,7 @@ import java.util.Map;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -31,13 +32,15 @@ public interface StorageImpl {
 	
 	PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, String foundUuid) throws BusinessException;
 
+	PersistenceActionResult addCRTByUuids(Repository repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException;
+
 	void update(Repository repository, CustomEntityInstance cei) throws BusinessException;
 	
 	void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException;
 	
 	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException;
 	
-	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration);
+	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration);
 	
 	public void cetCreated(CustomEntityTemplate cet);
 	

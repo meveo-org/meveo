@@ -46,6 +46,7 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableCreatorService;
+import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
@@ -57,6 +58,9 @@ import org.meveo.util.PersistenceUtils;
  * @version
  */
 public class SQLStorageImpl implements StorageImpl {
+	
+	@Inject
+	private CustomTableRelationService customTableRelationService;
 	
 	@Inject
 	private CrossStorageTransaction transaction;
@@ -220,37 +224,55 @@ public class SQLStorageImpl implements StorageImpl {
 
 	@Override
 	public List<Map<String, Object>> find(StorageQuery query) throws EntityDoesNotExistsException {
-		PaginationConfiguration sqlPaginationConfiguration = new PaginationConfiguration(query.getPaginationConfiguration());
-		sqlPaginationConfiguration.setFetchFields(List.copyOf(query.getFetchFields()));
+		PaginationConfiguration paginationConfiguration = query.getPaginationConfiguration();
+		CustomEntityTemplate cet = query.getCet();
+		var filters = query.getFilters();
+		var actualFetchFields = query.getFetchFields();
 		
-		if (query.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-			final List<Map<String, Object>> values = customTableService.list(query.getRepository().getSqlConfigurationCode(), query.getCet(), sqlPaginationConfiguration);
-			values.forEach(v -> replaceKeys(query.getCet(), query.getFetchFields(), v));
-			return values;
+		// In case where only graphql query is passed, we will only use it so we won't
+		// fetch sql
+		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
 
-		} else {
-			final List<CustomEntityInstance> ceis = customEntityInstanceService.list(query.getCet().getCode(), query.getCet().isStoreAsTable(), query.getFilters(), sqlPaginationConfiguration);
-			final List<Map<String, Object>> values = new ArrayList<>();
+		boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
 
-			for (CustomEntityInstance cei : ceis) {
-				Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
-				final Map<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
-				map.put("uuid", cei.getUuid());
-				map.put("code", cei.getCode());
-				map.put("description", cei.getDescription());
+		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+		
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (query.isFetchAllFields() || hasSqlFetchField || hasSqlFilter)) {
 
-				if (!query.isFetchAllFields()) {
-					for (String k : cei.getCfValuesAsValues().keySet()) {
-						if (!query.getFetchFields().contains(k)) {
-							map.remove(k);
+			PaginationConfiguration sqlPaginationConfiguration = new PaginationConfiguration(query.getPaginationConfiguration());
+			sqlPaginationConfiguration.setFetchFields(List.copyOf(query.getFetchFields()));
+			
+			if (query.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
+				final List<Map<String, Object>> values = customTableService.list(query.getRepository().getSqlConfigurationCode(), query.getCet(), sqlPaginationConfiguration);
+				values.forEach(v -> replaceKeys(query.getCet(), query.getFetchFields(), v));
+				return values;
+
+			} else {
+				final List<CustomEntityInstance> ceis = customEntityInstanceService.list(query.getCet().getCode(), query.getCet().isStoreAsTable(), query.getFilters(), sqlPaginationConfiguration);
+				final List<Map<String, Object>> values = new ArrayList<>();
+
+				for (CustomEntityInstance cei : ceis) {
+					Map<String, Object> cfValuesAsValues = cei.getCfValuesAsValues();
+					final Map<String, Object> map = cfValuesAsValues == null ? new HashMap<>() : new HashMap<>(cfValuesAsValues);
+					map.put("uuid", cei.getUuid());
+					map.put("code", cei.getCode());
+					map.put("description", cei.getDescription());
+
+					if (!query.isFetchAllFields()) {
+						for (String k : cei.getCfValuesAsValues().keySet()) {
+							if (!query.getFetchFields().contains(k)) {
+								map.remove(k);
+							}
 						}
 					}
+					values.add(map);
 				}
-				values.add(map);
-			}
 
-			return values;
+				return values;
+			}
 		}
+		
+		return null;
 	}
 
 	@Override
@@ -364,15 +386,36 @@ public class SQLStorageImpl implements StorageImpl {
 	
 	
 	@Override
-	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
-		final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
 
-		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			return (int) customTableService.count(repository.getSqlConfigurationCode(), dbTablename, paginationConfiguration);
+		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
 
-		} else {
-			return (int) customEntityInstanceService.count(cet.getCode(), paginationConfiguration);
+		
+		// If no pagination nor fetch fields are defined, we consider that we must fetch
+		// everything
+		boolean fetchAllFields = paginationConfiguration == null || actualFetchFields == null;
+
+		// In case where only graphql query is passed, we will only use it so we won't
+		// fetch sql
+		boolean dontFetchSql = paginationConfiguration != null && paginationConfiguration.getFilters() == null && paginationConfiguration.getGraphQlQuery() != null;
+
+		boolean hasSqlFetchField = paginationConfiguration != null && actualFetchFields != null && actualFetchFields.stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
+		boolean hasSqlFilter = paginationConfiguration != null && paginationConfiguration.getFilters() != null && filters.keySet().stream().anyMatch(s -> customTableService.sqlCftFilter(cet, s));
+
+		if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.SQL) && !dontFetchSql && (fetchAllFields || hasSqlFetchField || hasSqlFilter)) {
+			final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
+
+			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
+				return (int) customTableService.count(repository.getSqlConfigurationCode(), dbTablename, paginationConfiguration);
+
+			} else {
+				return (int) customEntityInstanceService.count(cet.getCode(), paginationConfiguration);
+			}
 		}
+		
+		return null;
 	}
 
 	public void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
@@ -625,6 +668,18 @@ public class SQLStorageImpl implements StorageImpl {
 			}
 		}
 		
+	}
+
+
+	@Override
+	public PersistenceActionResult addCRTByUuids(Repository repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
+		// SQL Storage
+		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUuid, targetUuid, relationValues);
+			return new PersistenceActionResult(relationUuid);
+		}
+		
+		return null;
 	}
 
 

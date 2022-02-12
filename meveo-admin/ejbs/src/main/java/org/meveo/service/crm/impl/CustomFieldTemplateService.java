@@ -8,8 +8,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -42,11 +44,11 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
-import org.meveo.persistence.impl.Neo4jStorageImpl;
-import org.meveo.persistence.impl.SQLStorageImpl;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.BusinessService;
@@ -89,10 +91,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     private ModuleInstallationContext moduleInstallCtx;
     
     @Inject
-    private Neo4jStorageImpl neo4jStorageImpl;
-    
-    @Inject
-    private SQLStorageImpl sqlStorageImpl;
+    private DBStorageTypeService dbStorageTypeService;
     
     static boolean useCFTCache = true;
 
@@ -343,8 +342,9 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		CustomModelObject appliesToTemplate = getAppliesToTemplate(cft, entityCode);
 		
 		if (appliesToTemplate != null) {
-			neo4jStorageImpl.cftCreated(appliesToTemplate, cft);
-			sqlStorageImpl.cftCreated(appliesToTemplate, cft);
+	        for (var storage : cft.getStorages()) {
+	        	dbStorageTypeService.findImplementation(storage).cftCreated(appliesToTemplate, cft);
+	        }
 		}
 
 		elasticClient.updateCFMapping(cft);
@@ -455,8 +455,14 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 			} 
 		}
 		
-		sqlStorageImpl.cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
-		neo4jStorageImpl.cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
+        Set<DBStorageType> storages = new HashSet<>();
+        storages.addAll(cft.getStorages());
+        storages.addAll(cachedCft.getStorages());
+		if (appliesToTemplate != null) {
+	        for (var storage : storages) {
+	        	dbStorageTypeService.findImplementation(storage).cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
+	        }
+		}
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
@@ -499,8 +505,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		}
 		
-		if (withData) {
-			sqlStorageImpl.removeCft(appliesToTemplate, cft);
+		if (withData && appliesToTemplate != null) {
+	        for (var storage : cft.getStorages()) {
+	        	dbStorageTypeService.findImplementation(storage).removeCft(appliesToTemplate, cft);
+	        }
 		}
 		
 		// Synchronize CET / CRT POJO

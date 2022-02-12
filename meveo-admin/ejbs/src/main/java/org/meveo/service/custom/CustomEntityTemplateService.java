@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -73,8 +74,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.impl.Neo4jStorageImpl;
-import org.meveo.persistence.impl.SQLStorageImpl;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleHelper;
 import org.meveo.service.admin.impl.ModuleUninstall;
@@ -183,11 +183,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomEntityTemplateCompiler cetCompiler;
     
     @Inject
-    private Neo4jStorageImpl neo4jStorageImpl;
+    private DBStorageTypeService dbStorageTypeService;
     
-    @Inject
-    private SQLStorageImpl sqlStorageImpl;
-	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
@@ -221,8 +218,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             throw new RuntimeException(e);
         }
         
-        sqlStorageImpl.cetCreated(cet);
-        neo4jStorageImpl.cetCreated(cet);
+        for (var storage : cet.getAvailableStorages()) {
+        	dbStorageTypeService.findImplementation(storage).cetCreated(cet);
+        }
     }
 
     /**
@@ -542,8 +540,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     		return;
     	}
     	
-    	neo4jStorageImpl.removeCet(cet);
-    	sqlStorageImpl.removeCet(cet);
+        for (var storage : cet.getAvailableStorages()) {
+        	dbStorageTypeService.findImplementation(storage).removeCet(cet);
+        }
     }
 
     @Override
@@ -665,8 +664,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
 
-        neo4jStorageImpl.cetUpdated(oldValue, cet);
-        sqlStorageImpl.cetUpdated(oldValue, cet);
+        Set<DBStorageType> storages = new HashSet<>();
+        storages.addAll(cet.getAvailableStorages());
+        storages.addAll(oldValue.getAvailableStorages());
+        for (var storage : storages) {
+        	dbStorageTypeService.findImplementation(storage).cetUpdated(oldValue, cet);
+        }
 
         return cetUpdated;
     }
