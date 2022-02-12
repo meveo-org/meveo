@@ -131,7 +131,7 @@ public class CustomTableService extends NativePersistenceService {
 	 * @throws BusinessException failed creating the entity
 	 */
 	public String create(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+		Collection<CustomFieldTemplate> cfts = (cet.getSuperTemplate() == null ? customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet)).values();
 		cei.setCet(cet);
 		return create(sqlConnectionCode, cei, true, true, cfts, true);
 	}
@@ -901,8 +901,9 @@ public class CustomTableService extends NativePersistenceService {
 		}
 		
 		if(cet.getSuperTemplate() != null) {
-			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
-			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(cet.getSuperTemplate()));
+			CustomEntityTemplate parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(parentCet.getAppliesTo());
+			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(parentCet));
 			paginationConfiguration.setSuperTypeFields(parentCfts.keySet());
 		}
 		
@@ -999,7 +1000,8 @@ public class CustomTableService extends NativePersistenceService {
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
         var cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
 		if(cet.getSuperTemplate() != null) {
-			var parentCfts = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
+			var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			var parentCfts = customFieldTemplateService.findByAppliesTo(parentCet.getAppliesTo());
 			parentCfts.forEach(cfts::putIfAbsent);
 		}
         

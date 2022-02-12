@@ -260,16 +260,18 @@ public class MenuBean implements Serializable {
 						.stream()
 						.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
 						.collect(Collectors.toList());
-						
-				addItems(firstSubmenu, firstLevelCets);
-				menu.addElement(firstSubmenu);
+				
+				if (!firstLevelCets.isEmpty()) {
+					addItems(firstSubmenu, firstLevelCets);
+					menu.addElement(firstSubmenu);
+				}
 			});
 		
 		PaginationConfiguration confCet = new PaginationConfiguration();
 		confCet.setFetchFields(List.of("subTemplates"));
 		
 		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplateService.list(confCet).stream()
-			.filter(cet -> cet.getCustomEntityCategory() == null)
+			.filter(cet -> cet.getCustomEntityCategory() == null && cet.getSuperTemplate() == null)
 			.collect(Collectors.toList());
 		
 		if (!cetsWithoutCategories.isEmpty()) {
@@ -288,6 +290,7 @@ public class MenuBean implements Serializable {
 				subMenu.addElement(item);
 			} else {
 				DefaultSubMenu cetSubMenu = new DefaultSubMenu(cet.getName());
+				cetSubMenu.setStyleClass("cet-" + cet.getCode());
 				addItems(cetSubMenu, cet.getSubTemplates());
 				subMenu.addElement(cetSubMenu);
 			}

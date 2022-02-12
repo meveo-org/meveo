@@ -80,12 +80,18 @@
                 <h:panelGrid columns="3" >
                     <h:panelGroup id="availableStorages">
                         <hftl:decorateFormField componentWidth="100%" label="#{messages['customRelationshipTemplate.availableStoragesDM']}">
-                            <p:pickList id="pickList" value="#{customRelationshipTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+                            <p:pickList id="pickListRepo" value="#{customRelationshipTemplateBean.availableStoragesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
                                 <o:converter converterId="omnifaces.ListConverter" list="#{customRelationshipTemplateBean.storageTypesList}" />
                                 <p:ajax event="transfer" listener="#{customRelationshipTemplateBean.onChangeAvailableStorages()}" update=":crtForm:group :crtForm:auditedPanel" />
                             </p:pickList>
                         </hftl:decorateFormField>
                     </h:panelGroup>
+                    <h:panelGroup id="repositories">
+						<hftl:decorateFormField componentWidth="100%" label="Repositories">
+							<p:pickList id="pickList" value="#{customRelationshipTemplateBean.repositoriesDM}" var="item" itemLabel="#{item}" itemValue="#{item}">
+							</p:pickList>
+						</hftl:decorateFormField>
+					</h:panelGroup>
                 </h:panelGrid>
 
                 <h:panelGroup id="group">

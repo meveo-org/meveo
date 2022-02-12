@@ -70,4 +70,38 @@
     	<addPrimaryKey tableName="crt_db_storage" columnNames="crt_id, db_storage_code"/>
     </changeSet>
     
+    <changeSet id="#496 - Possibility to target repositories on module installation" author="Clément Bareth">
+    	<createTable tableName="meveo_module_storage_repository">
+    		<column name="module_id" type="bigint">
+    			<constraints foreignKeyName="fk_module_id_repo" references="meveo_module(id)" nullable="false"/>
+    		</column>
+    		<column name="repo_id" type="bigint">
+   		    	<constraints foreignKeyName="fk_repo_module_id" references="storage_repository(id)" nullable="false"/>
+    		</column>
+    	</createTable>
+    	
+    	<sql>INSERT INTO meveo_module_storage_repository (module_id, repo_id) (SELECT meveo_module.id as module_id, storage_repository.id as repo_id FROM meveo_module, storage_repository WHERE storage_repository.code = 'default')</sql>
+    	
+ 	    <createTable tableName="cet_storage_repository">
+    		<column name="cet_id" type="bigint">
+    			<constraints foreignKeyName="fk_cet_id_repo" references="cust_cet(id)" nullable="false"/>
+    		</column>
+    		<column name="repo_id" type="bigint">
+   		    	<constraints foreignKeyName="fk_repo_cet_id" references="storage_repository(id)" nullable="false"/>
+    		</column>
+    	</createTable>
+    	
+    	<sql>INSERT INTO cet_storage_repository (cet_id, repo_id) (SELECT cust_cet.id as cet_id, storage_repository.id as repo_id FROM cust_cet, storage_repository WHERE storage_repository.code = 'default')</sql>
+    	
+    	 <createTable tableName="crt_storage_repository">
+    		<column name="crt_id" type="bigint">
+    			<constraints foreignKeyName="fk_crt_id_repo" references="cust_crt(id)" nullable="false"/>
+    		</column>
+    		<column name="repo_id" type="bigint">
+   		    	<constraints foreignKeyName="fk_repo_crt_id" references="storage_repository(id)" nullable="false"/>
+    		</column>
+    	</createTable>
+    	
+    	<sql>INSERT INTO crt_storage_repository (crt_id, repo_id) (SELECT cust_crt.id as crt_id, storage_repository.id as repo_id FROM cust_crt, storage_repository WHERE storage_repository.code = 'default')</sql>
+   	</changeSet>
 </databaseChangeLog>

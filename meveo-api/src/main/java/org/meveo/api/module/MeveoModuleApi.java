@@ -86,9 +86,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
-import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
@@ -99,6 +97,8 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
@@ -107,16 +107,18 @@ import org.meveo.model.module.ModuleRelease;
 import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.storage.Repository;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleUninstall;
-import org.meveo.service.admin.impl.ModuleUninstall.ModuleUninstallBuilder;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
@@ -182,10 +184,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     private CrossStorageService crossStorageService;
     
     @Inject
-    private CrossStorageApi crossStorageApi;
+    private CustomEntityInstanceApi ceiApi;
     
     @Inject
-    private CustomEntityInstanceApi ceiApi;
+    private SqlConfigurationService sqlConfigurationService;
+    
+    @Inject
+    private CustomRelationshipTemplateService customRelationshipTemplateService;
 
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -195,12 +200,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public ModuleInstallResult install(GitRepository repo) throws BusinessException, MeveoApiException {
+	public ModuleInstallResult install(List<String> repositories, GitRepository repo) throws BusinessException, MeveoApiException {
 		
 		ModuleInstallResult result = null;
 		
 		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
-		result = install(moduleDto, OnDuplicate.SKIP);
+		result = install(repositories, moduleDto, OnDuplicate.SKIP);
 		
 		// Copy module files to file explorer
 		try {
@@ -212,21 +217,59 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		return result;
 	}
 	
-	public ModuleInstallResult install(MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+	public void installData(MeveoModule module, Repository repository) throws BusinessException {
+		List<CustomModelObject> templates = sqlConfigurationService.initializeModuleDatabase(module.getCode(), repository.getSqlConfigurationCode());
+		for (var template : templates) {
+			meveoModuleService.getEntityManager().refresh(template);
+			template.getRepositories().add(repository);
+			if (template instanceof CustomEntityTemplate) {
+				customEntityTemplateService.update((CustomEntityTemplate) template);
+			} else {
+				customRelationshipTemplateService.update((CustomRelationshipTemplate) template);
+			}
+		}
+		
+		// TODO: Insert the CEIs using cross storage api
+		
+		module.getRepositories().add(repository);
+		meveoModuleService.update(module);
+	}
+	
+	/**
+	 * @param repositories Code of the repositories where to install the module data
+	 * @param moduleDto	 Serialiazed module
+	 * @param onDuplicate Action to realize on execution
+	 * @return the installation summary
+	 */
+	public ModuleInstallResult install(List<String> repositories, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
+		
+		List<Repository> storageRepositories = new ArrayList<>();
+		if (repositories == null || repositories.isEmpty()) {
+			storageRepositories.add(repositoryService.findDefaultRepository());
+		} else {
+			repositories.forEach(repository -> {
+				var storageRepo = repositoryService.findByCode(repository);
+				if (storageRepo != null) {
+					storageRepositories.add(storageRepo);
+				} else {
+					throw new IllegalArgumentException("Can't install module " + moduleDto.getCode() + " on non-existant repositories" + repository);
+				}
+			});
+		}
+
 		if (meveoModule == null) {
 			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		}
 		
+		// Update installed repositories
+		meveoModule.setRepositories(storageRepositories);
+		
 		try {
-			return meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
+			var installResult =  meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
+			
+			return installResult;
 		} catch (ModuleInstallFail e) {
-    		log.warn("Failed to install module {}, uninstalling items", meveoModule);
-    		
-//    		for(MeveoModuleItemDto item : e.getResult().getInstalledItems()) {
-//    			meveoModuleItemInstaller.uninstallItemDto(meveoModule, item);
-//    		}
-//    		
     		throw e.getException();
 		}
 	}
@@ -700,8 +743,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
 	}
-
-	
 
 	public void parseModuleInfoOnlyFromDto(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
 

@@ -3,9 +3,12 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.List;
+
 import javax.enterprise.context.RequestScoped;
 
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.storage.Repository;
 
 /**
  * 
@@ -17,6 +20,7 @@ import org.meveo.model.module.MeveoModule;
 public class ModuleInstallationContext {
 
 	private String ModuleCodeInstallation = "";
+	private List<Repository> repositories;
 	
 	private boolean active;
 	
@@ -38,6 +42,7 @@ public class ModuleInstallationContext {
 	public void begin(MeveoModule module) {
 		active = true;
 		this.ModuleCodeInstallation = module.getCode();
+		this.repositories = module.getRepositories();
 	}
 	
 	/**
@@ -45,6 +50,22 @@ public class ModuleInstallationContext {
 	 */
 	public void end() {
 		active = false;
-		this.ModuleCodeInstallation = "";
+		this.ModuleCodeInstallation = null;
+		this.repositories = null;
 	}
+
+	/**
+	 * @return the {@link #repositories}
+	 */
+	public List<Repository> getRepositories() {
+		return repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<Repository> repositories) {
+		this.repositories = repositories;
+	}
+	
 }

@@ -21,7 +21,6 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +40,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
@@ -50,9 +48,10 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
@@ -73,12 +72,13 @@ import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleHelper;
-import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.admin.impl.ModuleUninstall;
+import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.JSONSchemaGenerator;
@@ -107,6 +107,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private final static String CLASSES_DIR = "/classes";
     
     private static boolean useCETCache = true;
+    
 	
     /**
      * @param currentUser the current meveo user
@@ -553,7 +554,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	}
     	
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(SQLStorageConfiguration.getDbTablename(cet));
+            customTableCreatorService.removeTable(cet);
 
         } else if (cet.getSqlStorageConfiguration() != null) {
             customEntityInstanceService.removeByCet(cet.getCode());
@@ -844,7 +845,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
 
     	try {
-    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJsonSchemaFile);
+    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJavaFile);
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
@@ -852,10 +853,40 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
     
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
 		if (event.removeData() && event.removeItems()) {
-			moduleHelper.getEntities(event.module(), CustomEntityTemplate.class)
+			List<CustomEntityTemplate> cets = moduleHelper.getEntities(event.module(), CustomEntityTemplate.class);
+			List<Repository> repositories = event.module().getRepositories();
+			cets.stream()
+				.map(e -> { 
+					e.setRepositories(repositories);
+					return e;
+				})
 				.forEach(this::removeData);
 		}
 	}
+	
+	@Override
+	public void moveFilesToModule(CustomEntityTemplate entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+		super.moveFilesToModule(entity, oldModule, newModule);
+		
+		// Move CFTs and CEAs at the same time
+		for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
+		}
+		
+		for (EntityCustomAction cea : entityCustomActionService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			entityCustomActionService.moveFilesToModule(cea, oldModule, newModule);
+		}
+	}
+
+	@Override
+	protected BaseEntityDto getDto(CustomEntityTemplate entity) throws BusinessException {
+		CustomEntityTemplateDto dto = (CustomEntityTemplateDto) super.getDto(entity);
+		dto.setFields(null);
+		dto.setActions(null);
+		return dto;
+	}
+	
 }

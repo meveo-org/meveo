@@ -43,11 +43,11 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -56,6 +56,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 
 /**
@@ -94,6 +95,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Inject
     private Instance<CustomTableCreatorService> customTableCreatorService;
+    
+    @Inject
+    private RepositoryService repositoryService;
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallationContext;
     
     @Override
 	public int compareDtos(CustomEntityTemplateDto obj1, CustomEntityTemplateDto obj2, List<MeveoModuleItemDto> dtos) {
@@ -166,6 +173,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
     	boolean hasReferenceJpaEntity = hasReferenceJpaEntity(dto);
         CustomEntityTemplate cet = fromDTO(dto, null);
+        
+        // Override repositories on module installation
+        if (moduleInstallationContext.isActive()) {
+        	cet.setRepositories(new ArrayList<>());
+        	cet.getRepositories().addAll(moduleInstallationContext.getRepositories());
+        }
         
         // Prevent trigger of events in OntologyObserver
         cet.setInDraft(true);
@@ -701,22 +714,23 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         	ScriptInstance scriptInstance = scriptInstanceService.findByCode(dto.getPrePersistScripCode());
         	cet.setPrePersistScript(scriptInstance);
         }
-
-//        if(dto.getCustomEntityCategoryCode() != null){
-//            CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
-//            if(customEntityCategory == null){
-//                customEntityCategory = new CustomEntityCategory();
-//                customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
-//                customEntityCategory.setName(dto.getCustomEntityCategoryCode());
-//                try {
-//                    customEntityCategoryService.create(customEntityCategory);
-//                } catch (BusinessException e) {
-//                    log.error("Cannot create category", e);
-//                }
-//            }
-//            
-//            cet.setCustomEntityCategory(customEntityCategory);
-//        }
+        
+        // Parse repositories where to create the CET data
+        if (cet.getRepositories() == null || cet.getRepositories().isEmpty()) {
+	        if (dto.getRepositories() == null || dto.getRepositories().isEmpty()) {
+	        	cet.setRepositories(List.of(repositoryService.findDefaultRepository()));
+	        } else {
+	        	cet.setRepositories(new ArrayList<>());
+	        	dto.getRepositories().forEach(repository -> {
+					var storageRepo = repositoryService.findByCode(repository);
+					if (storageRepo != null) {
+						cet.getRepositories().add(storageRepo);
+					} else {
+						throw new IllegalArgumentException("Repository " + repository + " does not exists");
+					}
+				});
+	        }
+        }
 
         return cet;
     }
@@ -860,6 +874,12 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	public CustomEntityTemplateDto toDto(CustomEntityTemplate entity) {
 		var cfts = customFieldTemplateService.findByAppliesToNoCache(entity.getAppliesTo());
 		var actions = entityCustomActionService.findByAppliesTo(entity.getAppliesTo());
+		
+		// Avoid lazy initialization problems
+		if (entity.getCustomEntityCategory() != null) {
+			entity.setCustomEntityCategory(customEntityCategoryService.findById(entity.getCustomEntityCategory().getId()));
+		}
+		
 		return toDTO(entity, cfts.values(), actions.values());
 	}
 

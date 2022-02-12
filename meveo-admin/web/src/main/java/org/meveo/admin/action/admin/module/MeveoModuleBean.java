@@ -53,6 +53,7 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -106,6 +107,7 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	private String selectedFileName;
 	private boolean currentDirEmpty;
 	private boolean removeDataSchema;
+	private String selectedRepository;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -116,6 +118,20 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	}
 	
 	
+	/**
+	 * @return the {@link #selectedRepository}
+	 */
+	public String getSelectedRepository() {
+		return selectedRepository;
+	}
+
+	/**
+	 * @param selectedRepository the selectedRepository to set
+	 */
+	public void setSelectedRepository(String selectedRepository) {
+		this.selectedRepository = selectedRepository;
+	}
+
 	/**
 	 * @return the {@link #removeDataSchema}
 	 */
@@ -608,5 +624,32 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	
         messages.info("Synchronization", nbItemsAdded + " items added. Reload to see changes.");
 
+	}
+	
+	public List<String> availableRepositories() {
+		List<Repository> availableRepos = listRepositories();
+		if (entity.getRepositories() != null) {
+			availableRepos.removeIf(entity.getRepositories()::contains);
+		}
+		return availableRepos.stream()
+				.map(Repository::getCode)
+				.collect(Collectors.toList());
+	}
+	
+	@ActionMethod
+	public String installOnRepo() throws BusinessException {
+		meveoModuleApi.installData(entity, repositoryService.findByCode(selectedRepository));
+		return "moduleDetail.xhtml?faces-redirect=true&meveoModuleId=" + entity.getId() + "&edit=true";
+	}
+	
+	public String getRepositoriesCodes() {
+		if (entity.getRepositories() == null) {
+			return "";
+		}
+		
+		return entity.getRepositories()
+				.stream()
+				.map(Repository::getCode)
+				.collect(Collectors.joining(", "));
 	}
 }

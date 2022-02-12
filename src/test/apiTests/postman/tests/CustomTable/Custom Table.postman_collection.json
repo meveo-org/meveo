@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "c0cc4187-4297-41b2-bb9c-315d324fd3ed",
+		"_postman_id": "6d554a27-d145-4885-a7ce-a99eb1cb7a58",
 		"name": "Custom Table",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -1423,6 +1423,270 @@
 					"response": []
 				},
 				{
+					"name": "Create CET B in SQL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTableB\",\n  \"code\": \"TestTableB\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTableB\",\n  \"superTemplate\": \"TestTable\",\n  \"fields\": [\n    {\n      \"code\": \"idB\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"idB\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CET C in SQL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTableC\",\n  \"code\": \"TestTableC\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTableC\",\n  \"superTemplate\": \"TestTableB\",\n  \"fields\": [\n    {\n      \"code\": \"idC\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"idB\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CET target",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"TestTableTarget\",\n  \"code\": \"TestTableTarget\",\n  \"availableStorages\": [\n    \"SQL\"\n  ],\n  \"sqlStorageConfiguration\" : {\n      \"storeAsTable\" : true\n  },\n  \"description\": \"TestTable\",\n  \"fields\": [\n    {\n      \"code\": \"id\",\n      \"identifier\": true,\n      \"fieldType\": \"STRING\",\n      \"storages\": [\n        \"SQL\"\n      ],\n      \"storageType\": \"SINGLE\",\n      \"valueRequired\": false,\n      \"description\": \"id\",\n      \"isUnique\": false,\n      \"allowEdit\": false,\n      \"maxValue\": \"100\"\n    }    \n  ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create CRT",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"TestCrt\",\r\n  \"availableStorages\": [\"SQL\"],\r\n  \"name\": \"Test\",\r\n  \"isUnique\": false,\r\n  \"startNodeCode\": \"TestTableC\",\r\n  \"endNodeCode\": \"TestTableTarget\",\r\n  \"fields\": [\r\n        {\r\n            \"code\": \"name\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"description\": \"name\",\r\n            \"isUnique\": true,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/crt/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customRelationshipTemplate",
+								"crt",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Insert data",
 					"request": {
 						"auth": {
@@ -1451,7 +1715,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"TestTable\",\n        \"properties\": {\n            \"id\": \"TOTO\"\n        }\n    }\n]"
+							"raw": "[\n    {\n        \"name\": \"o1\",\n        \"type\": \"TestTableC\",\n        \"properties\": {\n            \"id\": \"TOTO\",\n            \"idB\": \"TOTOB\",\n            \"idC\": \"TOTOC\"\n        }\n    }\n]"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/{{missionId}}/persistence",
@@ -1525,6 +1789,47 @@
 					"response": []
 				},
 				{
+					"name": "Add CET C to module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/testingModule/items/CustomEntityTemplate/TestTableC",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"testingModule",
+								"items",
+								"CustomEntityTemplate",
+								"TestTableC"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Add CET to module",
 					"request": {
 						"auth": {
@@ -1560,6 +1865,129 @@
 								"items",
 								"CustomEntityTemplate",
 								"TestTable"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add CET B to module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/testingModule/items/CustomEntityTemplate/TestTableB",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"testingModule",
+								"items",
+								"CustomEntityTemplate",
+								"TestTableB"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add CET Target to module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/testingModule/items/CustomEntityTemplate/TestTableTarget",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"testingModule",
+								"items",
+								"CustomEntityTemplate",
+								"TestTableTarget"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add crt to module",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/module/testingModule/items/CustomRelationshipTemplate/TestCrt",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"module",
+								"testingModule",
+								"items",
+								"CustomRelationshipTemplate",
+								"TestCrt"
 							]
 						}
 					},
@@ -1815,6 +2243,450 @@
 									"key": "withData",
 									"value": "true"
 								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CRT persistence",
+			"item": [
+				{
+					"name": "Create source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CustomCetSource\",\n    \"code\": \"CustomCetSource\",\n    \"description\": \"CustomCetSource\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"fieldA\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"field\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create target",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CustomCetTarget\",\n    \"code\": \"CustomCetTarget\",\n    \"description\": \"CustomCetSource\",\n    \"sqlStorageConfiguration\": {\n        \"storeAsTable\": true\n    },\n    \"fields\": [\n{\n            \"code\": \"fieldA\",\n            \"fieldType\": \"STRING\",\n            \"storageType\": \"SINGLE\",\n            \"valueRequired\": false,\n            \"description\": \"field\",\n            \"isUnique\": true,\n            \"storages\": [\n                \"SQL\"\n            ]\n        }\n    ],\n    \"availableStorages\": [\n        \"SQL\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/cet/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"cet",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create crt",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"TestCRT\",\r\n    \"availableStorages\": [\r\n        \"SQL\"\r\n    ],\r\n    \"name\": \"TestCRT\",\r\n    \"isUnique\": false,\r\n    \"startNodeCode\": \"CustomCetSource\",\r\n    \"endNodeCode\": \"CustomCetTarget\",\r\n    \"fields\": [\r\n        {\r\n            \"code\": \"name\",\r\n            \"fieldType\": \"STRING\",\r\n            \"storageType\": \"SINGLE\",\r\n            \"valueRequired\": false,\r\n            \"description\": \"name\",\r\n            \"isUnique\": true,\r\n            \"storages\": [\r\n                \"SQL\"\r\n            ]\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/crt/createOrUpdate",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customRelationshipTemplate",
+								"crt",
+								"createOrUpdate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Put data",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "meveo",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "meveo.admin",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Encoding",
+								"value": "gzip",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"name\": \"dto\",\r\n        \"type\": \"CustomCetSource\",\r\n        \"properties\": {\r\n            \"fieldA\": \"Source\"\r\n        }\r\n    },\r\n    {\r\n        \"name\": \"dtoTarget\",\r\n        \"type\": \"CustomCetTarget\",\r\n        \"properties\": {\r\n            \"fieldA\": \"Target\"\r\n        }\r\n    },\r\n    {\r\n        \"name\": \"relation\",\r\n        \"type\": \"TestCRT\",\r\n        \"source\": \"dto\",\r\n        \"target\":\"dtoTarget\",\r\n        \"properties\": {\r\n            \"name\": \"MyCRT\"\r\n        }\r\n    }\r\n]"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/:project/persistence",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								":project",
+								"persistence"
+							],
+							"variable": [
+								{
+									"key": "project",
+									"value": "default",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete CRT",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/customRelationshipTemplate/relationship/TestCRT/CustomCetSource/CustomCetTarget",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"customRelationshipTemplate",
+								"relationship",
+								"TestCRT",
+								"CustomCetSource",
+								"CustomCetTarget"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete source",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CustomCetSource",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CustomCetSource"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete target",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{keycloakPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{keycloakUsername}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/entityCustomization/entity/CustomCetTarget",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"{{webContext}}",
+								"api",
+								"rest",
+								"entityCustomization",
+								"entity",
+								"CustomCetTarget"
 							]
 						}
 					},

@@ -34,42 +34,20 @@ github token to your maven settings.xml file.
 - Configure the github repository in your `~/.m2/settings.xml` file : 
 
 ```xml
-<server>
-    <id>github</id>
-    <username>GITHUB_ACCOUNT_NAME</username>
-    <password>GITHUB_TOKEN</password>
-</server>
-```
-
-then in order for maven to find the sources, create a symbolic link in `/facet/maven` to the `facet/java` directory
-
-```
-cd myModule
-mkdir -p facets/maven/src/main
-ln -s ../../../java facets/maven/src/main/java
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <server>
+        <id>github</id>
+        <username>GITHUB_ACCOUNT_NAME</username>
+        <password>GITHUB_TOKEN</password>
+    </server>
+</settings>
 ```
 
 you can now open the project in vscode
 
 ```
-cd facets/maven
+cd myModule/facets/maven
 code .
 ```
 
-Edit your `pom.xml` file to remove the tag
-```
-    <sourceDirectory>../java</sourceDirectory>
-```
-
-and add the dependencies to dependent module.
-
-For instance if your `infrastructure` module depends in the `credentials` module with version `1.0.0`,
-assuming you already cloned and maven installed the `credentials` module locally, then add this dependency
-```
-<dependency>
-  <groupId>org.meveo</groupId>
-  <artifactId>credentials</artifactId>
-  <version>1.0.0</version>
-  <scope>provided</scope>
-</dependency>
-```

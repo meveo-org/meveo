@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
@@ -24,6 +25,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.DBStorageTypeService;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.job.Job;
@@ -56,6 +58,8 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     private TranslatableLabel selectedFieldGroupingLabel = new TranslatableLabel();
 
     private DualListModel<DBStorageType> availableStoragesDM;
+    
+	private DualListModel<String> repositoriesDM;
 
     private EntityCustomAction selectedEntityAction;
 
@@ -81,6 +85,12 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Override
     public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
+		List<Repository> repositories = repositoriesDM.getTarget()
+				.stream()
+				.map(repositoryService::findByCode)
+				.collect(Collectors.toList());
+		entity.setRepositories(repositories);
+		
         String returnView =  super.saveOrUpdate(killConversation);
         customRelationshipTemplateService.synchronizeStorages(getEntity());
         return returnView;
@@ -109,8 +119,33 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
         }
         return false;
     }
+    
+    /**
+	 * @return the {@link #repositoresDM}
+	 */
+	public DualListModel<String> getRepositoriesDM() {
+		if (repositoriesDM == null) {
+			List<String> availableRepos = repositoryService.list()
+					.stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			List<String> entityRepos = entity.getRepositories().stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			availableRepos.removeIf(entityRepos::contains);
+			repositoriesDM = new DualListModel<>(availableRepos, entityRepos);
+		}
+		return repositoriesDM;
+	}
+	
+	/**
+	 * @param repositoresDM the repositoresDM to set
+	 */
+	public void setRepositoriesDM(DualListModel<String> repositoresDM) {
+		this.repositoriesDM = repositoresDM;
+	}
 
-    public void setDisplayNeo4j(boolean displayNeo4j) {
+	public void setDisplayNeo4j(boolean displayNeo4j) {
         this.displayNeo4j = displayNeo4j;
     }
 

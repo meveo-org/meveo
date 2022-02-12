@@ -111,5 +111,13 @@
 		<sql>DELETE FROM adm_user_role USING adm_role WHERE adm_user_role.role_id = adm_role.id AND adm_role.role_name LIKE 'CRT_%'</sql>
 		<sql>DELETE FROM adm_role WHERE role_name LIKE 'CRT_%'</sql>
 	</changeSet>
+	
+	<changeSet author="Clément Bareth" id="add index on module item">
+		<createIndex indexName="appliesTo_code_type_idx" tableName="meveo_module_item">
+	      <column name="applies_to"/>
+	      <column name="item_type"/>
+	      <column name="item_code"/>
+	  	</createIndex>
+  </changeSet>	
 
 </databaseChangeLog>

@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.Lock;
@@ -40,12 +41,15 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
@@ -116,7 +120,7 @@ public class CustomTableCreatorService implements Serializable {
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
-
+	
 	private EntityManager getEntityManager(String sqlConfigurationCode) {
 
 		if (StringUtils.isBlank(sqlConfigurationCode)) {
@@ -126,7 +130,7 @@ public class CustomTableCreatorService implements Serializable {
 			return sqlConnectionProvider.getEntityManager(sqlConfigurationCode);
 		}
 	}
-
+	
 	/**
 	 * Create a table with two columns referencing source and target custom tables
 	 * 
@@ -134,7 +138,7 @@ public class CustomTableCreatorService implements Serializable {
 	 * @throws BusinessException if the {@link CustomRelationshipTemplate} is not
 	 *                           configured to be stored in a custom table
 	 */
-	public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+	public boolean createCrtTable(String sqlConnectionCode, CustomRelationshipTemplate crt) throws BusinessException {
 		if (crt.getAvailableStorages() == null || !crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 			throw new BusinessException("CustomRelationshipTemplate " + crt.getCode() + " is not configured to be stored in a custom table");
 		}
@@ -161,12 +165,12 @@ public class CustomTableCreatorService implements Serializable {
 
 		// Source column
 		ColumnConfig sourceColumn = new ColumnConfig();
-		sourceColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
+		sourceColumn.setName(SQLStorageConfiguration.getSourceColumnName(crt));
 		sourceColumn.setType("varchar(255)");
 
 		// Target column
 		ColumnConfig targetColumn = new ColumnConfig();
-		targetColumn.setName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
+		targetColumn.setName(SQLStorageConfiguration.getTargetColumnName(crt));
 		targetColumn.setType("varchar(255)");
 
 		// UUID column
@@ -175,13 +179,6 @@ public class CustomTableCreatorService implements Serializable {
 		uuidColumn.setType("varchar(255)");
 		uuidColumn.setDefaultValueComputed(new DatabaseFunction("uuid_generate_v4()"));
 
-		// Unique constraint if CRT is unique
-		if (crt.isUnique()) {
-			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
-			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
-			uniqueConstraint.setTableName(tableName);
-			changeset.addChange(uniqueConstraint);
-		}
 
 		// Table creation
 		CreateTableChange createTableChange = new CreateTableChange();
@@ -196,6 +193,16 @@ public class CustomTableCreatorService implements Serializable {
 		addPrimaryKeyChange.setColumnNames(uuidColumn.getName());
 		addPrimaryKeyChange.setTableName(tableName);
 		changeset.addChange(addPrimaryKeyChange);
+		
+		// Unique constraint if CRT is unique
+		if (crt.isUnique()) {
+			AddUniqueConstraintChange uniqueConstraint = new AddUniqueConstraintChange();
+			uniqueConstraint.setColumnNames(sourceColumn.getName() + ", " + targetColumn.getName());
+			uniqueConstraint.setTableName(tableName);
+			uniqueConstraint.setConstraintName("uk_" + tableName);
+			changeset.addChange(uniqueConstraint);
+		}
+
 
 		// Source foreign key if source cet is a custom table
 		if (crt.getStartNode().getSqlStorageConfiguration() != null && crt.getStartNode().getSqlStorageConfiguration().isStoreAsTable()) {
@@ -204,7 +211,7 @@ public class CustomTableCreatorService implements Serializable {
 			sourceFkChange.setConstraintName(sourceColumn.getName() + "_fk");
 			sourceFkChange.setReferencedColumnNames(UUID);
 			sourceFkChange.setBaseTableName(tableName);
-			sourceFkChange.setReferencedTableName(sourceColumn.getName());
+			sourceFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getStartNode()));
 			changeset.addChange(sourceFkChange);
 		}
 
@@ -215,42 +222,56 @@ public class CustomTableCreatorService implements Serializable {
 			targetFkChange.setBaseColumnNames(targetColumn.getName());
 			targetFkChange.setReferencedColumnNames(UUID);
 			targetFkChange.setBaseTableName(tableName);
-			targetFkChange.setReferencedTableName(targetColumn.getName());
+			targetFkChange.setReferencedTableName(SQLStorageConfiguration.getDbTablename(crt.getEndNode()));
 			changeset.addChange(targetFkChange);
 		}
 
 		dbLog.addChangeSet(changeset);
 
-		EntityManager em = getEntityManager(null);
-
-		Session hibernateSession = em.unwrap(Session.class);
-
 		AtomicBoolean created = new AtomicBoolean();
 		created.set(true);
 
-		hibernateSession.doWork(connection -> {
-
-			Database database;
-			try {
-				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				setSchemaName(database);
-				Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
-				liquibase.update(new Contexts(), new LabelExpression());
-
-			} catch (MigrationFailedException e) {
-				if (e.getMessage().toLowerCase().contains("precondition")) {
-					created.set(false);
-				} else {
-					throw new HibernateException(e);
+		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConnectionCode)) {
+			hibernateSession.doWork(connection -> {
+	
+				Database database;
+				try {
+					database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					setSchemaName(database);
+					Liquibase liquibase = new Liquibase(dbLog, new ClassLoaderResourceAccessor(), database);
+					liquibase.update(new Contexts(), new LabelExpression());
+	
+				} catch (MigrationFailedException e) {
+					if (e.getMessage().toLowerCase().contains("precondition")) {
+						created.set(false);
+					} else {
+						throw new HibernateException(e);
+					}
+				} catch (Exception e) {
+					log.error("Failed to create a custom table {}", tableName, e);
+					throw new SQLException(e);
 				}
-			} catch (Exception e) {
-				log.error("Failed to create a custom table {}", tableName, e);
-				throw new SQLException(e);
-			}
-
-		});
+	
+			});
+		}
 
 		return created.get();
+	}
+	
+	public boolean createCrtTable(CustomRelationshipTemplate crt) throws BusinessException {
+		return crt.getRepositories()
+			.stream()
+			.map(Repository::getSqlConfigurationCode)
+			.map(code -> {
+				try {
+					return createCrtTable(code, crt);
+				} catch (BusinessException e) {
+					log.error("Failed to create table", e);
+					return false;
+				}
+			})
+			.reduce((old, newState) -> old && newState)
+			.orElse(false);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -365,6 +386,8 @@ public class CustomTableCreatorService implements Serializable {
 	 */
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createTable(String sqlConnectionCode, CustomEntityTemplate template, boolean createSequence) {
+		executePostgreSqlExtension(sqlConnectionCode);
+		
 		var dbTableName = SQLStorageConfiguration.getDbTablename(template);
 		
 		List<Change> pgChanges = new ArrayList<>();
@@ -1126,11 +1149,9 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 */
 	public void createTable(CustomEntityTemplate template) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
-			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				createTable(e.getCode(), template);
+		template.getRepositories().forEach(e -> {
+			if (!template.hasReferenceJpaEntity() || (template.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				createTable(e.getSqlConfiguration().getCode(), template);
 			}
 		});
 	}
@@ -1141,11 +1162,10 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void addField(String dbTablename, CustomFieldTemplate cft) {
-		sqlConfigurationService.listActiveAndInitialized()
-			.stream()
-			.filter(e -> !cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)))
-			.forEach(e -> addField(e.getCode(), dbTablename, cft));
+	public void addField(CustomModelObject template, CustomFieldTemplate cft) {
+        template.getRepositories().stream()
+				.filter(e -> !cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)))
+				.forEach(e -> addField(e.getSqlConfiguration().getCode(), SQLStorageConfiguration.getDbTablename(template), cft));
 	}
 
 	/**
@@ -1154,13 +1174,11 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void updateField(String dbTablename, CustomFieldTemplate cft) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
+	public void updateField(CustomModelObject template, CustomFieldTemplate cft) {
+        template.getRepositories().forEach(e -> {
 			// non entity field
-			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				updateField(e.getCode(), dbTablename, cft);
+			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getSqlConfiguration().getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
+				updateField(e.getSqlConfiguration().getCode(), SQLStorageConfiguration.getDbTablename(template), cft);
 			}
 		});
 	}
@@ -1170,10 +1188,12 @@ public class CustomTableCreatorService implements Serializable {
 	 * 
 	 * @param dbTablename physical name of the table
 	 */
-	public void removeTable(String dbTablename) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> removeTable(e.getCode(), dbTablename));
+	public void removeTable(CustomModelObject template) {
+		List<SqlConfiguration> sqlConfigs = template.getRepositories()
+				.stream()
+				.map(Repository::getSqlConfiguration)
+				.collect(Collectors.toList());
+		sqlConfigs.forEach(e -> removeTable(e.getCode(), SQLStorageConfiguration.getDbTablename(template)));
 	}
 
 	/**
@@ -1182,13 +1202,14 @@ public class CustomTableCreatorService implements Serializable {
 	 * @param dbTablename physical name of the table
 	 * @param cft         the custom field template
 	 */
-	public void removeField(String dbTablename, CustomFieldTemplate cft) {
-
-		List<SqlConfiguration> sqlConfigs = sqlConfigurationService.listActiveAndInitialized();
-		sqlConfigs.forEach(e -> {
+	public void removeField(CustomModelObject template, CustomFieldTemplate cft) {
+		template.getRepositories()
+			.stream()
+			.map(Repository::getSqlConfiguration)
+			.forEach(e -> {
 			// non entity field
 			if (!cft.hasReferenceJpaEntity() || (cft.hasReferenceJpaEntity() && e.getCode().equals(SqlConfiguration.DEFAULT_SQL_CONNECTION))) {
-				removeField(e.getCode(), dbTablename, cft);
+				removeField(e.getCode(), SQLStorageConfiguration.getDbTablename(template), cft);
 			}
 		});
 
@@ -1206,12 +1227,23 @@ public class CustomTableCreatorService implements Serializable {
 		try (Session hibernateSession = sqlConnectionProvider.getSession(sqlConfigurationCode)) {
 
 			hibernateSession.doWork(connection -> {
+				if (!StringUtils.isBlank(sqlConfigurationCode)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				try (PreparedStatement ps = connection.prepareStatement(uuidExtension)) {
 					ps.executeUpdate();
 					if (!StringUtils.isBlank(sqlConfigurationCode)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+							connection.commit();
 					}
-				}
+				} catch (Exception e) {
+					if (!sqlConfigurationCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConfigurationCode).isXAResource())
+							connection.rollback();
+					}
+					throw e;
+				}				
 			});
 		}
 	}

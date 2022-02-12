@@ -1,5 +1,7 @@
 package org.meveo.api.rest.custom;
 
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -54,7 +56,7 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@POST
 	@Path("/entity/")
 	@ApiOperation(value = "Create custom entity template information")
-	ActionStatus createEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto);
+	ActionStatus createEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("repository") List<String> repositories);
 
 	/**
 	 * Update custom entity template definition
@@ -113,7 +115,7 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@POST
 	@Path("/cet/createOrUpdate")
 	@ApiOperation(value = "Create or update custom entity template information")
-	ActionStatus createOrUpdateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("withData") boolean withData);
+	ActionStatus createOrUpdateEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("withData") boolean withData, @QueryParam("repository") List<String> repositories);
 
 	/**
 	 * To be sure the compatibility of above method we will create a new one. Define
@@ -125,7 +127,7 @@ public interface EntityCustomizationRs extends IBaseRs {
 	@POST
 	@Path("/entity/createOrUpdate")
 	@ApiOperation(value = "Create customized entity template information")
-	ActionStatus createOrUpdateCustumizedEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto);
+	ActionStatus createOrUpdateCustumizedEntityTemplate(@ApiParam("Custom entity template information") CustomEntityTemplateDto dto, @QueryParam("repository") List<String> repositories);
 
 	/**
 	 * Customize a standard Meveo entity definition by adding fields and/or custom

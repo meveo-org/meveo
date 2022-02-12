@@ -65,6 +65,9 @@ public class SqlConfiguration extends BusinessEntity {
 	@Transient
 	private String clearPassword;
 	
+	@Transient
+	private Boolean isXaResource;
+	
 	/**
 	 * @return the {@link #clearPassword}
 	 */
@@ -206,6 +209,18 @@ public class SqlConfiguration extends BusinessEntity {
 	 */
 	public void setInitialized(boolean initialized) {
 		this.initialized = initialized;
+	}
+
+	public boolean isXAResource() {
+		if (isXaResource!= null)
+			return isXaResource;
+		if (DEFAULT_SQL_CONNECTION.equals(code))
+			isXaResource=true;
+		else if (url == null)
+			return false;
+		else 
+			isXaResource = false;
+		return isXaResource;
 	}
 	
 	

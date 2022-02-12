@@ -485,7 +485,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			cei.setUuid(ceiToSave.getUuid());
 		}
 				
-		final Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
+		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? cache.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
 		cei.setCet(cet);
 
 		// Create referenced entities and set UUIDs in the values
@@ -679,11 +679,11 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 
 		String sourceUUID = findEntityId(repository, sourceValues, startNode);
-		String targetUUUID = findEntityId(repository, sourceValues, endNode);
+		String targetUUUID = findEntityId(repository, targetValues, endNode);
 
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			String relationUuid = customTableRelationService.createRelation(crt, sourceUUID, targetUUUID, relationValues);
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUUID, targetUUUID, relationValues);
 			return new PersistenceActionResult(relationUuid);
 		}
 
@@ -710,7 +710,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			String relationUuid = customTableRelationService.createRelation(crt, sourceUuid, targetUuid, relationValues);
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUuid, targetUuid, relationValues);
 			return new PersistenceActionResult(relationUuid);
 
 		}
@@ -821,6 +821,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			if(cetClassInstance != null) {
 				listener.postRemove(cetClassInstance);
 			}
+			
+			// Delete binaries
+			fileSystemService.delete(repository, cet, uuid);
 			
 			transaction.commitTransaction(repository);
 		

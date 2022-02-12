@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 
 /**
@@ -44,6 +45,14 @@ public class SQLStorageConfiguration implements Serializable {
 	@Column(name = "store_as_table", nullable = false)
 	@NotNull
 	private boolean storeAsTable = true;
+	
+	public boolean isStoreAsTable() {
+		return storeAsTable;
+	}
+
+	public void setStoreAsTable(boolean storeAsTable) {
+		this.storeAsTable = storeAsTable;
+	}
 
 	/**
 	 * Get a database field name derived from a code value. Lowercase and spaces
@@ -53,7 +62,11 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database field name
 	 */
 	public static String getCetDbTablename(String code) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(code);
+		String tableName = BaseEntity.cleanUpAndLowercaseCodeOrId(code);
+		if (tableName.length() > 63) {
+			return tableName.substring(0, 63);
+		}
+		return tableName;
 	}
 
 	/**
@@ -64,7 +77,7 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database field name
 	 */
 	public static String getDbTablename(CustomEntityTemplate cet) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(cet.getCode());
+		return getCetDbTablename(cet.getCode());
 	}
 
 	/**
@@ -75,15 +88,31 @@ public class SQLStorageConfiguration implements Serializable {
 	 * @return Database table name
 	 */
 	public static String getDbTablename(CustomRelationshipTemplate crt) {
-		return BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
+		String tableName = BaseEntity.cleanUpAndLowercaseCodeOrId(crt.getCode());
+		if (tableName.length() > 63) {
+			return tableName.substring(0, 63);
+		}
+		return tableName;
 	}
 
-	public boolean isStoreAsTable() {
-		return storeAsTable;
+	public static String getSourceColumnName(CustomRelationshipTemplate crt) {
+		return "source_" + getDbTablename(crt.getStartNode());
+	}
+	
+	public static String getTargetColumnName(CustomRelationshipTemplate crt) {
+		return "target_" + getDbTablename(crt.getEndNode());
 	}
 
-	public void setStoreAsTable(boolean storeAsTable) {
-		this.storeAsTable = storeAsTable;
+	/**
+	 * @param template
+	 * @return
+	 */
+	public static String getDbTablename(CustomModelObject template) {
+		if (template instanceof CustomEntityTemplate) {
+			return getDbTablename((CustomEntityTemplate) template);
+		} else {
+			return getDbTablename((CustomRelationshipTemplate) template);
+		}
 	}
 
 }

@@ -99,6 +99,10 @@
                             </p:column>
                         </p:dataTable>
                     </hftl:decorateFormField>
+                    <hftl:decorateFormField label="Repositories :" componentWidth="100" newLine="true">
+         				<p:pickList value="#{meveoModuleListBean.repositoriesDM}" var="repo" itemLabel="#{repo}" itemValue="#{repo}">  
+						</p:pickList>
+					</hftl:decorateFormField>
                 </ui:define>
             </hftl:decorateFormPanel>
         </p:dialog>

@@ -96,7 +96,7 @@ public class Endpoint extends BusinessEntity {
 	 * Technical service associated to the endpoint
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "service_id", updatable = false, nullable = false)
+	@JoinColumn(name = "service_id", updatable = true, nullable = false)
 	private Function service;
 
 	/**

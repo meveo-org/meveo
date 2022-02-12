@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -33,6 +32,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 
@@ -52,43 +52,58 @@ public class CustomTableRelationService extends NativePersistenceService {
     @Inject
 	private CustomFieldTemplateService customFieldTemplateService;
     
+    public String createOrUpdateRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
+    	String id = findIdByUniqueValues(repository.getSqlConfigurationCode(), crt, fieldValues, cfts.values());
+    	if (id != null) {
+    		updateRelation(repository, crt, startUuid, endUuid, fieldValues);
+    	} else {
+    		createRelation(repository, crt, startUuid, endUuid, fieldValues);
+    	}
+    	return null;
+    }
+    
 	/**
 	 * Create a single row in the table associated to the {@link CustomRelationshipTemplate}
 	 * 
+	 * @param repository  The repository where to create the relation
 	 * @param crt         CustomRelationshipTemplate associated to the table to insert values
 	 * @param startUuid   First part of the table's primary key
 	 * @param endUuid     Second part of the table's primary key
 	 * @param fieldValues Row values to insert
+	 * @return 
+	 * @throws BusinessException 
 	 */
-    public String createRelation(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    public String createRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
     	checkParameters(crt, startUuid, endUuid);
     	
     	Map<String, Object> values = new HashMap<>();
-    	values.put(SQLStorageConfiguration.getDbTablename(crt.getStartNode()), startUuid);
-    	values.put(SQLStorageConfiguration.getDbTablename(crt.getEndNode()), endUuid);
+    	values.put(SQLStorageConfiguration.getSourceColumnName(crt), startUuid);
+    	values.put(SQLStorageConfiguration.getTargetColumnName(crt), endUuid);
     	if(fieldValues != null) {
     		values.putAll(fieldValues);
     	}
     	
-    	return super.create(null, SQLStorageConfiguration.getDbTablename(crt), values, false);
+    	return super.create(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(crt), values, false);
     }
 
 	/**
 	 * Update a single row of the table associated to the {@link CustomRelationshipTemplate}
 	 * 
+	 * @param repository The repository where to update the relation
 	 * @param crt         CustomRelationshipTemplate associated to the table to update
 	 * @param startUuid   First part of the table's primary key
 	 * @param endUuid     Second part of the table's primary key
 	 * @param fieldValues Field values to update on the row. Non-provided fields will not be updated.
 	 */
-	public void updateRelation(CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
+	public void updateRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
     	checkParameters(crt, startUuid, endUuid);
 
     	// If no fields values are supplied, there is nothing to update
 		if (fieldValues != null && !fieldValues.keySet().isEmpty()) {
 			String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-			String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
-			String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+			String startColumn = SQLStorageConfiguration.getSourceColumnName(crt);
+			String endColumn = SQLStorageConfiguration.getTargetColumnName(crt);
 			
 			StringBuilder queryBuilder = new StringBuilder("UPDATE ").append(dbTablename).append("\n");
 
@@ -106,7 +121,8 @@ public class CustomTableRelationService extends NativePersistenceService {
 			Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
 
 			// Set source and target uuids
-			Query updateQuery = getEntityManager(null).createNativeQuery(queryBuilder.toString())
+			Query updateQuery = getEntityManager(repository.getSqlConfigurationCode())
+					.createNativeQuery(queryBuilder.toString())
 					.setParameter("startColumn", startUuid)
 					.setParameter("endColumn", endUuid);
 
@@ -131,8 +147,8 @@ public class CustomTableRelationService extends NativePersistenceService {
 		checkParameters(crt, startUuid, endUuid);
 		
 		String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-		String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
-		String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		String startColumn = SQLStorageConfiguration.getSourceColumnName(crt);
+		String endColumn = SQLStorageConfiguration.getTargetColumnName(crt);
 		
 		StringBuilder queryBuilder = new StringBuilder("DELETE \n")
 				.append("FROM ").append(dbTablename).append("\n")
@@ -163,8 +179,8 @@ public class CustomTableRelationService extends NativePersistenceService {
 		checkParameters(crt, startUuid, endUuid);
 		
 		String dbTablename = SQLStorageConfiguration.getDbTablename(crt);
-		String startColumn = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
-		String endColumn = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		String startColumn = SQLStorageConfiguration.getSourceColumnName(crt);
+		String endColumn = SQLStorageConfiguration.getTargetColumnName(crt);
 		
 		StringBuilder queryBuilder = new StringBuilder("SELECT EXISTS (\n")
 				.append("SELECT 1 \n")
@@ -198,7 +214,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 			throw new IllegalArgumentException("CRT must be unique !");
 		}
 
-		String targetField = SQLStorageConfiguration.getDbTablename(crt.getEndNode());
+		String targetField = SQLStorageConfiguration.getTargetColumnName(crt);
 		String tableName = SQLStorageConfiguration.getDbTablename(crt);
 
 		StringBuilder queryBuilder = new StringBuilder()
@@ -225,7 +241,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 	 */
 	public String findIdOfSourceEntityByRelationId(CustomRelationshipTemplate crt, String relationUuid) throws NoResultException {
 
-		String sourceField = SQLStorageConfiguration.getDbTablename(crt.getStartNode());
+		String sourceField = SQLStorageConfiguration.getSourceColumnName(crt);
 		String tableName = SQLStorageConfiguration.getDbTablename(crt);
 
 		StringBuilder queryBuilder = new StringBuilder()

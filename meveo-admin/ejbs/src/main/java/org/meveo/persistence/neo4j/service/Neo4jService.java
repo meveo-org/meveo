@@ -104,6 +104,7 @@ import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.FileSystemService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.internal.InternalNode;
@@ -185,7 +186,7 @@ public class Neo4jService implements CustomPersistenceService {
     private CustomFieldsCacheContainerProvider customFieldsCache;
     
     @Inject
-    private Repository defaultRepository;
+    private RepositoryService repositoryService;
     
 	@Inject
 	private CustomFieldInstanceService customFieldInstanceService;
@@ -270,6 +271,7 @@ public class Neo4jService implements CustomPersistenceService {
                 .getResultList();
         
         Set<String> codes = new HashSet<>(codeList);
+        Repository defaultRepository = repositoryService.findDefaultRepository();
         if (defaultRepository.getNeo4jConfiguration() != null) {
         	codes.add(defaultRepository.getNeo4jConfiguration().getCode());
         }
@@ -1191,7 +1193,7 @@ public class Neo4jService implements CustomPersistenceService {
                     if (cft.getFieldType() == CustomFieldTypeEnum.EXPRESSION) {
                         fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, String.class);
                     } else {
-                        fieldValue = cft.getDefaultValue();
+                        fieldValue = MeveoValueExpressionWrapper.evaluateExpression(cft.getDefaultValue(), (Map<Object, Object>) (Map) fieldValues, Object.class);
                     }
                 }
 

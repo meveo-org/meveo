@@ -29,6 +29,11 @@ public class MavenDependencyService {
 	@Inject
 	protected MavenConfigurationService mavenConfigurationService;
 	
+	public List<MavenDependency> list() {
+		return emWrapper.getEntityManager().createQuery("FROM MavenDependency", MavenDependency.class)
+				.getResultList();
+	}
+	
 	public List<MavenDependency> findModuleDependencies(String moduleCode) {
 		String queryString = 
 				  "SELECT DISTINCT md "

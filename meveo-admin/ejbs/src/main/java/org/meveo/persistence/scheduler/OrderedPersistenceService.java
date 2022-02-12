@@ -89,7 +89,7 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
             	
             	crossStorageTx.beginTransaction(repository);
 
-                PersistenceActionResult result;
+                PersistenceActionResult result = null;
 
                 if (itemToPersist instanceof SourceEntityToPersist) {
 
@@ -121,13 +121,6 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
                     /* Item is a relation */
                     final RelationToPersist relationToPersist = (RelationToPersist) itemToPersist;
-                    result = storageService.addCRTByValues(
-                    		repository,
-                            relationToPersist.getCode(),
-                            relationToPersist.getValues(),
-                            relationToPersist.getStartEntityToPersist().getValues(),
-                            relationToPersist.getEndEntityToPersist().getValues()
-                    );
 
                     Set<EntityRef> startPersistedEntities = context.getNodeReferences(relationToPersist.getStartEntityToPersist().getName());
                     Set<EntityRef> endPersistedEntities = context.getNodeReferences(relationToPersist.getEndEntityToPersist().getName());

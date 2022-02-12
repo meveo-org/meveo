@@ -49,6 +49,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.validation.Valid;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
@@ -66,10 +67,8 @@ import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
-import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -351,7 +350,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
      * @throws IOException 
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public void addModuleItem(MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
+	public void addModuleItem(@Valid MeveoModuleItem meveoModuleItem, MeveoModule module) throws BusinessException{
     	// Check if the module already contains the module item
     	if(module.getModuleItems().contains(meveoModuleItem)) {
     		return;
@@ -516,44 +515,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
         return query.getResultList();
     }
 
-
-	@SuppressWarnings("unchecked")
-	public void onCftCreated(@Observes @Created CustomFieldTemplate cft) throws BusinessException {
-		String cetCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
-		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftCreate");
-		q = q.setParameter("itemCode", cetCode);
-		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
-
-		try {
-			List<MeveoModule> modules = q.getResultList();
-			if (modules != null && !modules.isEmpty()) {
-				for (MeveoModule module : modules) {
-					// check if item already exists
-					Optional<MeveoModuleItem> moduleItem = Optional.empty();
-					if (module.getModuleItems() != null && !module.getModuleItems().isEmpty()) {
-						Predicate<MeveoModuleItem> isCft = e -> e.getItemClass().equals(CustomFieldTemplate.class.getName());
-						Predicate<MeveoModuleItem> isExisting = e -> e.getAppliesTo().equals(cft.getAppliesTo()) && e.getItemCode().equals(cft.getCode());
-
-						moduleItem = module.getModuleItems().stream().filter(isCft).filter(isExisting).findAny();
-					}
-
-					if (!moduleItem.isPresent()) {
-						MeveoModuleItem mi = new MeveoModuleItem();
-						mi.setMeveoModule(module);
-						mi.setAppliesTo(cft.getAppliesTo());
-						mi.setItemClass(CustomFieldTemplate.class.getName());
-						mi.setItemCode(cft.getCode());
-						meveoModuleItemService.create(mi);
-					}
-				}
-			}
-
-		} catch (NoResultException e) {
-
-		}
-	}
-
-	public void onCftDeleted(@Observes @Removed CustomFieldTemplate cft) {
+    public void onCftDeleted(@Observes @Removed CustomFieldTemplate cft) {
 		Query q = getEntityManager().createNamedQuery("MeveoModuleItem.synchronizeCftDelete");
 		q = q.setParameter("itemCode", cft.getCode());
 		q = q.setParameter("itemClass", CustomEntityTemplate.class.getName());
@@ -936,7 +898,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	}
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
-		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+		return super.findByCode(code,Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles", "repositories"));
 	}
 	
 	/**

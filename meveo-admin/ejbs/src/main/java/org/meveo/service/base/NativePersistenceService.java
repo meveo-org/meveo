@@ -59,7 +59,6 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -393,8 +392,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
-		return create(sqlConnectionCode, cei, returnId, false, cfts.values(), true);
+		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? cache.getCustomFieldTemplates(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
+		return create(sqlConnectionCode, cei, returnId, false, cfts, true);
 	}
 
 	/**
@@ -415,28 +414,24 @@ public class NativePersistenceService extends BaseService {
 		CustomEntityTemplate cet = cei.getCet();
 		
 		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
-		Map<String, CustomFieldTemplate> cftsMap = cfts.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
+				.filter(cft -> cft.getAppliesTo().equals(cet.getAppliesTo()))
+				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
 		Map<String, Object> convertedValues = convertValue(values, cftsMap, removeNullValues, null);
 		convertedValues.put("uuid", cei.getUuid());
 		convertedValues = serializeValues(convertedValues, cftsMap);
 		
+		
 		// If template has parent, create the data in this parent first
-		// XXX: Possible limitation : will handle only one level of hierarchy
-		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentFields = customFieldTemplateService.findByAppliesTo(cet.getSuperTemplate().getAppliesTo());
-			
-			var parentData = new HashMap<String, Object>();
-			// Only insert parent data
-			 convertedValues.entrySet().stream()
-			 	.filter(x -> x.getKey().equals("uuid") || parentFields.containsKey(x.getKey()))
-				.forEach(x -> parentData.put(x.getKey(), x.getValue()));
-			
-			var tableName = tableName(cet.getSuperTemplate());
-			var uuid = create(sqlConnectionCode, tableName, parentData, true);
-			
-			// Remove already inserted keys
-			parentData.keySet().forEach(convertedValues::remove);
-			convertedValues.put("uuid", uuid);
+		if(cet.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+			if (parentTemplate.storedIn(DBStorageType.SQL)) {
+				CustomEntityInstance parentCei = new CustomEntityInstance();
+				parentCei.setCet(parentTemplate);
+				parentCei.setCfValues(cei.getCfValues());
+				var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
+				convertedValues.put("uuid", uuid);	
+			}
 		}
 		
 		return create(sqlConnectionCode, cei.getTableName(), convertedValues, returnId);
@@ -468,16 +463,16 @@ public class NativePersistenceService extends BaseService {
 	 *                          updated with 'uuid' field value.
 	 * @throws BusinessException General exception
 	 */
-	public String create(String sqlConnectionCode, String tableName, Map<String, Object> values, boolean returnId) throws BusinessException {
+	public String create(String sqlConnectionCode, String tableName_, Map<String, Object> values, boolean returnId) throws BusinessException {
 		if("null".equals(values.get(FIELD_ID))) {
 			values.remove(FIELD_ID);
 		}
 		
-		if (tableName == null) {
+		if (tableName_ == null) {
 			throw new BusinessException("Table name must not be null");
 		}
 
-		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
+		final String tableName = PostgresReserverdKeywords.escapeAndFormat(tableName_);
 
 		if (values == null || values.isEmpty()) {
 			throw new IllegalArgumentException("No values to insert");
@@ -486,7 +481,7 @@ public class NativePersistenceService extends BaseService {
 		StringBuilder sql = new StringBuilder();
 		try {
 
-			Object uuid = values.get(FIELD_ID);
+			final Object uuid = values.get(FIELD_ID);
 
 			sql.append("insert into ").append(tableName);
 			StringBuilder fields = new StringBuilder();
@@ -525,7 +520,10 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}				
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -542,8 +540,15 @@ public class NativePersistenceService extends BaseService {
 
 					ps.executeUpdate();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
+				} catch (Exception e) {
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
+					throw e;
 				}
 			});
 
@@ -575,10 +580,10 @@ public class NativePersistenceService extends BaseService {
 					query.setParameter(fieldName, fieldValue);
 				}
 
-				uuid = query.getSingleResult();
-				values.put(FIELD_ID, uuid);
+				Object newUuid = query.getSingleResult();
+				values.put(FIELD_ID, newUuid);
 
-				return (String) uuid;
+				return (String) newUuid;
 
 			} else {
 				return null;
@@ -641,7 +646,10 @@ public class NativePersistenceService extends BaseService {
 
 			@Override
 			public void execute(Connection connection) throws SQLException {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
@@ -690,11 +698,16 @@ public class NativePersistenceService extends BaseService {
 					}
 					preparedStatement.executeBatch();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
 
 				} catch (SQLException e) {
 					log.error("Failed to bulk insert with sql {}\n", sql, e);
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
 					throw e;
 				}
 			}
@@ -802,7 +815,10 @@ public class NativePersistenceService extends BaseService {
 			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 
 			hibernateSession.doWork(connection -> {
-
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.setAutoCommit(false);
+				}
 				setSchema(sqlConnectionCode, connection);
 
 				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -816,11 +832,16 @@ public class NativePersistenceService extends BaseService {
 
 					ps.executeUpdate();
 					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						connection.commit();
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.commit();
 					}
 
 				} catch (Exception e) {
 					log.error("Native SQL update failed: {}", e.getMessage());
+					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+							connection.rollback();
+					}
 				}
 			});
 
@@ -863,6 +884,10 @@ public class NativePersistenceService extends BaseService {
 		
 		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 		session.doWork(connection -> {
+			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+					connection.setAutoCommit(false);
+			}
 			try (var statement = connection.prepareStatement(sql.toString())){
 				
 				if(finalValue == null) {
@@ -874,7 +899,8 @@ public class NativePersistenceService extends BaseService {
 				
 				statement.executeUpdate();
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					connection.commit();
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.commit();
 				}
 				
 				CustomTableRecord record = new CustomTableRecord();
@@ -884,6 +910,10 @@ public class NativePersistenceService extends BaseService {
 
 			} catch (Exception e) {
 				log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+						connection.rollback();
+				}
 				throw e;
 			}
 		});
@@ -946,6 +976,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param tableName Table name to update
 	 * @throws BusinessException General exception
 	 */
+	@SuppressWarnings("unchecked")
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template) throws BusinessException {
 		var tableName = tableName(template);
 		
@@ -955,20 +986,24 @@ public class NativePersistenceService extends BaseService {
 				.createNativeQuery("delete from {h-schema}" + tableName(subT))
 				.executeUpdate());
 		
+		// Gather uuids to delete
+		List<String> uuids = getEntityManager(sqlConnectionCode)
+				.createNativeQuery("SELECT uuid FROM {h-schema}"+ tableName, String.class)
+				.getResultList();
+		
 		// Remove in own table
 		getEntityManager(sqlConnectionCode)
-			.createNativeQuery("delete from {h-schema}" + tableName)
+			.createNativeQuery("delete from {h-schema}" + tableName + "WHERE uuid IN ?")
+			.setParameter(1, uuids)
 			.executeUpdate();
 		
 		// Remove in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			getEntityManager(sqlConnectionCode)
-			.createNativeQuery("delete from {h-schema}" + parentTable)
-			.executeUpdate();
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			if (parentTemplate.storedIn(DBStorageType.SQL)) {
+				remove(sqlConnectionCode, parentTemplate, uuids);
+			}
 		}
-		//TODO: remove all data from sub tables
-		//TODO: remove deleted rows from super-tables
 	}
 
 	/**
@@ -978,7 +1013,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids       A set of record identifiers
 	 * @throws BusinessException General exception
 	 */
-	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Set<String> ids) throws BusinessException {
+	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Collection<String> ids) throws BusinessException {
 		// Remove record in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
 		subTemplates.forEach(subT -> removeRecords(sqlConnectionCode, tableName(subT), ids));
@@ -987,18 +1022,17 @@ public class NativePersistenceService extends BaseService {
 		removeRecords(sqlConnectionCode, tableName(template), ids);
 		
 		// Remove record in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			removeRecords(sqlConnectionCode, parentTable, ids);
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			remove(sqlConnectionCode, parentTemplate, ids);
+		} else {
+			for (String id : ids) {
+				CustomTableRecord record = new CustomTableRecord();
+				record.setCetCode(template.getCode());
+				record.setUuid(id);
+				customTableRecordRemoved.fire(record);
+			}
 		}
-
-		for (String id : ids) {
-			CustomTableRecord record = new CustomTableRecord();
-			record.setCetCode(template.getCode());
-			record.setUuid(id);
-			customTableRecordRemoved.fire(record);
-		}
-		
 	}
 
 	/**
@@ -1015,7 +1049,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param tableName
 	 * @param ids
 	 */
-	private void removeRecords(String sqlConnectionCode, String tableName, Set<String> ids) {
+	private void removeRecords(String sqlConnectionCode, String tableName, Collection<String> ids) {
 		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
 	}
 
@@ -1035,15 +1069,15 @@ public class NativePersistenceService extends BaseService {
 		removeRecord(sqlConnectionCode, uuid, tableName(template));
 		
 		// Remove record in parent table
-		if(template.getSuperTemplate() != null && template.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentTable = tableName(template.getSuperTemplate());
-			removeRecord(sqlConnectionCode, uuid, parentTable);
+		if(template.getSuperTemplate() != null) {
+			CustomEntityTemplate parentTemplate = customEntityTemplateService.findById(template.getSuperTemplate().getId());
+			remove(sqlConnectionCode, parentTemplate, uuid);
+		} else {
+			CustomTableRecord record = new CustomTableRecord();
+			record.setCetCode(template.getCode());
+			record.setUuid(uuid);
+			customTableRecordRemoved.fire(record);
 		}
-		
-		CustomTableRecord record = new CustomTableRecord();
-		record.setCetCode(template.getCode());
-		record.setUuid(uuid);
-		customTableRecordRemoved.fire(record);
 	}
 
 	private void removeRecord(String sqlConnectionCode, String uuid, String tableName) {
@@ -1927,7 +1961,7 @@ public class NativePersistenceService extends BaseService {
                     		.findFirst();
 
                     if(!customFieldTemplateOpt.isPresent()){
-                        throw new ValidationException("No custom field template for " + fieldName + " was found");
+                    	continue;
                     }
 
                     CustomFieldTemplate customFieldTemplate = customFieldTemplateOpt.get();

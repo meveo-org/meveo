@@ -20,6 +20,8 @@ package org.meveo.admin.action.admin.module;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Inject;
@@ -38,6 +40,7 @@ import org.meveo.api.module.OnDuplicate;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleUninstall;
 import org.primefaces.model.DefaultTreeNode;
@@ -153,7 +156,7 @@ public class MeveoModuleListBean extends MeveoModuleBean {
     public void downloadAndInstallModule() {
         if (selectedModuleDto != null) {
             try {
-                moduleApi.install(selectedModuleDto, OnDuplicate.OVERWRITE);
+                moduleApi.install(repositoriesDM.getTarget(), selectedModuleDto, OnDuplicate.OVERWRITE);
                 messages.info(new BundleKey("messages", "meveoModule.installSuccess"), selectedModuleDto.getCode());
 
             } catch (ActionForbiddenException e) {

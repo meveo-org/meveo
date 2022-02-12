@@ -50,6 +50,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.model.storage.Repository;
 
 /**
  * The Class CustomRelationshipTemplate.
@@ -157,6 +158,32 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	@Type(type = "numeric_boolean")
 	@Column(name = "audited")
 	private boolean audited = false;
+	
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "crt_storage_repository",
+        joinColumns = @JoinColumn(name = "crt_id"),
+        inverseJoinColumns = @JoinColumn(name = "repo_id")
+    )
+    private List<Repository> repositories = new ArrayList<>();
+    
+	
+	/**
+	 * @return the {@link #repositories}
+	 */
+	public List<Repository> getRepositories() {
+		if (repositories == null) {
+			this.repositories = new ArrayList<>();
+		}
+		return repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<Repository> repositories) {
+		this.repositories = repositories;
+	}
 
     /**
 	 * Name of the field that will be added to the target entity and that refer to the incoming relationships of this type.

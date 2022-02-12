@@ -3,14 +3,12 @@ package org.meveo.admin.action.admin.custom;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +35,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.persistence.DBStorageTypeService;
+import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -45,7 +44,6 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +109,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	private Mutation mutation = new Mutation();
 
 	private DualListModel<DBStorageType> availableStoragesDM;
+	
+	private DualListModel<String> repositoriesDM;
 
 	private Map<String, List<CustomEntityTemplate>> listMap;
 
@@ -140,9 +140,21 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Override
 	public CustomEntityTemplate initEntity() {
-
 		CustomEntityTemplate entity = super.initEntity();
 		entity.getCustomEntityCategory();
+		
+		if (entity != null) {
+			List<String> availableRepos = repositoryService.list()
+					.stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			List<String> entityRepos = entity.getRepositories().stream()
+					.map(Repository::getCode)
+					.collect(Collectors.toList());
+			availableRepos.removeIf(entityRepos::contains);
+			repositoriesDM = new DualListModel<>(availableRepos, entityRepos);
+		}
+		
 		return entity;
 	}
 
@@ -158,6 +170,20 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	 */
 	public boolean isCustomEntityTemplate() {
 		return entityClassName == null || CustomEntityTemplate.class.getName().equals(entityClassName);
+	}
+	
+	/**
+	 * @return the {@link #repositoriesDM}
+	 */
+	public DualListModel<String> getRepositoriesDM() {
+		return repositoriesDM;
+	}
+	
+	/**
+	 * @param repositoriesDM the repositoriesDM to set
+	 */
+	public void setRepositoriesDM(DualListModel<String> repositoriesDM) {
+		this.repositoriesDM = repositoriesDM;
 	}
 
 	/**
@@ -322,6 +348,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public String saveOrUpdate(boolean killConversation) throws BusinessException, ELException {
 
 		String message = entity.isTransient() ? "save.successful" : "update.successful";
+		List<Repository> repositories = repositoriesDM.getTarget()
+				.stream()
+				.map(repositoryService::findByCode)
+				.collect(Collectors.toList());
+		entity.setRepositories(repositories);
 
 		try {
 			entity = saveOrUpdate(entity);

@@ -55,6 +55,7 @@ import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.model.storage.Repository;
 
 /**
  * The Class CustomEntityTemplate.
@@ -161,6 +162,31 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	@Transient
 	private boolean isInDraft = false;
 	
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "cet_storage_repository",
+        joinColumns = @JoinColumn(name = "cet_id"),
+        inverseJoinColumns = @JoinColumn(name = "repo_id")
+    )
+    private List<Repository> repositories = new ArrayList<>();
+	
+	/**
+	 * @return the {@link #repositories}
+	 */
+	public List<Repository> getRepositories() {
+		if (this.repositories == null) {
+			this.repositories = new ArrayList<>();
+		}
+		return this.repositories;
+	}
+
+	/**
+	 * @param repositories the repositories to set
+	 */
+	public void setRepositories(List<Repository> repositories) {
+		this.repositories = repositories;
+	}
+
 	/**
 	 * @return the {@link #isEqualFn}
 	 */

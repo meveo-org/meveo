@@ -15,7 +15,7 @@
     <ui:define name="body">
     
     	<o:importConstants type="org.meveo.api.module.OnDuplicate" />
-
+    	
 		<p:dialog id="addPatchPopup"
 			header="#{messages['meveoModule.patch.add']}"
 			widgetVar="dlg_addPatchPopup" dynamic="true" modal="true"
@@ -119,6 +119,11 @@
             <hftl:decorateFormField label="#{messages['meveoModule.partOfModules']}" rendered="#{!meveoModuleBean.entity.transient}">
                 <h:outputText value="#{meveoModuleBean.getPartOfModules()}" />
             </hftl:decorateFormField>
+            
+             <hftl:decorateFormField label="Installed on " rendered="#{meveoModuleBean.entity.installed}">
+                <h:outputText value="#{meveoModuleBean.getRepositoriesCodes()}" />
+            </hftl:decorateFormField>
+            
             <hftl:formField label="#{messages['meveoModule.currentRelease']}" required="true" field="currentVersion" id="currentVersion" isMessage="true" newLine="true" />
 			<p:panelGrid columns="2" id="meveoVersion">
 				<hftl:formField label="#{messages['meveoModule.meveoVersionBase']}"
@@ -246,26 +251,33 @@
                     	onclick="PF('installDialog').show()"
                         rendered="#{meveoModuleBean.entity.downloaded and !meveoModuleBean.entity.installed and meveoModuleBean.showInstallBtn}"/>
                         
-                        <p:confirmDialog id="installDialog" widgetVar="installDialog" message="On duplicate resource : " header="#{messages['meveoModule.install']}">
+                        <p:dialog id="installDialog" widgetVar="installDialog" header="Installation parameters">
 		                  	<h:form id="installForm">
-			                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+		                       <h:form style="margin-top: 5px; margin-bottom: 5px;">
+			                       <hftl:decorateFormField label="On duplicated items :" componentWidth="100" newLine="true">
 										<p:selectOneMenu value="#{meveoModuleBean.onDuplicate}">
 											<f:selectItems value="#{OnDuplicate.values()}"/>
-										</p:selectOneMenu>	                       
-									</h:form >
-			                       
-			                       <h:form >
-				                       <p:commandButton process="@(#installForm) @this"
-				                         id="install_btn"
-				                         update="@form"
-				                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
-				                         value="#{messages['meveoModule.install']}" 
-				                         onclick="doInstall()"/>
-				                         
-									   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
-			                  	   </h:form >
-		                  	   </h:form>
-		                   </p:confirmDialog>
+										</p:selectOneMenu>
+									</hftl:decorateFormField>
+									
+				                    <hftl:decorateFormField for="repoPickList" label="Repositories :" componentWidth="100" newLine="true">
+										<p:pickList id="repoPickList" value="#{meveoModuleBean.repositoriesDM}" var="repo" itemLabel="#{repo}" itemValue="#{repo}">
+<!-- 											<o:converter converterId="omnifaces.ListConverter" list="#{meveoModuleBean.listRepositories()}" /> -->
+<!-- 											<p:ajax event="select" listener="#{meveoModuleBean.onRepositoryChange()}"/> -->
+										</p:pickList>
+									</hftl:decorateFormField>
+									
+			                       <p:commandButton process="@form"
+			                         id="install_btn"
+			                         update="@form"
+			                         icon="ui-icon-check"  styleClass="ui-confirmdialog-yes"
+			                         value="#{messages['meveoModule.install']}" 
+			                         onclick="doInstall()"/>
+			                         
+								   <p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		                  	   </h:form >
+	                  	   </h:form>
+	                   </p:dialog>
                    
 		                   <p:remoteCommand id="doInstall"
 											action="#{meveoModuleBean.install}"
@@ -286,6 +298,27 @@
 
 					<p:commandButton value="#{messages['meveoModule.uninstall']}" onclick="PF('uninstallDialog').show()" rendered="#{meveoModuleBean.entity.downloaded and meveoModuleBean.entity.installed and meveoModuleBean.showUninstallBtn}">
                     </p:commandButton>
+                    
+                    <p:commandButton value="Install data" onclick="PF('dialog_install_data').show()" rendered="#{meveoModuleBean.entity.installed and not empty meveoModuleBean.availableRepositories()}"/>
+                    
+                    <p:dialog id="dialog_install_data" widgetVar="dialog_install_data" header="Choose repository">
+                    	<h:form>
+                    		<h:panelGrid columns="2" cellpadding="5">
+		                    	<p:selectOneMenu value="#{meveoModuleBean.selectedRepository}" id="dialog_install_data_repo" required="true">
+									<f:selectItem itemLabel="-- Select repository --" itemValue="" default="true"/>		                            
+									<f:selectItems value="#{meveoModuleBean.availableRepositories()}" var="listVal" itemLabel="#{listVal}" itemValue="#{listVal}" />
+		                        	<p:ajax event="change" update="@this"/>
+		                        </p:selectOneMenu>
+		                        <p:commandButton 
+			                         id="install_data_btn"
+			                         process="@this"
+			                         update="@form"
+			                         icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+			                         value="Install data" 
+			                         action="#{meveoModuleBean.installOnRepo}"/>
+	                         </h:panelGrid>
+                         </h:form>
+	                </p:dialog>
                     
                     <p:confirmDialog id="uninstallDialog" 
                     	widgetVar="uninstallDialog" 

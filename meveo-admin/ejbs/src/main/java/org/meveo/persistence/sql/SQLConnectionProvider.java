@@ -146,19 +146,27 @@ public class SQLConnectionProvider {
 
 		} else {
 			Configuration config = new Configuration();
-			config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
-			config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
-			config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
+			
+			if (sqlConfiguration.getUrl()!= null && sqlConfiguration.getUrl().startsWith("java:")) {
+				config.setProperty(org.hibernate.cfg.AvailableSettings.DATASOURCE, sqlConfiguration.getUrl());
+				config.setProperty( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE, "RESOURCE_LOCAL");
+				//config.setProperty( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, "org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl");
+			} else {
+				config.setProperty("hibernate.connection.driver_class", sqlConfiguration.getDriverClass());
+				config.setProperty("hibernate.connection.url", sqlConfiguration.getUrl());
+				config.setProperty("hibernate.connection.username", sqlConfiguration.getUsername());
+				if(sqlConfiguration.getClearPassword() == null) {
+					String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
+					var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());
+					config.setProperty("hibernate.connection.password", clearPwd);
+				} else {
+					config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
+				}				
+			}
 			config.setProperty("hibernate.generate_statistics", "true");
 			config.setProperty("hibernate.jmx.enabled", "true");
 	
-			if(sqlConfiguration.getClearPassword() == null) {
-				String salt = PasswordUtils.getSalt(sqlConfiguration.getCode(), sqlConfiguration.getUrl());
-				var clearPwd = PasswordUtils.decrypt(salt, sqlConfiguration.getPassword());
-				config.setProperty("hibernate.connection.password", clearPwd);
-			} else {
-				config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
-			}
+			
 			
 			if(!StringUtils.isBlank(sqlConfiguration.getSchema())) {
 				config.setProperty("hibernate.default_schema", sqlConfiguration.getSchema());
