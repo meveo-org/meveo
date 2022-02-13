@@ -14,9 +14,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
 import javax.persistence.NonUniqueResultException;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -42,6 +50,7 @@ import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
 import org.meveo.persistence.StorageQuery;
 import org.meveo.persistence.scheduler.EntityRef;
+import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
@@ -50,14 +59,20 @@ import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
+import org.slf4j.Logger;
 
-/**
- * 
- * @author heros
- * @since 
- * @version
- */
+@Dependent
 public class SQLStorageImpl implements StorageImpl {
+	
+	private UserTransaction userTx;
+	
+	private Map<String, org.hibernate.Session> hibernateSessions = new HashMap<>();
+	
+	@Inject
+	private SQLConnectionProvider sqlConnectionProvider;
+	
+	@Inject
+	private Logger log;
 	
 	@Inject
 	private CustomTableRelationService customTableRelationService;
@@ -171,7 +186,7 @@ public class SQLStorageImpl implements StorageImpl {
 		Map<String, Object> values = new HashMap<>();
 		
 		try {
-			transaction.beginTransaction(repository);
+			transaction.beginTransaction(repository, List.of(getStorageType()));
 
 			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 				List<String> sqlFields = PersistenceUtils.filterFields(fetchFields, cfts, DBStorageType.SQL);
@@ -205,13 +220,13 @@ public class SQLStorageImpl implements StorageImpl {
 				}
 			}
 
-			transaction.commitTransaction(repository);
+			transaction.commitTransaction(repository, List.of(getStorageType()));
 		} catch (Exception e) {
 			if(e instanceof EntityDoesNotExistsException) {
 				return null;
 			}
 			
-			transaction.rollbackTransaction(e);
+			transaction.rollbackTransaction(e, List.of(getStorageType()));
 			throw new RuntimeException(e);
 		}
 		
@@ -682,6 +697,81 @@ public class SQLStorageImpl implements StorageImpl {
 		return null;
 	}
 
+	@Override
+	public void init() {
+		// User transaction might be managed by container instead of bean
+		try {
+			userTx = (UserTransaction) new InitialContext().lookup("java:comp/UserTransaction");
+		} catch (Exception e) {
+			// NOOP
+		}
+	}
 
+	@Override
+	public void beginTransaction(Repository repository, int stackedCalls) {
+		try {
+			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION && stackedCalls == 0) {
+				userTx.begin();
+			}
+			
+			if(repository.getSqlConfiguration() != null) {
+				getHibernateSession(repository.getSqlConfigurationCode());
+			}
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+
+	@Override
+	public void commitTransaction(Repository repository) {
+		try {
+			if(userTx != null) {
+				userTx.commit();
+			}
+		} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+
+	@Override
+	public void rollbackTransaction(int stackedCalls) {
+		try {
+			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
+				if(stackedCalls == 0) {
+					userTx.rollback();
+				} else {
+					userTx.setRollbackOnly();
+				}
+			}
+		} catch (SecurityException | IllegalStateException | SystemException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void destroy() {
+		try {
+			hibernateSessions.values().forEach(s -> s.close());
+			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
+				userTx.commit();
+			}
+		} catch (Exception e) {
+			log.error("Error destroying {}", this, e);
+		}
+	}
+	
+	public org.hibernate.Session getHibernateSession(String repository) {
+		try {
+			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION) {
+				userTx.begin();
+			}
+			return hibernateSessions.computeIfAbsent(repository, sqlConnectionProvider::getSession);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }

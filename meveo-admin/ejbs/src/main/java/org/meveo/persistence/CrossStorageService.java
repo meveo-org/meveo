@@ -33,6 +33,7 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -68,6 +69,7 @@ import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -502,8 +504,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityInstance ceiAfterPreEvents = cei;
 		
 		try {
-			// transaction.begin();
-			transaction.beginTransaction(repository);
+			transaction.beginTransaction(repository, cet.getAvailableStorages());
 			
 			if(cetClassInstance != null) {
 				if(foundId != null) {
@@ -539,13 +540,13 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 			
-			transaction.commitTransaction(repository);
+			transaction.commitTransaction(repository, cet.getAvailableStorages());
 			
 		} catch (Exception e) {
 			
 			log.error("Can't create or update data", e);
 			
-			transaction.rollbackTransaction(e);
+			transaction.rollbackTransaction(e, cet.getAvailableStorages());
 			
 			if(e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -700,7 +701,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
 		CustomEntity cetClassInstance = null;
 		
-		transaction.beginTransaction(repository);
+		transaction.beginTransaction(repository, cet.getAvailableStorages());
 		
 		try {
 			if(listener != null) {
@@ -732,10 +733,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			// Delete binaries
 			fileSystemService.delete(repository, cet, uuid);
 			
-			transaction.commitTransaction(repository);
+			transaction.commitTransaction(repository, cet.getAvailableStorages());
 		
 		} catch(Exception e) {
-			transaction.rollbackTransaction(e);
+			transaction.rollbackTransaction(e, cet.getAvailableStorages());
 			throw e;
 		}
 		
@@ -915,7 +916,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 				// Check if target is not JPA entity
 				try {
-					var session = transaction.getHibernateSession(repository.getSqlConfigurationCode());
+					var session = customEntityTemplateService.getEntityManager().unwrap(Session.class);
 					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 					values.put(
 						entry.getKey(), 

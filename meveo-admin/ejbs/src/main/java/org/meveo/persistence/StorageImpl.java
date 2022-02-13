@@ -22,6 +22,7 @@ import org.meveo.model.storage.Repository;
 
 public interface StorageImpl {
 	
+	// -------------------------- CRUD operations -----------------------------
 	boolean exists(Repository repository, CustomEntityTemplate cet, String uuid);
 	
     String findEntityIdByValues(Repository repository, CustomEntityInstance cei);
@@ -42,6 +43,7 @@ public interface StorageImpl {
 	
 	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration);
 	
+	// ----------------- Database schema management ---------------------
 	public void cetCreated(CustomEntityTemplate cet);
 	
 	public void crtCreated(CustomRelationshipTemplate crt) throws BusinessException;
@@ -59,6 +61,20 @@ public interface StorageImpl {
 	public void removeCet(CustomEntityTemplate cet);
 	
 	public void removeCrt(CustomRelationshipTemplate crt);
+	
+	// -------------------- Transaction management -----------------
+	
+	public void init();
+
+	public void beginTransaction(Repository repository, int stackedCalls);
+	
+	public void commitTransaction(Repository repository);
+	
+	public void rollbackTransaction(int stackedCalls);
+	
+	public void destroy();
+	
+	// --------------------- Metadata --------------------------------
 	
 	DBStorageType getStorageType();
 }

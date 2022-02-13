@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJBException;
+import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -38,18 +39,28 @@ import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
 import org.meveo.persistence.StorageQuery;
 import org.meveo.persistence.graphql.GraphQLQueryBuilder;
+import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 
+@Dependent
 public class Neo4jStorageImpl implements StorageImpl {
+	
+	private Map<String, Session> neo4jSessions = new HashMap<>();
+	private Map<String, Transaction> neo4jTransactions = new HashMap<>();
 	
 	@Inject
 	private Neo4jService neo4jService;
+	
+	@Inject
+	private Neo4jConnectionProvider neo4jConnectionProvider;
 	
 	@Inject
 	private Neo4jDao neo4jDao;
@@ -472,6 +483,60 @@ public class Neo4jStorageImpl implements StorageImpl {
 		}
 		
 		return null;
+	}
+
+	@Override
+	public void init() {
+	}
+
+	@Override
+	public void beginTransaction(Repository repository, int stackedCalls) {
+		getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
+	}
+
+	@Override
+	public void commitTransaction(Repository repository) {
+		if(repository.getNeo4jConfiguration() != null) {
+			Transaction neo4jTx = neo4jTransactions.remove(repository.getNeo4jConfiguration().getCode());
+			if(neo4jTx == null) {
+				throw new IllegalStateException("No running transaction for " + repository.getCode());
+			}
+			neo4jTx.success();
+			neo4jTx.close();
+		}
+	}
+
+	@Override
+	public void rollbackTransaction(int stackedCalls) {
+		neo4jTransactions.values().forEach(Transaction::failure);
+		
+		if(stackedCalls == 0) {
+			neo4jTransactions.values().forEach(Transaction::close);
+		}
+		
+	}
+
+	@Override
+	public void destroy() {
+		neo4jTransactions.values().forEach(s -> s.close());
+		neo4jSessions.values().forEach(Session::close);
+		neo4jTransactions.clear();
+	}
+	
+	public Transaction getNeo4jTransaction(String repository) {
+		Session session = neo4jSessions.computeIfAbsent(repository, neo4jConnectionProvider::getSession);
+		if(session == null) {
+			throw new RuntimeException("Can't get session for repository " + repository);
+		}
+		return neo4jTransactions.computeIfAbsent(repository, code -> session.beginTransaction());
+	}
+	
+	public Transaction getUserManagedTx(String repository) {
+		Session session = neo4jSessions.computeIfAbsent(repository, neo4jConnectionProvider::getSession);
+		if(session == null) {
+			throw new RuntimeException("Can't get session for repository " + repository);
+		}
+		return session.beginTransaction();
 	}
 
 
