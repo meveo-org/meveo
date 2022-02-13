@@ -16,13 +16,14 @@
 
 package org.meveo.persistence.neo4j.helper;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.CrossStorageTransaction;
-import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
-import org.neo4j.driver.v1.Session;
+import org.meveo.service.storage.RepositoryService;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
@@ -31,6 +32,9 @@ public class CypherHelper {
 
     @Inject
     private CrossStorageTransaction crossStorageTransaction;
+    
+    @Inject
+    private RepositoryService repositoryService;
     
     @Inject
     private Logger log;
@@ -44,7 +48,7 @@ public class CypherHelper {
             CypherExceptionHandler cypherExceptionHandler
     ){
     	
-    	var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+    	Transaction transaction = crossStorageTransaction.beginTransaction(repositoryService.findByCode(neo4jConfiguration), DBStorageType.NEO4J);
     			
         try {
 
@@ -64,7 +68,7 @@ public class CypherHelper {
                 cypherExceptionHandler.handle(e);
             } else {
             	log.error("Error executing query \n{}\nwith parameters {}", request, parameters, e);
-            	crossStorageTransaction.rollbackTransaction(e);
+            	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             }
             
         }
@@ -94,7 +98,7 @@ public class CypherHelper {
     ){
     	
     	if(transaction == null) {
-    		transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        	transaction = crossStorageTransaction.beginTransaction(repositoryService.findByCode(neo4jConfiguration), DBStorageType.NEO4J);
     	}
 
         try {
@@ -107,7 +111,7 @@ public class CypherHelper {
                 cypherExceptionHandler.handle(e);
             } else {
 	            log.error("Can't run update query", e);
-	            crossStorageTransaction.rollbackTransaction(e);
+            	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             }
         }
     }

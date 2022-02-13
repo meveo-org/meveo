@@ -31,9 +31,11 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.storage.RepositoryService;
@@ -56,6 +58,9 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
     
 	@Inject
 	private CrossStorageTransaction crossStorageTx;
+	
+	@Inject
+	private DBStorageTypeService dbStorageTypeService;
     
     private T storageService;
 
@@ -87,7 +92,9 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
             for (ItemToPersist itemToPersist : iterator.next()) {
             	
-            	crossStorageTx.beginTransaction(repository);
+            	List<DBStorageType> storages = dbStorageTypeService.findTemplateStorages(itemToPersist.getCode());
+            	
+            	crossStorageTx.beginTransaction(repository, storages);
 
                 PersistenceActionResult result = null;
 
@@ -156,7 +163,7 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                     }
                 }
                 
-                crossStorageTx.commitTransaction(repository);
+                crossStorageTx.commitTransaction(repository, storages);
                 
                 if(result != null) {
                 	persistedItems.add(new PersistedItem(itemToPersist, result.getBaseEntityUuid()));

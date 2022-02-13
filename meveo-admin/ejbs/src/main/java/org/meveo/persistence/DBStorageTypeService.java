@@ -25,6 +25,13 @@ public class DBStorageTypeService {
 	
 	private ConcurrentHashMap<DBStorageType, StorageImpl> cache = new ConcurrentHashMap<>();
 	
+	public List<DBStorageType> findTemplateStorages(String template) {
+		return (List<DBStorageType>) emWrapper.getEntityManager()
+			.createNativeQuery("SELECT dbSt FROM DBStorageType dbSt, CustomEntityTemplate cet, CustomRelationshipTemplate crt \n"
+					+ "WHERE (dbSt.code IN cet.availableStorages OR dbSt.code IN crt.availableStorages) \n", DBStorageType.class)
+			.getResultList();
+	}
+	
 	public List<DBStorageType> list() {
 		return emWrapper.getEntityManager()
 			.createQuery("FROM DBStorageType", DBStorageType.class)

@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJBException;
-import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -50,7 +50,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 
-@Dependent
+@RequestScoped
 public class Neo4jStorageImpl implements StorageImpl {
 	
 	private Map<String, Session> neo4jSessions = new HashMap<>();
@@ -490,8 +490,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public void beginTransaction(Repository repository, int stackedCalls) {
-		getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
+	public <T> T beginTransaction(Repository repository, int stackedCalls) {
+		return (T) getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
 	}
 
 	@Override

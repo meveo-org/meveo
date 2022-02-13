@@ -66,7 +66,7 @@ public interface StorageImpl {
 	
 	public void init();
 
-	public void beginTransaction(Repository repository, int stackedCalls);
+	public <T> T beginTransaction(Repository repository, int stackedCalls);
 	
 	public void commitTransaction(Repository repository);
 	

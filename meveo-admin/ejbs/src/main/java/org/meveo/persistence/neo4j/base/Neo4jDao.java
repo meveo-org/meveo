@@ -39,7 +39,9 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.CrossStorageTransaction;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.neo4j.NonUniqueResult;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
@@ -96,6 +98,9 @@ public class Neo4jDao {
     
     @Inject
     private CrossStorageTransaction crossStorageTransaction;
+    
+    @Inject
+    private Neo4jStorageImpl neo4jStorageImpl;
 
     @Inject
     private CypherHelper cypherHelper;
@@ -154,7 +159,7 @@ public class Neo4jDao {
         		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
         		.append("'\n RETURN COUNT(*) ");
 
-        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
         	Long exists = cypherHelper.execute(
     			neo4jConfiguration,
     			checkConstraintQuery.toString(),
@@ -191,7 +196,7 @@ public class Neo4jDao {
         		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
         		.append("'\n RETURN COUNT(*) ");
 
-        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
         	Long exists = cypherHelper.execute(
     			neo4jConfiguration,
     			checkConstraintQuery.toString(),
@@ -221,7 +226,7 @@ public class Neo4jDao {
     public void createIndex(String neo4jConfiguration, String label, String property) {
         StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
 
-        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
 	        cypherHelper.update(
 	    		neo4jConfiguration,
 	    		createIndexQuery.toString(),
@@ -242,7 +247,7 @@ public class Neo4jDao {
     public void removeIndex(String neo4jConfiguration, String label, String property){
         StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
         
-        try (var tx = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration)) {
+        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
 	        cypherHelper.update(
 	    		neo4jConfiguration,
 	    		dropIndex.toString(),
@@ -287,7 +292,7 @@ public class Neo4jDao {
                         LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
                         transaction.success();
                     } else {
-                        crossStorageTransaction.rollbackTransaction(new Exception("Node with uuid " + uuid + " not deleted"));
+                        crossStorageTransaction.rollbackTransaction(new Exception("Node with uuid " + uuid + " not deleted"), List.of(DBStorageType.NEO4J));
                     }
                     return null;
                 },
@@ -376,7 +381,7 @@ public class Neo4jDao {
         values.put("relationLabel", relationLabel);
         values.put("targetLabel", targetLabel);
 
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
         
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.findRelationIdByTargetId);
@@ -403,7 +408,7 @@ public class Neo4jDao {
         values.put("relationLabel", relationLabel);
         values.put("sourceLabel", sourceLabel);
 
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
 
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.findSourceNodeByRelationId);
@@ -454,7 +459,7 @@ public class Neo4jDao {
 
         query.append(" }");
 
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
         final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
 
 		List<Record> records = result.list();
@@ -477,7 +482,7 @@ public class Neo4jDao {
         values.put(CET_CODE, code);
 
         try {
-            var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+            var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
 
             StrSubstitutor sub = new StrSubstitutor(values);
             String statement = sub.replace(Neo4JRequests.findNodeId);
@@ -499,7 +504,7 @@ public class Neo4jDao {
     public void updateIDL(String neo4jConfiguration, String idl) {
     	LOGGER.info("Updating IDL for repository {}", neo4jConfiguration);
     	
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
 
         try {
             transaction.run("call graphql.idl('" + idl + "')");
@@ -507,7 +512,7 @@ public class Neo4jDao {
             
         	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
         } catch (Exception e) {
-        	crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Cannot update IDL for repository {}", neo4jConfiguration, e);
             throw e;
         }
@@ -523,7 +528,7 @@ public class Neo4jDao {
 
         StringBuilder statement = new StringBuilder("call graphql.execute($query,$variables,$operationName)");
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         try {
             // Execute query and parse results
@@ -536,7 +541,7 @@ public class Neo4jDao {
                     .findFirst()
                     .orElseGet(Collections::emptyMap);
         } catch (Exception e) {
-        	crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("[{}] Error while executing a GraphQL query : {}", neo4JConfiguration, query,  e);
             return null;
         }
@@ -615,7 +620,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         Node node = null;
 
@@ -633,7 +638,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while merging Neo4J nodes.\n\nquery = {}\n\nvariables = {}", resolvedStatement, fieldValues, e);
             throw new RuntimeException(e);
         }
@@ -682,7 +687,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
         
         Map<String, Object> fieldValues = new HashMap<>(fields);
         if(uuid == null) {
@@ -701,7 +706,7 @@ public class Neo4jDao {
             transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while creating a Neo4J node", e);
         }
 
@@ -739,7 +744,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         Node node = null;
 
@@ -750,7 +755,7 @@ public class Neo4jDao {
             node = result.single().get(alias).asNode();
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
         }
 
@@ -773,7 +778,7 @@ public class Neo4jDao {
         resolvedStatement = resolvedStatement.replace('"', '\'');
 
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
         var params = convertParams(fields);
 
         try {
@@ -825,7 +830,7 @@ public class Neo4jDao {
         StrSubstitutor sub = new StrSubstitutor(values);
         String statement = sub.replace(Neo4JRequests.createRelationship);
         // Begin transaction
-        var transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
         Relationship relationship = null;
 
         try {
@@ -838,7 +843,7 @@ public class Neo4jDao {
 
             transaction.success();  // Commit transaction
         } catch (Exception e) {
-            crossStorageTransaction.rollbackTransaction(e);
+        	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
         }
 

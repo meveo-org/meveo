@@ -47,6 +47,10 @@ public class CrossStorageTransaction {
 
 		stackedCalls++;
 	}
+	
+	public <T> T beginTransaction(Repository repository, DBStorageType storage) {
+		return dbStorageTypeService.findImplementation(storage).beginTransaction(repository, stackedCalls);
+	}
 
 	
 	public void commitTransaction(Repository repository, List<DBStorageType> storages) {

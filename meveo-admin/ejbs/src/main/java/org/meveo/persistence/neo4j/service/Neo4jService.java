@@ -93,6 +93,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
@@ -196,6 +197,9 @@ public class Neo4jService implements CustomPersistenceService {
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+    @Inject
+    private Neo4jStorageImpl neo4jStorageImpl;
     
     /**
      * Remove all data concerned with the CET
@@ -829,7 +833,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -900,7 +904,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -1019,7 +1023,7 @@ public class Neo4jService implements CustomPersistenceService {
         parametersValues.putAll(startNodeConvertedValues);
         parametersValues.putAll(endNodeConvertedValues);
 
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         // Try to find the id of the source node
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
@@ -1109,7 +1113,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         String deleteStatement = getStatement(new StrSubstitutor(valuesMap), Neo4JRequests.deleteCet);
 
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
 
         InternalNode internalNode = null;
 

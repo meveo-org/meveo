@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
@@ -61,7 +61,7 @@ import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
-@Dependent
+@RequestScoped
 public class SQLStorageImpl implements StorageImpl {
 	
 	private UserTransaction userTx;
@@ -708,20 +708,21 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public void beginTransaction(Repository repository, int stackedCalls) {
+	public <T> T beginTransaction(Repository repository, int stackedCalls) {
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION && stackedCalls == 0) {
 				userTx.begin();
 			}
 			
 			if(repository.getSqlConfiguration() != null) {
-				getHibernateSession(repository.getSqlConfigurationCode());
+				return (T) getHibernateSession(repository.getSqlConfigurationCode());
 			}
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		
+		return null;
 	}
 
 	@Override
