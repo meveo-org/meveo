@@ -104,4 +104,10 @@
     	
     	<sql>INSERT INTO crt_storage_repository (crt_id, repo_id) (SELECT cust_crt.id as crt_id, storage_repository.id as repo_id FROM cust_crt, storage_repository WHERE storage_repository.code = 'default')</sql>
    	</changeSet>
+   	
+   	<changeSet id="#491 - Add cfs to Repository" author="Clément Bareth">
+   		<addColumn tableName="storage_repository">
+   			<column name="cf_values" type="${type.json}"></column>
+   		</addColumn>
+   	</changeSet>
 </databaseChangeLog>

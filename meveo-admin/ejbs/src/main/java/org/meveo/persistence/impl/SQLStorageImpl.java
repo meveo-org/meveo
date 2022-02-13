@@ -394,7 +394,6 @@ public class SQLStorageImpl implements StorageImpl {
 		}
 	}
 
-	@Override
 	public DBStorageType getStorageType() {
 		return DBStorageType.SQL;
 	}

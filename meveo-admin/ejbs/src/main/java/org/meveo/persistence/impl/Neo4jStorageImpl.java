@@ -168,7 +168,6 @@ public class Neo4jStorageImpl implements StorageImpl {
 		}
 	}
 
-	@Override
 	public DBStorageType getStorageType() {
 		return DBStorageType.NEO4J;
 	}

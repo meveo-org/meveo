@@ -74,7 +74,4 @@ public interface StorageImpl {
 	
 	public void destroy();
 	
-	// --------------------- Metadata --------------------------------
-	
-	DBStorageType getStorageType();
 }
