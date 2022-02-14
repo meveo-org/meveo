@@ -437,6 +437,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 				if(ceiMap.getValue() instanceof BusinessEntity) {
 					BusinessEntity cei = (BusinessEntity) ceiMap.getValue();
 					return cei.getCode();
+				} else if(ceiMap.getValue() instanceof Map) {
+					Map<String, Object> map = (Map<String, Object>) ceiMap.getValue();
+					return (String) map.get("uuid");
 				} else {
 					return ceiMap.getValue().toString();
 				}
@@ -471,6 +474,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 				} else if (ceiMap.getValue() instanceof EntityReferenceWrapper) {
 					EntityReferenceWrapper wrapper = (EntityReferenceWrapper) ceiMap.getValue();
 					return wrapper.getUuid();
+				} else if(ceiMap.getValue() instanceof Map) {
+					Map<String, Object> map = (Map<String, Object>) ceiMap.getValue();
+					return (String) map.get("uuid");
 				}
 
 			}

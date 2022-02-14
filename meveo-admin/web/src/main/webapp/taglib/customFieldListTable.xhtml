@@ -71,16 +71,19 @@
                         </f:facet>
                         <f:facet name="input">
                         	<c:if test="#{cft.fieldType == CustomFieldTypeEnum.ENTITY}">
-	                            <h:link outcome="referenceCEI" value="#{customEntityInstanceBean.getCeiCode(cft, mapValues)}">
-                                    <c:if test="#{not empty customEntityInstanceBean.getCeiCode(cft, mapValues)}">
-                                        <f:param name="uuid" value="#{customEntityInstanceBean.getCeiUuid(cft, mapValues)}"/>
-                                        <f:param name="cet" value="#{customEntityInstanceBean.getCetCode(cft, mapValues)}"/>
-                                        <f:param name="repo" value="#{customEntityInstanceBean.repositoryCode}"/>
-                                        <f:param name="tab" value="#{customEntityInstanceBean.activeTab}"/>
-                                        <!--<f:param name="backView" value="customizedEntities" />-->
-                                        <f:param name="cid" value="#{javax.enterprise.context.conversation.id}"/>
-                                    </c:if>
-	                            </h:link>
+                        	 	<c:if test="#{not empty customEntityInstanceBean.getCeiCode(cft, mapValues)}">
+		                            <h:link outcome="referenceCEI" value="#{customEntityInstanceBean.getCeiCode(cft, mapValues)}">
+	                                        <f:param name="uuid" value="#{customEntityInstanceBean.getCeiUuid(cft, mapValues)}"/>
+	                                        <f:param name="cet" value="#{customEntityInstanceBean.getCetCode(cft, mapValues)}"/>
+	                                        <f:param name="repo" value="#{customEntityInstanceBean.repositoryCode}"/>
+	                                        <f:param name="tab" value="#{customEntityInstanceBean.activeTab}"/>
+	                                        <!--<f:param name="backView" value="customizedEntities" />-->
+	                                        <f:param name="cid" value="#{javax.enterprise.context.conversation.id}"/>
+		                            </h:link>
+                              	</c:if>
+                        	 	<c:if test="#{empty customEntityInstanceBean.getCeiCode(cft, mapValues)}">
+									<h:outputText>No value</h:outputText>
+								</c:if>
                             </c:if>
                             <c:if test="#{cft.fieldType ne CustomFieldTypeEnum.ENTITY}">
                             	<hftl:customFieldValueMuteField edit="true" id="cfValue_in" cft="#{cft}" field="#{mapValues['value']}" label="#{messages['commons.value']}" datePattern="#{datePattern}" />

@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.faces.application.FacesMessage;
@@ -1354,8 +1354,20 @@ public class CustomFieldDataEntryBean implements Serializable {
 			Map<String, Object> mapValue = new LinkedHashMap<String, Object>();
 
 			for (Map<String, Object> listItem : customFieldValue.getMapValuesForGUI()) {
+				String key = (String) listItem.get(CustomFieldValue.MAP_KEY);
+				Object value = listItem.get(CustomFieldValue.MAP_VALUE);
+				
 				if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-					mapValue.put((String) listItem.get(CustomFieldValue.MAP_KEY), new EntityReferenceWrapper((BusinessEntity) listItem.get(CustomFieldValue.MAP_VALUE)));
+					if (value instanceof BusinessEntity) {
+						mapValue.put(key, new EntityReferenceWrapper((BusinessEntity) value));
+					} else if (value instanceof String) {
+						EntityReferenceWrapper entityRefWrapper = new EntityReferenceWrapper();
+						entityRefWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+						entityRefWrapper.setUuid((String) value);
+						mapValue.put(key, entityRefWrapper);
+					} else {
+						mapValue.put(key, new EntityReferenceWrapper((BusinessEntity) value));
+					}
 
 				} else {
 					mapValue.put((String) listItem.get(CustomFieldValue.MAP_KEY), listItem.get(CustomFieldValue.MAP_VALUE));
