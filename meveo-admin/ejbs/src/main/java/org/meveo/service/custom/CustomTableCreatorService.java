@@ -1134,40 +1134,42 @@ public class CustomTableCreatorService implements Serializable {
 
 	private String getColumnType(CustomFieldTemplate cft, CustomFieldTypeEnum fieldType) throws ClassNotFoundException {
 
-		// Serialize the field if it is a list, but not a list of entity references
-		if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
-			return "text";
-		}
-		
-		if(cft.getStorageType() == CustomFieldStorageTypeEnum.MATRIX) {
-			return "text";
+		switch (cft.getStorageType()) {
+			case LIST:
+			case MATRIX:
+			case MAP:
+				return "text";
+			default: 
+				break;
 		}
 
 		switch (fieldType) {
+		
 		case DATE:
 			return "datetime";
 		case DOUBLE:
 			return "numeric(23, 12)";
 		case LONG:
 			return "bigint";
+			
 		case SECRET:
 		case BINARY:
 		case EXPRESSION:
 		case MULTI_VALUE:
-		case STRING:
 		case ENTITY:
-		case LIST:
+		case STRING:
 			return "varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")";
+			
+		case LIST:
 		case TEXT_AREA:
-			return "text";
-		// Store serialized
 		case CHILD_ENTITY:
 		case EMBEDDED_ENTITY:
-			return "text";
-		case BOOLEAN:
-			return "int";
 		case LONG_TEXT:
 			return "text";
+			
+		case BOOLEAN:
+			return "int";
+
 
 		default:
 			break;
