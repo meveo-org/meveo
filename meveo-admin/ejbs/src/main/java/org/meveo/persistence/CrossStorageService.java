@@ -1573,7 +1573,32 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 		
 		} else if (fieldValue instanceof Map) {
-			entitiesToCreate.add(fieldValue);
+			
+			// Create references stored in map then update it
+			if (customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.MAP) {
+				Map<String, Object> referenceMap = new HashMap<>();
+				for (var entry : ((Map<String, Object>) fieldValue).entrySet()) {
+					if (entry.getValue() instanceof Map) {
+						var map = (Map<String, Object>) entry.getValue();
+						if (map.get("uuid") != null) {
+							var existingData = find(repository, referencedCet, (String) map.get("uuid"), false);
+							if (existingData != null) {
+								referenceMap.put(entry.getKey(), map.get("uuid"));
+								continue;
+							}
+						}
+						String uuid = createReferencedEntity(repository, customFieldTemplate, map).getBaseEntityUuid();
+						referenceMap.put(entry.getKey(), uuid);
+					} else if (entry.getValue() instanceof EntityReferenceWrapper) {
+						referenceMap.put(entry.getKey(), ((EntityReferenceWrapper) entry.getValue()).getUuid());
+					} else if (entry.getValue() instanceof String) {
+						referenceMap.put(entry.getKey(), (String) entry.getValue());
+					}
+				}
+				updatedValues.put(customFieldTemplate.getCode(), referenceMap);
+			} else {
+				entitiesToCreate.add(fieldValue);
+			}
 		
 		} else if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 			entitiesToCreate.add(Collections.singletonMap("value", fieldValue));
@@ -1589,22 +1614,11 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		for (Object e : entitiesToCreate) {
 			if (e instanceof Map) {
-				Map<String, Object> map = (Map<String, Object>) e;
-				CustomEntityInstance cei = new CustomEntityInstance();
-				cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
-				cei.setCode((String) map.get("code"));
-				String uuid = (String) map.get("uuid");
-				if (uuid != null) {
-					cei.setUuid(uuid);
-				}
-
-				customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), (Map<String, Object>) e);
-
-				final Set<EntityRef> createdEntities = createOrUpdate(repository, cei).getPersistedEntities();
+				final Set<EntityRef> createdEntities = createReferencedEntity(repository, customFieldTemplate, (Map<String, Object>) e)
+						.getPersistedEntities();
 				if (createdEntities.isEmpty()) {
-					log.error("Failed to create reference for {} ", cei, new Exception());
+					log.error("Failed to create reference for {} ", e, new Exception());
 				}
-
 				createdEntityReferences.addAll(createdEntities);
 
 			} else if (e instanceof String) {
@@ -1649,6 +1663,31 @@ public class CrossStorageService implements CustomPersistenceService {
 			updatedValues.put(customFieldTemplate.getCode() + "UUID", uuids.get(0));
 		}
 
+	}
+
+	/**
+	 * @param repository
+	 * @param customFieldTemplate
+	 * @param e
+	 * @param map
+	 * @return
+	 * @throws BusinessException
+	 * @throws IOException
+	 * @throws BusinessApiException
+	 * @throws EntityDoesNotExistsException
+	 */
+	protected PersistenceActionResult createReferencedEntity(Repository repository, CustomFieldTemplate customFieldTemplate, Map<String, Object> values) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		CustomEntityInstance cei = new CustomEntityInstance();
+		cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
+		cei.setCode((String) values.get("code"));
+		String uuid = (String) values.get("uuid");
+		if (uuid != null) {
+			cei.setUuid(uuid);
+		}
+
+		customFieldInstanceService.setCfValues(cei, customFieldTemplate.getEntityClazzCetCode(), values);
+
+		return createOrUpdate(repository, cei);
 	}
 
 	private String findUniqueRelationByTargetUuid(Repository repository, String targetUuid, CustomRelationshipTemplate crt) {
