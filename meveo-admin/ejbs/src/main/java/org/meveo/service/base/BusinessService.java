@@ -348,6 +348,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	    addFilesToModule(entity, newModule);
     }
     
+    public void onAddToModule(P entity, MeveoModule module) throws BusinessException {
+    	
+    }
+    
     // ------------------------------- Methods that retrieves lazy loaded objects ----------------------------------- //
 
     public P findByCodeLazy(String code) {

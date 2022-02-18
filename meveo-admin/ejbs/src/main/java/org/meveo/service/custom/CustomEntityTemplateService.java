@@ -70,6 +70,7 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -819,7 +820,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
     }
     
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @Override
+	public void onAddToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
+		super.onAddToModule(entity, module);
+		
+		for (var cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			meveoModuleService.addModuleItem(new MeveoModuleItem(cft), module);
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
 		if (event.removeData() && event.removeItems()) {
 			List<CustomEntityTemplate> cets = moduleHelper.getEntities(event.module(), CustomEntityTemplate.class);

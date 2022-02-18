@@ -382,6 +382,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
     			module.getModuleItems().add(meveoModuleItem);
     			meveoModuleItem.setMeveoModule(module);
+    			businessService.onAddToModule(meveoModuleItem.getItemEntity(), module);
     		} catch (BusinessException | IOException e2) {
 				throw new BusinessException("Entity cannot be add or remove from the module", e2);
     		}
@@ -392,6 +393,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		    moduleToRemove.removeItem(meveoModuleItem);
     		    module.getModuleItems().add(meveoModuleItem);
 				meveoModuleItem.setMeveoModule(module);
+				businessService.onAddToModule(meveoModuleItem.getItemEntity(), module);
     		} catch (BusinessException | IOException e) {
 				throw new BusinessException("Entity cannot be add or remove from the module", e);
 			}
