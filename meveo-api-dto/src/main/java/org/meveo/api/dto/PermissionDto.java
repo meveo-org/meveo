@@ -7,6 +7,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.model.security.Permission;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -17,8 +20,9 @@ import io.swagger.annotations.ApiModelProperty;
  */
 @XmlRootElement(name = "Permission")
 @XmlAccessorType(XmlAccessType.FIELD)
-@ApiModel
-public class PermissionDto extends BaseEntityDto {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("PermissionDto")
+public class PermissionDto extends BusinessEntityDto  {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
@@ -86,6 +90,30 @@ public class PermissionDto extends BaseEntityDto {
      */
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public static PermissionDto toDTO(Permission cec) {
+    	PermissionDto dto = new PermissionDto();
+        dto.setCode(cec.getCode());
+        dto.setName(cec.getName());
+        return dto;
+    }
+
+    /**
+     * Convert PermissionDto to a Permission instance. Note: does not convert custom entities that are part of DTO
+     *
+     * @param dto         PermissionDto object to convert
+     * @param cecToUpdate Permission to update with values from dto, or if null create a new one
+     * @return A new or updated Role instance
+     */
+    public static Permission fromDTO(PermissionDto dto, Permission cecToUpdate) {
+    	Permission cec = new Permission();
+        if (cecToUpdate != null) {
+            cec = cecToUpdate;
+        }
+        cec.setCode(dto.getCode());
+        cec.setName(dto.getName());
+        return cec;
     }
 
     /* (non-Javadoc)

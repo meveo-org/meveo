@@ -32,13 +32,14 @@ import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.security.Role;
 import org.meveo.security.keycloak.CurrentUserProvider;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
 
 /**
  * User Role service implementation.
  */
 @Stateless
-public class RoleService extends PersistenceService<Role> {
+public class RoleService extends BusinessService<Role>{
 
     @Inject
     private CurrentUserProvider currentUserProvider;

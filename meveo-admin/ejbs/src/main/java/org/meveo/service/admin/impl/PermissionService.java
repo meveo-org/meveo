@@ -31,6 +31,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.PersistenceService;
 
 /**
@@ -38,7 +39,7 @@ import org.meveo.service.base.PersistenceService;
  * @since Apr 4, 2013
  */
 @Stateless
-public class PermissionService extends PersistenceService<Permission> {
+public class PermissionService extends BusinessService<Permission>{
 
     @Inject
     private RoleService roleService;
