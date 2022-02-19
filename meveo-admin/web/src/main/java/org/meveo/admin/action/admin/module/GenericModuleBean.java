@@ -325,36 +325,7 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             	} catch (BusinessException e) {
             		throw new BusinessException("Entity cannot be add or remove from the module", e);
             	}
-                if (itemEntity instanceof CustomFieldTemplate) {
-                    CustomFieldTemplate customFieldTemplate = (CustomFieldTemplate)itemEntity;
-                    new DefaultTreeNode("item", item, getOrCreateNodeByAppliesTo(customFieldTemplate.getAppliesTo(), customFieldTemplate.getClass().getName()));
-                } else {
-                    new DefaultTreeNode("item", item, getOrCreateNodeByClass(itemEntity.getClass().getName()));
-                }
-                if (itemEntity instanceof CustomEntityTemplate) {
-                    CustomEntityTemplate customEntityTemplate = (CustomEntityTemplate)itemEntity;
-                    Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
-                    for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
-                        CustomFieldTemplate cft = entry.getValue();
-                        MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
-                        if (!entity.getModuleItems().contains(moduleItem)) {
-                        	meveoModuleService.addModuleItem(moduleItem, entity);
-                            new DefaultTreeNode("item", moduleItem, getOrCreateNodeByAppliesTo(customEntityTemplate.getAppliesTo(), cft.getClass().getName()));
-                        }
-                    }
-                }
-                if (itemEntity instanceof CustomRelationshipTemplate) {
-                    CustomRelationshipTemplate customRelationshipTemplate = (CustomRelationshipTemplate)itemEntity;
-                    Map<String, CustomFieldTemplate> customFieldTemplateMap = customFieldTemplateService.findByAppliesTo(customRelationshipTemplate.getAppliesTo());
-                    for (Map.Entry<String, CustomFieldTemplate> entry : customFieldTemplateMap.entrySet()) {
-                        CustomFieldTemplate cft = entry.getValue();
-                        MeveoModuleItem moduleItem = new MeveoModuleItem(cft);
-                        if (!entity.getModuleItems().contains(moduleItem)) {
-                        	meveoModuleService.addModuleItem(moduleItem, entity);
-                            new  DefaultTreeNode("item", moduleItem, getOrCreateNodeByAppliesTo(customRelationshipTemplate.getAppliesTo(), cft.getClass().getName()));
-                        }
-                    }
-                }
+                
             } else {
                 messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), itemEntity.getCode(), entity.getCode());
                 return;
@@ -362,6 +333,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
 
             moduleItemEntity = itemEntity;
             
+        	root = new DefaultTreeNode("Root");
+    		createTree(entity, null);
         }
     }
 

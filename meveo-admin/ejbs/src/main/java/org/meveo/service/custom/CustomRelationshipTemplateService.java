@@ -48,6 +48,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.service.admin.impl.PermissionService;
@@ -385,6 +386,16 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	}
     	return new File(repositoryDir, path);
 	}
+	
+    @Override
+	public void onAddToModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {
+		super.onAddToModule(entity, module);
+		
+		for (var cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+			meveoModuleService.addModuleItem(new MeveoModuleItem(cft), module);
+		}
+	}
+
 	
 	@Override
 	public void addFilesToModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {

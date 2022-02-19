@@ -35,26 +35,14 @@ public class ModuleObserver {
 	
 	@Inject
 	private Logger log;
-	
-	private List<BusinessEntity> entities = new ArrayList<>();
-	
-	/**
-	 * Observer when an entity that extends a BusinessEntity is deleted which is
-	 * annotated by MeveoModuleItem.
-	 *
-	 * @param be BusinessEntity
-	 * @throws BusinessException
-	 */
-	public void onMeveoModuleItemDelete(@Observes @Removed BusinessEntity be) throws BusinessException {
-		if (be.getClass().isAnnotationPresent(ModuleItem.class)) {
-			//TODO: Throw error if item belongs to another module than meveo
-			entities.add(be);
-		}
-	}
-	
+		
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Transactional(value = TxType.REQUIRES_NEW)
 	public void onItemDelete(@Observes(during = TransactionPhase.AFTER_SUCCESS) @PostRemoved MeveoModuleItem item, BusinessServiceFinder bsf, MeveoModuleService moduleService) {
+		if (item.getMeveoModule() == null) {
+			return;
+		}
+		
 		MeveoModule meveoModule = moduleService.findById(item.getMeveoModule().getId());
 		// Module has been deleted, so as the git repository and it's items so we don't need to remove them
 		if (meveoModule == null) {
