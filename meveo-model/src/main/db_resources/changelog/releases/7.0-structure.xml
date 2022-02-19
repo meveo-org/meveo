@@ -43,4 +43,68 @@
     	
     	<sql>INSERT INTO crt_storage_repository (crt_id, repo_id) (SELECT cust_crt.id as crt_id, storage_repository.id as repo_id FROM cust_crt, storage_repository WHERE storage_repository.code = 'default')</sql>
    	</changeSet>
+   	
+   	
+		<changeSet author="Gulam Samdani" id="#437 -Convert to buss entity for adm_permission">
+				<addColumn tableName="adm_permission">
+					<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+					<constraints nullable="false"/>
+					</column>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="creator" type="varchar(100)"/>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="updater" type="varchar(100)"/>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="created" type="datetime" defaultValueDate="CURRENT_TIMESTAMP">
+					<constraints nullable="false"/>
+					</column>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="updated" type="datetime" defaultValueDate="CURRENT_TIMESTAMP"/>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="code" type="varchar(255)" />
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="description" type="varchar(255)"/>
+				</addColumn>
+				<addColumn tableName="adm_permission">
+					<column name="version" type="int4" defaultValueNumeric="0"/>
+				</addColumn>
+			
+			</changeSet>
+			
+				<changeSet author="Gulam Samdani" id="#437 -Convert to buss entity for adm_role">
+					<addColumn tableName="adm_role">
+						<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+						<constraints nullable="false"/>
+						</column>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="creator" type="varchar(100)"/>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="updater" type="varchar(100)"/>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="created" type="datetime" defaultValueDate="CURRENT_TIMESTAMP">
+						<constraints nullable="false"/>
+						</column>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="updated" type="datetime" defaultValueDate="CURRENT_TIMESTAMP"/>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="code" type="varchar(255)"/>
+					</addColumn>
+					<addColumn tableName="adm_role">
+						<column name="description" type="varchar(255)"/>
+					</addColumn>
+				
+		</changeSet>
+   	
+   	
 </databaseChangeLog>
