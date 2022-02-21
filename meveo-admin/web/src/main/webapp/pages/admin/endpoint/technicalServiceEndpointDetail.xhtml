@@ -7,8 +7,8 @@
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	xmlns:s="http://jboss.org/seam/faces" template="/layout/template.xhtml">
 
-	<o:importConstants
-		type="org.meveo.model.technicalservice.endpoint.EndpointHttpMethod" />
+	<o:importConstants type="org.meveo.model.technicalservice.endpoint.EndpointHttpMethod" />
+	
 	<ui:define name="metadata">
 		<f:metadata>
 			<f:viewParam name="objectId" value="#{endpointBean.objectId}" />
@@ -137,10 +137,12 @@
 								headerText="#{messages['endpoint.parameters.mapping.default']}">
 								<h:inputText value="#{item.defaultValue}" size="40" />
 							</p:column>
+							<p:column headerText="Multi-valued">
+								<h:selectBooleanCheckbox value="#{item.multivalued}" style="width:100px" />
+							</p:column>
 							<p:column
 								headerText="#{messages['endpoint.parameters.mapping.valueRequired']}">
-								<h:selectBooleanCheckbox value="#{item.valueRequired}"
-									style="width:200px" />
+								<h:selectBooleanCheckbox value="#{item.valueRequired}" style="width:100px" />
 							</p:column>
 						</p:dataTable>
 					</hftl:decorateFormField>
