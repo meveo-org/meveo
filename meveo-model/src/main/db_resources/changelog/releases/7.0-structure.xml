@@ -44,6 +44,7 @@
     	<sql>INSERT INTO crt_storage_repository (crt_id, repo_id) (SELECT cust_crt.id as crt_id, storage_repository.id as repo_id FROM cust_crt, storage_repository WHERE storage_repository.code = 'default')</sql>
    	</changeSet>
    	
+
    	
 		<changeSet author="Gulam Samdani" id="#437 -Convert to buss entity for adm_permission">
 				<addColumn tableName="adm_permission">
@@ -121,4 +122,12 @@
    	
    	
    	
+
+   	<changeSet id="Update cascade maven deps" author="Clément Bareth">
+   		<dropForeignKeyConstraint baseTableName="adm_script_maven_dependency" constraintName="fk_maven_dependency"/>
+   		<addForeignKeyConstraint constraintName="fk_maven_dependency" referencedTableName="maven_dependency" 
+   			baseColumnNames="maven_coordinates" baseTableName="adm_script_maven_dependency" 
+   			referencedColumnNames="coordinates" onUpdate="CASCADE"/>
+   	</changeSet>
+
 </databaseChangeLog>

@@ -60,8 +60,8 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.PostRemoved;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
@@ -82,7 +82,10 @@ import org.meveo.model.catalog.IImageUpload;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.filter.Filter;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
+import org.meveo.service.admin.impl.MeveoModuleItemService;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.index.ElasticClient;
@@ -186,6 +189,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	
 	@Inject
 	protected ParamBeanFactory paramBeanFactory;
+	
+	@Inject
+	private MeveoModuleItemService meveoModuleItemService;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	/**
 	 * Constructor.
@@ -400,6 +409,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 				MeveoModule meveoModule = businessService.findModuleOf((BusinessEntity) entity);
 				if (meveoModule != null) {
 					businessService.removeFilesFromModule((BusinessEntity) entity, meveoModule);
+					MeveoModuleItem item = meveoModuleItemService.findByBusinessEntity((BusinessEntity) entity);
+					if (item != null) {
+						meveoModule.removeItem(item);
+						meveoModuleService.update(meveoModule);
+					}
 				}
 			}
 			

@@ -218,7 +218,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     private MeveoModule meveoModule;
 
-    private List<MeveoModule> selectedMeveoModules;
+    private MeveoModule selectedMeveoModule;
 
     /**
      * Object identifier to load
@@ -542,7 +542,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                 if (!org.meveo.commons.utils.StringUtils.isBlank(module.getModuleSource())) {
                     module.setModuleSource(JacksonUtil.toString(updateModuleItemDto(module)));
                 }
-                meveoModuleService.mergeModule(module);
+                meveoModuleService.update(module);
                 messages.info(businessEntity.getCode() + " added to module " + module.getCode());
             } catch (Exception e) {
                 messages.error(businessEntity.getCode() + " not added to module " + module.getCode(), e);
@@ -554,15 +554,13 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     }
 
     public void addToModule() throws BusinessException  {
-        for (MeveoModule eachModule : selectedMeveoModules) {
-            MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-            if (entity != null && !eachModule.equals(entity)) {
-            	try {
-					addToModule(entity, module);
-				} catch (BusinessException e) {
-					throw new BusinessException("Entity cannot be add or remove from the module", e);
-				}
-            }
+        MeveoModule module = meveoModuleService.findById(selectedMeveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+        if (entity != null && !selectedMeveoModule.equals(entity)) {
+        	try {
+				addToModule(entity, module);
+			} catch (BusinessException e) {
+				throw new BusinessException("Entity cannot be add or remove from the module", e);
+			}
         }
     }
 
@@ -571,22 +569,14 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
             return;
         }
 
-        String codes = selectedEntities.stream().filter(e -> e instanceof BusinessEntity)
-        		.map(BusinessEntity.class::cast)
-        		.map(BusinessEntity::getCode)
-        		.collect(Collectors.joining(", ", "[", "]"));
-
-        for (MeveoModule eachModule : selectedMeveoModules) {
-            MeveoModule module = meveoModuleService.findById(eachModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
-            List<String> itemExisted = new ArrayList<>();
-            for (T entity : selectedEntities) {
-                if (entity != null && !eachModule.equals(entity)) {
-                	try {
-						addToModule(entity, module);
-					} catch (BusinessException e2) {
-						throw new BusinessException("Entity cannot be add or remove from the module", e2);
-					}
-                }
+        MeveoModule module = meveoModuleService.findById(selectedMeveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+        for (T entity : selectedEntities) {
+            if (entity != null && !selectedMeveoModule.equals(entity)) {
+            	try {
+					addToModule(entity, module);
+				} catch (BusinessException e2) {
+					throw new BusinessException("Entity cannot be add or remove from the module", e2);
+				}
             }
         }
     }
@@ -1409,12 +1399,12 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         this.meveoModule = meveoModule;
     }
 
-    public List<MeveoModule> getSelectedMeveoModules() {
-        return selectedMeveoModules;
+    public MeveoModule getSelectedMeveoModule() {
+        return selectedMeveoModule;
     }
 
-    public void setSelectedMeveoModules(List<MeveoModule> selectedMeveoModules) {
-        this.selectedMeveoModules = selectedMeveoModules;
+    public void setSelectedMeveoModule(MeveoModule selectedMeveoModule) {
+        this.selectedMeveoModule = selectedMeveoModule;
     }
 
     /**

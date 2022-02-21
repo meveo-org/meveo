@@ -315,10 +315,10 @@
 
 					<p:dataTable id="resultModuleTable" var="e" paginator="true"
 						resizableColumns="true" value="#{meveoModuleBean.meveoModules}"
-						rows="10" selection="#{backingBean.selectedMeveoModules}"
+						rows="10" selection="#{backingBean.selectedMeveoModule}"
 						rowKey="#{e.id}" lazy="#{lazy}">
-						<p:column id="multiSelectModule" selectionMode="multiple"
-							width="4%" exportable="false" toggleable="false" />
+						<p:column id="multiSelectModule" selectionMode="single"
+							width="4%" exportable="single" toggleable="false" />
 						<p:ajax event="rowSelectCheckbox" />
 						<p:ajax event="rowUnselectCheckbox" />
 						<p:column>
