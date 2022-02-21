@@ -79,7 +79,7 @@
         </p:selectBooleanCheckbox>
     </c:if>
     
-    <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA}">
+   <!--  <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.TEXT_AREA}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
         <c:if test="#{empty entity.id and !disabled}">
             <p:inputTextarea value="#{field.stringValue}" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" placeholder="#{cft.description}"/>
@@ -88,7 +88,7 @@
             <pe:codeMirror theme="eclipse" mode="application/xml" value="#{field.stringValue}" lineNumbers="true" required="#{cft.valueRequired and !hasInheritedValue}" rendered="true"
                 label="#{cft.description}" />
         </c:if>
-    </c:if>
+    </c:if> -->
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.LONG_TEXT}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
         <c:if test="#{empty entity.id and !disabled}">
@@ -98,7 +98,7 @@
             <p:inputTextarea value="#{field.stringValue}" autoResize="false" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" placeholder="#{cft.description}"/>
         </c:if>
     </c:if>
-     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.EMBEDDED_ENTITY}">
+    <!--  <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.EMBEDDED_ENTITY}">
         <h:outputText value="#{field.stringValue}" styleClass="field-value" rendered="#{! edit or disabled}" />
         <c:if test="#{empty entity.id and !disabled}">
             <p:inputTextarea value="#{field.stringValue}" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" title="treeTitle"/>
@@ -106,7 +106,7 @@
         <c:if test="#{!empty entity.id and !disabled}">
             <p:inputTextarea value="#{field.stringValue}" autoResize="false" cols="#{cols}" rows="#{rows}" required="#{cft.valueRequired and !hasInheritedValue}" rendered="#{edit}" label="#{cft.description}" title="treeTitle"/>
         </c:if>
-    </c:if>
+    </c:if> -->
     <c:if test="#{cft.fieldType eq CustomFieldTypeEnum.DATE}">
     	<c:if test="#{cft.displayFormat != null}">
         	<c:set var="datePattern" value="#{cft.displayFormat}" />

@@ -89,9 +89,9 @@ public class SwaggerHelperService {
 			result = buildTypeOfEntity(cft);
 			result.setName(CustomFieldTypeEnum.ENTITY.name());
 			break;
-		case TEXT_AREA:
-			result.setName(CustomFieldTypeEnum.TEXT_AREA.name());
-			break;
+	//	case TEXT_AREA:
+		//	result.setName(CustomFieldTypeEnum.TEXT_AREA.name());
+		//	break;
 		case LONG_TEXT:
 			result.setName(CustomFieldTypeEnum.LONG_TEXT.name());
 			break;
@@ -107,10 +107,10 @@ public class SwaggerHelperService {
 		case BOOLEAN:
 			result = new BooleanProperty();
 			break;
-		case EMBEDDED_ENTITY:
-			result = buildTypeOfEntity(cft);
-			result.setName(CustomFieldTypeEnum.EMBEDDED_ENTITY.name());
-			break;
+		//case EMBEDDED_ENTITY:
+		//	result = buildTypeOfEntity(cft);
+		//	result.setName(CustomFieldTypeEnum.EMBEDDED_ENTITY.name());
+		//	break;
 		case BINARY:
 			result = new BinaryProperty();
 			break;

@@ -50,4 +50,8 @@
    			baseColumnNames="maven_coordinates" baseTableName="adm_script_maven_dependency" 
    			referencedColumnNames="coordinates" onUpdate="CASCADE"/>
    	</changeSet>
+   	
+	<changeSet author="Gulam Samdani" id="replance  TEXT_AREA field type">
+		<sql>update crm_custom_field_tmpl  set field_type ='LONG_TEXT'  where field_type ='TEXT_AREA';</sql>
+	</changeSet>
 </databaseChangeLog>

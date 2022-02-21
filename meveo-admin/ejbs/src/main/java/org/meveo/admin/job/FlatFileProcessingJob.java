@@ -248,7 +248,7 @@ public class FlatFileProcessingJob extends Job {
         mappingConf.setAppliesTo(JOB_FLAT_FILE_PROCESSING_JOB);
         mappingConf.setActive(true);
         mappingConf.setDescription(resourceMessages.getString("flatFile.mappingConf"));
-        mappingConf.setFieldType(CustomFieldTypeEnum.TEXT_AREA);
+        mappingConf.setFieldType(CustomFieldTypeEnum.LONG_TEXT);
         mappingConf.setDefaultValue(EMPTY_STRING);
         mappingConf.setValueRequired(true);
         result.put(FLAT_FILE_PROCESSING_JOB_MAPPING_CONF, mappingConf);

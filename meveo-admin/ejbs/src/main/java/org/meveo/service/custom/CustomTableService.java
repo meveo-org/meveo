@@ -1038,8 +1038,6 @@ public class CustomTableService extends NativePersistenceService {
                 	modifiableMap.put(field.getKey(), ((int) field.getValue()) == 1);
                 } else if(field.getValue() instanceof BigInteger) {
                 	modifiableMap.put(field.getKey(), ((BigInteger) field.getValue()).longValue());
-            	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.EMBEDDED_ENTITY)) {
-                    modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
             	} else if(field.getValue() instanceof String && cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY)) {
                     modifiableMap.put(field.getKey(), JacksonUtil.fromString((String) field.getValue(), GenericTypeReferences.MAP_STRING_OBJECT));
                 } else {

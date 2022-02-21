@@ -659,13 +659,8 @@ public class CustomFieldValue implements Serializable {
         case STRING:
         case SECRET:
         case LIST:
-        case TEXT_AREA:
         case LONG_TEXT:
-        case EMBEDDED_ENTITY:
-            stringValue = (String) value;
-
-            break;
-
+   
         case ENTITY:
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));
             break;
@@ -935,8 +930,6 @@ public class CustomFieldValue implements Serializable {
             case SECRET:
             case STRING:
             case LIST:
-            case TEXT_AREA:
-                return stringValue;
             case MULTI_VALUE:
                 throw new RuntimeException("Multi-value type of field supports only matrix");
             }
@@ -1039,7 +1032,7 @@ public class CustomFieldValue implements Serializable {
                 itemClass = Double.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY || cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
                 itemClass = EntityReferenceWrapper.class;
-            } else if (cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
+            } else if (cft.getFieldType() == CustomFieldTypeEnum.SECRET || cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST ) {
                 itemClass = String.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                 itemClass = Long.class;
@@ -1062,7 +1055,7 @@ public class CustomFieldValue implements Serializable {
                 itemClass = Double.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.ENTITY || cft.getFieldType() == CustomFieldTypeEnum.CHILD_ENTITY) {
                 itemClass = EntityReferenceWrapper.class;
-            } else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
+            } else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST ) {
                 itemClass = String.class;
             } else if (cft.getFieldType() == CustomFieldTypeEnum.LONG) {
                 itemClass = Long.class;
@@ -1423,7 +1416,7 @@ public class CustomFieldValue implements Serializable {
                 } else if (cft.getFieldType() == CustomFieldTypeEnum.BOOLEAN) {
                     return Boolean.parseBoolean(valueToConvert);
                 } else if (cft.getFieldType() == CustomFieldTypeEnum.STRING || cft.getFieldType() == CustomFieldTypeEnum.LIST
-                        || cft.getFieldType() == CustomFieldTypeEnum.TEXT_AREA) {
+                        ) {
                     return valueToConvert;
                 } else if (cft.getFieldType() == CustomFieldTypeEnum.DATE) {
                     return DateUtils.parseDateWithPattern(valueToConvert, DateUtils.DATE_TIME_PATTERN);
