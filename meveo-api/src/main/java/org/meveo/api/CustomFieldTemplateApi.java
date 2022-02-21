@@ -464,6 +464,16 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         	}
         }
         
+        if (StringUtils.isNotBlank(dto.getEntityClazz())) {
+        	if (customEntityTemplateService.findByCode(dto.getEntityClazzCetCode()) == null) {
+        		try {
+        			Class.forName(dto.getEntityClazz());
+        		} catch (ClassNotFoundException e) {
+        			throw new IllegalArgumentException("Entity " + dto.getEntityClazz() + " does not exists");
+        		}
+        	}
+        }
+        
         if(dto.getRelationshipName() != null && dto.getFieldType() == CustomFieldTypeEnum.BINARY) {
         	cft.setRelationshipName(dto.getRelationshipName());
         }
