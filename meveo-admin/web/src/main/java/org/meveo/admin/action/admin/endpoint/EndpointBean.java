@@ -25,6 +25,7 @@ import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
@@ -211,6 +212,7 @@ public class EndpointBean extends BaseBean<Endpoint> {
 					endpointParameter.setEndpoint(entity);
 					endpointParameter.setParameter(endpointPathParameter);
 					tsParameterMapping.setEndpointParameter(endpointParameter);
+					tsParameterMapping.setMultivalued(Endpoint.isParameterMultivalued(scriptInstance, tsParameterMapping));
 					parameterMappings.add(tsParameterMapping);
 				}
 			}
