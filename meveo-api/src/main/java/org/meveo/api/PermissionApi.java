@@ -68,15 +68,15 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 	@Override
 	public Permission createOrUpdate(PermissionDto dtoData) throws MeveoApiException, BusinessException {
 		
-		String name = dtoData.getName();
-		if (StringUtils.isBlank(name)) {
-			missingParameters.add("name");
+		String description = dtoData.getDescription();
+		if (StringUtils.isBlank(description)) {
+			missingParameters.add("Description");
 		}
 
-		String permissionValue = dtoData.getPermission();
-		if (permissionValue == null) {
-			missingParameters.add("permission");
+		if (StringUtils.isBlank(dtoData.getCode())) {
+			missingParameters.add("Code");
 		}
+
 		
 		handleMissingParameters();
 
@@ -84,7 +84,7 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 			throw new ActionForbiddenException("User has no permission to manage permissions.");
 		}
 
-		Permission permission = permissionService.findByPermission(permissionValue);
+		Permission permission = permissionService.findByPermission(dtoData.getCode());
 
 		if (permission == null) {
 			return create(dtoData);
@@ -103,19 +103,19 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 	 */
 	public Permission create(PermissionDto postData) throws MeveoApiException, BusinessException {
 
-		String name = postData.getName();
-		if (StringUtils.isBlank(name)) {
-			missingParameters.add("name");
+		String description = postData.getDescription();
+		if (StringUtils.isBlank(description)) {
+			missingParameters.add("Description");
 		}
 
-		if (StringUtils.isBlank(postData.getPermission())) {
-			missingParameters.add("permission");
+		if (StringUtils.isBlank(postData.getCode())) {
+			missingParameters.add("Code");
 		}
 
 		handleMissingParameters();
 
-		if (permissionService.findByPermission(postData.getPermission()) != null) {
-			throw new EntityAlreadyExistsException(Permission.class, name, "name");
+		if (permissionService.findByPermission(postData.getCode()) != null) {
+			throw new EntityAlreadyExistsException(Permission.class, postData.getCode(), "permission");
 		}
 
 		if (!(currentUser.hasRole("superAdminManagement") || (currentUser.hasRole("administrationManagement")))) {
@@ -123,8 +123,8 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 		}
 
 		Permission permission = new Permission();
-		permission.setName(postData.getName());
-		permission.setPermission(postData.getPermission());
+		permission.setName(postData.getDescription());
+		permission.setPermission(postData.getCode());
 		
 		permissionService.create(permission);
 
@@ -142,14 +142,13 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 	 */
 	public Permission update(PermissionDto postData) throws MeveoApiException, BusinessException {
 
-		String name = postData.getName();
-		if (StringUtils.isBlank(name)) {
-			missingParameters.add("name");
+		String description = postData.getDescription();
+		if (StringUtils.isBlank(description)) {
+			missingParameters.add("Description");
 		}
 
-	
-		if (StringUtils.isBlank(postData.getPermission())) {
-			missingParameters.add("permission");
+		if (StringUtils.isBlank(postData.getCode())) {
+			missingParameters.add("Code");
 		}
 		
 		handleMissingParameters();
@@ -165,11 +164,11 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 		}
 
 		if (postData.getName() != null) {
-			permission.setName(postData.getName());
+			permission.setName(postData.getDescription());
 		}
 
 		if (postData.getPermission() != null) {
-			permission.setPermission(postData.getPermission());
+			permission.setPermission(postData.getCode());
 		}
 
 		return permissionService.update(permission);

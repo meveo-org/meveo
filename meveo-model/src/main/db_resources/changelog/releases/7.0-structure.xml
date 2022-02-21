@@ -63,16 +63,22 @@
 					</column>
 				</addColumn>
 				<addColumn tableName="adm_permission">
-					<column name="updated" type="datetime" defaultValueDate="CURRENT_TIMESTAMP"/>
+					<column name="updated" type="datetime" />
 				</addColumn>
 				<addColumn tableName="adm_permission">
-					<column name="code" type="varchar(255)" />
+					<column name="code" type="varchar(255)">
+				
+					</column>
 				</addColumn>
 				<addColumn tableName="adm_permission">
-					<column name="description" type="varchar(255)"/>
+					<column name="description" type="varchar(255)">
+				
+					</column>
 				</addColumn>
 				<addColumn tableName="adm_permission">
-					<column name="version" type="int4" defaultValueNumeric="0"/>
+					<column name="version" type="int4" defaultValueNumeric="0">
+					<constraints nullable="false"/>
+					</column>
 				</addColumn>
 			
 			</changeSet>
@@ -85,7 +91,7 @@
 					</addColumn>
 					<addColumn tableName="adm_role">
 						<column name="creator" type="varchar(100)"/>
-					</addColumn>
+						</addColumn>
 					<addColumn tableName="adm_role">
 						<column name="updater" type="varchar(100)"/>
 					</addColumn>
@@ -95,16 +101,24 @@
 						</column>
 					</addColumn>
 					<addColumn tableName="adm_role">
-						<column name="updated" type="datetime" defaultValueDate="CURRENT_TIMESTAMP"/>
+						<column name="updated" type="datetime" />
 					</addColumn>
 					<addColumn tableName="adm_role">
-						<column name="code" type="varchar(255)"/>
+						<column name="code" type="varchar(255)">
+						</column>
 					</addColumn>
 					<addColumn tableName="adm_role">
-						<column name="description" type="varchar(255)"/>
+						<column name="description" type="varchar(255)">
+						</column>
 					</addColumn>
 				
 		</changeSet>
+		
+		<changeSet author="Gulam Samdani" id="#437 update data for adm_role and adm_permission">
+		   <sql> update adm_role set code=role_name ,description=role_description </sql>
+		   <sql> update adm_permission  set code=permission  ,description=name </sql> 
+        </changeSet>
+   	
    	
    	
 </databaseChangeLog>
