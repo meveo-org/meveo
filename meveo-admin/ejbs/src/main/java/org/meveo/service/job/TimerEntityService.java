@@ -18,12 +18,18 @@
  */
 package org.meveo.service.job;
 
+import java.util.List;
+
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
-import org.meveo.admin.exception.BusinessException;
 import org.meveo.event.monitoring.ClusterEventDto.CrudActionEnum;
 import org.meveo.event.monitoring.ClusterEventPublisher;
+import org.meveo.event.qualifier.Updated;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.BusinessService;
@@ -37,19 +43,15 @@ public class TimerEntityService extends BusinessService<TimerEntity> {
     @Inject
     private ClusterEventPublisher clusterEventPublisher;
 
-    @Override
-    public TimerEntity update(TimerEntity entity) throws BusinessException {
-        entity = super.update(entity);
-
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void rescheduleJobs(@Observes(during = TransactionPhase.AFTER_COMPLETION) @Updated TimerEntity entity) {
         // Reschedule jobs that are bound to the timer
-        for (JobInstance jobInstance : entity.getJobInstances()) {
+        for (JobInstance jobInstance : findById(entity.getId(), List.of("jobInstances")).getJobInstances()) {
             if (jobInstance.isActive()) {
                 jobInstanceService.scheduleUnscheduleJob(jobInstance.getId());
 
                 clusterEventPublisher.publishEvent(jobInstance, CrudActionEnum.update);
             }
         }
-
-        return entity;
     }
 }
