@@ -50,8 +50,18 @@ import org.meveo.model.ModuleItem;
 @Table(name = "adm_permission")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_permission_seq"), })
-@NamedQueries({ @NamedQuery(name = "Permission.getPermission", query = "select p from Permission p where p.permission=:permission", hints = {
-        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
+@NamedQueries({ 
+	@NamedQuery(
+			name = "Permission.getPermission",
+			query = "select p from Permission p where p.permission=:permission",
+			hints = {@QueryHint(name = "org.hibernate.cacheable", value = "true") }
+			),
+	@NamedQuery(
+			name = "Permission.getCode",
+			query = "select p from Permission p where p.code=:code",
+			hints = {@QueryHint(name = "org.hibernate.cacheable", value = "true") }
+			)
+	})
 public class Permission extends BusinessEntity {
     private static final long serialVersionUID = 2884657784984355718L;
 

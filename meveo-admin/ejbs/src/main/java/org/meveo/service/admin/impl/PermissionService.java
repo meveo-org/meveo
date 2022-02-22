@@ -69,6 +69,21 @@ public class PermissionService extends BusinessService<Permission>{
 
     }
     
+    
+    public Permission findByCode(String code) {
+
+        try {
+            Permission permissionEntity = getEntityManager().createNamedQuery("Permission.getCode", Permission.class).setParameter("code", code)
+                .getSingleResult();
+            return permissionEntity;
+
+        } catch (NoResultException | NonUniqueResultException e) {
+            log.trace("No permission {} was found. Reason {}", code, e.getClass().getSimpleName());
+            return null;
+        }
+
+    }
+    
     public void removeIfPresent(String permission) throws BusinessException {
     	Permission permissionEntity = this.findByPermission(permission);
     	if(permissionEntity != null) {

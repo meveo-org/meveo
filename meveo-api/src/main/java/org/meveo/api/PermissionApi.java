@@ -42,10 +42,10 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 	}
 
 	@Override
-	public PermissionDto find(String permission) throws MeveoApiException {
+	public PermissionDto find(String code) throws MeveoApiException {
 
-		if (StringUtils.isBlank(permission)) {
-			missingParameters.add("permission");
+		if (StringUtils.isBlank(code)) {
+			missingParameters.add("code");
 		}
 
 		handleMissingParameters();
@@ -55,9 +55,9 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 		}
 
 		PermissionDto permissionDto = null;
-		Permission permissionEntity = permissionService.findByPermission(permission);
-		if (permission == null) {
-			throw new EntityDoesNotExistsException(Permission.class, permission, "permission");
+		Permission permissionEntity = permissionService.findByCode(code);
+		if (code == null) {
+			throw new EntityDoesNotExistsException(Permission.class, code, "code");
 		}
 		permissionDto = new PermissionDto(permissionEntity);
 
@@ -84,7 +84,7 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 			throw new ActionForbiddenException("User has no permission to manage permissions.");
 		}
 
-		Permission permission = permissionService.findByPermission(dtoData.getCode());
+		Permission permission = permissionService.findByCode(dtoData.getCode());
 
 		if (permission == null) {
 			return create(dtoData);
@@ -114,8 +114,8 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 
 		handleMissingParameters();
 
-		if (permissionService.findByPermission(postData.getCode()) != null) {
-			throw new EntityAlreadyExistsException(Permission.class, postData.getCode(), "permission");
+		if (permissionService.findByCode(postData.getCode()) != null) {
+			throw new EntityAlreadyExistsException(Permission.class, postData.getCode(), "code");
 		}
 
 		if (!(currentUser.hasRole("superAdminManagement") || (currentUser.hasRole("administrationManagement")))) {
@@ -125,6 +125,8 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 		Permission permission = new Permission();
 		permission.setName(postData.getDescription());
 		permission.setPermission(postData.getCode());
+		permission.setDescription(postData.getDescription());
+		permission.setCode(postData.getCode());
 		
 		permissionService.create(permission);
 
@@ -157,20 +159,23 @@ public class PermissionApi extends BaseCrudApi<Permission, PermissionDto> {
 			throw new ActionForbiddenException("User has no permission to manage permission.");
 		}
 
-		Permission permission = permissionService.findByPermission(postData.getPermission());
+		Permission permission = permissionService.findByCode(postData.getCode());
 
 		if (permission == null) {
-			throw new EntityDoesNotExistsException(Permission.class, postData.getPermission(), "permission");
+			throw new EntityDoesNotExistsException(Permission.class, postData.getCode(), "code");
 		}
 
 		if (postData.getName() != null) {
 			permission.setName(postData.getDescription());
+			permission.setDescription(postData.getDescription());
 		}
 
 		if (postData.getPermission() != null) {
 			permission.setPermission(postData.getCode());
+			permission.setCode(postData.getCode());
 		}
-
+		
+		
 		return permissionService.update(permission);
 	}
 
