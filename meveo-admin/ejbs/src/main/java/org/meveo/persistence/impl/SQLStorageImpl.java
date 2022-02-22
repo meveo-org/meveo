@@ -123,6 +123,8 @@ public class SQLStorageImpl implements StorageImpl {
 
 	@Override
 	public String findEntityIdByValues(Repository repository, CustomEntityInstance cei) {
+		cei.setRepository(repository);
+		
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
 		Map<String, Object> valuesFilters = cei.getValuesNullSafe();
@@ -347,7 +349,8 @@ public class SQLStorageImpl implements StorageImpl {
 			} else {
 				// CEI storage
 				final CustomEntityInstance cei = customEntityInstanceService.findByUuid(ceiToUpdate.getCet().getCode(), ceiToUpdate.getUuid());
-	
+				cei.setRepository(repository);
+				
 				// Update binaries
 				if (CollectionUtils.isNotEmpty(binariesInSql)) {
 					final Map<String, Object> existingValues = cei.getCfValuesAsValues();
@@ -461,6 +464,7 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException {
+		ceiToSave.setRepository(repository);
 		CustomEntityTemplate cet = ceiToSave.getCet();
 		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
 
@@ -482,6 +486,8 @@ public class SQLStorageImpl implements StorageImpl {
 			customEntityInstanceService.create(cei);
 
 		} else {
+			cei.setRepository(repository);
+			
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
 				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
@@ -503,6 +509,8 @@ public class SQLStorageImpl implements StorageImpl {
 	
 
 	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+		cei.setRepository(repository);
+		
 		String sqlUUID = null;
 		
 		Map<String, Object> oldCfValues = new HashMap<>();
@@ -526,6 +534,7 @@ public class SQLStorageImpl implements StorageImpl {
 			
 			CustomEntityInstance tempCei = new CustomEntityInstance();
 			tempCei.setCetCode(cei.getCetCode());
+			tempCei.setRepository(repository);
 			customFieldInstanceService.setCfValues(tempCei, cei.getCetCode(), oldCfValues);
 			cei.setCfValuesOld(tempCei.getCfValues());
 			

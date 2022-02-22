@@ -44,6 +44,7 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.util.PersistenceUtils;
+import org.meveo.model.storage.Repository;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -89,6 +90,23 @@ public class CustomEntityInstance extends BusinessCFEntity {
 
 	@Transient
 	private CustomFieldValues cfValuesOld = new CustomFieldValues();
+	
+	@Transient
+	private Repository repository;
+	
+	/**
+	 * @return the {@link #repository}
+	 */
+	public Repository getRepository() {
+		return repository;
+	}
+
+	/**
+	 * @param repository the repository to set
+	 */
+	public void setRepository(Repository repository) {
+		this.repository = repository;
+	}
 
 	@Override
 	public boolean equals(Object obj) {

@@ -363,6 +363,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		if (targetUUUID == null) {
 			CustomEntityInstance cei = new CustomEntityInstance();
 			cei.setCetCode(startNode.getCode());
+			cei.setRepository(repository);
 			customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
 
 			return createOrUpdate(repository, cei);
@@ -372,6 +373,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			final String relationUUID = findUniqueRelationByTargetUuid(repository, targetUUUID, crt);
 
 			CustomEntityInstance cei = new CustomEntityInstance();
+			cei.setRepository(repository);
 			cei.setCetCode(startNode.getCode());
 			cei.setCet(cache.getCustomEntityTemplate(startNode.getCode()));
 			customFieldInstanceService.setCfValues(cei, startNode.getCode(), sourceValues);
@@ -423,6 +425,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCode(ceiToSave.getCode());
 		cei.setDescription(ceiToSave.getDescription());
 		cei.setCfValuesOld(ceiToSave.getCfValuesOld());
+		cei.setRepository(repository);
 		
 		if (ceiToSave.getCfValuesOld() != null && !ceiToSave.getCfValuesOld().getValuesByCode().isEmpty()) {
 			try {
@@ -573,7 +576,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @throws EntityDoesNotExistsException if the data does not exist yet
 	 */
 	public void update(Repository repository, CustomEntityInstance ceiToUpdate) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
-
+		ceiToUpdate.setRepository(repository);
 		CustomEntityTemplate cet = ceiToUpdate.getCet();
 		
 		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
@@ -649,6 +652,8 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @return the id corresponding to the values
 	 */
 	public String findEntityId(Repository repository, CustomEntityInstance cei) {
+		cei.setRepository(repository);
+		
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
 		
@@ -676,6 +681,8 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCet(cet);
 		cei.setCetCode(cet.getCode());
 		cei.setCode((String) valuesFilters.get("code"));
+		cei.setRepository(repository);
+		
 		customFieldInstanceService.setCfValues(cei, cet.getCode(), valuesFilters);
 		return findEntityId(repository, cei);
 	}
@@ -697,6 +704,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		cei.setCet(cet);
 		cei.setCetCode(cet.getCode());
 		cei.setUuid(uuid);
+		cei.setRepository(repository);
 		
 		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
 		CustomEntity cetClassInstance = null;
@@ -887,6 +895,7 @@ public class CrossStorageService implements CustomPersistenceService {
 								map.put("code", uuids.get(0));
 							}
 							CustomEntityInstance cei = customEntityInstanceService.fromMap(referencedCet, map);
+							cei.setRepository(repository);
 							updatedValues.put(customFieldTemplate.getCode(), cei);
 						}
 					}
@@ -918,6 +927,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
 		cei.setCode((String) values.get("code"));
+		cei.setRepository(repository);
 		String uuid = (String) values.get("uuid");
 		if (uuid != null) {
 			cei.setUuid(uuid);
@@ -1034,6 +1044,8 @@ public class CrossStorageService implements CustomPersistenceService {
 	}
 	
 	public void checkBeforeUpdate(Repository repository, CustomEntityInstance entity) throws EntityDoesNotExistsException, ELException, IllegalTransitionException {
+		entity.setRepository(repository);
+		
 		Map<String, Set<String>> map = customEntityInstanceService.getValueCetCodeAndWfTypeFromWF();
 		Map<String, Object> values = entity.getCfValuesAsValues();
 		if (values != null) {

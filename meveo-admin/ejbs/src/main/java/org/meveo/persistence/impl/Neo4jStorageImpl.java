@@ -180,6 +180,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 		neo4jCei.setCetCode(cei.getCetCode());
 		neo4jCei.setUuid(foundUuid);
 		neo4jCei.setCet(cei.getCet());
+		neo4jCei.setRepository(repository);
+		cei.setRepository(repository);
 		
 		if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
