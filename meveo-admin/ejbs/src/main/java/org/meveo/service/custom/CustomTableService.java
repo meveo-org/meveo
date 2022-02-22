@@ -938,8 +938,9 @@ public class CustomTableService extends NativePersistenceService {
 		Map<String, Object> data = new HashMap<>();
 		
 		// Complete data with parent table
-		if(cet.getSuperTemplate() != null && cet.getSuperTemplate().storedIn(DBStorageType.SQL)) {
-			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getSuperTemplate().getAppliesTo());
+		var superTemplate = cet.getSuperTemplate() != null ? customEntityTemplateService.findById(cet.getSuperTemplate().getId()) : null;
+		if(superTemplate != null && superTemplate.storedIn(DBStorageType.SQL)) {
+			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(superTemplate.getAppliesTo());
 			List<String> parentFieldsToSelect;
 			if(selectFieldsCopy != null) {
 				parentFieldsToSelect = new ArrayList<>();
