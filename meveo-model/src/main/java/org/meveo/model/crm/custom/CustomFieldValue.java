@@ -659,8 +659,13 @@ public class CustomFieldValue implements Serializable {
         case STRING:
         case SECRET:
         case LIST:
+      //  case TEXT_AREA:
         case LONG_TEXT:
-   
+        case EMBEDDED_ENTITY:
+            stringValue = (String) value;
+
+            break;
+
         case ENTITY:
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));
             break;
@@ -930,6 +935,8 @@ public class CustomFieldValue implements Serializable {
             case SECRET:
             case STRING:
             case LIST:
+         //   case TEXT_AREA:
+             //   return stringValue;
             case MULTI_VALUE:
                 throw new RuntimeException("Multi-value type of field supports only matrix");
             }

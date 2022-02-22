@@ -77,7 +77,7 @@ public enum CustomFieldTypeEnum {
      * EMBEDDED_ENTITY value
      */
     
-//	EMBEDDED_ENTITY(true, true, EntityReferenceWrapper.class),
+	EMBEDDED_ENTITY(true, true, EntityReferenceWrapper.class),
 	
 	/**
 	 * Binary type value - only the path is stored
@@ -169,4 +169,3 @@ public enum CustomFieldTypeEnum {
 		return CustomFieldTypeEnum.LONG;
 	}
 }
-

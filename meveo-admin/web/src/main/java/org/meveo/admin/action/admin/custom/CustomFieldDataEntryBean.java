@@ -855,7 +855,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 			Object newKey = null;
 
-			if (column.getKeyType() == CustomFieldMapKeyEnum.STRING ) {
+			if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
 				newKey = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
 				// No reason to support Long and Double as key values as it us covered by a
@@ -906,7 +906,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 				Object newValue = null;
 
-				if (column.getKeyType() == CustomFieldMapKeyEnum.STRING) {
+				if (column.getKeyType() == CustomFieldMapKeyEnum.STRING || column.getKeyType() == CustomFieldMapKeyEnum.TEXT_AREA) {
 					newValue = (String) entityValueHolder.getNewValue(cft.getCode() + "_" + column.getCode());
 
 				} else if (column.getKeyType() == CustomFieldMapKeyEnum.LONG) {
@@ -1796,28 +1796,32 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 	public boolean isEmbeddedEntity(ICustomFieldEntity entity) {
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
-		/*
-		 * for (CustomFieldTemplate cft : customFieldTemplates.values()) { if
-		 * (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) { return true; }
-		 * }
-		 */
+		for (CustomFieldTemplate cft : customFieldTemplates.values()) {
+			if (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) {
+				return true;
+			}
+		}
 		return false;
 	}
 
 	public String getSegmentTree(ICustomFieldEntity entity) {
 		String segmentTreeValue = null;
 		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(entity);
-		/*
-		 * for (CustomFieldTemplate cft : customFieldTemplates.values()) { if
-		 * (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) { var cfValue =
-		 * customFieldInstanceService.getCFValue(entity, cft.getCode()); if(cfValue
-		 * instanceof String) { segmentTreeValue = (String) cfValue; } else {
-		 * segmentTreeValue = JacksonUtil.toString(cfValue); }
-		 * 
-		 * if (segmentTreeValue == null) { segmentTreeValue = "{}"; }
-		 * log.info("getSegmentTree segmentValue={}", segmentTreeValue); }
-		 */
-		//}
+		for (CustomFieldTemplate cft : customFieldTemplates.values()) {
+			if (cft.getFieldType() == CustomFieldTypeEnum.EMBEDDED_ENTITY) {
+				var cfValue = customFieldInstanceService.getCFValue(entity, cft.getCode());
+				if(cfValue instanceof String) {
+					segmentTreeValue = (String) cfValue;
+				} else {
+					segmentTreeValue = JacksonUtil.toString(cfValue);
+				}
+				
+				if (segmentTreeValue == null) {
+					segmentTreeValue = "{}";
+				}
+				log.info("getSegmentTree segmentValue={}", segmentTreeValue);
+			}
+		}
 		return segmentTreeValue;
 	}
 

@@ -463,11 +463,11 @@ public class GraphQLService {
                         graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
                     case CHILD_ENTITY:
-                 //   case EMBEDDED_ENTITY:
+                    case EMBEDDED_ENTITY:
                     case LIST:
                     case SECRET:
                     case STRING:
-                 //   case TEXT_AREA:
+                  //  case TEXT_AREA:
                     case LONG_TEXT:
                     default:
                         graphQLField.setFieldType("String");

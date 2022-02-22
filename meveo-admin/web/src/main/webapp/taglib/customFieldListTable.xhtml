@@ -169,6 +169,7 @@
                         </f:facet>
                         <f:facet name="input">
                             <h:inputText value="#{mapValues[column.code]}" size="20" maxlength="50" rendered="#{column.keyType eq CustomFieldMapKeyEnum.STRING}" />
+                            <p:inputTextarea value="#{mapValues[column.code]}" cols="20" rows="3" rendered="#{column.keyType eq CustomFieldMapKeyEnum.TEXT_AREA}" />
                             <h:inputText value="#{mapValues[column.code]}" size="9" maxlength="15" rendered="#{column.keyType eq CustomFieldMapKeyEnum.LONG}" converter="javax.faces.Long" />
                             <h:inputText value="#{mapValues[column.code]}" size="9" maxlength="15" rendered="#{column.keyType eq CustomFieldMapKeyEnum.DOUBLE}" converter="javax.faces.Double" />
                             <p:inputText value="#{mapValues[column.code]}" size="20" maxlength="30" rendered="#{column.keyType eq CustomFieldMapKeyEnum.RON}">
@@ -212,6 +213,10 @@
                                 <c:if test="#{column.keyType eq CustomFieldMapKeyEnum.STRING}">
                                     <p:inputText value="#{cfValueHolder.newValues[cft.code.concat('_').concat(column.code)]}" placeholder="#{column.label}" label="#{column.label}" size="30"
                                         maxlength="50" />
+                                </c:if>
+
+                                <c:if test="#{column.keyType eq CustomFieldMapKeyEnum.TEXT_AREA}">
+                                    <p:inputTextarea value="#{cfValueHolder.newValues[cft.code.concat('_').concat(column.code)]}" cols="20" rows="3" label="#{column.label}" placeholder="#{column.label}" />
                                 </c:if>
 
                                 <c:if test="#{column.keyType eq CustomFieldMapKeyEnum.LONG}">

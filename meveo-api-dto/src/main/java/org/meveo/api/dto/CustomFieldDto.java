@@ -386,8 +386,11 @@ public class CustomFieldDto {
 				return longValue == null;
 			case LIST:
 			case STRING:
+			//case TEXT_AREA:
 			case LONG_TEXT:
 			case SECRET:
+			case EMBEDDED_ENTITY:
+				return stringValue == null;
 			case ENTITY:
 				return entityReferenceValue == null || entityReferenceValue.isEmpty();
 			case CHILD_ENTITY:
