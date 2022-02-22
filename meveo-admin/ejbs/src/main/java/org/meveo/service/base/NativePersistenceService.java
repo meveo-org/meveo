@@ -429,6 +429,7 @@ public class NativePersistenceService extends BaseService {
 				CustomEntityInstance parentCei = new CustomEntityInstance();
 				parentCei.setCet(parentTemplate);
 				parentCei.setCfValues(cei.getCfValues());
+				parentCei.setUuid(cei.getUuid());
 				var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
 				convertedValues.put("uuid", uuid);	
 			}
