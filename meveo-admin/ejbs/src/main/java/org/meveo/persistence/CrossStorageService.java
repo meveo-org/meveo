@@ -827,10 +827,14 @@ public class CrossStorageService implements CustomPersistenceService {
 					if (entry.getValue() instanceof Map) {
 						var map = (Map<String, Object>) entry.getValue();
 						if (map.get("uuid") != null) {
-							var existingData = find(repository, referencedCet, (String) map.get("uuid"), false);
-							if (existingData != null) {
-								referenceMap.put(entry.getKey(), map.get("uuid"));
-								continue;
+							try {
+								var existingData = find(repository, referencedCet, (String) map.get("uuid"), false);
+								if (existingData != null) {
+									referenceMap.put(entry.getKey(), map.get("uuid"));
+									continue;
+								}
+							} catch (EntityDoesNotExistsException e) {
+								//NOOP
 							}
 						}
 						String uuid = createReferencedEntity(repository, customFieldTemplate, map).getBaseEntityUuid();
@@ -839,6 +843,24 @@ public class CrossStorageService implements CustomPersistenceService {
 						referenceMap.put(entry.getKey(), ((EntityReferenceWrapper) entry.getValue()).getUuid());
 					} else if (entry.getValue() instanceof String) {
 						referenceMap.put(entry.getKey(), (String) entry.getValue());
+					} else if (entry.getValue() instanceof CustomEntity) {
+						var ce = (CustomEntity) entry.getValue();
+						if (ce.getUuid() != null) {
+							try {
+								var existingData = find(repository, referencedCet, ce.getUuid(), false);
+								if (existingData != null) {
+									referenceMap.put(entry.getKey(), ce.getUuid());
+									continue;
+								}
+							} catch (EntityDoesNotExistsException e) {
+								//NOOP
+							}
+						}
+						var cei = CEIUtils.pojoToCei(ce);
+						cei.setRepository(repository);
+						
+						String uuid = createReferencedEntity(repository, customFieldTemplate, cei.getCfValuesAsValues()).getBaseEntityUuid();
+						referenceMap.put(entry.getKey(), uuid);
 					}
 				}
 				updatedValues.put(customFieldTemplate.getCode(), referenceMap);
