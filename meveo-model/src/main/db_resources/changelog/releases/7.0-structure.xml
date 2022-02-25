@@ -120,8 +120,9 @@
 		   <sql> update adm_permission  set code=permission  ,description=name </sql> 
         </changeSet>
    	
-   	 <changeSet author="Gulam Samdani" id="#437 set not null constraint for code column in adm_permission ">
-		   <sql>  ALTER TABLE adm_permission ALTER COLUMN code SET NOT NULL ; </sql> 
+   	  <changeSet author="Gulam Samdani" id="#437 set not null constraint for code column in adm_permission ">
+	 		   <sql>  ALTER TABLE adm_permission ALTER COLUMN code SET NOT NULL ; </sql> 
+	 		   <sql>  ALTER TABLE adm_role ALTER COLUMN code SET NOT NULL ; </sql> 
 	 </changeSet>
    	
 
