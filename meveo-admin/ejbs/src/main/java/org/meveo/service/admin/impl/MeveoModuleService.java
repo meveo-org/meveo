@@ -30,15 +30,18 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
@@ -979,6 +982,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		
 		MeveoModuleDto dto = new MeveoModuleDto(newModule);
 		dto.setModuleItems(null);
+		
+		Stream.ofNullable(newModule.getModuleDependencies())
+			.flatMap(Collection::stream)
+			.forEach(dto::addModuleDependency);
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	
