@@ -935,8 +935,7 @@ public class CustomFieldValue implements Serializable {
             case SECRET:
             case STRING:
             case LIST:
-         //   case TEXT_AREA:
-             //   return stringValue;
+             return stringValue;
             case MULTI_VALUE:
                 throw new RuntimeException("Multi-value type of field supports only matrix");
             }
