@@ -102,5 +102,5 @@ public interface ScriptInstanceRs extends IBaseRs {
 	@POST
 	@Path("/clear")
 	@ApiOperation(value = "Clear the compiled scripts")
-	void clear();
+	void clear(@QueryParam("code") String scriptCode);
 }

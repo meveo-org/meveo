@@ -51,6 +51,7 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.PersistenceUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -112,8 +113,11 @@ public class CustomFieldInstanceService extends BaseService {
     private CrossStorageApi crossStorageApi;
     
     @Inject
+    private RepositoryService repositoryService;
+    
+    @Inject
     private Repository repository;
-
+    
     /**
      * Find a entity of a given class and matching given code. In case classname points to CustomEntityTemplate, find CustomEntityInstances of a CustomEntityTemplate code
      *
@@ -530,9 +534,11 @@ public class CustomFieldInstanceService extends BaseService {
 
         log.trace("Setting CF value. Code: {}, entity {} value {}", cfCode, entity, value);
         
+        String repository = "default";
         CustomEntityTemplate cet = null;
         if(entity instanceof CustomEntityInstance) {
         	cet = ((CustomEntityInstance) entity).getCet();
+        	repository = ((CustomEntityInstance) entity).getRepository() != null ? ((CustomEntityInstance) entity).getRepository().getCode() : "default";
         }
 
         // Can not set the value if field is versionable without a date
@@ -619,6 +625,7 @@ public class CustomFieldInstanceService extends BaseService {
 					
 	        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
 	    			entityReferenceWrapper.setClassnameCode(cft.getEntityClazzCetCode());
+	    			entityReferenceWrapper.setRepository(repository);
 
 					if (value instanceof Map) {
 						Map<String, Object> valueAsMap = (Map<String, Object>) value;
@@ -2474,7 +2481,7 @@ public class CustomFieldInstanceService extends BaseService {
 			CustomFieldTemplate codeCft = cfTemplateService.findByCodeAndAppliesTo("code", appliesTo);
 			if(codeCft != null) {
 				CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-				Map<String, Object> result = crossStorageService.find(repository, 
+				Map<String, Object> result = crossStorageService.find(repositoryService.findByCode(wrapper.getRepository()), 
 						refCet, 
 						uuid,
 						Collections.singletonList("code"), 

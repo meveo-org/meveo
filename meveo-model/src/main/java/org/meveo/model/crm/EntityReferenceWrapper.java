@@ -42,6 +42,8 @@ public class EntityReferenceWrapper implements Serializable {
     private String uuid;
     
     private Long id;
+    
+    private String repository = "default";
 
     public EntityReferenceWrapper() {
     	
@@ -126,5 +128,19 @@ public class EntityReferenceWrapper implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	/**
+	 * @return the {@link #repository}
+	 */
+	public String getRepository() {
+		return repository;
+	}
+
+	/**
+	 * @param repository the repository to set
+	 */
+	public void setRepository(String repository) {
+		this.repository = repository;
 	}
 }
