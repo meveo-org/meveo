@@ -37,6 +37,7 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
@@ -364,5 +365,33 @@ public class Endpoint extends BusinessEntity {
 	public void setCheckPathParams(boolean checkPathParams) {
 		this.checkPathParams = checkPathParams;
 	}
+	
+	/**
+	 * To determine if the endpoint parameter is multivalued, check the corresponding input's type
+	 * @param parameter the parameter
+	 * @return whether the parameter is multivaluedn according to its type
+	 */
+	public static boolean isParameterMultivalued(Function service, TSParameterMapping parameter) {
+		// Retrieve function's input
+		var functionsInputs = service.getInputs();
+		var mappedInput = functionsInputs.stream()
+				.filter(input -> input.getName().equals(parameter.getEndpointParameter().getParameter()))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Parameter " + parameter.getParameterName() + " does not corresponds to any input of function " + service.getCode()));
+		
+		// This part could be more precise if we had the full class of the input, instead of just the type name
+		if(mappedInput.getType().startsWith("Set")) {
+			return true;
+		} else if(mappedInput.getType().startsWith("List")) {
+			return true;
+		} else if(mappedInput.getType().startsWith("Collection")) {
+			return true;
+		} else if(mappedInput.getType().endsWith("[]")) {
+			return true;
+		} else {
+			return parameter.isMultivalued();
+		}
+	}
+
 	
 }

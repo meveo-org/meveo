@@ -461,8 +461,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.executeUpdate();	
 	}
 	
-    public void compileScript(T script, boolean testCompile) {
-    	
+    public Class<?> compileScript(T script, boolean testCompile) {
+    	return null;
 	}
 
 }

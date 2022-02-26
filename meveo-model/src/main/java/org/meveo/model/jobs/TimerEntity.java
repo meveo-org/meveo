@@ -39,6 +39,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
+import org.meveo.model.ObservableEntity;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -48,6 +49,7 @@ import org.meveo.model.ModuleItemOrder;
 @ModuleItem(value = "TimerEntity", path = "timerEntities")
 @ModuleItemOrder(39) //before jobs
 @ExportIdentifier({ "code"})
+@ObservableEntity
 @Table(name = "meveo_timer", uniqueConstraints = @UniqueConstraint(columnNames = { "code"}))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {@Parameter(name = "sequence_name", value = "meveo_timer_seq"), })
 public class TimerEntity extends BusinessEntity{

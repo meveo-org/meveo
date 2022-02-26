@@ -86,6 +86,7 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.index.ElasticClient;
@@ -195,7 +196,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	
 	@Inject
 	private MeveoModuleService meveoModuleService;
-
+	
 	/**
 	 * Constructor.
 	 */
@@ -412,7 +413,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 					MeveoModuleItem item = meveoModuleItemService.findByBusinessEntity((BusinessEntity) entity);
 					if (item != null) {
 						meveoModule.removeItem(item);
-						meveoModuleService.update(meveoModule);
 					}
 				}
 			}
