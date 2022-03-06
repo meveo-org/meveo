@@ -41,22 +41,15 @@ import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
-import org.apache.commons.collections4.MapUtils;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.document.DocumentField;
-import org.elasticsearch.search.sort.SortOrder;
 import org.hibernate.SQLQuery;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -67,7 +60,6 @@ import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
-import org.meveo.model.customEntities.CustomTableRecord;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
@@ -76,8 +68,6 @@ import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.index.ElasticClient;
-import org.meveo.service.index.ElasticSearchClassInfo;
 
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -100,9 +90,6 @@ public class CustomTableService extends NativePersistenceService {
      * File prefix indicating that imported data should be appended to exiting data
      */
     public static final String FILE_APPEND = "_append";
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -221,7 +208,6 @@ public class CustomTableService extends NativePersistenceService {
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
 
 		super.update(sqlConnectionCode, cei);
-		elasticClient.createOrUpdate(CustomTableRecord.class, cei.getCfValuesAsValues().get(NativePersistenceService.FIELD_ID), cei, false, true);
 	}
 
 	/**
@@ -250,32 +236,27 @@ public class CustomTableService extends NativePersistenceService {
 		for (CustomEntityInstance cei : ceis) {
 			update(sqlConnectionCode, cet, cei);
 		}
-		elasticClient.flushChanges();
 	}
 
     @Override
     public void updateValue(String sqlConnectionCode, String tableName, String uuid, String fieldName, Object value) throws BusinessException {
         super.updateValue(sqlConnectionCode, tableName, uuid, fieldName, value);
-        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, MapUtils.putAll(new HashMap<>(), new Object[] { fieldName, value }), true, true);
     }
 
     @Override
     public void disable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
         super.disable(sqlConnectionCode, tableName, uuid);
-        elasticClient.remove(CustomTableRecord.class, tableName, uuid, true);
     }
 
     @Override
     public void disable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
         super.disable(sqlConnectionCode, tableName, ids);
-        elasticClient.remove(CustomTableRecord.class, tableName, ids, true);
     }
 
     @Override
     public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
         super.enable(sqlConnectionCode, tableName, uuid);
         Map<String, Object> values = findById(sqlConnectionCode, tableName, uuid);
-        elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, true);
     }
 
     @Override
@@ -283,9 +264,7 @@ public class CustomTableService extends NativePersistenceService {
         super.enable(sqlConnectionCode, tableName, ids);
         for (String uuid : ids) {
             Map<String, Object> values = findById(sqlConnectionCode, tableName, uuid);
-            elasticClient.createOrUpdate(CustomTableRecord.class, tableName, uuid, values, false, false);
         }
-        elasticClient.flushChanges();
     }
 
     /**
@@ -486,9 +465,6 @@ public class CustomTableService extends NativePersistenceService {
 	            saveBatch(sqlConnectionCode, cfts, fields, cet.getCode(), values, entityReferencesCache);
             }
 
-            // Re-populate ES index
-            elasticClient.populateAll(currentUser, CustomTableRecord.class, cet.getCode());
-
             log.info("Imported {} lines to {} table", importedLinesTotal, dbTableName);
 
         } catch (RuntimeJsonMappingException e) {
@@ -573,12 +549,6 @@ public class CustomTableService extends NativePersistenceService {
             // Save to DB remaining records
             valuesPartial = convertValues(valuesPartial, cfts, false);
             customTableService.get().createInNewTx(sqlConnectionCode, cet, updateESImediately, valuesPartial);
-
-            // Repopulate ES index
-            if (!updateESImediately) {
-                elasticClient.populateAll(currentUser, CustomTableRecord.class, customModelObject.getCode());
-            }
-
         } catch (Exception e) {
             throw new BusinessException(e);
         }
@@ -733,152 +703,6 @@ public class CustomTableService extends NativePersistenceService {
             .with(Feature.WRITE_BIGDECIMAL_AS_PLAIN);
     }
     
-    /**
-     * Execute a search on given fields for given query values. See ElasticClient.search() for a query format.
-     *
-     * @param cetCodeOrTablename Custom entity template code, or custom table name to query
-     * @param queryValues Fields and values to match
-     * @param from Pagination - starting record. Defaults to 0.
-     * @param size Pagination - number of records per page. Defaults to ElasticClient.DEFAULT_SEARCH_PAGE_SIZE.
-     * @param sortFields - Fields to sort by. If omitted, will sort by score. If search query contains a 'closestMatch' expression, sortFields and sortOrder will be overwritten
-     *        with a corresponding field and descending order.
-     * @param sortOrders Sorting orders
-     * @param returnFields Return only certain fields - see Elastic Search documentation for details
-     * @return Search result
-     * @throws BusinessException General business exception
-     */
-    public List<Map<String, Object>> search(String cetCodeOrTablename, Map<String, Object> queryValues, Integer from, Integer size, String[] sortFields, SortOrder[] sortOrders,
-            String[] returnFields) throws BusinessException {
-
-        ElasticSearchClassInfo classInfo = new ElasticSearchClassInfo(CustomTableRecord.class, cetCodeOrTablename);
-        SearchResponse searchResult = elasticClient.search(queryValues, from, size, sortFields, sortOrders, returnFields, Collections.singletonList(classInfo));
-
-        if (searchResult == null) {
-            return new ArrayList<>();
-        }
-
-        List<Map<String, Object>> responseValues = new ArrayList<>();
-
-        searchResult.getHits().forEach(hit -> {
-            Map<String, Object> values = new HashMap<>();
-            responseValues.add(values);
-
-            if (hit.getFields() != null && !hit.getFields().values().isEmpty()) {
-                for (DocumentField field : hit.getFields().values()) {
-                    if (field.getValues() != null) {
-                        if (field.getValues().size() > 1) {
-                            values.put(field.getName(), field.getValues());
-                        } else {
-                            values.put(field.getName(), field.getValue());
-                        }
-                    }
-                }
-
-            } else if (hit.getSourceAsMap() != null) {
-                values.putAll(hit.getSourceAsMap());
-            }
-        });
-
-        // log.debug("AKK ES search result values are {}", responseValues);
-        return responseValues;
-    }
-
-    /**
-     * Get field value of the first record matching search criteria
-     * 
-     * @param cetCodeOrTablename Custom entity template code, or custom table name to query
-     * @param fieldToReturn Field value to return
-     * @param queryValues Search criteria with condition/field name as a key and field value as a value. See ElasticClient.search() for a query format.
-     * @return A field value
-     * @throws BusinessException General exception
-     */
-    public Object getValue(String cetCodeOrTablename, String fieldToReturn, Map<String, Object> queryValues) throws BusinessException {
-
-        Map<String, Object> values = new HashMap<>(queryValues);
-
-        List<Map<String, Object>> results = search(cetCodeOrTablename, values, 0, 1, new String[] { FIELD_ID }, new SortOrder[] { SortOrder.DESC }, new String[] { fieldToReturn });
-
-        if (results == null || results.isEmpty()) {
-            return null;
-        } else {
-            return results.get(0).get(fieldToReturn);
-        }
-    }
-
-    /**
-     * Get field value of the first record matching search criteria for a given date. Applicable to custom tables that contain 'valid_from' and 'valid_to' fields
-     * 
-     * @param cetCodeOrTablename Custom entity template code, or custom table name to query
-     * @param fieldToReturn Field value to return
-     * @param date Record validity date, as expressed by 'valid_from' and 'valid_to' fields, to match
-     * @param queryValues Search criteria with condition/field name as a key and field value as a value. See ElasticClient.search() for a query format.
-     * @return A field value
-     * @throws BusinessException General exception
-     */
-    public Object getValue(String cetCodeOrTablename, String fieldToReturn, Date date, Map<String, Object> queryValues) throws BusinessException {
-
-        Map<String, Object> values = new HashMap<>(queryValues);
-        values.put("minmaxRange valid_from valid_to", date);
-
-        List<Map<String, Object>> results = search(cetCodeOrTablename, values, 0, 1, new String[] { FIELD_VALID_PRIORITY, FIELD_VALID_FROM, FIELD_ID },
-            new SortOrder[] { SortOrder.DESC, SortOrder.DESC, SortOrder.DESC }, new String[] { fieldToReturn });
-
-        if (results == null || results.isEmpty()) {
-            return null;
-        } else {
-            return results.get(0).get(fieldToReturn);
-        }
-    }
-
-    /**
-     * Get field values of the first record matching search criteria
-     * 
-     * @param cetCodeOrTablename Custom entity template code, or custom table name to query
-     * @param fieldsToReturn Field values to return. Optional. If not provided all fields will be returned.
-     * @param queryValues Search criteria with condition/field name as a key and field value as a value. See ElasticClient.search() for a query format.
-     * @return A map of values with field name as a key and field value as a value. Note field value is always of String data type.
-     * @throws BusinessException General exception
-     */
-    public Map<String, Object> getValues(String cetCodeOrTablename, String[] fieldsToReturn, Map<String, Object> queryValues) throws BusinessException {
-
-        Map<String, Object> values = new HashMap<>(queryValues);
-
-        List<Map<String, Object>> results = search(cetCodeOrTablename, values, 0, 1, new String[] { FIELD_ID }, new SortOrder[] { SortOrder.DESC }, fieldsToReturn);
-
-        if (results == null || results.isEmpty()) {
-            return null;
-        } else {
-            return results.get(0);
-        }
-    }
-
-    /**
-     * Get field values of the first record matching search criteria for a given date. Applicable to custom tables that contain 'valid_from' and 'valid_to' fields
-     * 
-     * @param cetCodeOrTablename Custom entity template code, or custom table name to query
-     * @param fieldsToReturn Field values to return. Optional. If not provided all fields will be returned.
-     * @param date Record validity date, as expressed by 'valid_from' and 'valid_to' fields, to match
-     * @param queryValues Search criteria with condition/field name as a key and field value as a value. See ElasticClient.search() for a query format.
-     * @return A map of values with field name as a key and field value as a value. Note field value is always of String data type.
-     * @throws BusinessException General exception
-     */
-    public Map<String, Object> getValues(String cetCodeOrTablename, String[] fieldsToReturn, Date date, Map<String, Object> queryValues) throws BusinessException {
-
-        Map<String, Object> values = new HashMap<>(queryValues);
-        values.put("minmaxRange valid_from valid_to", date);
-
-        List<Map<String, Object>> results = search(cetCodeOrTablename, values, 0, 1, new String[] { FIELD_VALID_PRIORITY, FIELD_VALID_FROM, FIELD_ID },
-            new SortOrder[] { SortOrder.DESC, SortOrder.DESC, SortOrder.DESC }, fieldsToReturn);
-
-        if (results == null || results.isEmpty()) {
-            return null;
-        } else {
-            return results.get(0);
-        }
-    }
-
-
-
     public List<Map<String, Object>> list(String sqlConnectionCode, CustomEntityTemplate cet) {
         return list(sqlConnectionCode, cet, null);
     }

@@ -67,13 +67,11 @@ import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.BaseEntity;
-import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.EnableEntity;
 import org.meveo.model.IAuditable;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
-import org.meveo.model.ISearchable;
 import org.meveo.model.IdentifiableEnum;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ObservableEntity;
@@ -86,10 +84,8 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
-import org.meveo.service.index.ElasticClient;
 
 /**
  * Generic implementation that provides the default implementation for
@@ -146,9 +142,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper emWrapper;
-
-	@Inject
-	private ElasticClient elasticClient;
 
 	@Inject
 	private Conversation conversation;
@@ -421,11 +414,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 				entityRemovedAfterTxEventProducer.fire((BaseEntity) entity);
 			}
 
-			// Remove entity from Elastic Search
-			if (BusinessEntity.class.isAssignableFrom(entity.getClass())) {
-				elasticClient.remove((BusinessEntity) entity);
-			}
-
 			// Remove custom field values from cache if applicable
 			if (entity instanceof ICustomFieldEntity) {
 				customFieldInstanceService.removeCFValues((ICustomFieldEntity) entity);
@@ -547,13 +535,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
 	protected void postUpdate(E entity) {
 
-		// Update entity in Elastic Search. ICustomFieldEntity is updated
-		// partially, as entity itself does not have Custom field values
-		if (entity instanceof BusinessCFEntity) {
-			elasticClient.partialUpdate((BusinessEntity) entity);
-		} else if (entity instanceof ISearchable) {
-			elasticClient.createOrFullUpdate((ISearchable) entity);
-		}
 	}
 
 	/**
@@ -579,14 +560,6 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 			entityCreatedAfterTxEventProducer.fire((BaseEntity) entity);
 		}
 		
-		// Add entity to Elastic Search
-		if (ISearchable.class.isAssignableFrom(entity.getClass())) {
-			// flush first to allow child entities to be lazy loaded
-			// getEntityManager().flush();
-			// getEntityManager().refresh(entity);
-			elasticClient.createOrFullUpdate((ISearchable) entity);
-		}
-
 		// Schedule end of period events
 		// Be carefull - if called after persistence might loose ability to determine
 		// new period as CustomFeldvalue.isNewPeriod is not serialized to json

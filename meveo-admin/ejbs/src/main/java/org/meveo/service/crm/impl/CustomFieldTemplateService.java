@@ -55,7 +55,6 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitHelper;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
@@ -71,9 +70,6 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -346,8 +342,6 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	        	dbStorageTypeService.findImplementation(storage).cftCreated(appliesToTemplate, cft);
 	        }
 		}
-
-		elasticClient.updateCFMapping(cft);
 		
 		MeveoModule relatedModule = null;
 		// Synchronize CET / CRT POJO
@@ -465,7 +459,6 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		}
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
-        elasticClient.updateCFMapping(cftUpdated);
         
         // Synchronize CET / CRT POJO
         if (appliesToTemplate instanceof CustomEntityTemplate) {

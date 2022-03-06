@@ -97,10 +97,6 @@
 			</exclusions>
 		</dependency>
 		<!-- End of libraries provided in Jboss -->
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-		</dependency>
 		<!-- For testing -->
 		<dependency>
 			<groupId>org.jboss.shrinkwrap.resolver</groupId>

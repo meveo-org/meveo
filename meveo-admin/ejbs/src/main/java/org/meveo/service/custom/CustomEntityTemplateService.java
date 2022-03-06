@@ -87,7 +87,6 @@ import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -153,9 +152,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomFieldTemplateService customFieldTemplateService;
     
     @Inject
-    private ElasticClient elasticClient;
-    
-    @Inject
     private EntityCustomActionService entityCustomActionService;
 
     @Inject
@@ -201,9 +197,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         super.create(cet);
         
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
-
-
-        elasticClient.createCETMapping(cet);
 
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));

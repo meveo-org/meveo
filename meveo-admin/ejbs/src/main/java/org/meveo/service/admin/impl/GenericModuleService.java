@@ -62,7 +62,6 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.service.storage.RepositoryService;
@@ -72,9 +71,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @EJB
     private CustomFieldInstanceService customFieldInstanceService;
@@ -430,11 +426,6 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 
             if (module instanceof BaseEntity && (module.getClass().isAnnotationPresent(ObservableEntity.class) || module.getClass().isAnnotationPresent(ModuleItem.class))) {
                 entityRemovedEventProducer.fire((BaseEntity) module);
-            }
-
-            // Remove entity from Elastic Search
-            if (BusinessEntity.class.isAssignableFrom(module.getClass())) {
-                elasticClient.remove((BusinessEntity) module);
             }
 
             // Remove custom field values from cache if applicable
