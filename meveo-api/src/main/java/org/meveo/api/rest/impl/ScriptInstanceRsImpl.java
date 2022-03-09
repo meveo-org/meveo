@@ -4,7 +4,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.interceptor.Interceptors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.meveo.api.ScriptInstanceApi;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
@@ -102,12 +101,8 @@ public class ScriptInstanceRsImpl extends BaseRs implements ScriptInstanceRs {
 	}
 
 	@Override
-	public void clear(String scriptCode) {
-		if (StringUtils.isBlank(scriptCode)) {
-			scriptService.clearCompiledScripts();
-		} else {
-			scriptService.clearCompiledScripts(scriptCode);
-		}
+	public void clear() {
+    	scriptService.clearCompiledScripts();
 	}
 
 }

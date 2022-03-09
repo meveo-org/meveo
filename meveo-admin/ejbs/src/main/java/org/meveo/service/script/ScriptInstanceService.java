@@ -386,24 +386,4 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		}	
 	}
 
-	@Override
-	public void removeFilesFromModule(ScriptInstance entity, MeveoModule module) throws BusinessException {
-		super.removeFilesFromModule(entity, module);
-		String extension = entity.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5 ? ".js" : ".java";
-		if (extension == ".java") {
-			String path = entity.getCode().replaceAll("\\.", "/");
-	    	
-			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/java/");
-			String pathNewFile = path + ".java";
-			
-			File fileToDelete = new File(gitDirectory, pathNewFile);
-			
-			if (fileToDelete.exists()) {
-				fileToDelete.delete();
-				gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(fileToDelete), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
-			}
-		}	
-	}
-	
-
 }

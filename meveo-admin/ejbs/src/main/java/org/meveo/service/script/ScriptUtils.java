@@ -16,19 +16,15 @@
 
 package org.meveo.service.script;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
-import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,20 +47,6 @@ import com.github.javaparser.javadoc.JavadocBlockTag;
 public class ScriptUtils {
 
 	private static Logger logger = LoggerFactory.getLogger(ScriptUtils.class);
-	
-	public static File deleteCompiledClass(String scriptCode) {
-		String rootDir = CustomEntityTemplateService.getClassesDir(null).getAbsolutePath();
-		File classFile = Paths.get(rootDir, scriptCode.replaceAll("\\.", "/") + ".class")
-				.toFile();
-		
-		if (classFile.exists()) {
-			classFile.delete();
-			logger.info("Removed class file for " + scriptCode);
-			return classFile;
-		}
-		
-		return null;
-	}
 
 	public static ClassAndValue findTypeAndConvert(String type, String value) {
 		ClassAndValue classAndValue = new ClassAndValue();

@@ -581,7 +581,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public  Class<ScriptInterface> compileScript(T script, boolean testCompile) {
+    public void compileScript(T script, boolean testCompile) {
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -590,7 +590,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
     	List<ScriptInstanceError> scriptErrors = addScriptDependencies(script);
-    	Class<ScriptInterface> compiledScript = null;
         
         if(scriptErrors==null || scriptErrors.isEmpty()){
         	
@@ -598,12 +597,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 log.debug("Compile script {}", script.getCode());
 
                 try {
-                    if(!testCompile) {
-                    	clearCompiledScripts();
+                    if (!testCompile) {
+                        clearCompiledScripts(script.getCode());
                     }
 
+                    Class<ScriptInterface> compiledScript;
                     compiledScript = compileJavaSource(script.getScript(), testCompile);
-                    
+
                 } catch (CharSequenceCompilerException e) {
                     log.error("Failed to compile script {}. Compilation errors:", script.getCode());
 
@@ -635,7 +635,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.ES5) {
                 ScriptInterface engine = new ES5ScriptEngine(script);
                 ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), script.getCode()), () -> engine);
-                
             } else if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.PYTHON) {
                 ScriptInterface engine = new PythonScriptEngine(script);
                 ALL_SCRIPT_INTERFACES.put(new CacheKeyStr(currentUser.getProviderCode(), script.getCode()), () -> engine);
@@ -645,7 +644,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         script.setError(scriptErrors != null && !scriptErrors.isEmpty());
         script.setScriptErrors(scriptErrors);
         
-        return compiledScript;
+        if(!testCompile && (scriptErrors == null || scriptErrors.isEmpty())) {
+        	clearCompiledScripts();
+        }
     }
 
     private List<ScriptInstanceError> addScriptDependencies(T script) {
@@ -863,7 +864,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
     	} catch (ClassNotFoundException e) {
     		T script = findByCode(scriptCode);
-    		compiledScript = compileScript(script, false);
+    		compileScript(script, false);
     	}
     	
     	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
@@ -1044,10 +1045,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         super.clear(scriptCode);
         ALL_SCRIPT_INTERFACES.remove(new CacheKeyStr(currentUser.getProviderCode(), scriptCode));
         MeveoBeanManager.getInstance().removeBean(scriptCode);
-        File deletedFile = ScriptUtils.deleteCompiledClass(scriptCode);
-        if (deletedFile != null) {
-        	CharSequenceCompiler.unloadClass(deletedFile);
-        }
     }
 
     /**
@@ -1057,9 +1054,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         ALL_SCRIPT_INTERFACES.clear();
         for(var scriptToRemove : list()) {
         	MeveoBeanManager.getInstance().removeBean(scriptToRemove.getCode());
-        	ScriptUtils.deleteCompiledClass(scriptToRemove.getCode());
         }
-        CharSequenceCompiler.initUrlClassLoader();
     }
 
     @Override
@@ -1197,7 +1192,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	    } else if (moduleInstallCtx.isActive()) {
 	    	scriptDir = GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModuleCodeInstallation() + directory);
     	} else {
-	    	scriptDir = GitHelper.getRepositoryDir(currentUser, module.getCode() + directory);
+	    	scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
 	    }
 	    
 	    if (!scriptDir.exists()) {

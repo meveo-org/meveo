@@ -99,52 +99,27 @@ public class CharSequenceCompiler<T> {
 	   }
 	   fileManager = compiler.getStandardFileManager(null, null, null);
 	   
-	   initUrlClassLoader();
-   }
-   
-   public static void unloadClass(File classFile) {
-	   URL[] urls = Arrays.stream(urlClassLoader.getURLs())
-			   .filter(e -> {
+      try {
+    	  String classPath = ScriptInstanceService.CLASSPATH_REFERENCE.get();
+    	  List<URL> urlList = Arrays.stream(classPath.split(File.pathSeparator))
+    			  .map(path -> {
 					try {
-						return !e.equals(classFile.toURI().toURL());
-					} catch (MalformedURLException e1) {
-						throw new RuntimeException(e1);
+						return new File(path).toURI().toURL();
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return null;
 					}
-			}).toArray(URL[]::new);
-	   
-	   try {
-		   urlClassLoader.close();
-	   } catch (IOException e) {
-		   throw new RuntimeException(e);
-	   }
-	   
-	   ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
-	   urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
-   }
-   
-   public static void initUrlClassLoader() {
-	   try {
-		   if (urlClassLoader != null) {
-			   urlClassLoader.close();
-		   }
-		   String classPath = ScriptInstanceService.CLASSPATH_REFERENCE.get();
-		   List<URL> urlList = Arrays.stream(classPath.split(File.pathSeparator))
-				   .map(path -> {
-					   try {
-						   return new File(path).toURI().toURL();
-					   } catch (MalformedURLException e) {
-						   throw new RuntimeException(e);
-					   }
-				   }).collect(Collectors.toList());
-		   urlList.add(CustomEntityTemplateService.getClassesDir(null).toURI().toURL());
-
-		   URL[] urls = urlList.toArray(URL[]::new);
-
-		   ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
-		   urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
-	   } catch (IOException e) {
-		   throw new RuntimeException(e);
-	   }
+				}).collect(Collectors.toList());
+    	  urlList.add(CustomEntityTemplateService.getClassesDir(null).toURI().toURL());
+    	  
+	      URL[] urls = urlList.toArray(URL[]::new);
+	      
+	      ClassLoaderImpl classLoaderImpl = new ClassLoaderImpl(CharSequenceCompiler.class.getClassLoader());
+		  urlClassLoader = new URLClassLoader(urls, classLoaderImpl);
+      } catch (MalformedURLException e) {
+    	  throw new RuntimeException(e);
+      }
    }
    
    public static ClassLoader getUrlClassLoader() {
@@ -296,11 +271,13 @@ public class CharSequenceCompiler<T> {
 				   return (Class<T>) tmpClassLoader.loadClass(qualifiedClassName);
 			   }
 		   } else {
-			    urlClassLoader.close(); // Close previous UrlClassLoader
-			    urlClassLoader = new URLClassLoader(urls, this.getClassLoader()); // Re-instantiate a new one
+			   urlClassLoader.close(); // Close previous UrlClassLoader
+			   urlClassLoader = new URLClassLoader(urls, this.getClassLoader()); // Re-instantiate a new one
 			   return (Class<T>) urlClassLoader.loadClass(qualifiedClassName);
 		   }
 		   
+//		   Class<T> loadClass = loadClass(qualifiedClassName);
+//		   return loadClass;
 	   } catch (Exception e) {
 		   throw new CharSequenceCompilerException(classNames, e, diagnosticsList);
 	   }
