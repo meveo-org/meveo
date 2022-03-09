@@ -116,6 +116,7 @@ import org.meveo.service.script.weld.MeveoBeanManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -837,6 +838,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 					.filter(m -> m.getName().startsWith(Accessor.SET))
 					.filter(m -> m.getParameterCount() == 1)
 					.filter(m -> m.getReturnType() == void.class)
+					.filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
 					.map(Accessor::new)
 					.forEach(setters::add);
 			
@@ -844,6 +846,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 					.filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
 					.filter(m -> m.getParameterCount() == 0)
 					.filter(m -> m.getReturnType() != void.class)
+					.filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
 					.map(Accessor::new)
 					.forEach(getters::add);
         }
