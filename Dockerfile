@@ -165,7 +165,31 @@ RUN set -ex \
     && unzip glowroot.zip \
     && rm glowroot.zip \
     && ls ${JBOSS_HOME}/glowroot/glowroot.jar
+    
+    
+### ------------------------- NodeJs & NPM ------------------------------- ###
 
+ENV NODE_VERSION=16.14.0
+# RUN apt install -y curl
+
+ENV NVM_DIR=./.nvm
+
+RUN mkdir -p .nvm \
+	&& chown -R jboss:jboss .nvm
+	
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+
+ENV PATH="./.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+
+RUN npm config set user 0
+RUN npm config set unsafe-perm true
+	
+RUN node --version
+RUN npm --version
 
 ### ------------------------- Configurations ----------------------------- ###
 
