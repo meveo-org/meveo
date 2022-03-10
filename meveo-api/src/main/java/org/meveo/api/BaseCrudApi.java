@@ -114,12 +114,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @param dto DTO to convert
 	 * @return The JPA entity built from the DTO
 	 * @throws MeveoApiException
+	 * @throws BusinessException 
 	 */
-	public E fromDto(T dto) throws MeveoApiException {
+	public E fromDto(T dto) throws MeveoApiException, BusinessException {
 		return fromDto(dto, null);
 	}
 
-	public E fromDto(T dto, E entity) throws MeveoApiException {
+	public E fromDto(T dto, E entity) throws MeveoApiException, BusinessException {
 
 		if (entity == null) {
 			try {
