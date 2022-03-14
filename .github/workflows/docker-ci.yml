@@ -51,7 +51,7 @@ jobs:
       - name: Extract branch name
         id: extract_branch
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF_NAME})"
 
       # Determine a tag for new image
       - name: Set Image Tag
@@ -64,8 +64,8 @@ jobs:
             echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
             echo "IMAGE_TAG=dev-latest"
           else
-            echo "IMAGE_TAG=${github.ref_name}" >> $GITHUB_ENV
-            echo "IMAGE_TAG=${github.ref_name}"
+            echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${GIT_BRANCH}"
           fi
 
       # Build and push an image
