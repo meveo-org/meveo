@@ -64,8 +64,8 @@ jobs:
             echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
             echo "IMAGE_TAG=dev-latest"
           else
-            echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
-            echo "IMAGE_TAG=${GIT_BRANCH}"
+            echo "IMAGE_TAG=${github.ref_name}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${github.ref_name}"
           fi
 
       # Build and push an image
