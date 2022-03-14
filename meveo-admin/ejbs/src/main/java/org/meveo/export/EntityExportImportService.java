@@ -90,6 +90,7 @@ import org.meveo.api.dto.response.utilities.ImportExportResponseDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
@@ -176,6 +177,9 @@ public class EntityExportImportService implements Serializable {
 
     @Inject
     private NotificationCacheContainerProvider notificationCacheContainerProvider;
+
+    @Inject
+    private UserMessageCacheContainerProvider liquichainCacheContainerProvider;
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
@@ -2189,6 +2193,7 @@ public class EntityExportImportService implements Serializable {
         notificationCacheContainerProvider.refreshCache(null);
         customFieldsCacheContainerProvider.refreshCache(null);
         jobCacheContainerProvider.refreshCache(null);
+        liquichainCacheContainerProvider.refreshCache(null);
     }
 
     /**

@@ -2,10 +2,7 @@ package org.meveo.service.technicalservice.wsendpoint;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.Stateless;
@@ -22,6 +19,7 @@ import javax.websocket.Session;
 import javax.websocket.CloseReason.CloseCodes;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
 import org.meveo.service.script.ConcreteFunctionService;
@@ -40,6 +38,11 @@ public class WebsocketServerEndpoint {
 
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
+
+	@Inject
+	private UserMessageCacheContainerProvider userMessageCacheProvider;
+
+	private static final String LIQUICHAIN_MODULE_CODE = "liquichain";
 
 	private static Map<String, List<Session>> activeSessionsByEndpointCode = new ConcurrentHashMap<>();
 
@@ -112,6 +115,19 @@ public class WebsocketServerEndpoint {
 			session.getUserProperties().put("endpointName", endpointName);
 			if (username != null) {
 				session.getUserProperties().put("username", username);
+
+				if(LIQUICHAIN_MODULE_CODE.equals(endpointName)){
+					// Send all user Messages
+					Optional<List<String>> oldMessages = userMessageCacheProvider.getAllUserMessagesFromCache(username);
+					List<String> messagesToRemove = new ArrayList<>();
+					if(oldMessages.isPresent()){
+						for(String messageToSend: oldMessages.get()){
+							sendMessage(endpointName, username, messageToSend);
+							messagesToRemove.add(messageToSend);
+						}
+						userMessageCacheProvider.removeUserMessagesFromCache(username, messagesToRemove);
+					}
+				}
 			}
 			sessions.add(session);
 			log.info("endpointName={} with session={} has been successfully registered", endpointName, session.getId());
@@ -194,17 +210,35 @@ public class WebsocketServerEndpoint {
 			throw new RuntimeException("username is mandatory to send message");
 		}
 		List<Session> sessions = activeSessionsByEndpointCode.get(enpointCode);
-		for (Session session : sessions) {
-			if (session.isOpen()) {
-				if (session.getUserProperties().get("username")!=null){
-				 if(session.getUserProperties().get("username").equals(username)) {
-					session.getAsyncRemote().sendText(txtMessage);
-				 }
-				} else {
-					log.warn("session {} has no username",session);
+		if(sessions!=null){
+			for (Session session : sessions) {
+				if (session.isOpen()) {
+					if (session.getUserProperties().get("username")!=null){
+						if(session.getUserProperties().get("username").equals(username)) {
+							session.getAsyncRemote().sendText(txtMessage);
+						}
+					} else {
+						log.warn("session {} has no username",session);
+					}
 				}
-			} 
+			}
 		}
+		if(LIQUICHAIN_MODULE_CODE.equals(enpointCode)){
+			Optional<Session> userChatSession = this.getActiveEndpointSession(enpointCode, username);
+			if(!userChatSession.isPresent() ){
+				userMessageCacheProvider.addUserMessageToCache(username, txtMessage);
+			}
+		}
+	}
+
+	private Optional<Session> getActiveEndpointSession(String enpointCode, String username) {
+		if(username==null){
+			throw new RuntimeException("username is mandatory to know if he is active/online or not");
+		}
+		List<Session> sessions = activeSessionsByEndpointCode.get(enpointCode);
+		return sessions != null ?
+				sessions.stream().filter(s-> s.isOpen() && username.equals(s.getUserProperties().get("username"))).findFirst() :
+				null;
 	}
 
 	public void broadcastMessage(String id, String name, String data, Map<Object, Object> context) {

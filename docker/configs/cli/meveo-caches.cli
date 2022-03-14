@@ -27,3 +27,6 @@
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-es-index-cache:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-crt-cache:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-rows-page-cache:add
+
+/subsystem=infinispan/cache-container=meveo/local-cache=meveo-user-message:add
+/subsystem=infinispan/cache-container=meveo/local-cache=meveo-user-message/store=file:add(path=caching,preload=true,purge=false,passivation=false)
