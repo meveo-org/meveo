@@ -14,10 +14,7 @@ import javax.transaction.Transactional;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
-import org.meveo.cache.CacheContainerProvider;
-import org.meveo.cache.CustomFieldsCacheContainerProvider;
-import org.meveo.cache.JobCacheContainerProvider;
-import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.cache.*;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.Provider;
@@ -64,6 +61,9 @@ public class ApplicationInitializer {
 
     @Inject
     private NotificationCacheContainerProvider notifCache;
+
+    @Inject
+    private UserMessageCacheContainerProvider userMessageCache;
 
     @Inject
     private CustomFieldsCacheContainerProvider cftCache;
