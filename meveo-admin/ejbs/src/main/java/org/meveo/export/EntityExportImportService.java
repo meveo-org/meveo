@@ -179,7 +179,7 @@ public class EntityExportImportService implements Serializable {
     private NotificationCacheContainerProvider notificationCacheContainerProvider;
 
     @Inject
-    private UserMessageCacheContainerProvider liquichainCacheContainerProvider;
+    private UserMessageCacheContainerProvider userMessageCacheContainerProvider;
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCacheContainerProvider;
@@ -2193,7 +2193,7 @@ public class EntityExportImportService implements Serializable {
         notificationCacheContainerProvider.refreshCache(null);
         customFieldsCacheContainerProvider.refreshCache(null);
         jobCacheContainerProvider.refreshCache(null);
-        liquichainCacheContainerProvider.refreshCache(null);
+        userMessageCacheContainerProvider.refreshCache(null);
     }
 
     /**
