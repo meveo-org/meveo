@@ -34,7 +34,7 @@ public class NpmHelper {
 	 * </ul>
 	 * @throws IOException if the command can't be executed
 	 */
-	static int npmInstall(File directory, String... args) throws IOException {
+	public static int npmInstall(File directory, String... args) throws IOException {
 		List<String> command = new ArrayList<>();
 		command.addAll(List.of(npm, "install"));
 		
@@ -62,7 +62,7 @@ public class NpmHelper {
 		}
 	}
 	
-	static int npmInit(File directory) throws IOException {
+	public static int npmInit(File directory) throws IOException {
 		ProcessBuilder processBuilder = new ProcessBuilder()
 			.command(npm, "init", "-y")
 			.directory(directory)

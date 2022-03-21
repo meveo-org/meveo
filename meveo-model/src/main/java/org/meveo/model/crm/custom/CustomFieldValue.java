@@ -30,6 +30,7 @@ import org.meveo.model.CustomEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.customEntities.MeveoMatrix;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
@@ -1367,6 +1368,9 @@ public class CustomFieldValue implements Serializable {
 
         } else if (value instanceof List) {
             setListValue((List) value);
+        } else if (value instanceof MeveoMatrix) {
+        	MeveoMatrix matrix = (MeveoMatrix) value;
+        	setMapValue(matrix.getInnerMap());
         }
     }
 

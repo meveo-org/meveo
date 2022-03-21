@@ -4,6 +4,7 @@
 FROM maven:3.6-jdk-11-slim AS build-meveo
  
 ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git"
+ARG BUILD_NUMBER
 
 WORKDIR /usr/src/meveo
 
@@ -12,7 +13,7 @@ COPY . .
 # Download all dependencies using docker cache
 #RUN mvn dependency:go-offline
 
-RUN mvn clean package -Dscm.url=${SCM} -DskipTests
+RUN mvn clean package -Dscm.url=${SCM} -DskipTests -DbuildNumber=BUILD_NUMBER
 
 ##################################################################
 #####                Build meveo docker image                #####
