@@ -116,16 +116,16 @@ public class UserMessageCacheContainerProvider implements Serializable { // Cach
     /**
      * get all user messages from cache.
      *
-     * @param userName key for the message
+     * @param cacheKey key for the message
      */
     // @Lock(LockType.WRITE)
-    public Optional<List<String>> getAllUserMessagesFromCache(String userName) {
+    public Optional<List<String>> getAllUserMessagesFromCache(String cacheKey) {
         if (!useUserMessageCache) {
             return null;
         }
-        log.trace("getting all user messages under key {}", userName);
+        log.trace("getting all user messages under key {}", cacheKey);
         return Optional.ofNullable(
-                    userMessageCache.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(userName)
+                    userMessageCache.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKey)
         );
     }
 
@@ -142,10 +142,10 @@ public class UserMessageCacheContainerProvider implements Serializable { // Cach
         }
 
         log.trace("Removing {} usermessages from userMessageCache under key {}", messages.size(), userName);
-        List<String> userMessagesOld = userMessageCache.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(userName);
+        List<String> cachedUserMessages = userMessageCache.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(userName);
 
-        if (userMessagesOld != null && !userMessagesOld.isEmpty()) {
-            List<String> userMessages = new ArrayList<>(userMessagesOld);
+        if (cachedUserMessages != null && !cachedUserMessages.isEmpty()) {
+            List<String> userMessages = new ArrayList<>(cachedUserMessages);
             boolean removed = userMessages.removeAll(messages);
             if (removed) {
                 // Remove cached value altogether if no value are left in the list
@@ -162,16 +162,18 @@ public class UserMessageCacheContainerProvider implements Serializable { // Cach
     /**
      * Update message in cache
      * 
-     * @param message to update
+     * @param userMessages to update
      */
-    public void updateMessageInCache(String userName, String message) {
+    public void updateMessagesInCache(String userName, List<String> userMessages) {
 
         if (!useUserMessageCache) {
             return;
         }
-
-        removeUserMessagesFromCache(userName, Arrays.asList(message));
-        addUserMessageToCache(userName, message);
+        if (userMessages == null || userMessages.isEmpty()) {
+            userMessageCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(userName);
+        }else{
+            userMessageCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(userName, userMessages);
+        }
     }
 
     /**
