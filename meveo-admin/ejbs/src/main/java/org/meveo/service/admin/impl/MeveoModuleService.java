@@ -372,7 +372,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	BusinessService businessService = businessServiceFinder.find(meveoModuleItem.getItemEntity());
     	
     	// Throw an error if the item belongs to another module other than the Meveo module
-    	boolean belongsToModule = existingItems.stream().anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo") && !item.getMeveoModule().getCode().equals(module.getCode()));
+    	boolean belongsToModule = existingItems != null && existingItems
+    			.stream()
+    			.filter(item -> item.getMeveoModule() != null)
+    			.anyMatch(item -> !item.getMeveoModule().getCode().equals("Meveo") && !item.getMeveoModule().getCode().equals(module.getCode()));
     	if (belongsToModule) {
     		throw new EntityAlreadyLinkedToModule(meveoModuleItem, existingItems.get(0).getMeveoModule());
     	}
