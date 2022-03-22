@@ -383,7 +383,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	MeveoModule meveoModule = this.findByCode("Meveo");
     	
     	// FIXME: Seems that the module item is added elsewhere in the process so we need the second check (only happens for CFT)
-    	if (existingItems == null || existingItems.isEmpty() || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
+    	if (existingItems == null || existingItems.isEmpty() || existingItems.get(0).getMeveoModule() == null || existingItems.get(0).getMeveoModule().getCode().equals(module.getCode())) {
     		try {
     		    businessService.moveFilesToModule(meveoModuleItem.getItemEntity(), meveoModule, module);
     			module.getModuleItems().add(meveoModuleItem);
