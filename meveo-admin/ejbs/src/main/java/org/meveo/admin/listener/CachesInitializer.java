@@ -23,6 +23,7 @@ import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
 import org.infinispan.configuration.cache.SingleFileStoreConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.slf4j.Logger;
 
@@ -72,6 +73,10 @@ public class CachesInitializer {
 
         if (!cacheContainer.cacheExists(CustomFieldsCacheContainerProvider.MEVEO_CRT_CACHE)) {
             cacheContainer.defineConfiguration(CustomFieldsCacheContainerProvider.MEVEO_CRT_CACHE, configuration);
+        }
+        
+        if (!cacheContainer.cacheExists(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE)) {
+            cacheContainer.defineConfiguration(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE, configuration);
         }
 
         log.info("Finished initializing ontology caches");

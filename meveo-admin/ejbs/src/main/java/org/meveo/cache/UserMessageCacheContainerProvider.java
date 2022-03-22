@@ -1,5 +1,20 @@
 package org.meveo.cache;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
+import javax.ejb.DependsOn;
+import javax.ejb.Singleton;
+import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -7,16 +22,6 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.Asynchronous;
-import javax.ejb.Singleton;
-import javax.inject.Inject;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import java.io.Serializable;
-import java.util.*;
 
 /**
  * Provides cache related services (loading, update) for simple user message related operations
@@ -26,6 +31,7 @@ import java.util.*;
  * 
  */
 @Singleton
+@DependsOn("CachesInitializer")
 public class UserMessageCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
 
     private static final long serialVersionUID = -2866707126175429823L;
