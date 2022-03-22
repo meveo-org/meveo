@@ -51,3 +51,39 @@ cd myModule/facets/maven
 code .
 ```
 
+# Publish to Github
+With no pre-existing repo:
+1. Create an empty repository on github
+2. Add remote origin
+```
+git remote add origin <remote repository URL>
+```
+3. Add and commit your changes
+```
+git add .
+```
+```
+git commit -m "<commit message">
+```
+4. Push your changes
+```
+git push origin <branch name>
+```
+To a pre-existing repository:
+Are you the repo owner?
+If no:
+1.) Navigate to repo in question.
+2.) Fork the repo to your own account.
+3.) Clone the forked repo to your local environment.
+4.) Make your changes and push them to GitHub (to the forked repo).
+5.) In the browser, go to your version and verify your updates.
+6.) Create a pull request from your fork to the original.
+7.) The repo owner will be notified and will review your request.
+
+else if you are the repo owner:
+
+1. Git clone from the git repository you need to push to. Just make sure you create a new directory for the cloned code.
+2. Copy the contents of the cloned repository into the local directory that has your current code. Make sure to copy the .git (hidden) file.
+3. cd into your local directory and run git remote -v. You should see the remote repository git address.
+4. git add -A to add whatever change you require and commit it.
+5. Finally git push
