@@ -48,9 +48,8 @@ public class UserMessageCacheContainerProvider implements Serializable { // Cach
      * TODO: username we are using for refering message ownership in session is assumed to be unique, need to double check
      * cacheKeyStr will just be a username.
      */
-    @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-user-message")
     private Cache<String, List<String>> userMessageCache;
-
+    
     @Inject
     @CurrentUser
     protected MeveoUser currentUser;
