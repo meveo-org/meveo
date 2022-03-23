@@ -12,6 +12,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.util.CustomFieldUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -66,6 +67,11 @@ public class MeveoMatrix<ValueType> {
 	public static <T> MeveoMatrix<T> fromString(String serializedMatrix) {
 		var matrixMap = JacksonUtil.fromString(serializedMatrix, new TypeReference<Map<String, Object>>() {});
 		return new MeveoMatrix<T>(matrixMap);
+	}
+	
+	@JsonIgnore
+	public Map<String, Object> getInnerMap() {
+		return this.matrix;
 	}
 
 }
