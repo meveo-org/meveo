@@ -22,6 +22,7 @@ public class FlatFileAsyncUnitResponse {
     
     /** The success. */
     private boolean success  = false;
+    private boolean warning  = false;
     
     /**
      * Instantiates a new flat file async unit response.
@@ -107,5 +108,13 @@ public class FlatFileAsyncUnitResponse {
     public String toString() {
         return "FlatFileAsyncUnitResponse [lineRecord=" + lineRecord + ", reason=" + reason + ", lineNumber=" + lineNumber + ", success=" + success + "]";
     }
+
+	public boolean isWarning() {
+		return warning;
+	}
+
+	public void setWarning(boolean warning) {
+		this.warning = warning;
+	}
    
 }

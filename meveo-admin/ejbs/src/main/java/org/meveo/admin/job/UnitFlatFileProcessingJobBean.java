@@ -12,6 +12,7 @@ import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.crm.Provider;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.crm.impl.ImportWarningException;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.util.ApplicationProvider;
@@ -42,7 +43,7 @@ public class UnitFlatFileProcessingJobBean {
      */
     @JpaAmpNewTx
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void execute(ScriptInterface script, Map<String, Object> executeParams) throws BusinessException {
+    public void execute(ScriptInterface script, Map<String, Object> executeParams) throws BusinessException, ImportWarningException {
         executeParams.put(Script.CONTEXT_CURRENT_USER, currentUser);
         executeParams.put(Script.CONTEXT_APP_PROVIDER, appProvider);
         script.execute(executeParams);

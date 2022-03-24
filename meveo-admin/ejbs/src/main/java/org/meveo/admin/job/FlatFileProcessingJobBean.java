@@ -216,6 +216,9 @@ public class FlatFileProcessingJobBean {
                     if (!flatFileAsyncResponse.isSuccess()) {
                         result.registerError("file=" + fileName + ", line=" + flatFileAsyncResponse.getLineNumber() + ": " + flatFileAsyncResponse.getReason());
                         rejectRecord(flatFileAsyncResponse.getLineRecord(), flatFileAsyncResponse.getReason());
+                    } else if (flatFileAsyncResponse.isWarning()) {
+                        result.registerWarning("file=" + fileName + ", line=" + flatFileAsyncResponse.getLineNumber() + ": " + flatFileAsyncResponse.getReason());
+                        outputRecord(flatFileAsyncResponse.getLineRecord());
                     } else {
                         outputRecord(flatFileAsyncResponse.getLineRecord());
                         result.registerSucces();
