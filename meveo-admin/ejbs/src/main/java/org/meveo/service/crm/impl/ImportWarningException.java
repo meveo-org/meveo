@@ -1,6 +1,8 @@
 package org.meveo.service.crm.impl;
 
-public class ImportWarningException extends Exception {
+import org.meveo.admin.exception.BusinessException;
+
+public class ImportWarningException extends BusinessException {
 
 	/**
 	 * 
