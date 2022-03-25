@@ -2,6 +2,11 @@
 #####                Build meveo source code                #####
 #################################################################
 FROM maven:3.6-jdk-11-slim AS build-meveo
+
+# Install git packages 
+
+RUN apt-get -y update
+RUN apt-get -y install git
  
 ARG SCM="scm:git:ssh://git@github.com:meveo-org/meveo.git"
 ARG BUILD_NUMBER
@@ -13,7 +18,7 @@ COPY . .
 # Download all dependencies using docker cache
 #RUN mvn dependency:go-offline
 
-RUN mvn clean package -Dscm.url=${SCM} -DskipTests -DbuildNumber=BUILD_NUMBER
+RUN mvn clean package -Dscm.url=${SCM} -DskipTests 
 
 ##################################################################
 #####                Build meveo docker image                #####
