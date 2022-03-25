@@ -163,7 +163,10 @@ public class SQLConnectionProvider {
 					config.setProperty("hibernate.connection.password", sqlConfiguration.getClearPassword());
 				}				
 			}
-			config.setProperty("hibernate.generate_statistics", "true");
+			if (log.isTraceEnabled())
+				config.setProperty("hibernate.generate_statistics", "true");
+			else
+				config.setProperty("hibernate.generate_statistics", "false");
 			config.setProperty("hibernate.jmx.enabled", "true");
 	
 			
