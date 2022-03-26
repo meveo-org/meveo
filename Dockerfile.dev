@@ -1,6 +1,13 @@
 #FROM jboss/wildfly:18.0.1.Final
 FROM openjdk:11.0.7-jdk-slim-buster
 
+
+# Install git packages 
+
+RUN apt-get -y update
+RUN apt-get -y install git
+
+
 ### ------------------------- base ------------------------- ###
 # Install packages necessary
 RUN apt-get update \
@@ -19,11 +26,6 @@ RUN apt-get update \
 # https://github.com/docker-library/openjdk/pull/235#issuecomment-424466077
         fontconfig libfreetype6 \
     && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-    
-# Install git packages 
-
-RUN apt-get -y install git    
-    
 
 # Set the timezone (Default timezone is UTC.)
 # ENV TZ Europe/Paris
