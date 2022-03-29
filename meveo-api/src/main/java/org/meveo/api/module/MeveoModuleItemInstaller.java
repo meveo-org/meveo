@@ -165,7 +165,7 @@ public class MeveoModuleItemInstaller {
             moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
         }
         
-        List<MeveoModuleItem> moduleItems = meveoModuleService.getSortedModuleItems(module.getModuleItems());
+        List<MeveoModuleItem> moduleItems = meveoModuleService.getSortedModuleItemsForUninstall(module.getModuleItems());
 
         // Load items
         for (MeveoModuleItem item : List.copyOf(moduleItems)) {

@@ -1,16 +1,20 @@
 package org.meveo.api.dto.job;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomFieldsDto;
 import org.meveo.model.jobs.JobCategoryEnum;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class JobInstanceDto.
@@ -209,10 +213,41 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
     public void setLimitToSingleNode(Boolean limitToSingleNode) {
         this.limitToSingleNode = limitToSingleNode;
     }
+    
+    public static void main(String... args) {
+    	JobInstanceDto dto = new JobInstanceDto();
+    	dto.code = "a";
+    	dto.setFollowingJob("b");
+    	
+    	JobInstanceDto dto2 = new JobInstanceDto();
+    	dto2.code = "b";
+    	dto2.setFollowingJob("c");
+    	
+      	JobInstanceDto dto3 = new JobInstanceDto();
+      	dto3.code = "c";
+      	dto3.setFollowingJob("d");
+      	
+      	JobInstanceDto dto4 = new JobInstanceDto();
+      	dto4.code = "d";
+    	
+    	var list = new ArrayList<JobInstanceDto>();
+    	list.add(dto2);
+    	list.add(dto);
+    	list.add(dto3);
+    	list.add(dto4);
+    	
+    	list.sort((o, o1) -> o.compareTo(o1));
+    	
+    	System.out.println(list
+    			.stream()
+    			.map(JobInstanceDto::getCode)
+    			.collect(Collectors.joining(","))
+    			);
+    }
 
     @Override
     public String toString() {
-        return "JobInstanceDto [jobCategory=" + jobCategory + ", jobTemplate=" + jobTemplate + ", followingJob=" + followingJob + ", parameter=" + parameter + ", active=" + isActive()
+        return "JobInstanceDto [code=" + code +", jobCategory=" + jobCategory + ", jobTemplate=" + jobTemplate + ", followingJob=" + followingJob + ", parameter=" + parameter + ", active=" + isActive()
                 + ", customFields=" + customFields + ", timerCode=" + timerCode + ", runOnNodes=" + runOnNodes + ", limitToSingleNode=" + limitToSingleNode + "]";
     }
 
@@ -220,19 +255,21 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
 	public int compareTo(JobInstanceDto o) {
 		if (o == null)
 			return -1;
+		
 		if (this.getFollowingJob() == null && o.getFollowingJob() == null)
 			return 0;
+		
 		else if (this.getFollowingJob() == null && o.getFollowingJob() != null)
 			return -1;
+		
 		else if (this.getFollowingJob() != null && o.getFollowingJob() == null)
 			return 1;
-		else /*if (this.getFollowingJob() != null && o.getFollowingJob() != null)*/ {
+		
+		else {
 			if (this.getFollowingJob().contentEquals(o.code) )
 				return 1;
-			else if (o.getFollowingJob().contentEquals(this.code) )
-				return -1;
 			else 
-				return 0;
+				return -1;
 		}
 	}
 }
