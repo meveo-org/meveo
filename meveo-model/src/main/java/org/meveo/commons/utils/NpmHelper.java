@@ -21,8 +21,23 @@ public class NpmHelper {
 	    return System.getProperty("os.name").toLowerCase().contains("win");
 	}
 	
-	private static String npm = isWindows() ? "npm.cmd" : "npm";
+	private static List<String> npmCmd(String... args) {
+		List<String> command = new ArrayList<>();
+		
+		if (isWindows()) {
+			command.add("npm.cmd");
+		} else {
+			command.add("bash");
+			command.add("-c");
+			command.add("npm");
+		}
 	
+		for (String arg : args) {
+			command.add(arg);
+		}
+		
+		return command;
+	}
 	/**
 	 * Run an npm install command on the given directory
 	 * 
@@ -32,11 +47,11 @@ public class NpmHelper {
 	 * 	<li> 0 = artifact </li>
 	 * 	<li> 1 = artifact version </li>
 	 * </ul>
+	 * @return the process exit code
 	 * @throws IOException if the command can't be executed
 	 */
 	public static int npmInstall(File directory, String... args) throws IOException {
-		List<String> command = new ArrayList<>();
-		command.addAll(List.of(npm, "install"));
+		List<String> command = npmCmd("install");
 		
 		ProcessBuilder processBuilder = new ProcessBuilder()
 				.command(command)
@@ -64,7 +79,7 @@ public class NpmHelper {
 	
 	public static int npmInit(File directory) throws IOException {
 		ProcessBuilder processBuilder = new ProcessBuilder()
-			.command(npm, "init", "-y")
+			.command(npmCmd("init", "-y"))
 			.directory(directory)
 			.redirectErrorStream(true);
 		
