@@ -1,6 +1,7 @@
 package org.meveo.api.module;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;

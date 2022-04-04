@@ -48,6 +48,8 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     @Inject
     protected CustomFieldInstanceService customFieldInstanceService;
     
+    private List<JobInstance> followingJosbs;
+    
     private TimerEntity prevTimerEntity;
 
 	private Set<KeyValuePair> overrideParams;
@@ -79,6 +81,11 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
                 }
             }
         }
+        
+        followingJosbs = jobInstanceService.list();
+        followingJosbs.remove(entity);
+        followingJosbs.sort((jobA, jobB) -> jobA.getCode().compareTo(jobB.getCode()));
+        
         return entity;
     }
 
@@ -97,9 +104,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
      * @return A list of jobs minus a current one
      */
     public List<JobInstance> getFollowingJobList() {
-        List<JobInstance> jobs = jobInstanceService.list();
-        jobs.remove(entity);
-        return jobs;
+        return followingJosbs;
     }
 
     public List<String> getJobNames() {
