@@ -22,11 +22,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,6 +40,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
@@ -45,6 +48,9 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.IEntity;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.util.NullAwareBeanUtilsBean;
 import org.primefaces.model.SortOrder;
@@ -440,4 +446,27 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		return fileImport;
 	}
 	
+	public List<MeveoModuleItemDto> readModuleItems(File directory, String dtoClassName) {
+		List<MeveoModuleItemDto> items = new ArrayList<>();
+		for (File entityFile : directory.listFiles()) {
+			String entityFileName = entityFile.getName();
+			if (entityFileName.endsWith("-schema.json")) {
+				continue;
+			}
+
+			items.add(readModuleItem(entityFile, dtoClassName));
+		}
+		return items;
+	}
+	
+	protected MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
+		try {
+			String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
+			Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
+			return new MeveoModuleItemDto(dtoClassName, data);
+		} catch (IOException e) {
+			log.error("Can't read entityFile", e);
+			return null;
+		}
+	}
 }

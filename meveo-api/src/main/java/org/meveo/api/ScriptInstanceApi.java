@@ -1,5 +1,7 @@
 package org.meveo.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,11 +14,13 @@ import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.ScriptInstanceErrorDto;
+import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.script.CustomScriptDto;
 import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
@@ -356,5 +360,23 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 		if(entity != null) {
 			scriptInstanceService.remove(entity);
 		}
+	}
+
+	@Override
+	protected MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
+		// Reach root directory
+		File rootModuleDir = entityFile.getParentFile().getParentFile();
+		String path = entityFile.getName()
+					.replace(".json", "")
+					.replaceAll("\\.", "/");
+		File javaFile = new File(rootModuleDir, "facets" + File.separator + "java" + File.separator +  path + ".java");
+		MeveoModuleItemDto item = super.readModuleItem(entityFile, dtoClassName);
+		Map<String, Object> dto = (Map<String, Object>) item.getDtoData();
+		try {
+			dto.put("script", FileUtils.readFileToString(javaFile, "UTF-8"));
+		} catch (IOException e) {
+			log.error("Can't read java file", e);
+		}
+		return item;
 	}
 }

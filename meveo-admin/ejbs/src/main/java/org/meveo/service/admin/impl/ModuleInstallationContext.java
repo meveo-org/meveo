@@ -21,6 +21,7 @@ public class ModuleInstallationContext {
 
 	private String ModuleCodeInstallation = "";
 	private List<Repository> repositories;
+	private MeveoModule module;
 	
 	private boolean active;
 	
@@ -36,6 +37,13 @@ public class ModuleInstallationContext {
 	}
 	
 	/**
+	 * @return the {@link #module}
+	 */
+	public MeveoModule getModule() {
+		return module;
+	}
+	
+	/**
 	 * Declares the installation of a module
 	 * @param module in the process of being installed
 	 */
@@ -43,6 +51,7 @@ public class ModuleInstallationContext {
 		active = true;
 		this.ModuleCodeInstallation = module.getCode();
 		this.repositories = module.getRepositories();
+		this.module = module;
 	}
 	
 	/**

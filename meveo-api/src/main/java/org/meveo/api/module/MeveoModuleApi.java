@@ -258,9 +258,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			});
 		}
 
-		if (meveoModule == null) {
-			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
-		}
+		meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		
 		// Update installed repositories
 		meveoModule.setRepositories(storageRepositories);
@@ -318,20 +316,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.forEach(moduleDto.getModuleItems()::add);
 
 			} else {
-				for (File entityFile : directory.listFiles()) {
-					try {
-						String entityFileName = entityFile.getName();
-						if (entityFileName.endsWith("-schema.json")) {
-							continue;
-						}
-						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
-						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
-						moduleDto.getModuleItems().add(moduleItemDto);
-					} catch (IOException e) {
-						log.error("Can't read entityFile", e);
-					}
+				
+				// Retrieve API corresponding to class
+				var api = ApiUtils.getApiService(getItemClassByPath(directoryName), false);
+				if (api instanceof BaseCrudApi) {
+					BaseCrudApi<?,?> baseCrudApi = (BaseCrudApi) api;
+					List<MeveoModuleItemDto> items = baseCrudApi.readModuleItems(directory, dtoClassName);
+					moduleDto.getModuleItems().addAll(items);
+				} else {
+					log.warn("Can't install item of type {} : api is not a BaseCrudApi", dtoClassName);
 				}
+
 			}
 		}
 		

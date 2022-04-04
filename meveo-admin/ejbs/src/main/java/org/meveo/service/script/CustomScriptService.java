@@ -218,30 +218,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	@Override
     public void afterUpdateOrCreate(T script) throws BusinessException {
     	super.afterUpdateOrCreate(script);
-    	MeveoModule module = this.findModuleOf(script);
-        try {
-        	boolean commitFile = true;
-            File scriptFile = findScriptFile(script);
-            if (scriptFile.exists()) {
-                String previousScript = MeveoFileUtils.readString(scriptFile.getAbsolutePath());
-                if (previousScript.equals(script.getScript())) {
-                    // Don't commit if there are no difference
-                	commitFile = false;
-                }
-            }
-
-            if(commitFile) {
-	            buildScriptFile(scriptFile, script);
-	            if (module == null) {
-		            gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create or update script " + script.getCode());
-	            } else {
-	            	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create or update script" + script.getCode());
-	            }
-            }
-            
-        } catch (Exception e) {
-            log.error("Error committing script", e);
-        }
 
         // Don't compile script during module installation, will be compiled after
         if(!moduleInstallCtx.isActive()) {
