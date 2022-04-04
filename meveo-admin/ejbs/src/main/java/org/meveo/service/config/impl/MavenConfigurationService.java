@@ -163,7 +163,6 @@ public class MavenConfigurationService implements Serializable {
         return m2;
     }
     
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void updatePomOnSave(@Observes @Updated MeveoModule module) {
     	generatePom("Update pom", module);
     }
@@ -411,7 +410,8 @@ public class MavenConfigurationService implements Serializable {
 		meveoDependency.setScope("provided");
 		MavenUtils.addOrUpdateDependency(model, meveoDependency);
 		
-		module.getModuleDependencies().forEach(meveoModuleDependency -> {
+		MeveoModule moduleWithDependencies = moduleService.findByCode(module.getCode(), Arrays.asList("moduleDependencies"));
+		moduleWithDependencies.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
 			dependency.setGroupId("org.meveo");
 			dependency.setArtifactId(meveoModuleDependency.getCode());
