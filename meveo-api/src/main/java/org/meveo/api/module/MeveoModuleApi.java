@@ -1553,7 +1553,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateModuleOnCommitReceived(@Observes @CommitReceived CommitEvent event) throws IllegalArgumentException, MeveoApiException, BusinessException, Exception {
 		// Make sure the git repo is linked to a module
-		MeveoModule module = this.meveoModuleService.findByCode(event.getGitRepository().getCode());
+		MeveoModule module = this.meveoModuleService.findByCodeWithFetchEntities(event.getGitRepository().getCode());
 		if (module == null) {
 			return;
 		}
