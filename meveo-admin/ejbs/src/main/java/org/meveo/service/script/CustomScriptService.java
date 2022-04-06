@@ -220,9 +220,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	super.afterUpdateOrCreate(script);
 
         // Don't compile script during module installation, will be compiled after
-        if(!moduleInstallCtx.isActive()) {
-        	compileScript(script, false);
-        }
+    	moduleInstallCtx.registerOrExecutePostInstallAction(() -> {
+    		compileScript(script, false);
+			if(script.getError()) {
+                String message = "script "+ script.getCode() + " failed to compile. ";
+                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
+				throw new InvalidScriptException(message);
+			}
+    	});
     }
 
     @Override
@@ -1079,63 +1084,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
     		}
     	}
-    }
-
-    /**
-     * When a commit concerning script is received :
-     * <ul>
-     * <li>If script file has been created, create the JPA entity</li>
-     * <li>If script file has been modified, re-compile it</li>
-     * <li>If script file has been deleted, remove the JPA entity</li>
-     * </ul>
-     * @param commitEvent the event
-     * @throws BusinessException if the modifications can't be committed
-     * @throws IOException if a file can't be accessed
-     */
-    @SuppressWarnings("unchecked")
-    public void onScriptUploaded(@Observes @CommitReceived CommitEvent commitEvent) throws BusinessException, IOException {
-        for (String modifiedFile : commitEvent.getModifiedFiles()) {
-            if (modifiedFile.startsWith("facets/java") && !modifiedFile.contains("customEntities")) {
-                String scriptCode = modifiedFile.replaceAll("facets/java/(.*)\\..*$", "$1").replaceAll("/", ".");
-                T script = findByCode(scriptCode);
-                File repositoryDir = GitHelper.getRepositoryDir(currentUser, commitEvent.getGitRepository().getCode());
-                File scriptFile = new File(repositoryDir, modifiedFile);
-
-                if (script == null && scriptFile.exists()) {
-                    // Script has been created
-                	ScriptInstance scriptInstance = new ScriptInstance();
-                    scriptInstance.setCode(scriptCode);
-                    String absolutePath = scriptFile.getAbsolutePath();
-                    ScriptSourceTypeEnum scriptType = absolutePath.endsWith(".js") ? ScriptSourceTypeEnum.ES5 : JAVA;
-                    scriptInstance.setSourceTypeEnum(scriptType);
-                    scriptInstance.setScript(MeveoFileUtils.readString(absolutePath));
-                    GitRepository gitRepo = commitEvent.getGitRepository();
-                    String moduleCode = gitRepo.getCode(); 
-                    MeveoModule module = meveoModuleService.findByCode(moduleCode);
-
-                    create((T) scriptInstance);
-                    
-                    if (module != null) {
-                		MeveoModuleItem moduleItem = new MeveoModuleItem();
-                		moduleItem.setMeveoModule(module);
-                		moduleItem.setItemCode(scriptCode);
-                		moduleItem.setItemClass(ScriptInstance.class.getName());
-                		
-                		meveoModuleService.addModuleItem(moduleItem, module);
-                    }
-
-                } else if (script != null && !scriptFile.exists()) {
-                    // Script has been removed
-                    remove(script);
-
-                } else if (script != null && scriptFile.exists()) {
-                    // Script has been updated
-                	script.setScript(readScriptFile(script));
-                    update(script);
-                    compileScript(script, false);
-                }
-            }
-        }
     }
 
     private void buildScriptFile(File scriptFile, CustomScript scriptInstance) throws IOException {

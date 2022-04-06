@@ -15,6 +15,7 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.MavenDependencyDto;
 import org.meveo.api.dto.RoleDto;
@@ -29,14 +30,19 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
+import org.meveo.model.typereferences.GenericTypeReferences;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
@@ -63,6 +69,9 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 
 	@Inject
 	private FunctionCategoryService fcService;
+	
+	@Inject
+	private MeveoModuleService meveoModuleService;
 
 	public ScriptInstanceApi() {
 		super(ScriptInstance.class, ScriptInstanceDto.class);
@@ -363,7 +372,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	}
 
 	@Override
-	protected MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
+	public MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
 		// Reach root directory
 		File rootModuleDir = entityFile.getParentFile().getParentFile();
 		String path = entityFile.getName()
@@ -378,5 +387,63 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			log.error("Can't read java file", e);
 		}
 		return item;
+	}
+	
+	@Override
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+		final String scriptCode = parseCode(entityFile);
+		
+		// If parsed items contains the dto, noop
+		var existingDto = alreadyParseItems.stream()
+				.filter(item -> item.getDtoClassName().equals(ScriptInstanceDto.class.getName()))
+				.filter(item -> ((Map<String, Object>) item.getDtoData()).get("code").equals(scriptCode))
+				.findFirst();
+		
+		if (existingDto.isPresent()) {
+			return existingDto.get();
+		}
+		
+		if (directoryName.equals("facets") && entityFile.getName().endsWith(".java")) {
+			// If parsed items does not contains the dto, read it from file system and complete it with script value
+			File jsonFile = new File(GitHelper.getRepositoryDir(null, gitRepository), "/scriptInstances/" + scriptCode + ".json");
+			if (jsonFile.exists()) {
+				return readModuleItem(jsonFile, ScriptInstanceDto.class.getName());
+			} else {
+				// If parsed items does not contains the dto and json file does not exist, create a basic dto
+				ScriptInstanceDto dto = new ScriptInstanceDto();
+				dto.setCode(scriptCode);
+				dto.setType(ScriptSourceTypeEnum.JAVA);
+				try {
+					dto.setScript(FileUtils.readFileToString(entityFile, "UTF-8"));
+					return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
+				} catch (IOException e) {
+					log.error("Can't read java file", e);
+					return null;
+				}
+			}
+		}
+			
+		return super.parseModuleItem(entityFile, directoryName, alreadyParseItems, gitRepository);
+	}
+	
+	private String parseCode(File entityFile) {
+		if (entityFile.getName().endsWith(".json")) {
+			return FilenameUtils.getBaseName(entityFile.getName());
+		} else if (entityFile.getName().endsWith(".java")) {
+			String buffer = FilenameUtils.getBaseName(entityFile.getName());
+			for (File file = entityFile; !file.getParentFile().getName().equals("java"); file = file.getParentFile()) {
+				buffer = file.getParentFile().getName() + "." + buffer;
+			}
+			return buffer;
+		}
+		return null;
+	}
+	
+	@Override
+	public MeveoModuleItem getExistingItem(File entityFile) {
+		return meveoModuleService.findModuleItem(parseCode(entityFile), ScriptInstance.class.getName(), null)
+				.stream()
+				.findFirst()
+				.orElse(null);
 	}
 }

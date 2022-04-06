@@ -47,6 +47,7 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.IEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -459,7 +460,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		return items;
 	}
 	
-	protected MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
+	public MeveoModuleItemDto readModuleItem(File entityFile, String dtoClassName) {
 		try {
 			String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
 			Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
@@ -469,4 +470,17 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			return null;
 		}
 	}
+	
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+		ModuleItem item = jpaClass.getAnnotation(ModuleItem.class);
+		if (directoryName.equals(item.path())) {
+			return this.readModuleItem(entityFile, this.dtoClass.getName());
+		}
+		return null;
+	}
+	
+	public MeveoModuleItem getExistingItem(File entityFile) {
+		return null;
+	}
+	
 }
