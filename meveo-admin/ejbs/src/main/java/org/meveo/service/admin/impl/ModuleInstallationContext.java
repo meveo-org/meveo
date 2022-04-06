@@ -3,8 +3,11 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
 
 import org.meveo.model.module.MeveoModule;
@@ -22,6 +25,7 @@ public class ModuleInstallationContext {
 	private String ModuleCodeInstallation = "";
 	private List<Repository> repositories;
 	private MeveoModule module;
+	private List<Runnable> postInstallActions = new ArrayList<>();
 	
 	private boolean active;
 	
@@ -61,6 +65,9 @@ public class ModuleInstallationContext {
 		active = false;
 		this.ModuleCodeInstallation = null;
 		this.repositories = null;
+		
+		postInstallActions.forEach(Runnable::run);
+		postInstallActions.clear();
 	}
 
 	/**
@@ -75,6 +82,19 @@ public class ModuleInstallationContext {
 	 */
 	public void setRepositories(List<Repository> repositories) {
 		this.repositories = repositories;
+	}
+	
+	/**
+	 * If the context is active, register the action to execute it later, otherwise execute immediatly
+	 * 
+	 * @param runnable action to register / execute
+	 */
+	public void registerOrExecutePostInstallAction(Runnable runnable) {
+		if (!active) {
+			runnable.run();
+		} else {
+			postInstallActions.add(runnable);
+		}
 	}
 	
 }
