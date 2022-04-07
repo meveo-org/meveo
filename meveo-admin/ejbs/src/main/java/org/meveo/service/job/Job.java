@@ -201,7 +201,7 @@ public abstract class Job {
         jobInstance.setProviderCode(currentUser.getProviderCode());
 
         TimerConfig timerConfig = new TimerConfig();
-        timerConfig.setInfo(jobInstance);
+        timerConfig.setInfo(jobInstance.getCode());
         // timerConfig.setPersistent(false);
         // log.error("AKK creating a timer for {}", jobInstance.getCode());
         return timerService.createCalendarTimer(scheduleExpression, timerConfig);
