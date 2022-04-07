@@ -1625,10 +1625,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				.removeItems(true)
 				.removeFiles(true)
 				.build();
-		for(var item : meveoModuleService.getSortedModuleItemsForUninstall(deleteItems)) {
-			module.removeItem(item);
-			meveoModuleItemInstaller.uninstallItem(options, null, item);
-		}
 		
 		// Add new items
 		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(installItems)) {
@@ -1638,6 +1634,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		// Update existing items
 		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(updateItems)) {
 			meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
+		}
+		
+		for(var item : meveoModuleService.getSortedModuleItemsForUninstall(deleteItems)) {
+			module.removeItem(item);
+			meveoModuleItemInstaller.uninstallItem(options, null, item);
 		}
 		
 		moduleCtx.end();
