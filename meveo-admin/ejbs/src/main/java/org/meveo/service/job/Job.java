@@ -1,5 +1,22 @@
 package org.meveo.service.job;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
+import javax.ejb.ScheduleExpression;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.JobCacheContainerProvider;
@@ -19,21 +36,6 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Resource;
-import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
-import javax.ejb.ScheduleExpression;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * Interface that must implement all jobs that are managed in meveo application by the JobService bean. The implementation must be a session EJB and must statically register itself
@@ -179,8 +181,11 @@ public abstract class Job {
 
         for (Timer timer : alltimers) {
             try {
-                if (timer.getInfo() instanceof JobInstance) {
-                    timer.cancel();
+                if (timer.getInfo() instanceof String) {
+                	var job = jobInstanceService.findByCode((String) timer.getInfo());
+                	if (job != null) {
+                		timer.cancel();
+                	}
                 }
             } catch (Exception e) {
                 log.error("Failed to cancel timer {} for job{}", timer.getHandle(), this.getClass().getName(), e);
@@ -216,7 +221,8 @@ public abstract class Job {
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void trigger(Timer timer) {
 
-        JobInstance jobInstance = (JobInstance) timer.getInfo();
+    	String code = (String) timer.getInfo();
+        JobInstance jobInstance = jobInstanceService.findByCode(code, List.of("executionResults", "followingJob"));
         if (jobInstance == null) {
             return;
         }
