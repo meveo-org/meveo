@@ -25,8 +25,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Timeout;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -410,8 +408,7 @@ public class MavenConfigurationService implements Serializable {
 		meveoDependency.setScope("provided");
 		MavenUtils.addOrUpdateDependency(model, meveoDependency);
 		
-		MeveoModule moduleWithDependencies = moduleService.findByCode(module.getCode(), Arrays.asList("moduleDependencies"));
-		moduleWithDependencies.getModuleDependencies().forEach(meveoModuleDependency -> {
+		module.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
 			dependency.setGroupId("org.meveo");
 			dependency.setArtifactId(meveoModuleDependency.getCode());
