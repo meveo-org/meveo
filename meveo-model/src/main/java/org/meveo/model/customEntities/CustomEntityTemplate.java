@@ -136,7 +136,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	// @Column(name = "available_storages", columnDefinition = "TEXT")
 	// @Type(type = JsonTypes.JSON_LIST)
 	@ManyToMany
-	@JoinTable(name = "cet_db_storage", inverseJoinColumns = @JoinColumn(name = "cet_id"), joinColumns = @JoinColumn(name = "db_storage_code"))
+	@JoinTable(name = "cet_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cet_id"))
 	private List<DBStorageType> availableStorages = new ArrayList<>();
 	
 	@Type(type = "numeric_boolean")
