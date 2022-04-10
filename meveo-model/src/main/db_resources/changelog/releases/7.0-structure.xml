@@ -109,6 +109,8 @@
    		<addColumn tableName="storage_repository">
    			<column name="cf_values" type="${type.json}"></column>
    		</addColumn>
+	<changeSet>
+	
    	<changeSet id="Update cascade maven deps" author="Clément Bareth">
    		<dropForeignKeyConstraint baseTableName="adm_script_maven_dependency" constraintName="fk_maven_dependency"/>
    		<addForeignKeyConstraint constraintName="fk_maven_dependency" referencedTableName="maven_dependency" 

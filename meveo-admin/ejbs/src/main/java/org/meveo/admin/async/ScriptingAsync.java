@@ -71,6 +71,9 @@ public class ScriptingAsync {
             if (context.containsKey(Script.JOB_RESULT_REPORT)) {
                 result.setReport(context.get(Script.JOB_RESULT_REPORT) + "");
             }
+            if (context.containsKey(Script.JOB_RESULT_SUMMARY)) {
+                result.setSummary(context.get(Script.JOB_RESULT_SUMMARY) + "");
+            }
         } catch (Exception e) {
             result.registerError("Error in " + scriptCode + " execution :" + e.getMessage());
         }

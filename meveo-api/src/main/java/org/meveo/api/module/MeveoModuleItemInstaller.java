@@ -3,6 +3,7 @@ package org.meveo.api.module;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -133,10 +134,6 @@ public class MeveoModuleItemInstaller {
 	@ModuleInstall
 	private Event<MeveoModule> installEvent;
 
-	@Inject
-	@ModulePostInstall
-	private Event<MeveoModule> postInstallEvent;
-	
 	@EJB
 	private MeveoModuleItemInstaller meveoModuleItemInstaller;
 	
@@ -165,7 +162,7 @@ public class MeveoModuleItemInstaller {
             moduleScript = moduleScriptService.preUninstallModule(module.getScript().getCode(), module);
         }
         
-        List<MeveoModuleItem> moduleItems = meveoModuleService.getSortedModuleItems(module.getModuleItems());
+        List<MeveoModuleItem> moduleItems = meveoModuleService.getSortedModuleItemsForUninstall(module.getModuleItems());
 
         // Load items
         for (MeveoModuleItem item : List.copyOf(moduleItems)) {
@@ -372,13 +369,12 @@ public class MeveoModuleItemInstaller {
 		            }
 		            
 		            result.setInstalledModule(meveoModule);
-		            postInstallEvent.fire(meveoModule);
 		            
 		            meveoModuleService.update(meveoModule);
 	        	} catch(Exception e) {
+	        		installCtx.markFailed();
 	            	throw new ModuleInstallFail(meveoModule, result, e);
 	            }
-	
 	        }
 	
 	        return result;
@@ -643,9 +639,10 @@ public class MeveoModuleItemInstaller {
 	    return apiService.compareDtos(obj1, obj2, dtos);
 	}
 	
-	public List<MeveoModuleItemDto> getSortedModuleItems(List<MeveoModuleItemDto> moduleItems) {
-		List<MeveoModuleItemDto> unsortedItems = List.copyOf(moduleItems);
-
+	public List<MeveoModuleItemDto> getSortedModuleItems(Collection<MeveoModuleItemDto> moduleItems) {
+		List<MeveoModuleItemDto> unsortedItems = new ArrayList<>(moduleItems);
+		List<MeveoModuleItemDto> sortedItems = new ArrayList<>(moduleItems);
+		
 		Comparator<MeveoModuleItemDto> comparator = new Comparator<MeveoModuleItemDto>() {
 
 			@SuppressWarnings("unchecked")
@@ -695,9 +692,8 @@ public class MeveoModuleItemInstaller {
 			}
 		};
 
-		moduleItems.sort(comparator);
-
-		return moduleItems;
+		sortedItems.sort(comparator);
+		return sortedItems;
 	}
 	
     private void unpackAndInstallModuleItems(ModuleInstallResult result, MeveoModule meveoModule, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {

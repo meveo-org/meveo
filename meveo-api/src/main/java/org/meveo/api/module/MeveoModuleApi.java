@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,8 +37,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipOutputStream;
@@ -50,6 +52,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -108,12 +112,12 @@ import org.meveo.model.module.ModuleReleaseItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.Repository;
-import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -191,7 +195,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
-
+    
+    @Inject
+    private ModuleInstallationContext moduleCtx;
+    
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
 		if (!initalized) {
@@ -258,9 +265,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			});
 		}
 
-		if (meveoModule == null) {
-			meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
-		}
+		meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		
 		// Update installed repositories
 		meveoModule.setRepositories(storageRepositories);
@@ -318,20 +323,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.forEach(moduleDto.getModuleItems()::add);
 
 			} else {
-				for (File entityFile : directory.listFiles()) {
-					try {
-						String entityFileName = entityFile.getName();
-						if (entityFileName.endsWith("-schema.json")) {
-							continue;
-						}
-						String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
-						Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
-						MeveoModuleItemDto moduleItemDto = new MeveoModuleItemDto(dtoClassName, data);
-						moduleDto.getModuleItems().add(moduleItemDto);
-					} catch (IOException e) {
-						log.error("Can't read entityFile", e);
-					}
+				
+				// Retrieve API corresponding to class
+				var api = ApiUtils.getApiService(getItemClassByPath(directoryName), false);
+				if (api instanceof BaseCrudApi) {
+					BaseCrudApi<?,?> baseCrudApi = (BaseCrudApi) api;
+					List<MeveoModuleItemDto> items = baseCrudApi.readModuleItems(directory, dtoClassName);
+					moduleDto.getModuleItems().addAll(items);
+				} else {
+					log.warn("Can't install item of type {} : api is not a BaseCrudApi", dtoClassName);
 				}
+
 			}
 		}
 		
@@ -355,10 +357,14 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				.findFirst()
 				.orElse(null);
 	}
+	
+	private static Stream<BaseCrudApi> baseCrudApis() {
+		return MeveoModuleItemInstaller.MODULE_ITEM_TYPES.values()
+			.stream()
+			.map(clazz -> ApiUtils.getApiService(clazz, false))
+			.map(BaseCrudApi.class::cast);
+	}
 
-	/**
-	 * @return
-	 */
 	protected Map<String, String> getEntitiesPathsMapping() {
 		Map<String, String> entityDtoNamebyPath = new HashMap<String, String>();
 		
@@ -383,54 +389,57 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 	
 	public MeveoModuleItem getExistingItemFromFile(File directory, String fileName) {
-		if (!fileName.endsWith(".json")) {
-			return null;
+		if (fileName.endsWith(".json")) {
+			String[] paths = fileName.split("/");
+			String directoryName = paths[0];
+			String itemCode = FilenameUtils.getBaseName(fileName);
+			
+			Class<?> itemClass = getItemClassByPath(directoryName);
+			if (itemClass == null) {
+				return null;
+			}
+			
+			String appliesTo = null;
+			if (paths.length > 2) {
+				appliesTo = paths[1];
+			}
+			
+			return meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)
+					.stream()
+					.findFirst()
+					.orElse(null);
+		} else {
+			File entityFile = new File(directory, fileName);
+			
+			AtomicReference<MeveoModuleItem> item = new AtomicReference<>();
+			baseCrudApis().takeWhile(i -> item.get() == null)
+				.filter(Objects::nonNull)
+				.forEach(api -> {
+					if (item.get() == null) {
+						item.set(api.getExistingItem(entityFile));
+					}
+				});
+			return item.get();
 		}
-		
-		String[] paths = fileName.split("/");
-		String directoryName = paths[0];
-		String itemCode = FilenameUtils.getBaseName(fileName);
-		
-		Class<?> itemClass = getItemClassByPath(directoryName);
-		if (itemClass == null) {
-			return null;
-		}
-		
-		String appliesTo = null;
-		if (paths.length > 2) {
-			appliesTo = paths[1];
-		}
-		
-		return meveoModuleService.findModuleItem(itemCode, itemClass.getName(), appliesTo)
-				.stream()
-				.findFirst()
-				.orElse(null);
 	}
 	
-	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName) {
-		if (!fileName.endsWith(".json")) {
-			return null;
-		}
-		
-		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
+	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepo) {
 		
 		String[] paths = fileName.split("/");
 		String directoryName = paths[0];
-		String dtoClassName = entityDtoNamebyPath.get(directoryName);
-
-		if (dtoClassName == null) {
-			return null;
-		}
 		
 		File entityFile = new File(directory, fileName);
-		try {
-			Map<String, Object> data = JacksonUtil.read(entityFile, GenericTypeReferences.MAP_STRING_OBJECT);
-			return new MeveoModuleItemDto(dtoClassName, data);
-		} catch (IOException e) {
-			log.error("Failed to read data", e);
-		}
+		AtomicReference<MeveoModuleItemDto> item = new AtomicReference<>();
 		
-		return null;
+		baseCrudApis().takeWhile(i -> item.get() == null)
+			.filter(Objects::nonNull)
+			.forEach(api -> {
+				if (item.get() == null) {
+					item.set(api.parseModuleItem(entityFile, directoryName, alreadyParseItems, gitRepo));
+				}
+			});
+		
+		return item.get();
 	}
 	
 	public void registerModulePackage(String packageName) {
@@ -1558,29 +1567,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateModuleOnCommitReceived(@Observes @CommitReceived CommitEvent event) throws IllegalArgumentException, MeveoApiException, BusinessException, Exception {
 		// Make sure the git repo is linked to a module
-		MeveoModule module = this.meveoModuleService.findByCode(event.getGitRepository().getCode());
+		MeveoModule module = this.meveoModuleService.findByCodeWithFetchEntities(event.getGitRepository().getCode());
 		if (module == null) {
 			return;
 		}
 		
+		Set<MeveoModuleItemDto> installItems = new HashSet<>();
+		Set<MeveoModuleItemDto> updateItems = new HashSet<>();
+		Set<MeveoModuleItem> deleteItems = new HashSet<>();
+		
 		File directory = GitHelper.getRepositoryDir(null, module.getCode());
-		MeveoModuleItemDto itemDto;
-		MeveoModuleItem item;
-		ModuleUninstall options = ModuleUninstall.builder()
-			.module(module)
-			.removeData(true)
-			.removeItems(true)
-			.removeFiles(true)
-			.build();
 		
 		for (DiffEntry diff : event.getDiffs()) {
 
 			switch (diff.getChangeType()) {
 			case ADD:
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				if (itemDto != null) {
-					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
-				}
+				installItems.removeIf(Objects::isNull);
+				installItems.add(getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode()));
 				break;
 				
 			case COPY:
@@ -1588,33 +1591,18 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				break;
 				
 			case DELETE:
-				item = getExistingItemFromFile(directory, diff.getOldPath());
-				if (item != null) {
-					module.removeItem(item);
-					meveoModuleItemInstaller.uninstallItem(options, null, item);
-				}
+				deleteItems.add(getExistingItemFromFile(directory, diff.getOldPath()));
 				break;
 				
 			case MODIFY:
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				if (itemDto != null) {
-					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
-				}
+				updateItems.removeIf(Objects::isNull);
+				updateItems.add(getItemDtoFromFile(directory, diff.getNewPath(), updateItems, module.getCode()));
 				break;
 				
 			case RENAME:
-				// Remove
-				item = getExistingItemFromFile(directory, diff.getOldPath());
-				if (item != null) {
-					module.removeItem(item);
-					meveoModuleItemInstaller.uninstallItem(options, null, item);
-				}
-				
-				// Add
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath());
-				if (itemDto != null) { 
-					meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
-				}
+				installItems.removeIf(Objects::isNull);
+				deleteItems.add(getExistingItemFromFile(directory, diff.getOldPath()));
+				installItems.add(getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode()));
 				break;
 				
 			default:
@@ -1622,6 +1610,38 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 			}
 		}
+		
+		installItems.removeIf(Objects::isNull);
+		deleteItems.removeIf(Objects::isNull);
+		updateItems.removeIf(Objects::isNull);
+		
+		moduleCtx.begin(module);
+		moduleCtx.setRepositories(module.getRepositories());
+		
+		// Start with removing items
+		ModuleUninstall options = ModuleUninstall.builder()
+				.module(module)
+				.removeData(true)
+				.removeItems(true)
+				.removeFiles(true)
+				.build();
+		
+		// Add new items
+		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(installItems)) {
+			meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+		}
+		
+		// Update existing items
+		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(updateItems)) {
+			meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.OVERWRITE);
+		}
+		
+		for(var item : meveoModuleService.getSortedModuleItemsForUninstall(deleteItems)) {
+			module.removeItem(item);
+			meveoModuleItemInstaller.uninstallItem(options, null, item);
+		}
+		
+		moduleCtx.end();
 		
 		meveoModuleService.update(module);
 	}

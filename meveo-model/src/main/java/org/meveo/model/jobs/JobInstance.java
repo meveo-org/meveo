@@ -63,7 +63,7 @@ import org.meveo.model.ModuleItemOrder;
 @Table(name = "meveo_job_instance", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "meveo_job_instance_seq"), })
-public class JobInstance extends EnableBusinessCFEntity {
+public class JobInstance extends EnableBusinessCFEntity implements Comparable<JobInstance> {
 
     private static final long serialVersionUID = -5517252645289726288L;
 
@@ -391,4 +391,27 @@ public class JobInstance extends EnableBusinessCFEntity {
         }
         return this.runTimeValues.get(key);
     }
+    
+	@Override
+	public int compareTo(JobInstance o) {
+		if (o == null)
+			return -1;
+		
+		if (this.getFollowingJob() == null && o.getFollowingJob() == null)
+			return 0;
+		
+		else if (this.getFollowingJob() == null && o.getFollowingJob() != null)
+			return -1;
+		
+		else if (this.getFollowingJob() != null && o.getFollowingJob() == null)
+			return 1;
+		
+		else {
+			if (this.getFollowingJob().id == o.id)
+				return 1;
+			else 
+				return -1;
+		}
+	}
+    
 }

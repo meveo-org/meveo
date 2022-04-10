@@ -49,6 +49,7 @@ import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -68,7 +69,10 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
     @Inject
     private JobCacheContainerProvider jobCacheContainerProvider;
-
+    
+    @Inject
+    private ModuleInstallationContext moduleInstallationContext;
+    
     private static Map<JobCategoryEnum, List<Class<? extends Job>>> jobClasses = new HashMap<>();
     private static Map<CacheKeyLong, Timer> jobTimers = new HashMap<>();
 
@@ -217,7 +221,8 @@ public class JobInstanceService extends BusinessService<JobInstance> {
     public void create(JobInstance jobInstance) throws BusinessException {
         super.create(jobInstance);
         jobCacheContainerProvider.addUpdateJobInstance(jobInstance.getId());
-        scheduleJob(jobInstance, null);
+        
+        moduleInstallationContext.registerOrExecutePostInstallAction(() -> scheduleJob(jobInstance, null));
 
         clusterEventPublisher.publishEvent(jobInstance, CrudActionEnum.create);
         //TODO call afterCreateOrUpdate from PersistenceService

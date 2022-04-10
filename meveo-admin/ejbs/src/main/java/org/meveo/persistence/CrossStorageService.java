@@ -169,7 +169,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		values.put("uuid", uuid);
 		boolean foudEntity=false;
 		
-		Map<String, CustomFieldTemplate> cfts = cache.getCustomFieldTemplates(cet.getAppliesTo());
+		Collection<CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet).values();
 
 		// Retrieve only asked fields
 		if (fetchFields != null && !fetchFields.isEmpty()) {
@@ -242,7 +242,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 * @throws EntityDoesNotExistsException if data with given id can't be found
 	 */
 	public List<Map<String, Object>> find(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) throws EntityDoesNotExistsException {
-		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(cet.getAppliesTo());
+		final Map<String, CustomFieldTemplate> fields = customFieldTemplateService.getCftsWithInheritedFields(cet);
 
 		final Set<String> actualFetchFields;
 		// If no pagination nor fetch fields are defined, we consider that we must fetch everything

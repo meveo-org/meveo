@@ -344,14 +344,23 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		}
 		
 		MeveoModule relatedModule = null;
+		
+        if (moduleInstallCtx.isActive()) {
+        	relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+        }
+        
 		// Synchronize CET / CRT POJO
-        if (appliesToTemplate instanceof CustomEntityTemplate) {
-            CustomEntityTemplate cet = (CustomEntityTemplate) appliesToTemplate;
-            relatedModule = customEntityTemplateService.findModuleOf(cet);
+        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            if(relatedModule == null) {
+                relatedModule = customEntityTemplateService.findModuleOf(cet);
+            }
             customEntityTemplateService.addFilesToModule(cet, relatedModule);
-        } else if (appliesToTemplate instanceof CustomRelationshipTemplate) {
-        	CustomRelationshipTemplate crt = (CustomRelationshipTemplate) appliesToTemplate;
-        	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            if (relatedModule == null) {
+            	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+            }
             customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
         }
         
@@ -460,15 +469,25 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         
-        // Synchronize CET / CRT POJO
-        if (appliesToTemplate instanceof CustomEntityTemplate) {
-            CustomEntityTemplate cet = (CustomEntityTemplate) appliesToTemplate;
-            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
-            customEntityTemplateService.addFilesToModule(cet, cetModule);
-        } else if (appliesToTemplate instanceof CustomRelationshipTemplate) {
-        	CustomRelationshipTemplate crt = (CustomRelationshipTemplate) appliesToTemplate;
-            MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
-            customRelationshipTemplateService.addFilesToModule(crt, cetModule);
+		MeveoModule relatedModule = null;
+		
+        if (moduleInstallCtx.isActive()) {
+        	relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+        }
+        
+		// Synchronize CET / CRT POJO
+        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            if(relatedModule == null) {
+                relatedModule = customEntityTemplateService.findModuleOf(cet);
+            }
+            customEntityTemplateService.addFilesToModule(cet, relatedModule);
+        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            if (relatedModule == null) {
+            	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+            }
+            customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
         }
 
         return cftUpdated;

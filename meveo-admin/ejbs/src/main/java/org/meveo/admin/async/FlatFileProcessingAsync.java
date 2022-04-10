@@ -29,6 +29,7 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.crm.impl.ImportWarningException;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInterface;
@@ -133,6 +134,13 @@ public class FlatFileProcessingAsync {
 							try {
 								unitFlatFileProcessingJobBean.execute(script, executeParams);
 								flatFileAsyncResponse.setSuccess(true);
+							} catch (ImportWarningException e) {
+								String erreur = (recordContextFinal == null || recordContextFinal.getReason() == null) ? e.getMessage()
+										: recordContextFinal.getReason();
+								log.warn("record on warning :" + erreur);
+								flatFileAsyncResponse.setSuccess(true);
+								flatFileAsyncResponse.setWarning(true);
+								flatFileAsyncResponse.setReason(erreur);
 							} catch (Throwable e) {
 								if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
 									rollBackException.set(new BusinessException(e.getMessage(), e));
@@ -151,6 +159,13 @@ public class FlatFileProcessingAsync {
 					});
 				}
 
+			} catch (ImportWarningException e) {
+				String erreur = (recordContext == null || recordContext.getReason() == null) ? e.getMessage()
+						: recordContext.getReason();
+				log.warn("record on warning :" + erreur);
+				flatFileAsyncResponse.setSuccess(true);
+				flatFileAsyncResponse.setWarning(true);
+				flatFileAsyncResponse.setReason(erreur);
 			} catch (Throwable e) {
 				if (FlatFileProcessingJob.ROLLBBACK.equals(errorAction)) {
 					throw new BusinessException(e.getMessage(), e);

@@ -39,6 +39,7 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.NotificationCacheContainerProvider;
+import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.IEntity;
@@ -65,6 +66,9 @@ public class CacheBean implements Serializable {
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+
+    @Inject
+    private UserMessageCacheContainerProvider userMessageCacheContainerProvider;
 
     /** Logger. */
     @Inject
@@ -126,6 +130,7 @@ public class CacheBean implements Serializable {
             caches.putAll(notificationCacheContainerProvider.getCaches());
             caches.putAll(customFieldsCacheContainerProvider.getCaches());
             caches.putAll(jobCacheContainerProvider.getCaches());
+            caches.putAll(userMessageCacheContainerProvider.getCaches());
             selectedCache = caches.get(cacheName);
         }
     }
@@ -143,6 +148,7 @@ public class CacheBean implements Serializable {
         caches.putAll(notificationCacheContainerProvider.getCaches());
         caches.putAll(customFieldsCacheContainerProvider.getCaches());
         caches.putAll(jobCacheContainerProvider.getCaches());
+        caches.putAll(userMessageCacheContainerProvider.getCaches());
         caches = new TreeMap<String, Cache>(caches);
 
         for (Entry<String, Cache> cache : caches.entrySet()) {
@@ -172,6 +178,7 @@ public class CacheBean implements Serializable {
         notificationCacheContainerProvider.refreshCache(cacheName);
         customFieldsCacheContainerProvider.refreshCache(cacheName);
         jobCacheContainerProvider.refreshCache(cacheName);
+        userMessageCacheContainerProvider.refreshCache(cacheName);
         messages.info(new BundleKey("messages", "cache.refreshInitiated"));
     }
 
@@ -179,6 +186,7 @@ public class CacheBean implements Serializable {
         notificationCacheContainerProvider.refreshCache(null);
         customFieldsCacheContainerProvider.refreshCache(null);
         jobCacheContainerProvider.refreshCache(null);
+        userMessageCacheContainerProvider.refreshCache(null);
         messages.info(new BundleKey("messages", "cache.refreshInitiated"));
     }
 

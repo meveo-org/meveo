@@ -1,6 +1,8 @@
 package org.meveo.api.dto;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -83,6 +85,8 @@ public class EntityCustomActionDto extends BaseEntityDto {
 	 * GUI only, Whether to show this action in CEI detail.
 	 */
 	private Boolean applicableToEntityInstance = true;
+	
+	private Map<String, String> scriptParameters = new HashMap<>();
 
     /**
      * Instantiates a new entity custom action dto.
@@ -107,11 +111,27 @@ public class EntityCustomActionDto extends BaseEntityDto {
         this.guiPosition = action.getGuiPosition();
         this.applicableToEntityList = action.getApplicableToEntityList();
         this.applicableToEntityInstance = action.getApplicableToEntityInstance();
-
+        this.setScriptParameters(scriptParameters);
+        
         this.setScript(action.getScript().getCode());
     }
+    
 
     /**
+	 * @return the {@link #scriptParameters}
+	 */
+	public Map<String, String> getScriptParameters() {
+		return scriptParameters;
+	}
+
+	/**
+	 * @param scriptParameters the scriptParameters to set
+	 */
+	public void setScriptParameters(Map<String, String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	/**
      * Gets the code.
      *
      * @return the code

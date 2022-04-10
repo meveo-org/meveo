@@ -77,8 +77,7 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
             throw new EntityAlreadyExistsException(EntityCustomAction.class, actionDto.getCode() + "/" + actionDto.getAppliesTo());
         }
 
-        EntityCustomAction action = new EntityCustomAction();
-        entityCustomActionFromDTO(actionDto, action);
+        EntityCustomAction action = fromDto(actionDto);
 
         entityCustomActionService.create(action);
 
@@ -91,6 +90,15 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
             }
         }
         return result;
+    }
+    
+    @Override
+    public EntityCustomAction fromDto(EntityCustomActionDto dto, EntityCustomAction action) throws MeveoApiException, BusinessException {
+    	if (action == null) {
+    		action = new EntityCustomAction();
+    	}
+    	entityCustomActionFromDTO(dto, action);
+    	return action;
     }
 
     public List<ScriptInstanceErrorDto> update(EntityCustomActionDto actionDto, String appliesTo)
