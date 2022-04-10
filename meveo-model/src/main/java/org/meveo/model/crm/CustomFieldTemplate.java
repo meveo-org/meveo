@@ -340,7 +340,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 //    @Column(name = "storages", columnDefinition = "TEXT")
 //    @Type(type = JsonTypes.JSON_LIST)
 	@ManyToMany
-	@JoinTable(name = "cft_db_storage", inverseJoinColumns = @JoinColumn(name = "cft_id"), joinColumns = @JoinColumn(name = "db_storage_code"))
+	@JoinTable(name = "cft_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cft_id"))
     List<DBStorageType> storages = new ArrayList<>();
 
     /**

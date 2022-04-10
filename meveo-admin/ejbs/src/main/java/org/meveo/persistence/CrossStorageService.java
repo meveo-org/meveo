@@ -169,7 +169,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		values.put("uuid", uuid);
 		boolean foudEntity=false;
 		
-		Collection<CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet).values();
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
 
 		// Retrieve only asked fields
 		if (fetchFields != null && !fetchFields.isEmpty()) {
