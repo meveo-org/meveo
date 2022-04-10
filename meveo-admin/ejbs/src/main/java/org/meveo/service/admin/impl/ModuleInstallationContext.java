@@ -77,10 +77,6 @@ public class ModuleInstallationContext {
 	 * @throws BusinessException if a post install action fails
 	 */
 	public void end() throws BusinessException {
-		active = false;
-		this.ModuleCodeInstallation = null;
-		this.repositories = null;
-		
 		if (!failed) {
 			for (var action : postInstallActions) {
 				action.run();
@@ -89,6 +85,10 @@ public class ModuleInstallationContext {
 		}
 		
 		postInstallEvent.fire(module);
+		
+		active = false;
+		this.ModuleCodeInstallation = null;
+		this.repositories = null;
 	}
 
 	/**
