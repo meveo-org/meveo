@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
@@ -33,6 +34,7 @@ import org.meveo.model.sql.SqlConfiguration;
 @Table(name = "storage_repository", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "storage_repository_seq"), })
+@CustomFieldEntity(cftCodePrefix = "REPO")
 public class Repository extends BusinessEntity implements ICustomFieldEntity {
 
 	private static final long serialVersionUID = -93688572926121511L;
