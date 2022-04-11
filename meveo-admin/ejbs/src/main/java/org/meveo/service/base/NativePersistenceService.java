@@ -1082,7 +1082,8 @@ public class NativePersistenceService extends BaseService {
 	}
 
 	private void removeRecord(String sqlConnectionCode, String uuid, String tableName) {
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
+		crossStorageTransaction.getHibernateSession(sqlConnectionCode)
+			.createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
 			.setParameter(1, uuid)
 			.executeUpdate();
 	}
