@@ -82,7 +82,10 @@ public class CrossStorageTransaction {
 		}
 		
 		if(repository.getSqlConfiguration() != null) {
-			getHibernateSession(repository.getSqlConfigurationCode());
+			var session = getHibernateSession(repository.getSqlConfigurationCode());
+			if (!session.isOpen()) {
+				session.beginTransaction();
+			}
 		}
 	}
 	
