@@ -11,11 +11,15 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+import javax.transaction.Transactional;
 import javax.transaction.UserTransaction;
 
 import org.meveo.model.storage.Repository;
@@ -78,7 +82,10 @@ public class CrossStorageTransaction {
 		}
 		
 		if(repository.getSqlConfiguration() != null) {
-			getHibernateSession(repository.getSqlConfigurationCode());
+			var session = getHibernateSession(repository.getSqlConfigurationCode());
+			if (!session.isOpen()) {
+				session.beginTransaction();
+			}
 		}
 	}
 	
@@ -120,11 +127,17 @@ public class CrossStorageTransaction {
 				}
 				neo4jTx.success();
 				neo4jTx.close();
+				
+				
+
 			}
 			
 			try {
 				if(userTx != null) {
 					userTx.commit();
+				} else {
+					var hibernateSession = hibernateSessions.remove(repository.getSqlConfigurationCode());
+					hibernateSession.close();
 				}
 			} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
 				throw new RuntimeException(e);
