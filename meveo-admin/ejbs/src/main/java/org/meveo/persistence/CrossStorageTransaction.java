@@ -94,7 +94,11 @@ public class CrossStorageTransaction {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION) {
 				userTx.begin();
 			}
-			return hibernateSessions.computeIfAbsent(repository, sqlConnectionProvider::getSession);
+			var session = hibernateSessions.computeIfAbsent(repository, sqlConnectionProvider::getSession);
+			if (!session.getTransaction().isActive()) {
+				session.getTransaction().begin();
+			}
+			return session;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -137,6 +141,7 @@ public class CrossStorageTransaction {
 					userTx.commit();
 				} else {
 					var hibernateSession = hibernateSessions.remove(repository.getSqlConfigurationCode());
+					hibernateSession.getTransaction().commit();
 					hibernateSession.close();
 				}
 			} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
