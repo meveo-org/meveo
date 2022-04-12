@@ -108,7 +108,7 @@ import org.meveo.util.MeveoParamBean;
 public class NativePersistenceService extends BaseService {
 	
 	@FunctionalInterface
-	private static interface SqlAction {
+	public static interface SqlAction {
 		void doWork(PreparedStatement ps) throws Exception;
 	}
 
