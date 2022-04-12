@@ -106,6 +106,11 @@ import org.meveo.util.MeveoParamBean;
  * @version 6.12
  */
 public class NativePersistenceService extends BaseService {
+	
+	@FunctionalInterface
+	private static interface SqlAction {
+		void doWork(PreparedStatement ps) throws Exception;
+	}
 
 	/**
 	 * ID field name
@@ -518,47 +523,25 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
 
-			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
-
-			hibernateSession.doWork(connection -> {
-				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-						connection.setAutoCommit(false);
-				}				
-				setSchema(sqlConnectionCode, connection);
-
-				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-
-					int parameterIndex = 1;
-					for (String fieldName : values.keySet()) {
-						Object fieldValue = values.get(fieldName);
-						if (fieldValue == null) {
-							continue;
-						}
-
-						setParameterValue(ps, parameterIndex++, fieldValue);
+			doUpdate(sqlConnectionCode, sql.toString(), ps -> {
+				int parameterIndex = 1;
+				for (String fieldName : values.keySet()) {
+					Object fieldValue = values.get(fieldName);
+					if (fieldValue == null) {
+						continue;
 					}
 
-					ps.executeUpdate();
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.commit();
-					}
-				} catch (Exception e) {
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.rollback();
-					}
-					throw e;
+					setParameterValue(ps, parameterIndex++, fieldValue);
 				}
 			});
-
+			
 			// Find the identifier of the last inserted record
 			if (returnId) {
 				if (uuid != null) {
 					return (String) uuid;
 				}
 
+				var hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
 				Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
 
 				for (String fieldName : values.keySet()) {
@@ -640,79 +623,51 @@ public class NativePersistenceService extends BaseService {
 		}
 
 		sql.append(" (").append(fields).append(") values (").append(fieldValues).append(")");
+		
+		doBatch(sqlConnectionCode, sql.toString(), (preparedStatement -> {
+			Object fieldValue = null;
+			int i = 1;
+			int itemsProcessed = 0;
+			for (Map<String, Object> value : values) {
 
-		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+				i = 1;
+				for (String fieldName : fieldNames) {
+					fieldValue = value.get(fieldName);
 
-		hibernateSession.doWork(new org.hibernate.jdbc.Work() {
-
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-						connection.setAutoCommit(false);
-				}
-				setSchema(sqlConnectionCode, connection);
-
-				try (PreparedStatement preparedStatement = connection.prepareStatement(sql.toString())) {
-
-					Object fieldValue = null;
-					int i = 1;
-					int itemsProcessed = 0;
-					for (Map<String, Object> value : values) {
-
-						i = 1;
-						for (String fieldName : fieldNames) {
-							fieldValue = value.get(fieldName);
-
-							if (fieldValue == null) {
-								preparedStatement.setNull(i, Types.NULL);
-							} else if (fieldValue instanceof String) {
-								preparedStatement.setString(i, (String) fieldValue);
-							} else if (fieldValue instanceof Long) {
-								preparedStatement.setLong(i, (Long) fieldValue);
-							} else if (fieldValue instanceof Double) {
-								preparedStatement.setDouble(i, (Double) fieldValue);
-							} else if (fieldValue instanceof BigInteger) {
-								preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
-							} else if (fieldValue instanceof Integer) {
-								preparedStatement.setInt(i, (Integer) fieldValue);
-							} else if (fieldValue instanceof BigDecimal) {
-								preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
-							} else if (fieldValue instanceof Date) {
-								preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
-							} else if (fieldValue instanceof Collection) {
-								preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
-							} else {
-								log.error("Unhandled field type {}", fieldValue.getClass());
-							}
-
-							i++;
-						}
-
-						preparedStatement.addBatch();
-
-						// Batch size: 20
-						if (itemsProcessed % 500 == 0) {
-							preparedStatement.executeBatch();
-						}
-						itemsProcessed++;
+					if (fieldValue == null) {
+						preparedStatement.setNull(i, Types.NULL);
+					} else if (fieldValue instanceof String) {
+						preparedStatement.setString(i, (String) fieldValue);
+					} else if (fieldValue instanceof Long) {
+						preparedStatement.setLong(i, (Long) fieldValue);
+					} else if (fieldValue instanceof Double) {
+						preparedStatement.setDouble(i, (Double) fieldValue);
+					} else if (fieldValue instanceof BigInteger) {
+						preparedStatement.setInt(i, ((BigInteger) fieldValue).intValue());
+					} else if (fieldValue instanceof Integer) {
+						preparedStatement.setInt(i, (Integer) fieldValue);
+					} else if (fieldValue instanceof BigDecimal) {
+						preparedStatement.setBigDecimal(i, (BigDecimal) fieldValue);
+					} else if (fieldValue instanceof Date) {
+						preparedStatement.setDate(i, new java.sql.Date(((Date) fieldValue).getTime()));
+					} else if (fieldValue instanceof Collection) {
+						preparedStatement.setString(i, JacksonUtil.toString(fieldValue));
+					} else {
+						log.error("Unhandled field type {}", fieldValue.getClass());
 					}
+
+					i++;
+				}
+
+				preparedStatement.addBatch();
+
+				// Batch size: 20
+				if (itemsProcessed % 500 == 0) {
 					preparedStatement.executeBatch();
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.commit();
-					}
-
-				} catch (SQLException e) {
-					log.error("Failed to bulk insert with sql {}\n", sql, e);
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.rollback();
-					}
-					throw e;
 				}
+				itemsProcessed++;
 			}
-		});
+		}));
 	}
 
 	/**
@@ -812,36 +767,12 @@ public class NativePersistenceService extends BaseService {
 
 			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
 
-
-			Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
-
-			hibernateSession.doWork(connection -> {
-				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-						connection.setAutoCommit(false);
-				}
-				setSchema(sqlConnectionCode, connection);
-
-				try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-					int parameterIndex = 1;
-					for (String fieldName : values.keySet()) {
-						Object fieldValue = values.get(fieldName);
-						if (fieldValue != null && fieldName != "uuid") {
-							setParameterValue(ps, parameterIndex++, fieldValue);
-						}
-					}
-
-					ps.executeUpdate();
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.commit();
-					}
-
-				} catch (Exception e) {
-					log.error("Native SQL update failed: {}", e.getMessage());
-					if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-						if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-							connection.rollback();
+			doUpdate(sqlConnectionCode, sql.toString(), ps -> {
+				int parameterIndex = 1;
+				for (String fieldName : values.keySet()) {
+					Object fieldValue = values.get(fieldName);
+					if (fieldValue != null && fieldName != "uuid") {
+						setParameterValue(ps, parameterIndex++, fieldValue);
 					}
 				}
 			});
@@ -856,6 +787,64 @@ public class NativePersistenceService extends BaseService {
 			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);
 			throw e;
 		}
+	}
+	
+	private void doBatch(String sqlConnectionCode, String sql, SqlAction action) {
+		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		hibernateSession.doWork(connection -> {
+			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+					connection.setAutoCommit(false);
+			}
+			setSchema(sqlConnectionCode, connection);
+
+			try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+				action.doWork(ps);
+				
+				ps.executeBatch();
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
+						connection.commit();
+					}
+				}
+			} catch (Exception e) {
+				log.error("Query failed: {}", e.getMessage());
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
+						connection.rollback();
+					}
+				}
+			}
+		});
+	}
+	
+	private void doUpdate(String sqlConnectionCode, String sql, SqlAction action) {
+		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		hibernateSession.doWork(connection -> {
+			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
+					connection.setAutoCommit(false);
+			}
+			setSchema(sqlConnectionCode, connection);
+
+			try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+				action.doWork(ps);
+				
+				ps.executeUpdate();
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
+						connection.commit();
+					}
+				}
+			} catch (Exception e) {
+				log.error("Query failed: {}", e.getMessage());
+				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
+					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
+						connection.rollback();
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -883,41 +872,19 @@ public class NativePersistenceService extends BaseService {
 			sql.append("update " + finalTableName + " set " + finalFieldName + "= ? where uuid = ?");
 		}
 		
-		var session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
-		session.doWork(connection -> {
-			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-					connection.setAutoCommit(false);
-			}
-			try (var statement = connection.prepareStatement(sql.toString())){
-				
-				if(finalValue == null) {
-					statement.setString(1, uuid);
-				} else {
-					setParameterValue(statement, 1, finalValue);
-					statement.setString(2, uuid);
-				}
-				
-				statement.executeUpdate();
-				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-						connection.commit();
-				}
-				
-				CustomTableRecord record = new CustomTableRecord();
-				record.setUuid(uuid);
-				record.setCetCode(cetCode);
-				customTableRecordUpdate.fire(record);
-
-			} catch (Exception e) {
-				log.error("Failed to update value in table {}/{}/{}", tableName, fieldName, uuid);
-				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
-					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
-						connection.rollback();
-				}
-				throw e;
+		doUpdate(sqlConnectionCode, sql.toString(), statement -> {
+			if(finalValue == null) {
+				statement.setString(1, uuid);
+			} else {
+				setParameterValue(statement, 1, finalValue);
+				statement.setString(2, uuid);
 			}
 		});
+		
+		CustomTableRecord record = new CustomTableRecord();
+		record.setUuid(uuid);
+		record.setCetCode(cetCode);
+		customTableRecordUpdate.fire(record);
 	}
 
 	/**
@@ -929,7 +896,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void disable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
 		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
-		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		doUpdate(sqlConnectionCode, "update " + tableName + " set disabled=1 where uuid in ?", ps -> {
+			setParameterValue(ps, 1, ids);
+		});
 	}
 
 	/**
@@ -941,7 +910,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void disable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
-		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=1 where uuid=" + uuid).executeUpdate();
+		doUpdate(sqlConnectionCode, "update " + tableName + " set disabled=1 where uuid= ?", ps -> {
+			setParameterValue(ps, 1, uuid);
+		});
 	}
 
 	/**
@@ -953,7 +924,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, Set<String> ids) throws BusinessException {
 		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
-		getEntityManager(sqlConnectionCode).createNativeQuery("update " + tableName + " set disabled=0 where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		doUpdate(sqlConnectionCode, "update " + tableName + " set disabled=0 where uuid in ?", ps -> {
+			setParameterValue(ps, 1, ids);
+		});
 	}
 
 	/**
@@ -965,10 +938,9 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void enable(String sqlConnectionCode, String tableName, String uuid) throws BusinessException {
 		tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
-		getEntityManager(sqlConnectionCode)
-			.createNativeQuery("update " + tableName + " set disabled=0 where uuid= ?")
-			.setParameter(1, uuid)
-			.executeUpdate();
+		doUpdate(sqlConnectionCode, "update " + tableName + " set disabled=0 where uuid= ?", ps -> {
+			setParameterValue(ps, 1, uuid);
+		});
 	}
 
 	/**
@@ -993,10 +965,7 @@ public class NativePersistenceService extends BaseService {
 				.getResultList();
 		
 		// Remove in own table
-		getEntityManager(sqlConnectionCode)
-			.createNativeQuery("delete from {h-schema}" + tableName + "WHERE uuid IN ?")
-			.setParameter(1, uuids)
-			.executeUpdate();
+		removeRecords(sqlConnectionCode, tableName, uuids);
 		
 		// Remove in parent table
 		if(template.getSuperTemplate() != null) {
@@ -1051,7 +1020,9 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids
 	 */
 	private void removeRecords(String sqlConnectionCode, String tableName, Collection<String> ids) {
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid in :ids").setParameter("ids", ids).executeUpdate();
+		doUpdate(sqlConnectionCode, "delete from {h-schema}" + tableName + " where uuid in ?", (ps -> {
+			setParameterValue(ps, 1, ids);
+		}));
 	}
 
 	/**
@@ -1082,9 +1053,9 @@ public class NativePersistenceService extends BaseService {
 	}
 
 	private void removeRecord(String sqlConnectionCode, String uuid, String tableName) {
-		getEntityManager(sqlConnectionCode).createNativeQuery("delete from {h-schema}" + tableName + " where uuid= ?")
-			.setParameter(1, uuid)
-			.executeUpdate();
+		doUpdate(sqlConnectionCode, "delete from {h-schema}" + tableName + " where uuid= ?", (ps -> {
+			setParameterValue(ps, 1, uuid);
+		}));
 	}
 
 	/**
