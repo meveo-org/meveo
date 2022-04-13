@@ -28,6 +28,9 @@ public class CrossStorageTransaction {
 	private DBStorageTypeService dbStorageTypeService;
 	
 	@Inject
+	private StorageImplProvider provider;
+	
+	@Inject
 	private Logger log;
 	
 	private int stackedCalls = 0;
@@ -36,20 +39,20 @@ public class CrossStorageTransaction {
 	private void postConstruct() {
 		dbStorageTypeService.list()
 			.stream()
-			.map(dbStorageTypeService::findImplementation)
+			.map(provider::findImplementation)
 			.forEach(StorageImpl::init);
 	}
 
 	public void beginTransaction(Repository repository, List<DBStorageType> storages) {
 		storages.stream()
-			.map(dbStorageTypeService::findImplementation)
+			.map(provider::findImplementation)
 			.forEach(storageImpl -> storageImpl.beginTransaction(repository, stackedCalls));
 
 		stackedCalls++;
 	}
 	
 	public <T> T beginTransaction(Repository repository, DBStorageType storage) {
-		return dbStorageTypeService.findImplementation(storage).beginTransaction(repository, stackedCalls);
+		return provider.findImplementation(storage).beginTransaction(repository, stackedCalls);
 	}
 
 	
@@ -58,7 +61,7 @@ public class CrossStorageTransaction {
 		
 		if(stackedCalls == 0) {
 			storages.stream()
-				.map(dbStorageTypeService::findImplementation)
+				.map(provider::findImplementation)
 				.forEach(storageImpl -> storageImpl.commitTransaction(repository));
 		}
 	}
@@ -68,7 +71,7 @@ public class CrossStorageTransaction {
 		stackedCalls--;
 		
 		storages.stream()
-			.map(dbStorageTypeService::findImplementation)
+			.map(provider::findImplementation)
 			.forEach(storageImpl -> storageImpl.rollbackTransaction(stackedCalls));
 	}
 	
@@ -76,7 +79,7 @@ public class CrossStorageTransaction {
 	private void preDestroy() {
 		dbStorageTypeService.list()
 			.stream()
-			.map(dbStorageTypeService::findImplementation)
+			.map(provider::findImplementation)
 			.forEach(StorageImpl::destroy);
 	}
 }

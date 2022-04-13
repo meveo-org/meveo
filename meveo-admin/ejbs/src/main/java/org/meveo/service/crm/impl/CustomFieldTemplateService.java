@@ -48,7 +48,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
-import org.meveo.persistence.DBStorageTypeService;
+import org.meveo.persistence.StorageImplProvider;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.BusinessService;
@@ -86,8 +86,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     @Inject
     private ModuleInstallationContext moduleInstallCtx;
     
-    @Inject
-    private DBStorageTypeService dbStorageTypeService;
+	@Inject
+	private StorageImplProvider provider;
     
     static boolean useCFTCache = true;
 
@@ -339,7 +339,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		
 		if (appliesToTemplate != null) {
 	        for (var storage : cft.getStorages()) {
-	        	dbStorageTypeService.findImplementation(storage).cftCreated(appliesToTemplate, cft);
+	        	provider.findImplementation(storage).cftCreated(appliesToTemplate, cft);
 	        }
 		}
 		
@@ -463,7 +463,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         storages.addAll(cachedCft.getStorages());
 		if (appliesToTemplate != null) {
 	        for (var storage : storages) {
-	        	dbStorageTypeService.findImplementation(storage).cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
+	        	provider.findImplementation(storage).cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
 	        }
 		}
 
@@ -519,7 +519,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		
 		if (withData && appliesToTemplate != null) {
 	        for (var storage : cft.getStorages()) {
-	        	dbStorageTypeService.findImplementation(storage).removeCft(appliesToTemplate, cft);
+	        	provider.findImplementation(storage).removeCft(appliesToTemplate, cft);
 	        }
 		}
 		

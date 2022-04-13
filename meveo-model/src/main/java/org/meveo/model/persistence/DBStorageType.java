@@ -129,4 +129,10 @@ public class DBStorageType {
 		DBStorageType other = (DBStorageType) obj;
 		return Objects.equals(code, other.code);
 	}
+
+	@Override
+	public String toString() {
+		return this.code;
+	}
+	
 }

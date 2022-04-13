@@ -75,7 +75,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.DBStorageTypeService;
+import org.meveo.persistence.StorageImplProvider;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleHelper;
 import org.meveo.service.admin.impl.ModuleUninstall;
@@ -179,8 +179,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
     
-    @Inject
-    private DBStorageTypeService dbStorageTypeService;
+	@Inject
+	private StorageImplProvider provider;
     
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -213,7 +213,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         
         for (var storage : cet.getAvailableStorages()) {
-        	dbStorageTypeService.findImplementation(storage).cetCreated(cet);
+        	provider.findImplementation(storage).cetCreated(cet);
         }
     }
 
@@ -535,7 +535,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     	}
     	
         for (var storage : cet.getAvailableStorages()) {
-        	dbStorageTypeService.findImplementation(storage).removeCet(cet);
+        	provider.findImplementation(storage).removeCet(cet);
         }
     }
 
@@ -662,7 +662,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         storages.addAll(cet.getAvailableStorages());
         storages.addAll(oldValue.getAvailableStorages());
         for (var storage : storages) {
-        	dbStorageTypeService.findImplementation(storage).cetUpdated(oldValue, cet);
+        	provider.findImplementation(storage).cetUpdated(oldValue, cet);
         }
 
         return cetUpdated;

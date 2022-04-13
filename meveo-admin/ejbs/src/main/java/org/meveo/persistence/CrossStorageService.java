@@ -120,11 +120,11 @@ public class CrossStorageService implements CustomPersistenceService {
     @Removed
     private Event<CustomEntityInstance> customEntityInstanceDelete;
     
-    @Inject
-    private DBStorageTypeService dbStorageTypeService;
-    
 	@Inject
 	private CustomTableRelationService customTableRelationService;
+	
+	@Inject
+	private StorageImplProvider provider;
 
 	/**
 	 * Retrieves one entity instance
@@ -181,7 +181,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			Map<String, Object> storageValues = dbStorageTypeService.findImplementation(storage) 
+			Map<String, Object> storageValues = provider.findImplementation(storage) 
 					.findById(repository, cet, uuid, cfts, selectFields, withEntityReferences);
 			
 			if (storageValues != null) {
@@ -281,7 +281,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			List<Map<String, Object>> values = dbStorageTypeService.findImplementation(storage)
+			List<Map<String, Object>> values = provider.findImplementation(storage)
 					.find(query);
 			
 			if (values != null) {
@@ -314,7 +314,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 		for (var storage : cet.getAvailableStorages()) {
-			var count = dbStorageTypeService.findImplementation(storage)
+			var count = provider.findImplementation(storage)
 					.count(repository, cet, paginationConfiguration);
 			if (count != null) {
 				return count;
@@ -525,7 +525,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			var results = dbStorageTypeService.findImplementation(storage)
+			var results = provider.findImplementation(storage)
 					.createOrUpdate(repository, ceiAfterPreEvents, customFieldTemplates, foundId);
 			uuid = results.getBaseEntityUuid();
 			if (foundId == null) {
@@ -591,7 +591,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			dbStorageTypeService.findImplementation(storage).update(repository, ceiToUpdate);
+			provider.findImplementation(storage).update(repository, ceiToUpdate);
 		}
 	}
 
@@ -634,7 +634,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : crt.getAvailableStorages()) {
-			var result = dbStorageTypeService.findImplementation(storage)
+			var result = provider.findImplementation(storage)
 					.addCRTByUuids(repository, crt, PersistenceUtils.filterValues(cfts, relationValues, crt, storage), sourceUuid, targetUuid);
 			if (result != null) {
 				return result;
@@ -658,10 +658,10 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityTemplate cet = cei.getCet();
 		
 		for (var storage : cet.getAvailableStorages()) {
-			if (uuid != null && dbStorageTypeService.findImplementation(storage).exists(repository, cet, uuid)) {
+			if (uuid != null && provider.findImplementation(storage).exists(repository, cet, uuid)) {
 				break;
 			}
-			uuid = dbStorageTypeService.findImplementation(storage).findEntityIdByValues(repository, cei);
+			uuid = provider.findImplementation(storage).findEntityIdByValues(repository, cei);
 		}
 
 		return uuid;
@@ -725,7 +725,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			
 			for (var storage : cet.getAvailableStorages()) {
-				dbStorageTypeService.findImplementation(storage).remove(repository, cet, uuid);
+				provider.findImplementation(storage).remove(repository, cet, uuid);
 			}
 	
 			fileSystemService.delete(repository, cet, uuid);
@@ -762,7 +762,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
 		for (var storage : cft.getStoragesNullSafe()) {
-			dbStorageTypeService.findImplementation(storage).setBinaries(repository, cet, cft, uuid, binaries);
+			provider.findImplementation(storage).setBinaries(repository, cet, cft, uuid, binaries);
 		}
 	}
 
