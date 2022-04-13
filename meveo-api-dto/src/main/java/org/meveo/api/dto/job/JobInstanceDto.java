@@ -254,10 +254,10 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
 	@Override
 	public int compareTo(JobInstanceDto o) {
 		if (o == null)
-			return -1;
+			return 1;
 		
 		if (this.getFollowingJob() == null && o.getFollowingJob() == null)
-			return 0;
+			return this.code.compareTo(o.code);
 		
 		else if (this.getFollowingJob() == null && o.getFollowingJob() != null)
 			return -1;
@@ -269,7 +269,7 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
 			if (this.getFollowingJob().contentEquals(o.code) )
 				return 1;
 			else 
-				return -1;
+				return 0;
 		}
 	}
 }
