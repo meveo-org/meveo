@@ -955,9 +955,7 @@ public class NativePersistenceService extends BaseService {
 		
 		// Remove records in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
-		subTemplates.forEach(subT -> getEntityManager(sqlConnectionCode)
-				.createNativeQuery("delete from {h-schema}" + tableName(subT))
-				.executeUpdate());
+		subTemplates.forEach(subT -> doUpdate(sqlConnectionCode, "delete from " + tableName(subT), (ps) -> {}));
 		
 		// Gather uuids to delete
 		List<String> uuids = getEntityManager(sqlConnectionCode)
@@ -1020,7 +1018,7 @@ public class NativePersistenceService extends BaseService {
 	 * @param ids
 	 */
 	private void removeRecords(String sqlConnectionCode, String tableName, Collection<String> ids) {
-		doUpdate(sqlConnectionCode, "delete from {h-schema}" + tableName + " where uuid in ?", (ps -> {
+		doUpdate(sqlConnectionCode, "delete from " + tableName + " where uuid in ?", (ps -> {
 			setParameterValue(ps, 1, ids);
 		}));
 	}
@@ -1053,7 +1051,7 @@ public class NativePersistenceService extends BaseService {
 	}
 
 	private void removeRecord(String sqlConnectionCode, String uuid, String tableName) {
-		doUpdate(sqlConnectionCode, "delete from {h-schema}" + tableName + " where uuid= ?", (ps -> {
+		doUpdate(sqlConnectionCode, "delete from " + tableName + " where uuid= ?", (ps -> {
 			setParameterValue(ps, 1, uuid);
 		}));
 	}
