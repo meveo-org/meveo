@@ -64,7 +64,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     @ApiModelProperty("The import script instances")
     @XmlElementWrapper(name = "importScriptInstances")
 	@XmlElement(name = "importScriptInstancy")
-    private List<ScriptInstanceDto> importScriptInstances = new ArrayList<>();
+    private List<String> importScriptInstances = new ArrayList<>();
 
     /**
      * Instantiates a new script instance dto.
@@ -107,7 +107,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
 
         if (scriptInstance.getImportScriptInstancesNullSafe() != null) {
             for (ScriptInstance script : scriptInstance.getImportScriptInstancesNullSafe() ) {
-                importScriptInstances.add(new ScriptInstanceDto(script, script.getScript()));
+                importScriptInstances.add(script.getCode());
             }
         }
         
@@ -200,7 +200,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
      *
      * @return the importScriptInstances
      */
-    public List<ScriptInstanceDto> getImportScriptInstances() {
+    public List<String> getImportScriptInstances() {
         return importScriptInstances;
     }
 
@@ -209,7 +209,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
      *
      * @param importScriptInstances the importScriptInstances to set
      */
-    public void setImportScriptInstances(List<ScriptInstanceDto> importScriptInstances) {
+    public void setImportScriptInstances(List<String> importScriptInstances) {
         this.importScriptInstances = importScriptInstances;
     }
 
