@@ -877,10 +877,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public MeveoModuleDto moduleToDto(MeveoModule module) throws MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
 
-		if (module.isDownloaded() && !module.isInstalled()) {
+		if (module.isDownloaded() && !module.isInstalled() && module.getModuleSource() != null) {
 			try {
-				MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);
-
+				MeveoModuleDto moduleDto = MeveoModuleUtils.moduleSourceToDto(module);  
+				
 				moduleDto.setCurrentVersion(module.getCurrentVersion());
 				
 				if (module.getPatches() != null && !module.getPatches().isEmpty()) {
