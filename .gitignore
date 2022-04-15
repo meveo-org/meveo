@@ -12,3 +12,7 @@
 **/target/
 /bin/
 **/out/artifacts/**
+
+src/test/apiTests/postman/bin/newman/newman-run-report-*
+src/test/apiTests/postman/bin/package-lock.json
+src/test/apiTests/postman/conf/**
