@@ -32,6 +32,7 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.util.view.MessagesHelper;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DualListModel;
@@ -91,8 +92,11 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public String saveOrUpdateGit() throws BusinessException, ELException {
 
 		if (entity.getId() == null && entity.getRemoteOrigin() != null) {
-			gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
-			gitClient.checkout(entity, entity.getDefaultBranch(), false);
+			try {
+				gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+			} catch (Exception e) {
+				return MessagesHelper.error(messages, e);
+			}
 		}
 
 		String result = saveOrUpdate(false);
