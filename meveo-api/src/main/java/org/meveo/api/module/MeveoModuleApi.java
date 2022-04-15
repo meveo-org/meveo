@@ -52,13 +52,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.meveo.admin.exception.BusinessEntityException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
@@ -123,6 +122,7 @@ import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
+import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
@@ -198,6 +198,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private ModuleInstallationContext moduleCtx;
+    
+    @Inject
+    private GitClient gitClient;
     
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -749,8 +752,15 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if(meveoModuleService.hasDependencies(meveoModule)) {
 			throw new BusinessException("Unable to uninstall a referenced module.");
 		}
+		
+		RevCommit headCommitBefore = gitClient.getHeadCommit(meveoModule.getGitRepository());
+		
+		try {
+			return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
+		} finally {
+			gitClient.reset(meveoModule.getGitRepository(), headCommitBefore);
+		}
 
-		return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
 	}
 
 	public void parseModuleInfoOnlyFromDto(MeveoModule meveoModule, MeveoModuleDto moduleDto) throws MeveoApiException, BusinessException {
