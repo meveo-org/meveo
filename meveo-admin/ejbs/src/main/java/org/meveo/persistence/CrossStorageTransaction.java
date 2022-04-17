@@ -3,8 +3,8 @@
  */
 package org.meveo.persistence;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -46,10 +46,10 @@ public class CrossStorageTransaction {
 	@Inject
 	private Logger log;
 	
-	private Map<String, Session> neo4jSessions = new HashMap<>();
-	private Map<String, Transaction> neo4jTransactions = new HashMap<>();
+	private Map<String, Session> neo4jSessions = new ConcurrentHashMap<>();
+	private Map<String, Transaction> neo4jTransactions = new ConcurrentHashMap<>();
 	
-	private Map<String, org.hibernate.Session> hibernateSessions = new HashMap<>();
+	private Map<String, org.hibernate.Session> hibernateSessions = new ConcurrentHashMap<>();
 	
 	private int stackedCalls = 0;
 	

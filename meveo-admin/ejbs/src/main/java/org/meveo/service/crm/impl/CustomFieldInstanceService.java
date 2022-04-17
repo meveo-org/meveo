@@ -2415,52 +2415,59 @@ public class CustomFieldInstanceService extends BaseService {
      * @throws BusinessException thrown when values are not set
      */
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
-		Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(entity);
-		if(entity instanceof CustomEntityInstance) {
-			var cei = (CustomEntityInstance) entity;
-			if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
-				cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
-			}
-		}
-		
-		for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
-			Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
-			if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {
-			    if ((Integer) value == 1) {
-                    value = true;
-                } else {
-			        value = false;
-                }
+		Map<String, CustomFieldTemplate> cetFields = null;
+		try {
+			cetFields = customFieldTemplateService.findByAppliesTo(entity);
+			if(entity instanceof CustomEntityInstance) {
+				var cei = (CustomEntityInstance) entity;
+				if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
+					cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
+				}
 			}
 			
-            if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof BigInteger) {
-                EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
-                if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
-                    User user = userService.findById(((BigInteger) value).longValue());
-                    entityReferenceWrapper.setCode(user.getUserName());
-                } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
-                    Provider provider = providerService.findById(((BigInteger) value).longValue());
-                    entityReferenceWrapper.setCode(provider.getCode());
-                }
-                entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
-                entityReferenceWrapper.setId(((BigInteger) value).longValue());
-                value = entityReferenceWrapper;
-                
-            } /* else if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof String) {
-            	EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
-                if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
-                    User user = userService.findById(((BigInteger) value).longValue());
-                    entityReferenceWrapper.setCode(user.getUserName());
-                } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
-                    Provider provider = providerService.findById(((BigInteger) value).longValue());
-                    entityReferenceWrapper.setCode(provider.getCode());
-                }
-                entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
-                entityReferenceWrapper.setId(((BigInteger) value).longValue());
-                value = entityReferenceWrapper;
-            } */
+			for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
+				Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
+				if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {
+				    if ((Integer) value == 1) {
+			            value = true;
+			        } else {
+				        value = false;
+			        }
+				}
+				
+			    if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof BigInteger) {
+			        EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+			        if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
+			            User user = userService.findById(((BigInteger) value).longValue());
+			            entityReferenceWrapper.setCode(user.getUserName());
+			        } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
+			            Provider provider = providerService.findById(((BigInteger) value).longValue());
+			            entityReferenceWrapper.setCode(provider.getCode());
+			        }
+			        entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
+			        entityReferenceWrapper.setId(((BigInteger) value).longValue());
+			        value = entityReferenceWrapper;
+			        
+			    } /* else if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof String) {
+			    	EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+			        if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
+			            User user = userService.findById(((BigInteger) value).longValue());
+			            entityReferenceWrapper.setCode(user.getUserName());
+			        } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
+			            Provider provider = providerService.findById(((BigInteger) value).longValue());
+			            entityReferenceWrapper.setCode(provider.getCode());
+			        }
+			        entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
+			        entityReferenceWrapper.setId(((BigInteger) value).longValue());
+			        value = entityReferenceWrapper;
+			    } */
 
-            setCFValue(entity, cetField.getKey(), value);
+			    setCFValue(entity, cetField.getKey(), value);
+			}
+		} catch (NullPointerException e) {
+			if (entity == null)
+				throw new RuntimeException("NullPointerException cetCode:" + cetCode + " entity: null", e);
+			throw new RuntimeException("nullpointer cetCode:" + cetCode + " entity class:"+entity.getClass().getName() + " values:" + values+ " cetFields:"+cetFields, e);
 		}
 		
 	}

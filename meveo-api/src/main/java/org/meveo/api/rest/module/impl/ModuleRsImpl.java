@@ -160,8 +160,10 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
         	MeveoModuleDto dto = moduleApi.findIgnoreNotFound(moduleDto.getCode());
         	if(dto == null) {
         		moduleApi.create(moduleDto, false);
+                moduleApi.install(repositories, moduleDto, OnDuplicate.FAIL);
+        	} else {
+                moduleApi.install(repositories, dto, OnDuplicate.FAIL);
         	}
-            moduleApi.install(repositories, moduleDto, OnDuplicate.FAIL);
 
         } catch (Exception e) {
             processException(e, result);

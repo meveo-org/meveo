@@ -54,6 +54,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
@@ -78,6 +79,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	
 	@Inject
 	protected MeveoModuleService meveoModuleService;
+	
+	@Inject
+	private ModuleInstallationContext installationContext;
 	
 	@Inject
 	@MeveoRepository
@@ -306,7 +310,13 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     @Override
     public void afterUpdateOrCreate(P entity) throws BusinessException {
-    	MeveoModule module = findModuleOf(entity);
+    	MeveoModule module;
+    	if (!installationContext.isActive()) {
+    		module = findModuleOf(entity);
+    	} else {
+    		module = installationContext.getModule();
+    	}
+    	
     	if(module != null) {
     		addFilesToModule(entity,  module);
     	}

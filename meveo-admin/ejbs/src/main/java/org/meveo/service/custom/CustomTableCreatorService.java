@@ -640,13 +640,13 @@ public class CustomTableCreatorService implements Serializable {
 				constraints.setNullable(false);
 			}
 
-			if (cft.isUnique()) {
-				constraints.setUnique(true);
-				constraints.setUniqueConstraintName(getUniqueConstraintName(dbTableName, dbFieldname));
-			}
-
 			addColumnChange.setColumns(Collections.singletonList(column));
 			changeSet.addChange(addColumnChange);
+			
+			
+			if (cft.isUnique()) {
+				createOrUpdateUniqueField(dbTableName, cft, changeSet);
+			}
 		}
 
 		// Add a foreign key constraint pointing on referenced table if field is an

@@ -106,7 +106,7 @@ public class Endpoint extends BusinessEntity {
 	 */
 	@Type(type = "numeric_boolean")
 	@Column(name = "synchronous", nullable = false)
-	private boolean synchronous;
+	private boolean synchronous = true;
 
 	/**
 	 * Method used to access the endpoint. Conditionates the input format of the

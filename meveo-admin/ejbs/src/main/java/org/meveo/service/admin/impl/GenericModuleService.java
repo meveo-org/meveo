@@ -67,6 +67,8 @@ import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.service.storage.RepositoryService;
 
+import com.github.javaparser.utils.Log;
+
 @Stateless
 public class GenericModuleService<T extends MeveoModule> extends BusinessService<T> {
 
@@ -340,10 +342,11 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
         return super.enable(module);
     }
     
-	public List<MeveoModuleItem> getSortedModuleItems(Set<MeveoModuleItem> moduleItems) {
+	public List<MeveoModuleItem> getSortedModuleItemsForUninstall(Set<MeveoModuleItem> moduleItems) {
 
 		Comparator<MeveoModuleItem> comparator = new Comparator<MeveoModuleItem>() {
 
+			@SuppressWarnings("rawtypes")
 			@Override
 			public int compare(MeveoModuleItem o1, MeveoModuleItem o2) {
 
@@ -374,6 +377,18 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 				
 				if (Objects.isNull(sortOrder1) || Objects.isNull(sortOrder2)) {
 					return 0;
+				}
+				
+				try {
+					if (o1.getItemClass().equals(o2.getItemClass())) {
+						loadModuleItem(o1);
+						if (o1.getItemEntity() instanceof Comparable) {
+							loadModuleItem(o2);
+							return ((Comparable) o1.getItemEntity()).compareTo(o2.getItemEntity()) * -1;
+						}
+					}
+				} catch (BusinessException e) {
+					log.error("Failed to compare objects", e);
 				}
 
 				return sortOrder2.value() - sortOrder1.value();

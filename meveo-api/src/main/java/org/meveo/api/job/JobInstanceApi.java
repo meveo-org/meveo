@@ -1,6 +1,7 @@
 package org.meveo.api.job;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Stateless;
@@ -114,7 +115,7 @@ public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
 
         handleMissingParametersAndValidate(postData);
 
-        JobInstance jobInstance = jobInstanceService.findByCode(jobInstanceCode);
+        JobInstance jobInstance = jobInstanceService.findByCode(jobInstanceCode, List.of("executionResults"));
 
         if (jobInstance == null) {
             throw new EntityDoesNotExistsException(JobInstance.class, jobInstanceCode);

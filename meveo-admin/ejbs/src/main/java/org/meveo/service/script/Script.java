@@ -84,6 +84,11 @@ public abstract class Script implements ScriptInterface {
 	public static String JOB_RESULT_REPORT = "RESULT_REPORT";
 
 	/**
+	 * Summary when script is executed by a Job
+	 */
+	public static String JOB_RESULT_SUMMARY = "RESULT_SUMMARY";
+
+	/**
 	 * Nb of result to process when script is executed by a Job
 	 */
 	public static String JOB_RESULT_TO_PROCESS = "RESULT_TO_PROCESS";

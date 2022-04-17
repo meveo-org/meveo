@@ -22,7 +22,6 @@ package org.meveo.service.script;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,25 +35,23 @@ import javax.annotation.Priority;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
-import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.exception.ScriptExecutionException;
+import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.jpa.JpaAmpNewTx;
-import org.meveo.model.BaseEntity;
 import org.meveo.model.ModulePostInstall;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -66,6 +63,7 @@ import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.ScriptTransactionType;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
+import org.meveo.service.base.BusinessService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
@@ -97,21 +95,6 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
-    	if (StringUtils.isBlank(script.getScript()) && this.moduleInstallationContext.isActive()) {
-    		File repoDir = GitHelper.getRepositoryDir(null, this.moduleInstallationContext.getModuleCodeInstallation());
-    		String pathScript = script.getCode().replaceAll("\\.", "/");
-    		pathScript = pathScript.replaceAll("/+\\w+$", "");
-    		String scriptFileDir = "facets/java/" + pathScript + ".java";
-    		File javaSource = new File(repoDir, scriptFileDir);
-    		try {
-	    		if (javaSource.exists()) {
-	    			String scriptText = Files.readString(javaSource.toPath());
-	    			script.setScript(scriptText);
-	    		}
-			} catch (IOException e) {
-				throw new BusinessException(e);
-			}
-    	}
 		super.beforeUpdateOrCreate(script);
 		
         // Fetch maven dependencies
@@ -386,4 +369,11 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		}	
 	}
 
+	@Override
+	protected BaseEntityDto getDto(ScriptInstance entity) throws BusinessException {
+		ScriptInstanceDto dto = (ScriptInstanceDto) super.getDto(entity);
+		dto.setScript(null);
+		return dto;
+	}
+	
 }

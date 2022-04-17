@@ -1069,9 +1069,20 @@ public class CrossStorageService implements CustomPersistenceService {
 		if(sqlUUID == null) {
 			Map<String, Object> sqlValues = filterValues(cfts, cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL, false);
 			sqlUUID = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cei.getCet(), sqlValues, cfts.values());
+			if (sqlUUID != null) {
+				if (oldCfValues == null) {
+					oldCfValues = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID);
+					if(oldCfValues != null) {
+						oldCfValues.remove("uuid");
+					} else {
+						throw new IllegalStateException("Error in CrossStarageService : An entity which match on unique values exists, can't fetch this entity with cetCode / uuid " + cei.getCetCode()+ "/" +sqlUUID);
+					}
+				}
+			}
 		}
 		
 		if (sqlUUID != null) {
+
 			
 			cei.setUuid(sqlUUID);
 			

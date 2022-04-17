@@ -335,14 +335,14 @@
 								"key": "Accept",
 								"type": "text",
 								"value": "application/json",
-								"disabled": true
+								"disabled": false
 							},
 							{
 								"key": "Content-Type",
 								"name": "Content-Type",
-								"value": "application/graphql",
+								"value": "application/json",
 								"type": "text",
-								"disabled": true
+								"disabled": false
 							}
 						],
 						"body": {
@@ -355,7 +355,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/services/graphql/:repo",
+							"raw": "{{protocol}}://{{hostname}}:{{port}}/{{webContext}}/api/rest/graphql/:repo",
 							"protocol": "{{protocol}}",
 							"host": [
 								"{{hostname}}"
@@ -363,7 +363,8 @@
 							"port": "{{port}}",
 							"path": [
 								"{{webContext}}",
-								"services",
+								"api",
+								"rest",
 								"graphql",
 								":repo"
 							],
