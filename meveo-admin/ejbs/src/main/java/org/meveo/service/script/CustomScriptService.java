@@ -162,9 +162,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	@Inject
 	private MeveoModuleService meveoModuleService;
     
-    private static RepositorySystem defaultRepositorySystem;
+    private RepositorySystem defaultRepositorySystem;
 
-    private static RepositorySystemSession defaultRepositorySystemSession;
+    private RepositorySystemSession defaultRepositorySystemSession;
     
 	@Inject
 	private CustomEntityTemplateCompiler customEntityTemplateCompiler;
@@ -177,7 +177,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	
     @PostConstruct
     private void init() {
-        if((defaultRepositorySystem == null) && (mavenConfigurationService.getM2FolderPath() != null)) {
+        if(mavenConfigurationService.getM2FolderPath() != null) {
             defaultRepositorySystem = mavenConfigurationService.newRepositorySystem();
             defaultRepositorySystemSession = mavenConfigurationService.newRepositorySystemSession(defaultRepositorySystem);
         }
