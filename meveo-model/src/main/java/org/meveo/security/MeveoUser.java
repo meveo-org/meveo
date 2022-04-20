@@ -37,6 +37,11 @@ public abstract class MeveoUser implements Serializable {
     protected String providerCode;
 
     /**
+     * Commit message
+     */
+    protected String commitMessage;
+
+    /**
      * Is user authenticated
      */
     protected boolean authenticated;
@@ -212,6 +217,10 @@ public abstract class MeveoUser implements Serializable {
     public void setMail(String mail) {
         this.mail = mail;
     }
+
+    public String getCommitMessage() { return commitMessage; }
+
+    public void setCommitMessage(String message) { this.commitMessage = message; }
 
     /**
      * Return unproxied instance of MeveoUser - preserving username and provider code only

@@ -240,6 +240,7 @@ public class GitClient {
      * @throws IllegalArgumentException   if pattern list is empty
      */
     public void commit(GitRepository gitRepository, List<String> patterns, String message) throws BusinessException {
+        log.info("git repo in start method = {}",message);
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -275,6 +276,7 @@ public class GitClient {
 
                 if (status.hasUncommittedChanges()) {
                 	try {
+                        log.info("git repo commit message = {}",message);
 	                    RevCommit commit = git.commit().setMessage(message)
 	                            .setAuthor(user.getUserName(), user.getMail())
 	                            .setAllowEmpty(false)

@@ -26,7 +26,7 @@ services:
       POSTGRES_USER: meveo
       POSTGRES_PASSWORD: meveo
     ports:
-      - 5432:5432
+      - 5499:5432
   # neo4j:
   #   image: manaty/neo4j-meveo:3.5.13
   #   container_name: neo4j

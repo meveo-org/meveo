@@ -10,6 +10,9 @@
 			<a href="#{request.contextPath}" id="logo-wrapper"> <h:graphicImage
 					name="logo.png" library="img" />
 			</a>
+			<p:inputText id="commitMessage"
+						 value="#{currentUser.getCommitMessage()}"
+						 placeholder="#{messages['menutop.commitMessage']}"/>
 		</div>
 
 		<div id="responsive-menu-button">
