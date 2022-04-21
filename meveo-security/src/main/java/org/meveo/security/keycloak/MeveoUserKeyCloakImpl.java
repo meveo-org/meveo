@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ejb.SessionContext;
-import javax.faces.component.UIInput;
-import javax.faces.event.AjaxBehaviorEvent;
 
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
@@ -165,16 +163,5 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
 
         }
         return null;
-    }
-
-    private String val1;
-    public void setVal1(String val1){this.val1 = val1;}
-    public String getVal1(){return this.val1;}
-    public void ajaxListener(AjaxBehaviorEvent event) {
-        log.info("commit message 1 = {}",this.val1);
-        log.info("commit message 2 = {}",getVal1());
-        String val = (String)((UIInput)event.getSource()).getValue();
-        log.info("commit message 3= {}",val);
-        this.setCommitMessage("babar test");
     }
 }

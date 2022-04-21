@@ -91,15 +91,18 @@ public abstract class MeveoUser implements Serializable {
      * @param user User to clone
      */
     public MeveoUser(MeveoUser user) {
+        log.info("meveo user constructor 1");
         this.userName = user.getUserName();
         this.providerCode = user.getProviderCode();
         this.roles = user.roles;
         this.whiteList = user.whiteList;
         this.blackList = user.blackList;
         this.mail = user.mail;
+        this.commitMessage = user.getCommitMessage();
     }
 
     public MeveoUser(String userName, String providerCode) {
+        log.info("meveo user constructor 2");
         this.userName = userName;
         this.providerCode = providerCode;
     }
@@ -229,7 +232,10 @@ public abstract class MeveoUser implements Serializable {
 
     public String getCommitMessage() { return commitMessage; }
 
-    public void setCommitMessage(String message) { this.commitMessage = message; }
+    public void setCommitMessage(String message) {
+        log.info("setting value in commit message = {}",message);
+        this.commitMessage = message;
+    }
 
     /**
      * Return unproxied instance of MeveoUser - preserving username and provider code only
@@ -237,6 +243,7 @@ public abstract class MeveoUser implements Serializable {
      * @return MeveoUser instance
      */
     public MeveoUser unProxy() {
+        log.info("meveo user constructor 3");
         return new MeveoUser(this) {
             private static final long serialVersionUID = 1864122036421892838L;
         };

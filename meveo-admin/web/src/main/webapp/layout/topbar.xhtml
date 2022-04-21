@@ -11,9 +11,9 @@
 					name="logo.png" library="img" />
 			</a>
 			<p:inputText id="commitMessageId"
-						 value="#{currentUser.val1}"
+						 value="#{userBean.commitMessage}"
 						 placeholder="#{messages['menutop.commitMessage']}">
-				<p:ajax listener="#{currentUser.ajaxListener}" process="@this" event="change"/>
+				<p:ajax listener="#{userBean.ajaxListener}" process="@this" event="change"/>
 			</p:inputText>
 		</div>
 
@@ -65,9 +65,6 @@
 												.fadeOut('slow');
 									});
 						})
-				function updateCommitMessage(val){
-					alert(val);
-				}
 			</script>
 			<div class="FRight">
 				<ul id="user-info" class="ListNoStyle Padding10"
