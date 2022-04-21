@@ -1,8 +1,5 @@
 package org.meveo.model.security;
 
-import java.io.Serializable;
-import java.util.List;
-
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Cacheable;
@@ -17,7 +14,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.QueryHint;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -25,9 +21,9 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
-import org.meveo.model.IEntity;
+import org.meveo.model.ModuleItem;
 
 /*
  * (C) Copyright 2015-2016 Opencell SAS (http://opencellsoft.com/) and contributors.
@@ -50,12 +46,23 @@ import org.meveo.model.IEntity;
 @Entity
 @Cacheable
 @ExportIdentifier("name")
+@ModuleItem(value = "permission", path = "permission")
 @Table(name = "adm_permission")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_permission_seq"), })
-@NamedQueries({ @NamedQuery(name = "Permission.getPermission", query = "select p from Permission p where p.permission=:permission", hints = {
-        @QueryHint(name = "org.hibernate.cacheable", value = "true") }) })
-public class Permission implements IEntity<Long>, Serializable {
+@NamedQueries({ 
+	@NamedQuery(
+			name = "Permission.getPermission",
+			query = "select p from Permission p where p.permission=:permission",
+			hints = {@QueryHint(name = "org.hibernate.cacheable", value = "true") }
+			),
+	@NamedQuery(
+			name = "Permission.getCode",
+			query = "select p from Permission p where p.code=:code",
+			hints = {@QueryHint(name = "org.hibernate.cacheable", value = "true") }
+			)
+	})
+public class Permission extends BusinessEntity {
     private static final long serialVersionUID = 2884657784984355718L;
 
     @Id

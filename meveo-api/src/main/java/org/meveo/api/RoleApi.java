@@ -26,10 +26,15 @@ import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.admin.impl.RoleService;
+import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.model.SortOrder;
 
 @Stateless
-public class RoleApi extends BaseApi {
+public class RoleApi extends BaseCrudApi<Role, RoleDto> { 
+	
+	public RoleApi() {
+		super(Role.class, RoleDto.class);
+	}
 
     @Inject
     private RoleService roleService;
@@ -288,5 +293,16 @@ public class RoleApi extends BaseApi {
     		roleService.update(role);
     	}
     }
+    
+    @Override
+	public RoleDto toDto(Role entity) throws MeveoApiException {
+		return RoleDto.toDTO(entity);
+	}
+	
+	
+	@Override
+	public IPersistenceService<Role> getPersistenceService() {
+		return roleService;
+	}
 
 }

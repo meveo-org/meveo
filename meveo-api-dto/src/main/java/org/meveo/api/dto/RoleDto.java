@@ -13,10 +13,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * The Class RoleDto.
@@ -27,8 +30,9 @@ import org.meveo.model.security.Role;
  */
 @XmlRootElement(name = "Role")
 @XmlAccessorType(XmlAccessType.FIELD)
-@ApiModel
-public class RoleDto extends BaseEntityDto {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel("RoleDto")
+public class RoleDto extends BusinessEntityDto {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 1L;
@@ -184,4 +188,40 @@ public class RoleDto extends BaseEntityDto {
     public void setRoles(List<RoleDto> roles) {
         this.roles = roles;
     }
+    
+ // List<PermissionDto> permission
+ 	public static RoleDto toDTO(Role cec) {
+ 		RoleDto dto = new RoleDto();
+ 		dto.setCode(cec.getCode());
+ 		dto.setName(cec.getName());
+
+ 		List<PermissionDto> permissionDtos = new ArrayList<PermissionDto>();
+
+ 		Set<Permission> allPermissions = cec.getAllPermissions();
+ 		for (Permission ps : allPermissions) {
+ 			permissionDtos.add(new PermissionDto().toDTO(ps));
+ 		}
+
+ 		dto.setPermission(permissionDtos);
+ 		return dto;
+ 	}
+
+ 	/**
+ 	 * Convert RoleDto to a Role instance. Note: does not convert custom entities
+ 	 * that are part of DTO
+ 	 *
+ 	 * @param dto         RoleDto object to convert
+ 	 * @param cecToUpdate Role to update with values from dto, or if null create a
+ 	 *                    new one
+ 	 * @return A new or updated Role instance
+ 	 */
+ 	public static Role fromDTO(RoleDto dto, Role cecToUpdate) {
+ 		Role cec = new Role();
+ 		if (cecToUpdate != null) {
+ 			cec = cecToUpdate;
+ 		}
+ 		cec.setCode(dto.getCode());
+ 		cec.setName("morad");
+ 		return cec;
+ 	}
 }
