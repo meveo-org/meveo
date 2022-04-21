@@ -276,7 +276,8 @@ public class GitClient {
 
                 if (status.hasUncommittedChanges()) {
                 	try {
-                        log.info("git repo commit message = {}",message);
+                        log.info("git repo commit message = {}, user.fullname= {}, commitMessage= {}"
+                                ,message,user.getFullName(),user.getCommitMessage());
 	                    RevCommit commit = git.commit().setMessage(message)
 	                            .setAuthor(user.getUserName(), user.getMail())
 	                            .setAllowEmpty(false)

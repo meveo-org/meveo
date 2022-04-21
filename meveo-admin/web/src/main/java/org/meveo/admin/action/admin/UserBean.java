@@ -37,7 +37,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.faces.component.UIInput;
+import javax.faces.component.UIOutput;
 import javax.faces.event.ActionEvent;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -878,5 +881,10 @@ public class UserBean extends CustomFieldBean<User> {
 	
 	public String getChangePasswordUrl() {
 		return keycloakAdminClientService.getChangePasswordUrl();
+	}
+
+	public void ajaxListener(AjaxBehaviorEvent event) {
+		String val = (String)((UIOutput)event.getSource()).getValue();
+		log.info("commit message = {}",val);
 	}
 }
