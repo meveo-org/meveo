@@ -175,7 +175,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 
         
         ScriptInterface executionEngine = getExecutionEngine(scriptInstance, context);
-        return super.execute(executionEngine, context);
+        return super.execute(executionEngine, scriptInstance, context);
     }
 
     /**

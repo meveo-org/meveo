@@ -213,14 +213,6 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         clusterEventPublisher.publishEvent(entity, CrudActionEnum.disable);
 	}
 
-	/**
-     * Retrieve the execution engine corresponding to the given code
-     *
-     * @param executableCode Code of the execution engine to retrieve
-     * @return An instance of an execution engine for the executable with code
-     */
-    public abstract E getExecutionEngine(String executableCode, Map<String, Object> context) throws BusinessException;
-    
     public abstract E getExecutionEngine(T function, Map<String, Object> context) throws BusinessException;
 
     /**
@@ -270,7 +262,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      * @return Context parameters. Will not be null even if "context" parameter is null.
      * @throws BusinessException Any execution exception
      */
-    public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
+    public Map<String, Object> execute(E engine, T function, Map<String, Object> context) throws BusinessException {
         if (context == null) {
             context = new HashMap<>();
         }
@@ -289,7 +281,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 		}
 
         try {
-        	return buildResultMap(engine, context);
+        	return buildResultMap(engine, function, context);
 		} catch (Throwable e) {
 			throw new ScriptExecutionException(engine.getClass().getName(), "buildResultMap", e);
 		}
@@ -304,7 +296,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 		}
     }
     
-    protected Map<String, Object> buildResultMap(E engine, Map<String, Object> context) {
+    protected Map<String, Object> buildResultMap(E engine, T function, Map<String, Object> context) {
 		return context;
 	}
 
@@ -374,14 +366,15 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
      */
     @TransactionAttribute(TransactionAttributeType.NEVER)
     public Map<String, Object> execute(String code, Map<String, Object> context) throws BusinessException {
-        E engine = getExecutionEngine(code, context);
-        return execute(engine, context);
+    	T function = this.findByCode(code);
+        E engine = getExecutionEngine(function, context);
+        return execute(engine, function, context);
     }
     
     @TransactionAttribute(TransactionAttributeType.NEVER)
-   	public Map<String, Object> postCommit(String code, Map<String, Object> context) throws BusinessException {
+   	public Map<String, Object> postCommit(T function, Map<String, Object> context) throws BusinessException {
 
-   		E engine = getExecutionEngine(code, context);
+   		E engine = getExecutionEngine(function, context);
 
    		if (context == null) {
    			context = new HashMap<>();
@@ -389,13 +382,13 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
    		engine.postCommit(context);
 
-   		return buildResultMap(engine, context);
+   		return buildResultMap(engine, function, context);
    	}
 
    	@TransactionAttribute(TransactionAttributeType.NEVER)
-   	public Map<String, Object> postRollback(String code, Map<String, Object> context) throws BusinessException {
+   	public Map<String, Object> postRollback(T function, Map<String, Object> context) throws BusinessException {
 
-   		E engine = getExecutionEngine(code, context);
+   		E engine = getExecutionEngine(function, context);
 
    		if (context == null) {
    			context = new HashMap<>();
@@ -403,7 +396,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 
    		engine.postRollback(context);
 
-   		return buildResultMap(engine, context);
+   		return buildResultMap(engine, function, context);
    	}
 
     public abstract List<ExpectedOutput> compareResults(List<ExpectedOutput> expectedOutputs, Map<String, Object> results);

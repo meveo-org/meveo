@@ -81,19 +81,11 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 		return functionService.getOutputs(function);
 	}
 
-	/**
-	 * Retrieve function class from its code and call corresponding service. When knowing type in advance, prefer use corresponding service.
-	 */
-	@Override
-	public ScriptInterface getExecutionEngine(String executableCode, Map<String, Object> context) throws BusinessException{
-		FunctionService<?, ScriptInterface> functionService = getFunctionService(executableCode);
-		return functionService.getExecutionEngine(executableCode, context);
-	}
 	
 	@Override
 	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) throws BusinessException {
-		FunctionService<?, ScriptInterface> functionService = getFunctionService(function);
-		return functionService.getExecutionEngine(function.getCode(), context);
+		FunctionService<Function, ScriptInterface> functionService = getFunctionService(function);
+		return functionService.getExecutionEngine(function, context);
 	}
 	
 	@Override
@@ -112,23 +104,22 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	}
 
 	@SuppressWarnings("unchecked")
-	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) throws ElementNotFoundException {
+	public FunctionService<Function, ScriptInterface> getFunctionService(String executableCode) throws ElementNotFoundException {
 		
 		final Function function = findByCode(executableCode);
         if(function == null) {
     		throw new ElementNotFoundException( executableCode, "Function");
     	}  
-//		getEntityManager().detach(function);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
-		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+		return (FunctionService<Function, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public FunctionService<?, ScriptInterface> getFunctionService(Function function) {
+	public FunctionService<Function, ScriptInterface> getFunctionService(Function function) {
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
-		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+		return (FunctionService<Function, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
 
 	@Override
