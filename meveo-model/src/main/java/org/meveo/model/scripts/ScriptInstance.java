@@ -20,6 +20,8 @@ package org.meveo.model.scripts;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -62,7 +64,7 @@ import org.meveo.model.security.Role;
 })
 @ImportOrder(4)
 @ExportIdentifier({ "code" })
-public class ScriptInstance extends CustomScript {
+public class ScriptInstance extends CustomScript implements Comparable<ScriptInstance> {
 
 	private static final long serialVersionUID = -7691357496569390167L;
 	
@@ -164,6 +166,33 @@ public class ScriptInstance extends CustomScript {
 	@Override
 	public String toString() {
 		return "ScriptInstance [code=" + code + ", description=" + description + ", id=" + id + "]";
+	}
+	
+	public Set<ScriptInstance> getTransitiveScripts() {
+		if (getImportScriptInstances() != null && !getImportScriptInstances().isEmpty()) {
+			return Stream.concat(getImportScriptInstances().stream(), 
+					getImportScriptInstances().stream().flatMap(script -> script.getTransitiveScripts().stream()))
+					.collect(Collectors.toSet());
+		} else {
+			return Set.of();
+		}
+	}
+
+	@Override
+	public int compareTo(ScriptInstance o) {
+		if (o == null || o.getCode() == null) {
+			return -1;
+		}
+		
+		if (this.getTransitiveScripts().contains(o)) {
+			return 1;
+		}
+		
+		if (o.getTransitiveScripts().contains(this)) {
+			return -1;
+		}
+		
+		return 0;
 	}
 
 }
