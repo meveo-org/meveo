@@ -6,6 +6,7 @@ import org.meveo.service.script.Script;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.*;
 public abstract class EndpointScript extends Script {
 	
 	protected EndpointRequest endpointRequest;
@@ -18,6 +19,20 @@ public abstract class EndpointScript extends Script {
 	@JsonIgnore
 	public void setEndpointRequest(EndpointRequest endpointRequest) {
 		this.endpointRequest = endpointRequest;
+	}
+
+	public List<Locale> getIntendedLocales(){
+		List<Locale> locales = new ArrayList<>();
+		if(this.endpointRequest != null){
+			locales = Collections.list(this.endpointRequest.getLocales());
+			if (!new HashSet(locales).contains(this.endpointRequest.getLocale())){
+				locales.add(this.endpointRequest.getLocale());
+			}
+		}
+		if (!new HashSet(locales).contains(Locale.getDefault())){
+			locales.add(Locale.getDefault());
+		}
+		return locales;
 	}
 
 	@JsonIgnore
