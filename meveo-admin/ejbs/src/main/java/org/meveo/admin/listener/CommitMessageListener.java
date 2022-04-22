@@ -28,6 +28,8 @@ public class CommitMessageListener implements Serializable {
 
     public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
 
+    public CommitMessageListener(){}
+    //@Produces @SessionScoped
     public String getCommitMessage(){
         return this.commitMessage;
     }

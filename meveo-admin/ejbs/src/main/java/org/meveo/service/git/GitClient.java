@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
-import javax.faces.annotation.ManagedProperty;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -63,7 +62,6 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
-import org.meveo.admin.listener.CommitMessageListener;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;

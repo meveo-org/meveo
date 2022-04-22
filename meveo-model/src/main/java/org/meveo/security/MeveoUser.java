@@ -3,9 +3,6 @@ package org.meveo.security;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.faces.component.UIInput;
-import javax.faces.component.UIOutput;
-import javax.faces.event.AjaxBehaviorEvent;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
