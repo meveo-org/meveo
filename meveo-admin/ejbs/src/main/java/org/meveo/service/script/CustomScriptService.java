@@ -261,6 +261,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
     }
 
+    @Override
+    public ScriptInterface getExecutionEngine(String scriptCode, Map<String, Object> context) {
+        T script = this.findByCode(scriptCode);
+        detach(script);
+        return getExecutionEngine(script, context);
+    }
+
 	@Override
     public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
         try {
@@ -321,7 +328,15 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
 
     @Override
-    protected Map<String, Object> buildResultMap(ScriptInterface engine, T script, Map<String, Object> context) {
+    protected Map<String, Object> buildResultMap(ScriptInterface engine, Map<String, Object> context) {
+        CustomScript script = self.findByCodeNewTx(engine.getClass().getName(), List.of());
+
+        if (script == null) {
+            // The script is probably not a Java script and we cannot retrieve its code
+            // using its class name
+            return context;
+        }
+
         // Put getters' values to context
         if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
             for (Accessor getter : script.getGettersNullSafe()) {
@@ -334,7 +349,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             }
         }
 
-        return super.buildResultMap(engine, script, context);
+        return super.buildResultMap(engine, context);
     }
 
     /**

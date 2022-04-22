@@ -38,7 +38,7 @@ public class JavaBindings {
         
         FUNCTION_SUPPLIER = (name) -> {
         	ScriptInstanceService scriptService = CDI.current().select(ScriptInstanceService.class).get();
-        	return scriptService.getExecutionEngine(scriptService.findByCode(name), null);
+        	return scriptService.getExecutionEngine(name, null);
         };
 	}
 

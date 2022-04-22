@@ -157,7 +157,7 @@ public class DefaultObserver {
 			context.put(Script.APP_BASE_URL, paramBeanFactory.getInstance().getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo"));
 
 			if (afterTx) {
-				concreteFunctionService.postCommit(function, context);
+				concreteFunctionService.postCommit(function.getCode(), context);
 
 			} else {
 				context.putAll(concreteFunctionService.execute(function.getCode(), context));
@@ -168,7 +168,7 @@ public class DefaultObserver {
 			log.error("Failed script execution", e);
 
 			try {
-				concreteFunctionService.postRollback(function, context);
+				concreteFunctionService.postRollback(function.getCode(), context);
 
 			} catch (BusinessException e1) {
 				log.error("Failed rolling back script", e1);

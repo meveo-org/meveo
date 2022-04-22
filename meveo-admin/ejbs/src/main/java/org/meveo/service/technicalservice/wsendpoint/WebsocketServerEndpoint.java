@@ -93,7 +93,7 @@ public class WebsocketServerEndpoint {
 
 			Function service = wsEndpoint.getService();
 			Map<String, Object> context = new HashMap<>();
-			FunctionService<Function, ScriptInterface> functionService;
+			FunctionService<?, ScriptInterface> functionService;
 			ScriptInterface executionEngine = null;
 			List<Session> sessions = activeSessionsByEndpointCode.get(endpointName);
 			if (sessions == null) {
@@ -107,7 +107,7 @@ public class WebsocketServerEndpoint {
 			}
 			try {
 				functionService = concreteFunctionService.getFunctionService(service.getCode());
-				executionEngine = functionService.getExecutionEngine(service, context);
+				executionEngine = functionService.getExecutionEngine(service.getCode(), context);
 				session.getUserProperties().put("functionCode",service.getCode());
 				context.put("WS_EVENT", "open");
 				context.put("WS_SESSION", session);
@@ -142,10 +142,8 @@ public class WebsocketServerEndpoint {
 		context.put("WS_EVENT", "message");
 		context.put("WS_MESSAGE", message);
 		try {
-			String functionCode = (String) session.getUserProperties().get("functionCode");
-			FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(functionCode);
-			Function function = functionService.findByCode(functionCode);
-			ScriptInterface executionEngine  = functionService.getExecutionEngine(function, context);
+			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 			executionEngine.execute(context);
 		} catch (BusinessException e) {
 			result = "error while processing message " + e.getMessage();
@@ -162,9 +160,8 @@ public class WebsocketServerEndpoint {
 		if(session.getUserProperties().get("functionCode")!=null){
 			try {
 				Map<String, Object> context = new HashMap<>();
-				String functionCode = (String) session.getUserProperties().get("functionCode");
-				FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(functionCode);
-				ScriptInterface executionEngine  = functionService.getExecutionEngine(functionService.findByCode(functionCode), context);
+				FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+				ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 				context.put("WS_SESSION", session);
 				context.put("WS_EVENT", "close");
 				context.put("WS_REASON_CODE", reason.getCloseCode());
@@ -184,9 +181,8 @@ public class WebsocketServerEndpoint {
 		log.error("error in session {} : {}", session.getId(), t.getMessage());
 		try {
 			Map<String, Object> context = new HashMap<>();
-			String functionCode = (String) session.getUserProperties().get("functionCode");
-			FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(functionCode);
-			ScriptInterface executionEngine  = functionService.getExecutionEngine(functionService.findByCode(functionCode), context);
+			FunctionService<?, ScriptInterface>functionService = concreteFunctionService.getFunctionService((String)session.getUserProperties().get("functionCode"));
+			ScriptInterface executionEngine  = functionService.getExecutionEngine((String)session.getUserProperties().get("functionCode"), context);
 			context.put("WS_SESSION", session);
 			context.put("WS_EVENT", "error");
 			context.put("WS_ERROR", t.getMessage());

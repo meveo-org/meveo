@@ -50,6 +50,11 @@ public class DefaultFunctionService extends FunctionService<Function, ScriptInte
 	}
 
 	@Override
+	public ScriptInterface getExecutionEngine(String executableCode, Map<String, Object> context) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public ScriptInterface getExecutionEngine(Function function, Map<String, Object> context) {
 		throw new UnsupportedOperationException();
 	}

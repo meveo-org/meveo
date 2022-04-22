@@ -125,14 +125,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution)
 			throws BusinessException, ExecutionException, InterruptedException {
 		Function service = endpoint.getService();
-		final FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+				.getFunctionService(service.getCode());
 		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
 		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService,
 				parameterMap);
 
 		CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
 			try {
-				Map<String, Object> result = execute(endpointExecution, service, functionService, parameterMap, executionEngine);
+				Map<String, Object> result = execute(endpointExecution, functionService, parameterMap, executionEngine);
 				String data = transformData(endpoint, result);
 				return new EndpointResult(data, endpoint.getContentType());
 			} catch (Exception e) {
@@ -159,13 +160,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
-		final FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
+		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
+				.getFunctionService(service.getCode());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 
 		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
 
 		//FIXME
-		return execute(execution, service, functionService, parameterMap, executionEngine);
+		return execute(execution, functionService, parameterMap, executionEngine);
 
 	}
 
@@ -179,16 +181,15 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @throws ExecutionException
 	 * @throws BusinessException
 	 */
-	public <T extends Function> Map<String, Object> execute(EndpointExecution execution,
-			T service,
-			final FunctionService<T, ScriptInterface> functionService, Map<String, Object> parameterMap,
+	public Map<String, Object> execute(EndpointExecution execution,
+			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
 		// Start endpoint script with timeout if one was set
 		if (execution.getDelayMax() != null) {
 			try {
 				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
 					try {
-						return functionService.execute(executionEngine, service, parameterMap);
+						return functionService.execute(executionEngine, parameterMap);
 					} catch (BusinessException e) {
 						throw new RuntimeException(e);
 					}
@@ -198,7 +199,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				return executionEngine.cancel();
 			}
 		} else {
-			return functionService.execute(executionEngine, service, parameterMap);
+			return functionService.execute(executionEngine, parameterMap);
 		}
 	}
 
@@ -213,7 +214,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @throws IllegalArgumentException
 	 */
 	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
-			final FunctionService<Function, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
+			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
 
 
 		Matcher matcher=endpoint.getPathRegex().matcher(execution.getPathInfo());
@@ -271,7 +272,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		ScriptInterface executionEngine;
 		try {
-			executionEngine = functionService.getExecutionEngine(service, parameterMap);
+			executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 		} catch (BusinessException e) {
 			throw new IllegalArgumentException(
 					"Endpoint's code " + service.getCode() + "is not valid, function is not found.",e);
