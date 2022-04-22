@@ -18,11 +18,15 @@ package org.meveo.service.git;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
+import javax.faces.annotation.ManagedProperty;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -59,7 +63,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
-import org.meveo.cache.UserMessageCacheContainerProvider;
+import org.meveo.admin.listener.CommitMessageListener;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
@@ -114,8 +118,12 @@ public class GitClient {
     @Inject
     private Logger log;
 
-    @Inject
-    private UserMessageCacheContainerProvider userMessageCacheProvider;
+    private String commitMessage;
+
+    public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
+
+    public String getCommitMessage(){ return this.commitMessage; }
+
 
     /**
      * Remove the corresponding git repository from file system
@@ -241,7 +249,6 @@ public class GitClient {
      * @throws IllegalArgumentException   if pattern list is empty
      */
     public void commit(GitRepository gitRepository, List<String> patterns, String message) throws BusinessException {
-        log.info("git repo in start method = {}",message);
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -277,12 +284,7 @@ public class GitClient {
 
                 if (status.hasUncommittedChanges()) {
                 	try {
-                        Optional<List<String>> messages = userMessageCacheProvider.getAllUserMessagesFromCache(user.getUserName());
-                        if(messages.isPresent()){
-                            user.setCommitMessage((String) messages.get().get(0));
-                        }
-                        log.info("git repo commit message = {}, user.fullname= {}, commitMessage= {}"
-                                ,message,user.getFullName(),user.getCommitMessage());
+                        log.info("git repo commit message = {}",message);
 	                    RevCommit commit = git.commit().setMessage(message)
 	                            .setAuthor(user.getUserName(), user.getMail())
 	                            .setAllowEmpty(false)
@@ -354,6 +356,9 @@ public class GitClient {
             }
         }
 
+        if(StringUtils.isNotBlank(getCommitMessage())){
+            message = message+" : "+getCommitMessage();
+        }
         commit(gitRepository, patterns, message);
     }
 

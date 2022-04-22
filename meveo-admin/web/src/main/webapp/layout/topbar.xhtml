@@ -10,11 +10,13 @@
 			<a href="#{request.contextPath}" id="logo-wrapper"> <h:graphicImage
 					name="logo.png" library="img" />
 			</a>
-			<p:inputText id="commitMessageId"
-						 value="#{userBean.commitMessage}"
+			<h:form id="commit-form">
+			<p:inputText id="commit-message-id"
+						 value="#{commitMessageListener.commitMessage}"
 						 placeholder="#{messages['menutop.commitMessage']}">
-				<p:ajax listener="#{userBean.ajaxListener}" process="@this" event="change"/>
+				<p:ajax listener="#{commitMessageListener.ajaxListener}" event="change" execute="@this"/>
 			</p:inputText>
+			</h:form>
 		</div>
 
 		<div id="responsive-menu-button">

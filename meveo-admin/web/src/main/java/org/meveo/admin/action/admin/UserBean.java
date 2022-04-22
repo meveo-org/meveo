@@ -27,14 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.faces.component.UIInput;
-import javax.faces.component.UIOutput;
 import javax.faces.event.ActionEvent;
-import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,7 +50,6 @@ import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.UserApi;
-import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
@@ -152,9 +154,6 @@ public class UserBean extends CustomFieldBean<User> {
 	private boolean autoUnzipped;
 
 	final private String ZIP_FILE_EXTENSION = ".zip";
-
-	@Inject
-	private UserMessageCacheContainerProvider userMessageCacheProvider;
 
 	/**
 	 * Constructor. Invokes super constructor and provides class type of this bean
@@ -879,21 +878,5 @@ public class UserBean extends CustomFieldBean<User> {
 	
 	public String getChangePasswordUrl() {
 		return keycloakAdminClientService.getChangePasswordUrl();
-	}
-
-	private String commitMessage;
-
-	public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
-
-	public String getCommitMessage(){
-		Optional<List<String>> messages = userMessageCacheProvider.getAllUserMessagesFromCache(currentUser.getUserName());
-		return messages.isPresent()?(String)messages.get().get(0):commitMessage;
-	}
-
-	public void ajaxListener(AjaxBehaviorEvent event) {
-		log.info("commit message 1 = {}",this.commitMessage);
-		String val = (String)((UIInput)event.getSource()).getValue();
-		log.info("commit message 2= {}",val);
-		userMessageCacheProvider.addUserMessageToCache(currentUser.getUserName(),"babar test");
 	}
 }
