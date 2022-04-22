@@ -82,9 +82,9 @@ public class ModuleInstallationContext {
 				action.run();
 			}
 			postInstallActions.clear();
+			postInstallEvent.fire(module);
 		}
 		
-		postInstallEvent.fire(module);
 		
 		active = false;
 		this.ModuleCodeInstallation = null;
