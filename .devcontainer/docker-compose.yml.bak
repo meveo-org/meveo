@@ -59,8 +59,8 @@ services:
     depends_on:
       - postgres
   meveo:
-    image: manaty/meveo-dev
-    #image: manaty/wildfly-meveo:dev-latest
+    #image: manaty/meveo-dev
+    image: manaty/wildfly-meveo:dev-latest
     #build: 
     #  context: ../
     #  dockerfile: Dockerfile.dev
