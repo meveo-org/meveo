@@ -29,6 +29,9 @@ import javax.persistence.Table;
 
 import org.meveo.model.scripts.ScriptInstance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Enumeration class that represent the data storage handled by the application
  */
@@ -58,6 +61,7 @@ public class DBStorageType {
 	
 	@Id
 	@Column(name = "code")
+	@JsonValue
 	private String code;
 	
 	@Column(name = "storage_impl_name")
