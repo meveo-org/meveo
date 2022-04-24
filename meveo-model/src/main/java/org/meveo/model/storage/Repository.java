@@ -136,12 +136,12 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
 
 	@Override
 	public String getUuid() {
-		return this.code;
+		return "REPOSITORY_" + this.code;
 	}
 
 	@Override
 	public String clearUuid() {
-		return this.code;
+		return getUuid();
 	}
 
 	@Override
