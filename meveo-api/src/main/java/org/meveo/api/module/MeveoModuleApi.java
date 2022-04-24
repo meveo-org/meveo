@@ -77,6 +77,7 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
+import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -322,7 +323,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
 					.forEach(moduleDto.getModuleItems()::add);
 
-			} else {
+			}  else {
 				
 				// Retrieve API corresponding to class
 				var api = ApiUtils.getApiService(getItemClassByPath(directoryName), false);
@@ -335,6 +336,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				}
 
 			}
+		}
+		
+		// Parse installation script from items
+		if (moduleDto.getScript() != null && StringUtils.isBlank(moduleDto.getScript().getScript())) {
+			moduleDto.getModuleItems().stream()
+				.filter(item -> item.getDtoClassName().equals(ScriptInstanceDto.class.getName()))
+				.map(item -> JacksonUtil.convert(item.getDtoData(), ScriptInstanceDto.class))
+				.filter(scriptDto -> scriptDto.getCode().equals(moduleDto.getScript().getCode()))
+				.findFirst()
+				.ifPresent(moduleDto::setScript);
 		}
 		
 		return moduleDto;
