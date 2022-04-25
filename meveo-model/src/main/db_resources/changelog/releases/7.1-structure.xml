@@ -22,4 +22,11 @@
    			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
    			referencedColumnNames="id"/>
    	</changeSet>
+   	
+   	<changeSet id="#531 - Add cascade delete for child script" author="Clément Bareth">
+   		<dropForeignKeyConstraint baseTableName="meveo_script_instance_script_instance" constraintName="fk_meveo_script_instance_script_instance_child"/>
+	<addForeignKeyConstraint constraintName="fk_meveo_script_instance_script_instance_child" referencedTableName="meveo_script_instance" 
+   			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
+   			referencedColumnNames="id" onDelete="CASCADE"/>
+   	</changeSet>
 </databaseChangeLog>
