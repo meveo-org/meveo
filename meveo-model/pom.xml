@@ -312,8 +312,8 @@
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
 		</dependency>
+	</dependencies>
 
-    </dependencies>
 	<profiles>
 		<profile>
 			<id>rebuild</id>
