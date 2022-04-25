@@ -73,14 +73,18 @@ public class MeveoModuleListBean extends MeveoModuleBean {
 	public void delete() throws BusinessException {
 		entity = meveoModuleService.findById(entity.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
 		if(entity.isInstalled()) {
+			moduleUninstall.module(entity);
 			try {
-				moduleUninstall.module(entity);
-				moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+				List<MeveoModule> uninstalledModules = moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+				for (var module : uninstalledModules) {
+					meveoModuleService.remove(module);
+				}
 			} catch (MeveoApiException e) {
 				throw new BusinessException(e);
 			}
+		} else {
+			meveoModuleService.remove(entity);
 		}
-		meveoModuleService.remove(entity);
 	}
 
     public EntityListDataModelPF<MeveoModuleDto> getModuleDtos() {

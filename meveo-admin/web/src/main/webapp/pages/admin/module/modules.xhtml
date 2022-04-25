@@ -165,6 +165,9 @@
 	               			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.removeFiles}"
 	               				onIcon="ui-icon-check" offIcon="ui-icon-close"
 	               				offLabel="Keep module files" onLabel="Delete module files"/>
+	               			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.withDependencies}"
+                   				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                   				offLabel="Keep module dependencies" onLabel="Delete module dependencies"/>
                   		</h:panelGrid>
                 </h:panelGrid>
                 <h:panelGroup layout="block" styleClass="form-panel-actions">
