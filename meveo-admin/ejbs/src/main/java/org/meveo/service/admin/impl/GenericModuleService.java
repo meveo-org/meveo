@@ -404,8 +404,14 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 	}
 	
 	public boolean hasDependencies(T module) throws BusinessException {
+		
+		String query = "SELECT m from \n"
+				+ "MeveoModuleDependency m \n"
+				+ "WHERE m.code=:moduleCode \n"
+				+ "AND m.currentVersion=:currentVersion \n"
+				+ "AND m.meveoModule.installed = true \n";
 		// check if this module is a parent
-		TypedQuery<MeveoModuleDependency> moduleDependencyResult = getEntityManager().createNamedQuery("MeveoModuleDependency.findByCodeAndVersion", MeveoModuleDependency.class);
+		TypedQuery<MeveoModuleDependency> moduleDependencyResult = getEntityManager().createQuery(query, MeveoModuleDependency.class);
 		moduleDependencyResult.setParameter("moduleCode", module.getCode()) //
 				.setParameter("currentVersion", module.getCurrentVersion());
 		try {
