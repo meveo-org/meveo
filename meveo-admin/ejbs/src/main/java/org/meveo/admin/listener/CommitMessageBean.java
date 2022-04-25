@@ -21,7 +21,7 @@ public class CommitMessageBean implements Serializable {
 
     public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
 
-    public String getCommitMessage(){ return this.commitMessage; }
+    public String getCommitMessage(){ return this.getCommitMessage(); }
 
     public void ajaxListener(AjaxBehaviorEvent event) {
         log.info("commit message = {}",this.commitMessage);

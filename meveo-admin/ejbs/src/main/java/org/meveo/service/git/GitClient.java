@@ -347,7 +347,6 @@ public class GitClient {
                 }
             }
         }
-        log.info("full commit msg : {}",message);
         commit(gitRepository, patterns, message);
     }
 
