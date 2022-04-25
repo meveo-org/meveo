@@ -600,6 +600,10 @@ public class CEIUtils {
 	
 	public static String serialize(CustomEntityInstance entity) {
 		Map<String, Object> values = entity.getCfValuesAsValues();
+		if (values == null) {
+			values = new HashMap<>();
+		}
+		
 		values.put("uuid", entity.getUuid());
 		values.put("cetCode", entity.getCetCode());
 		
