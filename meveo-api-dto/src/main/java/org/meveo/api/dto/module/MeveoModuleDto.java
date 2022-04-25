@@ -264,6 +264,21 @@ public class MeveoModuleDto extends BaseDataModelDto {
 			moduleDependencies.add(moduleDependencyDto);
 		}
 	}
+	
+	public void addDependency(MeveoModule module) {
+		if (module == null) {
+			return;
+		}
+		
+		ModuleDependencyDto moduleDependencyDto = new ModuleDependencyDto(module.getCode(), module.getDescription(), module.getCurrentVersion());
+		if (module.getGitRepository() != null && module.getGitRepository().isRemote()) {
+			moduleDependencyDto.setGitUrl(module.getGitRepository().getRemoteOrigin());
+			moduleDependencyDto.setGitBranch(module.getGitRepository().getDefaultBranch());
+		}
+		if (!moduleDependencies.contains(moduleDependencyDto)) {
+			moduleDependencies.add(moduleDependencyDto);
+		}
+	}
 
 	/**
 	 * Gets the current version.

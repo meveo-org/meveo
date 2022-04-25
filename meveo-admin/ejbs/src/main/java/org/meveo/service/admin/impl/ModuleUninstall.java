@@ -20,6 +20,9 @@ public class ModuleUninstall {
 	@QueryParam("removeItems") @DefaultValue ("true")
 	private boolean removeItems = true;
 	
+	@QueryParam("withDependencies")
+	private boolean withDependencies = false;
+	
 	private boolean childModule;
 	private MeveoModule module;
 	
@@ -44,6 +47,13 @@ public class ModuleUninstall {
 	/** @return Whether to remove the module items from the database. If false, only disable them */
 	public boolean removeItems() {
 		return removeItems;
+	}
+	
+	/**
+	 * @return Whether to uninstall dependencies as well
+	 */
+	public boolean withDependencies() {
+		return withDependencies;
 	}
 	
 	/** @return Whether the module is a submodule */
@@ -93,6 +103,7 @@ public class ModuleUninstall {
 		opts.removeFiles = options.removeFiles;
 		opts.removeItems = options.removeItems;
 		opts.moduleCode = options.moduleCode == null && options.module != null ? options.module.getCode() : null;
+		opts.withDependencies = options.withDependencies;
 		return new ModuleUninstallBuilder(opts);
 	}
 	
@@ -105,6 +116,15 @@ public class ModuleUninstall {
 		
 		private ModuleUninstallBuilder() {
 			options = new ModuleUninstall();
+		}
+		
+		public ModuleUninstallBuilder withDependencies(boolean withDependencies) {
+			this.options.withDependencies = withDependencies;
+			return this;
+		}
+		
+		public void setWithDependencies(boolean withDependencies) {
+			withDependencies(withDependencies);
 		}
 		
 		/**
@@ -251,6 +271,11 @@ public class ModuleUninstall {
 		public void setModuleCode(String moduleCode) {
 			this.options.moduleCode = moduleCode;
 		}
+		
+		public boolean isWithDependencies() {
+			return this.options.withDependencies;
+		}
+		
 		
 	}
 }

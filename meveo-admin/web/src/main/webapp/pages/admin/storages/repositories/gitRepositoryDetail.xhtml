@@ -4,6 +4,7 @@
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
 	xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
 	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
 	template="/layout/template.xhtml" xmlns:o="http://omnifaces.org/ui">
 
 	<ui:define name="metadata">
@@ -268,5 +269,58 @@
 					
 			</h:form>
 		</p:confirmDialog>
+		
+		<p:dialog id="installingDeps" widgetVar="installingDeps">
+			<h:form>
+				<p:poll interval="5" update="@form" />
+				<span>The following modules are being installed : </span>
+				<ul>
+					<c:forEach var="module" items="#{gitRepositoryBean.missingDependencies}">
+						<c:choose>
+							<c:when test="#{module.installing}">
+								<li>
+									<span>Installing #{module.code}:#{module.currentVersion} (#{module.gitUrl}) ...</span>
+									<div style="width:64px;height:64px;position:fixed;right:5px;bottom:5px">
+										<h:graphicImage library="img" name="loading.gif" />
+									</div>
+								</li>
+							</c:when>
+							<c:when test="#{module.installed}">
+								<li>Installed #{module.code}:#{module.currentVersion} (#{module.gitUrl})</li>
+							</c:when>
+							<c:otherwise>
+								<li>#{module.code}:#{module.currentVersion} (#{module.gitUrl})</li>
+							</c:otherwise>
+						</c:choose>
+					</c:forEach>
+				</ul>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog id="installDeps" widgetVar="installDeps">
+			<h:form>
+				<span>The following modules are required : </span>
+				<ul>
+					<c:forEach var="module" items="#{gitRepositoryBean.missingDependencies}">
+						<li>#{module.code}:#{module.currentVersion} (#{module.gitUrl})</li>
+					</c:forEach>
+				</ul>
+				<p:fieldset legend="Git credentials">
+					<h:panelGrid columns="2">
+						<hftl:decorateFormField fieldId="username" label="#{messages['gitRepositories.username']}">
+							<p:inputText id="username" value="#{gitRepositoryBean.username}" size="50" />
+						</hftl:decorateFormField>
+						<hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
+							<h:inputSecret id="password" value="#{gitRepositoryBean.password}" maxlength="50" redisplay="true" />
+						</hftl:decorateFormField>
+					</h:panelGrid>
+				</p:fieldset>
+				<p:commandButton value="Install dependencies" action="#{gitRepositoryBean.installMissingDependencies}" async="true" 
+					oncomplete="PF('installDeps').hide();PF('installingDeps').show();"
+					onclick="PF('installDeps').hide();PF('installingDeps').show();">
+<!-- 					<f:ajax render="@all" /> -->
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
 	</ui:define>
 </ui:composition>
