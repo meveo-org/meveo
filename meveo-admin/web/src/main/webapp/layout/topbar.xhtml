@@ -67,9 +67,9 @@
 					<li class="Fs12 FontBold">#{appProvider.description}</li>
 					<li>
 						<p:inputText id="commit-message-id"
-									 value="#{commitMessageListener.commitMessage}"
+									 value="#{commitMessageBean.commitMessage}"
 									 placeholder="#{messages['menutop.commitMessage']}">
-							<p:ajax listener="#{commitMessageListener.ajaxListener}" event="blur" execute="@this"/>
+							<p:ajax listener="#{commitMessageBean.ajaxListener}" event="blur" execute="@this"/>
 						</p:inputText>
 					</li>
 				</ul>

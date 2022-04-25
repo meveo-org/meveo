@@ -18,8 +18,10 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
+import jnr.ffi.annotations.In;
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
@@ -69,6 +71,9 @@ public class EndpointEventListener {
 	@MeveoRepository
 	private GitRepository meveoRepository;
 
+	@Inject
+	private CommitMessageBean commitMessageBean;
+
 	/**
 	 * Create and commit the generated JS file to call the endpoint. Automatically
 	 * called at endpoint's creation.
@@ -95,9 +100,9 @@ public class EndpointEventListener {
 		FileUtils.write(scriptFile, esGeneratorService.buildJSInterface(endpoint), StandardCharsets.UTF_8);
 		filesToCommit.add(scriptFile);
 		if (module != null) {
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create JS script for endpoit" + endpoint.getCode());
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), "Create JS script for endpoit" + endpoint.getCode() +" "+commitMessageBean.getCommitMessage());
 		} else {
-			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode());
+			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Create JS script for endpoint " + endpoint.getCode() +" "+commitMessageBean.getCommitMessage());
 		}
 		return scriptFile;
 	}
@@ -131,9 +136,9 @@ public class EndpointEventListener {
 				if (!fileEndpointInterface.exists()) {
 					FileUtils.copyFile(endpointInterface, fileEndpointInterface);
 				}
-				gitClient.commitFiles(module.getGitRepository(), List.of(scriptFile, fileEndpointInterface), "Update JS script for endpoint " + endpoint.getCode());
+				gitClient.commitFiles(module.getGitRepository(), List.of(scriptFile, fileEndpointInterface), "Update JS script for endpoint " + endpoint.getCode() +" "+commitMessageBean.getCommitMessage());
 			} else {
-				gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoit " + endpoint.getCode());
+				gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), "Update JS script for endpoint " + endpoint.getCode() +" "+commitMessageBean.getCommitMessage());
 			}
 		}
 
@@ -162,10 +167,10 @@ public class EndpointEventListener {
 			parentDir.delete();
 			if (module != null) {
 				gitClient.commitFiles(module.getGitRepository(), Arrays.asList(scriptFile, parentDir), 
-					"Delete JS dir and script for endpoint " + endpoint.getCode());
+					"Delete JS dir and script for endpoint " + endpoint.getCode()+" "+commitMessageBean.getCommitMessage());
 			} else {
 				gitClient.commitFiles(meveoRepository, Arrays.asList(scriptFile, parentDir),
-					"Delete JS dir and script for endpoint " + endpoint.getCode());
+					"Delete JS dir and script for endpoint " + endpoint.getCode()+" "+commitMessageBean.getCommitMessage());
 			}
 		}
 

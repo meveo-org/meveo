@@ -38,6 +38,7 @@ import javax.persistence.criteria.Root;
 
 import org.infinispan.Cache;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomRelationshipTemplateDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -103,6 +104,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     
     @Inject
     private CustomEntityTemplateService cetService;
+
+	@Inject
+	CommitMessageBean commitMessageBean;
 
     private ParamBean paramBean = ParamBean.getInstance();
     
@@ -413,7 +417,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the crt json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the crt json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode()+" "+commitMessageBean.getCommitMessage());
     	
     	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
     	
@@ -424,7 +428,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the crt java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the crt java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode()+" "+commitMessageBean.getCommitMessage());
     }
 	
 	@Override

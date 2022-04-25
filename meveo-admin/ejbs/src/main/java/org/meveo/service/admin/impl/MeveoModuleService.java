@@ -63,6 +63,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.EntityAlreadyLinkedToModule;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
@@ -143,6 +144,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+
+    @Inject
+    CommitMessageBean commitMessageBean;
 
     /**
      * Add missing dependencies of each module item
@@ -1002,7 +1006,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), "Add module descriptor file");
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), "Add module descriptor file"+" "+commitMessageBean.getCommitMessage());
 
 	}
 	

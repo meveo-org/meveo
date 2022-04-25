@@ -32,7 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.revwalk.DepthWalk;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -70,6 +72,9 @@ public class EndpointService extends BusinessService<Endpoint> {
 
 	@Context
 	private HttpServletRequest request;
+
+	@Inject
+	private CommitMessageBean commitMessageBean;
 	
 	public static String getEndpointPermission(Endpoint endpoint) {
 		return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
@@ -206,7 +211,7 @@ public class EndpointService extends BusinessService<Endpoint> {
     	} catch (IOException e) {
     		throw new BusinessException("File cannot be write", e);
     	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode() +" "+commitMessageBean.getCommitMessage());
 	}
 	
 	@Override
@@ -216,7 +221,7 @@ public class EndpointService extends BusinessService<Endpoint> {
     	String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
     	File jsFile = new File (gitDirectory, path);
     	jsFile.delete();
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), "Remove JS script for Endpoint: " + entity.getCode());
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), "Remove JS script for Endpoint: " + entity.getCode() +" "+commitMessageBean.getCommitMessage());
 	}
 
 	private void validatePath(Endpoint entity) throws BusinessException {

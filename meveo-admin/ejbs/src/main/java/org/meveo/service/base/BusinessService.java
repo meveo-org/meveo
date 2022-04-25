@@ -40,6 +40,7 @@ import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -86,6 +87,9 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	@Inject
 	@MeveoRepository
 	protected GitRepository meveoRepository;
+
+	@Inject
+	CommitMessageBean commitMessageBean;
 	
     /**
      * Find entity by code - strict match.
@@ -340,7 +344,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode()+" "+commitMessageBean.getCommitMessage());
     }
     
     /**

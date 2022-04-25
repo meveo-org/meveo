@@ -116,11 +116,6 @@ public class GitClient {
     @Inject
     private Logger log;
 
-    private String commitMessage;
-
-    public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
-
-    public String getCommitMessage(){ return this.commitMessage; }
 
 
     /**
@@ -352,10 +347,7 @@ public class GitClient {
                 }
             }
         }
-
-        if(StringUtils.isNotBlank(getCommitMessage())){
-            message = message+" : "+getCommitMessage();
-        }
+        log.info("full commit msg : {}",message);
         commit(gitRepository, patterns, message);
     }
 
