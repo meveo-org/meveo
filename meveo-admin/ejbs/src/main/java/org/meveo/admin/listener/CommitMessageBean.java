@@ -1,6 +1,5 @@
 package org.meveo.admin.listener;
 
-import org.meveo.commons.utils.StringUtils;
 import org.slf4j.Logger;
 
 import javax.enterprise.context.SessionScoped;
@@ -18,11 +17,11 @@ public class CommitMessageBean implements Serializable {
     @Inject
     private transient Logger log;
 
-    private String commitMessage;
+    private String commitMessage="";
 
     public void setCommitMessage(String commitMessage){this.commitMessage = commitMessage;}
 
-    public String getCommitMessage(){ return StringUtils.isBlank(this.commitMessage)?"":this.commitMessage; }
+    public String getCommitMessage(){ return this.commitMessage; }
 
     public void ajaxListener(AjaxBehaviorEvent event) {
         log.info("commit message = {}",this.commitMessage);
