@@ -208,6 +208,10 @@ public class PersistenceRs {
 
 		List<Map<String, Object>> entities = data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
 		
+		if (customEntityTemplate.getAvailableStorages() == null || customEntityTemplate.getAvailableStorages().isEmpty()) {
+			return Response.ok(new PersistenceListResult()).build();
+		}
+		
 		if (withCount != null && withCount) {
 			Long totalCount = 0L;
 			
