@@ -631,7 +631,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	public boolean checkTestSuites(String codeScript) {
 
 		JobInstance jobInstance = jobInstanceService.findByCode("FunctionTestJob_" + codeScript);
-		JobExecutionResultImpl result = jobExecutionService.findLastExecutionByInstance(jobInstance);
+		JobExecutionResultImpl result = null;
+		if (jobInstance != null)
+			result = jobExecutionService.findLastExecutionByInstance(jobInstance);
 		if (result != null && result.getNbItemsProcessedWithError() > Long.valueOf("0")) {
 			return false;
 		}
