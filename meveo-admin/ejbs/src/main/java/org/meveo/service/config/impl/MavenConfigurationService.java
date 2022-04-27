@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Resource;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.NoSuchObjectLocalException;
 import javax.ejb.Singleton;
 import javax.ejb.Timeout;
@@ -496,10 +498,12 @@ public class MavenConfigurationService implements Serializable {
 		return result;
 	}
 
+	@Lock(LockType.READ)
 	public RepositorySystem newRepositorySystem() {
 		return ManualRepositorySystemFactory.newRepositorySystem();
 	}
 
+	@Lock(LockType.READ)
 	public RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
 		DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 

@@ -16,11 +16,16 @@
 
 package org.meveo.service.technicalservice.endpoint;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.event.Observes;
@@ -28,7 +33,6 @@ import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 
 import org.infinispan.Cache;
-import org.jboss.logging.Logger;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
@@ -86,14 +90,17 @@ public class EndpointCacheContainer {
 				});*/
 	}
 
+	@Lock(LockType.READ)
 	public PendingResult getPendingExecution(String key) {
 		return pendingExecutions.get(key);
 	}
 
+	@Lock(LockType.WRITE)
 	public void remove(String key) {
 		pendingExecutions.remove(key);
 	}
 
+	@Lock(LockType.WRITE)
 	public void put(String key, PendingResult value) {
 		pendingExecutions.put(key, value);
 	}
@@ -121,6 +128,7 @@ public class EndpointCacheContainer {
 		//log.info("endpointLoadingCache add "+endpoint.getCode()+" :"+endpointLoadingCache.size()+" entries");
 	}
 
+	@Lock(LockType.READ)
 	public Endpoint getEndpoint(String code) {
 		if(endpointLoadingCache.containsKey(code)){
 			return endpointLoadingCache.get(code);
@@ -132,6 +140,7 @@ public class EndpointCacheContainer {
 	/*
 	 * returns the endpoint with largest regex matching the path
 	 */
+	@Lock(LockType.READ)
 	public Endpoint getEndpointForPath(String path, String method){
 		Endpoint result=null;
 		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();

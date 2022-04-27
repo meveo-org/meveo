@@ -21,6 +21,7 @@ package org.meveo.service.admin.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -384,26 +385,33 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 						loadModuleItem(o1);
 						if (o1.getItemEntity() instanceof Comparable) {
 							loadModuleItem(o2);
-							return ((Comparable) o1.getItemEntity()).compareTo(o2.getItemEntity()) * -1;
+							return ((Comparable) o1.getItemEntity()).compareTo(o2.getItemEntity());
 						}
 					}
 				} catch (BusinessException e) {
 					log.error("Failed to compare objects", e);
 				}
 
-				return sortOrder2.value() - sortOrder1.value();
+				return sortOrder1.value() - sortOrder2.value();
 			}
 		};
 
 		List<MeveoModuleItem> sortedList = new ArrayList<>(moduleItems);
 		sortedList.sort(comparator);
-
+		Collections.reverse(sortedList);
+		
 		return sortedList;
 	}
 	
 	public boolean hasDependencies(T module) throws BusinessException {
+		
+		String query = "SELECT m from \n"
+				+ "MeveoModuleDependency m \n"
+				+ "WHERE m.code=:moduleCode \n"
+				+ "AND m.currentVersion=:currentVersion \n"
+				+ "AND m.meveoModule.installed = true \n";
 		// check if this module is a parent
-		TypedQuery<MeveoModuleDependency> moduleDependencyResult = getEntityManager().createNamedQuery("MeveoModuleDependency.findByCodeAndVersion", MeveoModuleDependency.class);
+		TypedQuery<MeveoModuleDependency> moduleDependencyResult = getEntityManager().createQuery(query, MeveoModuleDependency.class);
 		moduleDependencyResult.setParameter("moduleCode", module.getCode()) //
 				.setParameter("currentVersion", module.getCurrentVersion());
 		try {

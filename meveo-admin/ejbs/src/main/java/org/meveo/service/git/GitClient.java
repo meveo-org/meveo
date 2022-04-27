@@ -34,6 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
@@ -175,6 +176,7 @@ public class GitClient {
                 
                 if (gitRepository.getDefaultBranch() != null) {
                 	cloneCommand.setBranchesToClone(List.of(gitRepository.getDefaultBranch()));
+                	cloneCommand.setBranch(gitRepository.getDefaultBranch());
                 }
                 
                 Git repository;
@@ -191,6 +193,7 @@ public class GitClient {
 	                if (gitRepository.getDefaultBranch() != null) {
 	                	repository.checkout()
 	                		.setCreateBranch(false)
+	                		.setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
 	                		.setName(gitRepository.getDefaultBranch())
 	                		.call();
 	                }
