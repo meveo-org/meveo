@@ -53,7 +53,7 @@ public class NpmHelper {
 		}
 		
 		if (directory != null) {
-			cmd += " -workspace=" + directory.getAbsolutePath();
+			cmd += " --prefix " + directory.getAbsolutePath();
 		}
 		
 		ProcessBuilder processBuilder = new ProcessBuilder()
@@ -78,7 +78,7 @@ public class NpmHelper {
 	
 	public static int npmInit(File directory) throws IOException {
 		ProcessBuilder processBuilder = new ProcessBuilder()
-			.command(npmCmd("init", "-y", "-workspace=" + directory.getAbsolutePath()))
+			.command(npmCmd("init", "-y", "--prefix " + directory.getAbsolutePath()))
 			.redirectErrorStream(true);
 		
 		Process process = processBuilder.start();
