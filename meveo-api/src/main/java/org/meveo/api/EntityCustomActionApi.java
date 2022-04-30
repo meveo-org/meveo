@@ -274,6 +274,8 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
 		if (dto.getApplicableToEntityInstance() != null) {
 			action.setApplicableToEntityInstance(dto.getApplicableToEntityInstance());
 		}
+		
+		action.setScriptParameters(dto.getScriptParameters());
     }
 
     @SuppressWarnings("rawtypes")

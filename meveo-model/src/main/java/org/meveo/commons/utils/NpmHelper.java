@@ -25,17 +25,13 @@ public class NpmHelper {
 		List<String> command = new ArrayList<>();
 		
 		if (isWindows()) {
-			command.add("npm.cmd");
+			command.add("npm.cmd " + String.join(" ", args));
 		} else {
 			command.add("bash");
 			command.add("-c");
-			command.add("npm");
+			command.add("npm " + String.join(" ", args));
 		}
 	
-		for (String arg : args) {
-			command.add(arg);
-		}
-		
 		return command;
 	}
 	/**
@@ -51,16 +47,19 @@ public class NpmHelper {
 	 * @throws IOException if the command can't be executed
 	 */
 	public static int npmInstall(File directory, String... args) throws IOException {
-		List<String> command = npmCmd("install");
+		String cmd = "install";
+		if (args != null && args.length > 0) {
+			cmd += " " + String.join("@", args);
+		}
+		
+		if (directory != null) {
+			cmd += " --prefix " + directory.getAbsolutePath();
+		}
 		
 		ProcessBuilder processBuilder = new ProcessBuilder()
-				.command(command)
-				.directory(directory)
+				.command(npmCmd(cmd))
 				.redirectErrorStream(true);
 		
-		if (args != null && args.length > 0) {
-			command.add(String.join("@", args));
-		}
 		Process process = processBuilder.start();
 		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -79,8 +78,7 @@ public class NpmHelper {
 	
 	public static int npmInit(File directory) throws IOException {
 		ProcessBuilder processBuilder = new ProcessBuilder()
-			.command(npmCmd("init", "-y"))
-			.directory(directory)
+			.command(npmCmd("init", "-y", "--prefix " + directory.getAbsolutePath()))
 			.redirectErrorStream(true);
 		
 		Process process = processBuilder.start();
