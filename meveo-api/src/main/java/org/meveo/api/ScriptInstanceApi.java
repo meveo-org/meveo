@@ -452,6 +452,11 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	@Override
 	public int compareDtos(ScriptInstanceDto obj1, ScriptInstanceDto obj2, List<MeveoModuleItemDto> dtos) {
 		Map<String, ScriptInstanceDto> scriptDtos = filterModuleDtos(dtos);
+		
+		if (obj2.getImportScriptInstances() == null || obj2.getImportScriptInstances().isEmpty()) {
+			return 1;
+		}
+		
 		if (getTransitiveScripts(obj1, scriptDtos).contains(obj2.getCode())) {
 			return 1;
 		}
