@@ -231,6 +231,7 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
     <local-cache name="meveo-es-index-cache"/>
     <local-cache name="meveo-crt-cache"/>
     <local-cache name="meveo-rows-page-cache"/>
+    <local-cache name="meveo-user-message" />
 </cache-container>
 ```
 
