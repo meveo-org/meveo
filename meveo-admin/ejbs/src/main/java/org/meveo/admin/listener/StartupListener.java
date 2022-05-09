@@ -33,6 +33,8 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.inject.Instance;
@@ -118,6 +120,8 @@ public class StartupListener {
     
     @Inject
     private MeveoModuleService meveoModuleService;
+    
+    public boolean started = false;
     
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -306,6 +310,12 @@ public class StartupListener {
 	    		log.error("Error during execution of {}", initializer.getClass(), e);
 	    	}
 	    }
+	    started = true;
+	}
+	 
+	@Lock(LockType.READ)
+	public boolean isStarted() {
+		return started;
 	}
 
 	private SqlConfiguration setSqlConfiguration(SqlConfiguration sqlConfiguration) {
