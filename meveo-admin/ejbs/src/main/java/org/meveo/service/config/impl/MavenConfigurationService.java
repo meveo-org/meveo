@@ -95,6 +95,7 @@ import org.slf4j.Logger;
  * @version 6.9.0
  */
 @Singleton
+@Lock(LockType.READ)
 public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
