@@ -1,7 +1,13 @@
 package org.meveo.service.script;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.CDI;
 
 import org.meveo.admin.exception.BusinessException;
@@ -12,6 +18,8 @@ import org.meveo.commons.utils.EjbUtils;
  * @version 6.11
  */
 public abstract class Script implements ScriptInterface {
+	
+	private Map<Object, Instance<Object>> instancesToDestroy = new HashMap<>();
 
 	/**
 	 * Base URL of the application. Maps to app setting with key meveo.admin.baseUrl.
@@ -99,8 +107,13 @@ public abstract class Script implements ScriptInterface {
 		return EjbUtils.getServiceInterface(serviceInterfaceName);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <T> T getCDIBean(Class<T> cdiBeanClass) {
-		return CDI.current().select(cdiBeanClass).get();
+		Instance<T> instance = CDI.current().select(cdiBeanClass);
+		T object = instance.get();
+		
+		instancesToDestroy.put((Object) object, (Instance<Object>) instance);
+		return object;
 	}
 
 	@Override
@@ -138,5 +151,25 @@ public abstract class Script implements ScriptInterface {
 	 */
 	public void postRollback(Map<String, Object> methodContext) throws BusinessException {
 
+	}
+	
+	@PreDestroy
+	public void preDestroy() {
+		var beanManager = CDI.current().getBeanManager();
+
+		try {
+			instancesToDestroy.forEach((object, instance) -> {
+				var annotatedType = beanManager.createAnnotatedType(object.getClass());
+				Set<Bean<?>> beans = beanManager.getBeans(annotatedType.getBaseType());
+				beans.stream()
+					.filter(bean -> bean.getScope().equals(Dependent.class))
+					.findFirst()
+					.ifPresent(bean -> {
+						instance.destroy(object);
+					});
+			});
+		} catch (Exception e) {
+			e.printStackTrace(); // Should not happen
+		}
 	}
 }
