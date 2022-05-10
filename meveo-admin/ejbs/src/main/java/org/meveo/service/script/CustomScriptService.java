@@ -844,25 +844,25 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
     
     public void loadClassInCache(String scriptCode) {
-    	Class<ScriptInterface> compiledScript = null;
-    	try {
-    		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
-    	} catch (ClassNotFoundException e) {
-    		T script = findByCode(scriptCode);
-    		compileScript(script, false);
-    	}
-    	
-    	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
-        final Class<ScriptInterface> scriptClass = compiledScript;
-        
-        ALL_SCRIPT_INTERFACES.put(
+        ALL_SCRIPT_INTERFACES.computeIfAbsent(
         		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
-        		() -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass)
+        		key -> { 
+        			Class<ScriptInterface> compiledScript = null;
+        	    	try {
+        	    		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
+        	    	} catch (ClassNotFoundException e) {
+        	    		T script = findByCode(scriptCode);
+        	    		compileScript(script, false);
+        	    	}
+        	    	
+        	    	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+        	        final Class<ScriptInterface> scriptClass = compiledScript;
+        	        
+        	        log.debug("Compiled script {} added to compiled interface map", scriptCode);
+        			return () -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass);
+    		}
 		);
         
-        MeveoBeanManager.getInstance().addBean(bean);
-        
-        log.debug("Compiled script {} added to compiled interface map", scriptCode);
     }
 
 

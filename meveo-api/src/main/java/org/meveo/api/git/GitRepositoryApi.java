@@ -177,6 +177,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
         GitRepository entity = new GitRepository();
         entity.setRemoteOrigin(dto.getRemoteOrigin());
         entity.setCode(dto.getCode());
+        entity.setDefaultBranch(dto.getDefaultBranch());
 
         updateEntity(dto, entity);
 

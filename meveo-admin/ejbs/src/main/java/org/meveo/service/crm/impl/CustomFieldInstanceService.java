@@ -602,6 +602,8 @@ public class CustomFieldInstanceService extends BaseService {
 						if(value instanceof EntityReferenceWrapper) {
 							entityReferenceWrapper = (EntityReferenceWrapper) value;
 							
+						} else if (value instanceof Number) {
+							entityReferenceWrapper.setId(((Number) value).longValue());
 						} else if (value instanceof String) {
 							entityReferenceWrapper.setUuid((String) value);
 							entityReferenceWrapper.setCode((String) value);
@@ -620,7 +622,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 						cfValue = entity.getCfValuesNullSafe().setValue(cfCode, entityReferenceWrapper);
 					}
-					
+     
 				} else {
 					
 	        		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();

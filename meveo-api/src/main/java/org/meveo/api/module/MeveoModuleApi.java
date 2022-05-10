@@ -32,9 +32,11 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,6 +78,7 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
+import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
@@ -86,9 +89,11 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingModuleException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.git.CommitEvent;
@@ -124,6 +129,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
@@ -202,6 +208,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     @Inject
     private GitClient gitClient;
     
+    @Inject
+    private GitRepositoryApi gitRepositoryApi;
+    
+    @Inject
+    private GitRepositoryService gitRepositoryService;
+    
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
 		if (!initalized) {
@@ -214,7 +226,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		ModuleInstallResult result = null;
 		
-		MeveoModuleDto moduleDto = buildMeveoModuleFromDirectory(repo);
+		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+		
+		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
+		moduleDto = buildMeveoModuleFromDirectory(repoDir, moduleDto);
+		
 		result = install(repositories, moduleDto, OnDuplicate.SKIP);
 		
 		// Copy module files to file explorer
@@ -254,6 +270,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	public ModuleInstallResult install(List<String> repositories, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
 		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
 		
+		List<ModuleDependencyDto> missingModules = checkModuleDependencies(moduleDto);
+		if (!missingModules.isEmpty()) {
+			throw new MissingModuleException(missingModules);
+		}
+		
 		List<Repository> storageRepositories = new ArrayList<>();
 		if (repositories == null || repositories.isEmpty()) {
 			storageRepositories.add(repositoryService.findDefaultRepository());
@@ -281,11 +302,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     		throw e.getException();
 		}
 	}
-
-	@SuppressWarnings("rawtypes")
-	public MeveoModuleDto buildMeveoModuleFromDirectory(GitRepository repo) throws BusinessException, MeveoApiException {
-		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
-
+	
+	public MeveoModuleDto parseModuleJsonFile(GitRepository repo, File repoDir) throws BusinessException {
 		MeveoModuleDto moduleDto;
 		try {
 			moduleDto = JacksonUtil.read(new File(repoDir, "module.json"), MeveoModuleDto.class);
@@ -293,7 +311,37 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		} catch (IOException e1) {
 			throw new BusinessException("Can't read module descriptor", e1);
 		}
+		return moduleDto;
+	}
+	
+	public LinkedHashMap<GitRepository, ModuleDependencyDto> retrieveModuleDependencies(List<ModuleDependencyDto> dependencies, String username, String password) throws MeveoApiException, BusinessException {
+		LinkedHashMap<GitRepository, ModuleDependencyDto> result = new LinkedHashMap<>();
+		for (ModuleDependencyDto dependency : dependencies) {
+			GitRepositoryDto gitRepositoryDto = new GitRepositoryDto();
+			gitRepositoryDto.setCode(dependency.getCode());
+			gitRepositoryDto.setDefaultBranch(dependency.getGitBranch());
+			gitRepositoryDto.setRemoteOrigin(dependency.getGitUrl());
+
+			GitRepository repo = gitRepositoryService.findByCode(gitRepositoryDto.getCode());
+			if (repo == null) {
+				repo = gitRepositoryApi.create(gitRepositoryDto, false, username, password);
+			}
+			
+			if (!result.containsKey(repo)) {
+				File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+				MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
+				List<ModuleDependencyDto> missingDependencies = checkModuleDependencies(moduleDto);
+				result.putAll(retrieveModuleDependencies(missingDependencies, username, password));
+				
+				result.put(repo, dependency);
+			}
+		}
 		
+		return result;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private MeveoModuleDto buildMeveoModuleFromDirectory(File repoDir, MeveoModuleDto moduleDto) throws BusinessException, MeveoApiException {
 		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
 		
 		for (File directory : repoDir.listFiles()) {
@@ -729,7 +777,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public MeveoModule uninstall(Class<? extends MeveoModule> moduleClass, ModuleUninstall uninstall) throws MeveoApiException, BusinessException {
+	public List<MeveoModule> uninstall(Class<? extends MeveoModule> moduleClass, ModuleUninstall uninstall) throws MeveoApiException, BusinessException {
 		String code = uninstall.moduleCode();
 		if (StringUtils.isBlank(code)) {
 			missingParameters.add("code");
@@ -753,10 +801,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new BusinessException("Unable to uninstall a referenced module.");
 		}
 		
+		List<MeveoModule> uninstalledModules = new ArrayList<>();
+		
 		RevCommit headCommitBefore = gitClient.getHeadCommit(meveoModule.getGitRepository());
 		
 		try {
-			return meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
+			MeveoModule uninstalledModule = meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
+			uninstalledModules.add(uninstalledModule);
+			if (uninstall.withDependencies()) {
+				for (var dependency : uninstalledModule.getModuleDependencies()) {
+					MeveoModule moduleDependency = meveoModuleService.findByCode(dependency.getCode());
+					ModuleUninstall options = ModuleUninstall.builder(uninstall)
+							.module(moduleDependency)
+							.build();
+					uninstalledModules.addAll(uninstall(MeveoModule.class, options));
+				}
+			}
+			return uninstalledModules;
 		} finally {
 			gitClient.reset(meveoModule.getGitRepository(), headCommitBefore);
 		}
@@ -938,13 +999,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 		
-		Set<MeveoModuleDependency> moduleDependencies = module.getModuleDependencies();
-		if (moduleDependencies != null) {
-			for (MeveoModuleDependency dependency : moduleDependencies) {
-				moduleDto.addModuleDependency(dependency);
-			}
-		}
-
 		Set<MeveoModuleItem> moduleItems = module.getModuleItems();
 		if (moduleItems != null) {
 			for (MeveoModuleItem item : moduleItems) {
@@ -973,6 +1027,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (module.getPatches() != null && !module.getPatches().isEmpty()) {
 			moduleDto.setPatches(module.getPatches().stream().map(e -> modulePatchApi.toDto(e)).collect(Collectors.toList()));
 		}
+		
+		Stream.ofNullable(module.getModuleDependencies())
+			.flatMap(Collection::stream)
+			.map(MeveoModuleDependency::getCode)
+			.map(code -> meveoModuleService.findByCode(code, List.of("gitRepository")))
+			.forEach(moduleDto::addDependency);
 
 		return moduleDto;
 	}
@@ -1072,7 +1132,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			MeveoModule meveoModule = new MeveoModule();
 			parseModuleInfoOnlyFromDto(meveoModule, dto);
 			return meveoModule;
-		} catch (MeveoApiException | BusinessException e) {
+		} catch (BusinessException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -1198,7 +1258,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		List<MeveoModuleDto> modules = getModules(json);
 
 		try {
-			checkModuleDependencies(modules);
 			// Import files contained in each modules
 			if(!getFileImport().isEmpty()) {
 				File parentDir = getFileImport().iterator().next().getParentFile();
@@ -1534,40 +1593,44 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	private void checkModuleDependencies(List<MeveoModuleDto> modules) throws EntityDoesNotExistsException {
+	private List<ModuleDependencyDto> checkModuleDependencies(MeveoModuleDto meveoModuleDto) {
 		List<MeveoModule> meveoModules = meveoModuleService.list();
-		List<String> moduleCode = new ArrayList<>();
+		List<String> modulesCodes = new ArrayList<>();
+		List<ModuleDependencyDto> missingModules = new ArrayList<>();
+		
 		if (!meveoModules.isEmpty()) {
 			for (MeveoModule meveoModule : meveoModules) {
-				moduleCode.add(meveoModule.getCode());
-			}
-		}
-		for (MeveoModuleDto meveoModuleDto : modules) {
-			if (meveoModuleDto.getModuleDependencies() != null && !meveoModuleDto.getModuleDependencies().isEmpty()) {
-				if (!moduleCode.isEmpty()) {
-					for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
-						if (!moduleCode.contains(dependencyDto.getCode())) {
-							throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() +" doesn't exists locally.");
-						} else {
-							MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode(),Arrays.asList("releases"));
-							List<String> versions = new ArrayList<>();
-							versions.add(meveoModule.getCurrentVersion());
-							if (!meveoModule.getReleases().isEmpty()) {
-								for (ModuleRelease moduleRelease : meveoModule.getReleases()) {
-									versions.add(moduleRelease.getCurrentVersion());
-								}
-							}
-							if (!versions.contains(dependencyDto.getCurrentVersion())) {
-								throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency "+ dependencyDto.getCode() + " with version " + dependencyDto.getCurrentVersion() +" doesn't exists locally.");
-							}
-						}
-					}
-				} else {
-					throw new EntityDoesNotExistsException("The module file cannot be imported because module dependency doesn't exists locally.");
+				if (meveoModule.isInstalled()) {
+					modulesCodes.add(meveoModule.getCode());
 				}
 			}
 		}
+		
+		if (meveoModuleDto.getModuleDependencies() != null && !meveoModuleDto.getModuleDependencies().isEmpty()) {
+			for (ModuleDependencyDto dependencyDto : meveoModuleDto.getModuleDependencies()) {
+				if (!modulesCodes.contains(dependencyDto.getCode())) {
+					missingModules.add(dependencyDto);
+				} else {
+					MeveoModule meveoModule = meveoModuleService.findByCode(dependencyDto.getCode(),Arrays.asList("releases"));
+					List<String> versions = new ArrayList<>();
+					versions.add(meveoModule.getCurrentVersion());
+					
+					if (!meveoModule.getReleases().isEmpty()) {
+						for (ModuleRelease moduleRelease : meveoModule.getReleases()) {
+							versions.add(moduleRelease.getCurrentVersion());
+						}
+					}
+					
+					if (!versions.contains(dependencyDto.getCurrentVersion())) {
+						missingModules.add(dependencyDto);
+					}
+				}
+			}
+		}
+		
+		return missingModules;
 	}
+	
 
 	@Override
 	public void remove(MeveoModuleDto dto) throws MeveoApiException, BusinessException {

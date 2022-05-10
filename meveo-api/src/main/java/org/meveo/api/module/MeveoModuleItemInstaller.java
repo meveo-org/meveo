@@ -582,7 +582,7 @@ public class MeveoModuleItemInstaller {
 		        log.error("Failed to access field value in DTO {}", dto, e);
 		        throw new MeveoApiException("Failed to access field value in DTO: " + e.getMessage());
 
-		    } catch (MeveoApiException | BusinessException e) {
+		    } catch (BusinessException e) {
 		        log.error("Failed to transform DTO into a module item. DTO {}", dto, e);
 		        throw e;
 		    }

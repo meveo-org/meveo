@@ -31,7 +31,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.create(postData, null);
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 
@@ -44,7 +44,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.update(postData, null);
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 
@@ -83,7 +83,7 @@ public class CustomFieldTemplateRsImpl extends BaseRs implements CustomFieldTemp
 
         try {
             customFieldTemplateApi.createOrUpdate(postData, null);
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 

@@ -70,6 +70,7 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -634,7 +635,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	public boolean checkTestSuites(String codeScript) {
 
 		JobInstance jobInstance = jobInstanceService.findByCode("FunctionTestJob_" + codeScript);
-		JobExecutionResultImpl result = jobExecutionService.findLastExecutionByInstance(jobInstance);
+		JobExecutionResultImpl result = null;
+		if (jobInstance != null)
+			result = jobExecutionService.findLastExecutionByInstance(jobInstance);
 		if (result != null && result.getNbItemsProcessedWithError() > Long.valueOf("0")) {
 			return false;
 		}
@@ -992,7 +995,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		
 		Stream.ofNullable(newModule.getModuleDependencies())
 			.flatMap(Collection::stream)
-			.forEach(dto::addModuleDependency);
+			.map(MeveoModuleDependency::getCode)
+			.map(code -> findByCode(code, List.of("gitRepository")))
+			.forEach(dto::addDependency);
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	

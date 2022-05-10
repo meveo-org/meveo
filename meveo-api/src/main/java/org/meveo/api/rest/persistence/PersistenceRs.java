@@ -208,6 +208,10 @@ public class PersistenceRs {
 
 		List<Map<String, Object>> entities = data.stream().map(this::serializeJpaEntities).collect(Collectors.toList());
 		
+		if (customEntityTemplate.getAvailableStorages() == null || customEntityTemplate.getAvailableStorages().isEmpty()) {
+			return Response.ok(new PersistenceListResult()).build();
+		}
+		
 		if (withCount != null && withCount) {
 			Long totalCount = 0L;
 			
@@ -518,7 +522,7 @@ public class PersistenceRs {
 				/* Persist the entities and return 201 created response */
 				return scheduledPersistenceService.persist(repositoryCode, atomicPersistencePlan);
 	
-			} catch (BusinessException | ELException | IOException | BusinessApiException | EntityDoesNotExistsException e) {
+			} catch (BusinessException | ELException | IOException e) {
 				/* An error happened */
 				throw new ServerErrorException(Response.serverError().entity(e).build());
 			}
@@ -535,7 +539,7 @@ public class PersistenceRs {
 					PersistedItem item = new PersistedItem(result.getBaseEntityUuid(), dto);
 					persistedItems.add(item);
 					
-				} catch (BusinessApiException | EntityDoesNotExistsException | BusinessException | IOException e) {
+				} catch (BusinessException | IOException e) {
 					/* An error happened */
 					Response response = Response.serverError().entity(e).build();
 					throw new ServerErrorException(response);

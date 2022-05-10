@@ -21,4 +21,21 @@ public class MessagesHelper {
 		messages.error(message);
 		return null;
 	}
+	
+	/**
+	 * Display the error on screen and returns null
+	 * 
+	 * @param messages the messages bean
+	 * @param errorMessage root message
+	 * @param e the exception that occured
+	 * @return null
+	 */
+	public static String error(Messages messages, String errorMessage, Exception e) {
+		Throwable rootCause = e;
+		while (rootCause.getCause() != null) {
+			rootCause = rootCause.getCause();
+		}
+		messages.error(errorMessage + " : " + rootCause.getLocalizedMessage());
+		return null;
+	}
 }

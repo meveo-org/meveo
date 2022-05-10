@@ -156,19 +156,22 @@
                 <h:panelGrid id="deleteFile" columns="1">
                     #{messages['commons.confirmDelete']}
                        <h:panelGrid columns="1" cellpadding="5">
-                			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeItems}" id="remove" 
+                			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.removeItems}" id="remove" 
                  				onIcon="ui-icon-check" offIcon="ui-icon-close"
                  				offLabel="Disable module items" onLabel="Delete module items"/>
-               			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeData}"
-               				onIcon="ui-icon-check" offIcon="ui-icon-close"
-               				offLabel="Keep custom tables" onLabel="Delete custom tables"/>
-               			<p:selectBooleanButton value="#{meveoModuleBean.moduleUninstall.removeFiles}"
-               				onIcon="ui-icon-check" offIcon="ui-icon-close"
-               				offLabel="Keep module files" onLabel="Delete module files"/>
+	               			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.removeData}"
+	               				onIcon="ui-icon-check" offIcon="ui-icon-close"
+	               				offLabel="Keep custom tables" onLabel="Delete custom tables"/>
+	               			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.removeFiles}"
+	               				onIcon="ui-icon-check" offIcon="ui-icon-close"
+	               				offLabel="Keep module files" onLabel="Delete module files"/>
+	               			<p:selectBooleanButton value="#{meveoModuleListBean.moduleUninstall.withDependencies}"
+                   				onIcon="ui-icon-check" offIcon="ui-icon-close"
+                   				offLabel="Keep module dependencies" onLabel="Delete module dependencies"/>
                   		</h:panelGrid>
                 </h:panelGrid>
                 <h:panelGroup layout="block" styleClass="form-panel-actions">
-                    <p:commandButton action="#{meveoModuleListBean.deleteModuleFile()}" immediate="true" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
+                    <p:commandButton action="#{meveoModuleListBean.delete()}" process="@form" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
                     <p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" onclick="PF('deleteDialog').hide();" />
                 </h:panelGroup>
             </h:form>

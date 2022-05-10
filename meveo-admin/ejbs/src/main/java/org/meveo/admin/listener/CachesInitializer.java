@@ -16,11 +16,9 @@
 
 package org.meveo.admin.listener;
 
-import org.apache.commons.lang3.StringUtils;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
-import org.infinispan.configuration.cache.SingleFileStoreConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.UserMessageCacheContainerProvider;
@@ -76,7 +74,9 @@ public class CachesInitializer {
         }
         
         if (!cacheContainer.cacheExists(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE)) {
-            cacheContainer.defineConfiguration(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE, configuration);
+            Configuration persistentFileConfig =confBuilder.addSingleFileStore()
+                    .location(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE).preload(true).purgeOnStartup(false).build();
+            cacheContainer.defineConfiguration(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE, persistentFileConfig);
         }
 
         log.info("Finished initializing ontology caches");
