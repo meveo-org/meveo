@@ -1132,7 +1132,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			MeveoModule meveoModule = new MeveoModule();
 			parseModuleInfoOnlyFromDto(meveoModule, dto);
 			return meveoModule;
-		} catch (MeveoApiException | BusinessException e) {
+		} catch (BusinessException e) {
 			throw new RuntimeException(e);
 		}
 	}

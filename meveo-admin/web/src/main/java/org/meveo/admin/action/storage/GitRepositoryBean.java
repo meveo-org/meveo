@@ -244,7 +244,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			}
 			
 			return install();
-		} catch (MeveoApiException | BusinessException e) {
+		} catch (BusinessException e) {
 			MessagesHelper.error(messages, "Failed to install module or dependency", e);
 			return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
 		}

@@ -81,7 +81,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 				}
 			}
 		
-		} catch (BusinessException | MeveoApiException e) {
+		} catch (BusinessException e) {
 			throw new ServerErrorException(500, e);
 		}
 		
@@ -91,7 +91,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public void importCSV(File csv, boolean overwrite) {
 		try {
 			getBaseCrudApi().importCSV(new FileInputStream(csv), overwrite);
-		} catch (IOException | BusinessException | MeveoApiException e) {
+		} catch (IOException | BusinessException e) {
 			logger.error("Cannot import CSV file", e);
 			throw new ServerErrorException(500, e);
 		}
@@ -102,7 +102,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public void importXML(File csv, boolean overwrite) {
 		try {
 			getBaseCrudApi().importXML(new FileInputStream(csv), overwrite);
-		} catch (IOException | BusinessException | MeveoApiException e) {
+		} catch (IOException | BusinessException e) {
 			logger.error("Cannot import CSV file", e);
 			throw new ServerErrorException(500, e);
 		}
@@ -113,7 +113,7 @@ public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> ext
 	public void importJSON(File csv, boolean overwrite) {
 		try {
 			getBaseCrudApi().importJSON(new FileInputStream(csv), overwrite);
-		} catch (IOException | BusinessException | MeveoApiException e) {
+		} catch (IOException | BusinessException e) {
 			logger.error("Cannot import CSV file", e);
 			throw new ServerErrorException(500, e);
 		}
