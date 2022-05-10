@@ -6,7 +6,6 @@ package org.meveo.api.persistence;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -18,7 +17,6 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityGraph;
-import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -30,11 +28,8 @@ import org.meveo.persistence.scheduler.CyclicDependencyException;
 import org.meveo.persistence.scheduler.OrderedPersistenceService;
 import org.meveo.persistence.scheduler.PersistedItem;
 import org.meveo.persistence.scheduler.SchedulingService;
-import org.meveo.service.custom.CustomEntityTemplateCompiler;
-import org.meveo.service.script.CharSequenceCompiler;
-import org.meveo.service.script.CharSequenceCompilerException;
-import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,11 +57,18 @@ public class CrossStorageApi{
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
 	
+	@Inject
+	private RepositoryService repositoryService;
+	
 	
     protected static final Logger LOGGER = LoggerFactory.getLogger(CrossStorageApi.class);
+    
+	public <T> CrossStorageRequest<T> find(Class<T> cetClass) {
+		return find(repositoryService.findDefaultRepository(), cetClass);
+	}
 	
 	public <T> CrossStorageRequest<T> find(Repository repository, Class<T> cetClass) {
-		return new CrossStorageRequest(repository, crossStorageService, cetClass, getCet(cetClass));
+		return new CrossStorageRequest<T>(repository, crossStorageService, cetClass, getCet(cetClass));
 	}
 	
 	public CrossStorageRequest<CustomEntityInstance> find(Repository repository, String cetCode) {
@@ -75,7 +77,7 @@ public class CrossStorageApi{
 			throw new IllegalArgumentException("Cet with code " + cetCode + " does not exists");
 		}
 		
-		return new CrossStorageRequest(repository, crossStorageService, CustomEntityInstance.class, cet);
+		return new CrossStorageRequest<CustomEntityInstance>(repository, crossStorageService, CustomEntityInstance.class, cet);
 	}
 	
     public List<PersistedItem> persistEntities(Repository repository, EntityGraph entityGraph) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
@@ -97,6 +99,19 @@ public class CrossStorageApi{
 		CustomEntityTemplate cet = getCet(cetClass);
 		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
 		return JacksonUtil.convert(values, cetClass);
+	}
+	
+	/**
+	 * Find an instance of a given CET
+	 *
+	 * @param uuid       the uuid of the instance
+	 * @param cetClass   the clazz of the cet's type
+	 * @return the instanc of the cet
+	 * @throws EntityDoesNotExistsException the entity does not exists exception
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public <T> T find(String uuid, Class<T> cetClass) throws EntityDoesNotExistsException {
+		return find(repositoryService.findDefaultRepository(), uuid, cetClass);
 	}
 //	/**
 //	 * Find an instance (Pojo) of a given CET
@@ -136,6 +151,20 @@ public class CrossStorageApi{
 		cei.setCet(cet);
 		return cei;
 	}
+	
+	/**
+	 * Find an instance of a given CET
+	 *
+	 * @param repository the repository where the instance is stored
+	 * @param uuid       the uuid of the instance
+	 * @param cetCode    the code of the ce
+	 * @return the instance (CustomEntityInstance) of the cet
+	 * @throws EntityDoesNotExistsException the entity does not exists exception
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public CustomEntityInstance find(String uuid, String cetCode) throws EntityDoesNotExistsException {
+		return find(repositoryService.findDefaultRepository(), uuid, cetCode);
+	}
 
 	/**
 	 * 
@@ -158,9 +187,23 @@ public class CrossStorageApi{
 	}
 	
 	/**
+	 * 
+	 * @param value      the data to save
+	 * @return the UUID of the created / updated data
+	 * @throws BusinessApiException         See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
+	 * @throws EntityDoesNotExistsException See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
+	 * @throws BusinessException            See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
+	 * @throws IOException                  See {@link CrossStorageService#createOrUpdate(Repository, org.meveo.model.customEntities.CustomEntityInstance)}
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public String createOrUpdate(Object value) throws BusinessApiException, EntityDoesNotExistsException, BusinessException, IOException {
+		return createOrUpdate(repositoryService.findDefaultRepository(), value);
+	}
+	
+	/**
 	 * Remove an instance of a given CET
-	 *
-	 * @param repository the repository where the instance is stored
+	 * 
+	 * @param repository the repository where the entity is stored
 	 * @param uuid       the uuid of the instance
 	 * @param cetCode 	 code of the cet
 	 * @throws BusinessException if error occurs
@@ -168,6 +211,18 @@ public class CrossStorageApi{
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void remove(Repository repository, String uuid, String cetCode) throws BusinessException {
 		crossStorageService.remove(repository, cache.getCustomEntityTemplate(cetCode), uuid);
+	}
+	
+	/**
+	 * Remove an instance of a given CET
+	 *
+	 * @param uuid       the uuid of the instance
+	 * @param cetCode 	 code of the cet
+	 * @throws BusinessException if error occurs
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void remove(String uuid, String cetCode) throws BusinessException {
+		remove(repositoryService.findDefaultRepository(), uuid, cetCode);
 	}
 	
 	/**
@@ -181,6 +236,18 @@ public class CrossStorageApi{
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void remove(Repository repository, String uuid, Class<?> cetClass) throws BusinessException {
 		crossStorageService.remove(repository, getCet(cetClass), uuid);
+	}
+	
+	/**
+	 * Remove an instance of a given CET
+	 *
+	 * @param uuid       the uuid of the instance
+	 * @param cetClass   the clazz of the cet's type
+	 * @throws BusinessException if error occurs
+	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void remove(String uuid, Class<?> cetClass) throws BusinessException {
+		remove(repositoryService.findDefaultRepository(), uuid, cetClass);
 	}
 	
 	/**
