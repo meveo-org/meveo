@@ -18,6 +18,7 @@
  */
 package org.meveo.model.billing;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -27,6 +28,7 @@ import org.meveo.model.admin.Currency;
 import org.meveo.model.persistence.JsonTypes;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +39,8 @@ import java.util.Map;
 @Table(name = "adm_country")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_country_seq"), })
+@NamedQueries({
+        @NamedQuery(name = "Country.listByStatus", query = "SELECT c FROM Country c where c.active=:status order by c.description ASC") })
 public class Country extends AuditableEntity {
     private static final long serialVersionUID = 1L;
 
@@ -63,6 +67,11 @@ public class Country extends AuditableEntity {
     @Type(type = JsonTypes.JSON)
     @Column(name = "description_i18n", columnDefinition = "text")
     private Map<String, String> descriptionI18n;
+
+    @Type(type="numeric_boolean") @ColumnDefault("1")
+    @Column(name = "active")
+    @NotNull
+    private boolean active;
 
     public String getCountryCode() {
         return countryCode;
@@ -118,6 +127,24 @@ public class Country extends AuditableEntity {
 
     public String toString() {
         return countryCode;
+    }
+
+    /**
+     * Checks if is active.
+     *
+     * @return true, if is active
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Sets the active.
+     *
+     * @param active
+     */
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override

@@ -29,4 +29,10 @@
    			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
    			referencedColumnNames="id" onDelete="CASCADE"/>
    	</changeSet>
+
+	<changeSet id="#548 - Country should also contain a flag to identify a country being active or inactive" author="Farhan Munir" >
+		<addColumn tableName="adm_country">
+			<column name="active" type="${type.boolean}" defaultValueNumeric="1" />
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

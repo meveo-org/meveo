@@ -20,6 +20,7 @@ package org.meveo.service.admin.impl;
 
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.billing.Country;
+
 import org.meveo.service.base.PersistenceService;
 
 import javax.ejb.Stateless;
@@ -89,6 +90,19 @@ public class CountryService extends PersistenceService<Country> {
         queryBuilder.addOrderCriterion("a.description", true);
         Query query = queryBuilder.getQuery(getEntityManager());
         return query.getResultList();
+    }
+
+    /**
+     * @return list of country by status (active/inactive)
+     * @see org.meveo.service.base.PersistenceService#list()
+     */
+    @SuppressWarnings("unchecked")
+    public List<Country> listByStatus(boolean isActive ){
+        List<Country> countries =  (List<Country>) getEntityManager()
+                .createNamedQuery("Country.listByStatus", Country.class)
+                .setParameter("status", isActive)
+                .getResultList();
+        return countries;
     }
 
 }
