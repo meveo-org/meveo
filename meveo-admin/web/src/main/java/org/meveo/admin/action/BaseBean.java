@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -1105,7 +1104,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     public String getProviderLanguageCode() {
         if (appProvider.getLanguage() != null) {
-            return appProvider.getLanguage().getLanguageCode();
+            return appProvider.getLanguage().getCode();
         }
         return "";
     }

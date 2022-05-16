@@ -40,4 +40,13 @@
 		<dropColumn tableName="adm_country" columnName="description_i18n" />
 	</changeSet>
 
+	<changeSet id="#551 For Localized Message based work, we are not able to set Language for LocalizedMessage CET" author="Farhan Munir">
+		<addColumn tableName="adm_language">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_language" oldColumnName="language_code" newColumnName="code" />
+		<renameColumn tableName="adm_language" oldColumnName="description_en" newColumnName="description" />
+	</changeSet>
 </databaseChangeLog>

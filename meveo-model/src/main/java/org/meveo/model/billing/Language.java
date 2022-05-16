@@ -9,7 +9,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * This program is not suitable for any direct or indirect application in MILITARY industry
  * See the GNU Affero General Public License for more details.
  *
@@ -26,8 +26,10 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.meveo.model.AuditableEntity;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.crm.custom.CustomFieldValues;
 
 /**
  * Language entity.
@@ -38,31 +40,27 @@ import org.meveo.model.ExportIdentifier;
 @Table(name = "adm_language")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_language_seq"), })
-public class Language extends AuditableEntity {
+public class Language extends BusinessEntity {
     private static final long serialVersionUID = 1L;
 
-    @Column(name = "language_code", length = 3)
+    @Column(name = "code", length = 3)
     @Size(max = 3)
-    private String languageCode;
+    private String code;
 
-    @Column(name = "description_en", length = 100)
-    @Size(max = 100)
-    private String descriptionEn;
-
-    public String getLanguageCode() {
-        return languageCode;
+    public String getCode() {
+        return code;
     }
 
-    public void setLanguageCode(String languageCode) {
-        this.languageCode = languageCode;
+    public void setCode(String languageCode) {
+        this.code = languageCode;
     }
 
-    public String getDescriptionEn() {
-        return descriptionEn;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDescriptionEn(String descriptionEn) {
-        this.descriptionEn = descriptionEn;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
@@ -80,11 +78,11 @@ public class Language extends AuditableEntity {
         if (id != null && other.getId() != null && id.equals(other.getId())) {
             return true;
         }
-        if (languageCode == null) {
-            if (other.languageCode != null) {
+        if (code == null) {
+            if (other.code != null) {
                 return false;
             }
-        } else if (!languageCode.equals(other.languageCode)) {
+        } else if (!code.equals(other.code)) {
             return false;
         }
         return true;
@@ -92,6 +90,6 @@ public class Language extends AuditableEntity {
 
     @Override
     public String toString() {
-        return languageCode;
+        return code;
     }
 }

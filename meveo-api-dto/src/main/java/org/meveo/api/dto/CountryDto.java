@@ -61,7 +61,7 @@ public class CountryDto extends BaseEntityDto {
         currencyCode = country.getCurrency().getCurrencyCode();
 
         if (country.getLanguage() != null) {
-            languageCode = country.getLanguage().getLanguageCode();
+            languageCode = country.getLanguage().getCode();
         }
     }
 

@@ -78,7 +78,7 @@ public class CountryIsoDto extends BaseEntityDto {
         languageDescriptions = new ArrayList<>();
 
         if (e.getLanguage() != null) {
-            languageCode = e.getLanguage().getLanguageCode();
+            languageCode = e.getLanguage().getCode();
         }
     }
 

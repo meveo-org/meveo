@@ -41,7 +41,7 @@ import java.util.Map;
         @Parameter(name = "sequence_name", value = "adm_country_seq"), })
 @NamedQueries({
         @NamedQuery(name = "Country.listByStatus", query = "SELECT c FROM Country c where c.disabled=:isDisabled order by c.description ASC") })
-public class Country extends BusinessEntity implements ICustomFieldEntity {
+public class Country extends BusinessEntity {
     private static final long serialVersionUID = 1L;
 
     @Column(name = "code", length = 10)
@@ -129,43 +129,4 @@ public class Country extends BusinessEntity implements ICustomFieldEntity {
         return result;
     }
 
-    @Override
-    public String getUuid() {
-        return "";
-    }
-
-    public void setUuid(String uuid) {
-
-    }
-
-    @Override
-    public CustomFieldValues getCfValues() {
-        return new CustomFieldValues();
-    }
-
-    public void setCfValues(CustomFieldValues cfValues) {
-
-    }
-
-    @Override
-    public CustomFieldValues getCfValuesNullSafe() {
-        return  new CustomFieldValues();
-    }
-
-    @Override
-    public void clearCfValues() {
-
-    }
-
-    @Override
-    public String clearUuid() {
-        String oldUuid = "";
-        //uuid = UUID.randomUUID().toString();
-        return oldUuid;
-    }
-
-    @Override
-    public ICustomFieldEntity[] getParentCFEntities() {
-        return null;
-    }
 }
