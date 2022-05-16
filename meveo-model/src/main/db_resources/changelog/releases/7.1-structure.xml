@@ -30,7 +30,7 @@
    			referencedColumnNames="id" onDelete="CASCADE"/>
    	</changeSet>
 
-	<changeSet id="#303 and #304- Create a rest services that provides localized list of countries and states (as per provided country code)" author="Farhan Munir">
+	<changeSet id="#550 - Country should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
 		<addColumn tableName="adm_country">
 			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
 				<constraints nullable="false" />
