@@ -29,4 +29,15 @@
    			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
    			referencedColumnNames="id" onDelete="CASCADE"/>
    	</changeSet>
+
+	<changeSet id="#303 and #304- Create a rest services that provides localized list of countries and states (as per provided country code)" author="Farhan Munir">
+		<addColumn tableName="adm_country">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_country" oldColumnName="country_code" newColumnName="code" />
+		<dropColumn tableName="adm_country" columnName="description_i18n" />
+	</changeSet>
+
 </databaseChangeLog>

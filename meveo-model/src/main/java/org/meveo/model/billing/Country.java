@@ -21,9 +21,11 @@ package org.meveo.model.billing;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.meveo.model.AuditableEntity;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.admin.Currency;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.persistence.JsonTypes;
 
 import javax.persistence.*;
@@ -33,20 +35,18 @@ import java.util.Map;
 
 @Entity
 @Cacheable
-@ExportIdentifier("countryCode")
+@ExportIdentifier("code")
 @Table(name = "adm_country")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "adm_country_seq"), })
-public class Country extends AuditableEntity {
+@NamedQueries({
+        @NamedQuery(name = "Country.listByStatus", query = "SELECT c FROM Country c where c.disabled=:isDisabled order by c.description ASC") })
+public class Country extends BusinessEntity implements ICustomFieldEntity {
     private static final long serialVersionUID = 1L;
 
-    @Column(name = "country_code", length = 10)
+    @Column(name = "code", length = 10)
     @Size(max = 10)
-    private String countryCode;
-
-    @Column(name = "description", length = 100)
-    @Size(max = 100)
-    private String description;
+    private String code;
 
     @Column(name = "nationality", length = 100)
     @Size(max = 100)
@@ -60,30 +60,13 @@ public class Country extends AuditableEntity {
     @JoinColumn(name = "language_id")
     private Language language;
 
-    @Type(type = JsonTypes.JSON)
-    @Column(name = "description_i18n", columnDefinition = "text")
-    private Map<String, String> descriptionI18n;
 
-    public String getCountryCode() {
-        return countryCode;
+    public String getCode() {
+        return code;
     }
 
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(String description) {
-        this.description = description;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     /**
@@ -117,7 +100,7 @@ public class Country extends AuditableEntity {
     }
 
     public String toString() {
-        return countryCode;
+        return code;
     }
 
     @Override
@@ -136,32 +119,53 @@ public class Country extends AuditableEntity {
         if (id != null && other.getId() != null && id.equals(other.getId())) {
             return true;
         }
-        return (other.countryCode != null) && other.countryCode.equals(this.countryCode);
+        return (other.code != null) && other.code.equals(this.code);
     }
 
-    public Map<String, String> getDescriptionI18n() {
-        return descriptionI18n;
-    }
 
-    public void setDescriptionI18n(Map<String, String> descriptionI18n) {
-        this.descriptionI18n = descriptionI18n;
-    }
-
-    /**
-     * Instantiate descriptionI18n field if it is null. NOTE: do not use this method unless you have an intention to modify it's value, as entity will be marked dirty and record
-     * will be updated in DB
-     * 
-     * @return descriptionI18n value or instantiated descriptionI18n field value
-     */
-    public Map<String, String> getDescriptionI18nNullSafe() {
-        if (descriptionI18n == null) {
-            descriptionI18n = new HashMap<>();
-        }
-        return descriptionI18n;
-    }
 
     public int hashCode() {
-        int result = 961 + ((countryCode == null) ? 0 : ("Country" + countryCode).hashCode());
+        int result = 961 + ((code == null) ? 0 : ("Country" + code).hashCode());
         return result;
+    }
+
+    @Override
+    public String getUuid() {
+        return "";
+    }
+
+    public void setUuid(String uuid) {
+
+    }
+
+    @Override
+    public CustomFieldValues getCfValues() {
+        return new CustomFieldValues();
+    }
+
+    public void setCfValues(CustomFieldValues cfValues) {
+
+    }
+
+    @Override
+    public CustomFieldValues getCfValuesNullSafe() {
+        return  new CustomFieldValues();
+    }
+
+    @Override
+    public void clearCfValues() {
+
+    }
+
+    @Override
+    public String clearUuid() {
+        String oldUuid = "";
+        //uuid = UUID.randomUUID().toString();
+        return oldUuid;
+    }
+
+    @Override
+    public ICustomFieldEntity[] getParentCFEntities() {
+        return null;
     }
 }
