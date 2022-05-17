@@ -562,7 +562,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public void compileScript(T script, boolean testCompile) {
+    public Class<ScriptInterface> compileScript(T script, boolean testCompile) {
     	final String source;
         if (testCompile || !findScriptFile(script).exists()) {
             source = script.getScript();
@@ -571,7 +571,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
     	List<ScriptInstanceError> scriptErrors = addScriptDependencies(script);
-        
+    	Class<ScriptInterface> compiledScript = null;
+    	
         if(scriptErrors==null || scriptErrors.isEmpty()){
         	
             if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
@@ -582,7 +583,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         clearCompiledScripts(script.getCode());
                     }
 
-                    Class<ScriptInterface> compiledScript;
+                    
                     compiledScript = compileJavaSource(script.getScript(), testCompile);
 
                 } catch (CharSequenceCompilerException e) {
@@ -628,6 +629,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if(!testCompile && (scriptErrors == null || scriptErrors.isEmpty())) {
         	clearCompiledScripts();
         }
+        
+        return compiledScript;
     }
 
     private List<ScriptInstanceError> addScriptDependencies(T script) {
@@ -859,6 +862,30 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     		}
 		);
         
+    	try {
+    		ALL_SCRIPT_INTERFACES.computeIfAbsent(
+    				new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
+    				key -> { 
+    					Class<ScriptInterface> compiledScript = null;
+    					try {
+    						compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
+    					} catch (ClassNotFoundException e) {
+    						T script = findByCode(scriptCode);
+    						compiledScript = compileScript(script, false);
+    					}
+
+    					var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
+    					final Class<ScriptInterface> scriptClass = compiledScript;
+
+    					log.debug("Compiled script {} added to compiled interface map", scriptCode);
+    					return () -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass);
+    				}
+				);
+    	} catch (Exception e) {
+    		log.error("Failed to load class {}", scriptCode, e);
+    	}
+    }
+    
     }
 
 
