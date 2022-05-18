@@ -177,7 +177,8 @@ public class ValueExpressionWrapper {
      * @return A value that expression evaluated to
      * @throws ELException business exception.
      */
-    public static Object evaluateExpression(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) throws ELException {
+    @SuppressWarnings("unchecked")
+	public static <T> T evaluateExpression(String expression, Map<Object, Object> userMap, Class<T> resultClass) throws ELException {
         Object result = null;
         if (StringUtils.isBlank(expression)) {
             return null;
@@ -187,14 +188,14 @@ public class ValueExpressionWrapper {
         if (!expression.contains("#{") && !expression.contains("${")) {
             log.trace("the expression '{}' doesn't contain any EL", expression);
             if (resultClass.equals(String.class)) {
-                return expression;
+                return (T) expression;
             } else if (resultClass.equals(Double.class)) {
-                return Double.parseDouble(expression);
+                return (T) (Double) Double.parseDouble(expression);
             } else if (resultClass.equals(Boolean.class)) {
                 if ("true".equalsIgnoreCase(expression)) {
-                    return Boolean.TRUE;
+                    return (T) Boolean.TRUE;
                 } else {
-                    return Boolean.FALSE;
+                    return (T) Boolean.FALSE;
                 }
             }
         }
@@ -206,7 +207,7 @@ public class ValueExpressionWrapper {
             log.warn("EL {} throw error with variables {}", expression, userMap, e);
             throw new ELException("Error while evaluating expression " + expression, e);
         }
-        return result;
+        return (T) result;
     }
 
     private static Object getValue(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {

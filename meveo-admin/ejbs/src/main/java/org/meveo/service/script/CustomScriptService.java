@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,6 +71,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.jboss.weld.inject.WeldInstance;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
@@ -82,13 +82,9 @@ import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.git.CommitEvent;
-import org.meveo.event.qualifier.git.CommitReceived;
-import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
@@ -267,6 +263,60 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         detach(script);
         return getExecutionEngine(script, context);
     }
+    
+    @Override
+    public void setParameters(T script, ScriptInterface scriptInstance, Map<String, Object> context) {
+        for (Accessor setter : script.getSettersNullSafe()) {
+            Object setterValue = context.get(setter.getName());
+            if (setterValue != null) {
+                // In case the parameters are initialized by a get request, we might need to
+                // convert the input to their right types
+                ScriptUtils.ClassAndValue classAndValue = new ScriptUtils.ClassAndValue();
+                if (!setter.getType().equals("String") && setterValue instanceof String) {
+                    classAndValue = ScriptUtils.findTypeAndConvert(setter.getType(), (String) setterValue);
+                } else {
+                    classAndValue.setValue(setterValue);
+                    classAndValue.setClass(setterValue.getClass());
+                }
+
+                Method method = ReflectionUtils.getSetterByNameAndSimpleClassName(scriptInstance.getClass(), setter.getMethodName(), setter.getType())
+                		.orElse(null);
+                
+                try { 
+	                if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
+	                	// If value is a map or a custom entity instance, convert into target class
+	                	if(classAndValue.getValue() instanceof Map || classAndValue.getValue() instanceof Collection) {
+	                		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
+	                    	method.invoke(scriptInstance, convertedValue);
+	                    	
+	                	} else if (classAndValue.getValue() instanceof CustomEntityInstance) {
+	                		CustomEntityInstance cei = (CustomEntityInstance) classAndValue.getValue();
+	                		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
+	                    	method.invoke(scriptInstance, convertedValue);
+	                    	
+	                	} else if (Collection.class.isAssignableFrom(method.getParameters()[0].getType())) {
+	                		// If value which is supposed to be a collection comes with a single value, automatically deserialize it to a collection
+	                		var type = method.getParameters()[0].getParameterizedType();
+	                		var jacksonType = TypeFactory.defaultInstance().constructType(type);
+	                		Collection<?> collection = (Collection<?>) JacksonUtil.convert(classAndValue.getValue(), jacksonType);
+	                    	method.invoke(scriptInstance, collection);
+	                    	
+	                	} else {
+	                		log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
+	                		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
+	                	}
+	                	
+	                } else {
+	                	method.invoke(scriptInstance, classAndValue.getValue());
+	                }
+                
+                } catch (Exception e) {
+                	throw new RuntimeException(e);
+                }
+                
+            }
+        }
+    }
 
 	@Override
     public ScriptInterface getExecutionEngine(T script, Map<String, Object> context) {
@@ -275,51 +325,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
             // Call setters if those are provided
             if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA && context != null) {
-                for (Accessor setter : script.getSettersNullSafe()) {
-                    Object setterValue = context.get(setter.getName());
-                    if (setterValue != null) {
-                        // In case the parameters are initialized by a get request, we might need to
-                        // convert the input to their right types
-                        ScriptUtils.ClassAndValue classAndValue = new ScriptUtils.ClassAndValue();
-                        if (!setter.getType().equals("String") && setterValue instanceof String) {
-                            classAndValue = ScriptUtils.findTypeAndConvert(setter.getType(), (String) setterValue);
-                        } else {
-                            classAndValue.setValue(setterValue);
-                            classAndValue.setClass(setterValue.getClass());
-                        }
-
-                        Method method = ReflectionUtils.getSetterByNameAndSimpleClassName(scriptInstance.getClass(), setter.getMethodName(), setter.getType())
-                        		.orElse(null);
-                        
-                        if(method.getParameters()[0].getType() != classAndValue.getTypeClass()) {
-                        	// If value is a map or a custom entity instance, convert into target class
-                        	if(classAndValue.getValue() instanceof Map || classAndValue.getValue() instanceof Collection) {
-                        		Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
-                            	method.invoke(scriptInstance, convertedValue);
-                            	
-                        	} else if (classAndValue.getValue() instanceof CustomEntityInstance) {
-                        		CustomEntityInstance cei = (CustomEntityInstance) classAndValue.getValue();
-                        		Object convertedValue = CEIUtils.ceiToPojo(cei, method.getParameters()[0].getType());
-                            	method.invoke(scriptInstance, convertedValue);
-                            	
-                        	} else if (Collection.class.isAssignableFrom(method.getParameters()[0].getType())) {
-                        		// If value which is supposed to be a collection comes with a single value, automatically deserialize it to a collection
-                        		var type = method.getParameters()[0].getParameterizedType();
-                        		var jacksonType = TypeFactory.defaultInstance().constructType(type);
-                        		Collection<?> collection = (Collection<?>) JacksonUtil.convert(classAndValue.getValue(), jacksonType);
-                            	method.invoke(scriptInstance, collection);
-                            	
-                        	} else {
-                        		log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
-                        		throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
-                        	}
-                        	
-                        } else {
-                        	method.invoke(scriptInstance, classAndValue.getValue());
-                        }
-                        
-                    }
-                }
+            	this.setParameters(script, scriptInstance, context);
             }
             return scriptInstance;
         } catch (Exception e) {
@@ -843,25 +849,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     }
     
     public void loadClassInCache(String scriptCode) {
-        ALL_SCRIPT_INTERFACES.computeIfAbsent(
-        		new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
-        		key -> { 
-        			Class<ScriptInterface> compiledScript = null;
-        	    	try {
-        	    		compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
-        	    	} catch (ClassNotFoundException e) {
-        	    		T script = findByCode(scriptCode);
-        	    		compileScript(script, false);
-        	    	}
-        	    	
-        	    	var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
-        	        final Class<ScriptInterface> scriptClass = compiledScript;
-        	        
-        	        log.debug("Compiled script {} added to compiled interface map", scriptCode);
-        			return () -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass);
-    		}
-		);
-        
     	try {
     		ALL_SCRIPT_INTERFACES.computeIfAbsent(
     				new CacheKeyStr(currentUser.getProviderCode(), scriptCode), 
@@ -886,9 +873,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	}
     }
     
-    }
-
-
     /**
      * Compile java Source script
      *

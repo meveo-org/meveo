@@ -29,4 +29,15 @@
    			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
    			referencedColumnNames="id" onDelete="CASCADE"/>
    	</changeSet>
+   	
+   	<changeSet id="Add endpoint pool configuration" author="Clément Bareth">
+   		<addColumn tableName="service_endpoint">
+   			<column name="use_pool" type="${type.boolean}" defaultValue="0"></column>
+   			<column name="min_pool" type="varchar(255)"></column>
+   			<column name="max_pool" type="varchar(255)"></column>
+   			<column name="max_idle_time_pool" type="varchar(255)"></column>
+   			
+   		</addColumn>
+   	</changeSet>
+   	
 </databaseChangeLog>

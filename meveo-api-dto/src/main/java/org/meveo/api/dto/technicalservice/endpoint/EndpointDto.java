@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
+import org.meveo.model.technicalservice.endpoint.EndpointPool;
 import org.meveo.validation.constraint.nointersection.NoIntersectionBetween;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -145,6 +146,9 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     @ApiModelProperty("endpoint path , built from path parameters if not set")
     private String path;
     
+    @JsonProperty
+    private EndpointPool pool;
+    
     public EndpointDto() {
     	super();
     }
@@ -252,4 +256,18 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     public String getPath() {return path;}
 
     public void setPath(String path) {this.path = path;}
+
+	/**
+	 * @return the {@link #pool}
+	 */
+	public EndpointPool getPool() {
+		return pool;
+	}
+
+	/**
+	 * @param pool the pool to set
+	 */
+	public void setPool(EndpointPool pool) {
+		this.pool = pool;
+	}
 }
