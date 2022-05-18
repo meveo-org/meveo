@@ -20,18 +20,12 @@ package org.meveo.model.billing;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.admin.Currency;
-import org.meveo.model.crm.custom.CustomFieldValues;
-import org.meveo.model.persistence.JsonTypes;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
-import java.util.HashMap;
-import java.util.Map;
 
 @Entity
 @Cacheable
@@ -44,9 +38,6 @@ import java.util.Map;
 public class Country extends BusinessEntity {
     private static final long serialVersionUID = 1L;
 
-    @Column(name = "code", length = 10)
-    @Size(max = 10)
-    private String code;
 
     @Column(name = "nationality", length = 100)
     @Size(max = 100)
@@ -59,15 +50,6 @@ public class Country extends BusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language_id")
     private Language language;
-
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 
     /**
      * @return the nationality

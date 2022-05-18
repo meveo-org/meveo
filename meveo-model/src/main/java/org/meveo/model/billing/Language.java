@@ -19,17 +19,13 @@
 package org.meveo.model.billing;
 
 import javax.persistence.Cacheable;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ICustomFieldEntity;
-import org.meveo.model.crm.custom.CustomFieldValues;
 
 /**
  * Language entity.
@@ -42,18 +38,6 @@ import org.meveo.model.crm.custom.CustomFieldValues;
         @Parameter(name = "sequence_name", value = "adm_language_seq"), })
 public class Language extends BusinessEntity {
     private static final long serialVersionUID = 1L;
-
-    @Column(name = "code", length = 3)
-    @Size(max = 3)
-    private String code;
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String languageCode) {
-        this.code = languageCode;
-    }
 
     public String getDescription() {
         return description;

@@ -40,7 +40,7 @@
 		<dropColumn tableName="adm_country" columnName="description_i18n" />
 	</changeSet>
 
-	<changeSet id="#551 For Localized Message based work, we are not able to set Language for LocalizedMessage CET" author="Farhan Munir">
+	<changeSet id="#550 Language should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
 		<addColumn tableName="adm_language">
 			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
 				<constraints nullable="false" />
