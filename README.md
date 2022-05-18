@@ -77,14 +77,14 @@ On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swa
 ## Troubleshooting
 
 When encountering persistence errors you might have to connect to the DB container then to postgres:
-'''
+```
 docker exec -it postgres bash
 psql meveo meveo
 meveo=#\d  //to list the tables
 meveo=#drop table myentity;
 meveo=#drop sequence myentity_seq;
 meveo=#^Z  //ctrl+Z
-'''
+```
 
 ## Migration from versions previous to 7.0.0
 
