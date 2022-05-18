@@ -191,7 +191,9 @@ public class CharSequenceCompiler<T> {
          final Class<?>... types) throws CharSequenceCompilerException,
          ClassCastException {
 
-      Class<T> newClass = compile(sourcePath, qualifiedClassName, javaSource, diagnosticsList, isTestCompile);
+	  JavaFileObjectImpl compilationUnit = new JavaFileObjectImpl(qualifiedClassName, javaSource);
+      Class<T> newClass = compile(sourcePath, List.of(compilationUnit), diagnosticsList, isTestCompile)
+    		  .get(qualifiedClassName);
       return castable(newClass, types);
    }
 
@@ -208,14 +210,16 @@ public class CharSequenceCompiler<T> {
 	 * @return the compiled class
 	 * @throws CharSequenceCompilerException if the source cannot be compiled
 	 */
-   public synchronized Class<T> compile(
+   @SuppressWarnings("unchecked")
+public synchronized Map<String, Class<T>> compile(
 		   final String sourcePath,
-		   final String qualifiedClassName,
-           final CharSequence content,
+//		   final String qualifiedClassName,
+//           final CharSequence content,
+		   List<JavaFileObjectImpl> compilationUnits,
            final DiagnosticCollector<JavaFileObject> diagnosticsList,
            final boolean isTestCompile)  throws CharSequenceCompilerException {
 	   
-	   Set<String> classNames = Set.of(qualifiedClassName);
+	   Set<String> classNames = compilationUnits.stream().map(obj -> obj.getClassName()).collect(Collectors.toSet());
 
 	   File classesDirectory = CustomEntityTemplateService.getClassesDir(null);
 	   File outputDir;
@@ -229,14 +233,12 @@ public class CharSequenceCompiler<T> {
 		   classesDirectory.mkdirs();
 	   }
 
-	   final int dotPos = qualifiedClassName.lastIndexOf('.');
-	   final String className = dotPos == -1 ? qualifiedClassName : qualifiedClassName.substring(dotPos + 1);
-	   final String packageName = dotPos == -1 ? "" : qualifiedClassName.substring(0, dotPos);
+	   //final int dotPos = qualifiedClassName.lastIndexOf('.');
+//	   final String className = dotPos == -1 ? qualifiedClassName : qualifiedClassName.substring(dotPos + 1);
+//	   final String packageName = dotPos == -1 ? "" : qualifiedClassName.substring(0, dotPos);
 
-	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
+//	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
 	   // javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
-	   String pathScript = qualifiedClassName.replaceAll("\\.", "/");
-	   pathScript = pathScript.replaceAll("/+\\w+$", "");
 	   
 	   // Set source directory
 	   options.add("-sourcepath");
@@ -251,9 +253,9 @@ public class CharSequenceCompiler<T> {
 			   null, 
 			   javaFileManager, //XXX: Use a file manager to improve perfs ?
 			   diagnosticsList,
-			   options, 
+			   options,
 			   null, 
-			   List.of(javaFileToCompile)
+			   compilationUnits
 		   );
 
 	   final Boolean result = task.call();
@@ -261,6 +263,8 @@ public class CharSequenceCompiler<T> {
 	   if (result == null || !result.booleanValue()) {
 		   throw new CharSequenceCompilerException("Compilation failed.", classNames, diagnosticsList);
 	   }
+	   
+	   Map<String, Class<T>> results = new HashMap<>();
 
 	   try {
 		   URL[] urls = { outputDir.toURI().toURL() };
@@ -268,19 +272,23 @@ public class CharSequenceCompiler<T> {
 		   if(isTestCompile) {
 			   // Use a temporary classLoader if compilation is test
 			   try (var tmpClassLoader = new URLClassLoader(urls, classLoader)) {
-				   return (Class<T>) tmpClassLoader.loadClass(qualifiedClassName);
+				   for (var unit : compilationUnits) {
+					   results.put(unit.getClassName(), (Class<T>) tmpClassLoader.loadClass(unit.getClassName()));
+				   }
 			   }
 		   } else {
 			   urlClassLoader.close(); // Close previous UrlClassLoader
 			   urlClassLoader = new URLClassLoader(urls, this.getClassLoader()); // Re-instantiate a new one
-			   return (Class<T>) urlClassLoader.loadClass(qualifiedClassName);
+			   for (var unit : compilationUnits){
+				   results.put(unit.getClassName(), (Class<T>) urlClassLoader.loadClass(unit.getClassName()));
+			   }
 		   }
 		   
-//		   Class<T> loadClass = loadClass(qualifiedClassName);
-//		   return loadClass;
 	   } catch (Exception e) {
 		   throw new CharSequenceCompilerException(classNames, e, diagnosticsList);
 	   }
+	   
+	   return results;
    }
 
    /**
@@ -498,6 +506,8 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
 
    // if kind == SOURCE, this contains the source text
    private final CharSequence source;
+   
+   private final String className;
 
    /**
     * Construct a new instance which stores source
@@ -507,9 +517,15 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
     * @param source
     *           the source code
     */
-   JavaFileObjectImpl(final String baseName, final CharSequence source) {
-      super(CharSequenceCompiler.toURI(baseName + CharSequenceCompiler.JAVA_EXTENSION), Kind.SOURCE);
+   JavaFileObjectImpl(final String className, final CharSequence source) {
+      super(CharSequenceCompiler.toURI(getBaseName(className) + CharSequenceCompiler.JAVA_EXTENSION), Kind.SOURCE);
       this.source = source;
+      this.className = className;
+   }
+   
+   private static String getBaseName(String qualifiedClassName) {
+	   int dotPos = qualifiedClassName.lastIndexOf('.');
+	   return dotPos == -1 ? qualifiedClassName : qualifiedClassName.substring(dotPos + 1);
    }
 
    /**
@@ -520,10 +536,11 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
     * @param kind
     *           the kind of file
     */
-   JavaFileObjectImpl(final String name, final Kind kind) {
-      super(CharSequenceCompiler.toURI(name), kind);
-      source = null;
-   }
+//   JavaFileObjectImpl(final String name, final Kind kind) {
+//      super(CharSequenceCompiler.toURI(name), kind);
+//      source = null;
+//      this.className = name;
+//   }
 
    /**
     * Return the source code content
@@ -536,6 +553,13 @@ final class JavaFileObjectImpl extends SimpleJavaFileObject {
       if (source == null)
          throw new UnsupportedOperationException("getCharContent()");
       return source;
+   }
+
+   /**
+    * @return the {@link #className}
+    */
+   public String getClassName() {
+	   return className;
    }
 
    /**

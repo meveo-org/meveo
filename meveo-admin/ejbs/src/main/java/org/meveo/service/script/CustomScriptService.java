@@ -216,14 +216,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     	super.afterUpdateOrCreate(script);
 
         // Don't compile script during module installation, will be compiled after
-    	moduleInstallCtx.registerOrExecutePostInstallAction(() -> {
+    	if (!moduleInstallCtx.isActive()) {
     		compileScript(script, false);
-			if(script.getError()) {
-                String message = "script "+ script.getCode() + " failed to compile. ";
-                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
-				throw new InvalidScriptException(message);
-			}
-    	});
+    		if(script.getError()) {
+    			String message = "script "+ script.getCode() + " failed to compile. ";
+    			message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
+    			throw new InvalidScriptException(message);
+    		}
+    	}
     }
 
     @Override
@@ -557,6 +557,29 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     }
     
+    public void compileScripts(List<T> scripts) throws InvalidScriptException {
+    	List<T> javaScripts = scripts.stream()
+    			.filter(script -> script.getSourceTypeEnum() == JAVA)
+    			.collect(Collectors.toList());
+    	
+    	try {
+    		compileJavaSources(javaScripts);
+    	} catch (CharSequenceCompilerException e) {
+    		String errorMessage = "";
+    		List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
+            for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
+                if ("ERROR".equals(diagnostic.getKind().name())) {
+                	errorMessage += diagnostic.getMessage(Locale.getDefault()) + "\n";
+                }
+            }
+            throw new InvalidScriptException(errorMessage);
+    	}
+    	
+    	scripts.stream()
+			.filter(script -> script.getSourceTypeEnum() != JAVA)
+			.forEach(script -> compileScript(script, false));
+    }
+    
     /**
      * Compile script, a and update script entity status with compilation errors.
      * Successfully compiled script is added to a compiled script cache if active
@@ -569,13 +592,6 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public Class<ScriptInterface> compileScript(T script, boolean testCompile) {
-    	final String source;
-        if (testCompile || !findScriptFile(script).exists()) {
-            source = script.getScript();
-        } else {
-            source = readScriptFile(script);
-        }
-
     	List<ScriptInstanceError> scriptErrors = addScriptDependencies(script);
     	Class<ScriptInterface> compiledScript = null;
     	
@@ -888,6 +904,19 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         String sourcePath = getSourcePath();
         
         return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
+    }
+    
+    protected void compileJavaSources(List<T> scripts) throws CharSequenceCompilerException {
+        String classPath = CLASSPATH_REFERENCE.get();
+    	CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+        final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
+        String sourcePath = getSourcePath();
+        
+        List<JavaFileObjectImpl> compilationUnits = scripts.stream()
+        		.map(script -> new JavaFileObjectImpl(script.getCode(), script.getScript()))
+        		.collect(Collectors.toList());
+        
+        compiler.compile(sourcePath, compilationUnits, errs, false);
     }
 
 	/**
