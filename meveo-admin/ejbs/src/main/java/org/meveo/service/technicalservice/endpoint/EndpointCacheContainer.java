@@ -18,6 +18,7 @@ package org.meveo.service.technicalservice.endpoint;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -235,6 +236,23 @@ public class EndpointCacheContainer {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * Method used for statistics building
+	 * 
+	 * @return the list of endpoint's code that has an active pool
+	 */
+	public Collection<String> getPooledEndpoints() {
+		return endpointPool.keySet();
+	}
+	
+	public int getNbActiveInPool(String endpointCode) {
+		return endpointPool.get(endpointCode).getNumActive();
+	}
+	
+	public int getNbIdleInPool(String endpointCode) {
+		return endpointPool.get(endpointCode).getNumIdle();
 	}
 	
 	private ObjectPool<ScriptInterface> buildPool(Endpoint endpoint) {
