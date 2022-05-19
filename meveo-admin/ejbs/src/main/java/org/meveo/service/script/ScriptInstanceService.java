@@ -330,7 +330,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			.map(item -> findByCode(item.getItemCode()))
 			.collect(Collectors.toList());
 		
-		compileScripts(scripts);
+		if (!scripts.isEmpty()) {
+			compileScripts(scripts);
+		}
 	}
 	
 	/**

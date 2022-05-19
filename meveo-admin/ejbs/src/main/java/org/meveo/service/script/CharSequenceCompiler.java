@@ -211,13 +211,16 @@ public class CharSequenceCompiler<T> {
 	 * @throws CharSequenceCompilerException if the source cannot be compiled
 	 */
    @SuppressWarnings("unchecked")
-public synchronized Map<String, Class<T>> compile(
+   public synchronized Map<String, Class<T>> compile(
 		   final String sourcePath,
-//		   final String qualifiedClassName,
-//           final CharSequence content,
 		   List<JavaFileObjectImpl> compilationUnits,
-           final DiagnosticCollector<JavaFileObject> diagnosticsList,
-           final boolean isTestCompile)  throws CharSequenceCompilerException {
+		   final DiagnosticCollector<JavaFileObject> diagnosticsList,
+		   final boolean isTestCompile)  throws CharSequenceCompilerException {
+	   
+	   Map<String, Class<T>> results = new HashMap<>();
+	   if (compilationUnits == null || compilationUnits.isEmpty()) {
+		   return results;
+	   }
 	   
 	   Set<String> classNames = compilationUnits.stream().map(obj -> obj.getClassName()).collect(Collectors.toSet());
 
@@ -233,13 +236,6 @@ public synchronized Map<String, Class<T>> compile(
 		   classesDirectory.mkdirs();
 	   }
 
-	   //final int dotPos = qualifiedClassName.lastIndexOf('.');
-//	   final String className = dotPos == -1 ? qualifiedClassName : qualifiedClassName.substring(dotPos + 1);
-//	   final String packageName = dotPos == -1 ? "" : qualifiedClassName.substring(0, dotPos);
-
-//	   JavaFileObjectImpl javaFileToCompile = new JavaFileObjectImpl(className, content);
-	   // javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName, className + JAVA_EXTENSION, javaFileToCompile);
-	   
 	   // Set source directory
 	   options.add("-sourcepath");
 	   options.add(sourcePath);
@@ -263,8 +259,6 @@ public synchronized Map<String, Class<T>> compile(
 	   if (result == null || !result.booleanValue()) {
 		   throw new CharSequenceCompilerException("Compilation failed.", classNames, diagnosticsList);
 	   }
-	   
-	   Map<String, Class<T>> results = new HashMap<>();
 
 	   try {
 		   URL[] urls = { outputDir.toURI().toURL() };
