@@ -270,6 +270,11 @@ public class EndpointCacheContainer {
 					Integer maxTotal = MeveoValueExpressionWrapper.evaluateExpression(poolConfig.getMax(), null, Integer.class);
 					((GenericObjectPool<ScriptInterface>)  pool).setMaxTotal(maxTotal);
 				}
+				
+				if (!StringUtils.isBlank(poolConfig.getMin())) {
+					Integer min = MeveoValueExpressionWrapper.evaluateExpression(poolConfig.getMin(), null, Integer.class);
+					((GenericObjectPool<ScriptInterface>)  pool).setMinIdle(min);
+				}
 			}
 			
 			if (!StringUtils.isBlank(poolConfig.getMin())) {
