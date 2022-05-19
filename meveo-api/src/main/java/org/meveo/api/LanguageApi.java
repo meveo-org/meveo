@@ -29,7 +29,7 @@ public class LanguageApi extends BaseApi {
             handleMissingParameters();
         }
 
-        
+
 
         Language language = languageService.findByCode(postData.getCode());
 
@@ -37,8 +37,8 @@ public class LanguageApi extends BaseApi {
         if (language == null) {
             // create
             language = new Language();
-            language.setLanguageCode(postData.getCode());
-            language.setDescriptionEn(postData.getDescription());
+            language.setCode(postData.getCode());
+            language.setDescription(postData.getDescription());
             languageService.create(language);
         }
 
@@ -67,7 +67,7 @@ public class LanguageApi extends BaseApi {
             handleMissingParameters();
         }
 
-        
+
 
         Language language = languageService.findByCode(postData.getCode());
 
@@ -75,7 +75,7 @@ public class LanguageApi extends BaseApi {
             throw new EntityDoesNotExistsException(Language.class, postData.getCode());
         }
 
-        language.setDescriptionEn(postData.getDescription());
+        language.setDescription(postData.getDescription());
         languageService.update(language);
     }
 
@@ -99,7 +99,7 @@ public class LanguageApi extends BaseApi {
 
     /**
      * Create or update Language based on the trading language code.
-     * 
+     *
      * @param postData posted data
 
      * @throws MeveoApiException meveo api exception
@@ -118,5 +118,5 @@ public class LanguageApi extends BaseApi {
         if (StringUtils.isBlank(languageCode)){
             return;
         }
-	}
+    }
 }

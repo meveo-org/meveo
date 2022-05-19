@@ -64,13 +64,11 @@ public class CountryIsoApi extends BaseApi {
         }
 
         Country country = new Country();
-        country.setCountryCode(postData.getCountryCode());
+        country.setCode(postData.getCountryCode());
         country.setDescription(postData.getDescription());
 
         country.setLanguage(language);
         country.setCurrency(currency);
-
-        country.setDescriptionI18n(convertMultiLanguageToMapOfValues(postData.getLanguageDescriptions(), null));
 
         countryService.create(country);
 
@@ -113,9 +111,6 @@ public class CountryIsoApi extends BaseApi {
             country.setCurrency(currency);
         }
 
-        if (postData.getLanguageDescriptions() != null) {
-            country.setDescriptionI18n(convertMultiLanguageToMapOfValues(postData.getLanguageDescriptions(), country.getDescriptionI18n()));
-        }
         countryService.update(country);
     }
 
