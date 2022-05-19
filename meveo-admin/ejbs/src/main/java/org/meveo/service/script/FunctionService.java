@@ -262,20 +262,25 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         }
     }
     
+    public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
+    	return execute(engine, context, true);
+    }
+    
     /**
      * Execute an engine
      *
      * @param engine  Compiled script class
      * @param context Method context
+     * @param withInitFinalize whether to execute init and finalize methods
      * @return Context parameters. Will not be null even if "context" parameter is null.
      * @throws BusinessException Any execution exception
      */
-    public Map<String, Object> execute(E engine, Map<String, Object> context) throws BusinessException {
+    public Map<String, Object> execute(E engine, Map<String, Object> context, boolean withInitFinalize) throws BusinessException {
         if (context == null) {
             context = new HashMap<>();
         }
         try {
-			engine.init(context);
+			if (withInitFinalize) engine.init(context);
 		} catch (Throwable e) {
 			throw new ScriptExecutionException(engine.getClass().getName(), "init", e);
 		}
@@ -283,7 +288,7 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
         executeEngine(engine, context);
 
         try {
-			engine.finalize(context);
+			if (withInitFinalize) engine.finalize(context);
 		} catch (Throwable e) {
 			throw new ScriptExecutionException(engine.getClass().getName(), "finalize", e);
 		}
@@ -461,8 +466,11 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
 			.executeUpdate();	
 	}
 	
-    public void compileScript(T script, boolean testCompile) {
-    	
+    public Class<ScriptInterface> compileScript(T script, boolean testCompile) {
+    	return null;
 	}
-
+    
+    public void setParameters(T script, E scriptInstance, Map<String, Object> context) {
+    	// NOOP
+    }
 }

@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -164,6 +165,12 @@ public class Endpoint extends BusinessEntity {
 	 */
 	@Column(name = "path")
 	private String path;
+	
+	/**
+	 * Optional - Script instances pool configuration
+	 */
+	@Embedded
+	private EndpointPool pool = new EndpointPool();
 
 	@Transient
 	Pattern pathRegex;
@@ -366,6 +373,21 @@ public class Endpoint extends BusinessEntity {
 		this.checkPathParams = checkPathParams;
 	}
 	
+	
+	/**
+	 * @return the {@link #pool}
+	 */
+	public EndpointPool getPool() {
+		return pool;
+	}
+
+	/**
+	 * @param pool the pool to set
+	 */
+	public void setPool(EndpointPool pool) {
+		this.pool = pool;
+	}
+
 	/**
 	 * To determine if the endpoint parameter is multivalued, check the corresponding input's type
 	 * @param parameter the parameter

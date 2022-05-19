@@ -1,6 +1,7 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,14 +15,18 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
+import org.meveo.model.util.KeyValuePair;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.util.view.CrossStorageDataModel;
 import org.omnifaces.util.Faces;
+import org.primefaces.PrimeFaces;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,12 +236,43 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	public void setCustomFieldTemplateList(List<CustomFieldTemplate> customFieldTemplateList) {
 		this.customFieldTemplateList = customFieldTemplateList;
 	}
+	
+	public boolean hasParameters(EntityCustomAction action) {
+		return action.getScriptParameters() != null && !action.getScriptParameters().isEmpty();
+	}
 
 	@Override
 	public Map<String, Object> getFilters() {
 		var filters = super.getFilters();
 		filters.values().removeIf(StringUtils::isBlank);
 		return filters;
+	}
+
+	@Override
+	public void setAction(EntityCustomAction action) {
+		if(action == null) {
+			return;
+		}
+		
+		if(action == this.action) {
+			return;
+		}
+		
+		this.action = action;
+		
+		Map<Object, Object> elContext = new HashMap<>();
+		elContext.put("entity", entity);
+		
+		overrideParams.clear();
+		this.action.getScriptParameters().forEach((key, value) -> {
+			try {
+				overrideParams.add(new KeyValuePair(key, MeveoValueExpressionWrapper.evaluateExpression(value, elContext, Object.class)));
+			} catch (ELException e) {
+				log.error("Failed to evaluate el for custom action", e);
+			}
+		});
+		
+		PrimeFaces.current().ajax().update(":executeDialog");
 	}
 
 }

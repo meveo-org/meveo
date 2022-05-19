@@ -17,6 +17,7 @@ import org.meveo.api.rest.filter.PragmaRemover;
 import org.meveo.api.rest.filter.RESTCorsRequestFilter;
 import org.meveo.api.rest.filter.RESTCorsResponseFilter;
 import org.meveo.api.rest.impl.BaseRs;
+import org.meveo.api.rest.monitoring.MonitoringRs;
 import org.meveo.api.rest.persistence.PersistenceRs;
 import org.meveo.api.rest.swagger.SwaggerApiDefinition;
 import org.meveo.service.communication.impl.SseManager;
@@ -55,6 +56,7 @@ public class JaxRsActivator extends Application {
             resources.add(SseManager.class);
             resources.add(GZIPDecodingInterceptor.class);
             resources.add(GZIPEncodingInterceptor.class);
+            resources.add(MonitoringRs.class);
 		}
 
 

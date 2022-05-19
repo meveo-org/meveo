@@ -111,8 +111,8 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	private String uuid;
 	private String hash;
 	
-	private EntityCustomAction action;
-	private Set<KeyValuePair> overrideParams = new HashSet<>();
+	protected EntityCustomAction action;
+	protected Set<KeyValuePair> overrideParams = new HashSet<>();
 
 	@Inject
 	@Cookie(name = "repository")

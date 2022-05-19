@@ -308,23 +308,6 @@ public class EndpointBean extends BaseBean<Endpoint> {
 			entity.getPathParametersNullSafe().clear();
 		}
 
-		boolean isError = false;
-		if (parameterMappings != null) {
-			for (TSParameterMapping param : parameterMappings) {
-				if (StringUtils.isBlank(param.getParameterName())) {
-					if (param.getDefaultValue() == null) {
-						messages.error(new BundleKey("messages", "endpoint.parameters.mapping.default.error"),
-								param.getEndpointParameter().getParameter());
-						isError = true;
-					}
-				}
-			}
-		}
-
-		if (isError) {
-			return null;
-		}
-		
 		var dto = endpointApi.toDto(entity);
 		try {
 			endpointApi.createOrUpdate(dto);

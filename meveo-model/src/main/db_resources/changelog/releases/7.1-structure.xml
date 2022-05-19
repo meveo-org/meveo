@@ -49,4 +49,14 @@
 		<renameColumn tableName="adm_language" oldColumnName="language_code" newColumnName="code" />
 		<renameColumn tableName="adm_language" oldColumnName="description_en" newColumnName="description" />
 	</changeSet>
+   
+  <changeSet id="Add endpoint pool configuration" author="Clément Bareth">
+    <addColumn tableName="service_endpoint">
+      <column name="use_pool" type="${type.boolean}" defaultValue="0"></column>
+      <column name="min_pool" type="varchar(255)"></column>
+      <column name="max_pool" type="varchar(255)"></column>
+      <column name="max_idle_time_pool" type="varchar(255)"></column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

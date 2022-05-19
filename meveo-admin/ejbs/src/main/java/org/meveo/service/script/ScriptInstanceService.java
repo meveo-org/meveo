@@ -22,7 +22,6 @@ package org.meveo.service.script;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,7 +49,6 @@ import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.commons.utils.EjbUtils;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ReflectionUtils;
-import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.JpaAmpNewTx;
 import org.meveo.model.ModulePostInstall;
 import org.meveo.model.git.GitRepository;
@@ -332,15 +330,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			.map(item -> findByCode(item.getItemCode()))
 			.collect(Collectors.toList());
 		
-		scripts.forEach(script -> compileScript(script, false));
-		
-		// Throw exception if a script fails to compile
-		for(var script : scripts) {
-			if(script.getError()) {
-                String message = "script "+ script.getCode() + " failed to compile. ";
-                message+=script.getScriptErrors().stream().map(error->error.getMessage()).collect(Collectors.joining("\n"));
-				throw new InvalidScriptException(message);
-			}
+		if (!scripts.isEmpty()) {
+			compileScripts(scripts);
 		}
 	}
 	

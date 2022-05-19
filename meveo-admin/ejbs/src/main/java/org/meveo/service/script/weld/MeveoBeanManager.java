@@ -1322,8 +1322,7 @@ public class MeveoBeanManager implements WeldManager {
 	}
 	
 	public <T> T getInstance(Bean<T> bean, Class<T> scriptClass) {
-		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
-		WeldInstance<T> weldInstance = getInstance(createCreationalContext).select(scriptClass);
+		WeldInstance<T> weldInstance = getWeldInstance(bean, scriptClass);
 		T instance = weldInstance.get();
 		
 		if (bean.getScope().equals(Dependent.class)) {
@@ -1332,6 +1331,11 @@ public class MeveoBeanManager implements WeldManager {
 		}
 		
 		return instance;
+	}
+	
+	public <T> WeldInstance<T> getWeldInstance(Bean<T> bean, Class<T> scriptClass) {
+		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
+		return getInstance(createCreationalContext).select(scriptClass);
 	}
 	
 	public <T> T getInstance(Bean<T> bean) {
