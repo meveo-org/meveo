@@ -565,4 +565,11 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 		return nativeDataModel;
 	}
+
+	@Override
+	public boolean canUserUpdateEntity() {
+		return currentUser.hasRole(customEntityTemplate.getModifyPermission());
+	}
+	
+	
 }
