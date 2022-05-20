@@ -19,6 +19,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.everit.json.schema.ArraySchema;
+import org.everit.json.schema.BooleanSchema;
 import org.everit.json.schema.CombinedObjectSchema;
 import org.everit.json.schema.CombinedSchema;
 import org.everit.json.schema.EnumSchema;
@@ -29,6 +30,7 @@ import org.everit.json.schema.ReferenceSchema;
 import org.everit.json.schema.ReferenceViewSchema;
 import org.everit.json.schema.RelationSchema;
 import org.everit.json.schema.Schema;
+import org.everit.json.schema.Schema.Builder;
 import org.everit.json.schema.StringSchema;
 import org.everit.json.schema.internal.JSONPrinter;
 import org.json.JSONObject;
@@ -273,6 +275,9 @@ public class JSONSchemaGenerator {
 			case DOUBLE:
 				result = createNumberSchema(field);
 				break;
+			case BOOLEAN:
+				result = createBooleanSchema(field);
+				break;
 			case MULTI_VALUE:
 				throw new IllegalStateException("Multi-value type of field supports only matrix storage" + ": field = " + field + ", storageType = " + field.getStorageType());
 			default:
@@ -324,6 +329,15 @@ public class JSONSchemaGenerator {
 			result = result.indexType(field.getIndexType().name());
 		}
 
+		return result;
+	}
+
+	private Schema.Builder<?> createBooleanSchema(CustomFieldTemplate field) {
+		BooleanSchema.Builder result = BooleanSchema.builder();
+		Object defaultValue = field.getDefaultValue();
+		if (null != defaultValue) {
+			result.defaultValue(defaultValue);
+		}
 		return result;
 	}
 
