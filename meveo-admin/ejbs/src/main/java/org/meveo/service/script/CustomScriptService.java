@@ -562,6 +562,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     			.filter(script -> script.getSourceTypeEnum() == JAVA)
     			.collect(Collectors.toList());
     	
+    	for (T javaScript : javaScripts) {
+    		List<ScriptInstanceError> scriptErrors = addScriptDependencies(javaScript);
+    		if (!scriptErrors.isEmpty()) {
+    			throw new InvalidScriptException(JacksonUtil.toStringPrettyPrinted(scriptErrors));
+    		}
+    	}
+    	
     	try {
     		compileJavaSources(javaScripts);
     	} catch (CharSequenceCompilerException e) {
