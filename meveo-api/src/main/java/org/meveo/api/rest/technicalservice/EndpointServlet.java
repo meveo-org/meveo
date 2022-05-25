@@ -233,7 +233,7 @@ public class EndpointServlet extends HttpServlet {
             PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(uuidStr);
             final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
             if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE) {
-                if (cancel) {
+                if (cancel && pendingExecution.getEngine() != null) {
                     pendingExecution.getEngine().cancel();
                 }
 
