@@ -112,23 +112,22 @@ public class ConcreteFunctionService extends FunctionService<Function, ScriptInt
 	}
 
 	@SuppressWarnings("unchecked")
-	public FunctionService<?, ScriptInterface> getFunctionService(String executableCode) throws ElementNotFoundException {
+	public <T extends Function> FunctionService<T, ScriptInterface> getFunctionService(String executableCode) throws ElementNotFoundException {
 		
 		final Function function = findByCode(executableCode);
         if(function == null) {
     		throw new ElementNotFoundException( executableCode, "Function");
     	}  
-//		getEntityManager().detach(function);
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
-		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+		return (FunctionService<T, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public FunctionService<?, ScriptInterface> getFunctionService(Function function) {
+	public <T extends Function> FunctionService<T, ScriptInterface> getFunctionService(Function function) {
 		String functionType = function.getFunctionType();
 		FunctionServiceLiteral literal = new FunctionServiceLiteral(functionType);
-		return (FunctionService<?, ScriptInterface>) fnServiceInst.select(literal).get();
+		return (FunctionService<T, ScriptInterface>) fnServiceInst.select(literal).get();
 	}
 
 	@Override

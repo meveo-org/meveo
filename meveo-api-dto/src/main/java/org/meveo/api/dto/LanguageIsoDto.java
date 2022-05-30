@@ -27,61 +27,61 @@ public class LanguageIsoDto extends BaseEntityDto {
 	@XmlAttribute(required = true)
 	@ApiModelProperty(required = true, value = "Code of the language")
 	private String code;
-	
+
 	/** The description. */
 	@ApiModelProperty("Description of the language")
 	private String description;
 
 	/**
-     * Instantiates a new language iso dto.
-     */
+	 * Instantiates a new language iso dto.
+	 */
 	public LanguageIsoDto() {
 
 	}
 
 
 	/**
-     * Instantiates a new language iso dto.
-     *
-     * @param language the language
-     */
+	 * Instantiates a new language iso dto.
+	 *
+	 * @param language the language
+	 */
 	public LanguageIsoDto(Language language) {
-		code = language.getLanguageCode();
-		description = language.getDescriptionEn();
+		code = language.getCode();
+		description = language.getDescription();
 	}
 
 	/**
-     * Gets the code.
-     *
-     * @return the code
-     */
+	 * Gets the code.
+	 *
+	 * @return the code
+	 */
 	public String getCode() {
 		return code;
 	}
 
 	/**
-     * Sets the code.
-     *
-     * @param code the new code
-     */
+	 * Sets the code.
+	 *
+	 * @param code the new code
+	 */
 	public void setCode(String code) {
 		this.code = code;
 	}
 
 	/**
-     * Gets the description.
-     *
-     * @return the description
-     */
+	 * Gets the description.
+	 *
+	 * @return the description
+	 */
 	public String getDescription() {
 		return description;
 	}
 
 	/**
-     * Sets the description.
-     *
-     * @param description the new description
-     */
+	 * Sets the description.
+	 *
+	 * @param description the new description
+	 */
 	public void setDescription(String description) {
 		this.description = description;
 	}

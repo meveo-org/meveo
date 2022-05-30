@@ -29,4 +29,34 @@
    			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
    			referencedColumnNames="id" onDelete="CASCADE"/>
    	</changeSet>
+
+	<changeSet id="#550 - Country should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
+		<addColumn tableName="adm_country">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_country" oldColumnName="country_code" newColumnName="code" />
+		<dropColumn tableName="adm_country" columnName="description_i18n" />
+	</changeSet>
+
+	<changeSet id="#550 Language should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
+		<addColumn tableName="adm_language">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_language" oldColumnName="language_code" newColumnName="code" />
+		<renameColumn tableName="adm_language" oldColumnName="description_en" newColumnName="description" />
+	</changeSet>
+   
+  <changeSet id="Add endpoint pool configuration" author="Clément Bareth">
+    <addColumn tableName="service_endpoint">
+      <column name="use_pool" type="${type.boolean}" defaultValue="0"></column>
+      <column name="min_pool" type="varchar(255)"></column>
+      <column name="max_pool" type="varchar(255)"></column>
+      <column name="max_idle_time_pool" type="varchar(255)"></column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

@@ -27,7 +27,7 @@ public class LanguageDto extends BaseEntityDto {
     @XmlAttribute(required = true)
     @ApiModelProperty(required = true, value = "Code of the language")
     private String code;
-    
+
     /** The description. */
     @ApiModelProperty("Description of the language")
     private String description;
@@ -45,8 +45,8 @@ public class LanguageDto extends BaseEntityDto {
      * @param language the language
      */
     public LanguageDto(Language language) {
-        code = language.getLanguageCode();
-        description = language.getDescriptionEn();
+        code = language.getCode();
+        description = language.getDescription();
     }
 
     /**

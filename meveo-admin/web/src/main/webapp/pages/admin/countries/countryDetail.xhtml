@@ -46,14 +46,14 @@
                 <p:menuitem value="#{messages['menu.countries']}" outcome="countries" />
                 <p:menuitem value="#{messages['commons.new']} #{messages['menu.countries']}" disabled="true"
                             rendered="#{countryBean.entity.transient}"/>
-                <p:menuitem value="#{countryBean.entity.countryCode}"
+                <p:menuitem value="#{countryBean.entity.code}"
                             disabled="true" rendered="#{!countryBean.entity.transient}"/>
             </p:breadCrumb>
         </h:form>
 
 		<hftl:formPanel formId="formCountry"  label="#{messages['country.countryPanel']}"	backingBean="#{countryBean}">
 		
-			<hftl:formField label="#{messages['country.code']}"		field="countryCode" required="true" maxlength="3" />
+			<hftl:formField label="#{messages['country.code']}"		field="code" required="true" maxlength="3" />
 			
 			 <hftl:formLanguageFields field="description" />
 			

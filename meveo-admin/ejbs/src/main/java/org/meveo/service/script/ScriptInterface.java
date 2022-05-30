@@ -49,6 +49,14 @@ public interface ScriptInterface {
 	default Map<String, Object> cancel() {
 		return new HashMap<>();
 	}
+	
+	/** 
+	 * Usage in a pool - Method called before the object is borrowed from pool.
+	 * Reset the inputs / state of a script to default
+	 */
+	default void resetState() {
+		
+	}
 
 	/**
 	 * Executed after the main {@link #execute(Map)} method.

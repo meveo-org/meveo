@@ -803,7 +803,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		List<MeveoModule> uninstalledModules = new ArrayList<>();
 		
-		RevCommit headCommitBefore = gitClient.getHeadCommit(meveoModule.getGitRepository());
+		RevCommit headCommitBefore = null;
+		try {
+			headCommitBefore = gitClient.getHeadCommit(meveoModule.getGitRepository());
+		} catch (BusinessException e) {
+			log.error("Failed to retrieve head commit", e);
+		}
 		
 		try {
 			MeveoModule uninstalledModule = meveoModuleItemInstaller.uninstall(uninstall.withModule(meveoModule));
@@ -819,7 +824,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 			return uninstalledModules;
 		} finally {
-			gitClient.reset(meveoModule.getGitRepository(), headCommitBefore);
+			if (headCommitBefore != null) {
+				gitClient.reset(meveoModule.getGitRepository(), headCommitBefore);
+			}
 		}
 
 	}
