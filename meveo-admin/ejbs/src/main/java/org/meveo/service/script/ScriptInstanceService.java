@@ -44,6 +44,7 @@ import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidPermissionException;
 import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.admin.exception.ScriptExecutionException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.commons.utils.EjbUtils;
@@ -90,6 +91,9 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 	@Inject
 	@MeveoRepository
 	private GitRepository meveoRepository;
+
+	@Inject
+	private CommitMessageBean commitMessageBean;
 	
     @Override
 	protected void beforeUpdateOrCreate(ScriptInstance script) throws BusinessException {
@@ -355,8 +359,8 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			} catch (IOException e) {
 				throw new BusinessException("File cannot be write", e);
 			}
-			
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode());
+
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), "Add the script File : " + entity.getCode() + "in the module : " + module.getCode()+" "+commitMessageBean.getCommitMessage());
 		}	
 	}
 

@@ -75,6 +75,7 @@ import org.jboss.weld.inject.WeldInstance;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.InvalidScriptException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.cache.CacheKeyStr;
 import org.meveo.commons.utils.FileUtils;
@@ -170,6 +171,9 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 	
 	@Inject
 	private ScriptInstanceService self;
+
+    @Inject
+    private CommitMessageBean commitMessageBean;
 	
     @PostConstruct
     private void init() {
@@ -1128,7 +1132,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     		File file = findScriptFile(scriptInstance);
     		if (file.exists()) {
     			file.delete();
-    			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode());
+    			gitClient.commitFiles(meveoRepository, Collections.singletonList(file), "Remove script " + scriptInstance.getCode() +" "+commitMessageBean.getCommitMessage());
     		}
     	}
     }

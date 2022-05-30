@@ -49,6 +49,7 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -194,6 +195,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+
+    @Inject
+    CommitMessageBean commitMessageBean;
 	
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -814,7 +818,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
         
         if(!fileList.isEmpty()) {
-        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
+        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode()+" "+commitMessageBean.getCommitMessage());
         }
 		
 	}
@@ -839,7 +843,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     		throw new BusinessException("File cannot be write", e);
     	}
     	
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode()+" "+commitMessageBean.getCommitMessage());
     	
     	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
     	
@@ -851,7 +855,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     		throw new BusinessException("File cannot be write", e);
     	}
     	
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
+    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode()+" "+commitMessageBean.getCommitMessage());
     }
     
     @Override

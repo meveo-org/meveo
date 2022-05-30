@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -31,6 +33,9 @@ import org.meveo.service.git.GitHelper;
 
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
+
+    @Inject
+    CommitMessageBean commitMessageBean;
 
     /**
      * Find a list of entity actions/scripts corresponding to a given entity
@@ -128,6 +133,6 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for custom action " + cetCode + "." + entity.getCode());
+		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for custom action " + cetCode + "." + entity.getCode()+" "+commitMessageBean.getCommitMessage());
 	}
 }
