@@ -39,6 +39,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
@@ -344,7 +345,13 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode()+" "+commitMessageBean.getCommitMessage());
+	String message = "Add JSON file for entity " + entity.getCode();
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        }
+	gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
     }
     
     /**
