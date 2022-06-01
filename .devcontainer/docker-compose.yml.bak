@@ -1,0 +1,94 @@
+version: '3.5'
+
+volumes:
+  postgres_data:
+    driver: local
+  # neo4j_data:
+  #   driver: local
+  keycloak_data:
+    driver: local
+  meveo_data_dev:
+    driver: local
+  meveo_binary_data_dev:
+    driver: local
+
+services:
+  postgres:
+    image: postgres:9.5.21
+    container_name: postgres
+    networks:
+      - meveo
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: meveo
+      POSTGRES_USER: meveo
+      POSTGRES_PASSWORD: meveo
+    ports:
+      - 5432:5432
+  # neo4j:
+  #   image: manaty/neo4j-meveo:3.5.13
+  #   container_name: neo4j
+  #   build:
+  #     context: ./
+  #     dockerfile: ../docker/Dockerfile.neo4j
+  #   networks:
+  #     - meveo
+  #   restart: unless-stopped
+  #   volumes:
+  #     - neo4j_data:/data
+  #   environment:
+  #     NEO4J_AUTH: neo4j/neo4j123
+  #   ports:
+  #     - 7474:7474
+  #     - 7687:7687
+  keycloak:
+    image: manaty/keycloak
+    container_name: keycloak
+    networks:
+      - meveo
+    restart: unless-stopped
+    volumes:
+      - keycloak_data:/opt/jboss/keycloak/standalone/data/keycloakdb
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+    ports:
+      - 8081:8080
+    depends_on:
+      - postgres
+  meveo:
+    image: manaty/meveo-dev
+    #build: 
+    #  context: ../
+    #  dockerfile: Dockerfile.dev
+    container_name: meveo-dev
+    networks:
+      - meveo
+    volumes:
+      #- ..:/home/meveo
+      #- ~/meveodata/:/opt/jboss/wildfly/meveodata
+      - meveo_data_dev:/opt/jboss/wildfly/meveodata
+      #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
+      - meveo_binary_data_dev:/tmp/meveo/binary/storage
+    environment:
+      #Comment out the KEYCLOACK_URL if you are not on wsl2 or if it dosnt work for some reason 
+      KEYCLOAK_URL: http://host.docker.internal:8081/auth
+      WILDFLY_DEBUG_ENABLE: "true"
+      WILDFLY_DEBUG_PORT: 8787
+      WILDFLY_CUSTOM_XMMS: "1024m"
+      WILDFLY_CUSTOM_XMMX: "2048m"
+      #NEO4J_HOST_AND_PORT: "neo4j:7687"
+      #JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
+    ports:
+      - 8080:8080
+      - 8787:8787
+      - 9990:9990
+    depends_on:
+      - postgres
+      - keycloak
+
+networks:
+  meveo:
+    name: meveo

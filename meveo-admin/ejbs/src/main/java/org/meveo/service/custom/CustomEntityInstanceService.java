@@ -25,7 +25,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -62,13 +64,13 @@ import com.ibm.icu.math.BigDecimal;
 
 /**
  * CustomEntityInstance persistence service implementation.
- * 
+ *
  * @author Edward P. Legaspi | czetsuya@gmail.com
  * @version 6.7.0
  */
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
-	
+
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
 
@@ -92,6 +94,9 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
+
+	@Inject
+	CommitMessageBean commitMessageBean;
 
 	@Override
 	public void create(CustomEntityInstance entity) throws BusinessException {
@@ -204,7 +209,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 				ownValues.remove(entry.getKey());
 			}
 		}
-			
+
 		if (ownValues != null && !ownValues.isEmpty()) {
 			return resultList.stream()
 					.filter(customEntityInstance -> filterOnValues(ownValues, customEntityInstance))
@@ -256,7 +261,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			if (filterValue.getValue() == null) {
 				continue;
 			}
-			
+
 			if(filterValue.getValue() instanceof Collection) {
 				continue; //FIXME
 			}
@@ -340,7 +345,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 				}
 			}
 		}
-	}	
+	}
 
 	public boolean transitionsFromPreviousState(String cftCode, CustomEntityInstance instance) throws ELException {
 		Workflow workflow = workflowService.findByCetCodeAndWFType(instance.getCetCode(), cftCode);
@@ -351,160 +356,167 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			if (CollectionUtils.isNotEmpty(wfTransitions)) {
 				for (WFTransition wfTransition : wfTransitions) {
 					wfTransition = wfTransitionService.findById(wfTransition.getId());
-					
+
 					boolean isTransitionApplicable = MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", instance);
 					String targetStatus = instance.getCfValues().getValuesByCode().get(cftCode).get(0).getStringValue();
 					String startStatus = (String) instance.getCfValuesOldNullSafe().getValue(cftCode);
-					
+
 					boolean isSameTargetStatus = wfTransition.getToStatus().equals(targetStatus);
 					boolean isSameStartStatus = wfTransition.getFromStatus().equals(startStatus);
 					if(isTransitionApplicable && isSameTargetStatus && isSameStartStatus) {
 						transitions.add(wfTransition);
 						statusWF.add(wfTransition.getToStatus());
 					}
-					
+
 				}
 			}
-			
+
 			if (CollectionUtils.isEmpty(transitions)) {
 				log.debug("Update refused because no transition matched");
 				return false;
 			}
-			
+
 			for (WFTransition wfTransition : transitions) {
 				if (CollectionUtils.isNotEmpty(wfTransition.getWfActions())) {
 					for (WFAction action : wfTransition.getWfActions()) {
 						WFAction wfAction = wfActionService.findById(action.getId());
 						if (action.getConditionEl() == null || MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(action.getConditionEl(), "entity", instance)) {
 							Object actionResult;
-							
+
 							if (wfAction.getActionScript() != null) {
-                            	try {
+								try {
 									actionResult = workflowService.executeActionScript(instance, wfAction);
 								} catch (BusinessException e) {
 									log.error("Error execution workflow action script", e);
 								}
-                            } else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
-	                            actionResult = workflowService.executeExpression(wfAction.getActionEl(), instance);
-                            } else {
-                            	log.error("WFAction {} has no action EL or action script", wfAction.getId());
-                            	continue;
-                            }
-							
+							} else if (StringUtils.isNotBlank(wfAction.getActionEl())) {
+								actionResult = workflowService.executeExpression(wfAction.getActionEl(), instance);
+							} else {
+								log.error("WFAction {} has no action EL or action script", wfAction.getId());
+								continue;
+							}
+
 							//TODO: Log action result ?
 						}
 					}
 				}
 			}
 		}
-		
+
 		return true;
 	}
 
-    /**
-     *  Returns a list of states for a given CEI.
-     */
-    public List<String> statesOfCEI(String cetCode, String cftCode, String uuid) throws BusinessException, ELException, EntityDoesNotExistsException {
-        List<String> states = new ArrayList<>();
-        CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
-        if (customEntityTemplate != null) {
-            Workflow workflow = workflowService.findByCetCodeAndWFType(cetCode, cftCode);
-            if (workflow != null) {
-                String originStatus = null;
-                if (customEntityTemplate.isStoreAsTable()) {
-                    Map<String, Object> ceiMap = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, uuid);
-                    if (ceiMap != null) {
-                    	CustomEntityInstance customEntityInstance = new CustomEntityInstance();
-                    	customEntityInstance.setCetCode(cetCode);
-                    	customEntityInstance.setCet(customEntityTemplate);
-                    	customEntityInstance.setUuid(uuid);
-                    	customFieldInstanceService.setCfValues(customEntityInstance, cetCode, ceiMap);
-                        originStatus = (String) ceiMap.get(cftCode);
-                        if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
-                            for (WFTransition wfTransition : workflow.getTransitions()) {
-                                if (wfTransition != null && wfTransition.getFromStatus().equals(originStatus) && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", customEntityInstance)) {
-                                    states.add(wfTransition.getToStatus());
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    CustomEntityInstance customEntityInstance = findByUuid(cetCode, uuid);
-                    if (customEntityInstance != null) {
-                        originStatus = (String) customEntityInstance.getCfValues().getValue(cftCode);
-                        if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
-                            for (WFTransition wfTransition : workflow.getTransitions()) {
-                                if (wfTransition != null && wfTransition.getFromStatus().equals(originStatus) && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", customEntityInstance)) {
-                                    states.add(wfTransition.getToStatus());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return states;
-    }
+	/**
+	 *  Returns a list of states for a given CEI.
+	 */
+	public List<String> statesOfCEI(String cetCode, String cftCode, String uuid) throws BusinessException, ELException, EntityDoesNotExistsException {
+		List<String> states = new ArrayList<>();
+		CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cetCode);
+		if (customEntityTemplate != null) {
+			Workflow workflow = workflowService.findByCetCodeAndWFType(cetCode, cftCode);
+			if (workflow != null) {
+				String originStatus = null;
+				if (customEntityTemplate.isStoreAsTable()) {
+					Map<String, Object> ceiMap = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, uuid);
+					if (ceiMap != null) {
+						CustomEntityInstance customEntityInstance = new CustomEntityInstance();
+						customEntityInstance.setCetCode(cetCode);
+						customEntityInstance.setCet(customEntityTemplate);
+						customEntityInstance.setUuid(uuid);
+						customFieldInstanceService.setCfValues(customEntityInstance, cetCode, ceiMap);
+						originStatus = (String) ceiMap.get(cftCode);
+						if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+							for (WFTransition wfTransition : workflow.getTransitions()) {
+								if (wfTransition != null && wfTransition.getFromStatus().equals(originStatus) && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", customEntityInstance)) {
+									states.add(wfTransition.getToStatus());
+								}
+							}
+						}
+					}
+				} else {
+					CustomEntityInstance customEntityInstance = findByUuid(cetCode, uuid);
+					if (customEntityInstance != null) {
+						originStatus = (String) customEntityInstance.getCfValues().getValue(cftCode);
+						if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+							for (WFTransition wfTransition : workflow.getTransitions()) {
+								if (wfTransition != null && wfTransition.getFromStatus().equals(originStatus) && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(wfTransition.getConditionEl(), "entity", customEntityInstance)) {
+									states.add(wfTransition.getToStatus());
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return states;
+	}
 
-    /**
-     *  Returns the target states from a origin state of a given CEI where applicationEL evaluates to true.
-     */
-    public List<String> targetStates (CustomEntityInstance cei) throws ELException {
-        List<String> targetStates = new ArrayList<>();
-        Map<String, Set<String>> map = getValueCetCodeAndWfTypeFromWF();
-        if (cei.getCfValues() != null && cei.getCfValues().getValuesByCode() != null) {
-            for (String key : cei.getCfValues().getValuesByCode().keySet()) {
-                CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(key, "CE_" + cei.getCetCode());
-                if (customFieldTemplate != null && !map.isEmpty() && map.keySet().contains(cei.getCetCode()) && map.values().contains(customFieldTemplate.getCode())
-                        && MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(customFieldTemplate.getApplicableOnEl(), "entity", cei)) {
-                    Workflow workflow = workflowService.findByCetCodeAndWFType(cei.getCetCode(), customFieldTemplate.getCode());
-                    if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
-                        for (WFTransition wfTransition : workflow.getTransitions()) {
-                            targetStates.add(wfTransition.getToStatus());
-                        }
-                    }
-                }
-            }
-        }
-        return targetStates;
-    }
+	/**
+	 *  Returns the target states from a origin state of a given CEI where applicationEL evaluates to true.
+	 */
+	public List<String> targetStates (CustomEntityInstance cei) throws ELException {
+		List<String> targetStates = new ArrayList<>();
+		Map<String, Set<String>> map = getValueCetCodeAndWfTypeFromWF();
+		if (cei.getCfValues() != null && cei.getCfValues().getValuesByCode() != null) {
+			for (String key : cei.getCfValues().getValuesByCode().keySet()) {
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(key, "CE_" + cei.getCetCode());
+				if (customFieldTemplate != null && !map.isEmpty() && map.keySet().contains(cei.getCetCode()) && map.values().contains(customFieldTemplate.getCode())
+						&& MeveoValueExpressionWrapper.evaluateToBooleanOneVariable(customFieldTemplate.getApplicableOnEl(), "entity", cei)) {
+					Workflow workflow = workflowService.findByCetCodeAndWFType(cei.getCetCode(), customFieldTemplate.getCode());
+					if (CollectionUtils.isNotEmpty(workflow.getTransitions())) {
+						for (WFTransition wfTransition : workflow.getTransitions()) {
+							targetStates.add(wfTransition.getToStatus());
+						}
+					}
+				}
+			}
+		}
+		return targetStates;
+	}
 
-    public Map<String, Set<String>> getValueCetCodeAndWfTypeFromWF () {
-        List<Workflow> workflowList = workflowService.list();
-        Map<String, Set<String>> map = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(workflowList)) {
-            for (Workflow workflow : workflowList) {
-                Set<String> wfTypes = new HashSet<>();
-                if (map.keySet().contains(workflow.getCetCode())) {
-                    Set<String> types = map.get(workflow.getCetCode());
-                    for (String type : types) {
-                        wfTypes.add(type);
-                    }
-                }
-                wfTypes.add(workflow.getWfType());
-                map.put(workflow.getCetCode(), wfTypes);
-            }
-        }
-        return map;
-    }
+	public Map<String, Set<String>> getValueCetCodeAndWfTypeFromWF () {
+		List<Workflow> workflowList = workflowService.list();
+		Map<String, Set<String>> map = new HashMap<>();
+		if (CollectionUtils.isNotEmpty(workflowList)) {
+			for (Workflow workflow : workflowList) {
+				Set<String> wfTypes = new HashSet<>();
+				if (map.keySet().contains(workflow.getCetCode())) {
+					Set<String> types = map.get(workflow.getCetCode());
+					for (String type : types) {
+						wfTypes.add(type);
+					}
+				}
+				wfTypes.add(workflow.getWfType());
+				map.put(workflow.getCetCode(), wfTypes);
+			}
+		}
+		return map;
+	}
 
 	@Override
 	public void addFilesToModule(CustomEntityInstance entity, MeveoModule module) throws BusinessException {
 		String cetCode = entity.getCetCode();
 		String ceiJson = CEIUtils.serialize(entity);
-		
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
-    	File newDir = new File(gitDirectory, path);
-    	newDir.mkdirs();
-    	
-    	File newJsonFile = new File(gitDirectory, path + "/" + entity.getUuid() + ".json");
-    	try {
-    		MeveoFileUtils.writeAndPreserveCharset(ceiJson, newJsonFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be updated or created", e);
-    	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), "Add JSON file for entity " + entity.getCode());
+
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+		String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+		File newDir = new File(gitDirectory, path);
+		newDir.mkdirs();
+
+		File newJsonFile = new File(gitDirectory, path + "/" + entity.getUuid() + ".json");
+		try {
+			MeveoFileUtils.writeAndPreserveCharset(ceiJson, newJsonFile);
+		} catch (IOException e) {
+			throw new BusinessException("File cannot be updated or created", e);
+		}
+
+		String message = "Add JSON file for entity " + entity.getCode();
+		try {
+			message+=" "+commitMessageBean.getCommitMessage();
+		} catch (ContextNotActiveException e) {
+			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		}
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), message);
 	}
-    
+
 }
