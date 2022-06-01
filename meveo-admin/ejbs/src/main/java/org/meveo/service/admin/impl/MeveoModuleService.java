@@ -1011,8 +1011,16 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), "Add module descriptor file"+" "+commitMessageBean.getCommitMessage());
 
+        String message = "Add module descriptor file";
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when adding module.json to "+module.getCode());
+        }
+
+        gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), message);
+	
 	}
 	
 	
