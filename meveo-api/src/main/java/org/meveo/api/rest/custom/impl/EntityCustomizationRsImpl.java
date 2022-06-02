@@ -54,7 +54,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
         	dto.setRepositories(repositories);
             customEntityTemplateApi.create(dto);
 
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 
@@ -67,7 +67,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
 
         try {
             customEntityTemplateApi.updateEntityTemplate(dto, withData);
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 
@@ -116,7 +116,7 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
                 customEntityTemplateApi.updateEntityTemplate(dto, withData);
             }
             
-        } catch (BusinessException | MeveoApiException e) {
+        } catch (BusinessException e) {
             processException(e, result);
         }
 

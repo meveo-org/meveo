@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Stateless;
+import org.jboss.weld.contexts.ContextNotActiveException;
+import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
@@ -32,9 +35,12 @@ import org.meveo.service.git.GitHelper;
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
 
+    @Inject
+    CommitMessageBean commitMessageBean;
+
     /**
      * Find a list of entity actions/scripts corresponding to a given entity
-     * 
+     *
      * @param entity Entity that entity actions/scripts apply to
 
      * @return A map of entity actions/scripts mapped by a action code
@@ -51,7 +57,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
 
     /**
      * Find a list of entity actions/scripts corresponding to a given entity
-     * 
+     *
      * @param appliesTo Entity (CFT appliesTo code) that entity actions/scripts apply to
 
      * @return A map of entity actions/scripts mapped by a action code
@@ -73,7 +79,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
 
     /**
      * Find a specific entity action/script by a code
-     * 
+     *
      * @param code Entity action/script code. MUST be in a format of &lt;localCode&gt;|&lt;appliesTo&gt;
      * @param entity Entity that entity actions/scripts apply to
 
@@ -86,7 +92,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
 
     /**
      * Find a specific entity action/script by a code
-     * 
+     *
      * @param code Entity action/script code. MUST be in a format of &lt;localCode&gt;|&lt;appliesTo&gt;
      * @param appliesTo Entity (CFT appliesTo code) that entity actions/scripts apply to
 
@@ -103,31 +109,37 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
             return null;
         }
     }
-    
-	@Override
-	public void addFilesToModule(EntityCustomAction entity, MeveoModule module) throws BusinessException {
-    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-    	String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
-    	if(cetCode == null) {
-    		cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
-    	}
-    	
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
-    	
-    	File newDir = new File (gitDirectory, path);
-    	newDir.mkdirs();
-    	
-    	File newJsonFile = new File(newDir, entity.getCode() +".json");
-    	try {
-	    	MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be updated or created", e);
-    	}
-    	
-    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for custom action " + cetCode + "." + entity.getCode());
-	}
+
+    @Override
+    public void addFilesToModule(EntityCustomAction entity, MeveoModule module) throws BusinessException {
+        BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+        String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
+
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+        String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+        if(cetCode == null) {
+            cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
+        }
+
+        String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
+
+        File newDir = new File (gitDirectory, path);
+        newDir.mkdirs();
+
+        File newJsonFile = new File(newDir, entity.getCode() +".json");
+        try {
+            MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
+        } catch (IOException e) {
+            throw new BusinessException("File cannot be updated or created", e);
+        }
+
+        GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+        String message = "Add JSON file for custom action " + cetCode + "." + entity.getCode();
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        }
+        gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
+    }
 }

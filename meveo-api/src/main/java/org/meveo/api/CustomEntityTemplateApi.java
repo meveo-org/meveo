@@ -216,7 +216,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 	            }
 	        }
         
-		} catch (BusinessException | MeveoApiException e) {
+		} catch (BusinessException e) {
 			throw e;
 		} catch (Exception e) {
             var message = e.getMessage();

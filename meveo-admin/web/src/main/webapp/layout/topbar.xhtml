@@ -34,7 +34,6 @@
 							<li><p:link outcome="about"
 									value="#{messages['menu.aboutUs']}"></p:link></li>
 						</ul></li>
-
 				</ul>
 				<!-- / top-right-menu -->
 			</div>
@@ -66,6 +65,13 @@
 					style="margin: 0 40px 0 0;">
 					<li class="Fs14 FontBold">#{currentUser.fullNameOrUserName}</li>
 					<li class="Fs12 FontBold">#{appProvider.description}</li>
+					<li>
+						<p:inputText id="commit-message-id"
+									 value="#{commitMessageBean.commitMessage}"
+									 placeholder="#{messages['menutop.commitMessage']}">
+							<p:ajax listener="#{commitMessageBean.ajaxListener}" event="blur" execute="@this"/>
+						</p:inputText>
+					</li>
 				</ul>
 			</div>
 			<c:if

@@ -56,12 +56,12 @@ public class CountryDto extends BaseEntityDto {
      * @param country the Country enntity
      */
     public CountryDto(Country country) {
-        countryCode = country.getCountryCode();
+        countryCode = country.getCode();
         name = country.getDescription();
         currencyCode = country.getCurrency().getCurrencyCode();
 
         if (country.getLanguage() != null) {
-            languageCode = country.getLanguage().getLanguageCode();
+            languageCode = country.getLanguage().getCode();
         }
     }
 

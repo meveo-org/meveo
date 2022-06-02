@@ -36,6 +36,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 ### System
 
 - [Security](./meveo-model/src/main/java/org/meveo/security/README.md)
+  [Monitoring](./meveo-api/src/main/java/org/meveo/api/rest/monitoring/README.md)
 
 ### Configuration
 
@@ -74,9 +75,17 @@ A JMS topic is used to [publish events](./meveo-admin/ejbs/src/main/java/org/mev
 
 On a started instance, go to /meveo/api/rest/swagger.json or /meveo/api/rest/swagger.yaml
 
-## User Guide
+## Troubleshooting
 
-- [Documentation](https://github.com/meveo-org/meveo/tree/master/documentation/userguide)
+When encountering persistence errors you might have to connect to the DB container then to postgres:
+```
+docker exec -it postgres bash
+psql meveo meveo
+meveo=#\d  //to list the tables
+meveo=#drop table myentity;
+meveo=#drop sequence myentity_seq;
+meveo=#^Z  //ctrl+Z
+```
 
 ## Migration from versions previous to 7.0.0
 

@@ -38,11 +38,8 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.meveo.model.BusinessEntity;
-import org.meveo.model.ExportIdentifier;
-import org.meveo.model.ModuleItem;
-import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.ObservableEntity;
+import org.meveo.model.*;
+import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.Repository;
@@ -65,7 +62,7 @@ import org.meveo.model.storage.Repository;
 @NamedQueries({@NamedQuery(name = "MeveoModule.deleteModule", query = "DELETE from MeveoModule m where m.id=:id and m.version=:version")})
 @Inheritance(strategy = InheritanceType.JOINED)
 @SecondaryTable(name = "meveo_module_source", pkJoinColumns = @PrimaryKeyJoinColumn(referencedColumnName = "id"))
-public class MeveoModule extends BusinessEntity implements Serializable {
+public class MeveoModule extends BusinessEntity  {
 
     private static final long serialVersionUID = 1L;
 
@@ -353,5 +350,6 @@ public class MeveoModule extends BusinessEntity implements Serializable {
 	public void setRepositories(List<Repository> repositories) {
 		this.repositories = repositories;
 	}
-	
+
+
 }

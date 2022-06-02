@@ -117,6 +117,8 @@ public class GitClient {
     @Inject
     private Logger log;
 
+
+
     /**
      * Remove the corresponding git repository from file system
      *
@@ -348,7 +350,6 @@ public class GitClient {
                 }
             }
         }
-
         commit(gitRepository, patterns, message);
     }
 

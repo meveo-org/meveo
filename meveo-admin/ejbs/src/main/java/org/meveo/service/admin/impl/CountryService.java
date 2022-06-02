@@ -49,12 +49,9 @@ public class CountryService extends PersistenceService<Country> {
 
         QueryBuilder qb = new QueryBuilder(Country.class, "c");
         if (countryCode.length() <= 3) {
-            qb.addCriterion("countryCode", "=", countryCode, false);
+            qb.addCriterion("code", "=", countryCode, false);
         } else {
-            qb.startOrClause();
             qb.addCriterion("description", "=", countryCode, false);
-            qb.addSql("lower(descriptionI18n) like'%" + countryCode.toLowerCase() + "%'");
-            qb.endOrClause();
         }
         try {
             return (Country) qb.getQuery(getEntityManager()).setMaxResults(1).getSingleResult();
@@ -89,6 +86,19 @@ public class CountryService extends PersistenceService<Country> {
         queryBuilder.addOrderCriterion("a.description", true);
         Query query = queryBuilder.getQuery(getEntityManager());
         return query.getResultList();
+    }
+
+    /**
+     * @return list of country by status (active/inactive)
+     * @see org.meveo.service.base.PersistenceService#list()
+     */
+    @SuppressWarnings("unchecked")
+    public List<Country> listByStatus(boolean isActive ){
+        List<Country> countries =  (List<Country>) getEntityManager()
+                .createNamedQuery("Country.listByStatus", Country.class)
+                .setParameter("isDisabled", !isActive)
+                .getResultList();
+        return countries;
     }
 
 }

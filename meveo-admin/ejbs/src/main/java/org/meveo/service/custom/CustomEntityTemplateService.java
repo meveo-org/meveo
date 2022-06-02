@@ -48,7 +48,9 @@ import javax.transaction.Transactional.TxType;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
@@ -106,10 +108,10 @@ import com.google.common.collect.Lists;
 public class CustomEntityTemplateService extends BusinessService<CustomEntityTemplate> {
 
     private final static String CLASSES_DIR = "/classes";
-    
+
     private static boolean useCETCache = true;
-    
-	
+
+
     /**
      * @param currentUser the current meveo user
      * @return the directory where the classes are stored
@@ -154,13 +156,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
-    
+
     @Inject
     private CustomTableCreatorService customTableCreatorService;
 
     @Inject
     private ElasticClient elasticClient;
-    
+
     @Inject
     private EntityCustomActionService entityCustomActionService;
 
@@ -179,36 +181,39 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
-    
+
     @Inject
     private SqlConfigurationService sqlConfigurationService;
-    
+
     @Inject
     private JSONSchemaIntoJavaClassParser jSONSchemaIntoJavaClassParser;
-    
+
     @Inject
     private JSONSchemaGenerator jSONSchemaGenerator;
-    
+
     @Inject
     private GitClient gitClient;
-    
+
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
-	
+
+    @Inject
+    CommitMessageBean commitMessageBean;
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
-    	
+
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
-        
+
         checkCrudEventListenerScript(cet);
-        
-		ParamBean paramBean = paramBeanFactory.getInstance();
-                
+
+        ParamBean paramBean = paramBeanFactory.getInstance();
+
         super.create(cet);
-        
+
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
@@ -246,8 +251,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public ICustomFieldEntity findByClassAndCode(Class entityClass, String entityCode) {
-        
-    	ICustomFieldEntity result = null;
+
+        ICustomFieldEntity result = null;
         QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", null);
         queryBuilder.addCriterion("code", "=", entityCode, true);
         List<ICustomFieldEntity> entities = (List<ICustomFieldEntity>) queryBuilder.getQuery(getEntityManager()).getResultList();
@@ -266,24 +271,24 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      */
     public CustomEntityTemplate findByCodeOrDbTablename(String codeOrDbTablename) {
 
-    	CustomEntityTemplate cet = null;
-    	if(useCETCache) {
-    		cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
-    		if(cet != null) {
-    			return cet;
-    		}
-    	}
-    	
-		if (cet == null) {
-			cet = findByCode(codeOrDbTablename);
-			if (cet != null) {
-				return cet;
-			}
-		}
-		
+        CustomEntityTemplate cet = null;
+        if(useCETCache) {
+            cet = customFieldsCache.getCustomEntityTemplate(codeOrDbTablename);
+            if(cet != null) {
+                return cet;
+            }
+        }
+
+        if (cet == null) {
+            cet = findByCode(codeOrDbTablename);
+            if (cet != null) {
+                return cet;
+            }
+        }
+
         return findByDbTablename(codeOrDbTablename);
     }
-    
+
     /**
      * Find a custom entity template that uses a given custom table as implementation
      *
@@ -333,25 +338,25 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     /**
-     * 
+     *
      * @param cet the custom entity template
      * @return the json schema of the custom entity template
      * @throws IOException if a file can't be written / read
      */
     @SuppressWarnings("unchecked")
-	public String getJsonSchemaContent(CustomEntityTemplate cet) throws IOException {
+    public String getJsonSchemaContent(CustomEntityTemplate cet) throws IOException {
 
-    	MeveoModule module = this.findModuleOf(cet);
+        MeveoModule module = this.findModuleOf(cet);
         final File cetDir = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/json");
         File file = new File(cetDir.getAbsolutePath(), cet.getCode() + "-schema.json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
-        
+
         // Replace references in allOf
         List<Map<String, Object>> allOf = (List<Map<String, Object>>) jsonMap.getOrDefault("allOf", List.of());
         allOf.forEach(item -> {
-    		item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
+            item.computeIfPresent("$ref", (key, ref) -> ((String) ref).replace("./", ""));
         });
 
         Map<String, Object> items = (Map<String, Object>) jsonMap.get("properties");
@@ -406,12 +411,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     			.createQuery("SELECT subTemplates FROM CustomEntityTemplate cet WHERE cet.id = :id")
     			.setParameter("id", cet.getId())
     			.getSingleResult();
-		return result.getSubTemplates();*/ 
-    	return getEntityManager()
-			.createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
-			.setParameter("id", cet.getId())
-			.getResultList();
-    	
+		return result.getSubTemplates();*/
+        return getEntityManager()
+                .createQuery("FROM CustomEntityTemplate cet WHERE cet.superTemplate.id = :id", CustomEntityTemplate.class)
+                .setParameter("id", cet.getId())
+                .getResultList();
+
     }
 
     /**
@@ -419,18 +424,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @return whether the given template has a reference to a jpa entity in one of its fields
      */
     public boolean hasReferenceJpaEntity(CustomEntityTemplate cet) {
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+        Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 
-		if (cfts.size() > 0) {
-			Optional<CustomFieldTemplate> opt = cfts.values().stream()
-					.filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
-			if (opt.isPresent()) {
-				return true;
-			}
-		}
+        if (cfts.size() > 0) {
+            Optional<CustomFieldTemplate> opt = cfts.values().stream()
+                    .filter(e -> e.getFieldType().equals(CustomFieldTypeEnum.ENTITY) && customFieldTemplateService.isReferenceJpaEntity(e.getEntityClazzCetCode())).findAny();
+            if (opt.isPresent()) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
     /**
      * List custom entity templates, optionally filtering by an active status. Custom entity templates will be looked up in cache or retrieved from DB.
@@ -528,10 +533,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return convertListToMap(cartesianValues);
     }
-    
-	/**
-	 * @return the list of custom entity templates from database
-	 */
+
+    /**
+     * @return the list of custom entity templates from database
+     */
     public List<CustomEntityTemplate> listNoCache() {
         return super.list((Boolean) null);
     }
@@ -541,19 +546,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
      * @param cet The cet to load the listener
      */
     @SuppressWarnings("unchecked")
-	public CrudEventListenerScript<CustomEntity> loadCrudEventListener(CustomEntityTemplate cet) {
-    	if(cet.getCrudEventListener() == null && cet.getCrudEventListenerScript() != null) {
-    		var listener = (CrudEventListenerScript<CustomEntity>) scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
-    		cet.setCrudEventListener(listener);
-    	}
-    	return cet.getCrudEventListener();
+    public CrudEventListenerScript<CustomEntity> loadCrudEventListener(CustomEntityTemplate cet) {
+        if(cet.getCrudEventListener() == null && cet.getCrudEventListenerScript() != null) {
+            var listener = (CrudEventListenerScript<CustomEntity>) scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
+            cet.setCrudEventListener(listener);
+        }
+        return cet.getCrudEventListener();
     }
-    
+
     public void removeData(CustomEntityTemplate cet) {
-    	if (cet == null) {
-    		return;
-    	}
-    	
+        if (cet == null) {
+            return;
+        }
+
         if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
             customTableCreatorService.removeTable(cet);
 
@@ -575,10 +580,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         Map<String, EntityCustomAction> customActionMap = entityCustomActionService.findByAppliesTo(cet.getAppliesTo());
 
         for (CustomFieldTemplate cft : fields.values()) {
-        	// Don't remove super-template cfts
-        	if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
-        		customFieldTemplateService.remove(cft);
-        	}
+            // Don't remove super-template cfts
+            if(cft.getAppliesTo().equals(cet.getAppliesTo())) {
+                customFieldTemplateService.remove(cft);
+            }
         }
 
         for (EntityCustomAction entityCustomAction : customActionMap.values()) {
@@ -586,13 +591,13 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         customFieldsCache.removeCustomEntityTemplate(cet);
-        
+
         // Remove permissions
         permissionService.removeIfPresent(cet.getModifyPermission());
         permissionService.removeIfPresent(cet.getDecrpytPermission());
         permissionService.removeIfPresent(cet.getReadPermission());
 
-    	super.remove(cet);
+        super.remove(cet);
     }
 
     /**
@@ -611,23 +616,23 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
     }
 
-	/**
-	 * Remove the given CET in a new transaction
-	 * 
-	 * @see #remove(CustomEntityTemplate)
-	 * @param cet the CET to remove
-	 * @throws BusinessException if CET can't be removed
-	 */
-	@Transactional(TxType.REQUIRES_NEW)
+    /**
+     * Remove the given CET in a new transaction
+     *
+     * @see #remove(CustomEntityTemplate)
+     * @param cet the CET to remove
+     * @throws BusinessException if CET can't be removed
+     */
+    @Transactional(TxType.REQUIRES_NEW)
     public void removeInNewTx(CustomEntityTemplate cet) throws BusinessException {
-    	remove(cet);
+        remove(cet);
     }
-	
-	/**
+
+    /**
      * Remove the relation toward the category of the attached CETs
      *
      * @param categoryId Category id
-	 * @throws BusinessException if a relation can't be removed
+     * @throws BusinessException if a relation can't be removed
      */
     public void resetCategoryCETsByCategoryId(Long categoryId) throws BusinessException {
         TypedQuery<CustomEntityTemplate> query = getEntityManager().createNamedQuery("CustomEntityTemplate.getCETsByCategoryId", CustomEntityTemplate.class);
@@ -639,26 +644,26 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
     }
-	
-	@Override
+
+    @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
         CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
-        
-    	if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
+
+        if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
-    	
-    	checkCrudEventListenerScript(cet);
-    	
+
+        checkCrudEventListenerScript(cet);
+
         ParamBean paramBean = paramBeanFactory.getInstance();
 
         /* Update */
 
         if (cet.getCustomEntityCategory() != null && !cet.getCustomEntityCategory().isTransient()) {
-			CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
-			cet.setCustomEntityCategory(cec);
-		}
-        
+            CustomEntityCategory cec = customEntityCategoryService.reattach(cet.getCustomEntityCategory());
+            cet.setCustomEntityCategory(cec);
+        }
+
         CustomEntityTemplate cetUpdated = super.update(cet);
 
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
@@ -674,7 +679,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         // Synchronize custom fields storages with CET available storages
         for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesToNoCache(cet.getAppliesTo()).values()) {
-        	cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
+            cft.setHasReferenceJpaEntity(cet.hasReferenceJpaEntity());
             if (cft.getStoragesNullSafe() != null) {
                 for (DBStorageType storage : new ArrayList<>(cft.getStoragesNullSafe())) {
                     if (!cet.getAvailableStorages().contains(storage)) {
@@ -692,18 +697,18 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         } else {
             neo4jService.removeUUIDIndexes(cet);
         }
-        
+
         var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
-        
+
         // Handle SQL inheritance
         if(cet.storedIn(DBStorageType.SQL)) {
-        	if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
-        		// Inheritance removed
-        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
-        	} else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
-        		// Inheritance added
-        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
-        	}
+            if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
+                // Inheritance removed
+                sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+            } else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
+                // Inheritance added
+                sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+            }
         }
 
         return cetUpdated;
@@ -747,16 +752,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
     }
-    
+
     private void checkCrudEventListenerScript(CustomEntityTemplate cet) throws IllegalArgumentException {
-    	if(cet.getCrudEventListener() != null) {
-	    	var listener = scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
-	    	if(!(listener instanceof CrudEventListenerScript)) {
-	    		throw new IllegalArgumentException("The crud event listener script should implements the following interface: " + CrudEventListenerScript.class);
-	    	}
-    	}
+        if(cet.getCrudEventListener() != null) {
+            var listener = scriptInstanceService.getExecutionEngine(cet.getCrudEventListenerScript(), null);
+            if(!(listener instanceof CrudEventListenerScript)) {
+                throw new IllegalArgumentException("The crud event listener script should implements the following interface: " + CrudEventListenerScript.class);
+            }
+        }
     }
-    
+
     private List<Map<String, String>> convertListToMap(List<List<String>> cartesianValues) {
 
         List<Map<String, String>> result = new ArrayList<>();
@@ -773,7 +778,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         return result;
     }
-    
+
     private void createPrimitiveCft(CustomEntityTemplate cet) throws BusinessException {
         // Define CFT
         final CustomFieldTemplate customFieldTemplate = new CustomFieldTemplate();
@@ -781,17 +786,17 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         // Create CFT
         customFieldTemplateService.create(customFieldTemplate);
     }
-    
+
     @PostConstruct
     private void init() {
         useCETCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCET", "true"));
     }
-    
-	@Override
-	public void removeFilesFromModule(CustomEntityTemplate cet, MeveoModule module) throws BusinessException {
-		super.removeFilesFromModule(cet, module);
-		
-		final File cetJsonDir = cetCompiler.getJsonCetDir(cet, module);
+
+    @Override
+    public void removeFilesFromModule(CustomEntityTemplate cet, MeveoModule module) throws BusinessException {
+        super.removeFilesFromModule(cet, module);
+
+        final File cetJsonDir = cetCompiler.getJsonCetDir(cet, module);
         final File cetJavaDir = cetCompiler.getJavaCetDir(cet, module);
         final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
         List<File> fileList = new ArrayList<>();
@@ -812,91 +817,109 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (classFile.exists()) {
             classFile.delete();
         }
-        
-        if(!fileList.isEmpty()) {
-        	gitClient.commitFiles(meveoRepository, fileList, "Deleted custom entity template " + cet.getCode());
-        }
-		
-	}
 
-	/**
-	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
-	 */
+        if(!fileList.isEmpty()) {
+            String message = "Deleted custom entity template " + cet.getCode();
+            try {
+                message+=" "+commitMessageBean.getCommitMessage();
+            } catch (ContextNotActiveException e) {
+                log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+            }
+            gitClient.commitFiles(meveoRepository, fileList,message);
+        }
+
+    }
+
+    /**
+     * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
+     */
     @Override
     public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
-    	super.addFilesToModule(entity, module);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
-    	String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
-    	
-    	File newJavaFile = new File (gitDirectory, pathJavaFile);
-    	File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
-    	
-    	try {
-    		MeveoFileUtils.writeAndPreserveCharset(this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), newJsonSchemaFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-    	
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode());
-    	
-    	String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
-    	
-    	final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
+        super.addFilesToModule(entity, module);
 
-    	try {
-    		MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJavaFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-    	
-    	gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+        String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
+        String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
+
+        File newJavaFile = new File (gitDirectory, pathJavaFile);
+        File newJsonSchemaFile = new File(gitDirectory, pathJsonSchemaFile);
+
+        try {
+            MeveoFileUtils.writeAndPreserveCharset(this.jSONSchemaGenerator.generateSchema(pathJsonSchemaFile, entity), newJsonSchemaFile);
+        } catch (IOException e) {
+            throw new BusinessException("File cannot be write", e);
+        }
+
+        String message = "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode();
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        }
+        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), message);
+
+        String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
+
+        final CompilationUnit compilationUnit = this.jSONSchemaIntoJavaClassParser.parseJsonContentIntoJavaFile(schemaLocation, entity);
+
+        try {
+            MeveoFileUtils.writeAndPreserveCharset(compilationUnit.toString(), newJavaFile);
+        } catch (IOException e) {
+            throw new BusinessException("File cannot be write", e);
+        }
+
+        message = "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode();
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        }
+        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), message);
     }
-    
+
     @Override
-	public void onAddToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
-		super.onAddToModule(entity, module);
-		
-		for (var cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
-			meveoModuleService.addModuleItem(new MeveoModuleItem(cft), module);
-		}
-	}
+    public void onAddToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
+        super.onAddToModule(entity, module);
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
-		if (event.removeData() && event.removeItems()) {
-			List<CustomEntityTemplate> cets = moduleHelper.getEntities(event.module(), CustomEntityTemplate.class);
-			List<Repository> repositories = event.module().getRepositories();
-			cets.stream()
-				.map(e -> { 
-					e.setRepositories(repositories);
-					return e;
-				})
-				.forEach(this::removeData);
-		}
-	}
-	
-	@Override
-	public void moveFilesToModule(CustomEntityTemplate entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
-		super.moveFilesToModule(entity, oldModule, newModule);
-		
-		// Move CFTs and CEAs at the same time
-		for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
-			customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
-		}
-		
-		for (EntityCustomAction cea : entityCustomActionService.findByAppliesTo(entity.getAppliesTo()).values()) {
-			entityCustomActionService.moveFilesToModule(cea, oldModule, newModule);
-		}
-	}
+        for (var cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+            meveoModuleService.addModuleItem(new MeveoModuleItem(cft), module);
+        }
+    }
 
-	@Override
-	protected BaseEntityDto getDto(CustomEntityTemplate entity) throws BusinessException {
-		CustomEntityTemplateDto dto = (CustomEntityTemplateDto) super.getDto(entity);
-		dto.setFields(null);
-		dto.setActions(null);
-		return dto;
-	}
-	
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
+        if (event.removeData() && event.removeItems()) {
+            List<CustomEntityTemplate> cets = moduleHelper.getEntities(event.module(), CustomEntityTemplate.class);
+            List<Repository> repositories = event.module().getRepositories();
+            cets.stream()
+                    .map(e -> {
+                        e.setRepositories(repositories);
+                        return e;
+                    })
+                    .forEach(this::removeData);
+        }
+    }
+
+    @Override
+    public void moveFilesToModule(CustomEntityTemplate entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+        super.moveFilesToModule(entity, oldModule, newModule);
+
+        // Move CFTs and CEAs at the same time
+        for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
+            customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
+        }
+
+        for (EntityCustomAction cea : entityCustomActionService.findByAppliesTo(entity.getAppliesTo()).values()) {
+            entityCustomActionService.moveFilesToModule(cea, oldModule, newModule);
+        }
+    }
+
+    @Override
+    protected BaseEntityDto getDto(CustomEntityTemplate entity) throws BusinessException {
+        CustomEntityTemplateDto dto = (CustomEntityTemplateDto) super.getDto(entity);
+        dto.setFields(null);
+        dto.setActions(null);
+        return dto;
+    }
+
 }

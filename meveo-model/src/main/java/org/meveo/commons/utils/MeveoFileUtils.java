@@ -38,9 +38,11 @@ public class MeveoFileUtils {
         return true;
     }
 
-    public static String readString(String file) throws IOException {
+    public static String readString(String filePath) throws IOException {
+    	File file = new File(filePath);
+    	Charset charset = getCharset(file);
         StringBuilder contentBuilder = new StringBuilder();
-        try (Stream<String> stream = Files.lines(Paths.get(file), StandardCharsets.UTF_8)) {
+        try (Stream<String> stream = Files.lines(file.toPath(), charset)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         }
         return contentBuilder.toString();

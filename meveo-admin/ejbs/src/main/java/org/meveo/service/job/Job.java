@@ -220,9 +220,16 @@ public abstract class Job {
     @Timeout
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void trigger(Timer timer) {
+    	
+    	JobInstance jobInstance = null;
+    	if (timer.getInfo() instanceof JobInstance) {
+    		jobInstance = (JobInstance) timer.getInfo();
+    	} else {
+        	String code = (String) timer.getInfo();
+            jobInstance = jobInstanceService.findByCode(code, List.of("executionResults", "followingJob"));
+     
+    	}
 
-    	String code = (String) timer.getInfo();
-        JobInstance jobInstance = jobInstanceService.findByCode(code, List.of("executionResults", "followingJob"));
         if (jobInstance == null) {
             return;
         }

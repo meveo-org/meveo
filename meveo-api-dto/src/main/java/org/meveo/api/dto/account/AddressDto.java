@@ -70,7 +70,7 @@ public class AddressDto implements Serializable {
 			address3 = address.getAddress3();
 			zipCode = address.getZipCode();
 			city = address.getCity();
-			country = address.getCountry() == null ? null : address.getCountry().getCountryCode();
+			country = address.getCountry() == null ? null : address.getCountry().getCode();
 			state = address.getState();
 		}
 	}
