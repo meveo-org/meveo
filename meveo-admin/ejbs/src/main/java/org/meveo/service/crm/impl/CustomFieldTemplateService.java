@@ -22,8 +22,10 @@ import javax.persistence.Query;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.hibernate.util.HibernateUtils;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ValidationException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.MeveoFileUtils;
@@ -82,68 +84,71 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
-    
+
     @Inject
     private FileSystemService fileSystemService;
-    
+
     @Inject
     private CrossStorageService crossStorageService;
-    
+
     @Inject
     private ModuleInstallationContext moduleInstallCtx;
-    
+
+    @Inject
+    CommitMessageBean commitMessageBean;
+
     static boolean useCFTCache = true;
 
     @PostConstruct
     private void init() {
         useCFTCache = Boolean.parseBoolean(ParamBean.getInstance().getProperty("cache.cacheCFT", "true"));
     }
-    
-    @Override
-	protected void beforeUpdateOrCreate(CustomFieldTemplate entity) throws BusinessException {
-		super.beforeUpdateOrCreate(entity);
-		
-		if(entity.getRelationship() != null) {
-			if(entity.getRelationship().getId() != null) {
-				CustomRelationshipTemplate crt = getEntityManager().find(CustomRelationshipTemplate.class, entity.getRelationship().getId());
-				entity.setRelationship(crt);
-			}
-		}
-	}
 
-	public boolean exists(String code, String appliesTo) {
-    	try { 
-    		return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
-    			+ "code = :code and applies_to = :appliesTo")
-    			.setParameter("code", code)
-    			.setParameter("appliesTo",appliesTo)
-    			.getSingleResult() != null;
-    	} catch (NoResultException e) {
-    		return false;
-    	}
+    @Override
+    protected void beforeUpdateOrCreate(CustomFieldTemplate entity) throws BusinessException {
+        super.beforeUpdateOrCreate(entity);
+
+        if(entity.getRelationship() != null) {
+            if(entity.getRelationship().getId() != null) {
+                CustomRelationshipTemplate crt = getEntityManager().find(CustomRelationshipTemplate.class, entity.getRelationship().getId());
+                entity.setRelationship(crt);
+            }
+        }
     }
 
-	@SuppressWarnings("unchecked")
-	public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {
+    public boolean exists(String code, String appliesTo) {
+        try {
+            return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
+                            + "code = :code and applies_to = :appliesTo")
+                    .setParameter("code", code)
+                    .setParameter("appliesTo",appliesTo)
+                    .getSingleResult() != null;
+        } catch (NoResultException e) {
+            return false;
+        }
+    }
 
-		Query q = getEntityManager().createNamedQuery("CustomFieldTemplate.getCftUniqueFieldsByApplies") //
-				.setParameter("appliesTo", appliesTo);
+    @SuppressWarnings("unchecked")
+    public List<CustomFieldTemplate> findCftUniqueFieldsByApplies(String appliesTo) {
 
-		try {
-			return q.getResultList();
+        Query q = getEntityManager().createNamedQuery("CustomFieldTemplate.getCftUniqueFieldsByApplies") //
+                .setParameter("appliesTo", appliesTo);
 
-		} catch (NoResultException e) {
-			return null;
+        try {
+            return q.getResultList();
 
-		} catch (Exception e) {
-			log.error("Failed to retrieve custom field templates", e);
-			return null;
-		}
-	}
+        } catch (NoResultException e) {
+            return null;
+
+        } catch (Exception e) {
+            log.error("Failed to retrieve custom field templates", e);
+            return null;
+        }
+    }
 
     /**
      * Find a list of custom field templates corresponding to a given entity
-     * 
+     *
      * @param entity Entity that custom field templates apply to
      * @return A list of custom field templates mapped by a template key
      */
@@ -156,21 +161,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return new HashMap<String, CustomFieldTemplate>();
         }
     }
-    
+
     public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
-    	Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
-		for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
-			if (HibernateUtils.isLazyLoaded(e)) {
-				e = customEntityTemplateService.findById(e.getId(), List.of("superTemplate"));
-			}
-			findByAppliesTo(e.getAppliesTo()).forEach(customFieldTemplates::putIfAbsent);	// Preserve overriden cfts
-		}
-		return customFieldTemplates;
+        Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
+        for (CustomEntityTemplate e = cet; e != null; e = e.getSuperTemplate()) {
+            if (HibernateUtils.isLazyLoaded(e)) {
+                e = customEntityTemplateService.findById(e.getId(), List.of("superTemplate"));
+            }
+            findByAppliesTo(e.getAppliesTo()).forEach(customFieldTemplates::putIfAbsent);	// Preserve overriden cfts
+        }
+        return customFieldTemplates;
     }
 
     /**
      * Find a list of custom field templates corresponding to a given entity. Custom field templates are looked up in cache or retrieved from DB.
-     * 
+     *
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @return A list of custom field templates mapped by a template code
      */
@@ -199,67 +204,67 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Find a list of custom field templates corresponding to a given entity - always do a lookup in DB
-     * 
+     *
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @return A list of custom field templates mapped by a template key
      */
     public Map<String, CustomFieldTemplate> findByAppliesToNoCache(String appliesTo) {
 
-    	try {
-	        List<CustomFieldTemplate> values = getEntityManager()
-	        		.createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
-	        		.setParameter("appliesTo", appliesTo).getResultList();
-	
-	        Map<String, CustomFieldTemplate> cftMap = values.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
-	        return cftMap;
+        try {
+            List<CustomFieldTemplate> values = getEntityManager()
+                    .createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
+                    .setParameter("appliesTo", appliesTo).getResultList();
 
-    	} catch (Exception e) {
-        	log.error("Failed to retrieve custom field templates", e);
-        	return new HashMap<>();
-    	}
+            Map<String, CustomFieldTemplate> cftMap = values.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+            return cftMap;
+
+        } catch (Exception e) {
+            log.error("Failed to retrieve custom field templates", e);
+            return new HashMap<>();
+        }
     }
 
     /**
      * Find a specific custom field template by a code
-     * 
+     *
      * @param code Custom field template code
      * @param entity Entity that custom field templates apply to
      * @return Custom field template or NULL if not found
      */
     public CustomFieldTemplate findByCodeAndAppliesTo(String code, ICustomFieldEntity entity) {
-    	
+
         try {
-        	String calculatedAppliesToValue = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
-        	CustomFieldTemplate field = null;
-			if (calculatedAppliesToValue != null) {
-				field = findByCodeAndAppliesTo(code, calculatedAppliesToValue);
-			} else {
-				log.error("Can not calculate applicable AppliesToValue for entity of {} class.", entity.getClass().getSimpleName());
-			}
-			
-            if(field == null && entity instanceof CustomEntityInstance) {
-            	var cet = ((CustomEntityInstance) entity).getCet();
-            	if (cet.getSuperTemplate() != null) {
-            		var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
-            		if (parentCet.getAppliesTo() != null) {
-            	  		CustomEntityInstance parentCei = new CustomEntityInstance();
-                		parentCei.setCet(parentCet);
-                		return findByCodeAndAppliesTo(code, parentCei);
-            		}
-            	}
+            String calculatedAppliesToValue = CustomFieldTemplateUtils.calculateAppliesToValue(entity);
+            CustomFieldTemplate field = null;
+            if (calculatedAppliesToValue != null) {
+                field = findByCodeAndAppliesTo(code, calculatedAppliesToValue);
+            } else {
+                log.error("Can not calculate applicable AppliesToValue for entity of {} class.", entity.getClass().getSimpleName());
             }
-        	return field;
+
+            if(field == null && entity instanceof CustomEntityInstance) {
+                var cet = ((CustomEntityInstance) entity).getCet();
+                if (cet.getSuperTemplate() != null) {
+                    var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
+                    if (parentCet.getAppliesTo() != null) {
+                        CustomEntityInstance parentCei = new CustomEntityInstance();
+                        parentCei.setCet(parentCet);
+                        return findByCodeAndAppliesTo(code, parentCei);
+                    }
+                }
+            }
+            return field;
 
         } catch (CustomFieldException e) {
             log.error("Can not determine applicable CFT type for entity of {} class.", entity.getClass().getSimpleName());
         }
-        
+
         return null;
     }
 
     /**
      * Find a specific custom field template by a code. Custom field template will be looked up from cache or retrieved from DB.
-     * 
+     *
      * @param code Custom field template code
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @return Custom field template or NULL if not found
@@ -286,7 +291,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Find a specific custom field template by a code bypassing cache - always do a lookup in DB
-     * 
+     *
      * @param code Custom field template code
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @return Custom field template or NULL if not found
@@ -295,19 +300,19 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         try {
             return getEntityManager()
-            		.createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class)
+                    .createNamedQuery("CustomFieldTemplate.getCFTByCodeAndAppliesTo", CustomFieldTemplate.class)
 //            		.createQuery("FROM CustomFieldTemplate where code=:code and appliesTo=:appliesTo", CustomFieldTemplate.class)
-            		.setParameter("code", code)
-            		.setParameter("appliesTo", appliesTo)
-            		.getSingleResult();
-            
+                    .setParameter("code", code)
+                    .setParameter("appliesTo", appliesTo)
+                    .getSingleResult();
+
         } catch (NoResultException e) {
             return null;
-            
+
         } catch (Exception e) {
-        	log.error("Failed to retrieve custom field template", e);
-        	return null;
-    	}
+            log.error("Failed to retrieve custom field template", e);
+            return null;
+        }
     }
 
     @Override
@@ -324,50 +329,50 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
-        	checkDateFormat(cft);
+            checkDateFormat(cft);
         }
 
-		customFieldsCache.addUpdateCustomFieldTemplate(cft);
+        customFieldsCache.addUpdateCustomFieldTemplate(cft);
 
-		try {
-			super.create(cft);
-		} catch (Exception e) {
-			customFieldsCache.removeCustomFieldTemplate(cft);
-			throw e;
-		}
+        try {
+            super.create(cft);
+        } catch (Exception e) {
+            customFieldsCache.removeCustomFieldTemplate(cft);
+            throw e;
+        }
 
-		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
-		// CF applies to a CET
-		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-			if(cet == null) {
-				log.warn("Custom entity template {} was not found", entityCode);
-			
-			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				customTableCreatorService.addField(cet, cft);
-			}
-			
-		// CF Applies to a CRT
-		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+        // CF applies to a CET
+        if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+            if(cet == null) {
+                log.warn("Custom entity template {} was not found", entityCode);
+
+            } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                customTableCreatorService.addField(cet, cft);
+            }
+
+            // CF Applies to a CRT
+        } else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
             CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
             if (crt == null) {
                 log.warn("Custom relationship template {} was not found", entityCode);
-                
+
             } else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
                 customTableCreatorService.addField(crt, cft);
             }
         }
 
-		elasticClient.updateCFMapping(cft);
-		
-		MeveoModule relatedModule = null;
-		
+        elasticClient.updateCFMapping(cft);
+
+        MeveoModule relatedModule = null;
+
         if (moduleInstallCtx.isActive()) {
-        	relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+            relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
         }
-        
-		// Synchronize CET / CRT POJO
+
+        // Synchronize CET / CRT POJO
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if(relatedModule == null) {
@@ -375,29 +380,29 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
             customEntityTemplateService.addFilesToModule(cet, relatedModule);
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if (relatedModule == null) {
-            	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+                relatedModule = customRelationshipTemplateService.findModuleOf(crt);
             }
             customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
         }
-        
+
         // We only do this sync in case the CFT is created outside of a module installation context
         if (relatedModule != null && !moduleInstallCtx.isActive()) {
-        	MeveoModuleItem mi = new MeveoModuleItem();
-			mi.setMeveoModule(relatedModule);
-			mi.setAppliesTo(cft.getAppliesTo());
-			mi.setItemClass(CustomFieldTemplate.class.getName());
-			mi.setItemCode(cft.getCode());
-        	meveoModuleService.addModuleItem(mi, relatedModule);
+            MeveoModuleItem mi = new MeveoModuleItem();
+            mi.setMeveoModule(relatedModule);
+            mi.setAppliesTo(cft.getAppliesTo());
+            mi.setItemClass(CustomFieldTemplate.class.getName());
+            mi.setItemCode(cft.getCode());
+            meveoModuleService.addModuleItem(mi, relatedModule);
         }
-	}
-    
-	/**
-	 * @param cft
-	 * @throws BusinessException
-	 */
-	public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
+    }
+
+    /**
+     * @param cft
+     * @throws BusinessException
+     */
+    public void checkDateFormat(CustomFieldTemplate cft) throws BusinessException {
         if (cft.getDisplayFormat() != null) {
             try {
                 new SimpleDateFormat(cft.getDisplayFormat());
@@ -405,7 +410,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                 throw new BusinessException("Wrong syntax for date format : " + e.getMessage());
             }
         }
-	}
+    }
 
     @Override
     public CustomFieldTemplate update(CustomFieldTemplate cft) throws BusinessException {
@@ -417,66 +422,66 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         //  if CFT is of type DATE
         if (CustomFieldTypeEnum.DATE.equals(cft.getFieldType()) && cft.getDisplayFormat() != null) {
-        	checkDateFormat(cft);
+            checkDateFormat(cft);
         }
 
         checkIdentifierTypeAndUniqueness(cft);
 
         CustomFieldTemplate cftUpdated = super.update(cft);
 
-		String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
-		// CF applies to a CET
-		if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-			if(cet == null) {
-				log.warn("Custom entity template {} was not found", entityCode);
-				
-			} else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.updateField(cet, cft);
-			
-			} else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStoragesNullSafe() != null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(cet, cft);
-			}
-			
-			// Move files from / to file explorer if isSaveOnExplorer attribute has changed
-			if(cachedCft != null && cft.isSaveOnExplorer() != cachedCft.isSaveOnExplorer()) {
-				try {
-					Map<EntityRef, List<File>> summary = fileSystemService.moveBinaries(cet.getCode(), cft.getCode(), cft.isSaveOnExplorer());
-					for(Map.Entry<EntityRef, List<File>> summaryEntry : summary.entrySet()) {
-						Repository repository = summaryEntry.getKey().getRepository();
-						String uuid = summaryEntry.getKey().getUuid();
-						crossStorageService.setBinaries(repository, cet, cftUpdated, uuid, summaryEntry.getValue());
-					}
-					
-				} catch (IOException e) {
-					throw new BusinessException("Error while moving files from / to file explorer", e);
-				}
-			}
+        // CF applies to a CET
+        if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+            if(cet == null) {
+                log.warn("Custom entity template {} was not found", entityCode);
 
-		// CF Applies to a CRT
-		} else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
-			if(crt == null) {
-				log.warn("Custom relationship template {} was not found", entityCode);
-			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-				//FIXME: add sql code in param
-	            customTableCreatorService.updateField(crt, cft);
-			} else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStoragesNullSafe()!= null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeField(crt, cft);
-			}
-		}
+            } else if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable() && cet.getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.updateField(cet, cft);
+
+            } else if(cet.getAvailableStorages() != null && !cet.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft != null && cachedCft.getStoragesNullSafe() != null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
+                customTableCreatorService.removeField(cet, cft);
+            }
+
+            // Move files from / to file explorer if isSaveOnExplorer attribute has changed
+            if(cachedCft != null && cft.isSaveOnExplorer() != cachedCft.isSaveOnExplorer()) {
+                try {
+                    Map<EntityRef, List<File>> summary = fileSystemService.moveBinaries(cet.getCode(), cft.getCode(), cft.isSaveOnExplorer());
+                    for(Map.Entry<EntityRef, List<File>> summaryEntry : summary.entrySet()) {
+                        Repository repository = summaryEntry.getKey().getRepository();
+                        String uuid = summaryEntry.getKey().getUuid();
+                        crossStorageService.setBinaries(repository, cet, cftUpdated, uuid, summaryEntry.getValue());
+                    }
+
+                } catch (IOException e) {
+                    throw new BusinessException("Error while moving files from / to file explorer", e);
+                }
+            }
+
+            // CF Applies to a CRT
+        } else if(cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+            CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+            if(crt == null) {
+                log.warn("Custom relationship template {} was not found", entityCode);
+            }else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+                //FIXME: add sql code in param
+                customTableCreatorService.updateField(crt, cft);
+            } else if(!crt.getAvailableStorages().contains(DBStorageType.SQL) && cachedCft.getStoragesNullSafe()!= null && cachedCft.getStoragesNullSafe().contains(DBStorageType.SQL)) {
+                customTableCreatorService.removeField(crt, cft);
+            }
+        }
 
         customFieldsCache.addUpdateCustomFieldTemplate(cftUpdated);
         elasticClient.updateCFMapping(cftUpdated);
-        
-		MeveoModule relatedModule = null;
-		
+
+        MeveoModule relatedModule = null;
+
         if (moduleInstallCtx.isActive()) {
-        	relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+            relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
         }
-        
-		// Synchronize CET / CRT POJO
+
+        // Synchronize CET / CRT POJO
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if(relatedModule == null) {
@@ -484,69 +489,69 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
             customEntityTemplateService.addFilesToModule(cet, relatedModule);
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if (relatedModule == null) {
-            	relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+                relatedModule = customRelationshipTemplateService.findModuleOf(crt);
             }
             customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
         }
 
         return cftUpdated;
     }
-    
+
     @Override
     public void remove(CustomFieldTemplate cft) throws BusinessException {
-    	remove(cft, false);
+        remove(cft, false);
     }
 
     public void remove(CustomFieldTemplate cft, boolean withData) throws BusinessException {
         customFieldsCache.removeCustomFieldTemplate(cft);
         super.remove(cft);
 
-    	String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
+        String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
 
-		// CF applies to a CET
-		if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-			CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
-			if(cet == null) {
-				log.warn("Custom entity template {} was not found", entityCode);
-			} else if (withData && cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-	            customTableCreatorService.removeField(cet, cft);
-			}
-			
-			if(cft.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
-				try {
-					fileSystemService.removeBinaries(cet.getCode(), cft);
-				} catch (IOException e) {
-					throw new BusinessException("Can't remove binaries associated to " + cft, e); 
-				}
-			}
+        // CF applies to a CET
+        if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+            CustomEntityTemplate cet = customEntityTemplateService.findByCode(entityCode);
+            if(cet == null) {
+                log.warn("Custom entity template {} was not found", entityCode);
+            } else if (withData && cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
+                customTableCreatorService.removeField(cet, cft);
+            }
 
-		// CF Applies to a CRT
-		} else if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-			CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
-			if(crt == null) {
-				log.warn("Custom relationship template {} was not found", entityCode);
-			}else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-	            customTableCreatorService.removeField(crt, cft);
-			}
-		}
-		
-		// Synchronize CET / CRT POJO
+            if(cft.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
+                try {
+                    fileSystemService.removeBinaries(cet.getCode(), cft);
+                } catch (IOException e) {
+                    throw new BusinessException("Can't remove binaries associated to " + cft, e);
+                }
+            }
+
+            // CF Applies to a CRT
+        } else if(cft.getAppliesTo() != null && cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+            CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(entityCode);
+            if(crt == null) {
+                log.warn("Custom relationship template {} was not found", entityCode);
+            }else if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
+                customTableCreatorService.removeField(crt, cft);
+            }
+        }
+
+        // Synchronize CET / CRT POJO
         if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if (cet != null) {
-	            MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
-	            customEntityTemplateService.addFilesToModule(cet, cetModule);
+                MeveoModule cetModule = customEntityTemplateService.findModuleOf(cet);
+                customEntityTemplateService.addFilesToModule(cet, cetModule);
             }
         } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-        	CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
             if (crt != null) {
-            	MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
-                customRelationshipTemplateService.addFilesToModule(crt, cetModule);    	
+                MeveoModule cetModule = customRelationshipTemplateService.findModuleOf(crt);
+                customRelationshipTemplateService.addFilesToModule(crt, cetModule);
             }
         }
-		
+
     }
 
     @Override
@@ -565,7 +570,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Get a list of custom field templates for cache
-     * 
+     *
      * @return A list of custom field templates
      */
     public List<CustomFieldTemplate> getCFTForCache() {
@@ -575,7 +580,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Get a list of custom field templates for index
-     * 
+     *
      * @return A list of custom field templates
      */
     public List<CustomFieldTemplate> getCFTForIndex() {
@@ -585,7 +590,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Check and create missing templates given a list of templates.
-     * 
+     *
      * @param entity Entity that custom field templates apply to
      * @param templates A list of templates to check
      * @return A complete list of templates for a given entity. Mapped by a custom field template key.
@@ -603,7 +608,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Check and create missing templates given a list of templates.
-     * 
+     *
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @param templates A list of templates to check
      * @return A complete list of templates for a given entity. Mapped by a custom field template key.
@@ -615,7 +620,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Check and create missing templates given a list of templates.
-     * 
+     *
      * @param entity Entity that custom field templates apply to
      * @param templates A list of templates to check
      * @param removeOrphans When set to true, this will remove custom field templates that are not included in the templates collection.
@@ -624,7 +629,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
      * @throws BusinessException business exception.
      */
     public Map<String, CustomFieldTemplate> createMissingTemplates(ICustomFieldEntity entity, Collection<CustomFieldTemplate> templates, boolean updateExisting,
-            boolean removeOrphans) throws BusinessException {
+                                                                   boolean removeOrphans) throws BusinessException {
         try {
             return createMissingTemplates(CustomFieldTemplateUtils.calculateAppliesToValue(entity), templates, updateExisting, removeOrphans);
         } catch (CustomFieldException e) {
@@ -635,7 +640,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Check and create missing templates given a list of templates.
-     * 
+     *
      * @param appliesTo Entity (CFT appliesTo code) that custom field templates apply to
      * @param templates A list of templates to check
      * @param removeOrphans When set to true, this will remove custom field templates that are not included in the templates collection.
@@ -690,7 +695,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
     /**
      * Copy and associate a given custom field template to a given target entity type.
-     * 
+     *
      * @param cft Custom field template to copy
      * @param targetAppliesTo Target CFT.appliesTo value associate custom field template with
      * @return custom field template
@@ -700,7 +705,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         if (findByCodeAndAppliesTo(cft.getCode(), targetAppliesTo) != null) {
             throw new ValidationException("Custom field template " + cft.getCode() + " already exists in targe entity " + targetAppliesTo,
-                "customFieldTemplate.copyCFT.alreadyExists");
+                    "customFieldTemplate.copyCFT.alreadyExists");
         }
 
         // Load calendar for lazy loading
@@ -768,23 +773,23 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             }
         }
     }
-    
-	public boolean isReferenceJpaEntity(String clazz) {
 
-		final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCodeOrDbTablename(clazz);
-		if (referenceCet == null) {
-			try {
-				Class.forName(clazz);
-				return true;
+    public boolean isReferenceJpaEntity(String clazz) {
 
-			} catch (ClassNotFoundException e) {
-				throw new IllegalArgumentException("Class " + clazz + " does not exists.");
-			}
+        final CustomEntityTemplate referenceCet = customEntityTemplateService.findByCodeOrDbTablename(clazz);
+        if (referenceCet == null) {
+            try {
+                Class.forName(clazz);
+                return true;
 
-		}
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException("Class " + clazz + " does not exists.");
+            }
 
-		return false;
-	}
+        }
+
+        return false;
+    }
 
     public String getFieldName(CustomEntityTemplate customEntityTemplate) {
 
@@ -808,27 +813,33 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         return null;
     }
 
-	@Override
-	public void addFilesToModule(CustomFieldTemplate entity, MeveoModule module) throws BusinessException {
-    	BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
-    	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getAppliesTo();
-    	
-    	File newDir = new File (gitDirectory, path);
-    	newDir.mkdirs();
-    	
-    	File newJsonFile = new File(newDir, entity.getCode() +".json");
-    	try {
-    		MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be updated or created", e);
-    	}
-    	
-    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), "Add JSON file for CFT " + entity.getAppliesTo() + "." + entity.getCode());
-	}
-    
+    @Override
+    public void addFilesToModule(CustomFieldTemplate entity, MeveoModule module) throws BusinessException {
+        BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
+        String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
+
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+
+        String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getAppliesTo();
+
+        File newDir = new File (gitDirectory, path);
+        newDir.mkdirs();
+
+        File newJsonFile = new File(newDir, entity.getCode() +".json");
+        try {
+            MeveoFileUtils.writeAndPreserveCharset(businessEntityDtoSerialize, newJsonFile);
+        } catch (IOException e) {
+            throw new BusinessException("File cannot be updated or created", e);
+        }
+
+        GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+        String message = "Add JSON file for CFT " + entity.getAppliesTo() + "." + entity.getCode();
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        }
+        gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
+    }
+
 }
