@@ -141,7 +141,7 @@ public class EndpointCacheContainer {
 			.filter(endpoint -> endpoint.getService().getId().equals(script.getId()))
 			.findFirst()
 			.ifPresent(endpoint -> {
-				if (endpoint.getPool().isUsePool()) {
+				if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 					var pool = endpointPool.remove(endpoint.getCode());
 					
 					if (endpoint.isActive()) {
