@@ -179,7 +179,7 @@ public class EndpointCacheContainer {
 	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
 		if(endpoint.isActive()) {
 			endpointLoadingCache.put(endpoint.getCode(), endpoint);
-			if (endpoint.getPool().isUsePool()) {
+			if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 				var pool = endpointPool.remove(endpoint.getCode());
 				endpointPool.put(endpoint.getCode(), buildPool(endpoint));
 				if (pool != null) {
