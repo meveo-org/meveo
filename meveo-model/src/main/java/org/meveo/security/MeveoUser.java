@@ -3,6 +3,8 @@ package org.meveo.security;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +22,8 @@ public abstract class MeveoUser implements Serializable {
     private static final long serialVersionUID = 5535661206200553250L;
 
     /** Logger. */
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    @JsonIgnore
+    protected transient Logger log = LoggerFactory.getLogger(this.getClass());
 
     /*
      * User identifier - could or could not match the userName value
