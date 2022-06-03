@@ -205,7 +205,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				try {
 					final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
 						try {
-							return functionService.execute(executionEngine, parameterMap, !execution.getEndpoint().getPool().isUsePool());
+							EndpointPool endpointPool = execution.getEndpoint().getPool();
+							boolean usePool = endpointPool != null && endpointPool.isUsePool();
+							return functionService.execute(executionEngine, parameterMap, !usePool);
 						} catch (BusinessException e) {
 							throw new RuntimeException(e);
 						}

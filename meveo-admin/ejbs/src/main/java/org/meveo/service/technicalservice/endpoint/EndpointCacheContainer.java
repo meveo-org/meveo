@@ -127,7 +127,7 @@ public class EndpointCacheContainer {
 
 	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
 		endpointLoadingCache.remove(endpoint.getCode());
-		if (endpoint.getPool().isUsePool()) {
+		if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 			var pool = endpointPool.remove(endpoint.getCode());
 			if (pool != null) {
 				pool.close();
@@ -164,7 +164,7 @@ public class EndpointCacheContainer {
 			}
 		}
 		
-		if (endpoint.getPool().isUsePool()) {
+		if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 			var pool = endpointPool.remove(endpoint.getCode());
 			if (endpoint.isActive()) {
 				endpointPool.put(endpoint.getCode(), buildPool(endpoint));
