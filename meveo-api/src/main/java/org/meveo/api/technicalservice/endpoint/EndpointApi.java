@@ -58,6 +58,7 @@ import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.model.technicalservice.endpoint.EndpointExecutionResult;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.EndpointPool;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
@@ -83,11 +84,11 @@ import io.swagger.util.Json;
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
-	
+
 	@Inject
 	@Processed
 	private Event<EndpointExecutionResult> endpointExecuted;
-	
+
 	@Inject
 	private EndpointCacheContainer endpointCache;
 
@@ -105,7 +106,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
-	
+
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
 	}
@@ -117,11 +118,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	public String getEndpointScript(String baseUrl, String code) throws EntityDoesNotExistsException, IOException {
-		
+
 		if(code.equals(Endpoint.ENDPOINT_INTERFACE_JS)) {
 			return esGeneratorService.buildBaseEndpointInterface(baseUrl);
 		}
-		
+
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
@@ -138,7 +139,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Function service = endpoint.getService();
 		var functionService = concreteFunctionService.getFunctionService(service.getCode());
 		service = functionService.findById(service.getId());
-		
+
 		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
 		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService, parameterMap);
 
@@ -195,9 +196,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public Map<String, Object> execute(EndpointExecution execution,
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
-		
+
 		EndpointExecutionResult executionResult = new EndpointExecutionResult(execution.getEndpoint(), parameterMap);
-		
+
 		try {
 			// Start endpoint script with timeout if one was set
 			if (execution.getDelayMax() != null) {
@@ -214,18 +215,19 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					return executionEngine.cancel();
 				}
 			} else {
-				
-				executionResult.setResults(functionService.execute(executionEngine, parameterMap, !execution.getEndpoint().getPool().isUsePool()));
+				EndpointPool endpointPool = execution.getEndpoint().getPool();
+				boolean usePool = endpointPool != null && endpointPool.isUsePool();
+				executionResult.setResults(functionService.execute(executionEngine, parameterMap, !usePool));
 			}
 		} catch (Exception e) {
 			executionResult.setError(e);
 			throw e;
-			
+
 		} finally {
 			endpointExecuted.fireAsync(executionResult);
 			endpointCache.returnPooledScript(execution.getEndpoint(), executionEngine);
 		}
-		
+
 		return executionResult.getResults();
 
 	}
@@ -279,7 +281,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					} else {
 						parameterValue = convertItemsIntoCorrectType(endpoint, tsParameterMapping, colValue);
 					}
-					
+
 				}
 			}
 			String paramName = tsParameterMapping.getEndpointParameter().toString();
@@ -295,10 +297,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			} else {
 				executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
 			}
-			
+
 		} catch (BusinessException e) {
 			throw new IllegalArgumentException("Endpoint's code " + service.getCode() + "is not valid, function is not found.", e);
-		
+
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to instantiate endpoint script", e);
 		}
@@ -331,7 +333,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			endpointService.create(endpoint);
 			return endpoint;
 		} catch (EntityDoesNotExistsException e) {
-			throw new BusinessException("The endpoint references a missing element",e); 
+			throw new BusinessException("The endpoint references a missing element",e);
 		}
 	}
 
@@ -408,7 +410,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		try {
 			endpoint = fromDto(endpointDto, endpoint);
 		} catch (EntityDoesNotExistsException e) {
-			throw new BusinessException("The endpoint references a missing element", e); 
+			throw new BusinessException("The endpoint references a missing element", e);
 		}
 
 		if (endpointDto.getPathParameters() != null && !endpointDto.getPathParameters().isEmpty()) {
@@ -444,7 +446,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
-				
+
 				// Update existing parameters
 				for(var paramDto : endpointDto.getParameterMappings()) {
 					var paramToUpdate = endpoint.getParametersMappingNullSafe()
@@ -459,7 +461,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						param.setValueRequired(paramDto.getValueRequired());
 					});
 				}
-				
+
 				// Add new parameters
 				endpointDto.getParameterMappings()
 					.stream()
@@ -551,10 +553,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		// Synchronous
 		endpoint.setSynchronous(endpointDto.isSynchronous());
-		
+
 		// Secured
 		endpoint.setSecured(endpointDto.isSecured());
-		
+
 		// Check path params
 		endpoint.setCheckPathParams(endpointDto.isCheckPathParams());
 
@@ -575,8 +577,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				throw new EntityDoesNotExistsException("endpoint's serviceCode is not linked to a function : " + e.getLocalizedMessage());
 			}
 		}
-		
-		if(create) { 
+
+		if(create) {
 			// Parameters mappings
 			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
 			endpoint.setParametersMapping(tsParameterMappings);
@@ -598,10 +600,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		return endpoint;
 	}
-	
+
 	/**
 	 * Convert item types of collection into the correct type
-	 * 
+	 *
 	 * @param endpoint endpoint being executed
 	 * @param parameter parameter definition
 	 * @param value value being passed to endpoint script
@@ -613,12 +615,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				.filter(input -> input.getName().equals(parameter.getEndpointParameter().getParameter()))
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Parameter " + parameter.getParameterName() + " of endpoint " + endpoint.getCode() + " does not corresponds to any input of function " + endpoint.getService().getCode()));
-		
+
 		// Determine collection items type
 		var matcher = Pattern.compile("(.*)<(.*)>").matcher(mappedInput.getType());
 		if(matcher.find()) {
 			var itemType = matcher.group(2);
-			
+
 			// Integer to Long conversion
 			if(itemType.equals("Long")) {
 				return value.stream()
@@ -633,10 +635,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						}).collect(Collectors.toList());
 			}
 		}
-		
+
 		return value;
 	}
-	
+
 	private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
 		List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
 		for (String pathParameter : endpointDto.getPathParameters()) {
@@ -674,7 +676,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if(!endpoint.isSecured()) {
 			return true;
 		}
-		
+
 		return currentUser.hasRole(EndpointService.getEndpointPermission(endpoint));
 	}
 
@@ -744,8 +746,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				}
 			}
 			returnValue=serializableResult;
-		} 
-		
+		}
+
 		if (!shouldSerialize) {
 			return returnValue.toString();
 		}
@@ -760,13 +762,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
 			return serializedResult;
 		}
-		
+
 		return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
 	}
 
 	/**
 	 * Generates the request schema of an endpoint
-	 * 
+	 *
 	 * @param code code of the endpoint
 	 * @return request schema of the given endpoint
 	 */
@@ -779,7 +781,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	/**
 	 * Generates the response schema of an endpoint
-	 * 
+	 *
 	 * @param code code of the endpoint
 	 * @return response schema of the given endpoint
 	 */
@@ -794,5 +796,5 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public void remove(EndpointDto dto) throws MeveoApiException, BusinessException {
 		this.delete(dto.getCode());
 	}
-	
+
 }
