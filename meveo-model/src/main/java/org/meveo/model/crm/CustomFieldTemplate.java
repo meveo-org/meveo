@@ -54,6 +54,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
@@ -103,13 +105,13 @@ import org.meveo.model.shared.DateUtils;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })
 @NamedQueries({
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.disabled=false and cft.indexType is not null "),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.appliesTo=:appliesTo order by cft.code", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
 public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
 
@@ -339,9 +341,9 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     /** Storage where the cft value will be stored. */
 //    @Column(name = "storages", columnDefinition = "TEXT")
 //    @Type(type = JsonTypes.JSON_LIST)
-	@ManyToMany
 	@JoinTable(name = "cft_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cft_id"))
-    List<DBStorageType> storages = new ArrayList<>();
+	@ManyToMany
+	List<DBStorageType> storages = new ArrayList<>();
 
     /**
      * Display format for Date type only

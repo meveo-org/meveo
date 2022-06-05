@@ -47,7 +47,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
 	public void initialize() {
 
-		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode);
+		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode, List.of("availableStorages"));
 
 		if (customEntityTemplate.getSqlStorageConfigurationNullSafe().isStoreAsTable()) {
 			if (customTableName == null) {

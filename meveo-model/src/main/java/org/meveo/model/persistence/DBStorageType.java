@@ -16,6 +16,7 @@
 
 package org.meveo.model.persistence;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @Entity
 @Table(name = "db_storage_type")
-public class DBStorageType {
+public class DBStorageType implements Serializable {
 	
 	public static final DBStorageType SQL;
 	public static final DBStorageType NEO4J;

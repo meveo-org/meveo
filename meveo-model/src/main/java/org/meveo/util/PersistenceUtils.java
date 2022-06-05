@@ -147,7 +147,8 @@ public class PersistenceUtils {
 			}
 
 			return cft.getStoragesNullSafe().contains(storageType);
-		}).forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
+		}).filter(v -> v != null && v.getKey() != null)
+		.forEach(v -> filteredValues.put(v.getKey(), v.getValue()));
 
 		return filteredValues;
 	}

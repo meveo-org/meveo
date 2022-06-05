@@ -40,7 +40,7 @@ public class StorageImplProvider {
 			}
 		} else if (dbStorageType.getStorageImplName() != null) {
 			try {
-				result = (StorageImpl) CDI.current().select(Class.forName(dbStorageType.getStorageImplName()));
+				result = (StorageImpl) CDI.current().select(Class.forName(dbStorageType.getStorageImplName())).get();
 			} catch (ClassNotFoundException e) {
 				throw new IllegalArgumentException("Storage implementation " + dbStorageType.getStorageImplName() + " not found on classpath");
 			}

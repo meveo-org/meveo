@@ -412,7 +412,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		// Retrieve corresponding CET
-		CustomEntityTemplate cet = cache.getCustomEntityTemplate(ceiToSave.getCetCode());
+		CustomEntityTemplate cet  = customEntityTemplateService.findByCode(ceiToSave.getCetCode(), List.of("availableStorages"));
 		if(cet == null) {
 			throw new IllegalArgumentException("CET with code " + ceiToSave.getCetCode() + " does not exist");
 		}
@@ -441,6 +441,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				
 		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? cache.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
 		cei.setCet(cet);
+		cei.setFieldTemplates(customFieldTemplates);
 
 		// Create referenced entities and set UUIDs in the values
 		Map<String, Object> tmpValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();

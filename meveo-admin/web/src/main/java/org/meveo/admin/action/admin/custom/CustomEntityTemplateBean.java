@@ -1458,12 +1458,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {
-		return Arrays.asList("customEntityCategory");
+		return Arrays.asList("customEntityCategory", "availableStorages");
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("customEntityCategory");
+		return Arrays.asList("customEntityCategory", "availableStorages");
 	}
 
 	public boolean showAuditedField() {
