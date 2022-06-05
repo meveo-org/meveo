@@ -222,7 +222,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 				}
 
 			} catch (Exception e) {
-				log.error(e.getMessage());
+				log.error("Error during entity init", e);
 			}
 		}
 		
