@@ -232,7 +232,7 @@ public class EndpointServlet extends HttpServlet {
             String uuidStr = endpointExecution.getPathInfo().split("/")[0];
             PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(uuidStr);
             final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
-            if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE) {
+            if (execResult != null && (endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE)) {
                 if (cancel && pendingExecution != null && pendingExecution.getEngine() != null) {
                     pendingExecution.getEngine().cancel();
                 }
