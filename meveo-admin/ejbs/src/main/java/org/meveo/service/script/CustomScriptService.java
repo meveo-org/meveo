@@ -220,6 +220,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     public void afterUpdateOrCreate(T script) throws BusinessException {
         super.afterUpdateOrCreate(script);
 
+        // Remove from compiled map
+        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), script.getCode());
+        ALL_SCRIPT_INTERFACES.remove(key);
+       
         // Don't compile script during module installation, will be compiled after
         if (!moduleInstallCtx.isActive()) {
             compileScript(script, false);
