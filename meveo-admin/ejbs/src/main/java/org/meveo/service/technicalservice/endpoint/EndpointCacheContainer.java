@@ -228,7 +228,10 @@ public class EndpointCacheContainer {
 				if(path.startsWith("/"+endpoint.getBasePath())){
 					Matcher matcher = endpoint.getPathRegex().matcher(path);
 					if(matcher.matches() || matcher.lookingAt()){
-						if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
+						String currentEndpointPath = endpoint.getPathRegex().pattern();
+						currentEndpointPath = currentEndpointPath.substring(0,currentEndpointPath.length()-2); // Remove /? from the end of path
+						if(currentEndpointPath.equals(path)){ // Now both should be exactly same
+							log.debug("endpoint path matched=====================================>"+currentEndpointPath);
 							result=endpoint;
 						}
 					}
