@@ -64,7 +64,7 @@ public class CountryApi extends BaseApi {
         if (country == null) {
             country = new Country();
             country.setDescription(postData.getName());
-            country.setCountryCode(postData.getCountryCode());
+            country.setCode(postData.getCountryCode());
         }
         if (!StringUtils.isBlank(postData.getLanguageCode())) {
             Language language = languageService.findByCode(postData.getLanguageCode());

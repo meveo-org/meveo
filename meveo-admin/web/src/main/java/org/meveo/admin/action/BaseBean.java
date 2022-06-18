@@ -1086,7 +1086,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     public String getProviderLanguageCode() {
         if (appProvider.getLanguage() != null) {
-            return appProvider.getLanguage().getLanguageCode();
+            return appProvider.getLanguage().getCode();
         }
         return "";
     }

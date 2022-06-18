@@ -44,6 +44,7 @@ import org.meveo.api.exception.EntityAlreadyExistsException;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
+import org.meveo.commons.utils.MvCollectionUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.BusinessEntity;
@@ -584,7 +585,7 @@ public class MeveoModuleItemInstaller {
 		        log.error("Failed to access field value in DTO {}", dto, e);
 		        throw new MeveoApiException("Failed to access field value in DTO: " + e.getMessage());
 
-		    } catch (MeveoApiException | BusinessException e) {
+		    } catch (BusinessException e) {
 		        log.error("Failed to transform DTO into a module item. DTO {}", dto, e);
 		        throw e;
 		    }
@@ -692,7 +693,8 @@ public class MeveoModuleItemInstaller {
 			}
 		};
 
-		sortedItems.sort(comparator);
+		MvCollectionUtils.bubbleSort(sortedItems, comparator);
+		
 		return sortedItems;
 	}
 	
@@ -792,6 +794,7 @@ public class MeveoModuleItemInstaller {
         }
     	
     }
+    
 	
 	/**
 	 * Add cft which is a field of cet as a module item.

@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -482,5 +483,14 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	public MeveoModuleItem getExistingItem(File entityFile) {
 		return null;
 	}
+	
+    public Map<String, T> filterModuleDtos(List<MeveoModuleItemDto> itemDtos) {
+    	Map<String, T> dtos = new HashMap<>();
+		itemDtos.stream()
+			.filter(dto -> dto.getDtoClassName().equals(dtoClass.getName()))
+			.map(dto -> JacksonUtil.convert(dto.getDtoData(), dtoClass))
+			.forEach(dto -> dtos.put(dto.getCode(), dto));
+		return dtos;
+    }
 	
 }

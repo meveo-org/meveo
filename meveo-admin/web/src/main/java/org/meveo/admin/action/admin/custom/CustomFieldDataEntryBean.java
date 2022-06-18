@@ -273,9 +273,9 @@ public class CustomFieldDataEntryBean implements Serializable {
 	}
 	
 	public List<EntityCustomAction> getCustomActionsInList(IEntity entity) {
-
 		List<EntityCustomAction> customActions = getCustomActions(entity);
-		return customActions.stream().filter(e -> e.getApplicableToEntityList()).collect(Collectors.toList());
+		List<EntityCustomAction> results = customActions.stream().filter(e -> e.getApplicableToEntityList()).collect(Collectors.toList());
+		return results;
 	}
 	
 	/**

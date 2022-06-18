@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.core.Response;
@@ -50,11 +51,14 @@ import org.meveo.api.rest.technicalservice.EndpointScript;
 import org.meveo.api.swagger.SwaggerDocService;
 import org.meveo.api.utils.JSONata;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Processed;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointExecutionResult;
 import org.meveo.model.technicalservice.endpoint.EndpointParameter;
 import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
+import org.meveo.model.technicalservice.endpoint.EndpointPool;
 import org.meveo.model.technicalservice.endpoint.EndpointVariables;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
@@ -62,6 +66,7 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
+import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
@@ -80,6 +85,13 @@ import io.swagger.util.Json;
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
+	@Inject
+	@Processed
+	private Event<EndpointExecutionResult> endpointExecuted;
+
+	@Inject
+	private EndpointCacheContainer endpointCache;
+
 	@EJB
 	private EndpointService endpointService;
 
@@ -94,7 +106,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
-	
+
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
 	}
@@ -106,11 +118,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	}
 
 	public String getEndpointScript(String baseUrl, String code) throws EntityDoesNotExistsException, IOException {
-		
+
 		if(code.equals(Endpoint.ENDPOINT_INTERFACE_JS)) {
 			return esGeneratorService.buildBaseEndpointInterface(baseUrl);
 		}
-		
+
 		Endpoint endpoint = endpointService.findByCode(code);
 		if (endpoint == null) {
 			throw new EntityDoesNotExistsException(Endpoint.class, code);
@@ -125,11 +137,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public PendingResult executeAsync(Endpoint endpoint, EndpointExecution endpointExecution)
 			throws BusinessException, ExecutionException, InterruptedException {
 		Function service = endpoint.getService();
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
-				.getFunctionService(service.getCode());
+		var functionService = concreteFunctionService.getFunctionService(service.getCode());
+		service = functionService.findById(service.getId());
+
 		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
-		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService,
-				parameterMap);
+		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService, parameterMap);
 
 		CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
 			try {
@@ -160,8 +172,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
-		final FunctionService<?, ScriptInterface> functionService = concreteFunctionService
-				.getFunctionService(service.getCode());
+		var functionService = concreteFunctionService.getFunctionService(service.getCode());
+		service = functionService.findById(service.getId());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 
 		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
@@ -184,37 +196,46 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public Map<String, Object> execute(EndpointExecution execution,
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
-		// Start endpoint script with timeout if one was set
-		if (execution.getDelayMax() != null) {
-			try {
-				final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
-					try {
-						return functionService.execute(executionEngine, parameterMap);
-					} catch (BusinessException e) {
-						throw new RuntimeException(e);
-					}
-				});
-				return resultFuture.get(execution.getDelayMax(), execution.getDelayUnit());
-			} catch (TimeoutException e) {
-				return executionEngine.cancel();
+
+		EndpointExecutionResult executionResult = new EndpointExecutionResult(execution.getEndpoint(), parameterMap);
+
+		try {
+			// Start endpoint script with timeout if one was set
+			if (execution.getDelayMax() != null) {
+				try {
+					final CompletableFuture<Map<String, Object>> resultFuture = CompletableFuture.supplyAsync(() -> {
+						try {
+							EndpointPool endpointPool = execution.getEndpoint().getPool();
+							boolean usePool = endpointPool != null && endpointPool.isUsePool();
+							return functionService.execute(executionEngine, parameterMap, !usePool);
+						} catch (BusinessException e) {
+							throw new RuntimeException(e);
+						}
+					});
+					executionResult.setResults(resultFuture.get(execution.getDelayMax(), execution.getDelayUnit()));
+				} catch (TimeoutException e) {
+					return executionEngine.cancel();
+				}
+			} else {
+				EndpointPool endpointPool = execution.getEndpoint().getPool();
+				boolean usePool = endpointPool != null && endpointPool.isUsePool();
+				executionResult.setResults(functionService.execute(executionEngine, parameterMap, !usePool));
 			}
-		} else {
-			return functionService.execute(executionEngine, parameterMap);
+		} catch (Exception e) {
+			executionResult.setError(e);
+			throw e;
+
+		} finally {
+			endpointExecuted.fireAsync(executionResult);
+			endpointCache.returnPooledScript(execution.getEndpoint(), executionEngine);
 		}
+
+		return executionResult.getResults();
+
 	}
 
-	/**
-	 * @param endpoint
-	 * @param execution
-	 * @param service
-	 * @param functionService
-	 * @param parameterMap
-	 * @return
-	 * @throws BusinessException 
-	 * @throws IllegalArgumentException
-	 */
-	public ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, Function service,
-			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
+	public <T extends Function> ScriptInterface getEngine(Endpoint endpoint, EndpointExecution execution, T service,
+			final FunctionService<T, ScriptInterface> functionService, Map<String, Object> parameterMap)  {
 
 
 		Matcher matcher=endpoint.getPathRegex().matcher(execution.getPathInfo());
@@ -262,7 +283,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					} else {
 						parameterValue = convertItemsIntoCorrectType(endpoint, tsParameterMapping, colValue);
 					}
-					
+
 				}
 			}
 			String paramName = tsParameterMapping.getEndpointParameter().toString();
@@ -272,10 +293,18 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		ScriptInterface executionEngine;
 		try {
-			executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+			if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
+				executionEngine = endpointCache.getPooledScript(endpoint);
+				functionService.setParameters(service, executionEngine, parameterMap);
+			} else {
+				executionEngine = functionService.getExecutionEngine(service.getCode(), parameterMap);
+			}
+
 		} catch (BusinessException e) {
-			throw new IllegalArgumentException(
-					"Endpoint's code " + service.getCode() + "is not valid, function is not found.",e);
+			throw new IllegalArgumentException("Endpoint's code " + service.getCode() + "is not valid, function is not found.", e);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to instantiate endpoint script", e);
 		}
 
 		if (executionEngine instanceof EndpointScript) {
@@ -306,7 +335,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			endpointService.create(endpoint);
 			return endpoint;
 		} catch (EntityDoesNotExistsException e) {
-			throw new BusinessException("The endpoint references a missing element",e); 
+			throw new BusinessException("The endpoint references a missing element",e);
 		}
 	}
 
@@ -383,7 +412,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		try {
 			endpoint = fromDto(endpointDto, endpoint);
 		} catch (EntityDoesNotExistsException e) {
-			throw new BusinessException("The endpoint references a missing element", e); 
+			throw new BusinessException("The endpoint references a missing element", e);
 		}
 
 		if (endpointDto.getPathParameters() != null && !endpointDto.getPathParameters().isEmpty()) {
@@ -419,7 +448,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 			} else {
 				final Endpoint finalEndpoint = endpoint;
-				
+
 				// Update existing parameters
 				for(var paramDto : endpointDto.getParameterMappings()) {
 					var paramToUpdate = endpoint.getParametersMappingNullSafe()
@@ -434,7 +463,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						param.setValueRequired(paramDto.getValueRequired());
 					});
 				}
-				
+
 				// Add new parameters
 				endpointDto.getParameterMappings()
 					.stream()
@@ -498,6 +527,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		endpointDto.setContentType(endpoint.getContentType());
 		endpointDto.setBasePath(endpoint.getBasePath());
 		endpointDto.setPath(endpoint.getPath());
+		endpointDto.setPool(endpoint.getPool());
 		return endpointDto;
 	}
 
@@ -525,10 +555,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		// Synchronous
 		endpoint.setSynchronous(endpointDto.isSynchronous());
-		
+
 		// Secured
 		endpoint.setSecured(endpointDto.isSecured());
-		
+
 		// Check path params
 		endpoint.setCheckPathParams(endpointDto.isCheckPathParams());
 
@@ -549,8 +579,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				throw new EntityDoesNotExistsException("endpoint's serviceCode is not linked to a function : " + e.getLocalizedMessage());
 			}
 		}
-		
-		if(create) { 
+
+		if(create) {
 			// Parameters mappings
 			List<TSParameterMapping> tsParameterMappings = getParameterMappings(endpointDto, endpoint);
 			endpoint.setParametersMapping(tsParameterMappings);
@@ -568,13 +598,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		endpoint.setPath(endpointDto.getPath());
 
+		endpoint.setPool(endpointDto.getPool());
 
 		return endpoint;
 	}
-	
+
 	/**
 	 * Convert item types of collection into the correct type
-	 * 
+	 *
 	 * @param endpoint endpoint being executed
 	 * @param parameter parameter definition
 	 * @param value value being passed to endpoint script
@@ -586,12 +617,12 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				.filter(input -> input.getName().equals(parameter.getEndpointParameter().getParameter()))
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Parameter " + parameter.getParameterName() + " of endpoint " + endpoint.getCode() + " does not corresponds to any input of function " + endpoint.getService().getCode()));
-		
+
 		// Determine collection items type
 		var matcher = Pattern.compile("(.*)<(.*)>").matcher(mappedInput.getType());
 		if(matcher.find()) {
 			var itemType = matcher.group(2);
-			
+
 			// Integer to Long conversion
 			if(itemType.equals("Long")) {
 				return value.stream()
@@ -606,10 +637,10 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 						}).collect(Collectors.toList());
 			}
 		}
-		
+
 		return value;
 	}
-	
+
 	private List<EndpointPathParameter> getEndpointPathParameters(EndpointDto endpointDto, Endpoint endpoint) {
 		List<EndpointPathParameter> endpointPathParameters = new ArrayList<>();
 		for (String pathParameter : endpointDto.getPathParameters()) {
@@ -647,7 +678,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if(!endpoint.isSecured()) {
 			return true;
 		}
-		
+
 		return currentUser.hasRole(EndpointService.getEndpointPermission(endpoint));
 	}
 
@@ -717,8 +748,8 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				}
 			}
 			returnValue=serializableResult;
-		} 
-		
+		}
+
 		if (!shouldSerialize) {
 			return returnValue.toString();
 		}
@@ -733,13 +764,13 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		if (StringUtils.isBlank(endpoint.getJsonataTransformer())) {
 			return serializedResult;
 		}
-		
+
 		return JSONata.transform(endpoint.getJsonataTransformer(), serializedResult);
 	}
 
 	/**
 	 * Generates the request schema of an endpoint
-	 * 
+	 *
 	 * @param code code of the endpoint
 	 * @return request schema of the given endpoint
 	 */
@@ -752,7 +783,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	/**
 	 * Generates the response schema of an endpoint
-	 * 
+	 *
 	 * @param code code of the endpoint
 	 * @return response schema of the given endpoint
 	 */
@@ -767,5 +798,5 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	public void remove(EndpointDto dto) throws MeveoApiException, BusinessException {
 		this.delete(dto.getCode());
 	}
-	
+
 }

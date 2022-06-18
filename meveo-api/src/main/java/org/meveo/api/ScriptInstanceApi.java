@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -446,4 +448,45 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				.findFirst()
 				.orElse(null);
 	}
+
+	@Override
+	public int compareDtos(ScriptInstanceDto obj1, ScriptInstanceDto obj2, List<MeveoModuleItemDto> dtos) {
+		Map<String, ScriptInstanceDto> scriptDtos = filterModuleDtos(dtos);
+		
+		if (obj2.getImportScriptInstances() == null || obj2.getImportScriptInstances().isEmpty()) {
+			return 1;
+		}
+		
+		if (getTransitiveScripts(obj1, scriptDtos).contains(obj2.getCode())) {
+			return 1;
+		}
+		
+		if (getTransitiveScripts(obj2, scriptDtos).contains(obj1.getCode())) {
+			return -1;
+		}
+		
+		return 0;
+	}
+	
+	private static List<String> getTransitiveScripts(ScriptInstanceDto script, Map<String, ScriptInstanceDto> dtos) {
+		if (script != null && script.getImportScriptInstances() != null && !script.getImportScriptInstances().isEmpty()) {
+			return Stream.concat(script.getImportScriptInstances().stream(), 
+					script.getImportScriptInstances().stream().flatMap(importedScriptCode -> getTransitiveScripts(dtos.get(importedScriptCode), dtos).stream()))
+					.collect(Collectors.toList());
+		} else {
+			return List.of();
+		}
+	}
+	
+    private static int countImportedScripts(ScriptInstanceDto script, Map<String, ScriptInstanceDto> dtos) {
+    	if (script != null && script.getImportScriptInstances() != null && !script.getImportScriptInstances().isEmpty()) {
+			return script.getImportScriptInstances()
+						.stream()
+						.map(importedScriptCode -> countImportedScripts(dtos.get(importedScriptCode), dtos))
+						.reduce(script.getImportScriptInstances().size(), Integer::sum);
+    	} else {
+    		return 0;
+    	}
+    }
+	
 }

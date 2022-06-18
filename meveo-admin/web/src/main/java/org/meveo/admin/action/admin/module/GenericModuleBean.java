@@ -703,7 +703,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
 
             moduleUninstall.module(entity);
-            entity = (T) moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+            List<MeveoModule> uninstalledModules = moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+            entity = (T) uninstalledModules.get(0);
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {

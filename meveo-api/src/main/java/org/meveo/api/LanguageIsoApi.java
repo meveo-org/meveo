@@ -30,7 +30,7 @@ public class LanguageIsoApi extends BaseApi {
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
         }
- 
+
         handleMissingParameters();
 
         if (languageService.findByCode(postData.getCode()) != null) {
@@ -38,8 +38,8 @@ public class LanguageIsoApi extends BaseApi {
         }
 
         Language language = new Language();
-        language.setLanguageCode(postData.getCode());
-        language.setDescriptionEn(postData.getDescription());
+        language.setCode(postData.getCode());
+        language.setDescription(postData.getDescription());
         languageService.create(language);
 
     }
@@ -57,7 +57,7 @@ public class LanguageIsoApi extends BaseApi {
         if (language == null) {
             throw new EntityDoesNotExistsException(Language.class, postData.getCode());
         }
-        language.setDescriptionEn(postData.getDescription());
+        language.setDescription(postData.getDescription());
 
         languageService.update(language);
     }
@@ -104,17 +104,17 @@ public class LanguageIsoApi extends BaseApi {
             update(postData);
         }
     }
-    
-	public List<LanguageIsoDto> list() {
-		List<LanguageIsoDto> result = new ArrayList<>();
 
-		List<Language> languages = languageService.list();
-		if (languages != null) {
-			for (Language country : languages) {
-				result.add(new LanguageIsoDto(country));
-			}
-		}
+    public List<LanguageIsoDto> list() {
+        List<LanguageIsoDto> result = new ArrayList<>();
 
-		return result;
-	}
+        List<Language> languages = languageService.list();
+        if (languages != null) {
+            for (Language country : languages) {
+                result.add(new LanguageIsoDto(country));
+            }
+        }
+
+        return result;
+    }
 }

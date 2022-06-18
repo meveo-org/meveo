@@ -43,6 +43,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.StartupListener;
 import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
 import org.meveo.commons.utils.ParamBean;
@@ -80,9 +81,12 @@ public class EndpointServlet extends HttpServlet {
 
     @Inject
     public Logger log;
-
+    
     @EJB
     private EndpointApi endpointApi;
+    
+    @Inject
+    private StartupListener startupListener;
 
     @Inject
     private EndpointCacheContainer endpointCacheContainer;
@@ -178,7 +182,11 @@ public class EndpointServlet extends HttpServlet {
 
 
     private void doRequest(EndpointExecution endpointExecution, boolean cancel) throws IOException {
-
+    	if (!startupListener.isStarted()) {
+    		endpointExecution.getResp().setStatus(503);
+    		return;
+    	}
+    	
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
@@ -224,8 +232,8 @@ public class EndpointServlet extends HttpServlet {
             String uuidStr = endpointExecution.getPathInfo().split("/")[0];
             PendingResult pendingExecution = endpointCacheContainer.getPendingExecution(uuidStr);
             final Future<EndpointResult> execResult = pendingExecution != null ? pendingExecution.getResult() : null;
-            if (execResult != null && endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE) {
-                if (cancel) {
+            if (execResult != null && (endpointExecution.getMethod() == EndpointHttpMethod.GET || endpointExecution.getMethod() == EndpointHttpMethod.DELETE)) {
+                if (cancel && pendingExecution != null && pendingExecution.getEngine() != null) {
                     pendingExecution.getEngine().cancel();
                 }
 

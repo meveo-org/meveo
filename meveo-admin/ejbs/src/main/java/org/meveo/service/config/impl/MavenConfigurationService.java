@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Resource;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.NoSuchObjectLocalException;
 import javax.ejb.Singleton;
 import javax.ejb.Timeout;
@@ -93,6 +95,7 @@ import org.slf4j.Logger;
  * @version 6.9.0
  */
 @Singleton
+@Lock(LockType.READ)
 public class MavenConfigurationService implements Serializable {
 
 	private static final long serialVersionUID = 7814020640577283116L;
@@ -504,10 +507,12 @@ public class MavenConfigurationService implements Serializable {
 		return result;
 	}
 
+	@Lock(LockType.READ)
 	public RepositorySystem newRepositorySystem() {
 		return ManualRepositorySystemFactory.newRepositorySystem();
 	}
 
+	@Lock(LockType.READ)
 	public RepositorySystemSession newRepositorySystemSession(RepositorySystem system) {
 		DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 

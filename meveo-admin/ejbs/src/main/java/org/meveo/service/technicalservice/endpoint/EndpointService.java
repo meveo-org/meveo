@@ -32,7 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.revwalk.DepthWalk;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -55,12 +58,12 @@ import org.meveo.service.git.MeveoRepository;
  */
 @Stateless
 public class EndpointService extends BusinessService<Endpoint> {
-	
+
 	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
-	
+
 	@Inject
 	private GitClient gitClient;
-	
+
 	@Inject
 	private PermissionService permissionService;
 
@@ -70,7 +73,10 @@ public class EndpointService extends BusinessService<Endpoint> {
 
 	@Context
 	private HttpServletRequest request;
-	
+
+	@Inject
+	private CommitMessageBean commitMessageBean;
+
 	public static String getEndpointPermission(Endpoint endpoint) {
 		return String.format(EXECUTE_ENDPOINT_TEMPLATE, endpoint.getCode());
 	}
@@ -99,7 +105,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 		return getEntityManager().createNamedQuery("findByParameterName", Endpoint.class).setParameter("serviceCode", code).setParameter("propertyName", parameterName)
 				.getResultList();
 	}
-	
+
 	/**
 	 * Create a new endpoint in database. Also create associated client and roles in
 	 * keycloak.
@@ -110,23 +116,23 @@ public class EndpointService extends BusinessService<Endpoint> {
 	public void create(Endpoint entity) throws BusinessException {
 		validatePath(entity);
 		super.create(entity);
-		
+
 		if (entity.isSecured()) {
-	        permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
+			permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
 		}
 	}
-	
+
 	@Override
 	public Endpoint update(Endpoint entity) throws BusinessException {
 		validatePath(entity);
 		Endpoint endpoint = super.update(entity);
-		
+
 		if (entity.isSecured()) {
-	        permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
+			permissionService.createIfAbsent(getEndpointPermission(entity), DefaultRole.EXECUTE_ALL_ENDPOINTS.getRoleName());
 		} else {
 			permissionService.removeIfPresent(getEndpointPermission(entity));
 		}
-		
+
 		return endpoint;
 	}
 
@@ -144,7 +150,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	/**
 	 * Checks if an endpoint interface is already created and pushed in git
 	 * repository.
-	 * 
+	 *
 	 * @param endpoint endpoint to search
 	 * @return true if endpoint interface exists
 	 */
@@ -159,7 +165,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	/**
 	 * Checks if the base endpoint interface is already created and pushed in git
 	 * repository.
-	 * 
+	 *
 	 * @param endpoint endpoint to search
 	 * @return true if endpoint interface exists
 	 */
@@ -169,7 +175,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 
 		return f.exists() && !f.isDirectory();
 	}
-	
+
 	public File getScriptFile(Endpoint endpoint) {
 		File repositoryDir;
 		MeveoModule module = this.findModuleOf(endpoint);
@@ -182,41 +188,53 @@ public class EndpointService extends BusinessService<Endpoint> {
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
 	}
-	
+
 	public File getBaseScriptFile() {
 		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
 		final File endpointFile = new File(repositoryDir, "/facets/javascript/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
 		return endpointFile;
 	}
-	
+
 	/**
 	 * see java-doc {@link BusinessService#addFilesToModule(org.meveo.model.BusinessEntity, MeveoModule)}
 	 */
 	@Override
 	public void addFilesToModule(Endpoint entity, MeveoModule module) throws BusinessException {
 		super.addFilesToModule(entity, module);
-    	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
-    	
-    	File newJsFile = new File (gitDirectory, path);
-    	
-    	try {
-    		MeveoFileUtils.writeAndPreserveCharset(ESGenerator.generateFile(entity), newJsFile);
-    	} catch (IOException e) {
-    		throw new BusinessException("File cannot be write", e);
-    	}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), "Add JS script for Endpoint: " + entity.getCode());
+
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
+
+		File newJsFile = new File (gitDirectory, path);
+
+		try {
+			MeveoFileUtils.writeAndPreserveCharset(ESGenerator.generateFile(entity), newJsFile);
+		} catch (IOException e) {
+			throw new BusinessException("File cannot be write", e);
+		}
+		String message = "Add JS script for Endpoint: " + entity.getCode();
+		try {
+			message+=" "+commitMessageBean.getCommitMessage();
+		} catch (ContextNotActiveException e) {
+			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		}
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), message);
 	}
-	
+
 	@Override
 	public void removeFilesFromModule(Endpoint entity, MeveoModule module) throws BusinessException {
 		super.removeFilesFromModule(entity, module);
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
-    	String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
-    	File jsFile = new File (gitDirectory, path);
-    	jsFile.delete();
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), "Remove JS script for Endpoint: " + entity.getCode());
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
+		File jsFile = new File (gitDirectory, path);
+		jsFile.delete();
+		String message = "Remove JS script for Endpoint: " + entity.getCode();
+		try {
+			message+=" "+commitMessageBean.getCommitMessage();
+		} catch (ContextNotActiveException e) {
+			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		}
+		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), message);
 	}
 
 	private void validatePath(Endpoint entity) throws BusinessException {

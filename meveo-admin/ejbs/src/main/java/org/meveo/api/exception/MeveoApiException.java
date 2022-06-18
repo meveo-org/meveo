@@ -2,10 +2,11 @@ package org.meveo.api.exception;
 
 import javax.ejb.ApplicationException;
 
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.MeveoApiErrorCodeEnum;
 
 @ApplicationException(rollback = true)
-public class MeveoApiException extends Exception {
+public class MeveoApiException extends BusinessException {
 
 	private static final long serialVersionUID = 1L;
 

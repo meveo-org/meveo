@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.script.CustomScriptDto;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
@@ -19,7 +21,10 @@ import org.meveo.model.security.Role;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -64,7 +69,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
     @ApiModelProperty("The import script instances")
     @XmlElementWrapper(name = "importScriptInstances")
 	@XmlElement(name = "importScriptInstancy")
-    private List<ScriptInstanceDto> importScriptInstances = new ArrayList<>();
+    private List<String> importScriptInstances = new ArrayList<>();
 
     /**
      * Instantiates a new script instance dto.
@@ -107,7 +112,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
 
         if (scriptInstance.getImportScriptInstancesNullSafe() != null) {
             for (ScriptInstance script : scriptInstance.getImportScriptInstancesNullSafe() ) {
-                importScriptInstances.add(new ScriptInstanceDto(script, script.getScript()));
+                importScriptInstances.add(script.getCode());
             }
         }
         
@@ -200,7 +205,7 @@ public class ScriptInstanceDto extends CustomScriptDto {
      *
      * @return the importScriptInstances
      */
-    public List<ScriptInstanceDto> getImportScriptInstances() {
+    public List<String> getImportScriptInstances() {
         return importScriptInstances;
     }
 
@@ -209,8 +214,22 @@ public class ScriptInstanceDto extends CustomScriptDto {
      *
      * @param importScriptInstances the importScriptInstances to set
      */
-    public void setImportScriptInstances(List<ScriptInstanceDto> importScriptInstances) {
-        this.importScriptInstances = importScriptInstances;
+    @JsonSetter("importScriptInstances")
+    public void setImportScriptInstances(List<Object> importScriptInstances) {
+    	if (importScriptInstances == null || importScriptInstances.isEmpty()) {
+    		return;
+    	}
+    	
+    	Object firstItem = importScriptInstances.get(0);
+    	if (firstItem instanceof String) {
+    		this.importScriptInstances = new ArrayList<>();
+    		importScriptInstances.forEach(e -> this.importScriptInstances.add((String) e));
+    	} else {
+    		this.importScriptInstances = JacksonUtil.convert(importScriptInstances, new TypeReference<List<ScriptInstanceDto>>() {})
+    				.stream()
+    				.map(ScriptInstanceDto::getCode)
+    				.collect(Collectors.toList());
+    	}
     }
 
     /* (non-Javadoc)

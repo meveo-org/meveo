@@ -61,6 +61,11 @@ public class CrossStorageRequest<T> {
 		configuration.setNumberOfRows(limit);
 		return this;
 	}
+
+	public CrossStorageRequest<T> offset(int offset) {
+		configuration.setFirstRow(offset);
+		return this;
+	}
 	
 	public CrossStorageRequest<T> fetch(String field) {
 		this.relationsToFetch.add(field);

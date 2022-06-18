@@ -195,3 +195,113 @@ When we update an endpoint from secure to unsecure, the permission is deleted. I
 Once the permission is created, it is added to the role `Execute_All_Endpoints`. This role also belongs by default to the `administrateur` role.
 
 It is possible to completely disable endpoint security by setting the meveo-admin property `endpointSecurityEnabled` to `false`
+
+## Pooling
+
+When an endpoint is heavily sollicited, it might be advantageous to use an instance pool for its associated script instances.
+
+The configuration elements are :
+
+- `usePool` : Default to `false`. When true, enable the usage of a pool for the related endpoint.
+- `min`: The minimum number of instances in the pool. When set > 0, some script will be instantiated at startup to fill the pool. Can be used with an EL.
+- `max`: The maximum number of instances in the pool. When set, if the maximum instances are reach, the pool will the block endpoint's request until one instance become available. Can be used with an EL.
+- `maxIdleTime`: The max idle time, in seconds, before eviction. When set, if an instance is idling for more than the defined amout of time, it will be destroyed. Can be used with an EL.
+
+### Script example
+
+```java
+package org.meveo.script;
+
+import java.util.UUID;
+import java.util.Map;
+import org.meveo.service.script.Script;
+import org.meveo.admin.exception.BusinessException;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
+public class PooledScriptExample extends Script {
+
+    private Logger log = LoggerFactory.getLogger(PooledScriptExample.class);
+
+    private String uuid;
+
+    private String input;
+
+    public void setInput(String input) {
+        this.input = input;
+    }
+
+    // This function is called when object is created by the pool.
+    // The parameters object will always be null.
+    @Override
+    public void init(Map<String, Object> parameters) throws BusinessException {
+        uuid = UUID.randomUUID().toString();
+        log.info("Script with uuid {} created !", uuid);
+    }
+
+  	// This function is called when the object is borrowed by the pool, before the inputs are initialized by the endpoint.
+    @Override
+    public void resetState() {
+        this.input = "default";
+        log.info("Activating script with uuid {}", uuid);
+    }
+
+    // This function is called when object is executed by the endpoint.
+    // The parameters object will contain the usual parameters and the fields bound to setter will be initialized.
+    @Override
+    public void execute(Map<String, Object> parameters) throws BusinessException {
+        log.info("Script with uuid {} called with input {}", uuid, input);
+    }
+
+	// This method is called before the object is destroyed
+	// You can implement some state change here in order to interrupt a running task from the 'execute' method
+	public Map<String, Object> cancel() {
+		log.info("Script execution with uuid {} cancelled", uuid);
+
+		// If you have intermediate results, you can return them
+		return new HashMap<>();
+	}
+
+    // This function is called when object is destroyed by the pool.
+    // This is where you would close objects that need to be closed.
+    // The parameters object will always be null
+    @Override
+    public void finalize(Map<String, Object> parameters) throws BusinessException {
+        log.info("Script with uuid {} will be destroyed", uuid);
+    }
+}
+```
+
+### Endpoint example
+
+```json
+{
+    "code": "pooled-endpoint",
+    "secured": false,
+    "checkPathParams": true,
+    "serviceCode": "org.meveo.script.PooledScriptExample",
+    "synchronous": true,
+    "method": "GET",
+    "parameterMappings": [
+        {
+            "serviceParameter": "input",
+            "multivalued": false,
+            "parameterName": "input",
+            "defaultValue": null,
+            "valueRequired": false
+        }
+    ],
+    "pathParameters": [],
+    "roles": [],
+    "serializeResult": false,
+    "contentType": "application/json",
+    "basePath": "pooled-endpoint",
+    "path": "/",
+    "pool": {
+        "usePool": true,
+        "min": "2",
+        "max": "5",
+        "maxIdleTime": "10"
+    }
+}
+```

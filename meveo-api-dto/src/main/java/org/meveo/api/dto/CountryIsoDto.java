@@ -1,5 +1,6 @@
 package org.meveo.api.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -70,14 +71,14 @@ public class CountryIsoDto extends BaseEntityDto {
      * @param e the country entity
      */
     public CountryIsoDto(Country e) {
-        countryCode = e.getCountryCode();
+        countryCode = e.getCode();
         description = e.getDescription();
         nationality = e.getNationality();
-        setLanguageDescriptions(LanguageDescriptionDto.convertMultiLanguageFromMapOfValues(e.getDescriptionI18n()));
         currencyCode = e.getCurrency().getCurrencyCode();
+        languageDescriptions = new ArrayList<>();
 
         if (e.getLanguage() != null) {
-            languageCode = e.getLanguage().getLanguageCode();
+            languageCode = e.getLanguage().getCode();
         }
     }
 

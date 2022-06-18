@@ -61,14 +61,17 @@ import org.hibernate.proxy.HibernateProxy;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jboss.weld.contexts.ContextNotActiveException;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.EntityAlreadyLinkedToModule;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.ApiService;
 import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
+import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -143,6 +146,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+
+    @Inject
+    CommitMessageBean commitMessageBean;
 
     /**
      * Add missing dependencies of each module item
@@ -630,7 +636,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	public boolean checkTestSuites(String codeScript) {
 
 		JobInstance jobInstance = jobInstanceService.findByCode("FunctionTestJob_" + codeScript);
-		JobExecutionResultImpl result = jobExecutionService.findLastExecutionByInstance(jobInstance);
+		JobExecutionResultImpl result = null;
+		if (jobInstance != null)
+			result = jobExecutionService.findLastExecutionByInstance(jobInstance);
 		if (result != null && result.getNbItemsProcessedWithError() > Long.valueOf("0")) {
 			return false;
 		}
@@ -988,7 +996,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		
 		Stream.ofNullable(newModule.getModuleDependencies())
 			.flatMap(Collection::stream)
-			.forEach(dto::addModuleDependency);
+			.map(MeveoModuleDependency::getCode)
+			.map(code -> findByCode(code, List.of("gitRepository")))
+			.forEach(dto::addDependency);
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	
@@ -1002,8 +1012,16 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     	}
     	
     	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-		gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), "Add module descriptor file");
 
+        String message = "Add module descriptor file";
+        try {
+            message+=" "+commitMessageBean.getCommitMessage();
+        } catch (ContextNotActiveException e) {
+            log.warn("No active session found for getting commit message when adding module.json to "+module.getCode());
+        }
+
+        gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), message);
+	
 	}
 	
 	

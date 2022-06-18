@@ -159,23 +159,21 @@ public class Neo4jDao {
         		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
         		.append("'\n RETURN COUNT(*) ");
 
-        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
-        	Long exists = cypherHelper.execute(
-    			neo4jConfiguration,
-    			checkConstraintQuery.toString(),
-    			Map.of(),
-                (transaction, result) -> result.single().get(0).asLong()
-            );
-        	
-            if (exists != 0) {
-		        cypherHelper.update(
-	        		neo4jConfiguration,
-	        		query.toString(),
-	        		null,
-	        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
-	        		tx
-	    		);
-            }
+    	Long exists = cypherHelper.execute(
+			neo4jConfiguration,
+			checkConstraintQuery.toString(),
+			Map.of(),
+            (transaction, result) -> result.single().get(0).asLong()
+        );
+    	
+        if (exists != 0) {
+	        cypherHelper.update(
+        		neo4jConfiguration,
+        		query.toString(),
+        		null,
+        		e -> LOGGER.debug("Unique constraint {}({}) does not exists", label, property),
+        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
+    		);
         }
     }
 
@@ -196,24 +194,22 @@ public class Neo4jDao {
         		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
         		.append("'\n RETURN COUNT(*) ");
 
-        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
-        	Long exists = cypherHelper.execute(
-    			neo4jConfiguration,
-    			checkConstraintQuery.toString(),
-    			Map.of(),
-                (transaction, result) -> result.single().get(0).asLong()
-            );
-        	
-        	if (exists == 0) {
-		        cypherHelper.update(
-	        		neo4jConfiguration,
-	        		query.toString(),
-	        		null,
-	        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
-	        		tx
-	    		);
-        	}
-        }
+    	Long exists = cypherHelper.execute(
+			neo4jConfiguration,
+			checkConstraintQuery.toString(),
+			Map.of(),
+            (transaction, result) -> result.single().get(0).asLong()
+        );
+    	
+    	if (exists == 0) {
+	        cypherHelper.update(
+        		neo4jConfiguration,
+        		query.toString(),
+        		null,
+        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
+        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
+    		);
+    	}
     }
 
     /**
@@ -226,15 +222,13 @@ public class Neo4jDao {
     public void createIndex(String neo4jConfiguration, String label, String property) {
         StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
 
-        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
-	        cypherHelper.update(
-	    		neo4jConfiguration,
-	    		createIndexQuery.toString(),
-	    		null,
-	    		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
-	    		tx
-			);
-        }
+        cypherHelper.update(
+    		neo4jConfiguration,
+    		createIndexQuery.toString(),
+    		null,
+    		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
+    		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
+		);
     }
 
     /**
@@ -247,15 +241,13 @@ public class Neo4jDao {
     public void removeIndex(String neo4jConfiguration, String label, String property){
         StringBuilder dropIndex = new StringBuilder("DROP INDEX ON :").append(label).append("(").append(property).append(")");
         
-        try (var tx = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)) {
-	        cypherHelper.update(
-	    		neo4jConfiguration,
-	    		dropIndex.toString(),
-	    		null,
-	    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property),
-	    		tx
-    		);
-        }
+        cypherHelper.update(
+    		neo4jConfiguration,
+    		dropIndex.toString(),
+    		null,
+    		e -> LOGGER.debug("Index on {}({}) does not exists", label, property),
+    		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
+		);
     }
 
     /**

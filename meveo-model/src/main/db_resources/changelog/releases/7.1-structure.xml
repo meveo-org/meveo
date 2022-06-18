@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+  	
+   	<changeSet id="#531 - Add foreign key to meveo_script_instance_script_instance" author="Clément Bareth">
+   		<sql>
+   			DELETE FROM meveo_script_instance_script_instance rel
+			WHERE NOT EXISTS (SELECT id FROM meveo_script_instance WHERE id = rel.child_script_instance_id)
+			OR NOT EXISTS (SELECT id FROM meveo_script_instance WHERE id = rel.script_instance_id)
+   		</sql>
+   		<addForeignKeyConstraint constraintName="fk_meveo_script_instance_script_instance_parent" referencedTableName="meveo_script_instance" 
+   			baseColumnNames="script_instance_id" baseTableName="meveo_script_instance_script_instance" 
+   			referencedColumnNames="id" onDelete="CASCADE"/>
+ 		<addForeignKeyConstraint constraintName="fk_meveo_script_instance_script_instance_child" referencedTableName="meveo_script_instance" 
+   			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
+   			referencedColumnNames="id"/>
+   	</changeSet>
+   	
+   	<changeSet id="#531 - Add cascade delete for child script" author="Clément Bareth">
+   		<dropForeignKeyConstraint baseTableName="meveo_script_instance_script_instance" constraintName="fk_meveo_script_instance_script_instance_child"/>
+	<addForeignKeyConstraint constraintName="fk_meveo_script_instance_script_instance_child" referencedTableName="meveo_script_instance" 
+   			baseColumnNames="child_script_instance_id" baseTableName="meveo_script_instance_script_instance" 
+   			referencedColumnNames="id" onDelete="CASCADE"/>
+   	</changeSet>
+
+	<changeSet id="#550 - Country should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
+		<addColumn tableName="adm_country">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_country" oldColumnName="country_code" newColumnName="code" />
+		<dropColumn tableName="adm_country" columnName="description_i18n" />
+	</changeSet>
+
+	<changeSet id="#550 Language should also contain a flag to identify a country being active or inactive and requires some changes." author="Farhan Munir">
+		<addColumn tableName="adm_language">
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<renameColumn tableName="adm_language" oldColumnName="language_code" newColumnName="code" />
+		<renameColumn tableName="adm_language" oldColumnName="description_en" newColumnName="description" />
+	</changeSet>
+   
+  <changeSet id="Add endpoint pool configuration" author="Clément Bareth">
+    <addColumn tableName="service_endpoint">
+      <column name="use_pool" type="${type.boolean}" defaultValue="0"></column>
+      <column name="min_pool" type="varchar(255)"></column>
+      <column name="max_pool" type="varchar(255)"></column>
+      <column name="max_idle_time_pool" type="varchar(255)"></column>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

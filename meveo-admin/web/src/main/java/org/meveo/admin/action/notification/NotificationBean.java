@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.persistence.Entity;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
@@ -35,7 +34,6 @@ import org.meveo.model.ObservableEntity;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.model.notification.ScriptNotification;
 import org.meveo.model.notification.StrategyImportTypeEnum;
-import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.ScriptNotificationService;
@@ -244,9 +242,13 @@ public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
         String queryLc = query.toLowerCase();
         List<String> classNames = new ArrayList<String>();
         for (Class clazz : classes) {
-            if (clazz.isAnnotationPresent(Entity.class) && clazz.getName().toLowerCase().contains(queryLc)
-                    && (clazz.isAnnotationPresent(ObservableEntity.class) || clazz.isAnnotationPresent(NotifiableEntity.class))) {
-                classNames.add(clazz.getName());
+        	String className = clazz.getName();
+        	if (className.contains("HibernateProxy") || className.contains("WeldClientProxy")) {
+        		continue;
+        	}
+        	
+            if (className.toLowerCase().contains(queryLc) && (clazz.isAnnotationPresent(ObservableEntity.class) || clazz.isAnnotationPresent(NotifiableEntity.class))) {
+                classNames.add(className);
             }
         }
         classNames.add("org.meveo.service.neo4j.graph.Neo4jEntity");

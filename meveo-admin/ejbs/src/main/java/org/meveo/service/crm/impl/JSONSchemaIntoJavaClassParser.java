@@ -413,8 +413,6 @@ public class JSONSchemaIntoJavaClassParser {
                                 compilationUnit.addImport("java.time.Instant");
                                 vd.setType("Instant");
                             }
-                        } else if (values.get("default") != null && (values.get("default").equals("true") || values.get("default").equals("false"))) {
-                            vd.setType("Boolean");
                         } else {
                             String type = (String) values.get("type");
                             type = Character.toUpperCase(type.charAt(0)) + type.substring(1);

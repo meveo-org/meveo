@@ -34,6 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
@@ -116,6 +117,8 @@ public class GitClient {
     @Inject
     private Logger log;
 
+
+
     /**
      * Remove the corresponding git repository from file system
      *
@@ -172,20 +175,39 @@ public class GitClient {
                 final CloneCommand cloneCommand = Git.cloneRepository()
                         .setURI(gitRepository.getRemoteOrigin())
                         .setDirectory(repoDir);
-                if (gitRepository.getDefaultBranch() != null)
+                
+                if (gitRepository.getDefaultBranch() != null) {
+                	cloneCommand.setBranchesToClone(List.of(gitRepository.getDefaultBranch()));
                 	cloneCommand.setBranch(gitRepository.getDefaultBranch());
+                }
+                
+                Git repository;
                 cloneCommand.setCloneSubmodules(true);
                 if(gitRepository.getRemoteOrigin().startsWith("http")) {
                     CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
-                    cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call().close();
+                    repository = cloneCommand.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
                 } else {
                     SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
-                    cloneCommand.setTransportConfigCallback(sshTransportConfigCallback).call().close();
+                    repository = cloneCommand.setTransportConfigCallback(sshTransportConfigCallback).call();
+                }
+                
+                try (repository) {
+	                if (gitRepository.getDefaultBranch() != null) {
+	                	repository.checkout()
+	                		.setCreateBranch(false)
+	                		.setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK)
+	                		.setName(gitRepository.getDefaultBranch())
+	                		.call();
+	                }
                 }
 
             } catch (GitAPIException e) {
-                repoDir.delete();
-                throw new BusinessException("Error cloning repository " + gitRepository.getRemoteOrigin(), e);
+                try {
+					FileUtils.deleteDirectory(repoDir);
+				} catch (IOException e1) {
+					log.error("Failed to delete repository", repoDir);
+				}
+                throw new BusinessException("Error cloning repository {}", e, gitRepository.getRemoteOrigin());
 
             } finally {
                 keyLock.unlock(gitRepository.getCode());
@@ -328,7 +350,6 @@ public class GitClient {
                 }
             }
         }
-
         commit(gitRepository, patterns, message);
     }
 

@@ -35,7 +35,7 @@ public class LanguageService extends PersistenceService<Language> {
             return null;
         }
         QueryBuilder qb = new QueryBuilder(Language.class, "c");
-        qb.addCriterion("languageCode", "=", code, false);
+        qb.addCriterion("code", "=", code, false);
 
         try {
             return (Language) qb.getQuery(getEntityManager()).getSingleResult();

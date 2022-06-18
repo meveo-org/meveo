@@ -75,6 +75,24 @@
 				<hftl:formField label="#{messages['endpoint.synchronous']}" field="synchronous" />
 			</h:panelGrid>
 			
+			<p:fieldset legend="Pool" id="pool" toggleable="true" collapsed="#{!endpointBean.entity.pool.usePool}">
+				<hftl:formField label="Enable pool usage" id="usePool"
+                    field="pool"
+                    childField="usePool"/>
+                    
+                <hftl:formField label="Minimum number of instances" id="min"
+                    field="pool"
+                    childField="min"/>
+                    
+                 <hftl:formField label="Maximum number of instances" id="max"
+                    field="pool"
+                    childField="max"/>
+                    
+                 <hftl:formField label="Idle time before eviction" id="maxIdleTime"
+                    field="pool"
+                    childField="maxIdleTime"/>   
+			</p:fieldset>
+			
 			<h:panelGroup id="functionInputs">
 				<hftl:decorateFormField componentWidth="100%"
 					rendered="#{notificationBean.entity.function.hasInputs()}"

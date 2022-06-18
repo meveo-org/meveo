@@ -1,5 +1,10 @@
 package org.meveo.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +20,10 @@ import java.util.Set;
 public abstract class MeveoUser implements Serializable {
 
     private static final long serialVersionUID = 5535661206200553250L;
+
+    /** Logger. */
+    @JsonIgnore
+    protected transient Logger log = LoggerFactory.getLogger(this.getClass());
 
     /*
      * User identifier - could or could not match the userName value
@@ -276,5 +285,5 @@ public abstract class MeveoUser implements Serializable {
 	public void setLocale(String locale) {
 		this.locale = locale;
 	}
-    
+
 }

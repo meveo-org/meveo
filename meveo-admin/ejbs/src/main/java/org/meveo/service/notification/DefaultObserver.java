@@ -46,6 +46,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.NotifiableEntity;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.mediation.MeveoFtpFile;
@@ -388,11 +389,15 @@ public class DefaultObserver {
 		checkEvent(NotificationEventTypeEnum.TERMINATED, e);
 	}
 
-	public void onEntityProcess(@Observes @Processed BaseEntity e) throws BusinessException {
-		log.debug("Defaut observer : Entity {} with id {} processed", e.getClass().getName(), e.getId());
-		if (!e.getClass().isAnnotationPresent(ObservableEntity.class)) {
+	public void onEntityProcess(@Observes @Processed Object e) throws BusinessException {
+		if (e instanceof BaseEntity) {
+			log.debug("Defaut observer : Entity {} with id {} processed", e.getClass().getName(), ((BaseEntity) e).getId());
+		}
+		
+		if (!e.getClass().isAnnotationPresent(ObservableEntity.class) || !e.getClass().isAnnotationPresent(NotifiableEntity.class)) {
 			return;
 		}
+
 		checkEvent(NotificationEventTypeEnum.PROCESSED, e);
 	}
 

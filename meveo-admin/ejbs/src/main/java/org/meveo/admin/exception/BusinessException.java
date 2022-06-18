@@ -25,6 +25,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.event.monitoring.CreateEventHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  * @author Wassim Drira
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationException(rollback = true)
 public class BusinessException extends Exception {
     private static final long serialVersionUID = 1L;
-
+    
     private static final boolean sendException;
 
     static {
@@ -45,13 +46,13 @@ public class BusinessException extends Exception {
         registerEvent();
     }
 
-    public BusinessException(String message, Throwable cause) {
-        super(message, cause);
+    public BusinessException(String message, Throwable cause, Object... args) {
+    	super(MessageFormatter.arrayFormat(message, args, cause).getMessage(), cause);
         registerEvent();
     }
-
-    public BusinessException(String message) {
-        super(message);
+    
+    public BusinessException(String format, Object... args) {
+    	super(MessageFormatter.arrayFormat(format, args).getMessage());
         registerEvent();
     }
 

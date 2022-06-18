@@ -13,7 +13,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 
 import javax.el.ELResolver;
@@ -85,7 +89,8 @@ import org.jboss.weld.resources.ClassTransformer;
 import org.jboss.weld.serialization.spi.BeanIdentifier;
 import org.jboss.weld.util.LazyValueHolder;
 import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.script.ScriptInterface;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wrapper for {@link BeanManagerImpl} used to instantiate scripts
@@ -99,6 +104,8 @@ public class MeveoBeanManager implements WeldManager {
 	
 	public static MeveoBeanManager INSTANCE;
 	
+	private static Logger LOGGER = LoggerFactory.getLogger(MeveoBeanManager.class);
+	
 	private Instance<ScriptInstanceService> scriptInstanceService = CDI.current().select(ScriptInstanceService.class);
 	
 	private BeanManagerImpl beanManager;
@@ -110,6 +117,8 @@ public class MeveoBeanManager implements WeldManager {
 	private Map<String, List<Bean<?>>> meveoBeans = new HashMap<>();
 	private MeveoBeanResolver meveoBeanResolver;
 	private MeveoProxyProvider clientProxyProvider;
+	
+	private ConcurrentHashMap<Class<?>, Future<Bean<?>>> beanDefinitionTasks = new ConcurrentHashMap<>();
 	
 	public static MeveoBeanManager getInstance() {
 		if(INSTANCE == null) {
@@ -1259,7 +1268,7 @@ public class MeveoBeanManager implements WeldManager {
 	 * @param <T> type of the bean
 	 * @param bean the bean to add
 	 */
-	public synchronized <T> void addBean(Bean<T> bean) {
+	private <T> void addBean(Bean<T> bean) {
 		// Need to drop previous instance of bean
         List<Bean<?>> beans = removeBean(bean.getBeanClass().getName());
         beans.add(bean);
@@ -1283,22 +1292,37 @@ public class MeveoBeanManager implements WeldManager {
 	 * @param type Script class
 	 * @return a bean definition for the given type
 	 */
-	public synchronized <T> Bean<T> createBean(Class<T> type) {
-        AnnotatedType<T> oat = createAnnotatedType(type);
-        var classTransformer = ClassTransformer.instance(beanManager);
-        // Drop the type definition so we can reload it later if the script is re-compiled
-        classTransformer.disposeBackedAnnotatedType(type, beanManager.getId(), null);
-        
-        BeanAttributes<T> oa = createBeanAttributes(oat);
-        InjectionTargetFactory<T> factory = getInjectionTargetFactory(oat);
-        Bean<T> bean = createBean(oa, type, factory);
-        
-        return bean;
+	@SuppressWarnings("unchecked")
+	public <T> Bean<T> createBean(Class<T> type) {
+		try {
+			Bean<T> returnedBean = (Bean<T>) beanDefinitionTasks.computeIfAbsent(type, clazz -> {
+				return CompletableFuture.supplyAsync(() -> {
+					AnnotatedType<T> oat = createAnnotatedType(type);
+					var classTransformer = ClassTransformer.instance(beanManager);
+					// Drop the type definition so we can reload it later if the script is re-compiled
+					classTransformer.disposeBackedAnnotatedType(type, beanManager.getId(), null);
+					
+					BeanAttributes<T> oa = createBeanAttributes(oat);
+					InjectionTargetFactory<T> factory = getInjectionTargetFactory(oat);
+					Bean<T> bean = createBean(oa, type, factory);
+					
+					addBean(bean);
+
+					return bean;
+				});
+			}).get();
+			
+			beanDefinitionTasks.remove(type);
+			
+			return returnedBean;
+		} catch (InterruptedException | ExecutionException e) {
+			LOGGER.error("Failed to define bean for {}", type, e);
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public <T> T getInstance(Bean<T> bean, Class<T> scriptClass) {
-		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
-		WeldInstance<T> weldInstance = getInstance(createCreationalContext).select(scriptClass);
+		WeldInstance<T> weldInstance = getWeldInstance(bean, scriptClass);
 		T instance = weldInstance.get();
 		
 		if (bean.getScope().equals(Dependent.class)) {
@@ -1307,6 +1331,11 @@ public class MeveoBeanManager implements WeldManager {
 		}
 		
 		return instance;
+	}
+	
+	public <T> WeldInstance<T> getWeldInstance(Bean<T> bean, Class<T> scriptClass) {
+		WeldCreationalContext<T> createCreationalContext = createCreationalContext(bean);
+		return getInstance(createCreationalContext).select(scriptClass);
 	}
 	
 	public <T> T getInstance(Bean<T> bean) {

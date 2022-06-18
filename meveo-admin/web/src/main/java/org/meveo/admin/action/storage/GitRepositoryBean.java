@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,9 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
+import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingModuleException;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.elresolver.ELException;
@@ -32,6 +35,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
+import org.meveo.util.view.MessagesHelper;
+import org.primefaces.PrimeFaces;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DualListModel;
@@ -77,6 +82,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	private String branch;
 	
 	protected DualListModel<String> repositories;
+	
+	private List<ModuleDependencyDto> missingDependencies;
 
 	public GitRepositoryBean() {
 		super(GitRepository.class);
@@ -91,8 +98,11 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public String saveOrUpdateGit() throws BusinessException, ELException {
 
 		if (entity.getId() == null && entity.getRemoteOrigin() != null) {
-			gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
-			gitClient.checkout(entity, entity.getDefaultBranch(), false);
+			try {
+				gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+			} catch (Exception e) {
+				return MessagesHelper.error(messages, e);
+			}
 		}
 
 		String result = saveOrUpdate(false);
@@ -220,6 +230,27 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		return false;
 	}
 	
+	public String installMissingDependencies() {
+		try {
+			LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(missingDependencies, username, password);
+			
+			this.missingDependencies = new ArrayList<>(gitRepos.values());
+			
+			for (GitRepository repo : gitRepos.keySet()) {
+				ModuleDependencyDto dependency = gitRepos.get(repo);
+				dependency.setInstalling(true);
+				moduleApi.install(repositories.getTarget(), repo);
+				dependency.setInstalled(true);
+			}
+			
+			return install();
+		} catch (BusinessException e) {
+			MessagesHelper.error(messages, "Failed to install module or dependency", e);
+			return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
+		}
+		
+	}
+	
 	public String install() {
 		try {
 			List<String> repos = repositories.getTarget();
@@ -230,8 +261,15 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 				messages.error("At least one repository should be selected");
 			}
 
-		} catch (BusinessException | MeveoApiException e) {
-			messages.error("Failed to install module: " + e.getMessage());
+		} catch (MissingModuleException e) {
+			this.missingDependencies = e.getMissingModules();
+			PrimeFaces.current().ajax().update("installDeps");
+			PrimeFaces.current().executeScript("PF('installDialog').hide();");
+			PrimeFaces.current().executeScript("PF('installDeps').show();");
+			return null;
+			
+		} catch (Exception e) {
+			MessagesHelper.error(messages, "Failed to install module", e);
 		}
 		
 		return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
@@ -250,5 +288,12 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	 */
 	public void setRepositories(DualListModel<String> repositories) {
 		this.repositories = repositories;
+	}
+	
+	/**
+	 * @return the {@link #missingDependencies}
+	 */
+	public List<ModuleDependencyDto> getMissingDependencies() {
+		return missingDependencies;
 	}
 }
