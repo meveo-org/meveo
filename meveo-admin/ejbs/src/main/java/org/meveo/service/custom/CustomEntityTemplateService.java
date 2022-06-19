@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -76,7 +77,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.neo4j.service.Neo4jService;
+import org.meveo.persistence.StorageImplProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleHelper;
@@ -89,7 +90,6 @@ import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 
@@ -149,9 +149,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomEntityCategoryService customEntityCategoryService;
 
     @Inject
-    private CustomEntityInstanceService customEntityInstanceService;
-
-    @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
 
     @Inject
@@ -161,17 +158,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private CustomTableCreatorService customTableCreatorService;
 
     @Inject
-    private ElasticClient elasticClient;
-
-    @Inject
     private EntityCustomActionService entityCustomActionService;
 
     @Inject
     @MeveoRepository
     private GitRepository meveoRepository;
-
-    @Inject
-    private Neo4jService neo4jService;
 
     @Inject
     private ParamBeanFactory paramBeanFactory;
@@ -196,6 +187,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Inject
     private CustomEntityTemplateCompiler cetCompiler;
+    
+	@Inject
+	private StorageImplProvider provider;
+    
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -216,12 +211,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         customFieldsCache.addUpdateCustomEntityTemplate(cet);
 
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.createTable(cet);
-        }
-
-        elasticClient.createCETMapping(cet);
-
         try {
             permissionService.createIfAbsent(cet.getModifyPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
             permissionService.createIfAbsent(cet.getDecrpytPermission(), paramBean.getProperty("role.modifyAllCE", "ModifyAllCE"));
@@ -232,13 +221,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
                 createPrimitiveCft(cet);
             }
 
-            // Create neoj4 indexes
-            if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-                neo4jService.addUUIDIndexes(cet);
-            }
-
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+        
+        for (var storage : cet.getAvailableStorages()) {
+        	provider.findImplementation(storage).cetCreated(cet);
         }
     }
 
@@ -555,20 +543,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     }
 
     public void removeData(CustomEntityTemplate cet) {
-        if (cet == null) {
-            return;
-        }
-
-        if (cet.getSqlStorageConfiguration() != null && cet.getSqlStorageConfiguration().isStoreAsTable()) {
-            customTableCreatorService.removeTable(cet);
-
-        } else if (cet.getSqlStorageConfiguration() != null) {
-            customEntityInstanceService.removeByCet(cet.getCode());
-        }
-
-        if (cet.getNeo4JStorageConfiguration() != null && cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.removeCet(cet);
-            neo4jService.removeUUIDIndexes(cet);
+    	if (cet == null) {
+    		return;
+    	}
+    	
+        for (var storage : cet.getAvailableStorages()) {
+        	provider.findImplementation(storage).removeCet(cet);
         }
     }
 
@@ -691,24 +671,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
 
-        // Synchronize neoj4 indexes
-        if (cet.getAvailableStorages() != null && cet.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-            neo4jService.addUUIDIndexes(cet);
-        } else {
-            neo4jService.removeUUIDIndexes(cet);
-        }
-
-        var sqlConfs = sqlConfigurationService.listActiveAndInitialized();
-
-        // Handle SQL inheritance
-        if(cet.storedIn(DBStorageType.SQL)) {
-            if(oldValue.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
-                // Inheritance removed
-                sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
-            } else if(oldValue.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
-                // Inheritance added
-                sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
-            }
+        Set<DBStorageType> storages = new HashSet<>();
+        storages.addAll(cet.getAvailableStorages());
+        storages.addAll(oldValue.getAvailableStorages());
+        for (var storage : storages) {
+        	provider.findImplementation(storage).cetUpdated(oldValue, cet);
         }
 
         return cetUpdated;

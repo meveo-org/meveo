@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -40,6 +39,8 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -52,7 +53,6 @@ import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.JsonTypes;
 import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.scripts.ScriptInstance;
@@ -134,8 +134,10 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	/**
 	 * List of storages where the custom fields can be stored
 	 */
-	@Column(name = "available_storages", columnDefinition = "TEXT")
-	@Type(type = JsonTypes.JSON_LIST)
+	// @Column(name = "available_storages", columnDefinition = "TEXT")
+	// @Type(type = JsonTypes.JSON_LIST)
+	@ManyToMany
+	@JoinTable(name = "cet_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cet_id"))
 	private List<DBStorageType> availableStorages = new ArrayList<>();
 	
 	@Type(type = "numeric_boolean")
