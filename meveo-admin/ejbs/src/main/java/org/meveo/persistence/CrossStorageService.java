@@ -774,8 +774,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		for (CustomFieldTemplate customFieldTemplate : cetFields) {
 			if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
-				final CustomEntityTemplate referencedCet = cache.getCustomEntityTemplate(customFieldTemplate.getEntityClazzCetCode());
-
+				final CustomEntityTemplate referencedCet = customEntityTemplateService.findByCode(customFieldTemplate.getEntityClazzCetCode(), List.of("availableStorages"));
 				if(referencedCet != null) {
 					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
 				
