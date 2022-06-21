@@ -888,5 +888,10 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         dto.setActions(null);
         return dto;
     }
+    
+	@Override
+	public CustomEntityTemplate findByCode(String code) {
+		return super.findByCode(code, List.of("availableStorages"));
+	}
 
 }
