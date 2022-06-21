@@ -652,4 +652,8 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 				.map(Repository::getCode)
 				.collect(Collectors.joining(", "));
 	}
+	
+	public void forceDelete() throws BusinessException {
+		meveoModuleService.remove(entity);
+	}
 }
