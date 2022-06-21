@@ -509,9 +509,9 @@ public class JSONSchemaIntoJavaClassParser {
 		case MULTI_VALUE:
 		case SECRET:
 		case STRING:
-		case TEXT_AREA:
+		//case TEXT_AREA:
 			vd.setType("MeveoMatrix<String>");
-			break;
+		    break;
 		default:
 			break;
         

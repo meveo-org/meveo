@@ -51,7 +51,7 @@ public enum CustomFieldTypeEnum {
     /**
      * A long string value
      */
-    TEXT_AREA(false, true, String.class),
+  //  TEXT_AREA(false, true, String.class),
 
     /**
      * An embedded entity data

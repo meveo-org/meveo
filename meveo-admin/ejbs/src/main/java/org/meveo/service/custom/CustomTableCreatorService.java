@@ -1098,7 +1098,7 @@ public class CustomTableCreatorService implements Serializable {
 				break;
 			case SECRET:
 			case STRING:
-			case TEXT_AREA:
+		//	case TEXT_AREA:
 			case LONG_TEXT:
 			case LIST:
 				column.setDefaultValue(cft.getDefaultValue());
@@ -1161,7 +1161,7 @@ public class CustomTableCreatorService implements Serializable {
 			return "varchar(" + (cft.getMaxValue() == null ? CustomFieldTemplate.DEFAULT_MAX_LENGTH_STRING : cft.getMaxValue()) + ")";
 			
 		case LIST:
-		case TEXT_AREA:
+		//case TEXT_AREA:
 		case CHILD_ENTITY:
 		case EMBEDDED_ENTITY:
 		case LONG_TEXT:

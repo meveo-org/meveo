@@ -386,7 +386,7 @@ public class CustomFieldDto {
 				return longValue == null;
 			case LIST:
 			case STRING:
-			case TEXT_AREA:
+			//case TEXT_AREA:
 			case LONG_TEXT:
 			case SECRET:
 			case EMBEDDED_ENTITY:

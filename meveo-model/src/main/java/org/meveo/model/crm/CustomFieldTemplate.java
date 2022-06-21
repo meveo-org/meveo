@@ -972,7 +972,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
                 return Double.parseDouble(defaultValue);
             } else if (fieldType == CustomFieldTypeEnum.LONG) {
                 return Long.parseLong(defaultValue);
-            } else if (fieldType == CustomFieldTypeEnum.STRING || fieldType == CustomFieldTypeEnum.LIST || fieldType == CustomFieldTypeEnum.TEXT_AREA || fieldType == CustomFieldTypeEnum.LONG_TEXT) {
+            } else if (fieldType == CustomFieldTypeEnum.STRING || fieldType == CustomFieldTypeEnum.LIST  || fieldType == CustomFieldTypeEnum.LONG_TEXT) {
                 return defaultValue;
             } else if (fieldType == CustomFieldTypeEnum.DATE) {
                 return DateUtils.parseDateWithPattern(defaultValue, DateUtils.DATE_TIME_PATTERN);
@@ -1538,7 +1538,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
         String[] splitValues = multiValue.split("\\" + CustomFieldValue.MATRIX_KEY_SEPARATOR);
         for (int i = 0; i < splitValues.length; i++) {
             CustomFieldMapKeyEnum dataType = matrixValueColumns.get(i).getKeyType();
-            if (dataType == CustomFieldMapKeyEnum.STRING || dataType == CustomFieldMapKeyEnum.TEXT_AREA) {
+            if (dataType == CustomFieldMapKeyEnum.STRING ) {
                 values.put(matrixValueColumns.get(i).getCode(), splitValues[i]);
 
             } else if (!StringUtils.isBlank(splitValues[i])) {
@@ -1578,7 +1578,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
             }
             valueSet = true;
             CustomFieldMapKeyEnum dataType = column.getKeyType();
-            if (dataType == CustomFieldMapKeyEnum.STRING || dataType == CustomFieldMapKeyEnum.TEXT_AREA) {
+            if (dataType == CustomFieldMapKeyEnum.STRING) {
                 valBuilder.append((String) columnValue);
             } else if (dataType == CustomFieldMapKeyEnum.LONG || dataType == CustomFieldMapKeyEnum.DOUBLE) {
                 valBuilder.append(columnValue.toString());
@@ -1808,7 +1808,7 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 		case DOUBLE:
 			return new ArrayList<Double>();
 		case EXPRESSION:
-		case TEXT_AREA:
+	//	case TEXT_AREA:
         case LONG_TEXT:
 		case LIST:
 		case SECRET:

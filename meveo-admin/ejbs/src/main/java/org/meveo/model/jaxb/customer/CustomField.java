@@ -246,7 +246,7 @@ public class CustomField {
             case SECRET:
             case LIST:
             case STRING:
-            case TEXT_AREA:
+           // case TEXT_AREA:
             case LONG_TEXT:
             case EMBEDDED_ENTITY:	
                 return stringValue == null;
