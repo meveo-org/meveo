@@ -113,7 +113,7 @@ import org.meveo.model.shared.DateUtils;
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
 		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.appliesTo=:appliesTo order by cft.code", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
-public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
+public class CustomFieldTemplate extends BusinessEntity {
 
     private static final long serialVersionUID = -1403961759495272885L;
 
@@ -1364,11 +1364,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	@Override
     public String toString() {
         return String.format("CustomFieldTemplate [id=%s, appliesTo=%s, code=%s]", id, appliesTo, code);
-    }
-
-    @Override
-    public int compareTo(CustomFieldTemplate o) {
-        return o.getCode().compareTo(getCode());
     }
 
     /**
