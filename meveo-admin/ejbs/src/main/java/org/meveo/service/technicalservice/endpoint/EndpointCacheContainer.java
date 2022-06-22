@@ -224,15 +224,12 @@ public class EndpointCacheContainer {
 		Iterator<Map.Entry<String,Endpoint>> it = endpointLoadingCache.entrySet().iterator();
 		while (it.hasNext()) {
 			Endpoint endpoint = it.next().getValue();
-			System.out.println("path="+path);
-			System.out.println("endpoint pattern to match ="+endpoint.getPathRegex().pattern().substring(0,endpoint.getPathRegex().pattern().length()-2));
 			if(endpoint.getMethod().getLabel().equals(method)){
 				if(path.startsWith("/"+endpoint.getBasePath())){
 					Matcher matcher = endpoint.getPathRegex().matcher(path);
 					if(matcher.matches() || matcher.lookingAt()){
 						if((result==null)||(endpoint.getPathRegex().pattern().length()>result.getPathRegex().pattern().length())){
 							result=endpoint;
-							System.out.println("path and pattern matched");
 						}
 					}
 				}

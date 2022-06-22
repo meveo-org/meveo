@@ -124,7 +124,7 @@ public class EndpointRetrieval {
         assert("mytest".equals(endpoint.getCode()));
 
         endpoint = cache.getEndpointForPath("/mytest2/param1/param2?param3=1","GET");
-        assertNull(endpoint); // till here
+        assertNull(endpoint);
 
         endpoint = cache.getEndpointForPath("/idservice/param1/id/param2?param3=1","GET");
         assert("idservice".equals(endpoint.getCode()));
