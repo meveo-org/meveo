@@ -34,6 +34,7 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomEntityTemplateService;
@@ -63,6 +64,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	@Inject
+	private DBStorageTypeService dbStorageTypeService;
 
 	/**
 	 * Object being customized in case customization corresponds to a non
@@ -1294,7 +1298,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public DualListModel<DBStorageType> getAvailableStoragesDM() {
 		if (availableStoragesDM == null) {
 			List<DBStorageType> perksSource = new ArrayList<>();
-			for (DBStorageType dbStorageType : DBStorageType.values()) {
+			for (DBStorageType dbStorageType : dbStorageTypeService.list()) {
 				perksSource.add(dbStorageType);
 			}
 			List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();
@@ -1454,12 +1458,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {
-		return Arrays.asList("customEntityCategory");
+		return Arrays.asList("customEntityCategory", "availableStorages");
 	}
 
 	@Override
 	protected List<String> getListFieldsToFetch() {
-		return Arrays.asList("customEntityCategory");
+		return Arrays.asList("customEntityCategory", "availableStorages");
 	}
 
 	public boolean showAuditedField() {

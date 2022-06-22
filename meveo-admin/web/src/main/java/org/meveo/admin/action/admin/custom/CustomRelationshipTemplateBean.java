@@ -24,6 +24,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.persistence.DBStorageTypeService;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomizedEntity;
@@ -66,6 +67,9 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
+    
+	@Inject
+	private DBStorageTypeService dbStorageTypeService;
 
     public CustomRelationshipTemplateBean() {
         super(CustomRelationshipTemplate.class);
@@ -698,7 +702,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
     public DualListModel<DBStorageType> getAvailableStoragesDM() {
         if (availableStoragesDM == null) {
             List<DBStorageType> perksSource = new ArrayList<>();
-            for (DBStorageType dbStorageType : DBStorageType.values()) {
+            for (DBStorageType dbStorageType : dbStorageTypeService.list()) {
                 perksSource.add(dbStorageType);
             }
             List<DBStorageType> perksTarget = new ArrayList<DBStorageType>();

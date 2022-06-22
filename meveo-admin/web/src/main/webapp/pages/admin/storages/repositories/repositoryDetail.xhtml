@@ -52,56 +52,68 @@
 			</p:breadCrumb>
 		</h:form>
 
-		<hftl:formPanel formId="formRepository"
-			label="#{messages['repository.title']}"
-			backingBean="#{repositoryBean}" showFormButtons="false">
-			<hftl:formField label="#{messages['businessEntity.code']}"
-				field="code" required="true" validateUnique="true" allowEdit="false" />
-			<hftl:formField label="#{messages['businessEntity.description']}"
-				field="description"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<hftl:formField id="parentRepositoryId"
-				label="#{messages['repository.parentRepository']}"
-				field="parentRepository" valueLabelField="code" popup="true"
-				popupId="parentRepositoryPopup"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<hftl:formField label="#{messages['repository.neo4jConfiguration']}"
-				field="neo4jConfiguration" valueField="id" valueLabelField="code"
-				popup="false" listBean="#{neo4jConfigurationBean}" />
-			<hftl:formField label="#{messages['repository.sqlConfiguration']}"
-				field="sqlConfiguration" valueField="id" valueLabelField="code"
-				popup="false" listBean="#{sqlConfigurationBean}"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<hftl:formField label="#{messages['repository.path']}" field="path"
-				disabled="true" required="false"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<hftl:formField id="binaryStorageConfigurationId"
-				label="#{messages['binaryStorageConfiguration.title']}"
-				field="binaryStorageConfiguration" valueLabelField="code"
-				popup="true" popupId="binaryStorageConfigurationPopup"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<hftl:formField label="#{messages['repository.dataSeparationType']}"
-				field="dataSeparationType"
-				edit="#{repositoryBean.entity.code ne 'default'}" />
-			<h:panelGrid columns="1">
-				<hftl:decorateFormField fieldId="userGroupLevel"
-					label="#{messages['user.userGroupLevel']}" newLine="true">
-					<p:tree id="userGroupLevel"
-						value="#{repositoryBean.userGroupRootNode}" var="groupLevel"
-						propagateSelectionUp="false" propagateSelectionDown="false"
-						selectionMode="single"
-						selection="#{repositoryBean.userGroupSelectedNode}">
-						<p:treeNode>
-							<h:outputText value="#{groupLevel.descriptionOrCode}" />
-						</p:treeNode>
-					</p:tree>
-				</hftl:decorateFormField>
-				<h:panelGroup>
-					<p:commandLink update="userGroupLevel" process="@this"
-						actionListener="#{repositoryBean.clearUserHierarchyLevel}"
-						value="#{messages['action.clear']}"></p:commandLink>
-				</h:panelGroup>
-			</h:panelGrid>
+		
+
+			<hftl:formPanel formId="formRepository"
+				label="#{messages['repository.title']}"
+				backingBean="#{repositoryBean}" showFormButtons="false">
+				
+				<p:tabView id="tabView">
+				
+					<p:tab title="Repository">
+					<hftl:formField label="#{messages['businessEntity.code']}"
+						field="code" required="true" validateUnique="true" allowEdit="false" />
+					<hftl:formField label="#{messages['businessEntity.description']}"
+						field="description"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<hftl:formField id="parentRepositoryId"
+						label="#{messages['repository.parentRepository']}"
+						field="parentRepository" valueLabelField="code" popup="true"
+						popupId="parentRepositoryPopup"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<hftl:formField label="#{messages['repository.neo4jConfiguration']}"
+						field="neo4jConfiguration" valueField="id" valueLabelField="code"
+						popup="false" listBean="#{neo4jConfigurationBean}" />
+					<hftl:formField label="#{messages['repository.sqlConfiguration']}"
+						field="sqlConfiguration" valueField="id" valueLabelField="code"
+						popup="false" listBean="#{sqlConfigurationBean}"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<hftl:formField label="#{messages['repository.path']}" field="path"
+						disabled="true" required="false"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<hftl:formField id="binaryStorageConfigurationId"
+						label="#{messages['binaryStorageConfiguration.title']}"
+						field="binaryStorageConfiguration" valueLabelField="code"
+						popup="true" popupId="binaryStorageConfigurationPopup"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<hftl:formField label="#{messages['repository.dataSeparationType']}"
+						field="dataSeparationType"
+						edit="#{repositoryBean.entity.code ne 'default'}" />
+					<h:panelGrid columns="1">
+						<hftl:decorateFormField fieldId="userGroupLevel"
+							label="#{messages['user.userGroupLevel']}" newLine="true">
+							<p:tree id="userGroupLevel"
+								value="#{repositoryBean.userGroupRootNode}" var="groupLevel"
+								propagateSelectionUp="false" propagateSelectionDown="false"
+								selectionMode="single"
+								selection="#{repositoryBean.userGroupSelectedNode}">
+								<p:treeNode>
+									<h:outputText value="#{groupLevel.descriptionOrCode}" />
+								</p:treeNode>
+							</p:tree>
+						</hftl:decorateFormField>
+						<h:panelGroup>
+							<p:commandLink update="userGroupLevel" process="@this"
+								actionListener="#{repositoryBean.clearUserHierarchyLevel}"
+								value="#{messages['action.clear']}"></p:commandLink>
+						</h:panelGroup>
+					
+					</h:panelGrid>
+				</p:tab>
+			
+				<hftl:customFields backingBean="#{repositoryBean}" messagesId=":formId:messages" />
+
+		</p:tabView>
 
 			<ui:param name="buttons" value="true" />
 			<ui:define name="buttons">
@@ -124,6 +136,7 @@
 				</p:commandButton>
 			</ui:define>
 		</hftl:formPanel>
+		
 
 		<p:dialog id="deleteDialog"
 			header="#{messages['commons.confirmationHeader']}"

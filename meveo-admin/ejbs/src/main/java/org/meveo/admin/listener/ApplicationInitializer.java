@@ -6,7 +6,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -18,11 +17,8 @@ import org.meveo.cache.*;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.Provider;
-import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.crm.impl.ProviderService;
-import org.meveo.service.index.ElasticClient;
-import org.meveo.service.index.ElasticSearchIndexPopulationService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.model.SortOrder;
@@ -73,12 +69,6 @@ public class ApplicationInitializer {
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
-
-    @Inject
-    private ElasticClient elasticClient;
-    
-    @Inject
-    private ElasticSearchIndexPopulationService esPopulationService;
 
     public void init() {
 
@@ -136,19 +126,6 @@ public class ApplicationInitializer {
             scriptInstanceService.constructClassPath();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-
-        try {
-
-            if (createESIndex) {
-                // Here cache will be populated as part of reindexing
-                elasticClient.cleanAndReindex(MeveoUser.instantiate(APPLICATION_INITIALIZER, isMainProvider ? null : provider.getCode()), true);
-            } else {
-                esPopulationService.populateCache(System.getProperty(CacheContainerProvider.SYSTEM_PROPERTY_CACHES_TO_LOAD));
-            }
-
-        } catch (Exception e) {
-            log.error("Failed to initialize Elastic search client", e);
         }
 
         log.info("Initialized application for provider {}", provider.getCode());

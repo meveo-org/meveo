@@ -338,11 +338,6 @@
 				<version>1.0.2.Final</version>
 			</dependency>
 			<dependency>
-				<groupId>org.elasticsearch</groupId>
-				<artifactId>elasticsearch</artifactId>
-				<version>6.6.1</version>
-			</dependency>
-			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
 				<version>${jackson.version}</version>
@@ -414,6 +409,19 @@
 				<version>2.7.0</version>
 				<scope>test</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>4.5.10</version>
+			</dependency>
+		
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpcore</artifactId>
+				<version>4.4.12</version>
+			</dependency>
+			
 		</dependencies>
 	</dependencyManagement>
 	<build>

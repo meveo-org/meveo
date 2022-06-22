@@ -301,6 +301,8 @@
                     
                     <p:commandButton value="Install data" onclick="PF('dialog_install_data').show()" rendered="#{meveoModuleBean.entity.installed and not empty meveoModuleBean.availableRepositories()}"/>
                     
+                   <p:commandButton value="Force delete" title="Delete module without uninstalling items" action="#{meveoModuleBean.forceDelete}"/>
+                    
                     <p:dialog id="dialog_install_data" widgetVar="dialog_install_data" header="Choose repository">
                     	<h:form>
                     		<h:panelGrid columns="2" cellpadding="5">

@@ -99,8 +99,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	@Column(name = "DIRECTION", length = 100)
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
     
-    @Column(name = "available_storages", columnDefinition = "TEXT")
-    @Type(type = JsonTypes.JSON_LIST)
+//    @Column(name = "available_storages", columnDefinition = "TEXT")
+//    @Type(type = JsonTypes.JSON_LIST)
+	@ManyToMany
+	@JoinTable(name = "crt_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "crt_id"))
     private List<DBStorageType> availableStorages;
 
     /**

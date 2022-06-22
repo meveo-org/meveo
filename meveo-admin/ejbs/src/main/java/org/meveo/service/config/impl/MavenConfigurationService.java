@@ -155,6 +155,14 @@ public class MavenConfigurationService implements Serializable {
      *         user's provider
      */
     public static String getM2Directory(MeveoUser currentUser) {
+    	String userCustomM2 = ParamBean.getInstance().getProperty("maven.path.m2", null);
+    	if (userCustomM2 != null) {
+    		File m2Dir = new File(userCustomM2);
+    		if (m2Dir.exists()) {
+    			return userCustomM2;
+    		}
+    	}
+    	
         String rootDir = ParamBean.getInstance().getChrootDir(currentUser == null ? null : currentUser.getProviderCode());
         String m2 = rootDir + M2_DIR;
         File m2Folder = new File(m2);

@@ -40,6 +40,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -52,6 +54,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
@@ -101,15 +105,15 @@ import org.meveo.model.shared.DateUtils;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })
 @NamedQueries({
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft where cft.disabled=false and cft.indexType is not null "),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.disabled=false and cft.indexType is not null "),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft where cft.appliesTo=:appliesTo order by cft.code", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.appliesTo=:appliesTo order by cft.code", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
-public class CustomFieldTemplate extends BusinessEntity implements Comparable<CustomFieldTemplate> {
+public class CustomFieldTemplate extends BusinessEntity {
 
     private static final long serialVersionUID = -1403961759495272885L;
 
@@ -335,9 +339,11 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
     private boolean identifier;
 
     /** Storage where the cft value will be stored. */
-    @Column(name = "storages", columnDefinition = "TEXT")
-    @Type(type = JsonTypes.JSON_LIST)
-    List<DBStorageType> storages = new ArrayList<>();
+//    @Column(name = "storages", columnDefinition = "TEXT")
+//    @Type(type = JsonTypes.JSON_LIST)
+	@JoinTable(name = "cft_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cft_id"))
+	@ManyToMany
+	List<DBStorageType> storages = new ArrayList<>();
 
     /**
      * Display format for Date type only
@@ -1358,11 +1364,6 @@ public class CustomFieldTemplate extends BusinessEntity implements Comparable<Cu
 	@Override
     public String toString() {
         return String.format("CustomFieldTemplate [id=%s, appliesTo=%s, code=%s]", id, appliesTo, code);
-    }
-
-    @Override
-    public int compareTo(CustomFieldTemplate o) {
-        return o.getCode().compareTo(getCode());
     }
 
     /**

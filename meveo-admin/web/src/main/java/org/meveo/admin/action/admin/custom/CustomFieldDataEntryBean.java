@@ -2063,25 +2063,21 @@ public class CustomFieldDataEntryBean implements Serializable {
 	public Object getValueObject(CustomFieldValueHolder childEntityValue, String fieldCode, String entityClazz) {
 		Object value = null;
 		if (childEntityValue != null && childEntityValue.getValuesByCode() != null && isStoreTable(entityClazz)) {
-			try {
-				CustomEntityInstance customEntityInstance = (CustomEntityInstance) childEntityValue.getEntity();
-				if (customEntityInstance != null) {
-					CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityInstance.getCetCode());
-					CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
-					Map<String, Object> childEntity = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, customEntityInstance.getUuid());
-					if (childEntity != null) {
-						value = childEntity.get(fieldCode);
-						if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
-							if ((Integer) value == 1) {
-								return true;
-							} else {
-								return false;
-							}
+			CustomEntityInstance customEntityInstance = (CustomEntityInstance) childEntityValue.getEntity();
+			if (customEntityInstance != null) {
+				CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityInstance.getCetCode());
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
+				Map<String, Object> childEntity = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, customEntityInstance.getUuid());
+				if (childEntity != null) {
+					value = childEntity.get(fieldCode);
+					if (customFieldTemplate.getFieldType() == CustomFieldTypeEnum.BOOLEAN && value instanceof Integer) {
+						if ((Integer) value == 1) {
+							return true;
+						} else {
+							return false;
 						}
 					}
 				}
-			} catch (EntityDoesNotExistsException e) {
-				log.error(e.getMessage());
 			}
 		}
 		return value;

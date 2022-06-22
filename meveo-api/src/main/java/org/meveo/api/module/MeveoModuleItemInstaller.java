@@ -1,12 +1,16 @@
 package org.meveo.api.module;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.EJB;
@@ -29,6 +33,7 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -38,7 +43,9 @@ import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
+import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.MvCollectionUtils;
@@ -637,6 +644,60 @@ public class MeveoModuleItemInstaller {
 	    return apiService.compareDtos(obj1, obj2, dtos);
 	}
 	
+	public Map<Class<? extends BaseEntityDto>, List<MeveoModuleItemDto>> getSortedModuleItemsByType(Collection<MeveoModuleItemDto> moduleItems) {
+		Map<String, List<MeveoModuleItemDto>> itemsByType = new HashMap<>();
+		
+		for (MeveoModuleItemDto dto : moduleItems) {
+			itemsByType.computeIfAbsent(dto.getDtoClassName(), key -> new ArrayList<>())
+				.add(dto);
+		}
+		
+		Comparator<Class<? extends BaseEntityDto>> comparator = (dtoClass1, dtoClass2) -> {
+			String m1 = ModuleUtil.getModuleItemName(dtoClass1);
+			String m2 = ModuleUtil.getModuleItemName(dtoClass2);
+			
+			Class<IEntity<?>> entityClass1 = (Class<IEntity<?>>) MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m1);
+			if(entityClass1 == null) {
+				log.error("Can't get module item type for {}", m1);
+				return 0;
+			}
+			
+			Class<IEntity<?>> entityClass2 = (Class<IEntity<?>>) MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(m2);
+			if(entityClass2 == null) {
+				log.error("Can't get module item type for {}", m2);
+				return 0;
+			}
+			
+			ModuleItemOrder sortOrder1 = entityClass1.getAnnotation(ModuleItemOrder.class);
+			ModuleItemOrder sortOrder2 = entityClass2.getAnnotation(ModuleItemOrder.class);
+			
+			return sortOrder1.value() - sortOrder2.value();
+		};
+		
+		TreeMap<Class<? extends BaseEntityDto>, List<MeveoModuleItemDto>> sortedItemsByType = new TreeMap<>(comparator);
+		
+		itemsByType.forEach((className, items) -> {
+			Class<? extends BaseEntityDto> dtoClass;
+			try {
+				dtoClass = (Class<? extends BaseEntityDto>) Class.forName(className);
+				String itemType = ModuleUtil.getModuleItemName(dtoClass);
+				Class<IEntity<?>> entityClass = (Class<IEntity<?>>) MeveoModuleItemInstaller.MODULE_ITEM_TYPES.get(itemType);
+				
+				if (Comparable.class.isAssignableFrom(dtoClass) || Comparable.class.isAssignableFrom(entityClass)) {
+					sortedItemsByType.put(dtoClass, getSortedModuleItems(items));
+				} else {
+					sortedItemsByType.put(dtoClass, items);
+				}
+				
+			} catch (ClassNotFoundException e) {
+				log.error("Can't find DTO class", e);
+			}
+		});
+		
+		return sortedItemsByType;
+		
+	}
+	
 	public List<MeveoModuleItemDto> getSortedModuleItems(Collection<MeveoModuleItemDto> moduleItems) {
 		List<MeveoModuleItemDto> unsortedItems = new ArrayList<>(moduleItems);
 		List<MeveoModuleItemDto> sortedItems = new ArrayList<>(moduleItems);
@@ -755,36 +816,38 @@ public class MeveoModuleItemInstaller {
 
 			// we need to sort the module items because of dependency hierarchy
 			// each item is annotated with @ModuleItemSort
-			List<MeveoModuleItemDto> sortedModuleItems = getSortedModuleItems(moduleDto.getModuleItems());
+			// List<MeveoModuleItemDto> sortedModuleItems = getSortedModuleItems(moduleDto.getModuleItems());
 			
-			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
-				try {
-					 var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
-					result.merge(subResult);
-				} catch (Exception e) {
-					if (e instanceof EJBException) {
-						throw new BusinessException(e.getCause());
-					}
-
-					throw new BusinessException(e);
-				}
-			}
-
-			for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
-				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+			for (List<MeveoModuleItemDto> sortedModuleItems : getSortedModuleItemsByType(moduleDto.getModuleItems()).values()) {
+				for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
 					try {
-						Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-						CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
-					if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
-						CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
-						ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
-						if (si != null) {
-							cet.setCrudEventListenerScript(si);
-							customEntityTemplateService.update(cet);
+						 var subResult = meveoModuleItemInstaller.unpackAndInstallModuleItem(meveoModule, moduleItemDto, onDuplicate);
+						result.merge(subResult);
+					} catch (Exception e) {
+						if (e instanceof EJBException) {
+							throw new BusinessException(e.getCause());
 						}
+	
+						throw new BusinessException(e);
 					}
-					} catch (ClassNotFoundException e) {
-						log.error("Cannot find dto class", e);
+				}
+	
+				for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
+					if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+						try {
+							Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+							CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+						if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
+							CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
+							ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
+							if (si != null) {
+								cet.setCrudEventListenerScript(si);
+								customEntityTemplateService.update(cet);
+							}
+						}
+						} catch (ClassNotFoundException e) {
+							log.error("Cannot find dto class", e);
+						}
 					}
 				}
 			}
