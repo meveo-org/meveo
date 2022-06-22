@@ -49,10 +49,6 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
     @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-running-jobs")
     private Cache<CacheKeyLong, List<String>> runningJobsCache;
 
-    @Inject
-    @CurrentUser
-    protected MeveoUser currentUser;
-
 
     /**
      * Get a summary of cached information.
@@ -92,7 +88,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      */
     // @Lock(LockType.READ)
     public JobRunningStatusEnum isJobRunning(Long jobInstanceId) {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         if (jobInstanceId == null) {
             return JobRunningStatusEnum.NOT_RUNNING;
         }
@@ -127,7 +123,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
     public JobRunningStatusEnum markJobAsRunning(Long jobInstanceId, boolean limitToSingleNode) {
         JobRunningStatusEnum[] isRunning = new JobRunningStatusEnum[1];
         String currentNode = EjbUtils.getCurrentClusterNode();
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
 
         BiFunction<? super CacheKeyLong, ? super List<String>, ? extends List<String>> remappingFunction = (jobInstIdFullKey, nodesOld) -> {
 
@@ -181,7 +177,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
 
         String currentNode = EjbUtils.getCurrentClusterNode();
         boolean isClusterMode = EjbUtils.isRunningInClusterMode();
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
 
         BiFunction<? super CacheKeyLong, ? super List<String>, ? extends List<String>> remappingFunction = (jobInstIdFullKey, nodesOld) -> {
 
@@ -211,7 +207,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      * @param jobInstanceId Job instance identifier
      */
     public void resetJobRunningStatus(Long jobInstanceId) {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         // Use flags to not return previous value
         runningJobsCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyLong(currentProvider, jobInstanceId), new ArrayList<>());
         log.trace("Job {} of Provider {} marked as not running in job cache", jobInstanceId, currentProvider);
@@ -224,7 +220,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      * @return A list of cluster node names that job is currently running on
      */
     public List<String> getNodesJobIsRuningOn(Long jobInstanceId) {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         return runningJobsCache.compute(new CacheKeyLong(currentProvider, jobInstanceId), (k,v)-> (v==null ? new ArrayList<String>(): v));
     }
 
@@ -244,7 +240,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
 
         };
 
-        runningJobsCache.compute(new CacheKeyLong(currentUser.getProviderCode(), jobInstanceId), remappingFunction);
+        runningJobsCache.compute(new CacheKeyLong(null, jobInstanceId), remappingFunction);
     }
 
     /**
@@ -253,7 +249,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      * @param jobInstanceId Job instance identifier
      */
     public void removeJobInstance(Long jobInstanceId) {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         runningJobsCache.remove(new CacheKeyLong(currentProvider, jobInstanceId));
     }
 
@@ -261,21 +257,21 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
      * Initialize cache for all job instances
      */
     private void populateJobCache() {
-        log.debug("Start to pre-populate Job cache of provider {}.", currentUser.getProviderCode());
+        log.debug("Start to pre-populate Job cache of provider {}.");
 
         List<JobInstance> jobInsances = jobInstanceService.list();
         for (JobInstance jobInstance : jobInsances) {
             addUpdateJobInstance(jobInstance.getId());
         }
 
-        log.debug("End populating Job cache of Provider {} with {} jobs.", currentUser.getProviderCode(), jobInsances.size());
+        log.debug("End populating Job cache of Provider {} with {} jobs.", null, jobInsances.size());
     }
 
     /**
      * Clear the current provider data from cache
      */
     private void clear() {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         Iterator<Entry<CacheKeyLong, List<String>>> iter = runningJobsCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).entrySet().iterator();
         ArrayList<CacheKeyLong> itemsToBeRemoved = new ArrayList<>();
         while (iter.hasNext()) {
