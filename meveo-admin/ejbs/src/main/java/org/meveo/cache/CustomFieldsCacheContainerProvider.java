@@ -114,10 +114,6 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private EmbeddedCacheManager cacheContainer;
 
-    @Inject
-    @CurrentUser
-    protected MeveoUser currentUser;
-
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
     @PostConstruct
@@ -167,7 +163,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     private void populateCFTCache() {
 
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
 
         log.debug("Start to pre-populate CFT cache for provider {}", currentProvider);
 
@@ -228,7 +224,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             return;
         }
 
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
 
         log.debug("Start to pre-populate CET cache for provider {}", currentProvider);
 
@@ -245,7 +241,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private void populateCRTCache() {
 
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
 
         // Cache custom relationship templates sorted by a crt.name
         List<CustomRelationshipTemplate> allCrts = customRelationshipTemplateService.getCRTForCache();
@@ -356,7 +352,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 
         CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
-        log.trace("Adding/updating custom field template {} for {} to CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentUser.getProviderCode());
+        log.trace("Adding/updating custom field template {} for {} to CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, null);
 
         Map<String, CustomFieldTemplate> cftsOld = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKeyByAppliesTo);
         Map<String, CustomFieldTemplate> cfts = new TreeMap<>();
@@ -408,7 +404,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         try {
             CacheKeyStr cacheKeyByAppliesTo = getCFTCacheKeyByAppliesTo(cft);
 
-            String currentProvider = currentUser.getProviderCode();
+            String currentProvider = null;
             log.trace("Removing custom field template {} for {} from CFT cache of Provider {}.", cft.getCode(), cacheKeyByAppliesTo, currentProvider);
 
             Map<String, CustomFieldTemplate> cftsOld = cftsByAppliesTo.getAdvancedCache().withFlags(Flag.FORCE_WRITE_LOCK).get(cacheKeyByAppliesTo);
@@ -437,7 +433,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      */
     public void markNoCustomFieldTemplates(String appliesTo) {
 
-        CacheKeyStr cacheKeyByAppliesTo = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
+        CacheKeyStr cacheKeyByAppliesTo = new CacheKeyStr(null, appliesTo);
         if (!cftsByAppliesTo.getAdvancedCache().containsKey(cacheKeyByAppliesTo)) {
             Lock lock = cacheLock.writeLock();
             lock.lock();
@@ -460,7 +456,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         Lock lock = cacheLock.writeLock();
         lock.lock();
         try {
-            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()), cet);
+            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(new CacheKeyStr(null, cet.getCode()), cet);
         } finally {
             lock.unlock();
         }
@@ -481,7 +477,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         Lock lock = cacheLock.writeLock();
         lock.lock();
         try {
-            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(currentUser.getProviderCode(), cet.getCode()));
+            cetsByCode.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).remove(new CacheKeyStr(null, cet.getCode()));
         } finally {
             lock.unlock();
         }
@@ -495,7 +491,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         try {
             crtsByCode.getAdvancedCache()
                 .withFlags(Flag.IGNORE_RETURN_VALUES)
-                .put(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()), crt);
+                .put(new CacheKeyStr(null, crt.getCode()), crt);
         } finally {
             lock.unlock();
         }
@@ -509,14 +505,14 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         try {
             crtsByCode.getAdvancedCache()
                 .withFlags(Flag.IGNORE_RETURN_VALUES)
-                .remove(new CacheKeyStr(currentUser.getProviderCode(), crt.getCode()));
+                .remove(new CacheKeyStr(null, crt.getCode()));
         } finally {
             lock.unlock();
         }
     }
 
     private CacheKeyStr getCFTCacheKeyByAppliesTo(CustomFieldTemplate cft) {
-        return new CacheKeyStr(currentUser.getProviderCode(), cft.getAppliesTo());
+        return new CacheKeyStr(null, cft.getAppliesTo());
     }
 
     /**
@@ -526,7 +522,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @return A map of custom field templates with template code as a key or NULL if cache key not found
      */
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
-        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), appliesTo);
+        CacheKeyStr key = new CacheKeyStr(null, appliesTo);
 
         Map<String, CustomFieldTemplate> cfMaps;
 //        Lock lock = cacheLock.readLock();
@@ -580,7 +576,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @return Custom entity template or NULL if not found
      */
     public CustomEntityTemplate getCustomEntityTemplate(String code) {
-        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
+        CacheKeyStr key = new CacheKeyStr(null, code);
         CustomEntityTemplate customEntityTemplate;
         Lock lock = cacheLock.readLock();
         lock.lock();
@@ -608,7 +604,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @return Custom relationship template or NULL if not found
      */
     public CustomRelationshipTemplate getCustomRelationshipTemplate(String code) {
-        CacheKeyStr key = new CacheKeyStr(currentUser.getProviderCode(), code);
+        CacheKeyStr key = new CacheKeyStr(null, code);
         CustomRelationshipTemplate customRelationshipTemplate;
         Lock lock = cacheLock.readLock();
         lock.lock();
@@ -684,7 +680,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * Clear the data belonging to the current provider from cache
      */
     public void cetsByCodeClear() {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         log.debug("cetsByCodeClear() => " + currentProvider + ".");
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
 
@@ -726,7 +722,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * Clear the data belonging to the current provider from cache
      */
     public void crtsByCodeClear() {
-        String currentProvider = currentUser.getProviderCode();
+        String currentProvider = null;
         log.debug("crtsByCodeClear() => " + currentProvider + ".");
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
 
@@ -761,8 +757,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * Clear the data belonging to the current provider from cache
      */
     public void cftsByAppliesToClear() {
-        String currentProvider = currentUser.getProviderCode();
-        log.info("Clear CFTS cache for {}/{} ", currentProvider, currentUser);
+        String currentProvider = null;
         // cftsByAppliesTo.keySet().removeIf(key -> (key.getProvider() == null) ? currentProvider == null : key.getProvider().equals(currentProvider));
         ArrayList<CacheKeyStr> itemsToBeRemoved = new ArrayList<>();
 
