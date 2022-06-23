@@ -37,7 +37,7 @@ public class MeveoModulePatchId implements Serializable {
 	 */
 	@NotNull
 	@Column(name = "source_version", length = 25)
-	@Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
+	@Pattern(regexp = MeveoModule.VERSION_PATTERN)
 	private String sourceVersion;
 
 	/**
@@ -45,7 +45,7 @@ public class MeveoModulePatchId implements Serializable {
 	 */
 	@NotNull
 	@Column(name = "target_version", length = 25)
-	@Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
+	@Pattern(regexp = MeveoModule.VERSION_PATTERN)
 	private String targetVersion;
 
 	/**

@@ -321,28 +321,22 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	public void releaseModule() {
 		String version = this.getReleaseVersion();
 		log.debug("release module {} on version {}", entity.getCode(), version);
-		Integer nextVersion = Integer.parseInt(version.replace(".", ""));
-		Integer versionModule = Integer.parseInt(entity.getCurrentVersion().replace(".", ""));
-		if (nextVersion > versionModule) {
-			try {
-				if (entity.getScript() != null) {
-					boolean checkRelease = meveoModuleService.checkTestSuites(entity.getScript().getCode());
-					if (!checkRelease) {
-						messages.error(new BundleKey("messages", "meveoModule.checkTestSuitsReleaseFailed"));
-						return;
-					}
+		try {
+			if (entity.getScript() != null) {
+				boolean checkRelease = meveoModuleService.checkTestSuites(entity.getScript().getCode());
+				if (!checkRelease) {
+					messages.error(new BundleKey("messages", "meveoModule.checkTestSuitsReleaseFailed"));
+					return;
 				}
-				meveoModuleService.releaseModule(entity, version);
-				meveoModuleService.flush();
-				entity = meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
-				messages.info(new BundleKey("messages", "meveoModule.releaseSuccess"), entity.getCode(), version);
-			} catch (Exception e) {
-				log.error("Error when release module {} to {}", entity.getCode(), meveoInstance, e);
-				messages.error(new BundleKey("messages", "meveoModule.releaseFailed"), entity.getCode(), version,
-						(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
 			}
-		} else {
-			messages.error(new BundleKey("messages", "meveoModule.nextVersionLessCurrentVersion"), entity.getCurrentVersion());
+			meveoModuleService.releaseModule(entity, version);
+			meveoModuleService.flush();
+			entity = meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+			messages.info(new BundleKey("messages", "meveoModule.releaseSuccess"), entity.getCode(), version);
+		} catch (Exception e) {
+			log.error("Error when release module {} to {}", entity.getCode(), meveoInstance, e);
+			messages.error(new BundleKey("messages", "meveoModule.releaseFailed"), entity.getCode(), version,
+					(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
 		}
 		releaseVersion = null;
 	}

@@ -69,7 +69,7 @@ public class ModuleRelease extends BaseEntity implements Serializable {
     private String moduleSource;
 
     @Column(name = "current_version")
-    @Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
+    @Pattern(regexp = MeveoModule.VERSION_PATTERN)
     private String currentVersion;
 
     @Column(name = "meveo_version_base")

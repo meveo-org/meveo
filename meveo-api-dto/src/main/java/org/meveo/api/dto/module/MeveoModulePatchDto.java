@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.meveo.api.dto.ScriptInstanceDto;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -43,13 +44,13 @@ public class MeveoModulePatchDto implements Comparable<MeveoModulePatchDto>, Ser
 	private ScriptInstanceDto scriptInstance = new ScriptInstanceDto();
 
 	@NotNull
-	@Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
+	@Pattern(regexp = MeveoModule.VERSION_PATTERN)
 	@XmlAttribute(required = true)
 	@ApiModelProperty(required = true, value = "This patch can be apply from this version")
 	private String sourceVersion;
 
 	@NotNull
-	@Pattern(regexp = "^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$")
+	@Pattern(regexp = MeveoModule.VERSION_PATTERN)
 	@XmlAttribute(required = true)
 	@ApiModelProperty(required = true, value = "This patch can be apply up to this version")
 	private String targetVersion;

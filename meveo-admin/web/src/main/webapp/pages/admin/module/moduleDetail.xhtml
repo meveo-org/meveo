@@ -15,6 +15,7 @@
     <ui:define name="body">
     
     	<o:importConstants type="org.meveo.api.module.OnDuplicate" />
+    	<o:importConstants type="org.meveo.model.module.MeveoModule" />
     	
 		<p:dialog id="addPatchPopup"
 			header="#{messages['meveoModule.patch.add']}"
@@ -37,14 +38,14 @@
 					label="#{messages['meveoModule.patch.sourceVersion']}">
 					<p:inputText id="sourceVersion"
 						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.sourceVersion}">
-						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+						<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}" />
 					</p:inputText>
 				</hftl:decorateFormField>
 				<hftl:decorateFormField for="targetVersion"
 					label="#{messages['meveoModule.patch.targetVersion']}">
 					<p:inputText id="targetVersion"
 						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.targetVersion}">
-						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+						<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}" />
 					</p:inputText>
 				</hftl:decorateFormField>
 				<h:panelGroup layout="block" styleClass="form-panel-actions"
@@ -415,7 +416,7 @@
 					<hftl:decorateFormField fieldId="release" label="#{messages['meveoModule.provideNextVersion']}">
 						<p:inputText id="release" value="#{meveoModuleBean.releaseVersion}" size="50"
 									 maxlength="100" disabled="false" required="true" validatorMessage="#{messages['meveoModule.releaseVersion.error']}">
-							<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$"/>
+							<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}"/>
 						</p:inputText>
 					</hftl:decorateFormField>
 				</ui:define>
