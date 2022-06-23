@@ -444,6 +444,33 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 	}
 
 	@Override
+	public void removeFilesFromModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {
+		super.removeFilesFromModule(entity, module);
+		
+        List<File> fileList = new ArrayList<>();
+
+        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + entity.getAppliesTo());
+        if (cftDir.exists()) {
+	        for (File cftFile : cftDir.listFiles()) {
+	        	cftFile.delete();
+	        	fileList.add(cftFile);
+	        }
+	        cftDir.delete();
+	        fileList.add(cftDir);
+        }
+        
+        if(!fileList.isEmpty()) {
+            String message = "Deleted custom relationship template " + entity.getCode();
+            try {
+                message+=" "+commitMessageBean.getCommitMessage();
+            } catch (ContextNotActiveException e) {
+                log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+            }
+            gitClient.commitFiles(meveoRepository, fileList,message);
+        }
+	}
+
+	@Override
 	protected BaseEntityDto getDto(CustomRelationshipTemplate entity) throws BusinessException {
 		CustomRelationshipTemplateDto dto = (CustomRelationshipTemplateDto) super.getDto(entity);
 		dto.setFields(null);

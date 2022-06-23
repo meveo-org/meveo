@@ -784,6 +784,16 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         if (classFile.exists()) {
             classFile.delete();
         }
+        
+        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + cet.getAppliesTo());
+        if (cftDir.exists()) {
+	        for (File cftFile : cftDir.listFiles()) {
+	        	cftFile.delete();
+	        	fileList.add(cftFile);
+	        }
+	        cftDir.delete();
+	        fileList.add(cftDir);
+        }
 
         if(!fileList.isEmpty()) {
             String message = "Deleted custom entity template " + cet.getCode();
