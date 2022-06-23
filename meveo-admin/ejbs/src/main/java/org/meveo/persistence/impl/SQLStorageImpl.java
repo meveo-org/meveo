@@ -61,6 +61,8 @@ import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
 
+import liquibase.pro.packaged.S;
+
 @RequestScoped
 public class SQLStorageImpl implements StorageImpl {
 	
@@ -763,7 +765,11 @@ public class SQLStorageImpl implements StorageImpl {
 	@Override
 	public void destroy() {
 		try {
-			hibernateSessions.values().forEach(s -> s.close());
+			hibernateSessions.values().forEach(s -> {
+				if (s.isOpen()) {
+					s.close();
+				}
+			});
 			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
 				userTx.commit();
 			}

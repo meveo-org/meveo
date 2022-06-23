@@ -6,6 +6,7 @@ package org.meveo.persistence;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -32,6 +33,8 @@ public class CrossStorageTransaction {
 	@Inject
 	private StorageImplProvider provider;
 	
+	private List<StorageImpl> storages; 
+	
 	@Inject
 	private Logger log;
 	
@@ -39,10 +42,11 @@ public class CrossStorageTransaction {
 	
 	@PostConstruct
 	private void postConstruct() {
-		dbStorageTypeService.list()
+		storages = dbStorageTypeService.list()
 			.stream()
 			.map(provider::findImplementation)
-			.forEach(StorageImpl::init);
+			.collect(Collectors.toList());
+		storages.forEach(StorageImpl::init);
 	}
 
 	public void beginTransaction(Repository repository, List<DBStorageType> storages) {
@@ -79,9 +83,11 @@ public class CrossStorageTransaction {
 	
 	@PreDestroy
 	private void preDestroy() {
-		dbStorageTypeService.list()
-			.stream()
-			.map(provider::findImplementation)
-			.forEach(StorageImpl::destroy);
+		try {
+			storages.forEach(StorageImpl::destroy);
+		} catch (Exception e) {
+			log.error("Error destroying transaction", e);
+		}
+
 	}
 }
