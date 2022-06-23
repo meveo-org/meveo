@@ -319,19 +319,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 		customActions.put(entity.getUuid(), actionList);
 	}
 
-	private static <K, V> Map<K, V> sortByValue(Map<K, V> map) {
-		List<Entry<K, V>> list = new LinkedList<>(map.entrySet());
-		Collections.sort(list, new Comparator<Object>() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public int compare(Object o1, Object o2) {
-				return ((Comparable<V>) ((Entry<K, V>) (o1)).getValue()).compareTo(((Entry<K, V>) (o2)).getValue());
-			}
-		});
+	private static Map<String, CustomFieldTemplate> sortByValue(Map<String, CustomFieldTemplate> map) {
+		List<Entry<String, CustomFieldTemplate>> list = new LinkedList<>(map.entrySet());
+		list.sort(Comparator.comparing(entry -> entry.getValue().getCode()));
 
-		Map<K, V> result = new LinkedHashMap<>();
-		for (Iterator<Entry<K, V>> it = list.iterator(); it.hasNext();) {
-			Entry<K, V> entry = (Entry<K, V>) it.next();
+		Map<String, CustomFieldTemplate> result = new LinkedHashMap<>();
+		for (Entry<String, CustomFieldTemplate> entry : list) {
 			result.put(entry.getKey(), entry.getValue());
 		}
 
