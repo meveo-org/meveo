@@ -57,6 +57,7 @@ import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.PasswordUtils;
@@ -125,6 +126,9 @@ public class CrossStorageService implements CustomPersistenceService {
 	
 	@Inject
 	private StorageImplProvider provider;
+	
+	@Inject
+	private SQLStorageImpl sqlStorageImpl;
 
 	/**
 	 * Retrieves one entity instance
@@ -995,7 +999,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				// Check if target is not JPA entity
 				if (cet == null) {
 					try {
-						var session = customEntityTemplateService.getEntityManager().unwrap(Session.class);
+						var session = sqlStorageImpl.getHibernateSession("default");
 						Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
 						values.put(
 							entry.getKey(), 
