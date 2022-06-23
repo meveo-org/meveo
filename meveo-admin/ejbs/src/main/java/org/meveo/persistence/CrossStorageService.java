@@ -990,25 +990,28 @@ public class CrossStorageService implements CustomPersistenceService {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
 			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-				// Check if target is not JPA entity
-				try {
-					var session = customEntityTemplateService.getEntityManager().unwrap(Session.class);
-					Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
-					values.put(
-						entry.getKey(), 
-						session.find(clazz, entry.getValue())
-					);
-					continue;
-					
-				} catch (ClassNotFoundException e) {
-					//NOOP
+				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 				
-				} catch(Exception e) {
-					log.error("Cannot find referenced entity {}", e.getMessage());
-					throw new RuntimeException(e);
+				// Check if target is not JPA entity
+				if (cet == null) {
+					try {
+						var session = customEntityTemplateService.getEntityManager().unwrap(Session.class);
+						Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
+						values.put(
+							entry.getKey(), 
+							session.find(clazz, entry.getValue())
+						);
+						continue;
+						
+					} catch (ClassNotFoundException e) {
+						//NOOP
+					
+					} catch(Exception e) {
+						log.error("Cannot find referenced entity {}", e.getMessage());
+						throw new RuntimeException(e);
+					}
 				}
 				
-				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 				var nConf = cet.getNeo4JStorageConfiguration();
 				
 				// Don't fetch primitive entities
