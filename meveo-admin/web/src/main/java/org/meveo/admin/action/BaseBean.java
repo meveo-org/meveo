@@ -96,6 +96,7 @@ import org.meveo.service.storage.RepositoryService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.EntityCustomizationUtils;
+import org.meveo.util.view.MessagesHelper;
 import org.meveo.util.view.PagePermission;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.omnifaces.cdi.Param;
@@ -434,9 +435,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                 endConversation();
             }
             
-        } catch (Exception e){ 
-        	messages.error("Entity can't be saved. Please retry.");
-        	log.error("Can't update entity", e);
+        } catch (Exception e) {
+        	log.error("Can't create / update entity", e);
+        	return MessagesHelper.error(messages, e);
         }
 
         return back();
