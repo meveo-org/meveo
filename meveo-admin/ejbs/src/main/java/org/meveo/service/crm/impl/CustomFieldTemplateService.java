@@ -343,7 +343,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		CustomModelObject appliesToTemplate = getAppliesToTemplate(cft, entityCode);
 		
-		if (appliesToTemplate != null) {
+		if (appliesToTemplate != null && cft.getStorages() != null) {
 	        for (var storage : cft.getStorages()) {
 	        	provider.findImplementation(storage).cftCreated(appliesToTemplate, cft);
 	        }
@@ -467,7 +467,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         Set<DBStorageType> storages = new HashSet<>();
         storages.addAll(cft.getStorages());
         storages.addAll(cachedCft.getStorages());
-		if (appliesToTemplate != null) {
+		if (appliesToTemplate != null && cft.getStorages() != null) {
 	        for (var storage : storages) {
 	        	provider.findImplementation(storage).cftUpdated(appliesToTemplate, cachedCft, cftUpdated);
 	        }
@@ -523,7 +523,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
 		}
 		
-		if (withData && appliesToTemplate != null) {
+		if (withData && appliesToTemplate != null && cft.getStorages() != null) {
 	        for (var storage : cft.getStorages()) {
 	        	provider.findImplementation(storage).removeCft(appliesToTemplate, cft);
 	        }
