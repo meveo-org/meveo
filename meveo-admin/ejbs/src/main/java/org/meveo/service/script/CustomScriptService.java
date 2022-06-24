@@ -97,6 +97,7 @@ import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.scripts.test.ExpectedOutput;
+import org.meveo.model.util.ClassNameUtils;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
@@ -833,44 +834,59 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         // Find getter and setter defined in super types
         for(ClassOrInterfaceType type : classOrInterfaceDeclaration.getExtendedTypes()) {
-            Class<?> typeClass = null;
-
+            Class<?> typeClass;
+            String className;
+            
             try {
-                typeClass = Class.forName(type.toString());
+            	className = type.toString();
+                typeClass = Class.forName(className);
             } catch (Exception e) {
-                String className = compilationUnit.getImports().stream()
+                className = compilationUnit.getImports().stream()
                         .filter(importEntry -> importEntry.getNameAsString().endsWith("." + type.getNameAsString()))
                         .map(ImportDeclaration::getNameAsString)
                         .findFirst()
-                        .orElseThrow(() -> new RuntimeException("No declaration found for extended type " + type.getNameAsString()));
-
+                        .orElse(null);
+                
+                if (className == null) {
+                	className = ClassNameUtils.getPackageName(script.getCode()) + "." + type.getNameAsString();
+                }
+                
                 try {
                     typeClass = Class.forName(className);
                 } catch (ClassNotFoundException e1) {
-                    try {
-                        typeClass = getScriptInterfaceWCompile(className).getScriptInterface().getClass();
-                    } catch (Exception e2) {
-                        throw new BusinessException(e2);
-                    }
+                	typeClass = null;
                 }
+
+            }
+            
+            if (typeClass != null) {
+                // Build getters and setter of extended types
+                Arrays.stream(typeClass.getMethods())
+                        .filter(m -> m.getName().startsWith(Accessor.SET))
+                        .filter(m -> m.getParameterCount() == 1)
+                        .filter(m -> m.getReturnType() == void.class)
+                        .filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
+                        .map(Accessor::new)
+                        .forEach(setters::add);
+
+                Arrays.stream(typeClass.getMethods())
+                        .filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
+                        .filter(m -> m.getParameterCount() == 0)
+                        .filter(m -> m.getReturnType() != void.class)
+                        .filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
+                        .map(Accessor::new)
+                        .forEach(getters::add);
+            } else if (className != null) {
+            	// If the extended type is a script, copy input / output of the parent script
+            	T extendedScript = findByCode(className);
+            	if (extendedScript != null) {
+            		getters.addAll(extendedScript.getGetters());
+            		setters.addAll(extendedScript.getSetters());
+            	} else {
+                    log.warn("Class / script not found for type " + type.getNameAsString() + ", getters & setters won't be inferred.");
+            	}
             }
 
-            // Build getters and setter of extended types
-            Arrays.stream(typeClass.getMethods())
-                    .filter(m -> m.getName().startsWith(Accessor.SET))
-                    .filter(m -> m.getParameterCount() == 1)
-                    .filter(m -> m.getReturnType() == void.class)
-                    .filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
-                    .map(Accessor::new)
-                    .forEach(setters::add);
-
-            Arrays.stream(typeClass.getMethods())
-                    .filter(m -> m.getName().startsWith(Accessor.GET) && !m.getName().equals("getClass"))
-                    .filter(m -> m.getParameterCount() == 0)
-                    .filter(m -> m.getReturnType() != void.class)
-                    .filter(m -> !m.isAnnotationPresent(JsonIgnore.class))
-                    .map(Accessor::new)
-                    .forEach(getters::add);
         }
 
         checkEndpoints(script, setters);
