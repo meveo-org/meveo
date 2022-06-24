@@ -84,6 +84,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	protected DualListModel<String> repositories;
 	
 	private List<ModuleDependencyDto> missingDependencies;
+	
+	private List<String> branchList = List.of();
 
 	public GitRepositoryBean() {
 		super(GitRepository.class);
@@ -92,6 +94,30 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	@PostConstruct
 	public void init() {
         repositories = new DualListModel<>(repositoryService.list().stream().map(Repository::getCode).collect(Collectors.toList()), new ArrayList<>());
+	}
+
+	@Override
+	public GitRepository initEntity() {
+		GitRepository entity = super.initEntity();
+		
+		if (entity != null) {
+			try {
+				branchList = gitClient.listRefs(entity);
+			} catch (BusinessException e) {
+				log.warn("Failed to retrieve refs list", e);
+			}
+		}
+		
+		return entity;
+	}
+	
+	/**
+	 * @return the {@link #branchList}
+	 */
+	public List<String> getBranchList(String query) {
+		return branchList.stream()
+				.filter(ref -> ref.startsWith(query))
+				.collect(Collectors.toList());
 	}
 
 	@ActionMethod
@@ -123,6 +149,17 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			log.error("Failed to push", e);
 			messages.error(new BundleKey("messages", "gitRepositories.push.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
 		}
+	}
+	
+	public void fetchRemote() {
+		try {
+			gitClient.fetch(entity, this.getUsername(), this.getPassword());
+			initEntity(entity.getId());
+			messages.info(new BundleKey("messages", "gitRepositories.pull.successful"));
+		} catch (Exception e) {
+			log.error("Failed to fetch", e);
+			messages.error(new BundleKey("messages", "gitRepositories.pull.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+		}	
 	}
 
 	public void pullRemote() {

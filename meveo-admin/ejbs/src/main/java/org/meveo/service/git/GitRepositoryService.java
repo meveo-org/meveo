@@ -214,6 +214,15 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.create(entity);
         return entity;
     }
+    
+    
+
+    @Override
+	public GitRepository update(GitRepository entity) throws BusinessException {
+    	super.update(entity);
+    	gitClient.checkout(entity, entity.getDefaultBranch(), true);
+		return entity;
+	}
 
     public GitRepository setBranchInformation(GitRepository repository) {
         // Set branches information if not null

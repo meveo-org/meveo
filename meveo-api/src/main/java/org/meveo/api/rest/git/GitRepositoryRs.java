@@ -256,7 +256,7 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 	}
 
 	/**
-	 * Push the commits of a {@link GitRepository}
+	 * Pull the commits of a {@link GitRepository}
 	 *
 	 * @param code     Code of the {@link GitRepository} to pull
 	 * @param username Optional - Username to use during pull
@@ -271,6 +271,24 @@ public class GitRepositoryRs extends BaseCrudRs<GitRepository, GitRepositoryDto>
 			@FormParam("password") @ApiParam("Password to use during pull") String password) throws BusinessException {
 		final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
 		gitClient.pull(gitRepository, username, password);
+	}
+	
+	/**
+	 * Fetch the commits of a {@link GitRepository}
+	 *
+	 * @param code     Code of the {@link GitRepository} to pull
+	 * @param username Optional - Username to use during pull
+	 * @param password Optional - Password to use during pull
+	 */
+	@POST
+	@Path("/repositories/{code}/fetch")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@ApiOperation("Pull changes from remote origin")
+	@ApiResponses({ @ApiResponse(code = 200, message = "If pull is successful"), @ApiResponse(code = 400, message = "If repository has no remote") })
+	public void fetch(@PathParam("code") @ApiParam("Code of the repository") String code, @FormParam("username") @ApiParam("Username to use during fetch") String username,
+			@FormParam("password") @ApiParam("Password to use during fetch") String password) throws BusinessException {
+		final GitRepository gitRepository = code.equals(meveoRepository.getCode()) ? meveoRepository : gitRepositoryService.findByCode(code);
+		gitClient.fetch(gitRepository, username, password);
 	}
 
 	/**
