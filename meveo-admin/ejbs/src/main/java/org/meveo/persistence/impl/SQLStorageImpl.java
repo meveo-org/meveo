@@ -181,7 +181,7 @@ public class SQLStorageImpl implements StorageImpl {
 			}
 		}
 		
-		return null;
+		return uuid;
 	}
 
 	@Override

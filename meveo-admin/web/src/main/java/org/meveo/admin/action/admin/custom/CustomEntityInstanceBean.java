@@ -331,7 +331,14 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 			String message = entity.isTransient() ? "save.successful" : "update.successful";
 
 			try {
-				crossStorageService.createOrUpdate(repository, entity);
+				// Raise an error if the value already exist
+				String entityId = crossStorageService.findEntityId(repository, entity);
+				if (entityId == null) {
+					crossStorageService.createOrUpdate(repository, entity);
+				} else {
+					messages.error("Entity with same unique values already exsits with id " + entityId);
+					return null;
+				}
 			} catch (IllegalTransitionException e) {
 				messages.error(new BundleKey("messages", "customEntityInstance.update.illegalTransition"), e.getField(), e.getFrom(), e.getTo());
 				return null;
