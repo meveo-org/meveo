@@ -528,7 +528,9 @@ public class SQLStorageImpl implements StorageImpl {
 		if(sqlUUID == null) {
 			Map<String, Object> sqlValues = PersistenceUtils.filterValues(cfts, cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL, false);
 			sqlUUID = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cei.getCet(), sqlValues, cfts.values());
-			oldCfValues = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID);
+			if (sqlUUID != null) {
+				oldCfValues = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID);
+			}
 		}
 		
 		if (sqlUUID != null) {
