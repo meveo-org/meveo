@@ -1,3 +1,4 @@
+
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
                 xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
@@ -85,6 +86,10 @@
 					disabled="true" rendered="#{!meveoModuleBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
+		
+    	<p:messages id="messages">
+            <p:autoUpdate />
+        </p:messages>
 
         <ui:include src="modulePopups.xhtml">
             <ui:param name="backingBean" value="#{meveoModuleBean}" />
@@ -293,6 +298,10 @@
 					<p:commandButton rendered="#{meveoModuleBean.entity.active}" id="sync" value="Synchronize module items dependencies" actionListener="#{meveoModuleBean.synchronizeLinkedItems}">
 						
 					</p:commandButton>
+					
+					<p:commandButton rendered="#{meveoModuleBean.entity.installed}" id="recompile" value="Recompile" actionListener="#{meveoModuleBean.recompileAll}">
+						
+					</p:commandButton>
 
 					<p:commandButton immediate="true" value="#{messages['meveoModule.patch.apply']}"
 						onclick="PF('dlg_applyPatchPopup').show()" type="button" rendered="#{!meveoModuleBean.entity.transient and meveoModuleBean.entity.isInDraft}" />
@@ -302,7 +311,7 @@
                     
                     <p:commandButton value="Install data" onclick="PF('dialog_install_data').show()" rendered="#{meveoModuleBean.entity.installed and not empty meveoModuleBean.availableRepositories()}"/>
                     
-                   <p:commandButton value="Force delete" title="Delete module without uninstalling items" action="#{meveoModuleBean.forceDelete}"/>
+                   <p:commandButton rendered="#{meveoModuleBean.entity.code != 'Meveo'}" value="Force delete" title="Delete module without uninstalling items" action="#{meveoModuleBean.forceDelete}"/>
                     
                     <p:dialog id="dialog_install_data" widgetVar="dialog_install_data" header="Choose repository">
                     	<h:form>

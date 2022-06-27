@@ -58,6 +58,8 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.util.view.MessagesHelper;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.UploadedFile;
@@ -95,6 +97,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Inject
 	private MeveoModulePatchApi meveoModulePatchApi;
+	
+	@Inject
+	private ScriptInstanceService scriptService;
 
 	private String moduleCode;
 	private String releaseVersion;
@@ -649,5 +654,16 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	
 	public void forceDelete() throws BusinessException {
 		meveoModuleService.remove(entity);
+	}
+	
+	public String recompileAll() {
+		try {
+			scriptService.reCompileAll(entity);
+			messages.info("Recompiled scripts with success");
+		} catch (Exception e) {
+			MessagesHelper.error(messages, e);
+		}
+		
+		return null;
 	}
 }
