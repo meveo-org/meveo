@@ -59,4 +59,111 @@
     </addColumn>
   </changeSet>
 
+	<changeSet id="Update adm_country table to ISO 3166-1 #558" author="Clément Bareth">
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="238" />
+			<column name="code" value="AQ" />
+			<column name="description" value="Antarctica" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="239" />
+			<column name="code" value="AX" />
+			<column name="description" value="Åland Islands" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="240" />
+			<column name="code" value="BL" />
+			<column name="description" value="Saint Barthélémy" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="241" />
+			<column name="code" value="BQ" />
+			<column name="description" value="Bonaire, Sint Eustatius and Sab" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="242" />
+			<column name="code" value="CW" />
+			<column name="description" value="Curaçao" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="243" />
+			<column name="code" value="EH" />
+			<column name="description" value="Western Sahara" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="244" />
+			<column name="code" value="GG" />
+			<column name="description" value="Guernsey" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="245" />
+			<column name="code" value="IM" />
+			<column name="description" value="Isle of Man" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="246" />
+			<column name="code" value="JE" />
+			<column name="description" value="Jersey" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="247" />
+			<column name="code" value="ME" />
+			<column name="description" value="Montenegro" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="248" />
+			<column name="code" value="MF" />
+			<column name="description" value="Saint Martin (French part)" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="249" />
+			<column name="code" value="RS" />
+			<column name="description" value="Serbia" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="250" />
+			<column name="code" value="SS" />
+			<column name="description" value="South Sudan" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="251" />
+			<column name="code" value="SX" />
+			<column name="description" value="Sint Maarten  (Dutch part)" />
+		</insert>
+		<delete tableName="adm_country">
+			<where>code='YU'</where>
+		</delete>
+		<delete tableName="adm_country">
+			<where>code='AN'</where>
+		</delete>
+	</changeSet>
+
 </databaseChangeLog>
