@@ -50,6 +50,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBTransactionRolledbackException;
+import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -97,6 +98,7 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -1735,5 +1737,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleCtx.end();
 		
 		meveoModuleService.update(module);
+	}
+	
+	public void deleteModuleBeforeRepository(@Observes @Removed GitRepository repository) throws MeveoApiException, BusinessException {
+		MeveoModule module = meveoModuleService.findByCode(repository.getCode());
+		if (module != null) {
+			ModuleUninstall uninstallParams = ModuleUninstall.builder()
+					.module(module)
+					.removeData(true)
+					.removeFiles(true)
+					.removeItems(true)
+					.withDependencies(false)
+					.build();
+					
+			for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
+				meveoModuleService.remove(uninstalledModule);
+			}
+			
+		}
 	}
 }
