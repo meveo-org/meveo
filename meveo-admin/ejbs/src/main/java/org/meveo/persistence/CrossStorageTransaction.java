@@ -4,8 +4,6 @@
 package org.meveo.persistence;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -13,8 +11,12 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
+import org.hibernate.Session;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
+import org.meveo.persistence.impl.SQLStorageImpl;
+import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
 
 /**
@@ -32,6 +34,12 @@ public class CrossStorageTransaction {
 	
 	@Inject
 	private StorageImplProvider provider;
+	
+	@Inject
+	private Neo4jStorageImpl neo4jStorageImpl;
+	
+	@Inject
+	private SQLStorageImpl sqlStorageImpl;
 	
 	private List<StorageImpl> storages; 
 	
@@ -79,6 +87,14 @@ public class CrossStorageTransaction {
 		storages.stream()
 			.map(provider::findImplementation)
 			.forEach(storageImpl -> storageImpl.rollbackTransaction(stackedCalls));
+	}
+	
+	public Transaction getNeo4jTransaction(String repository) {
+		return neo4jStorageImpl.getNeo4jTransaction(repository);
+	}
+	
+	public Session getHibernateSession(String repository) {
+		return sqlStorageImpl.getHibernateSession(repository);
 	}
 	
 	@PreDestroy
