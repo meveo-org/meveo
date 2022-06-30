@@ -26,7 +26,8 @@
         <hftl:formPanel label="#{messages['repository.neo4jConfiguration']}" backingBean="#{neo4jConfigurationBean}">
             <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
             <hftl:formField label="#{messages['neo4jConfiguration.url']}" field="neo4jUrl" required="true" />
-            <hftl:formField label="#{messages['neo4jConfiguration.login']}" field="neo4jLogin" required="true" />
+            <hftl:formField label="#{messages['neo4jConfiguration.login']}" field="neo4jLogin" required="true" />            
+            <hftl:formField label="Protocol" field="protocol" required="true"/>
             <hftl:formField label="#{messages['neo4jConfiguration.password']}" field="clearPassword" required="true" secret="true"/>
         	<ui:param name="buttons" value="true" />
         	<ui:define name="buttons">
