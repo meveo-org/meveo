@@ -400,6 +400,15 @@ public class CrossStorageService implements CustomPersistenceService {
 	private boolean isEverythingStoredInNeo4J(CustomRelationshipTemplate crt) {
 		return crt.getAvailableStorages().contains(DBStorageType.NEO4J) && crt.getStartNode().getAvailableStorages().contains(DBStorageType.NEO4J) && crt.getEndNode().getAvailableStorages().contains(DBStorageType.NEO4J);
 	}
+	
+	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
+		for (var storage : cet.getAvailableStorages()) {
+			if (provider.findImplementation(storage).exists(repository, cet, uuid)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Create or update an entity and enventyally entity references that it holds
@@ -417,10 +426,11 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		// Retrieve corresponding CET
 		CustomEntityTemplate cet  = customEntityTemplateService.findByCode(ceiToSave.getCetCode(), List.of("availableStorages"));
+		ceiToSave.setCet(cet);
 		if(cet == null) {
 			throw new IllegalArgumentException("CET with code " + ceiToSave.getCetCode() + " does not exist");
 		}
-				
+		
 		Set<EntityRef> persistedEntities = new HashSet<>();
 
 		// Initialize the CEI that will be manipulated
@@ -465,7 +475,11 @@ public class CrossStorageService implements CustomPersistenceService {
 			.collect(Collectors.toList());
 		
 		try {
-			foundId = findEntityId(repository, cei);
+			if (ceiToSave.getUuid() != null && exists(repository, cet, ceiToSave.getUuid())) {
+				foundId = ceiToSave.getUuid();
+			} else {
+				foundId = findEntityId(repository, cei);
+			}
 		} catch (IllegalArgumentException e) {
 			// It's no problem if we can't retrieve record using values - we consider it does not exist
 			foundId = null;
@@ -584,7 +598,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		ceiToUpdate.setRepository(repository);
 		CustomEntityTemplate cet = ceiToUpdate.getCet();
 		
-		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(cet.getAppliesTo());
+		Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.getCftsWithInheritedFields(cet);
 		ceiToUpdate.setFieldTemplates(customFieldTemplates);
 
 		if (ceiToUpdate.getCfValuesOld() != null && !ceiToUpdate.getCfValuesOld().getValuesByCode().isEmpty()) {
@@ -774,7 +788,12 @@ public class CrossStorageService implements CustomPersistenceService {
 	private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		Map<String, Object> updatedValues = new HashMap<>(entityValues);
 
-		List<CustomFieldTemplate> cetFields = updatedValues.keySet().stream().map(fieldName -> cache.getCustomFieldTemplate(fieldName, cet.getAppliesTo())).filter(Objects::nonNull).collect(Collectors.toList());
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
+		List<CustomFieldTemplate> cetFields = updatedValues.keySet()
+				.stream()
+				.map(cfts::get)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
 
 		for (CustomFieldTemplate customFieldTemplate : cetFields) {
 			if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
