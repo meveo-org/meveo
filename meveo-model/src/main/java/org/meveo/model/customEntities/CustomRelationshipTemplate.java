@@ -68,7 +68,7 @@ import org.meveo.model.storage.Repository;
         parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
 )
 @NamedQueries({
-        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  "),
+        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt JOIN FETCH crt.availableStorages where crt.disabled=false  "),
         @NamedQuery(name = "CustomRelationshipTemplate.findByStartEndAndName", query = "SELECT crt from CustomRelationshipTemplate crt " +
                 "WHERE crt.startNode.code = :startCode " +
                 "AND crt.endNode.code = :endCode " +

@@ -262,7 +262,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 	 */
 	@Override
 	public CustomRelationshipTemplate findByCode(String code){
-		return super.findByCode(code);
+		return super.findByCode(code, List.of("availableStorages"));
 	}
 
 	/**
