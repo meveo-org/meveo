@@ -96,8 +96,18 @@
 			<!-- ===================================== JOB EXECUTION RESULTS ===================================== -->
 
             <p:panel id="jobExecutions" rendered="#{!jobInstanceBean.entity.transient}">
-				<p:dataTable id="jobExecutionsDatatable" var="entity" sortBy="#{entity.startDate}" sortOrder="descending" paginator="true" value="#{jobInstanceBean.entity.executionResults}" rows="10"
-					rowKey="#{entity.id}" widget="jobExecutionsTable" resizableColumns="true">
+				<p:dataTable
+					id="jobExecutionsDatatable"
+					var="entity" 
+					sortBy="#{entity.startDate}" 
+					sortOrder="descending" 
+					paginator="true" 
+					value="#{jobInstanceBean.executionResults}" 
+					rows="10"
+					rowKey="#{entity.id}" 
+					widget="jobExecutionsTable"
+					lazy="true"
+					resizableColumns="true">
 					<p:column sortBy="#{entity.startDate}">
 						<f:facet name="header">
 							<h:outputText value="#{messages['jobExecution.startDate']}" />
