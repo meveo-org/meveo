@@ -16,17 +16,44 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.meveo.event.qualifier.Updated;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.persistence.DBStorageTypeService;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
-public class CrossStorageScheduledPersistenceService extends OrderedPersistenceService<CrossStorageService>{
+public class CrossStorageScheduledPersistenceService extends OrderedPersistenceService<CrossStorageService> {
+	
+	private static ConcurrentHashMap<String, List<DBStorageType>> storageTypesCache = new ConcurrentHashMap<>();
 
     @Inject
     private CrossStorageService service;
+    
+	@Inject
+	private DBStorageTypeService dbStorageTypeService;
 
     @Override
-    protected CrossStorageService getStorageService(){
+    protected CrossStorageService getStorageService() {
         return service;
     }
+
+	@Override
+	protected List<DBStorageType> getStorageTypes(String templateCode) {
+		return storageTypesCache.computeIfAbsent(templateCode, dbStorageTypeService::findTemplateStorages);
+	}
+	
+	public void onCetUpdate(@Observes @Updated CustomEntityTemplate cet) {
+		storageTypesCache.remove(cet.getCode());
+	}
+	
+	public void onCrtUpdate(@Observes @Updated CustomRelationshipTemplate crt) {
+		storageTypesCache.remove(crt.getCode());
+	}
 }

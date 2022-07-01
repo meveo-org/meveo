@@ -26,9 +26,12 @@ public class DBStorageTypeService implements Serializable {
 	
 	@SuppressWarnings("unchecked")
 	public List<DBStorageType> findTemplateStorages(String template) {
+		String query = "FROM DBStorageType dbSt \n" + 
+					   "	WHERE EXISTS (FROM CustomEntityTemplate cet INNER JOIN cet.availableStorages cetStorage WHERE cet.code = :code AND cetStorage.code = dbSt.code) \n" +
+					   "	OR EXISTS (FROM CustomRelationshipTemplate crt INNER JOIN crt.availableStorages crtStorage WHERE crt.code = :code AND crtStorage.code = dbSt.code) \n";
 		return (List<DBStorageType>) emWrapper.getEntityManager()
-			.createNativeQuery("SELECT dbSt FROM DBStorageType dbSt, CustomEntityTemplate cet, CustomRelationshipTemplate crt \n"
-					+ "WHERE (dbSt.code IN cet.availableStorages OR dbSt.code IN crt.availableStorages) \n", DBStorageType.class)
+			.createQuery(query, DBStorageType.class)
+			.setParameter("code", template)
 			.getResultList();
 	}
 	

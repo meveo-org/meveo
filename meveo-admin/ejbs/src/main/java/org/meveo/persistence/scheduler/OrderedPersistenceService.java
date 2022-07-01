@@ -59,9 +59,6 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 	@Inject
 	private CrossStorageTransaction crossStorageTx;
 	
-	@Inject
-	private DBStorageTypeService dbStorageTypeService;
-    
     private T storageService;
 
     @PostConstruct
@@ -70,6 +67,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
     }
 
     protected abstract T getStorageService();
+    
+    protected abstract List<DBStorageType> getStorageTypes(String templateCode);
 
     /**
      * Iterate over the persistence schedule and persist the provided entities
@@ -92,8 +91,8 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
             for (ItemToPersist itemToPersist : iterator.next()) {
             	
-            	List<DBStorageType> storages = dbStorageTypeService.findTemplateStorages(itemToPersist.getCode());
-            	
+            	List<DBStorageType> storages = getStorageTypes(itemToPersist.getCode());
+            			
             	crossStorageTx.beginTransaction(repository, storages);
 
                 PersistenceActionResult result = null;
