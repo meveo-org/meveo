@@ -19,6 +19,7 @@ package org.meveo.api.rest.module.impl;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -277,4 +278,13 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 			moduleApi.install(repositories, repo);
 		}
 	}
+
+    @Override
+    public Map<String, String> initDefaultRepo(String username, String password) throws BusinessException {
+        try{
+            return moduleApi.initDefaultRepo(username,password);
+        } catch (Exception e) {
+            throw new BusinessException("Error executing initDefaultRepo", e);
+        }
+    }
 }
