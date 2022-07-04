@@ -17,6 +17,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.util.KeyValuePair;
@@ -25,6 +26,8 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
+import org.meveo.util.view.ServiceBasedLazyDataModel;
+import org.primefaces.model.LazyDataModel;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -273,7 +276,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("timerEntity", "executionResults", "followingJob");
+        return Arrays.asList("timerEntity", "followingJob");
     }
     
 	@Override
@@ -296,5 +299,20 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     @Override
     public boolean isHasParams() {
         return hasParams;
+    }
+    
+    public LazyDataModel<JobExecutionResultImpl> getExecutionResults() {
+    	return new ServiceBasedLazyDataModel<JobExecutionResultImpl>() {
+
+			@Override
+			protected Map<String, Object> getSearchCriteria() {
+				return new HashMap<>();
+			}
+
+			@Override
+			protected IPersistenceService<JobExecutionResultImpl> getPersistenceServiceImpl() {
+				return jobExecutionService;
+			}
+		};
     }
 }

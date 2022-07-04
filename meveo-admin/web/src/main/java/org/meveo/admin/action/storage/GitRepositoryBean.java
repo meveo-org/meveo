@@ -100,7 +100,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public GitRepository initEntity() {
 		GitRepository entity = super.initEntity();
 		
-		if (entity != null) {
+		if (entity != null && entity.getId() !=null && entity.getCode() != null) {
 			try {
 				branchList = gitClient.listRefs(entity);
 			} catch (BusinessException e) {
