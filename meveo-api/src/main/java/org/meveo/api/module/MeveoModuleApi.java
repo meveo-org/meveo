@@ -52,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
+import javax.ejb.Timeout;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
@@ -218,6 +219,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private GitRepositoryService gitRepositoryService;
+    
+    @Inject
+    private DefaultMeveoModuleInitializer defaultMeveoModuleInitializer;
     
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -1754,74 +1758,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.withDependencies(false)
 					.build();
 					
-			for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
-				meveoModuleService.remove(uninstalledModule);
+			if (module.isInstalled()) {
+				for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
+					meveoModuleService.remove(uninstalledModule);
+				} 
+			} else {
+				meveoModuleService.remove(module);
 			}
 			
 		}
 	}
 
-	// initDefaultRepo
-	// (Credential credential) => username + pw pour les repos des différents modules
-	// Propriété System => meveo.module.default => point to json (check if exists else error)
-	// json to serialize as MeveoModuleDto
-	// in MeveoModuleDto => has property moduleDependencies=> iterate over
-	// for each object of list => has name of module, target repo and branch
-	// (for each module)
-		// check if exists
-		// if true
-		// git fetch
-		// checkout repo @ branch +  sur Gitrepository => has property default_branch that needs to be modified
-		// git pull
-	// else
-	// git clone moduleGitUrl
-	// install
-
+	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public Map<String, String> initDefaultRepo(String username, String password) throws MeveoApiException, IOException, BusinessException {
-		Map<String, String> message = new HashMap<String, String>();
-		String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/module.json");
-		File moduleFile = new File(path);
-		MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
-		List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
-		for (ModuleDependencyDto moduleDependencyDto : moduleDependencyDtos) {
-			String moduleCode = moduleDependencyDto.getCode();
-			String moduleGitUrl = moduleDependencyDto.getGitUrl();
-			String moduleBranch = moduleDependencyDto.getGitBranch();
-			try {
-				GitClient gitClient = new GitClient();
-				GitRepositoryApi gitRepositoryApi = new GitRepositoryApi();
-				GitRepository repository = null;
-				GitRepositoryDto repositoryDto = null;
-				// Check if module exists
-				if (find(moduleCode)!= null) {
-					MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(moduleCode);
-					// git fetch
-					repository = module.getGitRepository();
-					// necessary?
-					// if (repository.getRemoteOrigin()!=moduleGitUrl) {
-					// 	repository.setRemoteOrigin(moduleGitUrl);
-					// }
-					gitClient.fetch(repository, username, password);
-					// git checkout
-					repositoryDto = gitRepositoryApi.toDto(repository);
-					repositoryDto.setDefaultBranch(moduleBranch);
-					repository = gitRepositoryApi.update(repositoryDto);
-					// gitClient.checkout(repository, moduleBranch, false);
-					// git pull
-					gitClient.pull(repository, username, password);
-				} else {
-					repositoryDto = new GitRepositoryDto();
-					repositoryDto.setCode(moduleCode);
-					repositoryDto.setRemoteOrigin(moduleGitUrl);
-					repositoryDto.setDefaultBranch(moduleBranch);
-					repository = gitRepositoryApi.create(repositoryDto, true, username, password);
-					install(null, repository);
-				}
-				message.put(moduleCode, "SUCCESS");
-			} catch (Exception e) {
-				message.put(moduleCode, e.getMessage());
-			}
-		}
-		return message;
+		return defaultMeveoModuleInitializer.init(username, password);
 	}
 }
