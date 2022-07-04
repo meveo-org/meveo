@@ -19,6 +19,7 @@ package org.meveo.api.rest.module;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -298,4 +299,10 @@ public interface ModuleRs extends IBaseRs {
 	@Path("/release/{code}/{nextVersion}")
 	@ApiOperation(value = "release meveo module by code")
 	ActionStatus release(@PathParam("code") @ApiParam("Code of the module") String moduleCode, @PathParam("nextVersion") @ApiParam("next version meveo module") String nextVersion);
+
+
+	@POST
+	@Path("/initDefault")
+	@ApiOperation(value = "update meveo modules")
+	Map<String, String> initDefaultRepo(@FormParam("username") String username, @FormParam("password") String password) throws BusinessException;
 }

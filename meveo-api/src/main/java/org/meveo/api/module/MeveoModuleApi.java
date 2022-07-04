@@ -96,7 +96,9 @@ import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.git.GitRepositoryApi;
+import org.meveo.api.rest.module.impl.ModuleRsImpl;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
@@ -1755,5 +1757,69 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 			
 		}
+	}
+
+	// initDefaultRepo
+	// (Credential credential) => username + pw pour les repos des différents modules
+	// Propriété System => meveo.module.default => point to json (check if exists else error)
+	// json to serialize as MeveoModuleDto
+	// in MeveoModuleDto => has property moduleDependencies=> iterate over
+	// for each object of list => has name of module, target repo and branch
+	// (for each module)
+		// check if exists
+		// if true
+		// git fetch
+		// checkout repo @ branch +  sur Gitrepository => has property default_branch that needs to be modified
+		// git pull
+	// else
+	// git clone moduleGitUrl
+	// install
+
+	public Map<String, String> initDefaultRepo(String username, String password) throws MeveoApiException, IOException, BusinessException {
+		Map<String, String> message = new HashMap<String, String>();
+		String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/module.json");
+		File moduleFile = new File(path);
+		MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
+		List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
+		for (ModuleDependencyDto moduleDependencyDto : moduleDependencyDtos) {
+			String moduleCode = moduleDependencyDto.getCode();
+			String moduleGitUrl = moduleDependencyDto.getGitUrl();
+			String moduleBranch = moduleDependencyDto.getGitBranch();
+			try {
+				GitClient gitClient = new GitClient();
+				GitRepositoryApi gitRepositoryApi = new GitRepositoryApi();
+				GitRepository repository = null;
+				GitRepositoryDto repositoryDto = null;
+				// Check if module exists
+				if (find(moduleCode)!= null) {
+					MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(moduleCode);
+					// git fetch
+					repository = module.getGitRepository();
+					// necessary?
+					// if (repository.getRemoteOrigin()!=moduleGitUrl) {
+					// 	repository.setRemoteOrigin(moduleGitUrl);
+					// }
+					gitClient.fetch(repository, username, password);
+					// git checkout
+					repositoryDto = gitRepositoryApi.toDto(repository);
+					repositoryDto.setDefaultBranch(moduleBranch);
+					repository = gitRepositoryApi.update(repositoryDto);
+					// gitClient.checkout(repository, moduleBranch, false);
+					// git pull
+					gitClient.pull(repository, username, password);
+				} else {
+					repositoryDto = new GitRepositoryDto();
+					repositoryDto.setCode(moduleCode);
+					repositoryDto.setRemoteOrigin(moduleGitUrl);
+					repositoryDto.setDefaultBranch(moduleBranch);
+					repository = gitRepositoryApi.create(repositoryDto, true, username, password);
+					install(null, repository);
+				}
+				message.put(moduleCode, "SUCCESS");
+			} catch (Exception e) {
+				message.put(moduleCode, e.getMessage());
+			}
+		}
+		return message;
 	}
 }
