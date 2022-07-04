@@ -63,7 +63,7 @@ import io.swagger.annotations.ApiParam;
  * @version 6.7.0
  */
 @Path("/module")
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.APPLICATION_FORM_URLENCODED })
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 @Api("ModuleRs")
 public interface ModuleRs extends IBaseRs {
