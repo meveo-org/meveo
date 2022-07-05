@@ -146,23 +146,19 @@ public class SQLStorageImpl implements StorageImpl {
 					.filter(cft -> cft.getStoragesNullSafe().contains(DBStorageType.SQL))
 					.collect(Collectors.toList());
 
-				if(uniqueCfts.isEmpty()) {
-					throw new IllegalArgumentException("Can't retrieve SQL record by values if no unique fields are defined");
-				}
+				if(!uniqueCfts.isEmpty()) {
+					Map<String, Object> uniqueValues = new HashMap<>();
+					uniqueCfts.forEach(cft -> {
+						var value = valuesFilters.get(cft.getCode());
+						if(value != null) {
+							uniqueValues.put(cft.getCode(), value);
+						}
+					});
 				
-				Map<String, Object> uniqueValues = new HashMap<>();
-				uniqueCfts.forEach(cft -> {
-					var value = valuesFilters.get(cft.getCode());
-					if(value != null) {
-						uniqueValues.put(cft.getCode(), value);
+					if(!uniqueValues.isEmpty()) {
+						uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cet, uniqueValues, cfts.values());
 					}
-				});
-				
-				if(uniqueValues.isEmpty()) {
-					throw new IllegalArgumentException("No unique values provided");
 				}
-				
-				uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cet, uniqueValues, cfts.values());
 			}
 			
 		} else {
