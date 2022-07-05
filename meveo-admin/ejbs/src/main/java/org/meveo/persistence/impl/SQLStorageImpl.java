@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -762,6 +763,7 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
+	@PreDestroy
 	public void destroy() {
 		try {
 			hibernateSessions.values().forEach(s -> {
@@ -769,6 +771,7 @@ public class SQLStorageImpl implements StorageImpl {
 					s.close();
 				}
 			});
+			hibernateSessions.clear();
 			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
 				userTx.commit();
 			}

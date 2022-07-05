@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PreDestroy;
 import javax.ejb.EJBException;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -518,10 +519,13 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
+	@PreDestroy
 	public void destroy() {
 		neo4jTransactions.values().forEach(s -> s.close());
 		neo4jSessions.values().forEach(Session::close);
+		
 		neo4jTransactions.clear();
+		neo4jSessions.clear();
 	}
 	
 	public Transaction getNeo4jTransaction(String repository) {
