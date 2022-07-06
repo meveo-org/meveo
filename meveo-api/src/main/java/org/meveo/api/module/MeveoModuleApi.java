@@ -1768,7 +1768,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public Map<String, String> initDefaultRepo(String username, String password) throws MeveoApiException, IOException, BusinessException {
-		return defaultMeveoModuleInitializer.init(username, password);
+	public Map<String, String> initDefaultRepo(UpdateModulesParameters parameters) throws MeveoApiException, IOException, BusinessException {
+		return defaultMeveoModuleInitializer.init(parameters);
 	}
 }

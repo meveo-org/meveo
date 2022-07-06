@@ -46,6 +46,7 @@ import org.meveo.api.dto.response.module.MeveoModuleDtoResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
+import org.meveo.api.module.UpdateModulesParameters;
 import org.meveo.api.rest.IBaseRs;
 import org.meveo.api.rest.module.impl.ModuleUploadForm;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
@@ -304,5 +305,5 @@ public interface ModuleRs extends IBaseRs {
 	@POST
 	@Path("/initDefault")
 	@ApiOperation(value = "update meveo modules")
-	Map<String, String> initDefaultRepo(@FormParam("username") String username, @FormParam("password") String password) throws BusinessException;
+	Map<String, String> initDefaultRepo(@FormParam("params") UpdateModulesParameters parameters) throws BusinessException;
 }

@@ -41,6 +41,7 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.OnDuplicate;
+import org.meveo.api.module.UpdateModulesParameters;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.api.rest.module.ModuleRs;
 import org.meveo.model.git.GitRepository;
@@ -280,9 +281,9 @@ public class ModuleRsImpl extends BaseRs implements ModuleRs {
 	}
 
     @Override
-    public Map<String, String> initDefaultRepo(String username, String password) throws BusinessException {
+    public Map<String, String> initDefaultRepo(UpdateModulesParameters parameters) throws BusinessException {
         try{
-            return moduleApi.initDefaultRepo(username,password);
+            return moduleApi.initDefaultRepo(parameters);
         } catch (Exception e) {
             throw new BusinessException("Error executing initDefaultRepo", e);
         }
