@@ -130,7 +130,7 @@ public class DefaultMeveoModuleInitializer {
 
 				userTx.commit();
 			}
-			if (parameters.getCallbackUrl()!=null) {
+			if (parameters.getCallbackUrl()!=null && !parameters.getCallbackUrl().isEmpty()) {
 				returnResponse(parameters, message);
 			}
 			return message;
