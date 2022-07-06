@@ -130,7 +130,9 @@ public class DefaultMeveoModuleInitializer {
 
 				userTx.commit();
 			}
-			returnResponse(parameters, message);
+			if (parameters.getCallbackUrl()!=null) {
+				returnResponse(parameters, message);
+			}
 			return message;
 
 		} catch (NotSupportedException | RollbackException | SystemException | HeuristicRollbackException | HeuristicMixedException e1) {
