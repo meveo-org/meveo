@@ -109,11 +109,11 @@ public class CustomEntityTemplateObserver {
 		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 
 		// oldValue
-		cft = createCft("old_value", CustomFieldTypeEnum.STRING, false, false);
+		cft = createCft("old_value", CustomFieldTypeEnum.LONG_TEXT, false, false);
 		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 
 		// newValue
-		cft = createCft("new_value", CustomFieldTypeEnum.STRING, false, false);
+		cft = createCft("new_value", CustomFieldTypeEnum.LONG_TEXT, false, false);
 		customTableCreatorService.addField(sqlConnectionCode, dbTableName, cft);
 	}
 
