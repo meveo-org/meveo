@@ -21,6 +21,8 @@ import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.dto.git.GitRepositoryDto;
@@ -35,6 +37,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.git.GitClient;
 import org.slf4j.Logger;
+
 
 @TransactionManagement(TransactionManagementType.BEAN)
 public class DefaultMeveoModuleInitializer {
@@ -57,12 +60,15 @@ public class DefaultMeveoModuleInitializer {
 	@Inject
 	private Logger log;
 
-	public Map<String, String> init(String username, String password) throws MeveoApiException, IOException, BusinessException {
+	public Map<String, String> init(UpdateModulesParameters parameters) throws MeveoApiException, IOException, BusinessException {
+		String username = parameters.getGitCredentials().getUsername();
+		String password = parameters.getGitCredentials().getPassword();
+
 		try {
 			userTx.setTransactionTimeout((int) Duration.ofHours(1).toSeconds());
 			
 			Map<String, String> message = new HashMap<String, String>();
-			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/module.json");
+			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/default/module.json");
 			File moduleFile = new File(path);
 			MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
 			List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
@@ -121,10 +127,10 @@ public class DefaultMeveoModuleInitializer {
 					userTx.rollback();
 					continue;
 				}
-				
+
 				userTx.commit();
 			}
-			
+			returnResponse(parameters, message);
 			return message;
 
 		} catch (NotSupportedException | RollbackException | SystemException | HeuristicRollbackException | HeuristicMixedException e1) {
@@ -132,4 +138,20 @@ public class DefaultMeveoModuleInitializer {
 		}
 	}
 
+	public void returnResponse(UpdateModulesParameters parameters, Map<String, String> message) throws BusinessException {
+		Map<String, Object> body = new HashMap<String, Object>();
+		body.put("id", parameters.getId());
+		body.put("message", message);
+		Client client = ClientBuilder.newClient();
+		WebTarget target = client.target(parameters.getCallbackUrl());
+		String resp = JacksonUtil.toStringPrettyPrinted(body);
+		Response response = target.request().post(Entity.json(resp));
+		String responseContent = "";
+		if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+			log.info("Response sent successfully");
+		} else {
+			responseContent += response.readEntity(String.class);
+			log.error("Error sending response \n "+responseContent);
+		}
+	}
 }
