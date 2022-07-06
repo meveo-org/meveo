@@ -305,5 +305,5 @@ public interface ModuleRs extends IBaseRs {
 	@POST
 	@Path("/initDefault")
 	@ApiOperation(value = "update meveo modules")
-	Map<String, String> initDefaultRepo(@FormParam("params") UpdateModulesParameters parameters) throws BusinessException;
+	Map<String, String> initDefaultRepo(UpdateModulesParameters parameters) throws BusinessException;
 }
