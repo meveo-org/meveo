@@ -18,14 +18,26 @@
  */
 package org.meveo.model.billing;
 
+import java.util.Map;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.validation.constraints.Size;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.admin.Currency;
-
-import javax.persistence.*;
-import javax.validation.constraints.Size;
+import org.meveo.model.persistence.JsonTypes;
 
 @Entity
 @Cacheable
@@ -50,6 +62,10 @@ public class Country extends BusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language_id")
     private Language language;
+    
+	@Type(type = JsonTypes.JSON)
+	@Column(name = "description_i18n", columnDefinition = "text")
+	private Map<String, String> descriptionI18n;
 
     /**
      * @return the nationality
@@ -80,6 +96,20 @@ public class Country extends BusinessEntity {
     public void setLanguage(Language language) {
         this.language = language;
     }
+    
+    /**
+	 * @return the {@link #descriptionI18n}
+	 */
+	public Map<String, String> getDescriptionI18n() {
+		return descriptionI18n;
+	}
+	
+	/**
+	 * @param descriptionI18n the descriptionI18n to set
+	 */
+	public void setDescriptionI18n(Map<String, String> descriptionI18n) {
+		this.descriptionI18n = descriptionI18n;
+	}
 
     public String toString() {
         return code;
