@@ -268,22 +268,6 @@ public interface EntityCustomizationRs extends IBaseRs {
 	ActionStatus createOrUpdateAction(@ApiParam("Entity custom action information") EntityCustomActionDto dto);
 
 	/**
-	 * Returns a List of BusinessEntities given a CustomFieldTemplate code. The
-	 * CustomFieldTemplate is pulled from the database and entityClass is use in
-	 * query. For example entity class is of type OfferTemplate, then it will return
-	 * a list of OfferTemplates.
-	 * 
-	 * @param code     - CFT code
-	 * @param wildcode - code filter
-	 * @return
-	 */
-	@GET
-	@Path("/listBusinessEntityForCFVByCode/")
-	@ApiOperation(value = "List custom field template by code")
-	BusinessEntityResponseDto listBusinessEntityForCFVByCode(@QueryParam("code") @ApiParam("Code of the custom field template") String code,
-			@QueryParam("wildcode") @ApiParam("Code filter") String wildcode);
-
-	/**
 	 * Returns a list of filtered CustomFieldTemplate of an entity. The list of
 	 * entity is evaluted againsts the entity with the given code.
 	 * 
