@@ -2416,6 +2416,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @param values map of cft values
      * @throws BusinessException thrown when values are not set
      */
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
 		Map<String, CustomFieldTemplate> cetFields = null;
 		try {
