@@ -810,7 +810,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
 		}
 		
-		if(meveoModuleService.hasDependencies(meveoModule)) {
+		if(meveoModuleService.isDependencyOfOtherModule(meveoModule)) {
 			throw new BusinessException("Unable to uninstall a referenced module.");
 		}
 		
@@ -829,10 +829,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			if (uninstall.withDependencies()) {
 				for (var dependency : uninstalledModule.getModuleDependencies()) {
 					MeveoModule moduleDependency = meveoModuleService.findByCode(dependency.getCode());
-					ModuleUninstall options = ModuleUninstall.builder(uninstall)
-							.module(moduleDependency)
-							.build();
-					uninstalledModules.addAll(uninstall(MeveoModule.class, options));
+					if (!meveoModuleService.isDependencyOfOtherModule(moduleDependency)) {
+						ModuleUninstall options = ModuleUninstall.builder(uninstall)
+								.module(moduleDependency)
+								.build();
+						uninstalledModules.addAll(uninstall(MeveoModule.class, options));
+					}
 				}
 			}
 			return uninstalledModules;

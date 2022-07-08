@@ -127,9 +127,6 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     private MavenConfigurationService mavenConfigurationService;
     
     @Inject
-    private MeveoModuleItemService meveoModuleItemService;
-
-    @Inject
     private JobInstanceService jobInstanceService;
 
     @Inject
