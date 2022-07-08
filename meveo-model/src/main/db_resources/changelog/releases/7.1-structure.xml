@@ -1198,6 +1198,16 @@
 			<where>id = 247</where>
 		</update>
 	</changeSet>
+	<changeSet id="Fix description i18n">
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Saint-Martin (partie néerlandaise)","ENG":"Sint Maarten (Dutch part)"}' />
+			<where>id = 251</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Monténégro","ENG":"Montenegro"}' />
+			<where>id = 247</where>
+		</update>
+	</changeSet>
 
 
 </databaseChangeLog>
