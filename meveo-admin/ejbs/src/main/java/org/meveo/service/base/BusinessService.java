@@ -332,7 +332,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
+    	String path;
+		try {
+			path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";
+		} catch (Exception e1) {
+			throw new BusinessException("failed to build path of entity {} ({}) of module {}", e1, entity.getCode(), entity.getClass(), module.getCode());
+		}
     	
     	File newDir = new File (gitDirectory, path);
     	newDir.mkdirs();
