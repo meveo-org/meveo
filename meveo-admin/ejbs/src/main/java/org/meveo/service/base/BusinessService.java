@@ -322,8 +322,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		module = installationContext.getModule();
     	}
     	
-    	if(module != null) {
+    	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
     		addFilesToModule(entity,  module);
+    	} else if (module != null) {
+    		log.info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
     	}
 	}
 
