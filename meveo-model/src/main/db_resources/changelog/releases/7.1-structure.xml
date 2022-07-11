@@ -1198,7 +1198,7 @@
 			<where>id = 247</where>
 		</update>
 	</changeSet>
-	<changeSet id="Fix description i18n">
+	<changeSet id="Fix description i18n"  author="Clément Bareth">
 		<update tableName="adm_country">
 			<column name="description_i18n" value='{"FRA":"Saint-Martin (partie néerlandaise)","ENG":"Sint Maarten (Dutch part)"}' />
 			<where>id = 251</where>
