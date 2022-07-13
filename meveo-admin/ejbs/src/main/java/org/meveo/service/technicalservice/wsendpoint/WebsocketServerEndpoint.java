@@ -223,12 +223,12 @@ public class WebsocketServerEndpoint {
 		}
 	}
 
-	public void sendMessage(String enpointCode, String username, String txtMessage) {
+	public void sendMessage(String enpointCode, String username, String txtMessage, boolean persistMessage) {
 		String persistCacheKey = enpointCode+"_"+username;
-		sendMessage(enpointCode, username, txtMessage, persistCacheKey);
+		sendMessage(enpointCode, username, txtMessage, persistCacheKey, persistMessage);
 	}
 
-	public void sendMessage(String enpointCode, String username, String txtMessage, String persistCacheKey) {
+	public void sendMessage(String enpointCode, String username, String txtMessage, String persistCacheKey, boolean persistMessage) {
 		log.info("sendMessage ");
 		boolean messageSent = false;
 		if(username==null){
@@ -250,7 +250,7 @@ public class WebsocketServerEndpoint {
 				}
 			}
 		}
-		if(persistCacheKey != null && !messageSent){
+		if(persistCacheKey != null && !messageSent && persistMessage){
 			userMessageCacheProvider.addUserMessageToCache(persistCacheKey, txtMessage);
 		}
 	}
