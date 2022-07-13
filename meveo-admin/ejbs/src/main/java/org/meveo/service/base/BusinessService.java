@@ -322,8 +322,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		module = installationContext.getModule();
     	}
     	
-    	if(module != null) {
+    	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
     		addFilesToModule(entity,  module);
+    	} else if (module != null) {
+    		log.info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
     	}
 	}
 
@@ -332,7 +334,12 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
     	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
-    	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";// + entity.getCode();
+    	String path;
+		try {
+			path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";
+		} catch (Exception e1) {
+			throw new BusinessException("failed to build path of entity {} ({}) of module {}", e1, entity.getCode(), entity.getClass(), module.getCode());
+		}
     	
     	File newDir = new File (gitDirectory, path);
     	newDir.mkdirs();

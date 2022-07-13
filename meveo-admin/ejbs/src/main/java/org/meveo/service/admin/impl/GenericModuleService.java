@@ -399,7 +399,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
 		return sortedList;
 	}
 	
-	public boolean hasDependencies(T module) throws BusinessException {
+	public boolean isDependencyOfOtherModule(T module) throws BusinessException {
 		
 		String query = "SELECT m from \n"
 				+ "MeveoModuleDependency m \n"
@@ -422,7 +422,7 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
     @Override
     public void remove(T module) throws BusinessException {
 
-		if(hasDependencies(module)) {
+		if(isDependencyOfOtherModule(module)) {
 			throw new BusinessException("Unable to delete a referenced module.");
 		}
     	

@@ -306,20 +306,6 @@ public class EntityCustomizationRsImpl extends BaseRs implements EntityCustomiza
     }
 
     @Override
-    public BusinessEntityResponseDto listBusinessEntityForCFVByCode(String code, String wildcode) {
-        BusinessEntityResponseDto result = new BusinessEntityResponseDto();
-
-        try {
-            result.setBusinessEntities(customEntityTemplateApi.listBusinessEntityForCFVByCode(code, wildcode));
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
     public EntityCustomizationResponseDto listELFiltered(String appliesTo, String entityCode) {
         EntityCustomizationResponseDto result = new EntityCustomizationResponseDto();
 

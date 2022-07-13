@@ -2059,7 +2059,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			CustomEntityInstance customEntityInstance = (CustomEntityInstance) childEntityValue.getEntity();
 			if (customEntityInstance != null) {
 				CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(customEntityInstance.getCetCode());
-				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCode(fieldCode);
+				CustomFieldTemplate customFieldTemplate = customFieldTemplateService.findByCodeAndAppliesTo(fieldCode, customEntityTemplate.getAppliesTo());
 				Map<String, Object> childEntity = customTableService.findById(SqlConfiguration.DEFAULT_SQL_CONNECTION, customEntityTemplate, customEntityInstance.getUuid());
 				if (childEntity != null) {
 					value = childEntity.get(fieldCode);

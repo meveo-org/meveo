@@ -397,20 +397,6 @@ public class EntityCustomizationWsImpl extends BaseWs implements EntityCustomiza
     }
 
     @Override
-    public BusinessEntityResponseDto listBusinessEntityForCFVByCode(String code, String wildcode) {
-        BusinessEntityResponseDto result = new BusinessEntityResponseDto();
-
-        try {
-            result.setBusinessEntities(customEntityTemplateApi.listBusinessEntityForCFVByCode(code, wildcode));
-
-        } catch (Exception e) {
-            processException(e, result.getActionStatus());
-        }
-
-        return result;
-    }
-
-    @Override
     public CustomEntityTemplatesResponseDto listEntityTemplates(String customEntityTemplateCode) {
         CustomEntityTemplatesResponseDto result = new CustomEntityTemplatesResponseDto();
 

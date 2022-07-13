@@ -1,5 +1,11 @@
 # Custom Entities
 
+## Custom fields (CFT)
+A Custom Field Template defines the fields of a Custom Entity.  It can be modified through the API or programmatically in a script.
+
+### Searching CFTs
+The CustomFieldTemplate entity has 2 natural ids: code and appliesTo.  When searching for a CFT, make sure to use use both.  This means, when searching programmatically, use [CustomFieldTemplateService](/meveo-admin/ejbs/src/main/java/org/meveo/service/crm/impl/CustomFieldTemplateService.java)#findByCodeAndAppliesTo and not findByCode
+
 ## Custom action
 A custom action is script that can be called on an entity ether by API of from meveo admin.
 
