@@ -529,39 +529,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         return EntityCustomizationDto.toDTO(clazz, cetFields.values(), cetActions.values());
     }
     
-	public List<BusinessEntityDto> listBusinessEntityForCFVByCode(String code, String wildcode)
-			throws MeveoApiException {
-		List<BusinessEntityDto> result = new ArrayList<>();
-
-		if (StringUtils.isBlank(code)) {
-			missingParameters.add("code");
-		}
-		
-		if(StringUtils.isBlank(wildcode)) {
-			wildcode = "";
-		}
-
-		handleMissingParameters();
-
-		CustomFieldTemplate cft = customFieldTemplateService.findByCode(code);
-		if (cft == null) {
-			throw new EntityDoesNotExistsException(CustomFieldTemplate.class, code);
-		}
-
-		String entityClazz = cft.getEntityClazz();
-		if (!StringUtils.isBlank(entityClazz)) {
-			List<BusinessEntity> businessEntities = customFieldInstanceService
-					.findBusinessEntityForCFVByCode(entityClazz, wildcode);
-			if (businessEntities != null) {
-				for (BusinessEntity be : businessEntities) {
-					result.add(new BusinessEntityDto(be));
-				}
-			}
-		}
-
-		return result;
-	}
-
     /**
      * Finds an entity that match the given criterion. Evaluates applicableEL on custom fields and actions of the entity, if false it will not be included in the resulting object.
      * 

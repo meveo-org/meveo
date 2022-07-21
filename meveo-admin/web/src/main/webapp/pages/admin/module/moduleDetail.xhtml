@@ -1,3 +1,4 @@
+
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
                 xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
@@ -15,6 +16,7 @@
     <ui:define name="body">
     
     	<o:importConstants type="org.meveo.api.module.OnDuplicate" />
+    	<o:importConstants type="org.meveo.model.module.MeveoModule" />
     	
 		<p:dialog id="addPatchPopup"
 			header="#{messages['meveoModule.patch.add']}"
@@ -37,14 +39,14 @@
 					label="#{messages['meveoModule.patch.sourceVersion']}">
 					<p:inputText id="sourceVersion"
 						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.sourceVersion}">
-						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+						<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}" />
 					</p:inputText>
 				</hftl:decorateFormField>
 				<hftl:decorateFormField for="targetVersion"
 					label="#{messages['meveoModule.patch.targetVersion']}">
 					<p:inputText id="targetVersion"
 						value="#{meveoModuleBean.newMeveoModulePatch.meveoModulePatchId.targetVersion}">
-						<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$" />
+						<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}" />
 					</p:inputText>
 				</hftl:decorateFormField>
 				<h:panelGroup layout="block" styleClass="form-panel-actions"
@@ -84,6 +86,10 @@
 					disabled="true" rendered="#{!meveoModuleBean.entity.transient}" />
 			</p:breadCrumb>
 		</h:form>
+		
+    	<p:messages id="messages">
+            <p:autoUpdate />
+        </p:messages>
 
         <ui:include src="modulePopups.xhtml">
             <ui:param name="backingBean" value="#{meveoModuleBean}" />
@@ -292,6 +298,10 @@
 					<p:commandButton rendered="#{meveoModuleBean.entity.active}" id="sync" value="Synchronize module items dependencies" actionListener="#{meveoModuleBean.synchronizeLinkedItems}">
 						
 					</p:commandButton>
+					
+					<p:commandButton rendered="#{meveoModuleBean.entity.installed}" id="recompile" value="Recompile" actionListener="#{meveoModuleBean.recompileAll}">
+						
+					</p:commandButton>
 
 					<p:commandButton immediate="true" value="#{messages['meveoModule.patch.apply']}"
 						onclick="PF('dlg_applyPatchPopup').show()" type="button" rendered="#{!meveoModuleBean.entity.transient and meveoModuleBean.entity.isInDraft}" />
@@ -300,6 +310,8 @@
                     </p:commandButton>
                     
                     <p:commandButton value="Install data" onclick="PF('dialog_install_data').show()" rendered="#{meveoModuleBean.entity.installed and not empty meveoModuleBean.availableRepositories()}"/>
+                    
+                   <p:commandButton rendered="#{meveoModuleBean.entity.code != 'Meveo'}" value="Force delete" title="Delete module without uninstalling items" action="#{meveoModuleBean.forceDelete}"/>
                     
                     <p:dialog id="dialog_install_data" widgetVar="dialog_install_data" header="Choose repository">
                     	<h:form>
@@ -413,7 +425,7 @@
 					<hftl:decorateFormField fieldId="release" label="#{messages['meveoModule.provideNextVersion']}">
 						<p:inputText id="release" value="#{meveoModuleBean.releaseVersion}" size="50"
 									 maxlength="100" disabled="false" required="true" validatorMessage="#{messages['meveoModule.releaseVersion.error']}">
-							<f:validateRegex pattern="^(\d+\.)?(\d+\.)?(\*|\d+)$"/>
+							<f:validateRegex pattern="#{MeveoModule.VERSION_PATTERN}"/>
 						</p:inputText>
 					</hftl:decorateFormField>
 				</ui:define>

@@ -2416,6 +2416,7 @@ public class CustomFieldInstanceService extends BaseService {
      * @param values map of cft values
      * @throws BusinessException thrown when values are not set
      */
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
 		Map<String, CustomFieldTemplate> cetFields = null;
 		try {
@@ -2490,7 +2491,7 @@ public class CustomFieldInstanceService extends BaseService {
 			CustomFieldTemplate codeCft = cfTemplateService.findByCodeAndAppliesTo("code", appliesTo);
 			if(codeCft != null) {
 				CustomEntityTemplate refCet = customEntityTemplateService.findByCode(cft.getEntityClazzCetCode());
-				Map<String, Object> result = crossStorageService.find(repositoryService.findByCode(wrapper.getRepository()), 
+				Map<String, Object> result = crossStorageService.findById(repositoryService.findByCode(wrapper.getRepository()), 
 						refCet, 
 						uuid,
 						Collections.singletonList("code"), 

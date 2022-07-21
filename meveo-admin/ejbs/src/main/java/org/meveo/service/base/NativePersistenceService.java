@@ -89,6 +89,7 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.CrossStorageTransaction;
+import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -161,7 +162,7 @@ public class NativePersistenceService extends BaseService {
     private CustomEntityTemplateService customEntityTemplateService;
 	
     @Inject
-    private CrossStorageTransaction crossStorageTransaction;
+    private SQLStorageImpl sqlStorageImpl;
     
     @Inject
     private CustomFieldsCacheContainerProvider cache;
@@ -223,7 +224,7 @@ public class NativePersistenceService extends BaseService {
 		try {
 			tableName = PostgresReserverdKeywords.escapeAndFormat(tableName);
 
-			Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+			Session session = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 
 			StringBuilder selectQuery = new StringBuilder();
 
@@ -323,7 +324,7 @@ public class NativePersistenceService extends BaseService {
 			QueryBuilder builder = new QueryBuilder();
 			builder.setSqlString(q.toString());
 			
-			Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+			Session session = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 			NativeQuery<Map<String, Object>> query = builder.getNativeQuery(session, true);
 			queryParamers.forEach((k, v) -> query.setParameter(k, v));
 			
@@ -541,7 +542,7 @@ public class NativePersistenceService extends BaseService {
 					return (String) uuid;
 				}
 
-				var hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+				var hibernateSession = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 				Query query = hibernateSession.createNativeQuery("select uuid from {h-schema}" + tableName + " where " + findIdFields).setMaxResults(1);
 
 				for (String fieldName : values.keySet()) {
@@ -790,7 +791,7 @@ public class NativePersistenceService extends BaseService {
 	}
 	
 	private void doBatch(String sqlConnectionCode, String sql, SqlAction action) {
-		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		Session hibernateSession = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 		hibernateSession.doWork(connection -> {
 			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
@@ -819,7 +820,7 @@ public class NativePersistenceService extends BaseService {
 	}
 	
 	private void doUpdate(String sqlConnectionCode, String sql, SqlAction action) {
-		Session hibernateSession = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		Session hibernateSession = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 		hibernateSession.doWork(connection -> {
 			if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 				if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource())
@@ -1474,7 +1475,7 @@ public class NativePersistenceService extends BaseService {
 	public List<Map<String, Object>> list(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		QueryBuilder queryBuilder = getQuery(tableName, config);
 		
-		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		Session session = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 
 		NativeQuery<Map<String, Object>> query = queryBuilder.getNativeQuery(session, true);
 		try {
@@ -1515,7 +1516,7 @@ public class NativePersistenceService extends BaseService {
 	public long count(String sqlConnectionCode, String tableName, PaginationConfiguration config) {
 		
 		QueryBuilder queryBuilder = getQuery(tableName, config);
-		Session session = crossStorageTransaction.getHibernateSession(sqlConnectionCode);
+		Session session = sqlStorageImpl.getHibernateSession(sqlConnectionCode);
 
 		Query query = queryBuilder.getNativeCountQuery(session);
 		Object count = query.getSingleResult();

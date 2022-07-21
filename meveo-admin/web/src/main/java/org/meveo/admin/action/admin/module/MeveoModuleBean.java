@@ -58,6 +58,8 @@ import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
+import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.util.view.MessagesHelper;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.UploadedFile;
@@ -95,6 +97,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	@Inject
 	private MeveoModulePatchApi meveoModulePatchApi;
+	
+	@Inject
+	private ScriptInstanceService scriptService;
 
 	private String moduleCode;
 	private String releaseVersion;
@@ -321,28 +326,22 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 	public void releaseModule() {
 		String version = this.getReleaseVersion();
 		log.debug("release module {} on version {}", entity.getCode(), version);
-		Integer nextVersion = Integer.parseInt(version.replace(".", ""));
-		Integer versionModule = Integer.parseInt(entity.getCurrentVersion().replace(".", ""));
-		if (nextVersion > versionModule) {
-			try {
-				if (entity.getScript() != null) {
-					boolean checkRelease = meveoModuleService.checkTestSuites(entity.getScript().getCode());
-					if (!checkRelease) {
-						messages.error(new BundleKey("messages", "meveoModule.checkTestSuitsReleaseFailed"));
-						return;
-					}
+		try {
+			if (entity.getScript() != null) {
+				boolean checkRelease = meveoModuleService.checkTestSuites(entity.getScript().getCode());
+				if (!checkRelease) {
+					messages.error(new BundleKey("messages", "meveoModule.checkTestSuitsReleaseFailed"));
+					return;
 				}
-				meveoModuleService.releaseModule(entity, version);
-				meveoModuleService.flush();
-				entity = meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
-				messages.info(new BundleKey("messages", "meveoModule.releaseSuccess"), entity.getCode(), version);
-			} catch (Exception e) {
-				log.error("Error when release module {} to {}", entity.getCode(), meveoInstance, e);
-				messages.error(new BundleKey("messages", "meveoModule.releaseFailed"), entity.getCode(), version,
-						(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
 			}
-		} else {
-			messages.error(new BundleKey("messages", "meveoModule.nextVersionLessCurrentVersion"), entity.getCurrentVersion());
+			meveoModuleService.releaseModule(entity, version);
+			meveoModuleService.flush();
+			entity = meveoModuleService.findById(entity.getId(), getListFieldsToFetch());
+			messages.info(new BundleKey("messages", "meveoModule.releaseSuccess"), entity.getCode(), version);
+		} catch (Exception e) {
+			log.error("Error when release module {} to {}", entity.getCode(), meveoInstance, e);
+			messages.error(new BundleKey("messages", "meveoModule.releaseFailed"), entity.getCode(), version,
+					(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()));
 		}
 		releaseVersion = null;
 	}
@@ -651,5 +650,20 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 				.stream()
 				.map(Repository::getCode)
 				.collect(Collectors.joining(", "));
+	}
+	
+	public void forceDelete() throws BusinessException {
+		meveoModuleService.remove(entity);
+	}
+	
+	public String recompileAll() {
+		try {
+			scriptService.reCompileAll(entity);
+			messages.info("Recompiled scripts with success");
+		} catch (Exception e) {
+			MessagesHelper.error(messages, e);
+		}
+		
+		return null;
 	}
 }

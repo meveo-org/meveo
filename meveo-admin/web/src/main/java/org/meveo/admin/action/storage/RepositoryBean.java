@@ -11,11 +11,14 @@ import javax.inject.Named;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
+import org.meveo.admin.action.admin.custom.CustomFieldDataEntryBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.storage.RepositoryApi;
 import org.meveo.api.storage.RepositoryDto;
+import org.meveo.elresolver.ELException;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.hierarchy.HierarchyLevel;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.storage.Repository;
@@ -36,6 +39,9 @@ import org.primefaces.model.TreeNode;
 public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 
 	private static final long serialVersionUID = 8661265102557481231L;
+	
+    @Inject
+    protected CustomFieldDataEntryBean customFieldDataEntryBean;
 
 	@Inject
 	private RepositoryService repositoryService;
@@ -85,13 +91,15 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 	}
 
 	@ActionMethod
-	public String saveOrUpdate() throws BusinessException {
+	public String saveOrUpdate() throws BusinessException, ELException {
 		String message = entity.isTransient() ? "save.successful" : "update.successful";
 
 		if (getUserGroupSelectedNode() != null) {
 			UserHierarchyLevel userHierarchyLevel = (UserHierarchyLevel) this.getUserGroupSelectedNode().getData();
 			getEntity().setUserHierarchyLevel(userHierarchyLevel);
 		}
+		
+		customFieldDataEntryBean.saveCustomFieldsToEntity((ICustomFieldEntity) entity, entity.isTransient());
 
 		if (entity.isTransient()) {
 			repositoryService.create(entity);

@@ -18,6 +18,8 @@ package org.meveo.persistence.neo4j.service;
 
 import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
+import javax.ejb.EJBException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
@@ -49,6 +52,7 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -59,6 +63,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.CETUtils;
+import org.meveo.api.exception.BusinessApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -88,17 +93,21 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.CustomPersistenceService;
 import org.meveo.persistence.PersistenceActionResult;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateUtils;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.ApplicationProvider;
+import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.internal.InternalNode;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
@@ -179,6 +188,18 @@ public class Neo4jService implements CustomPersistenceService {
     
     @Inject
     private RepositoryService repositoryService;
+    
+	@Inject
+	private CustomFieldInstanceService customFieldInstanceService;
+	
+	@Inject
+	private FileSystemService fileSystemService;
+	
+	@Inject
+	private CustomFieldsCacheContainerProvider cache;
+	
+    @Inject
+    private Neo4jStorageImpl neo4jStorageImpl;
     
     /**
      * Remove all data concerned with the CET
@@ -812,7 +833,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -883,7 +904,7 @@ public class Neo4jService implements CustomPersistenceService {
         String resolvedStatement = sub.replace(statement);
 
         // Begin Neo4J transaction
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         List<Record> recordList = new ArrayList<>();
 
@@ -1002,7 +1023,7 @@ public class Neo4jService implements CustomPersistenceService {
         parametersValues.putAll(startNodeConvertedValues);
         parametersValues.putAll(endNodeConvertedValues);
 
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4JConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4JConfiguration);
 
         // Try to find the id of the source node
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
@@ -1092,7 +1113,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         String deleteStatement = getStatement(new StrSubstitutor(valuesMap), Neo4JRequests.deleteCet);
 
-        final Transaction transaction = crossStorageTransaction.getNeo4jTransaction(neo4jConfiguration);
+        final Transaction transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
 
         InternalNode internalNode = null;
 

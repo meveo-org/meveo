@@ -98,9 +98,6 @@ public interface EntityCustomizationWs extends IBaseWs {
     @WebMethod
     public EntityCustomizationResponseDto findEntityCustomizations(@WebParam(name = "customizedEntityClass") String customizedEntityClass);
 
-    @WebMethod
-	BusinessEntityResponseDto listBusinessEntityForCFVByCode(@WebParam(name = "code") String code, @WebParam(name = "wildcode") String wildcode);
-    
 	@WebMethod
 	CustomEntityTemplatesResponseDto listEntityTemplates(@WebParam(name = "customEntityTemplateCode") String customEntityTemplateCode);
 	

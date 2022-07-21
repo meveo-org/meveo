@@ -59,4 +59,1155 @@
     </addColumn>
   </changeSet>
 
+	<changeSet id="Update adm_country table to ISO 3166-1 #558" author="Clément Bareth">
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="238" />
+			<column name="code" value="AQ" />
+			<column name="description" value="Antarctica" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="239" />
+			<column name="code" value="AX" />
+			<column name="description" value="Åland Islands" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="240" />
+			<column name="code" value="BL" />
+			<column name="description" value="Saint Barthélémy" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="241" />
+			<column name="code" value="BQ" />
+			<column name="description" value="Bonaire, Sint Eustatius and Sab" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="242" />
+			<column name="code" value="CW" />
+			<column name="description" value="Curaçao" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="243" />
+			<column name="code" value="EH" />
+			<column name="description" value="Western Sahara" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="244" />
+			<column name="code" value="GG" />
+			<column name="description" value="Guernsey" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="245" />
+			<column name="code" value="IM" />
+			<column name="description" value="Isle of Man" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="246" />
+			<column name="code" value="JE" />
+			<column name="description" value="Jersey" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="247" />
+			<column name="code" value="ME" />
+			<column name="description" value="Montenegro" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="248" />
+			<column name="code" value="MF" />
+			<column name="description" value="Saint Martin (French part)" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="249" />
+			<column name="code" value="RS" />
+			<column name="description" value="Serbia" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="250" />
+			<column name="code" value="SS" />
+			<column name="description" value="South Sudan" />
+		</insert>
+		<insert tableName="adm_country">
+			<column name="created" valueDate="2022-06-24 00:00:00.579" />
+			<column name="disabled" valueNumeric="0" />
+			<column name="id" valueNumeric="251" />
+			<column name="code" value="SX" />
+			<column name="description" value="Sint Maarten  (Dutch part)" />
+		</insert>
+		<delete tableName="adm_country">
+			<where>code='YU'</where>
+		</delete>
+		<delete tableName="adm_country">
+			<where>code='AN'</where>
+		</delete>
+	</changeSet>
+
+	<changeSet author="Clément Bareth" id="#550 - Add description_i18n to adm_country back">
+		<addColumn tableName="adm_country">
+			<column name="description_i18n" type="${type.json}" />
+		</addColumn>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Andorre&quot;,&quot;ENG&quot;:&quot;Andorra&quot;}" />
+			<where>id = 1</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Emirats Arabes Unis&quot;,&quot;ENG&quot;:&quot;United Arab Emirates&quot;}" />
+			<where>id = 2</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Afghanistan&quot;,&quot;ENG&quot;:&quot;Afghanistan&quot;}" />
+			<where>id = 3</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Antigua-et-Barbuda&quot;,&quot;ENG&quot;:&quot;Antigua and Barbuda&quot;}" />
+			<where>id = 4</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Anguilla&quot;,&quot;ENG&quot;:&quot;Anguilla&quot;}" />
+			<where>id = 5</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Albanie&quot;,&quot;ENG&quot;:&quot;Albania&quot;}" />
+			<where>id = 6</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Arménie&quot;,&quot;ENG&quot;:&quot;Armenia&quot;}" />
+			<where>id = 7</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Antilles néerlandaises&quot;,&quot;ENG&quot;:&quot;Netherlands Antilles&quot;}" />
+			<where>id = 8</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Angola&quot;,&quot;ENG&quot;:&quot;Angola&quot;}" />
+			<where>id = 9</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Argentine&quot;,&quot;ENG&quot;:&quot;Argentina&quot;}" />
+			<where>id = 10</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Samoa orientales&quot;,&quot;ENG&quot;:&quot;American Samoa&quot;}" />
+			<where>id = 11</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Autriche&quot;,&quot;ENG&quot;:&quot;Austria&quot;}" />
+			<where>id = 12</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Australie&quot;,&quot;ENG&quot;:&quot;Australia&quot;}" />
+			<where>id = 13</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Aruba&quot;,&quot;ENG&quot;:&quot;Aruba&quot;}" />
+			<where>id = 14</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Azerbaïdjan&quot;,&quot;ENG&quot;:&quot;Azerbaijan&quot;}" />
+			<where>id = 15</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bosnie-Herzégovine&quot;,&quot;ENG&quot;:&quot;Bosnia and Herzegovina&quot;}" />
+			<where>id = 16</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Barbade&quot;,&quot;ENG&quot;:&quot;Barbados&quot;}" />
+			<where>id = 17</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bangladesh&quot;,&quot;ENG&quot;:&quot;Bangladesh&quot;}" />
+			<where>id = 18</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Belgique&quot;,&quot;ENG&quot;:&quot;Belgium&quot;}" />
+			<where>id = 19</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Burkina Faso&quot;,&quot;ENG&quot;:&quot;Burkina Faso&quot;}" />
+			<where>id = 20</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bulgarie&quot;,&quot;ENG&quot;:&quot;Bulgaria&quot;}" />
+			<where>id = 21</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bahreïn&quot;,&quot;ENG&quot;:&quot;Bahrain&quot;}" />
+			<where>id = 22</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Burundi&quot;,&quot;ENG&quot;:&quot;Burundi&quot;}" />
+			<where>id = 23</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bénin&quot;,&quot;ENG&quot;:&quot;Benin&quot;}" />
+			<where>id = 24</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bermudes&quot;,&quot;ENG&quot;:&quot;Bermuda&quot;}" />
+			<where>id = 25</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bruneï&quot;,&quot;ENG&quot;:&quot;Brunei Darussalam&quot;}" />
+			<where>id = 26</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bolivie&quot;,&quot;ENG&quot;:&quot;Bolivia&quot;}" />
+			<where>id = 27</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Brésil&quot;,&quot;ENG&quot;:&quot;Brazil&quot;}" />
+			<where>id = 28</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bahamas&quot;,&quot;ENG&quot;:&quot;The Bahamas&quot;}" />
+			<where>id = 29</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bhoutan&quot;,&quot;ENG&quot;:&quot;Bhutan&quot;}" />
+			<where>id = 30</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bouvet (Île)&quot;,&quot;ENG&quot;:&quot;Bouvet Island&quot;}" />
+			<where>id = 31</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Botswana&quot;,&quot;ENG&quot;:&quot;Botswana&quot;}" />
+			<where>id = 32</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Biélorussie&quot;,&quot;ENG&quot;:&quot;Belarus&quot;}" />
+			<where>id = 33</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Bélize&quot;,&quot;ENG&quot;:&quot;Belize&quot;}" />
+			<where>id = 34</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Canada&quot;,&quot;ENG&quot;:&quot;Canada&quot;}" />
+			<where>id = 35</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Cocos / Keeling (Îles)&quot;,&quot;ENG&quot;:&quot;Cocos (Keeling) Islands&quot;}" />
+			<where>id = 36</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;République Démocratique du Congo&quot;,&quot;ENG&quot;:&quot;Congo , Democratic Republic of the&quot;}" />
+			<where>id = 37</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;République Centrafricaine&quot;,&quot;ENG&quot;:&quot;Central African Republic&quot;}" />
+			<where>id = 38</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Congo&quot;,&quot;ENG&quot;:&quot;Congo, Republic of the&quot;}" />
+			<where>id = 39</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Suisse&quot;,&quot;ENG&quot;:&quot;Switzerland&quot;}" />
+			<where>id = 40</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Côte DIvoire&quot;,&quot;ENG&quot;:&quot;Cote Ivoire&quot;}" />
+			<where>id = 41</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Cook (Îles)&quot;,&quot;ENG&quot;:&quot;Cook Islands&quot;}" />
+			<where>id = 42</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Chili&quot;,&quot;ENG&quot;:&quot;Chile&quot;}" />
+			<where>id = 43</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Cameroun&quot;,&quot;ENG&quot;:&quot;Cameroon&quot;}" />
+			<where>id = 44</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Chine&quot;,&quot;ENG&quot;:&quot;China&quot;}" />
+			<where>id = 45</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Colombie&quot;,&quot;ENG&quot;:&quot;Colombia&quot;}" />
+			<where>id = 46</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Costa Rica&quot;,&quot;ENG&quot;:&quot;Costa Rica&quot;}" />
+			<where>id = 47</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Cuba&quot;,&quot;ENG&quot;:&quot;Cuba&quot;}" />
+			<where>id = 48</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Cap Vert&quot;,&quot;ENG&quot;:&quot;Cape Verde&quot;}" />
+			<where>id = 49</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Christmas (Île)&quot;,&quot;ENG&quot;:&quot;Christmas Island&quot;}" />
+			<where>id = 50</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Chypre&quot;,&quot;ENG&quot;:&quot;Cyprus&quot;}" />
+			<where>id = 51</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;République Tchèque&quot;,&quot;ENG&quot;:&quot;Czech Republic&quot;}" />
+			<where>id = 52</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Allemagne&quot;,&quot;ENG&quot;:&quot;Germany&quot;}" />
+			<where>id = 53</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Djibouti&quot;,&quot;ENG&quot;:&quot;Djibouti&quot;}" />
+			<where>id = 54</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Danemark&quot;,&quot;ENG&quot;:&quot;Denmark&quot;}" />
+			<where>id = 55</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Dominique&quot;,&quot;ENG&quot;:&quot;Dominica&quot;}" />
+			<where>id = 56</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;République Dominicaine&quot;,&quot;ENG&quot;:&quot;Dominican Republic&quot;}" />
+			<where>id = 57</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Algérie&quot;,&quot;ENG&quot;:&quot;Algeria&quot;}" />
+			<where>id = 58</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Equateur&quot;,&quot;ENG&quot;:&quot;Ecuador&quot;}" />
+			<where>id = 59</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Estonie&quot;,&quot;ENG&quot;:&quot;Estonia&quot;}" />
+			<where>id = 60</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Egypte&quot;,&quot;ENG&quot;:&quot;Egypt&quot;}" />
+			<where>id = 61</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Erythrée&quot;,&quot;ENG&quot;:&quot;Eritrea&quot;}" />
+			<where>id = 62</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Espagne&quot;,&quot;ENG&quot;:&quot;Spain&quot;}" />
+			<where>id = 63</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ethiopie&quot;,&quot;ENG&quot;:&quot;Ethiopia&quot;}" />
+			<where>id = 64</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Finlande&quot;,&quot;ENG&quot;:&quot;Finland&quot;}" />
+			<where>id = 65</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Fiji&quot;,&quot;ENG&quot;:&quot;Fiji&quot;}" />
+			<where>id = 66</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Falkland / Malouines (Îles)&quot;,&quot;ENG&quot;:&quot;Falkland Islands (Islas Malvinas)&quot;}" />
+			<where>id = 67</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Micronésie (Etats fédérés de)&quot;,&quot;ENG&quot;:&quot;Micronesia, Federated States of&quot;}" />
+			<where>id = 68</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Féroé (Îles)&quot;,&quot;ENG&quot;:&quot;Faroe Islands&quot;}" />
+			<where>id = 69</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;France&quot;,&quot;ENG&quot;:&quot;France&quot;}" />
+			<where>id = 70</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Gabon&quot;,&quot;ENG&quot;:&quot;Gabon&quot;}" />
+			<where>id = 71</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Grenade&quot;,&quot;ENG&quot;:&quot;Grenada&quot;}" />
+			<where>id = 72</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Géorgie&quot;,&quot;ENG&quot;:&quot;Georgia&quot;}" />
+			<where>id = 73</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guyane française&quot;,&quot;ENG&quot;:&quot;French Guiana&quot;}" />
+			<where>id = 74</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ghana&quot;,&quot;ENG&quot;:&quot;Ghana&quot;}" />
+			<where>id = 75</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Gibraltar&quot;,&quot;ENG&quot;:&quot;Gibraltar&quot;}" />
+			<where>id = 76</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Groënland&quot;,&quot;ENG&quot;:&quot;Greenland&quot;}" />
+			<where>id = 77</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Gambie&quot;,&quot;ENG&quot;:&quot;The Gambia&quot;}" />
+			<where>id = 78</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guinée&quot;,&quot;ENG&quot;:&quot;Guinea&quot;}" />
+			<where>id = 79</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guadeloupe&quot;,&quot;ENG&quot;:&quot;Guadeloupe&quot;}" />
+			<where>id = 80</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guinée Equatoriale&quot;,&quot;ENG&quot;:&quot;Equatorial Guinea&quot;}" />
+			<where>id = 81</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Grèce&quot;,&quot;ENG&quot;:&quot;Greece&quot;}" />
+			<where>id = 82</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Géorgie du Sud et îles Sandwich du Sud&quot;,&quot;ENG&quot;:&quot;South Georgia and the South Sand&quot;}" />
+			<where>id = 83</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guatemala&quot;,&quot;ENG&quot;:&quot;Guatemala&quot;}" />
+			<where>id = 84</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guam&quot;,&quot;ENG&quot;:&quot;Guam&quot;}" />
+			<where>id = 85</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guinée-Bissau&quot;,&quot;ENG&quot;:&quot;Guinea-Bissau&quot;}" />
+			<where>id = 86</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Guyana&quot;,&quot;ENG&quot;:&quot;Guyana&quot;}" />
+			<where>id = 87</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Hong Kong&quot;,&quot;ENG&quot;:&quot;Hong Kong (SAR)&quot;}" />
+			<where>id = 88</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Territoire des Îles Heard et McDonald&quot;,&quot;ENG&quot;:&quot;Heard Island and McDonald Island&quot;}" />
+			<where>id = 89</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Honduras&quot;,&quot;ENG&quot;:&quot;Honduras&quot;}" />
+			<where>id = 90</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Croatie&quot;,&quot;ENG&quot;:&quot;Croatia&quot;}" />
+			<where>id = 91</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Haïti&quot;,&quot;ENG&quot;:&quot;Haiti&quot;}" />
+			<where>id = 92</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Hongrie&quot;,&quot;ENG&quot;:&quot;Hungary&quot;}" />
+			<where>id = 93</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Indonésie&quot;,&quot;ENG&quot;:&quot;Indonesia&quot;}" />
+			<where>id = 94</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Irlande&quot;,&quot;ENG&quot;:&quot;Ireland&quot;}" />
+			<where>id = 95</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Israël&quot;,&quot;ENG&quot;:&quot;Israel&quot;}" />
+			<where>id = 96</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Indie&quot;,&quot;ENG&quot;:&quot;India&quot;}" />
+			<where>id = 97</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Territoire britannique de l Océan Indien&quot;,&quot;ENG&quot;:&quot;British Indian Ocean Territory&quot;}" />
+			<where>id = 98</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Irak&quot;,&quot;ENG&quot;:&quot;Iraq&quot;}" />
+			<where>id = 99</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Iran (République islamique d)&quot;,&quot;ENG&quot;:&quot;Iran&quot;}" />
+			<where>id = 100</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Islande&quot;,&quot;ENG&quot;:&quot;Iceland&quot;}" />
+			<where>id = 101</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Italie&quot;,&quot;ENG&quot;:&quot;Italy&quot;}" />
+			<where>id = 102</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Jamaïque&quot;,&quot;ENG&quot;:&quot;Jamaica&quot;}" />
+			<where>id = 103</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Jordanie&quot;,&quot;ENG&quot;:&quot;Jordan&quot;}" />
+			<where>id = 104</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Japon&quot;,&quot;ENG&quot;:&quot;Japan&quot;}" />
+			<where>id = 105</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Kenya&quot;,&quot;ENG&quot;:&quot;Kenya&quot;}" />
+			<where>id = 106</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Kyrgyzstan&quot;,&quot;ENG&quot;:&quot;Kyrgyzstan&quot;}" />
+			<where>id = 107</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Cambodge&quot;,&quot;ENG&quot;:&quot;Cambodia&quot;}" />
+			<where>id = 108</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Kiribati&quot;,&quot;ENG&quot;:&quot;Kiribati&quot;}" />
+			<where>id = 109</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Comores&quot;,&quot;ENG&quot;:&quot;Comoros&quot;}" />
+			<where>id = 110</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Saint Kitts et Nevis&quot;,&quot;ENG&quot;:&quot;Saint Kitts and Nevis&quot;}" />
+			<where>id = 111</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Corée (République populaire démocratique du)&quot;,&quot;ENG&quot;:&quot;Korea, North&quot;}" />
+			<where>id = 112</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Corée (République démocratique du)&quot;,&quot;ENG&quot;:&quot;Korea, South&quot;}" />
+			<where>id = 113</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Koweït&quot;,&quot;ENG&quot;:&quot;Kuwait&quot;}" />
+			<where>id = 114</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Caïmans (Îles)&quot;,&quot;ENG&quot;:&quot;Cayman Islands&quot;}" />
+			<where>id = 115</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Kazakstan&quot;,&quot;ENG&quot;:&quot;Kazakhstan&quot;}" />
+			<where>id = 116</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Laos (République populaire démocratique du)&quot;,&quot;ENG&quot;:&quot;Laos&quot;}" />
+			<where>id = 117</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Liban&quot;,&quot;ENG&quot;:&quot;Lebanon&quot;}" />
+			<where>id = 118</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Sainte Lucie&quot;,&quot;ENG&quot;:&quot;Saint Lucia&quot;}" />
+			<where>id = 119</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Liechtenstein&quot;,&quot;ENG&quot;:&quot;Liechtenstein&quot;}" />
+			<where>id = 120</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Sri Lanka&quot;,&quot;ENG&quot;:&quot;Sri Lanka&quot;}" />
+			<where>id = 121</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Libéria&quot;,&quot;ENG&quot;:&quot;Liberia&quot;}" />
+			<where>id = 122</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Lesotho&quot;,&quot;ENG&quot;:&quot;Lesotho&quot;}" />
+			<where>id = 123</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Lithuanie&quot;,&quot;ENG&quot;:&quot;Lithuania&quot;}" />
+			<where>id = 124</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Luxembourg&quot;,&quot;ENG&quot;:&quot;Luxembourg&quot;}" />
+			<where>id = 125</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Lettonie&quot;,&quot;ENG&quot;:&quot;Latvia&quot;}" />
+			<where>id = 126</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Libye (Jamahiriya Arabe Libyenne)&quot;,&quot;ENG&quot;:&quot;Libya&quot;}" />
+			<where>id = 127</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Maroc&quot;,&quot;ENG&quot;:&quot;Morocco&quot;}" />
+			<where>id = 128</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Monaco&quot;,&quot;ENG&quot;:&quot;Monaco&quot;}" />
+			<where>id = 129</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Moldavie&quot;,&quot;ENG&quot;:&quot;Moldova&quot;}" />
+			<where>id = 130</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Madagascar&quot;,&quot;ENG&quot;:&quot;Madagascar&quot;}" />
+			<where>id = 131</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Marshall (Îles)&quot;,&quot;ENG&quot;:&quot;Marshall Islands&quot;}" />
+			<where>id = 132</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Macédoine (ancienne République yougoslave de)&quot;,&quot;ENG&quot;:&quot;Macedonia, The Former Yugoslav R&quot;}" />
+			<where>id = 133</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mali&quot;,&quot;ENG&quot;:&quot;Mali&quot;}" />
+			<where>id = 134</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Myanmar&quot;,&quot;ENG&quot;:&quot;Burma&quot;}" />
+			<where>id = 135</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mongolie&quot;,&quot;ENG&quot;:&quot;Mongolia&quot;}" />
+			<where>id = 136</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Macau&quot;,&quot;ENG&quot;:&quot;Macao&quot;}" />
+			<where>id = 137</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mariannes (Îles)&quot;,&quot;ENG&quot;:&quot;Northern Mariana Islands&quot;}" />
+			<where>id = 138</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Martinique&quot;,&quot;ENG&quot;:&quot;Martinique&quot;}" />
+			<where>id = 139</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mauritanie&quot;,&quot;ENG&quot;:&quot;Mauritania&quot;}" />
+			<where>id = 140</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Montserrat&quot;,&quot;ENG&quot;:&quot;Montserrat&quot;}" />
+			<where>id = 141</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Malte&quot;,&quot;ENG&quot;:&quot;Malta&quot;}" />
+			<where>id = 142</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Maurice&quot;,&quot;ENG&quot;:&quot;Mauritius&quot;}" />
+			<where>id = 143</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Maldives&quot;,&quot;ENG&quot;:&quot;Maldives&quot;}" />
+			<where>id = 144</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Malawi&quot;,&quot;ENG&quot;:&quot;Malawi&quot;}" />
+			<where>id = 145</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mexique&quot;,&quot;ENG&quot;:&quot;Mexico&quot;}" />
+			<where>id = 146</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Malaysie&quot;,&quot;ENG&quot;:&quot;Malaysia&quot;}" />
+			<where>id = 147</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mozambique&quot;,&quot;ENG&quot;:&quot;Mozambique&quot;}" />
+			<where>id = 148</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Namibie&quot;,&quot;ENG&quot;:&quot;Namibia&quot;}" />
+			<where>id = 149</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Nouvelle-Calédonie&quot;,&quot;ENG&quot;:&quot;New Caledonia&quot;}" />
+			<where>id = 150</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Niger&quot;,&quot;ENG&quot;:&quot;Niger&quot;}" />
+			<where>id = 151</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Norfolk (Île)&quot;,&quot;ENG&quot;:&quot;Norfolk Island&quot;}" />
+			<where>id = 152</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Nigéria&quot;,&quot;ENG&quot;:&quot;Nigeria&quot;}" />
+			<where>id = 153</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Nicaragua&quot;,&quot;ENG&quot;:&quot;Nicaragua&quot;}" />
+			<where>id = 154</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Pays-Bas&quot;,&quot;ENG&quot;:&quot;Netherlands&quot;}" />
+			<where>id = 155</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Norvège&quot;,&quot;ENG&quot;:&quot;Norway&quot;}" />
+			<where>id = 156</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Népal&quot;,&quot;ENG&quot;:&quot;Nepal&quot;}" />
+			<where>id = 157</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Nauru&quot;,&quot;ENG&quot;:&quot;Nauru&quot;}" />
+			<where>id = 158</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Niue&quot;,&quot;ENG&quot;:&quot;Niue&quot;}" />
+			<where>id = 159</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Nouvelle-Zélande&quot;,&quot;ENG&quot;:&quot;New Zealand&quot;}" />
+			<where>id = 160</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Oman&quot;,&quot;ENG&quot;:&quot;Oman&quot;}" />
+			<where>id = 161</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Panama&quot;,&quot;ENG&quot;:&quot;Panama&quot;}" />
+			<where>id = 162</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Pérou&quot;,&quot;ENG&quot;:&quot;Peru&quot;}" />
+			<where>id = 163</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Polynésie française&quot;,&quot;ENG&quot;:&quot;French Polynesia&quot;}" />
+			<where>id = 164</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Papouasie Nouvelle-Guinée&quot;,&quot;ENG&quot;:&quot;Papua New Guinea&quot;}" />
+			<where>id = 165</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Philippines&quot;,&quot;ENG&quot;:&quot;Philippines&quot;}" />
+			<where>id = 166</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Pakistan&quot;,&quot;ENG&quot;:&quot;Pakistan&quot;}" />
+			<where>id = 167</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Pologne&quot;,&quot;ENG&quot;:&quot;Poland&quot;}" />
+			<where>id = 168</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;St. Pierre et Miquelon&quot;,&quot;ENG&quot;:&quot;Saint Pierre and Miquelon&quot;}" />
+			<where>id = 169</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Pitcaïrn&quot;,&quot;ENG&quot;:&quot;Pitcairn Islands&quot;}" />
+			<where>id = 170</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Porto Rico&quot;,&quot;ENG&quot;:&quot;Puerto Rico&quot;}" />
+			<where>id = 171</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Territoire Palestinien Occupé&quot;,&quot;ENG&quot;:&quot;Palestinian Territory, Occupied&quot;}" />
+			<where>id = 172</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Portugal&quot;,&quot;ENG&quot;:&quot;Portugal&quot;}" />
+			<where>id = 173</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Palau&quot;,&quot;ENG&quot;:&quot;Palau&quot;}" />
+			<where>id = 174</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Paraguay&quot;,&quot;ENG&quot;:&quot;Paraguay&quot;}" />
+			<where>id = 175</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Quatar&quot;,&quot;ENG&quot;:&quot;Qatar&quot;}" />
+			<where>id = 176</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Réunion&quot;,&quot;ENG&quot;:&quot;RÃ©union&quot;}" />
+			<where>id = 177</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Romania&quot;,&quot;ENG&quot;:&quot;Romania&quot;}" />
+			<where>id = 178</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Russie (Fédération de)&quot;,&quot;ENG&quot;:&quot;Russia&quot;}" />
+			<where>id = 179</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Rwanda&quot;,&quot;ENG&quot;:&quot;Rwanda&quot;}" />
+			<where>id = 180</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Arabie Séoudite&quot;,&quot;ENG&quot;:&quot;Saudi Arabia&quot;}" />
+			<where>id = 181</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Salomon (Îles)&quot;,&quot;ENG&quot;:&quot;Solomon Islands&quot;}" />
+			<where>id = 182</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Seychelles&quot;,&quot;ENG&quot;:&quot;Seychelles&quot;}" />
+			<where>id = 183</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Soudan&quot;,&quot;ENG&quot;:&quot;Sudan&quot;}" />
+			<where>id = 184</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Suède&quot;,&quot;ENG&quot;:&quot;Sweden&quot;}" />
+			<where>id = 185</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Singapour&quot;,&quot;ENG&quot;:&quot;Singapore&quot;}" />
+			<where>id = 186</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ste Hélène&quot;,&quot;ENG&quot;:&quot;Saint Helena&quot;}" />
+			<where>id = 187</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Slovénie&quot;,&quot;ENG&quot;:&quot;Slovenia&quot;}" />
+			<where>id = 188</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Svalbard et Jan Mayen (Îles)&quot;,&quot;ENG&quot;:&quot;Svalbard&quot;}" />
+			<where>id = 189</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Slovaquie&quot;,&quot;ENG&quot;:&quot;Slovakia&quot;}" />
+			<where>id = 190</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Sierra Léone&quot;,&quot;ENG&quot;:&quot;Sierra Leone&quot;}" />
+			<where>id = 191</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;San Marin&quot;,&quot;ENG&quot;:&quot;San Marino&quot;}" />
+			<where>id = 192</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Sénégal&quot;,&quot;ENG&quot;:&quot;Senegal&quot;}" />
+			<where>id = 193</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Somalie&quot;,&quot;ENG&quot;:&quot;Sénégal&quot;}" />
+			<where>id = 194</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Surinam&quot;,&quot;ENG&quot;:&quot;Suriname&quot;}" />
+			<where>id = 195</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Sao Tomé et Principe&quot;,&quot;ENG&quot;:&quot;Santo Tomas and Principe&quot;}" />
+			<where>id = 196</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Salvador&quot;,&quot;ENG&quot;:&quot;El Salvador&quot;}" />
+			<where>id = 197</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Syrie (République arabe syrienne)&quot;,&quot;ENG&quot;:&quot;Syria&quot;}" />
+			<where>id = 198</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Swaziland&quot;,&quot;ENG&quot;:&quot;Swaziland&quot;}" />
+			<where>id = 199</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Turks et Caicos (Îles)&quot;,&quot;ENG&quot;:&quot;Turks and Caicos Islands&quot;}" />
+			<where>id = 200</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tchad&quot;,&quot;ENG&quot;:&quot;Chad&quot;}" />
+			<where>id = 201</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Territoires Antarctiques français&quot;,&quot;ENG&quot;:&quot;French Southern and Antarctic Land&quot;}" />
+			<where>id = 202</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Togo&quot;,&quot;ENG&quot;:&quot;Togo&quot;}" />
+			<where>id = 203</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Thaïlande&quot;,&quot;ENG&quot;:&quot;Thailand&quot;}" />
+			<where>id = 204</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tadjikistan&quot;,&quot;ENG&quot;:&quot;Tajikistan&quot;}" />
+			<where>id = 205</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tokelau&quot;,&quot;ENG&quot;:&quot;Tokelau&quot;}" />
+			<where>id = 206</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Turkménistan&quot;,&quot;ENG&quot;:&quot;Turkmenistan&quot;}" />
+			<where>id = 207</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tunisie&quot;,&quot;ENG&quot;:&quot;Tunisia&quot;}" />
+			<where>id = 208</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tonga&quot;,&quot;ENG&quot;:&quot;Tonga&quot;}" />
+			<where>id = 209</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Timor oriental&quot;,&quot;ENG&quot;:&quot;East timor&quot;}" />
+			<where>id = 210</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Turquie&quot;,&quot;ENG&quot;:&quot;Turkey&quot;}" />
+			<where>id = 211</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Trinidad et Tobago&quot;,&quot;ENG&quot;:&quot;Trinidad and Tobago&quot;}" />
+			<where>id = 212</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tuvalu&quot;,&quot;ENG&quot;:&quot;Tuvalu&quot;}" />
+			<where>id = 213</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Taiwan&quot;,&quot;ENG&quot;:&quot;Taiwan&quot;}" />
+			<where>id = 214</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Tanzanie&quot;,&quot;ENG&quot;:&quot;Tanzania&quot;}" />
+			<where>id = 215</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ukraine&quot;,&quot;ENG&quot;:&quot;Ukraine&quot;}" />
+			<where>id = 216</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ouganda&quot;,&quot;ENG&quot;:&quot;Uganda&quot;}" />
+			<where>id = 217</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Royaume-Uni&quot;,&quot;ENG&quot;:&quot;United Kingdom&quot;}" />
+			<where>id = 218</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Territoires non incorporés des États-Unis&quot;,&quot;ENG&quot;:&quot;United States Minor Outlying Island&quot;}" />
+			<where>id = 219</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Etats-Unis d Amérique&quot;,&quot;ENG&quot;:&quot;United States&quot;}" />
+			<where>id = 220</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Uruguay&quot;,&quot;ENG&quot;:&quot;Uruguay&quot;}" />
+			<where>id = 221</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Ouzbékistan&quot;,&quot;ENG&quot;:&quot;Uzbekistan&quot;}" />
+			<where>id = 222</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vatican&quot;,&quot;ENG&quot;:&quot;Holy See Vatican City&quot;}" />
+			<where>id = 223</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n"
+				value="{&quot;FRA&quot;:&quot;Saint Vincent et Grenadines&quot;,&quot;ENG&quot;:&quot;Saint Vincent and the Grenadines&quot;}" />
+			<where>id = 224</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vénézuela&quot;,&quot;ENG&quot;:&quot;Venezuela&quot;}" />
+			<where>id = 225</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vierges (Îles) - RU&quot;,&quot;ENG&quot;:&quot;British Virgin Islands&quot;}" />
+			<where>id = 226</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vierges (Îles) - EU&quot;,&quot;ENG&quot;:&quot;Virgin Islands&quot;}" />
+			<where>id = 227</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vietnam&quot;,&quot;ENG&quot;:&quot;Vietnam&quot;}" />
+			<where>id = 228</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Vanuatu&quot;,&quot;ENG&quot;:&quot;Vanuatu&quot;}" />
+			<where>id = 229</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Wallis et Futuna (Îles)&quot;,&quot;ENG&quot;:&quot;Wallis and Futuna&quot;}" />
+			<where>id = 230</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Samoa&quot;,&quot;ENG&quot;:&quot;Samoa&quot;}" />
+			<where>id = 231</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Yemen&quot;,&quot;ENG&quot;:&quot;Yemen&quot;}" />
+			<where>id = 232</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Mayotte&quot;,&quot;ENG&quot;:&quot;Mayotte&quot;}" />
+			<where>id = 233</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Yougoslavie&quot;,&quot;ENG&quot;:&quot;Yugoslavia&quot;}" />
+			<where>id = 234</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Afrique du Sud&quot;,&quot;ENG&quot;:&quot;South Africa&quot;}" />
+			<where>id = 235</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Zambie&quot;,&quot;ENG&quot;:&quot;Zambia&quot;}" />
+			<where>id = 236</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value="{&quot;FRA&quot;:&quot;Zimbabwe&quot;,&quot;ENG&quot;:&quot;Zimbabwe&quot;}" />
+			<where>id = 237</where>
+		</update>
+	</changeSet>
+
+	<changeSet id="#558 - Add i18next translations" author="Clément Bareth">
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Antarctique","ENG":"Antarctica"}' />
+			<where>id = 238</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Iles Åland","ENG":"Åland Islands"}' />
+			<where>id = 239</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Saint Barthélémy","ENG":"Saint Barthélémy"}' />
+			<where>id = 240</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Bonaire, Saint-Eustache et Saba","ENG":"Bonaire, Sint Eustatius and Saba"}' />
+			<where>id = 241</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Curaçao","ENG":"Curaçao"}' />
+			<where>id = 242</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Sahara occidental","ENG":"Western Sahara"}' />
+			<where>id = 243</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Guernesey","ENG":"Guernsey"}' />
+			<where>id = 244</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Île de Man","ENG":"Isle of Man"}' />
+			<where>id = 245</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Jersey","ENG":"Jersey"}' />
+			<where>id = 246</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Monténégro","ENG":"Montenegro"}' />
+			<where>id = 247</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Saint-Martin (partie française)","ENG":"Saint Martin (French part)"}' />
+			<where>id = 248</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Serbie","ENG":"Serbia"}' />
+			<where>id = 249</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Soudan du sud","ENG":"South Sudan"}' />
+			<where>id = 250</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Saint-Martin (partie néerlandaise)","ENG":"Sint Maarten (Dutch part)"}' />
+			<where>id = 247</where>
+		</update>
+	</changeSet>
+	<changeSet id="Fix description i18n"  author="Clément Bareth">
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Saint-Martin (partie néerlandaise)","ENG":"Sint Maarten (Dutch part)"}' />
+			<where>id = 251</where>
+		</update>
+		<update tableName="adm_country">
+			<column name="description_i18n" value='{"FRA":"Monténégro","ENG":"Montenegro"}' />
+			<where>id = 247</where>
+		</update>
+	</changeSet>
+
+
 </databaseChangeLog>

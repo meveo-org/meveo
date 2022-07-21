@@ -10,6 +10,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.cache.JobCacheContainerProvider;
 import org.meveo.cache.JobRunningStatusEnum;
 import org.meveo.commons.utils.EjbUtils;
@@ -17,6 +18,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.jobs.JobCategoryEnum;
+import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.util.KeyValuePair;
@@ -25,6 +27,8 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
+import org.meveo.util.view.ServiceBasedLazyDataModel;
+import org.primefaces.model.LazyDataModel;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -273,7 +277,7 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     @Override
     protected List<String> getFormFieldsToFetch() {
-        return Arrays.asList("timerEntity", "executionResults", "followingJob");
+        return Arrays.asList("timerEntity", "followingJob");
     }
     
 	@Override
@@ -296,5 +300,46 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
     @Override
     public boolean isHasParams() {
         return hasParams;
+    }
+    
+    public LazyDataModel<JobExecutionResultImpl> getExecutionResults() {
+    	JobExecutionService jobExecServiceForJob = entity == null || entity.getCode() == null ? jobExecutionService : new JobExecutionService() {
+    		
+    		@Override
+    		public JobExecutionResultImpl findById(Long id) {
+    			return jobExecutionService.findById(id);
+    		}
+    		
+    		@Override
+    		public long count() {
+				return jobExecutionService.count(entity.getCode(), new PaginationConfiguration());
+    		}
+    		
+    		@Override
+    		public long count(PaginationConfiguration config) {
+				return jobExecutionService.count(entity.getCode(), config);
+    		}
+
+			@Override
+			public List<JobExecutionResultImpl> list(PaginationConfiguration config) {
+				return jobExecutionService.find(entity.getCode(), config);
+			}
+    		
+    	};
+    	
+    	return new ServiceBasedLazyDataModel<JobExecutionResultImpl>() {
+
+			private static final long serialVersionUID = -6476614953254588085L;
+
+			@Override
+			protected Map<String, Object> getSearchCriteria() {
+				return new HashMap<>();
+			}
+
+			@Override
+			protected IPersistenceService<JobExecutionResultImpl> getPersistenceServiceImpl() {
+				return jobExecServiceForJob;
+			}
+		};
     }
 }

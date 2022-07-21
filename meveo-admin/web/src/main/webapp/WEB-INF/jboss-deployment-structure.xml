@@ -2,6 +2,7 @@
     <deployment>
         <exclusions>
             <module name="org.jboss.resteasy.resteasy-jackson-provider"/>
+            <module name="org.apache.httpcomponents.core"/>
         </exclusions>
         <dependencies>
             <module name="org.jboss.resteasy.resteasy-jackson2-provider" services="import"/>

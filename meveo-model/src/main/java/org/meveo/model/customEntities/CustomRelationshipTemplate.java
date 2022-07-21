@@ -68,7 +68,7 @@ import org.meveo.model.storage.Repository;
         parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
 )
 @NamedQueries({
-        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt where crt.disabled=false  "),
+        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt JOIN FETCH crt.availableStorages where crt.disabled=false  "),
         @NamedQuery(name = "CustomRelationshipTemplate.findByStartEndAndName", query = "SELECT crt from CustomRelationshipTemplate crt " +
                 "WHERE crt.startNode.code = :startCode " +
                 "AND crt.endNode.code = :endCode " +
@@ -99,8 +99,10 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	@Column(name = "DIRECTION", length = 100)
     private RelationshipDirectionEnum direction = RelationshipDirectionEnum.OUTGOING;
     
-    @Column(name = "available_storages", columnDefinition = "TEXT")
-    @Type(type = JsonTypes.JSON_LIST)
+//    @Column(name = "available_storages", columnDefinition = "TEXT")
+//    @Type(type = JsonTypes.JSON_LIST)
+	@ManyToMany
+	@JoinTable(name = "crt_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "crt_id"))
     private List<DBStorageType> availableStorages;
 
     /**

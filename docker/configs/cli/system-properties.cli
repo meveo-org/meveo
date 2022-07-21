@@ -7,6 +7,8 @@
 /system-property=meveo.admin.database.driver:add(value=postgresql)
 /system-property=meveo.admin.database.username:add(value=${env.MEVEO_DB_USERNAME:meveo})
 /system-property=meveo.admin.database.password:add(value=${env.MEVEO_DB_PASSWORD:meveo})
+/system-property=meveo.admin.database.min-pool-size:add(value=${env.MEVEO_DB_MIN_POOL_SIZE:10})
+/system-property=meveo.admin.database.max-pool-size:add(value=${env.MEVEO_DB_MAX_POOL_SIZE:200})
 /system-property=meveo.keycloak.url:add(value=${env.KEYCLOAK_URL})
 /system-property=meveo.keycloak.realm:add(value=${env.KEYCLOAK_REALM})
 /system-property=meveo.keycloak.secret:add(value=${env.KEYCLOAK_SECRET})

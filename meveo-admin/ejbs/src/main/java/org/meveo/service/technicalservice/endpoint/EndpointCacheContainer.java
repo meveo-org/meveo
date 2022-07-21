@@ -67,7 +67,7 @@ import org.slf4j.Logger;
 @Startup
 public class EndpointCacheContainer {
 
-	
+
 	@Inject
 	private Logger log;
 
@@ -81,10 +81,10 @@ public class EndpointCacheContainer {
 	private Map<String, Endpoint> endpointLoadingCache = new HashMap<String, Endpoint>();
 
 	private Map<String, ObjectPool<ScriptInterface>> endpointPool = new ConcurrentHashMap<>();
-	
+
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
-	
+
 	@PostConstruct
 	private void init() {
 		List<Endpoint> allEndpoints = endpointService.list();
@@ -104,7 +104,7 @@ public class EndpointCacheContainer {
 			}
 		}
 	}
-	
+
 	@PreDestroy
 	private void destroy() {
 		endpointPool.values().forEach(ObjectPool::close);
@@ -127,32 +127,32 @@ public class EndpointCacheContainer {
 
 	public void removeEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed Endpoint endpoint) {
 		endpointLoadingCache.remove(endpoint.getCode());
-		if (endpoint.getPool().isUsePool()) {
+		if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 			var pool = endpointPool.remove(endpoint.getCode());
 			if (pool != null) {
 				pool.close();
 			}
 		}
 	}
-	
+
 	public void updatePool(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated ScriptInstance script) {
 		endpointLoadingCache.values()
-			.stream()
-			.filter(endpoint -> endpoint.getService().getId().equals(script.getId()))
-			.findFirst()
-			.ifPresent(endpoint -> {
-				if (endpoint.getPool().isUsePool()) {
-					var pool = endpointPool.remove(endpoint.getCode());
-					
-					if (endpoint.isActive()) {
-						endpointPool.put(endpoint.getCode(), buildPool(endpoint));
+				.stream()
+				.filter(endpoint -> endpoint.getService().getId().equals(script.getId()))
+				.findFirst()
+				.ifPresent(endpoint -> {
+					if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
+						var pool = endpointPool.remove(endpoint.getCode());
+
+						if (endpoint.isActive()) {
+							endpointPool.put(endpoint.getCode(), buildPool(endpoint));
+						}
+
+						if (pool != null) {
+							pool.close();
+						}
 					}
-					
-					if (pool != null) {
-						pool.close();
-					}
-				}
-			});
+				});
 	}
 
 	public void updateEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Endpoint endpoint) {
@@ -163,8 +163,8 @@ public class EndpointCacheContainer {
 				endpointLoadingCache.remove(endpoint.getCode());
 			}
 		}
-		
-		if (endpoint.getPool().isUsePool()) {
+
+		if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 			var pool = endpointPool.remove(endpoint.getCode());
 			if (endpoint.isActive()) {
 				endpointPool.put(endpoint.getCode(), buildPool(endpoint));
@@ -172,14 +172,14 @@ public class EndpointCacheContainer {
 			if (pool != null) {
 				pool.close();
 			}
-			
+
 		}
 	}
 
 	public void addEndpoint(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created Endpoint endpoint) {
 		if(endpoint.isActive()) {
 			endpointLoadingCache.put(endpoint.getCode(), endpoint);
-			if (endpoint.getPool().isUsePool()) {
+			if (endpoint.getPool() != null && endpoint.getPool().isUsePool()) {
 				var pool = endpointPool.remove(endpoint.getCode());
 				endpointPool.put(endpoint.getCode(), buildPool(endpoint));
 				if (pool != null) {
@@ -197,12 +197,12 @@ public class EndpointCacheContainer {
 			return null;
 		}
 	}
-	
+
 	@Lock(LockType.READ)
 	public ScriptInterface getPooledScript(Endpoint endpoint) throws Exception {
 		return endpointPool.get(endpoint.getCode()).borrowObject();
 	}
-	
+
 	@Lock(LockType.READ)
 	public void returnPooledScript(Endpoint endpoint, ScriptInterface script) {
 		var pool = this.endpointPool.get(endpoint.getCode());
@@ -228,7 +228,7 @@ public class EndpointCacheContainer {
 				if(path.startsWith("/"+endpoint.getBasePath())){
 					Matcher matcher = endpoint.getPathRegex().matcher(path);
 					if(matcher.matches() || matcher.lookingAt()){
-						if((result==null)||(result.getPathRegex().pattern().length()>endpoint.getPathRegex().pattern().length())){
+						if((result==null)||(endpoint.getPathRegex().pattern().length()>result.getPathRegex().pattern().length())){
 							result=endpoint;
 						}
 					}
@@ -237,42 +237,42 @@ public class EndpointCacheContainer {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Method used for statistics building
-	 * 
+	 *
 	 * @return the list of endpoint's code that has an active pool
 	 */
 	public Collection<String> getPooledEndpoints() {
 		return endpointPool.keySet();
 	}
-	
+
 	public int getNbActiveInPool(String endpointCode) {
 		return endpointPool.get(endpointCode).getNumActive();
 	}
-	
+
 	public int getNbIdleInPool(String endpointCode) {
 		return endpointPool.get(endpointCode).getNumIdle();
 	}
-	
+
 	private ObjectPool<ScriptInterface> buildPool(Endpoint endpoint) {
 		String scriptCode = endpoint.getService().getCode();
 
-    	Class<ScriptInterface> compiledScript;
+		Class<ScriptInterface> compiledScript;
 		try {
 			// Make sure the class is loaded
 			scriptInstanceService.loadClassInCache(scriptCode);
-			
+
 			var mBeanManager = MeveoBeanManager.getInstance();
 			compiledScript = CharSequenceCompiler.getCompiledClass(scriptCode);
 			var bean = mBeanManager.createBean(compiledScript);
 			Instance<ScriptInterface> instance = mBeanManager.getWeldInstance(bean, compiledScript);
-			
+
 			var factory = new ScriptInterfacePoolFactory(endpoint.getService(), compiledScript, instance);
 			ObjectPool<ScriptInterface> pool = new GenericObjectPool<ScriptInterface>(factory);
-			
+
 			EndpointPool poolConfig = endpoint.getPool();
-			
+
 			if (StringUtils.isAllBlank(poolConfig.getMaxIdleTime(), poolConfig.getMax())) {
 				pool = new SoftReferenceObjectPool<>(factory);
 
@@ -283,18 +283,18 @@ public class EndpointCacheContainer {
 					((GenericObjectPool<ScriptInterface>)  pool).setSoftMinEvictableIdle(Duration.of(minEvictableIdle, ChronoUnit.SECONDS));
 					((GenericObjectPool<ScriptInterface>)  pool).setTimeBetweenEvictionRuns(Duration.of(minEvictableIdle, ChronoUnit.SECONDS));
 				}
-				
+
 				if (!StringUtils.isBlank(poolConfig.getMax())) {
 					Integer maxTotal = MeveoValueExpressionWrapper.evaluateExpression(poolConfig.getMax(), null, Integer.class);
 					((GenericObjectPool<ScriptInterface>)  pool).setMaxTotal(maxTotal);
 				}
-				
+
 				if (!StringUtils.isBlank(poolConfig.getMin())) {
 					Integer min = MeveoValueExpressionWrapper.evaluateExpression(poolConfig.getMin(), null, Integer.class);
 					((GenericObjectPool<ScriptInterface>)  pool).setMinIdle(min);
 				}
 			}
-			
+
 			if (!StringUtils.isBlank(poolConfig.getMin())) {
 				Integer min = MeveoValueExpressionWrapper.evaluateExpression(poolConfig.getMin(), null, Integer.class);
 				try {
@@ -303,7 +303,7 @@ public class EndpointCacheContainer {
 					log.error("Failed to add objects to pool", e);
 				}
 			}
-				
+
 			return pool;
 		} catch (ELException | ClassNotFoundException e) {
 			log.error("Failed to configure script pool", e);

@@ -92,12 +92,11 @@ import org.meveo.service.base.MeveoExceptionMapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.filter.FilterService;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.util.ApplicationProvider;
 import org.meveo.util.EntityCustomizationUtils;
-import org.meveo.util.view.ESBasedDataModel;
+import org.meveo.util.view.MessagesHelper;
 import org.meveo.util.view.PagePermission;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.omnifaces.cdi.Param;
@@ -154,9 +153,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
     @Inject
     private FilterCustomFieldSearchBean filterCustomFieldSearchBean;
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;
@@ -439,9 +435,9 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                 endConversation();
             }
             
-        } catch (Exception e){ 
-        	messages.error("Entity can't be saved. Please retry.");
-        	log.error("Can't update entity", e);
+        } catch (Exception e) {
+        	log.error("Can't create / update entity", e);
+        	return MessagesHelper.error(messages, e);
         }
 
         return back();
@@ -1024,19 +1020,6 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
                     return getListFieldsToFetch();
                 }
 
-                @Override
-                protected ElasticClient getElasticClientImpl() {
-                    return elasticClient;
-                }
-
-                @Override
-                protected String getFullTextSearchValue(Map<String, Object> loadingFilters) {
-                    String fullTextValue = super.getFullTextSearchValue(loadingFilters);
-                    if (fullTextValue == null) {
-                        return (String) filters.get(ESBasedDataModel.FILTER_FULL_TEXT);
-                    }
-                    return fullTextValue;
-                }
             };
         }
 

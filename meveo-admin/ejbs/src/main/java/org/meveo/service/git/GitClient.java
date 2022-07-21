@@ -35,7 +35,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
+import org.eclipse.jgit.api.FetchCommand;
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RebaseCommand;
@@ -44,12 +47,16 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.internal.storage.file.WindowCache;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -397,6 +404,57 @@ public class GitClient {
             keyLock.unlock(gitRepository.getCode());
         }
     }
+    
+    /**
+     * Fetch remote
+     *
+     * @param gitRepository Repository to update
+     * @param username      Optional - Username to use when pulling
+     * @param password      Optional - Password to use when pulling
+     * @throws UserNotAuthorizedException if user does not have write access to the repository
+     * @throws IllegalArgumentException   if repository has no remote
+     * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
+     */
+    public void fetch(GitRepository gitRepository, String username, String password) throws BusinessException {
+        MeveoUser user = currentUser.get();
+        if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+
+        if (!gitRepository.isRemote()) {
+            throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
+        try (Git git = Git.open(repositoryDir)) {
+            FetchCommand fetch = git.fetch()
+            		.setRecurseSubmodules(SubmoduleConfig.FetchRecurseSubmodulesMode.YES);
+
+			if (gitRepository.getRemoteOrigin().startsWith("http")) {
+				CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
+				fetch = fetch.setCredentialsProvider(usernamePasswordCredentialsProvider);
+			
+			} else {
+				SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
+				fetch = fetch.setTransportConfigCallback(sshTransportConfigCallback);
+			}
+			
+            fetch.call();
+            
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+            throw new BusinessException("Cannot pull repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
+
+    }
 
     /**
      * Pull with rebase the upstream's content
@@ -447,28 +505,7 @@ public class GitClient {
                 git.reset().setMode(ResetType.HARD).setRef("origin/" + branch).call();
             }
 
-            try (RevWalk rw = new RevWalk(git.getRepository())) {
-                ObjectId head = git.getRepository().resolve(Constants.HEAD);
-                RevCommit headCommitAfterPull = rw.parseCommit(head);
-
-                // Fire commit received event if commits are different and Meveo repository is concerned
-                if(!headCommitBeforePull.getId().equals(headCommitAfterPull.getId())) {
-                    var diffs = getDiffs(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
-                	Set<String> modifiedFiles = getModifiedFiles(diffs);
-                    if(modifiedFiles != null && !modifiedFiles.isEmpty()) {
-                    	try {
-                    		gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
-                    	} catch (Exception e) {
-                    		// Roll-back repository state
-                    		git.reset()
-                    			.setRef(headCommitBeforePull.getName())
-                    			.setMode(ResetType.HARD)
-                    			.call();
-                    		throw new BusinessException(e);
-                    	}
-                    }
-                }
-            }
+            triggerCommitEvent(gitRepository, git, headCommitBeforePull);
             
         	git.submoduleUpdate().call();
 
@@ -483,6 +520,31 @@ public class GitClient {
         }
 
     }
+
+	protected void triggerCommitEvent(GitRepository gitRepository, Git git, RevCommit headCommitBeforePull) throws AmbiguousObjectException, IncorrectObjectTypeException, IOException, MissingObjectException, GitAPIException, CheckoutConflictException, BusinessException {
+		try (RevWalk rw = new RevWalk(git.getRepository())) {
+		    ObjectId head = git.getRepository().resolve(Constants.HEAD);
+		    RevCommit headCommitAfterPull = rw.parseCommit(head);
+
+		    // Fire commit received event if commits are different and Meveo repository is concerned
+		    if(!headCommitBeforePull.getId().equals(headCommitAfterPull.getId())) {
+		        var diffs = getDiffs(git.getRepository(), headCommitBeforePull, headCommitAfterPull);
+		    	Set<String> modifiedFiles = getModifiedFiles(diffs);
+		        if(modifiedFiles != null && !modifiedFiles.isEmpty()) {
+		        	try {
+		        		gitRepositoryCommitedEvent.fire(new CommitEvent(gitRepository, modifiedFiles, diffs));
+		        	} catch (Exception e) {
+		        		// Roll-back repository state
+		        		git.reset()
+		        			.setRef(headCommitBeforePull.getName())
+		        			.setMode(ResetType.HARD)
+		        			.call();
+		        		throw new BusinessException(e);
+		        	}
+		        }
+		    }
+		}
+	}
 
     /**
      * Create a branch base on the current branch
@@ -606,6 +668,8 @@ public class GitClient {
         keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
+        	RevCommit headCommitBeforePull = getHeadCommit(gitRepository);
+        	
         	if(createBranch) {
         		// Don't create branch if already exist
         		createBranch = git.branchList().call()
@@ -616,8 +680,27 @@ public class GitClient {
         	}
         	
             if(!git.getRepository().getBranch().equals(branch)) {
-                git.checkout().setCreateBranch(createBranch).setName(branch).call();
+                var checkout = git.checkout()
+                	.setUpstreamMode(SetupUpstreamMode.TRACK)
+                	.setCreateBranch(createBranch)
+                	.setName(branch);
+                
+                if (gitRepository.isRemote()) {
+                	List<Ref> remoteBranches = git.branchList()
+                		.setListMode(ListMode.REMOTE)
+                		.call();
+                	
+                	remoteBranches.stream()
+    	                .filter(ref -> ref.getName().endsWith(branch))
+    	                .findFirst()
+    	                .ifPresent(ref -> {
+    	                	checkout.setStartPoint(ref.getName());
+    	                });
+                }
+                
+            	checkout.call();
                 gitRepository.setCurrentBranch(branch);
+                triggerCommitEvent(gitRepository, git, headCommitBeforePull);
             }
 
         } catch (IOException e) {
@@ -685,6 +768,56 @@ public class GitClient {
 
         } catch (GitAPIException e) {
             throw new BusinessException("Checkout problem for repository " + gitRepository.getCode(), e);
+
+        } finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
+    }
+    
+    public List<String> listRefs(GitRepository gitRepository) throws BusinessException {
+    	MeveoUser user = currentUser.get();
+        if (!GitHelper.hasReadRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+        
+        List<String> results = new ArrayList<>();
+
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
+        try (Git git = Git.open(repositoryDir)) {
+        	var repo = git.getRepository();
+        	
+            git.branchList()
+        		.call()
+                .stream()
+                .map(Ref::getName)
+                .map(Repository::shortenRefName)
+                .forEach(results::add);
+            
+            git.branchList()
+        		.setListMode(ListMode.REMOTE)
+        		.call()
+                .stream()
+                .map(Ref::getName)
+                .map(repo::shortenRemoteBranchName)
+                .forEach(results::add);
+            
+            git.tagList()
+            	.call()
+	            .stream()
+	            .map(Ref::getName)
+	            .map(Repository::shortenRefName)
+            	.forEach(results::add);
+            
+            return results.stream().distinct().collect(Collectors.toList());
+
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+            throw new BusinessException("Cannot list branches of repository " + gitRepository.getCode(), e);
 
         } finally {
             keyLock.unlock(gitRepository.getCode());

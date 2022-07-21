@@ -9,6 +9,67 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
 
+    <changeSet id="#491 - Add db storage type table" author="Clément Bareth">
+    	<createTable tableName="db_storage_type">
+    		<column name="code" type="varchar(255)">
+    			<constraints primaryKey="true" primaryKeyName="pk_db_storage_type"/>
+    		</column>
+    		<column name="storage_impl_name" type="varchar(255)"></column>
+    		<column name="storage_impl_script_id" type="bigint">
+    			<constraints foreignKeyName="fk_db_storage_type_script" references="meveo_script_instance(id)"/>
+    		</column>
+    	</createTable>
+    	<insert tableName="db_storage_type">
+    		<column name="code" value="SQL"></column>
+    		<column name="storage_impl_name" value="org.meveo.persistence.impl.SQLStorageImpl"></column>
+    	</insert>
+ 	    <insert tableName="db_storage_type">
+    		<column name="code" value="NEO4J"></column>
+    		<column name="storage_impl_name" value="org.meveo.persistence.impl.Neo4jStorageImpl"></column>
+    	</insert>
+    
+    	<createTable tableName="cet_db_storage">
+   			<column name="cet_id" type="bigint">
+   				<constraints foreignKeyName="fk_cet_db_storage_cet" references="cust_cet(id)"/>
+   			</column>
+   			<column name="db_storage_code" type="varchar(255)">
+   				<constraints foreignKeyName="fk_cet_db_storage_db_storage" references="db_storage_type(code)"/>
+   			</column>
+    	</createTable>
+    	
+    	<addPrimaryKey tableName="cet_db_storage" columnNames="cet_id, db_storage_code"/>
+    	<sql>INSERT INTO cet_db_storage (cet_id, db_storage_code) SELECT id as cet_id, 'SQL' as db_storage_code FROM cust_cet WHERE available_storages LIKE '%SQL%'</sql>
+    	<sql>INSERT INTO cet_db_storage (cet_id, db_storage_code) SELECT id as cet_id, 'NEO4J' as db_storage_code FROM cust_cet WHERE available_storages LIKE '%NEO4j%'</sql>
+    	
+ 	    <createTable tableName="crt_db_storage">
+   			<column name="crt_id" type="bigint">
+   				<constraints foreignKeyName="fk_crt_db_storage_cet" references="cust_crt(id)"/>
+   			</column>
+   			<column name="db_storage_code" type="varchar(255)">
+   				<constraints foreignKeyName="fk_crt_db_storage_db_storage" references="db_storage_type(code)"/>
+   			</column>
+    	</createTable>
+  	    <sql>INSERT INTO crt_db_storage (crt_id, db_storage_code) SELECT id as crt_id, 'SQL' as db_storage_code FROM cust_crt WHERE available_storages LIKE '%SQL%'</sql>
+    	<sql>INSERT INTO crt_db_storage (crt_id, db_storage_code) SELECT id as crt_id, 'NEO4J' as db_storage_code FROM cust_crt WHERE available_storages LIKE '%NEO4J%'</sql>
+ 
+  	    <createTable tableName="cft_db_storage">
+   			<column name="cft_id" type="bigint">
+   				<constraints foreignKeyName="fk_cft_db_storage_cet" references="crm_custom_field_tmpl(id)"/>
+   			</column>
+   			<column name="db_storage_code" type="varchar(255)">
+   				<constraints foreignKeyName="fk_cft_db_storage_db_storage" references="db_storage_type(code)"/>
+   			</column>
+    	</createTable>
+  	    <sql>INSERT INTO cft_db_storage (cft_id, db_storage_code) SELECT id as cft_id, 'SQL' as db_storage_code FROM crm_custom_field_tmpl WHERE storages LIKE '%SQL%'</sql>
+    	<sql>INSERT INTO cft_db_storage (cft_id, db_storage_code) SELECT id as cft_id, 'NEO4J' as db_storage_code FROM crm_custom_field_tmpl WHERE storages LIKE '%NEO4J%'</sql>
+ 
+    </changeSet>
+    
+    <changeSet id="#491 - Add pks" author="Clément Bareth">
+    	<addPrimaryKey tableName="cft_db_storage" columnNames="cft_id, db_storage_code"/>
+    	<addPrimaryKey tableName="crt_db_storage" columnNames="crt_id, db_storage_code"/>
+    </changeSet>
+    
     <changeSet id="#496 - Possibility to target repositories on module installation" author="Clément Bareth">
     	<createTable tableName="meveo_module_storage_repository">
     		<column name="module_id" type="bigint">
@@ -44,6 +105,12 @@
     	<sql>INSERT INTO crt_storage_repository (crt_id, repo_id) (SELECT cust_crt.id as crt_id, storage_repository.id as repo_id FROM cust_crt, storage_repository WHERE storage_repository.code = 'default')</sql>
    	</changeSet>
    	
+   	<changeSet id="#491 - Add cfs to Repository" author="Clément Bareth">
+   		<addColumn tableName="storage_repository">
+   			<column name="cf_values" type="${type.json}"></column>
+   		</addColumn>
+	</changeSet>
+	
    	<changeSet id="Update cascade maven deps" author="Clément Bareth">
    		<dropForeignKeyConstraint baseTableName="adm_script_maven_dependency" constraintName="fk_maven_dependency"/>
    		<addForeignKeyConstraint constraintName="fk_maven_dependency" referencedTableName="maven_dependency" 

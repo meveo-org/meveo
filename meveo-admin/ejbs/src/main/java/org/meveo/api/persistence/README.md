@@ -311,6 +311,8 @@ Repository defaultRepo = repositoryService.findDefaultRepository();
 List<MyCet> ceis = crossStorageApi.find(defaultRepo, MyCet.class)
     .by("fieldOne", "filterValue") // Optional
     .fetch("relationshipOne") // Optional
+    .offset(20) // Optional
+    .limit(10) // Optional
     .orderBy("fieldTwo",true) //Optional order by field, true for ascending, false for descending
     .getResults();
 
@@ -322,6 +324,8 @@ In the most simple case its key is the field code and the value is the value it 
 But it can represent, in SQL storage case several different type of filters by setting the key format in the form `condition field1 field2` or `condition field1 field2 ... fieldN`
 
 Conditions supported:
+- limit: set the number of records to be returned.
+- offset: set the first row offset for the records that will be returned. 
 - fromRange : filter records where the field is greater or equal to some value. Ex: `by("fromRange age",22)` is translated to `age >= 22` note that when the value is an Instant or a Date, the time part (hour,min,sec) is set to 0
 - toRange : filter records where the field is less or equal to some value,. Ex: `by("toRange age",22)` is translated to `age <= 22` note that when the value is an Instant or a Date, the time part (hour,min,sec) is set to 0
 - list : filter records where the value is in the list of element of the field, assuming the field is a collection of values. Ex: `by("list colors","blue")` is translated to `'blue' in elements(colors)`

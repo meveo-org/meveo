@@ -38,7 +38,10 @@
 				<hftl:formField label="#{messages['businessEntity.description']}"
 					field="description" />
 				<hftl:formField label="#{messages['gitRepositories.defaultBranch']}"
-								field="defaultBranch" />
+					isAutocomplete="true"
+					autocompleteBean="#{gitRepositoryBean}"
+					autocompleteMethod="getBranchList"
+					field="defaultBranch" />
 				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
 			</h:panelGrid>
 			<h:panelGrid columns="1">
@@ -65,7 +68,7 @@
 				</h:panelGroup>
 			</h:panelGrid>
 
-			<h:panelGrid id="actions" columns="3">
+			<h:panelGrid id="actions" columns="4">
 				<p:commandButton id="push"
 					value="#{messages['gitRepositories.push']}"
 					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
@@ -75,6 +78,11 @@
 					value="#{messages['gitRepositories.pull']}"
 					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
 					oncomplete="PF('pullRemoteDlg').show()" immediate="true"
+					icon="ui-icon-arrowthick-1-sw" update="@form" />
+				<p:commandButton id="fetch"
+					value="Fetch"
+					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
+					oncomplete="PF('fetchRemoteDlg').show()" immediate="true"
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
 				<p:commandButton id="install-module"
 					value="#{messages['gitRepositories.install']}"
@@ -187,6 +195,35 @@
 				</p:commandButton>
 				<p:button value="#{messages['action.cancel']}"
 					onclick="PF('pullRemoteDlg').hide(); return false;" />
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog id="fetchRemoteDlg" widgetVar="fetchRemoteDlg"
+			header="#{messages['gitRepositories.header']}" dynamic="true"
+			modal="true" styleClass="form-dialog" closeOnEscape="true"
+			width="50%" appendTo="@(body)">
+			<p:messages autoUpdate="true" />
+			<h:form id="fetchRemoteForm" autocomplete="off">
+				<h:panelGrid columns="1">
+					<hftl:decorateFormField fieldId="username"
+						label="#{messages['gitRepositories.username']}">
+						<p:inputText autocomplete="off" id="username"
+							value="#{gitRepositoryBean.username}" size="50" />
+					</hftl:decorateFormField>
+					<hftl:decorateFormField fieldId="password"
+						label="#{messages['gitRepositories.password']}">
+						<h:inputSecret autocomplete="off" id="password"
+							value="#{gitRepositoryBean.password}" size="50" redisplay="true" />
+					</hftl:decorateFormField>
+				</h:panelGrid>
+				<p:commandButton value="Fetch"
+					action="#{gitRepositoryBean.fetchRemote}"
+					update="@form :formGitRepository" process="@form"
+					oncomplete="if (args &amp;&amp; !args.validationFailed) PF('fetchRemoteDlg').hide()">
+					<f:ajax render="@all" />
+				</p:commandButton>
+				<p:button value="#{messages['action.cancel']}"
+					onclick="PF('fetchRemoteDlg').hide(); return false;" />
 			</h:form>
 		</p:dialog>
 

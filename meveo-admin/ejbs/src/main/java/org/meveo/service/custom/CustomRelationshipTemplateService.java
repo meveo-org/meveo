@@ -46,13 +46,12 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.persistence.StorageImplProvider;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -73,14 +72,11 @@ import com.github.javaparser.ast.CompilationUnit;
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
 
-	@Inject
-	private CustomFieldTemplateService customFieldTemplateService;
-
-	@Inject
-	private CustomTableCreatorService customTableCreatorService;
-
-	@Inject
-	private PermissionService permissionService;
+    @Inject
+    private CustomFieldTemplateService customFieldTemplateService;
+    
+    @Inject
+    private PermissionService permissionService;
 
 	@Inject
 	private CustomFieldsCacheContainerProvider customFieldsCache;
@@ -105,6 +101,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
 	@Inject
 	private CustomEntityTemplateService cetService;
+	
+	@Inject
+	private StorageImplProvider provider;
 
 	@Inject
 	CommitMessageBean commitMessageBean;
@@ -130,9 +129,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		try {
 			permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
 			permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
-			if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.createCrtTable(crt);
-			}
+            for (var storage : crt.getAvailableStorages()) {
+            	provider.findImplementation(storage).crtCreated(crt);
+            }
 			customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -158,21 +157,9 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		permissionService.createIfAbsent(crt.getModifyPermission(), paramBean.getProperty("role.modifyAllCR", "ModifyAllCR"));
 		permissionService.createIfAbsent(crt.getReadPermission(), paramBean.getProperty("role.readAllCR", "ReadAllCR"));
 
-		// SQL Storage logic
-		if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			boolean created = customTableCreatorService.createCrtTable(crt);
-			// Create the custom fields for the table if the table has been created
-			if(created) {
-				for(CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(crt.getAppliesTo()).values()) {
-					customTableCreatorService.addField(crt, cft);
-				}
-			}
-		}else {
-			// Remove table if storage previously contained SQL
-			if(customFieldsCache.getCustomRelationshipTemplate(crt.getCode()).getAvailableStorages().contains(DBStorageType.SQL)) {
-				customTableCreatorService.removeTable(crt);
-			}
-		}
+        for (var storage : crt.getAvailableStorages()) {
+        	provider.findImplementation(storage).crtUpdated(crt);
+        }
 
 		customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
@@ -218,11 +205,11 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 			customFieldTemplateService.remove(cft.getId());
 		}
 
-		if(crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			customTableCreatorService.removeTable(repositoryService.findDefaultRepository().getCode(), SQLStorageConfiguration.getDbTablename(crt));
-		}
-
-		customFieldsCache.removeCustomRelationshipTemplate(crt);
+        for (var storage : crt.getAvailableStorages()) {
+        	provider.findImplementation(storage).removeCrt(crt);
+        }
+        
+        customFieldsCache.removeCustomRelationshipTemplate(crt);
 
 		permissionService.removeIfPresent(crt.getModifyPermission());
 		permissionService.removeIfPresent(crt.getReadPermission());
@@ -275,7 +262,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 	 */
 	@Override
 	public CustomRelationshipTemplate findByCode(String code){
-		return super.findByCode(code);
+		return super.findByCode(code, List.of("availableStorages"));
 	}
 
 	/**
@@ -454,6 +441,33 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		for (CustomFieldTemplate cft : customFieldTemplateService.findByAppliesTo(entity.getAppliesTo()).values()) {
 			customFieldTemplateService.moveFilesToModule(cft, oldModule, newModule);
 		}
+	}
+
+	@Override
+	public void removeFilesFromModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {
+		super.removeFilesFromModule(entity, module);
+		
+        List<File> fileList = new ArrayList<>();
+
+        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + entity.getAppliesTo());
+        if (cftDir.exists()) {
+	        for (File cftFile : cftDir.listFiles()) {
+	        	cftFile.delete();
+	        	fileList.add(cftFile);
+	        }
+	        cftDir.delete();
+	        fileList.add(cftDir);
+        }
+        
+        if(!fileList.isEmpty()) {
+            String message = "Deleted custom relationship template " + entity.getCode();
+            try {
+                message+=" "+commitMessageBean.getCommitMessage();
+            } catch (ContextNotActiveException e) {
+                log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+            }
+            gitClient.commitFiles(meveoRepository, fileList,message);
+        }
 	}
 
 	@Override

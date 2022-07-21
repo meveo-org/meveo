@@ -50,6 +50,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBTransactionRolledbackException;
+import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -78,6 +79,7 @@ import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
 import org.meveo.api.dto.EntityCustomActionDto;
+import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
@@ -96,6 +98,7 @@ import org.meveo.api.export.ExportFormat;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.jpa.JpaAmpNewTx;
@@ -373,7 +376,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.map(ceiDto ->  new MeveoModuleItemDto(CustomEntityInstanceDto.class.getName(), ceiDto))
 					.forEach(moduleDto.getModuleItems()::add);
 
-			} else {
+			}  else {
 				
 				// Retrieve API corresponding to class
 				var api = ApiUtils.getApiService(getItemClassByPath(directoryName), false);
@@ -386,6 +389,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				}
 
 			}
+		}
+		
+		// Parse installation script from items
+		if (moduleDto.getScript() != null && StringUtils.isBlank(moduleDto.getScript().getScript())) {
+			moduleDto.getModuleItems().stream()
+				.filter(item -> item.getDtoClassName().equals(ScriptInstanceDto.class.getName()))
+				.map(item -> JacksonUtil.convert(item.getDtoData(), ScriptInstanceDto.class))
+				.filter(scriptDto -> scriptDto.getCode().equals(moduleDto.getScript().getCode()))
+				.findFirst()
+				.ifPresent(moduleDto::setScript);
 		}
 		
 		return moduleDto;
@@ -797,7 +810,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new ActionForbiddenException(meveoModule.getClass(), code, "uninstall", "Module is not installed or already enabled");
 		}
 		
-		if(meveoModuleService.hasDependencies(meveoModule)) {
+		if(meveoModuleService.isDependencyOfOtherModule(meveoModule)) {
 			throw new BusinessException("Unable to uninstall a referenced module.");
 		}
 		
@@ -816,10 +829,12 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			if (uninstall.withDependencies()) {
 				for (var dependency : uninstalledModule.getModuleDependencies()) {
 					MeveoModule moduleDependency = meveoModuleService.findByCode(dependency.getCode());
-					ModuleUninstall options = ModuleUninstall.builder(uninstall)
-							.module(moduleDependency)
-							.build();
-					uninstalledModules.addAll(uninstall(MeveoModule.class, options));
+					if (!meveoModuleService.isDependencyOfOtherModule(moduleDependency)) {
+						ModuleUninstall options = ModuleUninstall.builder(uninstall)
+								.module(moduleDependency)
+								.build();
+						uninstalledModules.addAll(uninstall(MeveoModule.class, options));
+					}
 				}
 			}
 			return uninstalledModules;
@@ -1724,5 +1739,23 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleCtx.end();
 		
 		meveoModuleService.update(module);
+	}
+	
+	public void deleteModuleBeforeRepository(@Observes @Removed GitRepository repository) throws MeveoApiException, BusinessException {
+		MeveoModule module = meveoModuleService.findByCode(repository.getCode());
+		if (module != null) {
+			ModuleUninstall uninstallParams = ModuleUninstall.builder()
+					.module(module)
+					.removeData(true)
+					.removeFiles(true)
+					.removeItems(true)
+					.withDependencies(false)
+					.build();
+					
+			for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
+				meveoModuleService.remove(uninstalledModule);
+			}
+			
+		}
 	}
 }

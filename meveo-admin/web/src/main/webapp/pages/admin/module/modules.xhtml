@@ -171,7 +171,7 @@
                   		</h:panelGrid>
                 </h:panelGrid>
                 <h:panelGroup layout="block" styleClass="form-panel-actions">
-                    <p:commandButton action="#{meveoModuleListBean.delete()}" process="@form" update="@form" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
+                    <p:commandButton action="#{meveoModuleListBean.delete()}" process="@form" update="@form,listOfModules" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" oncomplete="PF('deleteDialog').hide();" />
                     <p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" onclick="PF('deleteDialog').hide();" />
                 </h:panelGroup>
             </h:form>

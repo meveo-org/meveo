@@ -60,8 +60,6 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
-import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleDependency;
 import org.meveo.model.module.MeveoModuleItem;
@@ -73,10 +71,8 @@ import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.admin.impl.ModuleUninstall.ModuleUninstallBuilder;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.index.ElasticClient;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.event.TransferEvent;
 import org.primefaces.model.CroppedImage;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
@@ -106,9 +102,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
     @Inject
     @ViewBean
     protected ScriptInstanceBean scriptInstanceBean;
-
-    @Inject
-    private ElasticClient elasticClient;
 
     @Inject
     protected CustomFieldTemplateService customFieldTemplateService;
@@ -399,10 +392,6 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
                 return getListFieldsToFetch();
             }
 
-            @Override
-            protected ElasticClient getElasticClientImpl() {
-                return elasticClient;
-            }
         };
     }
 
@@ -714,7 +703,8 @@ public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudB
             }
 
             moduleUninstall.module(entity);
-            entity = (T) moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+            List<MeveoModule> uninstalledModules = moduleApi.uninstall(MeveoModule.class, moduleUninstall.build());
+            entity = (T) uninstalledModules.get(0);
             messages.info(new BundleKey("messages", "meveoModule.uninstallSuccess"), entity.getCode());
 
         } catch (Exception e) {

@@ -16,7 +16,10 @@
 
 package org.meveo.persistence.scheduler;
 
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.neo4j.service.Neo4jService;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -29,4 +32,9 @@ public class Neo4JScheduledPersistenceService extends OrderedPersistenceService<
     protected Neo4jService getStorageService(){
         return service;
     }
+
+	@Override
+	protected List<DBStorageType> getStorageTypes(String templateCode) {
+		return List.of(DBStorageType.NEO4J);
+	}
 }
