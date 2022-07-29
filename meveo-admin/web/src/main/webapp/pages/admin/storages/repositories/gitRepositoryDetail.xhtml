@@ -68,22 +68,35 @@
 				</h:panelGroup>
 			</h:panelGrid>
 
-			<h:panelGrid id="actions" columns="4">
+			<h:panelGrid id="actions" columns="6">
 				<p:commandButton id="push"
-					value="#{messages['gitRepositories.push']}"
-					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
+					value="#{messages['gitRepositories.push']} (#{gitRepositoryBean.countCommitsToPush()})"
+					rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"
+					disabled="#{gitRepositoryBean.countCommitsToPull() != 0}"
 					oncomplete="PF('pushRemoteDlg').show()" immediate="true"
 					icon="ui-icon-arrowthick-1-ne" update="@form" />
 				<p:commandButton id="pull"
-					value="#{messages['gitRepositories.pull']}"
-					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
+					value="#{messages['gitRepositories.pull']} (#{gitRepositoryBean.countCommitsToPull()})"
+					rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"
 					oncomplete="PF('pullRemoteDlg').show()" immediate="true"
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
 				<p:commandButton id="fetch"
 					value="Fetch"
-					rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
+					rendered="#{gitRepositoryBean.entity.id != null and gitRepositoryBean.entity.remoteOrigin != null}"
 					oncomplete="PF('fetchRemoteDlg').show()" immediate="true"
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
+				<p:commandButton id="commit"
+					value="Commit (#{gitRepositoryBean.countPendingChanges()})"
+					actionListener="#{gitRepositoryBean.commit}"
+					rendered="#{gitRepositoryBean.entity.id != null}"
+					immediate="true"
+					icon="ui-icon-play" update="@form" />
+				<p:commandButton id="discard"
+					value="Discard"
+					actionListener="#{gitRepositoryBean.discard}"
+					immediate="true"
+					rendered="#{gitRepositoryBean.entity.id != null}"
+					icon="ui-icon-closethick" update="@form" />
 				<p:commandButton id="install-module"
 					value="#{messages['gitRepositories.install']}"
 					rendered="#{gitRepositoryBean.isModuleRepository()}"

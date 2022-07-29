@@ -18,6 +18,7 @@ import javax.inject.Named;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseCrudBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.listener.CommitMessageBean;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
@@ -74,6 +75,9 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	@Inject
 	private GitClient gitClient;
+	
+    @Inject
+    private CommitMessageBean commitMessageBean;
 
 	private String username;
 
@@ -149,6 +153,38 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			log.error("Failed to push", e);
 			messages.error(new BundleKey("messages", "gitRepositories.push.error"), e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
 		}
+	}
+	
+	public int countCommitsToPush() throws BusinessException {
+		if (entity != null && entity.getId() != null) {
+			return gitClient.countCommitsToPush(entity);
+		}
+		
+		return 0;
+	}
+	
+	public int countCommitsToPull() throws BusinessException {
+		if (entity != null && entity.getId() != null) {
+			return gitClient.countCommitsToPull(entity);
+		}
+		return 0;
+	}
+	
+	public int countPendingChanges() throws BusinessException {
+		if (entity != null && entity.getId() != null) {
+			return gitClient.countPendingChanges(entity);
+		}
+		return 0;
+	}
+	
+	public void commit() throws BusinessException {
+		gitClient.commit(entity, List.of("."), commitMessageBean.getCommitMessage());
+		messages.info("Pending changes successfully commited");
+	}
+	
+	public void discard() throws BusinessException {
+		gitClient.discard(entity);
+		messages.info("Pending changes successfully discarded");
 	}
 	
 	public void fetchRemote() {

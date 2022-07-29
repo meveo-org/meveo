@@ -51,6 +51,7 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -58,6 +59,7 @@ import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.internal.storage.file.WindowCache;
+import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
@@ -81,6 +83,7 @@ import org.meveo.model.git.GitRepository;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.synchronization.KeyLock;
+import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
 
 /**
@@ -922,6 +925,16 @@ public class GitClient {
             keyLock.unlock(gitRepository.getCode());
         }
     }
+    
+    /**
+     * Reset a repository to a head commit
+     * 
+     * @param gitRepository {@link GitRepository} to reset
+     */
+    public void discard(GitRepository gitRepository) throws BusinessException {
+    	RevCommit headCommit = this.getHeadCommit(gitRepository);
+    	reset(gitRepository, headCommit);
+    }
 
     /**
      * Reset a repository to a given commit
@@ -981,6 +994,83 @@ public class GitClient {
         }
 
         return modifiedFiles;
+    }
+    
+    public int countCommitsToPush(GitRepository gitRepository) throws BusinessException {
+        MeveoUser user = currentUser.get();
+        if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
+        try (Git git = Git.open(repositoryDir)) {
+            String branch = git.getRepository().getBranch();
+            AnyObjectId branchId = git.getRepository().findRef(branch).getObjectId();
+            AnyObjectId remoteBranchId = git.getRepository().findRef("origin/" + branch).getObjectId();
+        	return Iterables.size(git.log().addRange(remoteBranchId, branchId).call());
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+			log.error("Failed to count commits ahead", e);
+			return 0;
+		} finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
+    }
+    
+    public int countCommitsToPull(GitRepository gitRepository) throws BusinessException {
+        MeveoUser user = currentUser.get();
+        if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
+        try (Git git = Git.open(repositoryDir)) {
+            String branch = git.getRepository().getBranch();
+            AnyObjectId branchId = git.getRepository().findRef(branch).getObjectId();
+            AnyObjectId remoteBranchId = git.getRepository().findRef("origin/" + branch).getObjectId();
+        	return Iterables.size(git.log().addRange(branchId, remoteBranchId).call());
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+			// TODO Auto-generated catch block
+        	log.error("Failed to count commits above", e);
+			return 0;
+		} finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
+    }
+    
+    public int countPendingChanges(GitRepository gitRepository) throws BusinessException {
+        MeveoUser user = currentUser.get();
+        if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+
+        keyLock.lock(gitRepository.getCode());
+
+        try (Git git = Git.open(repositoryDir)) {
+        	var status = git.status().call();
+        	return status.getUncommittedChanges().size() + status.getUntracked().size();
+        } catch (IOException e) {
+            throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
+
+        } catch (GitAPIException e) {
+        	log.error("Failed to count pending changes", e);
+			return 0;
+		} finally {
+            keyLock.unlock(gitRepository.getCode());
+        }
     }
 
     protected void createGitMeveoFolder(GitRepository gitRepository, File repoDir) throws BusinessException {
