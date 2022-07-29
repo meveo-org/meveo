@@ -956,6 +956,10 @@ public class GitClient {
             git.reset().setMode(ResetCommand.ResetType.HARD)
                     .setRef(commit.getId().getName())
                     .call();
+            
+            git.clean().setForce(true)
+            	.setCleanDirectories(true)
+            	.call();
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
