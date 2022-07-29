@@ -1008,17 +1008,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     		throw new BusinessException("File cannot be updated or created", e);
     	}
     	
-    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-
-        String message = "Add module descriptor file";
-        try {
-            message+=" "+commitMessageBean.getCommitMessage();
-        } catch (ContextNotActiveException e) {
-            log.warn("No active session found for getting commit message when adding module.json to "+module.getCode());
-        }
-
-        gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), message);
+    	if (module.isAutoCommit()) {
+	    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
 	
+	        String message = "Add module descriptor file";
+	        try {
+	            message+=" "+commitMessageBean.getCommitMessage();
+	        } catch (ContextNotActiveException e) {
+	            log.warn("No active session found for getting commit message when adding module.json to "+module.getCode());
+	        }
+	
+	        gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), message);
+    	}
 	}
 	
 	

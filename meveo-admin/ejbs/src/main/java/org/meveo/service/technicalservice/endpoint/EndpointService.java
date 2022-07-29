@@ -212,13 +212,16 @@ public class EndpointService extends BusinessService<Endpoint> {
 		} catch (IOException e) {
 			throw new BusinessException("File cannot be write", e);
 		}
-		String message = "Add JS script for Endpoint: " + entity.getCode();
-		try {
-			message+=" "+commitMessageBean.getCommitMessage();
-		} catch (ContextNotActiveException e) {
-			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		
+		if (module.isAutoCommit()) {
+			String message = "Add JS script for Endpoint: " + entity.getCode();
+			try {
+				message+=" "+commitMessageBean.getCommitMessage();
+			} catch (ContextNotActiveException e) {
+				log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+			}
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), message);
 		}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsFile), message);
 	}
 
 	@Override
@@ -228,13 +231,16 @@ public class EndpointService extends BusinessService<Endpoint> {
 		String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
 		File jsFile = new File (gitDirectory, path);
 		jsFile.delete();
-		String message = "Remove JS script for Endpoint: " + entity.getCode();
-		try {
-			message+=" "+commitMessageBean.getCommitMessage();
-		} catch (ContextNotActiveException e) {
-			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		
+		if (module.isAutoCommit()) {
+			String message = "Remove JS script for Endpoint: " + entity.getCode();
+			try {
+				message+=" "+commitMessageBean.getCommitMessage();
+			} catch (ContextNotActiveException e) {
+				log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+			}
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), message);
 		}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(jsFile), message);
 	}
 
 	private void validatePath(Endpoint entity) throws BusinessException {

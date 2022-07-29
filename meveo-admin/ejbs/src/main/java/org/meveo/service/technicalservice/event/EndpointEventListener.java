@@ -106,7 +106,7 @@ public class EndpointEventListener {
 		} catch (ContextNotActiveException e) {
 			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
 		}
-		if (module != null) {
+		if (module != null && module.isAutoCommit()) {
 			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(scriptFile), message);
 		} else {
 			gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), message);
@@ -150,7 +150,9 @@ public class EndpointEventListener {
 				if (!fileEndpointInterface.exists()) {
 					FileUtils.copyFile(endpointInterface, fileEndpointInterface);
 				}
-				gitClient.commitFiles(module.getGitRepository(), List.of(scriptFile, fileEndpointInterface), message);
+				if (module.isAutoCommit()) {
+					gitClient.commitFiles(module.getGitRepository(), List.of(scriptFile, fileEndpointInterface), message);
+				}
 			} else {
 				gitClient.commitFiles(meveoRepository, Collections.singletonList(scriptFile), message);
 			}
@@ -187,7 +189,7 @@ public class EndpointEventListener {
 				log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
 			}
 
-			if (module != null) {
+			if (module != null && module.isAutoCommit()) {
 				gitClient.commitFiles(module.getGitRepository(), Arrays.asList(scriptFile, parentDir),message);
 			} else {
 				gitClient.commitFiles(meveoRepository, Arrays.asList(scriptFile, parentDir),message);

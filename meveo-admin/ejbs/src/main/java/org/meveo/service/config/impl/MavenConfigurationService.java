@@ -446,10 +446,12 @@ public class MavenConfigurationService implements Serializable {
 		
 		writeToPom(model, pomFile); 
 		
-		try {
-			gitClient.commitFiles(repository, updatedFiles, message);
-		} catch (BusinessException e) {
-			log.error("Can't commit pom.xml file", e);
+		if (module.isAutoCommit()) {
+			try {
+				gitClient.commitFiles(repository, updatedFiles, message);
+			} catch (BusinessException e) {
+				log.error("Can't commit pom.xml file", e);
+			}
 		}
 
 	}

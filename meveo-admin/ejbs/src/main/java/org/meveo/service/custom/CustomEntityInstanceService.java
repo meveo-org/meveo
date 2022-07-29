@@ -510,13 +510,15 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			throw new BusinessException("File cannot be updated or created", e);
 		}
 
-		String message = "Add JSON file for entity " + entity.getCode();
-		try {
-			message+=" "+commitMessageBean.getCommitMessage();
-		} catch (ContextNotActiveException e) {
-			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+		if (module.isAutoCommit()) {
+			String message = "Add JSON file for entity " + entity.getCode();
+			try {
+				message+=" "+commitMessageBean.getCommitMessage();
+			} catch (ContextNotActiveException e) {
+				log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+			}
+			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), message);
 		}
-		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), message);
 	}
 
 }

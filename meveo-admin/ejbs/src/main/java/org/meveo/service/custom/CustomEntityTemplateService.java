@@ -828,12 +828,14 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         }
 
         String message = "Add the cet json schema : " + entity.getCode()+".json" + " in the module : " + module.getCode();
-        try {
-            message+=" "+commitMessageBean.getCommitMessage();
-        } catch (ContextNotActiveException e) {
-            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        if (module.isAutoCommit()) {
+	        try {
+	            message+=" "+commitMessageBean.getCommitMessage();
+	        } catch (ContextNotActiveException e) {
+	            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+	        }
+	        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), message);
         }
-        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJsonSchemaFile), message);
 
         String schemaLocation = this.cetCompiler.getTemplateSchema(entity);
 
@@ -845,13 +847,15 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             throw new BusinessException("File cannot be write", e);
         }
 
-        message = "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode();
-        try {
-            message+=" "+commitMessageBean.getCommitMessage();
-        } catch (ContextNotActiveException e) {
-            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+        if (module.isAutoCommit()) {
+	        message = "Add the cet java source file : " + entity.getCode()+".java" + "in the module : " + module.getCode();
+	        try {
+	            message+=" "+commitMessageBean.getCommitMessage();
+	        } catch (ContextNotActiveException e) {
+	            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+	        }
+	        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), message);
         }
-        gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newJavaFile), message);
     }
 
     @Override

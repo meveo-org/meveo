@@ -351,14 +351,16 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     		throw new BusinessException("File cannot be updated or created", e);
     	}
     	
-    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
-	String message = "Add JSON file for entity " + entity.getCode();
-        try {
-            message+=" "+commitMessageBean.getCommitMessage();
-        } catch (ContextNotActiveException e) {
-            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
-        }
-	gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
+    	if (module.isAutoCommit()) {
+	    	GitRepository gitRepository = gitRepositoryService.findByCode(module.getCode());
+			String message = "Add JSON file for entity " + entity.getCode();
+	        try {
+	            message+=" "+commitMessageBean.getCommitMessage();
+	        } catch (ContextNotActiveException e) {
+	            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+	        }
+			gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
+    	}
     }
     
     /**

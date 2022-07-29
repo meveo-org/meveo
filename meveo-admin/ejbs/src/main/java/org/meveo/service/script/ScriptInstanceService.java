@@ -365,13 +365,15 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 				throw new BusinessException("File cannot be write", e);
 			}
 
-			String message = "Add the script File : " + entity.getCode() + "in the module : " + module.getCode();
-			try {
-				message+=" "+commitMessageBean.getCommitMessage();
-			} catch (ContextNotActiveException e) {
-				log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+			if (module.isAutoCommit()) {
+				String message = "Add the script File : " + entity.getCode() + "in the module : " + module.getCode();
+				try {
+					message+=" "+commitMessageBean.getCommitMessage();
+				} catch (ContextNotActiveException e) {
+					log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+				}
+				gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), message);
 			}
-			gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newFile), message);
 		}
 	}
 

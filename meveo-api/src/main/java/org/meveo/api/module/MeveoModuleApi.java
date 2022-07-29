@@ -864,6 +864,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		meveoModule.setIsInDraft(moduleDto.isInDraft());
 		meveoModule.setMeveoVersionBase(moduleDto.getMeveoVersionBase());
 		meveoModule.setMeveoVersionCeiling(moduleDto.getMeveoVersionCeiling());
+		meveoModule.setAutoCommit(moduleDto.isAutoCommit());
 		if (!StringUtils.isBlank(moduleDto.getLogoPicture()) && moduleDto.getLogoPictureFile() != null) {
 			writeModulePicture(moduleDto.getLogoPicture(), moduleDto.getLogoPictureFile());
 		}
