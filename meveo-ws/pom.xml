@@ -24,6 +24,7 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>jakarta.validation</groupId>

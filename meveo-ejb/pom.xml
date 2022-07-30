@@ -1,0 +1,87 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.meveo</groupId>
+		<artifactId>meveo</artifactId>
+		<version>7.1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>meveo-ejb</artifactId>
+
+
+	<properties>
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.meveo</groupId>
+			<artifactId>meveo-admin</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.javassist</groupId>
+					<artifactId>javassist</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jboss.resteasy</groupId>
+					<artifactId>resteasy-jaxrs</artifactId>
+				</exclusion>
+			</exclusions>
+			<version>${project.version}</version>
+			<type>ejb</type>
+			<optional>true</optional>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.meveo</groupId>
+			<artifactId>meveo-security</artifactId>
+			<version>${project.version}</version>
+			<type>ejb</type>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.meveo</groupId>
+			<artifactId>meveo-api</artifactId>
+			<version>${project.version}</version>
+			<type>ejb</type>
+			<optional>true</optional>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>create-fat-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<artifactSet>
+								<includes>
+									<include>org.meveo:*</include>
+									<include>org.everit:*</include>
+								</includes>
+
+								<excludes>
+									<exclude>org.meveo:meveo-model:jar:</exclude>
+									<exclude>org.meveo:meveo-el-resolver:jar:</exclude>
+									<exclude>org.meveo:meveo-api-dto:jar:</exclude>
+									<exclude>org.meveo:meveo-json-schema:jar:</exclude>
+								</excludes>
+							</artifactSet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
