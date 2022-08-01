@@ -24,6 +24,9 @@ public class MeveoModuleFilters {
 
     @QueryParam("active")
     private Boolean active;
+    
+    @QueryParam("isInDraft")
+    private Boolean isInDraft;
 
     @QueryParam("downloaded")
     private Boolean downloaded;
@@ -93,4 +96,20 @@ public class MeveoModuleFilters {
     public void setItemClass(String itemClass) {
         this.itemClass = itemClass;
     }
+
+	/**
+	 * @return the {@link #isInDraft}
+	 */
+	public Boolean getIsInDraft() {
+		return isInDraft;
+	}
+
+	/**
+	 * @param isInDraft the isInDraft to set
+	 */
+	public void setIsInDraft(Boolean isInDraft) {
+		this.isInDraft = isInDraft;
+	}
+    
+    
 }

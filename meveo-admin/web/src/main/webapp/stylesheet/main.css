@@ -753,7 +753,10 @@ form.formNoBottomBorder {
 .ui-datagrid-blank .ui-datagrid-content { border: none !important; }
 .dataList .ui-datalist-content { border: none; background: transparent; background-image: none; }
 .panelGrid td { padding: 2px 0px !important; }
-.FRight { float: right; }
+.FRight {
+	float: right;
+	display: flex;
+}
 .FLeft { float: left; }
 .VAlignTop { vertical-align: top; }
 .VAlignMiddle { vertical-align: middle; }

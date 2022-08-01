@@ -4,8 +4,6 @@
 package org.meveo.service.admin.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
@@ -17,12 +15,16 @@ import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.PostRemoved;
-import org.meveo.event.qualifier.Removed;
 import org.meveo.model.BusinessEntity;
-import org.meveo.model.ModuleItem;
+import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.security.CurrentUser;
+import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.BusinessServiceFinder;
 import org.slf4j.Logger;
@@ -35,6 +37,47 @@ public class ModuleObserver {
 	
 	@Inject
 	private Logger log;
+	
+	@Inject
+	private MeveoModuleService moduleService;
+	
+	@Inject
+	@CurrentUser
+	private MeveoUser currentUser;
+	
+	@Inject
+	private ModuleInstallationContext moduleInstallationContext;
+	
+	public void addItemToCurrentUserModule(@Observes @Created BusinessEntity itemEntity) {
+		{
+			Class<?>[] ignoredClasses = { MeveoModule.class, CustomEntityInstance.class };
+			for (Class<?> ignoredClass : ignoredClasses) {
+				if (ignoredClass.isInstance(itemEntity)) {
+					return;
+				}
+			}
+		}
+		
+		if (!moduleInstallationContext.isActive() && currentUser != null && currentUser.getCurrentModule() != null) {
+			MeveoModule module = moduleService.findByCode(currentUser.getCurrentModule());
+            MeveoModuleItem item = new MeveoModuleItem(itemEntity);
+            
+            String appliesTo = null;
+        	if (itemEntity instanceof CustomFieldTemplate) {
+        		appliesTo = ((CustomFieldTemplate) itemEntity).getAppliesTo();
+        	} else if (itemEntity instanceof EntityCustomAction) {
+        		appliesTo = ((EntityCustomAction) itemEntity).getAppliesTo();
+        	}
+        	item.setAppliesTo(appliesTo);
+            
+        	try {
+        		moduleService.addModuleItem(item, module);
+        	} catch (BusinessException e) {
+        		log.error("Entity cannot be add to the module", e);
+        	}
+
+		}
+	}
 		
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Transactional(value = TxType.REQUIRES_NEW)

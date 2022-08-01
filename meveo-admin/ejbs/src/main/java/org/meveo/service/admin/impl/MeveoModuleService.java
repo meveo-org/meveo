@@ -513,6 +513,12 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
                 queryBuilder.append(" AND m.moduleSource != null AND m.moduleSource != '' ");
             }
         }
+        
+        if (filters.getIsInDraft() != null && filters.getIsInDraft()) {
+        	queryBuilder.append(" AND m.isInDraft = true");
+        } else if (filters.getIsInDraft() != null && !filters.getIsInDraft()) {
+        	queryBuilder.append(" AND m.isInDraft = false");
+        }
 
         if(filters.getItemCode() != null && filters.getItemClass() != null){
             queryBuilder.append(" AND i.itemCode = :itemCode AND i.itemClass = :itemClass");

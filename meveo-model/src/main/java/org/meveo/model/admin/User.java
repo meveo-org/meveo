@@ -63,6 +63,7 @@ import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
 import org.meveo.model.security.Role;
 import org.meveo.model.shared.Name;
@@ -148,6 +149,10 @@ public class User extends EnableEntity implements ICustomFieldEntity {
 
     @Column(name = "ssh_public_key", columnDefinition = "TEXT")
     private String sshPublicKey;
+    
+    @JoinColumn(name = "current_module")
+    @ManyToOne
+    private MeveoModule currentModule;
 
     public User() {
     }
@@ -357,6 +362,20 @@ public class User extends EnableEntity implements ICustomFieldEntity {
 
 	public void setCurrentMissionType(String currentMissionType) {
 		this.currentMissionType = currentMissionType;
+	}
+	
+	/**
+	 * @param currentModule the currentModule to set
+	 */
+	public void setCurrentModule(MeveoModule currentModule) {
+		this.currentModule = currentModule;
+	}
+	
+	/**
+	 * @return the {@link #currentModule}
+	 */
+	public MeveoModule getCurrentModule() {
+		return currentModule;
 	}
 
     

@@ -38,6 +38,7 @@ import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.admin.exception.UsernameAlreadyExistsException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.module.MeveoModuleDto;
@@ -50,6 +51,7 @@ import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.api.module.MeveoModulePatchApi;
 import org.meveo.api.module.ModuleReleaseApi;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.model.admin.User;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModulePatch;
 import org.meveo.model.module.ModuleRelease;
@@ -57,6 +59,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleFilters;
 import org.meveo.service.admin.impl.MeveoModulePatchService;
 import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.view.MessagesHelper;
@@ -82,6 +85,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	private static final long serialVersionUID = 1L;
+	
+	@Inject
+	private UserService userService;
 
 	@Inject
 	private MeveoModuleApi meveoModuleApi;
@@ -194,6 +200,12 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	public List<MeveoModule> getMeveoModules() {
 		return meveoModules;
+	}
+	
+	public List<String> getMeveoModulesCodes() {
+		var filters = new MeveoModuleFilters();
+		filters.setIsInDraft(true);
+		return meveoModuleService.listCodesOnly(filters);
 	}
 
 	public void setMeveoModules(List<MeveoModule> meveoModules) {
@@ -665,5 +677,25 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		}
 		
 		return null;
+	}
+	
+	public String getUserCurrentModule() {
+		if (currentUser.getCurrentModule() == null) {
+			return "Meveo";
+		}
+		
+		return currentUser.getCurrentModule();
+	}
+	
+	public void setUserCurrentModule(String moduleCode) {
+		User user = userService.findByUsername(currentUser.getUserName());
+		MeveoModule module = meveoModuleService.findByCode(moduleCode);
+		user.setCurrentModule(module);
+		try {
+			userService.update(user);
+			currentUser.setCurrentModule(module.getCode());
+		} catch (UsernameAlreadyExistsException | BusinessException e) {
+			log.error("Failed to set current module for user {}", user, e);
+		}
 	}
 }

@@ -3,6 +3,8 @@
 	xmlns:h="http://xmlns.jcp.org/jsf/html"
 	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
 	xmlns:p="http://primefaces.org/ui"
+	xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
 	xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
 	<div id="topbar-wrapper" class="clearfix">
@@ -61,6 +63,22 @@
 						})
 			</script>
 			<div class="FRight">
+				<div class="Padding5">
+					<hftl:decorateFormField 
+						label="Current module" 
+						labelStyle="color:white; min-width: 120px;" 
+						labelStyleClass="Fs14 FontBold"
+						inputStyle="min-width: 120px"
+					>
+						<p:selectOneMenu
+							id="select-repository"
+							style="min-width: 80px"
+							value="#{meveoModuleBean.userCurrentModule}">
+							<f:selectItems value="#{meveoModuleBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+							<p:ajax event="change" execute="@this" update="@this"/>
+						</p:selectOneMenu>
+					</hftl:decorateFormField>
+				</div>
 				<ul id="user-info" class="ListNoStyle Padding10"
 					style="margin: 0 40px 0 0;">
 					<li class="Fs14 FontBold">#{currentUser.fullNameOrUserName}</li>

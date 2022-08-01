@@ -14,6 +14,14 @@
    			<column name="auto_commit" defaultValueNumeric="1" type="${type.boolean}"></column>
    		</addColumn>
 	</changeSet>
+	
+	<changeSet id="Link user to module - #588" author="Clément Bareth">
+		<addColumn tableName="adm_user">
+			<column name="current_module" type="bigint">
+				<constraints foreignKeyName="fk_current_module" referencedTableName="meveo_module" referencedColumnNames="id" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
 
 
 </databaseChangeLog>

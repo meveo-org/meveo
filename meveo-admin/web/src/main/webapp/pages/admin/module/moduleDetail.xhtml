@@ -87,16 +87,12 @@
 			</p:breadCrumb>
 		</h:form>
 		
-    	<p:messages id="messages">
-            <p:autoUpdate />
-        </p:messages>
-
         <ui:include src="modulePopups.xhtml">
             <ui:param name="backingBean" value="#{meveoModuleBean}" />
         </ui:include>
         
         <hftl:formPanel formId="moduleForm" label="#{messages['meveoModule.title']}" showFormButtons="false" backingBean="#{meveoModuleBean}"
-            edit="#{meveoModuleBean.entity.isInDraft and !meveoModuleBean.entity.downloaded}">
+            edit="#{meveoModuleBean.entity.isInDraft}">
             <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
             <hftl:formField label="#{messages['businessEntity.description']}" field="description" required="true" id="description" />
             <hftl:formField label="#{messages['meveoModule.license']}" required="true" field="license" id="license" isMessage="true" newLine="true" />
