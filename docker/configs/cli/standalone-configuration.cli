@@ -8,4 +8,7 @@ run-batch --file=/opt/jboss/wildfly/cli/email.cli
 run-batch --file=/opt/jboss/wildfly/cli/logging.cli
 run-batch --file=/opt/jboss/wildfly/cli/reverse-proxy.cli
 run-batch --file=/opt/jboss/wildfly/cli/deploy-scanner.cli
+run-batch --file=/opt/jboss/wildfly/cli/security-domain.cli
 stop-embedded-server
+
+
