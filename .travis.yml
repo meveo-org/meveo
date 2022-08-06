@@ -81,7 +81,8 @@ script:
 
   # Copy dbchangelog and meveo.ear files into the docker image folder for meveo
   - cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
-  - cp meveo-ear/src/target/meveo.ear docker/
+  - cp meveo-ear/target/meveo.ear docker/
+       
 
   # Build a meveo image
   - docker build

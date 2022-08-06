@@ -216,10 +216,14 @@ RUN cd /tmp/meveo \
 # Build meveo source and deploy meveo.ear
   && ./deploy.sh
 #RUN chown jboss:jboss ./meveo-ear/src/target/meveo.ear \
-#    && cp  ./meveo-ear/src/target/meveo.ear ${JBOSS_HOME}/standalone/deployments/
+#    && cp  ./meveo-ear/target/meveo.ear ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo
 
 COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
+
+
+
+             

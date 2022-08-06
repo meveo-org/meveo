@@ -5,5 +5,5 @@ echo "Build meveo project"
 mvn clean package -DskipTests
 
 echo "Deploy meveo.ear in exploded mode"
-unzip meveo-ear/src/target/meveo.ear -d ${MEVEO_DEPLOY_DIR}/meveo.ear
+unzip meveo-ear/target/meveo.ear -d ${MEVEO_DEPLOY_DIR}/meveo.ear
 touch ${MEVEO_DEPLOY_DIR}/meveo.ear.dodeploy
