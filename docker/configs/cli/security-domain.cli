@@ -2,3 +2,4 @@
 #  import javax.annotation.security.DeclareRoles --  for ear , "DeclareRoles" is not work for ejb default security domain. So, overcome this issue need remove this default-security-domain tag from wildfy ejb3 security subsystem.
 
 /subsystem=ejb3/:undefine-attribute(name=default-security-domain)
+/subsystem=ejb3/:undefine-attribute(name=default-missing-method-permissions-deny-access)
