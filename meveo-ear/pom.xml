@@ -976,7 +976,7 @@
 							<ejbModule>
 								<groupId>org.meveo</groupId>
 								<artifactId>meveo-ejb</artifactId>
-								<bundleFileName>meveo-ejb</bundleFileName>
+								<bundleFileName>meveo-ejb.jar</bundleFileName>
 							</ejbModule>
 
 						</modules>
