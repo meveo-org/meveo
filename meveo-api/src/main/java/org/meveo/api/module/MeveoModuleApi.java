@@ -52,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
+import javax.ejb.Timeout;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
@@ -97,6 +98,7 @@ import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
@@ -216,6 +218,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private GitRepositoryService gitRepositoryService;
+    
+    @Inject
+    private DefaultMeveoModuleInitializer defaultMeveoModuleInitializer;
     
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -858,6 +863,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		meveoModule.setIsInDraft(moduleDto.isInDraft());
 		meveoModule.setMeveoVersionBase(moduleDto.getMeveoVersionBase());
 		meveoModule.setMeveoVersionCeiling(moduleDto.getMeveoVersionCeiling());
+		meveoModule.setAutoCommit(moduleDto.isAutoCommit());
 		if (!StringUtils.isBlank(moduleDto.getLogoPicture()) && moduleDto.getLogoPictureFile() != null) {
 			writeModulePicture(moduleDto.getLogoPicture(), moduleDto.getLogoPictureFile());
 		}
@@ -1752,10 +1758,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 					.withDependencies(false)
 					.build();
 					
-			for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
-				meveoModuleService.remove(uninstalledModule);
+			if (module.isInstalled()) {
+				for (MeveoModule uninstalledModule : uninstall(module.getClass(), uninstallParams)) {
+					meveoModuleService.remove(uninstalledModule);
+				} 
+			} else {
+				meveoModuleService.remove(module);
 			}
 			
 		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public Map<String, String> initDefaultRepo(UpdateModulesParameters parameters) throws MeveoApiException, IOException, BusinessException {
+		return defaultMeveoModuleInitializer.init(parameters);
 	}
 }

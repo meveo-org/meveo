@@ -268,6 +268,9 @@ public class CurrentUserProvider {
                 currentUser.setFullName(user.getNameOrUsername());
                 currentUser.setSshPrivateKey(user.getSshPrivateKey());
                 currentUser.setSshPublicKey(user.getSshPublicKey());
+                if (user.getCurrentModule() != null) {
+                	currentUser.setCurrentModule(user.getCurrentModule().getCode());
+                }
 
             } catch (NoResultException e) {
                 user = new User();

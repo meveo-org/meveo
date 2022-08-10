@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+  	
+   	<changeSet id="Disable autocommit #587 " author="Clément Bareth">
+   		<addColumn tableName="meveo_module">
+   			<column name="auto_commit" defaultValueNumeric="1" type="${type.boolean}"></column>
+   		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Link user to module - #588" author="Clément Bareth">
+		<addColumn tableName="adm_user">
+			<column name="current_module" type="bigint">
+				<constraints foreignKeyName="fk_current_module" referencedTableName="meveo_module" referencedColumnNames="id" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
+
+
+</databaseChangeLog>
