@@ -28,6 +28,8 @@
 		<module>meveo-model</module>
 		<module>meveo-security</module>
 		<module>meveo-admin</module>
+		<module>meveo-admin-web</module>
+		<module>meveo-admin-ejbs</module>
 		<module>meveo-api</module>
 		<module>meveo-api-dto</module>
 		<module>meveo-json-schema</module>
