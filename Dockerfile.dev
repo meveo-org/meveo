@@ -215,7 +215,7 @@ COPY --chown=jboss:jboss . /tmp/meveo
 RUN cd /tmp/meveo \
 # Build meveo source and deploy meveo.war
   && ./deploy.sh
-#RUN chown jboss:jboss ./meveo-admin/web/target/meveo.war \
+#RUN chown jboss:jboss ./meveo-admin-web/target/meveo.war \
 #    && cp ./meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/
 #RUN rm -Rf /tmp/meveo
 

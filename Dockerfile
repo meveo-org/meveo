@@ -216,7 +216,7 @@ COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-model/src/main/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
-COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
+COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-admin-web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true
