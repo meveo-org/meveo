@@ -5,19 +5,18 @@ package org.meveo.persistence;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.elresolver.ELException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
-import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 
 public interface StorageImpl {
@@ -73,5 +72,13 @@ public interface StorageImpl {
 	public void rollbackTransaction(int stackedCalls);
 	
 	public void destroy();
+	
+	default public Map<String, Map<String, Object>> findByIds(Repository repository, CustomEntityTemplate cet, List<String> uuids, Map<String, CustomFieldTemplate> cfts, Collection<String> fetchFields, boolean withEntityReferences) {
+		Map<String, Map<String, Object>> results = new HashMap<>();
+		for (String uuid : uuids) {
+			results.put(uuid, findById(repository, cet, uuid, cfts, fetchFields, withEntityReferences));
+		}
+		return results;
+	}
 	
 }
