@@ -70,6 +70,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -78,6 +79,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.filter.Filter;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -442,6 +444,11 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         return back();
     }
+    
+	@ActionMethod
+	public String saveOrUpdate() throws BusinessException, ELException {
+		return saveOrUpdate(false);
+	}
 
     @ActionMethod
     public String saveOrUpdateWithMessage(boolean killConversation) throws BusinessException {

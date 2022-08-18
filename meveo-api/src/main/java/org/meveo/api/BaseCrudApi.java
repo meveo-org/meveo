@@ -41,12 +41,16 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CFBusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.module.MeveoModule;
@@ -90,6 +94,27 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		this.jpaClass = jpaClass;
 	}
 
+	@Override
+	public T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		E entity = getPersistenceService().findByCode(code);
+		if (entity != null) {
+			return toDto(entity);
+		}
+		return null;
+	}
+
+	@Override
+	public E createOrUpdate(T dtoData) throws MeveoApiException, BusinessException {
+		E entity = getPersistenceService().findByCode(dtoData.getCode());
+		if (entity == null) {
+			getPersistenceService().create(entity);
+			return entity;
+		} else {
+			entity = fromDto(dtoData, entity);
+			return getPersistenceService().update(entity);
+		}
+	}
+
 	/**
 	 * @return all entities
 	 */
@@ -114,7 +139,25 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @return Entity converted
 	 * @throws MeveoApiException
 	 */
-	public abstract T toDto(E entity) throws MeveoApiException;
+	public T toDto(E entity) throws MeveoApiException {
+		try {
+			T dto = dtoClass.getDeclaredConstructor(jpaClass).newInstance(entity);
+			
+			if (entity instanceof ICustomFieldEntity) {
+				ICustomFieldEntity cfEntity = (ICustomFieldEntity) entity;
+				CFBusinessEntityDto cfDto = (CFBusinessEntityDto) dto;
+				if (cfEntity.getCfValues() != null) {
+					populateCustomFields(cfDto.getCustomFields(), cfEntity, entity.getId() == null);
+					var cfValuesDto = entityToDtoConverter.getCustomFieldsDTO(cfEntity, true);
+					cfDto.setCustomFields(cfValuesDto);
+				}
+			}
+			
+			return dto;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			throw new UnsupportedOperationException("Not implemented");
+		}
+	}
 
 	/**
 	 * Build a JPA representation from a DTO
@@ -141,6 +184,14 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		try {
 			BeanUtilsBean beanUtilsBean = new NullAwareBeanUtilsBean();
 			beanUtilsBean.copyProperties(entity, dto);
+			
+			if (entity instanceof ICustomFieldEntity) {
+				ICustomFieldEntity cfEntity = (ICustomFieldEntity) entity;
+				CFBusinessEntityDto cfDto = (CFBusinessEntityDto) dto;
+				if (cfDto.getCustomFields() != null) {
+					populateCustomFields(cfDto.getCustomFields(), cfEntity, entity.getId() == null);
+				}
+			}
 
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new MeveoApiException("Unable to copy dto to entity. Make sure that the properties match.");
