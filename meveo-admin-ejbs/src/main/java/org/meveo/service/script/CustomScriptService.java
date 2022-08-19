@@ -249,7 +249,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
         if(!moduleInstallCtx.isActive()) {
-            compileScript(script, true);
+            Class<ScriptInterface> compiledClass = compileScript(script, true);
+            if (!ScriptInterface.class.isAssignableFrom(compiledClass)) {
+            	throw new InvalidScriptException("Script should implement ScriptInterface");
+            }
         }
         if (script.getError() != null && script.isError()) {
             log.error("Failed compiling with error={}", script.getScriptErrors());
@@ -579,7 +582,19 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         try {
-            compileJavaSources(javaScripts);
+            var compilationResults = compileJavaSources(javaScripts);
+            var invalidScripts = compilationResults.values()
+                	.stream()
+                	.filter(compiledClass -> !ScriptInterface.class.isAssignableFrom(compiledClass))
+                	.collect(Collectors.toList());
+                
+                if (!invalidScripts.isEmpty()) {
+                	String message = invalidScripts.stream()
+                		.map(Class::getName)
+                		.collect(Collectors.joining(",", "Following scripts should implement ScriptInterface : ", "."));
+                	throw new InvalidScriptException(message);
+                }
+                
         } catch (CharSequenceCompilerException e) {
             String errorMessage = "";
             List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
@@ -937,7 +952,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
-    protected void compileJavaSources(List<T> scripts) throws CharSequenceCompilerException {
+    protected Map<String, Class<ScriptInterface>> compileJavaSources(List<T> scripts) throws CharSequenceCompilerException {
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
@@ -946,8 +961,8 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         List<JavaFileObjectImpl> compilationUnits = scripts.stream()
                 .map(script -> new JavaFileObjectImpl(script.getCode(), script.getScript()))
                 .collect(Collectors.toList());
-
-        compiler.compile(sourcePath, compilationUnits, errs, false);
+        
+        return compiler.compile(sourcePath, compilationUnits, errs, false);
     }
 
     /**
