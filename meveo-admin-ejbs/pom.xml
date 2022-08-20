@@ -162,6 +162,12 @@
 	</build>
 	<dependencies>
 		<dependency>
+		    <groupId>org.glassfish.tyrus.bundles</groupId>
+		    <artifactId>tyrus-standalone-client</artifactId>
+		    <version>1.19</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>1.23</version>
