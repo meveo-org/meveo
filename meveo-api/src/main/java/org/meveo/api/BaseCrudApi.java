@@ -106,11 +106,11 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	@Override
 	public E createOrUpdate(T dtoData) throws MeveoApiException, BusinessException {
 		E entity = getPersistenceService().findByCode(dtoData.getCode());
+		entity = fromDto(dtoData, entity);
 		if (entity == null) {
 			getPersistenceService().create(entity);
 			return entity;
 		} else {
-			entity = fromDto(dtoData, entity);
 			return getPersistenceService().update(entity);
 		}
 	}

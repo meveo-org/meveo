@@ -23,8 +23,11 @@ import java.util.regex.Pattern;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -53,6 +56,7 @@ import org.meveo.model.scripts.Function;
 @ModuleItem(value = "WSEndpoint", path = "wsendpoints")
 @ModuleItemOrder(80)
 @ObservableEntity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class WSEndpoint extends BusinessEntity {
 
 	private static final long serialVersionUID = 6561905332917884614L;

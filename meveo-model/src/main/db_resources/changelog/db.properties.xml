@@ -35,6 +35,7 @@
     <property name="now" value="sysdate" dbms="oracle"/>
     <property name="now" value="now()" dbms="mysql"/>
     <property name="now" value="now()" dbms="postgresql"/>
+    <property name="type.int" value="integer" dbms="postgresql"/>
 
     <property name="db.schema.adapted" value="${db.schema}." dbms="postgresql"/>
     <property name="db.schema.adapted" value="" dbms="mysql"/>

@@ -26,7 +26,7 @@ import org.meveo.model.BusinessEntity;
 public abstract class BusinessRs<E extends BusinessEntity, T extends BusinessEntityDto> extends BaseRs /* implements IBusinessRs<E, T> */ {
 
 	@Inject
-	private BaseCrudApi<E, T> api;
+	protected BaseCrudApi<E, T> api;
 	
 	@POST
 	@Path("/")

@@ -4,18 +4,20 @@
 package org.meveo.service.technicalservice.wsendpoint;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
-import javax.websocket.ContainerProvider;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
 
+import org.glassfish.tyrus.client.ClientManager;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
 import org.meveo.service.script.ScriptInterface;
 
@@ -35,8 +37,9 @@ public class WebsocketClientInstance implements AutoCloseable {
 	}
 	
 	public void connect() throws Exception {
-        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-        session = container.connectToServer(this, new URI(client.getUrl()));
+		//TODO: Implement retry
+        ClientManager clientManager = ClientManager.createClient();
+        session = clientManager.connectToServer(this, new URI(client.getUrl()));
 	}
 	
 	@OnOpen
@@ -46,7 +49,18 @@ public class WebsocketClientInstance implements AutoCloseable {
 	
 	@OnMessage
 	public String onMessage(Session session, String message) {
-		return websocketExecutionService.onMessage(session, message, function);
+		Map<String, Object> context = new HashMap<>();
+		context.put("WS_SESSION", session);
+		context.put("WS_EVENT", "message");
+		context.put("WS_MESSAGE", message);
+		try {
+			function.execute(context);
+			return (String) context.get("WS_RESPONSE");
+			
+		} catch (BusinessException e) {
+			//TODO: Print error
+		}
+		return null;
 	}
 	
 	@OnClose
@@ -65,6 +79,16 @@ public class WebsocketClientInstance implements AutoCloseable {
 			session.close();
 		}
 	}
-	 
+	
+	public Session getSession() {
+		return this.session;
+	}
+	
+	public boolean isConnected() {
+		if (session == null) {
+			return false;
+		}
+		return session.isOpen();
+	}
 
 }

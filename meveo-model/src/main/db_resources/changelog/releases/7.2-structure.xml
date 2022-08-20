@@ -71,6 +71,39 @@
 
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="Websocket client" author="Clément Bareth">
+		<createTable tableName="websocket_client">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="websocket_client_pkey"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="service_id" type="bigint">
+				<constraints foreignKeyName="fk_websocket_client_function" references="meveo_function(id)"/>
+			</column>
+			<column name="secured" type="${type.boolean}" defaultValueNumeric="1">
+				<constraints nullable="false"/>
+			</column>
+			<column name="url" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="retry_delay" type="${type.int}" defaultValueNumeric="60"></column>
+			<column name="nb_max_retry" type="${type.int}" defaultValueNumeric="100"></column>
+		</createTable>
+	</changeSet>
 
 
 </databaseChangeLog>
