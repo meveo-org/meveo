@@ -3,7 +3,7 @@ package org.meveo.model.security;
 public enum DefaultRole {
 	
 	NONE(null, null),
-	ADMIN("administrateur", -1L),
+	ADMIN(DefaultRoleNames.ADMIN, -1L),
 	SUPER_ADMIN("superAdministrateur", -2L),
 	MODIFY_ALL_CE("ModifyAllCE", -3L),
 	READ_ALL_CE("ReadAllCE", -4L),

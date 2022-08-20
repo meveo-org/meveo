@@ -743,6 +743,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
+		if (cei.getFieldTemplates() == null) {
+			cei.setFieldTemplates(customFieldTemplateService.getCftsWithInheritedFields(cet));
+		}
 		
 		for (var storage : cet.getAvailableStorages()) {
 			if (uuid != null && provider.findImplementation(storage).exists(repository, cet, uuid)) {

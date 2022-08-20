@@ -18,6 +18,7 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.admin.MvCredential;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -50,7 +51,7 @@ public class ModuleObserver {
 	
 	public void addItemToCurrentUserModule(@Observes @Created BusinessEntity itemEntity) {
 		{
-			Class<?>[] ignoredClasses = { MeveoModule.class, CustomEntityInstance.class };
+			Class<?>[] ignoredClasses = { MeveoModule.class, CustomEntityInstance.class, MvCredential.class };
 			for (Class<?> ignoredClass : ignoredClasses) {
 				if (ignoredClass.isInstance(itemEntity)) {
 					return;

@@ -410,19 +410,21 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			File jsonFile = new File(GitHelper.getRepositoryDir(null, gitRepository), "/scriptInstances/" + scriptCode + ".json");
 			if (jsonFile.exists()) {
 				return readModuleItem(jsonFile, ScriptInstanceDto.class.getName());
-			} else {
+			}/* else { //FIXME: Scan for a particular annotation
 				// If parsed items does not contains the dto and json file does not exist, create a basic dto
 				ScriptInstanceDto dto = new ScriptInstanceDto();
 				dto.setCode(scriptCode);
 				dto.setType(ScriptSourceTypeEnum.JAVA);
 				try {
-					dto.setScript(FileUtils.readFileToString(entityFile, "UTF-8"));
+					String script = FileUtils.readFileToString(entityFile, "UTF-8");
+					// Avoid parsing custom entities java files
+					dto.setScript(script);
 					return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
 				} catch (IOException e) {
 					log.error("Can't read java file", e);
 					return null;
 				}
-			}
+			}*/
 		}
 			
 		return super.parseModuleItem(entityFile, directoryName, alreadyParseItems, gitRepository);

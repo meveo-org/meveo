@@ -1482,6 +1482,16 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>credentials</from-outcome>
+            <to-view-id>/pages/admin/credentials/credentials.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+       <navigation-case>
+            <from-outcome>credentialDetail</from-outcome>
+            <to-view-id>/pages/admin/credentials/credentialDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>repositoryDetail</from-outcome>
             <to-view-id>/pages/admin/storages/repositories/repositoryDetail.xhtml</to-view-id>
             <redirect/>

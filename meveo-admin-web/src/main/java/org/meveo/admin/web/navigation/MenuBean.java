@@ -189,6 +189,7 @@ public class MenuBean implements Serializable {
 		
 		addItem(admin, "meveoModules", "menu.meveoModules", "MeveoModules");
 		addItem(admin, "meveoInstances", "menu.meveoInstance", "MeveoInstances");
+		addItem(admin, "credentials", "menu.credentials", "Credentials");
 		
 	}
 
