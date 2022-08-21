@@ -133,17 +133,17 @@ public class WebsocketManager {
 		var instance = websocketClients.get(websocketCode);
 		if (instance != null) {
 			if (!instance.isConnected()) {
-				//TODO: Auto-reconnect
-//				connect(null, null);
-//				instance = websocketClients.get(websocketCode);
+				try {
+					instance.connect();
+				} catch (Exception e) {
+					return false;
+				}
 			}
 			var session = instance.getSession();
 			if (session.isOpen()) {
 				session.getAsyncRemote().sendText(txtMessage);
 				messageSent = true;
 			}
-		} else {
-			// TODO use WebsockerServerEndpoint
 		}
 		
 		return messageSent;

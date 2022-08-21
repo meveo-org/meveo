@@ -47,7 +47,7 @@ public class WebsocketClientRs extends BusinessRs<WebsocketClient, WebsocketClie
 	
 	@Path("/{code}/message")
 	@POST
-	public void sendMessage(@PathParam("code") String code, String message) {
-		websocketManager.sendMessage(code, null, message, false);
+	public boolean sendMessage(@PathParam("code") String code, String message) {
+		return websocketManager.sendMessage(code, null, message, false);
 	}
 }
