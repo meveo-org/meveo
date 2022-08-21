@@ -4,12 +4,23 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.el.*;
+import javax.el.ArrayELResolver;
+import javax.el.BeanELResolver;
+import javax.el.CompositeELResolver;
+import javax.el.ELContext;
+import javax.el.ELResolver;
+import javax.el.ExpressionFactory;
+import javax.el.FunctionMapper;
+import javax.el.ListELResolver;
+import javax.el.MapELResolver;
+import javax.el.ValueExpression;
+import javax.el.VariableMapper;
 
 import org.apache.commons.lang3.StringUtils;
-import org.meveo.com.sun.el.ExpressionFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sun.el.ExpressionFactoryImpl;
 
 public class ValueExpressionWrapper {
 
