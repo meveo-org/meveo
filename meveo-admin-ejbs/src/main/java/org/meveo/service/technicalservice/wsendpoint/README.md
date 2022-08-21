@@ -45,8 +45,9 @@ For rest API, use the `https://<host>:<port>/meveo/api/rest/wsendpoint` POST end
     "serviceCode": "com.mycompany.websocket.WSExchange",
     "roles": []
 }
-
+```
 For clients, use the `https://<host>:<port>/meveo/api/rest/websockets/clients` POST endpoint with body
+```
 {
     "code": "client1",
     "url": "ws://localhost:7071",
