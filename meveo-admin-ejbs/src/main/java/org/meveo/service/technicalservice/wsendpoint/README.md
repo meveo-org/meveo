@@ -1,4 +1,4 @@
-# Websocket endpoint
+# Websocket endpoint & clients
 
 Websocket endpoints allow realtime bidirectional communications between a user agent and a meveo instance server.
 Although this can be achieved by the user agent calling some Rest endpoint on the server and the server notifying the user agent using webnotifications (either on top SSE or Websocket),
@@ -32,7 +32,7 @@ public class WSExchange extends Script {
 
 ## Websocket endpoint creation
 
-In meveo admin you can create a Websocket endpoint by using the "Services/Endpoints/Websocket" menu
+In meveo admin you can create a Websocket endpoint by using the "Services/Endpoints/Websocket" or "Services/Endpoints/Websocket clients" menu
 
 Like a Rest endpoint, a Websocket endpoint, has a name, can be secured and is associated to the function that perform its logic.
 
@@ -44,6 +44,16 @@ For rest API, use the `https://<host>:<port>/meveo/api/rest/wsendpoint` POST end
     "secured": false,
     "serviceCode": "com.mycompany.websocket.WSExchange",
     "roles": []
+}
+
+For clients, use the `https://<host>:<port>/meveo/api/rest/websockets/clients` POST endpoint with body
+{
+    "code": "client1",
+    "url": "ws://localhost:7071",
+    "secured": "false",
+    "service": "org.meveo.script.WebsocketScript",
+    "nbMaxRetry": 5,
+    "retryDelayInSeconds": 20
 }
 ```
 
@@ -70,6 +80,8 @@ when a client sends a message on an open socket, `execute` method of the associa
 
 This imply for instance that the parameters still contain the websocket session under the `WS_SESSION` key.
 
+For clients, if the implementation scripts set the `WS_RESPONSE`, a message is automatically sent back.
+
 ### onClose
 Whe the server is notified that the session is closes, `execute` method of the associated function with the parameters that resulted from the call to the function when opening and
 * `WS_EVENT` : "close"
@@ -89,7 +101,9 @@ You can send message to a websocket client from any script by using the method
 ```
 public void sendMessage(String enpointCode, String username, String txtMessage) 
 ```
-of the `WebsocketServerEndpoint` service 
+of the `WebsocketServerEndpoint` service
+
+For websocket clients, see the `WebsocketManager` service
 
 
 
