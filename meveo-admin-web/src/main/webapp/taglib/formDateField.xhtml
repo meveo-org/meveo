@@ -43,7 +43,7 @@
                         <p:ajax update="#{listenerUpdate}" listener="#{actionListenerBean[actionListenerMethod]}" event="dateSelect" />
                     </c:if>
                     <c:if test="#{fieldInfo.fieldType == FieldTypeEnum.Instant}">
-                    	<f:converter converterId="instantConverter"/>
+                    	<f:converter binding="#{instantConverter}"/>
                     	<f:attribute name="format" value="${datePattern}"/>
                     </c:if>
                 </p:calendar>
