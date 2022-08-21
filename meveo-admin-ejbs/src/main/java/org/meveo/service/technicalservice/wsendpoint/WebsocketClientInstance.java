@@ -17,12 +17,8 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 
 import org.glassfish.tyrus.client.ClientManager;
-import org.glassfish.tyrus.client.ClientProperties;
-import org.glassfish.tyrus.client.auth.AuthConfig;
-import org.glassfish.tyrus.client.auth.Credentials;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.admin.MvCredential;
-import org.meveo.model.admin.MvCredential.AuthenticationType;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInterface;

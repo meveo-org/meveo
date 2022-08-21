@@ -4,27 +4,22 @@
 package org.meveo.service.technicalservice.wsendpoint;
 
 import java.net.URI;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import javax.ejb.Asynchronous;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ejb.Timeout;
-import javax.ejb.Timer;
-import javax.ejb.TimerConfig;
-import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Destroyed;
 import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -33,6 +28,7 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.admin.MvCredential;
+import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
 import org.meveo.service.admin.impl.credentials.CredentialHelperService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
@@ -48,7 +44,7 @@ public class WebsocketManager {
 	private Logger log;
 
 	@Inject
-	private WebsocketClientService wsEndpointService;
+	private WebsocketClientService wsClientService;
 
 	@Inject
 	private ConcreteFunctionService concreteFunctionService;
@@ -65,7 +61,7 @@ public class WebsocketManager {
 	public void init() {
 		log.info("Opening active websocket clients");
 		
-    	for (WebsocketClient client : wsEndpointService.listActive()) {
+    	for (WebsocketClient client : wsClientService.listActive()) {
     		try {
     			initWebSocketClient(client);
     		} catch (BusinessException e) {
@@ -163,10 +159,24 @@ public class WebsocketManager {
 		});
     }
     
-    @Transactional
+    @Asynchronous
     public void resetClient(@Observes @Updated WebsocketClient client) throws Exception {
     	closeClient(client);
     	initWebSocketClient(client);
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void updateFunction(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Updated Function function) {
+    	List<WebsocketClient> clients = wsClientService.findByServiceCode(function.getCode());
+    	if (clients != null) {
+    		for (var client : clients) {
+    			try {
+    				resetClient(client);
+    			} catch (Exception e) {
+    				//NOOP
+    			}
+    		}
+    	}
     }
     
     public void destroy(@Observes @Destroyed(ApplicationScoped.class) Object init) {

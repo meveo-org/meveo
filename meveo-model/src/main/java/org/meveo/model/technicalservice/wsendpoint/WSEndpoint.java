@@ -17,30 +17,19 @@
  */
 package org.meveo.model.technicalservice.wsendpoint;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.meveo.model.BusinessEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.annotation.ImportOrder;
-import org.meveo.model.scripts.Function;
 
 /**
  * Configuration of a websocket endpoint allowing to use a technical service.
@@ -56,51 +45,12 @@ import org.meveo.model.scripts.Function;
 @ModuleItem(value = "WSEndpoint", path = "wsendpoints")
 @ModuleItemOrder(80)
 @ObservableEntity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class WSEndpoint extends BusinessEntity {
+public class WSEndpoint extends Websocket {
 
 	private static final long serialVersionUID = 6561905332917884614L;
 	
 	public static final String ENDPOINT_INTERFACE_JS = "WSEndpointInterface";
 
 	public static final Pattern basePathPattern = Pattern.compile("[a-zA-Z0-9_\\-.]+");
-
-
-	/** Whether websocket endpoint is accessible without logging */
-	@Column(name = "secured", nullable = false)
-	@Type(type = "numeric_boolean")
-	private boolean secured = true;
-
-	/**
-	 * Technical service associated to the endpoint
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "service_id", updatable = false, nullable = false)
-	private Function service;
-
-	public void setCode(String code){
-		Matcher matcher = basePathPattern.matcher(code);
-		if(matcher.matches()) {
-			this.code = code;
-		} else {
-			throw new RuntimeException("invalid code");
-		}
-	}
-
-	public Function getService() {
-		return service;
-	}
-
-	public void setService(Function service) {
-		this.service = service;
-	}
-
-	public boolean isSecured() {
-		return secured;
-	}
-
-	public void setSecured(boolean secured) {
-		this.secured = secured;
-	}
 	
 }

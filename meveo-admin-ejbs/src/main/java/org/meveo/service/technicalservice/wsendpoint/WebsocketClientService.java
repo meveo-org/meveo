@@ -15,13 +15,27 @@
  */
 package org.meveo.service.technicalservice.wsendpoint;
 
-import javax.ejb.Stateless;
+import java.util.List;
 
+import javax.ejb.Stateless;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
+
+import org.meveo.model.scripts.Function;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
 import org.meveo.service.base.BusinessService;
 
 @Stateless
 public class WebsocketClientService extends BusinessService<WebsocketClient> {
 
-	
+	public List<WebsocketClient> findByServiceCode(String code) {
+		CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+		CriteriaQuery<WebsocketClient> query = cb.createQuery(WebsocketClient.class);
+		Root<WebsocketClient> root = query.from(WebsocketClient.class);
+		final Join<WebsocketClient, Function> service = root.join("service");
+		query.where(cb.equal(service.get("code"), code));
+		return getEntityManager().createQuery(query).getResultList();
+	}
 }

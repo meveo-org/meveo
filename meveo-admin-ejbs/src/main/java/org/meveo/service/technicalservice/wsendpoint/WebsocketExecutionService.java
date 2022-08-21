@@ -15,6 +15,7 @@ import javax.websocket.Session;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
+import org.meveo.model.technicalservice.wsendpoint.Websocket;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
 
@@ -23,7 +24,7 @@ public class WebsocketExecutionService {
 	@Inject
 	private Logger log;
 
-	public boolean onOpen(Session session, EndpointConfig config, WSEndpoint wsEndpoint, ScriptInterface executionEngine) {
+	public boolean onOpen(Session session, EndpointConfig config, Websocket wsEndpoint, ScriptInterface executionEngine) {
 		Map<String, Object> context = new HashMap<>();
 		
 		try {

@@ -18,7 +18,7 @@ import org.meveo.model.ObservableEntity;
 @Table(name = "websocket_client")
 @GenericGenerator(name = "ID_GENERATOR", strategy = "increment")
 @ObservableEntity
-public class WebsocketClient extends WSEndpoint {
+public class WebsocketClient extends Websocket {
 	
 	private static final long serialVersionUID = -8049840006660921466L;
 	
