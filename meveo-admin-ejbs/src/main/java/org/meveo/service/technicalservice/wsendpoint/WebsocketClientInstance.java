@@ -17,8 +17,12 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 
 import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.client.ClientProperties;
+import org.glassfish.tyrus.client.auth.AuthConfig;
+import org.glassfish.tyrus.client.auth.Credentials;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.admin.MvCredential;
+import org.meveo.model.admin.MvCredential.AuthenticationType;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInterface;
@@ -56,16 +60,33 @@ public class WebsocketClientInstance implements AutoCloseable {
 	}
 	
 	public void connect() throws Exception {
-		//TODO: Implement retry
-        ClientManager clientManager = ClientManager.createClient();
+		ClientManager clientManager = ClientManager.createClient();
         String url = credential != null
         		? MeveoValueExpressionWrapper.evaluateToStringIgnoreErrors(client.getUrl(), "credential", credential)
         		: client.getUrl();
-
+        
         connecting = true;
         try {
-        	session = clientManager.connectToServer(this, new URI(url));
-        	this.error = null;
+        	Exception lastException = null;
+        	for (int i = 0; i < client.getNbMaxRetry(); i++) {
+        		try {
+        			session = clientManager.connectToServer(this, new URI(url));
+        			if (session != null && session.isOpen()) {
+        				break;
+        			}
+        		} catch (Exception e) {
+        			lastException = e;
+        			Thread.sleep(client.getNbMaxRetry() * 1000);
+        		}
+        	}
+        	
+        	if (lastException != null) {
+    			this.error = lastException.getLocalizedMessage();
+    			throw lastException;
+        	} else {
+        		this.error = null;
+        	}
+        	
         } finally {
         	connecting = false;
         }
