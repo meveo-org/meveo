@@ -11,7 +11,7 @@ public class WebsocketClientDto extends WSEndpointDto {
 	
 	private String url;
 	private int retryDelayInSeconds = 60;
-	private int nbMaxRetry = Integer.MAX_VALUE;
+	private int nbMaxRetry = 100;
 	private String service;
 	
 	public WebsocketClientDto() {
