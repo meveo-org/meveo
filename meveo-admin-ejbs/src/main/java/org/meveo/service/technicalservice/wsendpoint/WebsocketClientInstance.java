@@ -18,7 +18,9 @@ import javax.websocket.Session;
 
 import org.glassfish.tyrus.client.ClientManager;
 import org.meveo.admin.exception.BusinessException;
+import org.meveo.model.admin.MvCredential;
 import org.meveo.model.technicalservice.wsendpoint.WebsocketClient;
+import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInterface;
 
 @ClientEndpoint
@@ -29,6 +31,7 @@ public class WebsocketClientInstance implements AutoCloseable {
 	private final WebsocketExecutionService websocketExecutionService;
 	
 	private Session session;
+	private MvCredential credential;
 	
 	public WebsocketClientInstance(WebsocketClient client, ScriptInterface function,WebsocketExecutionService websocketExecutionService) {
 		this.client = client;
@@ -36,10 +39,21 @@ public class WebsocketClientInstance implements AutoCloseable {
 		this.websocketExecutionService = websocketExecutionService;
 	}
 	
+	/**
+	 * @param credential the credential to set
+	 */
+	public void setCredential(MvCredential credential) {
+		this.credential = credential;
+	}
+	
 	public void connect() throws Exception {
 		//TODO: Implement retry
         ClientManager clientManager = ClientManager.createClient();
-        session = clientManager.connectToServer(this, new URI(client.getUrl()));
+        String url = credential != null
+        		? MeveoValueExpressionWrapper.evaluateToStringIgnoreErrors(client.getUrl(), "credential", credential)
+        		: client.getUrl();
+
+        session = clientManager.connectToServer(this, new URI(url));
 	}
 	
 	@OnOpen

@@ -34,6 +34,17 @@ public class WebsocketClientRs extends BusinessRs<WebsocketClient, WebsocketClie
 		}
 	}
 	
+	@Path("/{code}/close")
+	@POST
+	public void close(@PathParam("code") String code) throws Exception {
+		WebsocketClient client = api.getPersistenceService().findByCode(code);
+		if (client != null) {
+			websocketManager.closeClient(client);
+		} else {
+			throw new EntityDoesNotExistsException(WebsocketClient.class, code);
+		}
+	}
+	
 	@Path("/{code}/message")
 	@POST
 	public void sendMessage(@PathParam("code") String code, String message) {
