@@ -95,7 +95,8 @@ public class MenuBean implements Serializable {
 		DefaultSubMenu endpoints = addSubMenu(services, "endpoint", "menu.endpoint");
 		addItem(endpoints, "endpoint", "menu.endpoint.rest", "restEndpoint");
 		addItem(endpoints, "webSocketEndpoints", "menu.endpoint.webSocket", "webSocketEndpoint");
-	
+		addItem(endpoints, "websocketClients", "menu.endpoint.webSocketClient", "webSocketClient");
+
 		DefaultSubMenu jobSubMenu = addSubMenu(services, "jobSubMenu", "menu.jobs");
 		addItem(jobSubMenu, "jobInstances", "menu.jobInstances", "jobs");
 		addItem(jobSubMenu, "timerEntities", "menu.timerEntities", "timers");

@@ -30,8 +30,10 @@ public class WebsocketClientInstance implements AutoCloseable {
 	private final ScriptInterface function;
 	private final WebsocketExecutionService websocketExecutionService;
 	
+	private String error;
 	private Session session;
 	private MvCredential credential;
+	private boolean connecting = false;
 	
 	public WebsocketClientInstance(WebsocketClient client, ScriptInterface function,WebsocketExecutionService websocketExecutionService) {
 		this.client = client;
@@ -46,6 +48,13 @@ public class WebsocketClientInstance implements AutoCloseable {
 		this.credential = credential;
 	}
 	
+	/**
+	 * @param error the error to set
+	 */
+	public void setError(String error) {
+		this.error = error;
+	}
+	
 	public void connect() throws Exception {
 		//TODO: Implement retry
         ClientManager clientManager = ClientManager.createClient();
@@ -53,7 +62,13 @@ public class WebsocketClientInstance implements AutoCloseable {
         		? MeveoValueExpressionWrapper.evaluateToStringIgnoreErrors(client.getUrl(), "credential", credential)
         		: client.getUrl();
 
-        session = clientManager.connectToServer(this, new URI(url));
+        connecting = true;
+        try {
+        	session = clientManager.connectToServer(this, new URI(url));
+        	this.error = null;
+        } finally {
+        	connecting = false;
+        }
 	}
 	
 	@OnOpen
@@ -84,6 +99,7 @@ public class WebsocketClientInstance implements AutoCloseable {
 	
 	@OnError
 	public void error(Session session, Throwable t) {
+		this.error = t.getLocalizedMessage();
 		websocketExecutionService.error(session, t, function);
 	}
 
@@ -91,6 +107,9 @@ public class WebsocketClientInstance implements AutoCloseable {
 	public void close() throws Exception {
 		if (session != null) {
 			session.close();
+			session = null;
+			this.connecting = false;
+			this.error = null;
 		}
 	}
 	
@@ -103,6 +122,18 @@ public class WebsocketClientInstance implements AutoCloseable {
 			return false;
 		}
 		return session.isOpen();
+	}
+	
+	public String getStatus() {
+		if (isConnected()) {
+			return "connected";
+		} else if(connecting) {
+			return "connecting";
+		} else if (error != null){
+			return error;
+		} else {
+			return "inactive";
+		}
 	}
 
 }

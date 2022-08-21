@@ -1,0 +1,106 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:hftl="http://hftl.org"
+                xmlns:p="http://primefaces.org/ui"
+                template="/layout/template.xhtml">
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="objectId" value="#{websocketClientBean.objectId}"/>
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="body">
+
+        <hftl:entityPopup id="searchFuncionPopup"
+                          header="#{messages['endpoint.search.endpoint.service']}"
+                          backingBean="#{functionBean}"
+                          searchField1Label="#{messages['BusinessEntity.code']}"
+                          searchField1="code" column1Label="#{messages['BusinessEntity.code']}"
+                          column1="code" selection="#{websocketClientBean.entity.service}"
+                          column2Label="#{messages['BusinessEntity.description']}"
+                          column2="description" column3="class" column3Child="simpleName"
+                          column3Label="Type" selectionListenerBean="#{websocketClientBean}"
+                          selectionListenerMethod="onFunctionChange"
+                          updateField=":wsEndpointForm:serviceId :wsEndpointForm:serviceId_text">
+        </hftl:entityPopup>
+
+        <h:form id="crumbmenuForm">
+            <p:breadCrumb homeDisplay="text" id="crumbmenu">
+                <p:menuitem value="#{messages['menu.services']}" disabled="true"/>
+                <p:menuitem outcome="endpoint" value="#{messages['menu.endpoint']}" disabled="true" />
+                <p:menuitem outcome="websocketClients" value="Websocket clients" />
+                <p:menuitem
+                        value="#{messages['commons.new']} #{messages['endpoint.webSocket']}"
+                        disabled="true" rendered="#{websocketClientBean.entity.transient}"/>
+                <p:menuitem
+                        value="#{websocketClientBean.entity.code}"
+                        disabled="true" rendered="#{!websocketClientBean.entity.transient}"/>
+            </p:breadCrumb>
+        </h:form>
+
+        <hftl:formPanel formId="wsEndpointForm"
+                        label="#{messages['endpoint.webSocket']}" showAddModuleButton="true"
+                        backingBean="#{websocketClientBean}" killConversationOnSave="true">
+            <h:panelGrid columns="4">
+                <hftl:formField label="#{messages['endpoint.name']}" field="code" required="true"
+                                validateUnique="true"/>
+                <hftl:formField label="#{messages['BusinessEntity.description']}" field="description"/>
+                <hftl:formField id="serviceId" label="#{messages['endpoint.code']}"
+                                field="service" valueLabelField="code" required="true" popup="true"
+                                popupId="searchFuncionPopup" allowEdit="true"
+                                displayOneLine="false" componentWidth="100"
+                                actionListenerBean="#{websocketClientBean}"
+                                actionListenerMethod="onFunctionChange"/>
+                <hftl:formField label="#{messages['endpoint.webSocket.secured']}" field="secured"/>
+                
+            </h:panelGrid>
+
+			<h:panelGrid columns="3">
+				<hftl:formField label="Url EL (&quot;credential&quot; variable available)" field="url" />
+				<hftl:formField label="Number of retry" field="nbMaxRetry" componentWidth="100"/>
+				<hftl:formField label="Delay between retries (seconds)" field="retryDelayInSeconds" componentWidth="70"/>
+			</h:panelGrid>
+			
+			<h:panelGrid columns="1">
+				<hftl:decorateFormField label="Status" componentWidth="100">
+					<h:outputText value="#{websocketClientBean.status}" />
+				</hftl:decorateFormField>
+			</h:panelGrid>
+			
+			<ui:param name="buttons" value="true" />
+			
+        	<ui:define name="buttons">
+				<p:commandButton process="@this" rendered="${websocketClientBean.getStatus() != 'connected' and websocketClientBean.getStatus() != 'connecting'}"
+					value="Connect"
+					action="#{websocketClientBean.connect()}" update="messages wsEndpointForm"
+				/>
+				<p:commandButton process="@this" rendered="${websocketClientBean.status eq 'connected'}"
+					value="Close"
+					action="#{websocketClientBean.close()}" update="messages wsEndpointForm"
+				/>
+				
+		      	<p:commandButton value="Send message" rendered="${websocketClientBean.status eq 'connected'}" onclick="PF('sendMsgDlg').show()"/>
+
+				<p:dialog header="Send message" widgetVar="sendMsgDlg">
+					<h:panelGrid columns="1">
+						<p:inputTextarea readonly="false" 
+							id="sendMsgInput"
+							rows="15"
+							autoResize="false"
+							cols="40"
+							value="#{websocketClientBean.message}" />
+						<p:commandButton value="Send" 
+							update="messages wsEndpointForm" 
+							onclick="PF('sendMsgDlg').hide();" 
+							actionListener="#{websocketClientBean.sendMessage()}" />
+					</h:panelGrid>
+				</p:dialog>
+
+			</ui:define>
+
+		</hftl:formPanel>
+    </ui:define>
+
+</ui:composition>

@@ -59,20 +59,8 @@ public class WebsocketManager {
 	@Inject
 	private CredentialHelperService credentialHelperService;
 	
-    @Resource
-    protected TimerService timerService;
-	
 	private final Map<String, WebsocketClientInstance> websocketClients = new ConcurrentHashMap<>();
 	
-//	@PostConstruct
-//    public void postConstruct() {
-//		LocalDateTime dateTime = LocalDateTime.now().plus(Duration.of(2, ChronoUnit.MINUTES));
-//		Date date = Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
-//		
-//		timerService.createSingleActionTimer(date, new TimerConfig(null, false));
-//    }
-	
-	// @Timeout
 	@PostConstruct
 	public void init() {
 		log.info("Opening active websocket clients");
@@ -108,7 +96,8 @@ public class WebsocketManager {
 			}
 			
 	    	instance = new WebsocketClientInstance(client, function, websocketExecutionService);
-	    	
+			websocketClients.put(client.getCode(), instance);
+
 	    	if (client.isSecured()) {
 	    		String url = MeveoValueExpressionWrapper.evaluateExpression(client.getUrl(), new HashMap<>(), String.class);
 	    		String domainName = new URI(url).getHost();
@@ -121,22 +110,24 @@ public class WebsocketManager {
 	    	}
 	    	
 			instance.connect();
-			websocketClients.put(client.getCode(), instance);
-			
 			log.info("Connection to client {} {}", client.getCode(), instance.isConnected() ? "succeeded" : "failed");
+			
 			return instance.isConnected();
 		} catch (Exception e) {
+			if (instance != null) {
+				instance.setError(e.getLocalizedMessage());
+			}
 			log.warn("Failed to connect to websocket {}", client.getCode(), e);
 			return false;
 		}
     }
     
-	public void sendMessage(String websocketCode, String username, String txtMessage, boolean persistMessage) {
+	public boolean sendMessage(String websocketCode, String username, String txtMessage, boolean persistMessage) {
 		String persistCacheKey = websocketCode+"_"+username;
-		sendMessage(websocketCode, username, txtMessage, persistCacheKey, persistMessage);
+		return sendMessage(websocketCode, username, txtMessage, persistCacheKey, persistMessage);
 	}
 	
-	public void sendMessage(String websocketCode, String username, String txtMessage, String persistCacheKey, boolean persistMessage) {
+	public boolean sendMessage(String websocketCode, String username, String txtMessage, String persistCacheKey, boolean persistMessage) {
 		boolean messageSent = false;
 
 		var instance = websocketClients.get(websocketCode);
@@ -154,6 +145,8 @@ public class WebsocketManager {
 		} else {
 			// TODO use WebsockerServerEndpoint
 		}
+		
+		return messageSent;
 	}
     
     @Transactional
@@ -185,5 +178,14 @@ public class WebsocketManager {
 			}
 		});
     }
-
+    
+    public String getStatus(WebsocketClient client) {
+    	WebsocketClientInstance instance = websocketClients.get(client.getCode());
+    	if (instance == null) {
+    		return "inactive";
+    	}
+    	
+    	return instance.getStatus();
+    }
+    
 }
