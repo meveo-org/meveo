@@ -22,6 +22,88 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id=" internalize mv-credential module #591 " author="Clément Bareth">
+		<createTable tableName="mv_credential">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="mv_credential_pkey"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="service_id" type="bigint"/>
+			<column name="header_value" type="varchar(255)"/>
+			<column name="public_key" type="varchar(255)"/>
+			<column name="token" type="varchar(255)"/>
+			<column name="private_key" type="varchar(255)"/>
+			<column name="domain_name" type="varchar(255)"/>
+			<column name="password" type="varchar(255)"/>
+			<column name="authentication_type" type="varchar(255)"/>
+			<column name="header_key" type="varchar(255)"/>
+			<column name="refresh_token" type="varchar(255)"/>
+			<column name="status" type="varchar(255)"/>
+			<column name="username" type="varchar(255)"/>
+            <column name="token_expiry" type="datetime" />
+            <column name="last_connection" type="datetime" />
+            <column name="credit" type="bigint"/>
+            <column name="cf_values" type="text"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="Add missing props -  #591 " author="Clément Bareth">
+		<addColumn tableName="mv_credential">
+			<column name="api_key" type="varchar(255)" />
+		</addColumn>
+
+		<addColumn tableName="mv_credential">
+			<column name="uuid" type="varchar(255)" />
+
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Websocket client" author="Clément Bareth">
+		<createTable tableName="websocket_client">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="websocket_client_pkey"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="service_id" type="bigint">
+				<constraints foreignKeyName="fk_websocket_client_function" references="meveo_function(id)"/>
+			</column>
+			<column name="secured" type="${type.boolean}" defaultValueNumeric="1">
+				<constraints nullable="false"/>
+			</column>
+			<column name="url" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="retry_delay" type="${type.int}" defaultValueNumeric="60"></column>
+			<column name="nb_max_retry" type="${type.int}" defaultValueNumeric="100"></column>
+		</createTable>
+	</changeSet>
 
 
 </databaseChangeLog>

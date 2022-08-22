@@ -326,7 +326,7 @@
         </c:if>
 
         <!-- If the value binding is a date, display a p:calendar field. -->
-        <c:if test="${fieldInfo.fieldType == FieldTypeEnum.Date or fieldInfo.fieldType == FieldTypeEnum.DatePeriod}">
+        <c:if test="${fieldInfo.fieldType == FieldTypeEnum.Date or fieldInfo.fieldType == FieldTypeEnum.DatePeriod or fieldInfo.fieldType == FieldTypeEnum.Instant}">
 
             <c:if test="${empty(time)}">
                 <c:set var="time" value="false" />
@@ -339,6 +339,7 @@
             </c:if>
 
             <hftl:formDateField id="${empty(id)?fieldIdPrefix.concat('_date'):id}" fieldItem="#{fieldItem}" label="${label}" disabled="${disabled}" required="${required}"
+                fieldInfo="${fieldInfo}"
                 componentWidth="${componentWidth}" newLine="${newLine}" displayOneLine="${displayOneLine}" styleClass="${styleClass}" style="${style}" labelStyle="${labelStyle}"
                 labelStyleClass="${labelStyleClass}" inputStyle="${inputStyle}" inputStyleClass="${inputStyleClass}" labelWidth="${labelWidth}" inputWidth="${inputWidth}" datePattern="${datePattern}"
                 edit="#{edit}" listenerUpdate="${listenerUpdate}" actionListenerBean="${actionListenerBean}" actionListenerMethod="${actionListenerMethod}" />

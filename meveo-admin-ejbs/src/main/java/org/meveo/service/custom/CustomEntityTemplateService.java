@@ -576,6 +576,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         permissionService.removeIfPresent(cet.getModifyPermission());
         permissionService.removeIfPresent(cet.getDecrpytPermission());
         permissionService.removeIfPresent(cet.getReadPermission());
+        
+        final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
+        final File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
+        if (classFile.exists()) {
+            classFile.delete();
+        }
 
         super.remove(cet);
     }
@@ -765,7 +771,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
         final File cetJsonDir = cetCompiler.getJsonCetDir(cet, module);
         final File cetJavaDir = cetCompiler.getJavaCetDir(cet, module);
-        final File classDir = CustomEntityTemplateService.getClassesDir(currentUser);
+
         List<File> fileList = new ArrayList<>();
 
         final File schemaFile = new File(cetJsonDir, cet.getCode() + "-schema.json");
@@ -780,11 +786,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             fileList.add(javaFile);
         }
 
-        final File classFile = new File(classDir, "org/meveo/model/customEntities/" + cet.getCode() + ".class");
-        if (classFile.exists()) {
-            classFile.delete();
-        }
-        
         final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + cet.getAppliesTo());
         if (cftDir.exists()) {
 	        for (File cftFile : cftDir.listFiles()) {

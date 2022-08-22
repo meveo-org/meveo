@@ -3,7 +3,7 @@ package org.meveo.util.view;
 public class FieldInformation {
 
     public enum FieldTypeEnum {
-        Text, Boolean, Date, DatePeriod, Enum, Number, Entity, List, Map, Image;
+        Text, Boolean, Date, DatePeriod, Enum, Number, Entity, List, Map, Image, Instant;
     }
 
     public enum FieldNumberTypeEnum {

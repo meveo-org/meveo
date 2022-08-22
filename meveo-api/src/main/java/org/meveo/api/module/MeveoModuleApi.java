@@ -1678,13 +1678,18 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		Set<MeveoModuleItem> deleteItems = new HashSet<>();
 		
 		File directory = GitHelper.getRepositoryDir(null, module.getCode());
-		
-		for (DiffEntry diff : event.getDiffs()) {
 
+		for (DiffEntry diff : event.getDiffs()) {
+			MeveoModuleItemDto itemDto;
+			MeveoModuleItem item;
+			
 			switch (diff.getChangeType()) {
 			case ADD:
 				installItems.removeIf(Objects::isNull);
-				installItems.add(getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode()));
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode());
+				if (itemDto != null) {
+					installItems.add(itemDto);
+				}
 				break;
 				
 			case COPY:
@@ -1697,13 +1702,21 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 			case MODIFY:
 				updateItems.removeIf(Objects::isNull);
-				updateItems.add(getItemDtoFromFile(directory, diff.getNewPath(), updateItems, module.getCode()));
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), updateItems, module.getCode());
+				if (itemDto != null) {
+					updateItems.add(itemDto);
+				}
 				break;
 				
 			case RENAME:
 				installItems.removeIf(Objects::isNull);
-				deleteItems.add(getExistingItemFromFile(directory, diff.getOldPath()));
-				installItems.add(getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode()));
+				item = getExistingItemFromFile(directory, diff.getOldPath());
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode());
+				
+				if (item != null && itemDto != null) {
+					deleteItems.add(item);
+					installItems.add(itemDto);
+				}
 				break;
 				
 			default:

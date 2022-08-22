@@ -5,6 +5,8 @@
     xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui" xmlns:hftl="http://hftl.org">
 
 <ui:composition>
+ 	<o:importConstants type="org.meveo.util.view.FieldInformation.FieldTypeEnum" />
+ 
     <hftl:decorateFormField fieldId="#{id}" label="#{label}" componentWidth="#{componentWidth}" newLine="#{newLine}" displayOneLine="#{displayOneLine}" styleClass="#{styleClass}" style="#{style}"
         labelStyle="#{labelStyle}" labelStyleClass="#{labelStyleClass}" inputStyle="#{inputStyle}" inputStyleClass="#{inputStyleClass}" labelWidth="#{labelWidth}" inputWidth="#{inputWidth}">
 
@@ -39,6 +41,10 @@
                     </c:if>
                     <c:if test="#{not empty listenerUpdate and not empty actionListenerBean}">
                         <p:ajax update="#{listenerUpdate}" listener="#{actionListenerBean[actionListenerMethod]}" event="dateSelect" />
+                    </c:if>
+                    <c:if test="#{fieldInfo.fieldType == FieldTypeEnum.Instant}">
+                    	<f:converter binding="#{instantConverter}"/>
+                    	<f:attribute name="format" value="${datePattern}"/>
                     </c:if>
                 </p:calendar>
             </c:if>

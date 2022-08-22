@@ -147,6 +147,74 @@ public class CrossStorageService implements CustomPersistenceService {
 	public Map<String, Object> find(Repository repository, CustomEntityTemplate cet, String uuid, Collection<String> fetchFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
 		return findById(repository, cet, uuid, fetchFields, new HashMap<>(), withEntityReferences);
 	}
+	
+	/**
+	 * Retrieves many entity instances
+	 *
+	 * @param repository           Repository code
+	 * @param cet                  Template of the entities to retrieve
+	 * @param uuids        		   UUIDs of the entities
+	 * @param fetchFields          Fields to select
+	 * @param withEntityReferences Whether to fetch entity references
+	 * @return list of matching entities
+	 * @throws EntityDoesNotExistsException if entity does not exist
+	 */
+	public List<Map<String, Object>> findByIds(Repository repository, CustomEntityTemplate cet, List<String> uuids, Collection<String> fetchFields, Map<String, Set<String>> subFields, boolean withEntityReferences) throws EntityDoesNotExistsException {
+		if (uuids == null) {
+			throw new IllegalArgumentException("Cannot retrieve entity by uuid without uuid");
+		}
+
+		if (cet == null) {
+			throw new IllegalArgumentException("CET should be provided");
+		}
+
+		List<String> selectFields;
+		Map<String, Map<String, Object>> values = new HashMap<>();
+		// values.put("uuid", uuid);
+		// boolean foudEntity=false;
+		
+		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
+
+		// Retrieve only asked fields
+		if (fetchFields != null && !fetchFields.isEmpty()) {
+			selectFields = new ArrayList<>(fetchFields);
+
+		// No restrictions about fields - retrieve all fields
+		} else {
+			selectFields = cfts.values().stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
+		}
+		
+		for (var storage : cet.getAvailableStorages()) {
+			Map<String, Map<String, Object>> storageValues = provider.findImplementation(storage) 
+					.findByIds(repository, cet, uuids, cfts, selectFields, withEntityReferences);
+			
+			if (storageValues != null) {
+				storageValues.forEach((uuid, data) -> {
+					values.computeIfAbsent(uuid, key -> new HashMap<>())
+						.putAll(data);
+				});
+			}
+			
+			// Don't retrieve the fields we already fetched
+			selectFields.removeAll(values.keySet());
+		}
+		
+		// Remove null values
+		values.values().removeIf(Objects::isNull);
+
+		// Fetch entity references
+		values.values().forEach(data -> {
+			try {
+				fetchEntityReferences(repository, cet, data, subFields);
+			} catch (EntityDoesNotExistsException e) {
+				log.error("Failed to fetch entity references", e);
+			}
+		});
+
+		values.values().forEach(data -> deserializeData(data, cfts.values()));
+		
+		return new ArrayList<>(values.values());
+	}
 
 	/**
 	 * Retrieves one entity instance
@@ -675,6 +743,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		String uuid = null;
 		CustomEntityTemplate cet = cei.getCet();
+		if (cei.getFieldTemplates() == null) {
+			cei.setFieldTemplates(customFieldTemplateService.getCftsWithInheritedFields(cet));
+		}
 		
 		for (var storage : cet.getAvailableStorages()) {
 			if (uuid != null && provider.findImplementation(storage).exists(repository, cet, uuid)) {

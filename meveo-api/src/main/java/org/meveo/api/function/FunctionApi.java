@@ -26,17 +26,20 @@ import java.util.regex.Pattern;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.PathParam;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.function.FunctionDto;
 import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.Sample;
+import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
@@ -50,9 +53,20 @@ import org.meveo.service.script.FunctionService;
  * @version 6.9.0
  * @since 6.5.0
  */
-public class FunctionApi {
+@Named("FunctionApi")
+public class FunctionApi extends BaseCrudApi<Function, FunctionDto> {
 
-    public static final String TEST_MODE = "test-mode";
+    /**
+	 * Instantiates a new FunctionApi
+	 *
+	 * @param jpaClass
+	 * @param dtoClass
+	 */
+	public FunctionApi() {
+		super(Function.class, FunctionDto.class);
+	}
+
+	public static final String TEST_MODE = "test-mode";
 
     @Inject
     private JobInstanceService jobService;
@@ -74,7 +88,7 @@ public class FunctionApi {
      * @return the dto represenation of the function, or null if not found.
      * @throws BusinessException 
      */
-    public FunctionDto find(String code) throws BusinessException {
+    public FunctionDto find(String code) {
     	Function function = concreteFunctionService.findByCode(code);
     	if(function == null) {
     		return null;
@@ -83,8 +97,13 @@ public class FunctionApi {
         final FunctionDto functionDto = new FunctionDto();
         functionDto.setCode(function.getCode());
         functionDto.setTestSuite(function.getTestSuite());
-        functionDto.setInputs(concreteFunctionService.getInputs(function));
-        functionDto.setOutputs(concreteFunctionService.getOutputs(function));
+        try {
+			functionDto.setInputs(concreteFunctionService.getInputs(function));
+	        functionDto.setOutputs(concreteFunctionService.getOutputs(function));
+		} catch (BusinessException e) {
+			throw new RuntimeException(e);
+		}
+        
         if(function.getCategory() != null) {
         	function.setCategory(function.getCategory());
         }
@@ -174,5 +193,10 @@ public class FunctionApi {
     public List<Sample> getSamples(String functionCode) throws ElementNotFoundException {
         return concreteFunctionService.getFunctionService(functionCode).getSamples(functionCode);
     }
+
+	@Override
+	public IPersistenceService<Function> getPersistenceService() {
+		return defaultFunctionService;
+	}
 
 }
