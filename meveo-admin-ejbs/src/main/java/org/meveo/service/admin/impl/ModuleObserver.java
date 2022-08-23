@@ -59,7 +59,7 @@ public class ModuleObserver {
 			}
 		}
 		
-		if (!moduleInstallationContext.isActive() && currentUser != null && currentUser.getCurrentModule() != null) {
+		if (!moduleInstallationContext.isActive() && currentUser != null && currentUser.getCurrentModule() != null && !currentUser.getCurrentModule().equals("Meveo")) {
 			MeveoModule module = moduleService.findByCode(currentUser.getCurrentModule());
             MeveoModuleItem item = new MeveoModuleItem(itemEntity);
             
