@@ -190,6 +190,9 @@ public class WebsocketManager {
     }
     
     public String getStatus(WebsocketClient client) {
+	if (client==null || client.getCode()==null) {
+    		return "inactive";
+	}
     	WebsocketClientInstance instance = websocketClients.get(client.getCode());
     	if (instance == null) {
     		return "inactive";
