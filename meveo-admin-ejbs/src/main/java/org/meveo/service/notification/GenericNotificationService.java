@@ -69,7 +69,7 @@ public class GenericNotificationService extends BusinessService<Notification> {
             List<Notification> notifications = notificationCacheContainerProvider.getApplicableNotifications(eventType, entityOrEvent);
 
             // Populate cache if no record was found in cache
-            if (notifications == null || notifications.isEmpty()) {
+            if (notifications == null) {
 
                 notifications = getApplicableNotificationsNoCache(eventType, entityOrEvent);
                 if (notifications.isEmpty()) {
