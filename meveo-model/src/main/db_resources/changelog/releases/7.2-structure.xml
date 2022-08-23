@@ -104,6 +104,18 @@
 			<column name="nb_max_retry" type="${type.int}" defaultValueNumeric="100"></column>
 		</createTable>
 	</changeSet>
+	
+	<changeSet id="Alter fk_current_module constraint : set null on delete" author="Clément Bareth">
+		<dropForeignKeyConstraint baseTableName="adm_user" constraintName="fk_current_module"/>
+		<addForeignKeyConstraint
+			constraintName="fk_current_module"
+			referencedTableName="meveo_module"
+			referencedColumnNames="id"
+			baseTableName="adm_user"
+			baseColumnNames="current_module"
+			onDelete="SET NULL"
+		/>
+	</changeSet>
 
 
 </databaseChangeLog>

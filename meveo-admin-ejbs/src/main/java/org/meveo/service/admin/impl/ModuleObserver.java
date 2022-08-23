@@ -22,6 +22,7 @@ import org.meveo.model.admin.MvCredential;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.security.CurrentUser;
@@ -51,7 +52,13 @@ public class ModuleObserver {
 	
 	public void addItemToCurrentUserModule(@Observes @Created BusinessEntity itemEntity) {
 		{
-			Class<?>[] ignoredClasses = { MeveoModule.class, CustomEntityInstance.class, MvCredential.class };
+			Class<?>[] ignoredClasses = { 
+					MeveoModule.class, 
+					CustomEntityInstance.class, 
+					MvCredential.class,
+					GitRepository.class
+			};
+			
 			for (Class<?> ignoredClass : ignoredClasses) {
 				if (ignoredClass.isInstance(itemEntity)) {
 					return;
