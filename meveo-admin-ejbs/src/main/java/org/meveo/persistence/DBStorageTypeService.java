@@ -24,7 +24,14 @@ public class DBStorageTypeService implements Serializable {
 		emWrapper.getEntityManager().merge(storageType);
 	}
 	
-	@SuppressWarnings("unchecked")
+	public DBStorageType find(String code) {
+		return emWrapper.getEntityManager().find(DBStorageType.class, code);
+	}
+	
+	public void delete(DBStorageType storageType) {
+		emWrapper.getEntityManager().remove(storageType);
+	}
+	
 	public List<DBStorageType> findTemplateStorages(String template) {
 		String query = "FROM DBStorageType dbSt \n" + 
 					   "	WHERE EXISTS (FROM CustomEntityTemplate cet INNER JOIN cet.availableStorages cetStorage WHERE cet.code = :code AND cetStorage.code = dbSt.code) \n" +
