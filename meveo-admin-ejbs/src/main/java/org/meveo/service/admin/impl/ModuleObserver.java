@@ -25,6 +25,8 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.model.storage.Repository;
+import org.meveo.model.storage.StorageConfiguration;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessService;
@@ -56,7 +58,9 @@ public class ModuleObserver {
 					MeveoModule.class, 
 					CustomEntityInstance.class, 
 					MvCredential.class,
-					GitRepository.class
+					GitRepository.class,
+					Repository.class,
+					StorageConfiguration.class
 			};
 			
 			for (Class<?> ignoredClass : ignoredClasses) {

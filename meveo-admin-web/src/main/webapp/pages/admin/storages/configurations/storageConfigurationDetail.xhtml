@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:h="http://xmlns.jcp.org/jsf/html" 
+	xmlns:hftl="http://hftl.org"
+	xmlns:hf="http://xmlns.jcp.org/jsf/composite/tags"
+	xmlns:o="http://omnifaces.org/ui"
+	template="/layout/template.xhtml">
+	
+	<o:importConstants type="org.meveo.model.admin.MvCredential.AuthenticationType" />
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:viewParam name="objectId" value="#{storageConfigurationBean.objectId}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+				<p:menuitem value="Credentials" outcome="credentials" />
+				<p:menuitem
+					value="#{storageConfigurationBean.entity.code}"
+					disabled="true" rendered="#{!storageConfigurationBean.entity.transient}" />
+			</p:breadCrumb>
+		</h:form>
+
+			<hftl:formPanel formId="formCredential"
+				label="#{messages['repository.title']}"
+				backingBean="#{storageConfigurationBean}" showFormButtons="false">
+				
+				<p:tabView id="tabView">
+				
+				<p:tab title="Storage">
+					<hftl:formField label="#{messages['businessEntity.code']}"
+						field="code" required="true" validateUnique="true" allowEdit="false" />
+					<hftl:formField label="#{messages['businessEntity.description']}"
+						field="description"
+						edit="#{storageConfigurationBean.entity.code ne 'default'}" />
+						
+					<hftl:formField label="Credential"
+						field="credential" valueField="id" valueLabelField="code"
+						popup="false" listBean="#{mvCredentialBean}" />
+						
+					<hftl:formField
+						label="#{messages['customFieldTemplate.storageType']}"
+						field="storageType" required="true" componentWidth="30" disabled="#{customFieldTemplateBean.entity.fieldType == CustomFieldTypeEnum.MULTI_VALUE}"
+						actionListenerBean="#{customFieldTemplateBean}" allowEdit="false"
+						listenerUpdate="defaultValueField mapKeyTypeField matrixColumns storageType"
+						actionListenerMethod="updateDefaultValues" />
+						
+					<hftl:formField label="Last connection" field="lastConnection" datePattern="dd/MM/yyyy HH:mm:ss"/>
+					<hftl:formField label="Status" field="status"  />
+					<hftl:formField label="Authentication type" field="authenticationType" noTranslateLabel="true"/>
+					<hftl:formField label="API Key" field="apiKey"  />
+					<hftl:formField label="Header value" field="headerValue"/>
+					<hftl:formField label="Header key" field="headerKey"  />
+					<hftl:formField label="Public key" field="publicKey"  />
+					<hftl:formField label="Private key" field="privateKey"  />
+					<hftl:formField label="Username" field="username"  />
+					<hftl:formField label="Password" field="password"  />
+					<hftl:formField label="Token" field="token" />
+					<hftl:formField label="Refresh token" field="refreshToken"  />
+					<hftl:formField label="Token expiry" field="tokenExpiry"  />
+				</p:tab>
+			
+				<hftl:customFields backingBean="#{storageConfigurationBean}" messagesId=":formId:messages" />
+
+		</p:tabView>
+
+			<ui:param name="buttons" value="true" />
+			<ui:define name="buttons">
+				<p:commandButton id="saveButton" value="#{messages['action.save']}"
+					onclick="delayDisable(this);" oncomplete="this.disabled=false;"
+					action="#{storageConfigurationBean.saveOrUpdate}" icon="ui-icon-check"
+					update="@form">
+					<f:param name="edit" value="true" />
+				</p:commandButton>
+				<hf:clearButton label="#{messages['action.reset']}"
+					edit="#{storageConfigurationBean.edit}"
+					rendered="#{storageConfigurationBean.canUserUpdateEntity()}"
+					resetAction="#{storageConfigurationBean.resetFormEntity()}" />
+				<p:button id="backButton" value="#{messages['action.back']}"
+					outcome="#{storageConfigurationBean.back()}" />
+				<p:commandButton icon="ui-icon-trash"
+					value="#{messages['commons.delete']}" immediate="true"
+					onclick="PF('deleteDialog').show();"
+					rendered="#{storageConfigurationBean.entity.code ne 'default'}">
+				</p:commandButton>
+			</ui:define>
+		</hftl:formPanel>
+		
+	</ui:define>
+</ui:composition>

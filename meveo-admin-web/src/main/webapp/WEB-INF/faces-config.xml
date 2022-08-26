@@ -1496,6 +1496,16 @@
             <to-view-id>/pages/admin/storages/repositories/repositoryDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+         <navigation-case>
+            <from-outcome>storageConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/configurations/storageConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>storageConfigurations</from-outcome>
+            <to-view-id>/pages/admin/storages/configurations/storageConfigurations.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
         <navigation-case>
             <from-outcome>gitRepositories</from-outcome>
             <to-view-id>/pages/admin/storages/repositories/gitRepositories.xhtml</to-view-id>

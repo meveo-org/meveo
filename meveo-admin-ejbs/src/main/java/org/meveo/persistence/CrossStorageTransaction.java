@@ -58,15 +58,22 @@ public class CrossStorageTransaction {
 	}
 
 	public void beginTransaction(Repository repository, List<DBStorageType> storages) {
-		storages.stream()
-			.map(provider::findImplementation)
-			.forEach(storageImpl -> storageImpl.beginTransaction(repository, stackedCalls));
+		for (var storage : storages) {
+			var impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				impl.beginTransaction(storageConf, stackedCalls);
+			}
+		}
 
 		stackedCalls++;
 	}
 	
 	public <T> T beginTransaction(Repository repository, DBStorageType storage) {
-		return provider.findImplementation(storage).beginTransaction(repository, stackedCalls);
+		var impl = provider.findImplementation(storage);
+		for (var storageConf : repository.getStorageConfigurations(storage)) {
+			return impl.beginTransaction(storageConf, stackedCalls);
+		}
+		return null;
 	}
 
 	
@@ -74,9 +81,12 @@ public class CrossStorageTransaction {
 		stackedCalls--;
 		
 		if(stackedCalls == 0) {
-			storages.stream()
-				.map(provider::findImplementation)
-				.forEach(storageImpl -> storageImpl.commitTransaction(repository));
+			for (var storage : storages) {
+				var impl = provider.findImplementation(storage);
+				for (var storageConf : repository.getStorageConfigurations(storage)) {
+					impl.commitTransaction(storageConf);
+				}
+			}
 		}
 	}
 	
@@ -95,6 +105,10 @@ public class CrossStorageTransaction {
 	
 	public Session getHibernateSession(String repository) {
 		return sqlStorageImpl.getHibernateSession(repository);
+	}
+	
+	public int getStackedCalls() {
+		return stackedCalls;
 	}
 	
 	@PreDestroy
