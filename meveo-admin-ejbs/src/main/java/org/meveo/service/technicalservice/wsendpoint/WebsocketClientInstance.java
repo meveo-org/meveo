@@ -95,18 +95,7 @@ public class WebsocketClientInstance implements AutoCloseable {
 	
 	@OnMessage
 	public String onMessage(Session session, String message) {
-		Map<String, Object> context = new HashMap<>();
-		context.put("WS_SESSION", session);
-		context.put("WS_EVENT", "message");
-		context.put("WS_MESSAGE", message);
-		try {
-			function.execute(context);
-			return (String) context.get("WS_RESPONSE");
-			
-		} catch (BusinessException e) {
-			//TODO: Print error
-		}
-		return null;
+		return websocketExecutionService.onMessage(session, message, function);
 	}
 	
 	@OnClose

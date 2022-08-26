@@ -52,13 +52,16 @@ public class WebsocketExecutionService {
 	}
 	
 	public String onMessage(Session session, String message, ScriptInterface executionEngine) {
-		String result = "message correctly processed";
+		String result = null;
+		
 		Map<String, Object> context = new HashMap<>();
 		context.put("WS_SESSION", session);
 		context.put("WS_EVENT", "message");
 		context.put("WS_MESSAGE", message);
 		try {
 			executionEngine.execute(context);
+			return (String) context.get("WS_RESPONSE");
+			
 		} catch (BusinessException e) {
 			result = "error while processing message " + e.getMessage();
 		}
