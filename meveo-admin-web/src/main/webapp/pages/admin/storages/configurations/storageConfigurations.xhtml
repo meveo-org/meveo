@@ -24,6 +24,12 @@
 
 			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
 			<hftl:column label="#{messages['businessEntity.description']}" field="description" />
+			<p:column headerText="Credential">
+				#{entity.credential.code}
+			</p:column>
+			<p:column headerText="Storage type">
+				#{entity.dbStorageType.code}
+			</p:column>
 			
 			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationVisualization')}" renderDeleteLink="false">
 				<ui:define name="actionButtons">

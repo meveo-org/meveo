@@ -83,7 +83,11 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     private CustomFieldValues cfValues;
     
     @ManyToMany
-    @JoinTable(name = "repository_storages")
+    @JoinTable(
+		name = "repository_storages", 
+    	joinColumns = @JoinColumn(name = "storage_repository_id"),
+    	inverseJoinColumns = @JoinColumn(name = "storage_configuration_id")
+	)
     private Set<StorageConfiguration> storages;
 
 	public Repository getParentRepository() {
