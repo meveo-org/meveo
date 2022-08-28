@@ -165,5 +165,11 @@
 			<column name="uuid" type="varchar(255)" />
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="Add supported type to db storagetype" author="Clément Bareth">
+		<addColumn tableName="db_storage_type">
+			<column name="field_types" type="text"/>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>
