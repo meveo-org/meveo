@@ -82,7 +82,7 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     @Column(name = "cf_values", columnDefinition = "text")
     private CustomFieldValues cfValues;
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
 		name = "repository_storages", 
     	joinColumns = @JoinColumn(name = "storage_repository_id"),
@@ -215,7 +215,7 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     	}
     	
     	if (sqlConfiguration != null) {
-    		storagesConfigs.add(neo4jConfiguration);
+    		storagesConfigs.add(sqlConfiguration);
     	}
     	
     	if (storages != null) {
