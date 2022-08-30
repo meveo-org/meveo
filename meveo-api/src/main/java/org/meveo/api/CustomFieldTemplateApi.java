@@ -437,6 +437,8 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
                 }
             }
             cft.setAppliesTo(appliesTo);
+        }  else if (!dto.getFieldType().equals(cftToUpdate.getFieldType())) {
+        	throw new IllegalArgumentException("Can't change type for field " + dto.getFullCode() + ". You must delete and re-create it.");
         }
         
         cft.setInDraft(dto.isInDraft());
@@ -469,7 +471,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         		try {
         			Class.forName(dto.getEntityClazz());
         		} catch (ClassNotFoundException e) {
-        			throw new IllegalArgumentException("Entity " + dto.getEntityClazz() + " does not exists");
+        			throw new IllegalArgumentException("Can't create field " + dto.getFullCode() + " : " + dto.getEntityClazz() + " does not exists");
         		}
         	}
         }
