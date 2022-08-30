@@ -276,39 +276,20 @@ public class MeveoModuleItemInstaller {
 						scriptInstanceService.disable((ScriptInstance) itemEntity);
 						return;
 					}
-					
-		            if (itemEntity instanceof Endpoint) {
-		                Endpoint endpoint = (Endpoint) itemEntity;
-		                if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
-		                	meveoModuleService.getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
-		                            .setParameter("endpointId", endpoint.getId())
-		                            .executeUpdate();
-		                }
-		                if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
-		                	meveoModuleService.getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
-		                            .setParameter("endpointId", endpoint.getId())
-		                            .executeUpdate();
-		                }
-		                Function service = concreteFunctionService.findById(endpoint.getService().getId());
-		                meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteById")
-		                        .setParameter("endpointId", endpoint.getId())
-		                        .executeUpdate();
-		                log.info("uninstalled endpoint {} / {}", endpoint.getClass(), endpoint.getId());
-		            } else {
-		            	log.info("Uninstalling module item {}", item);
-						if (itemEntity instanceof ScriptInstance) {
-							List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
-							ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
-							if (CollectionUtils.isNotEmpty(entityCustomActions)) {
-								for (EntityCustomAction entityCustomAction : entityCustomActions) {
-									if (entityCustomAction.getScript().equals(scriptInstance)) {
-										entityCustomActionService.remove(entityCustomAction);
-									}
+		            
+	            	log.info("Uninstalling module item {}", item);
+					if (itemEntity instanceof ScriptInstance) {
+						List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
+						ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
+						if (CollectionUtils.isNotEmpty(entityCustomActions)) {
+							for (EntityCustomAction entityCustomAction : entityCustomActions) {
+								if (entityCustomAction.getScript().equals(scriptInstance)) {
+									entityCustomActionService.remove(entityCustomAction);
 								}
 							}
 						}
-		            	api.getPersistenceService().remove(itemEntity);
-		            }
+					}
+	            	api.getPersistenceService().remove(itemEntity);
 		            
 				} else {
 					
