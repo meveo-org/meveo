@@ -110,7 +110,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 	 * @throws MeveoApiException if api exception occurs
 	 * @throws BusinessException if business exception occurs
 	 */
-    public void create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
+    public CustomFieldTemplate create(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -174,14 +174,16 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         
         validateSamples(cft);
         customFieldTemplateService.create(cft);
+        
+        return cft;
 
     }
 
     private boolean checkAppliesToExisted (String appliesTo) {
     	if(appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-    		return customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(appliesTo)) != null;
+    		return customEntityTemplateService.exists(CustomEntityTemplate.getCodeFromAppliesTo(appliesTo));
     	} else if (appliesTo.startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-    		return customRelationshipTemplateService.findByCode(CustomRelationshipTemplate.getCodeFromAppliesTo(appliesTo)) != null;
+    		return customRelationshipTemplateService.exists(CustomRelationshipTemplate.getCodeFromAppliesTo(appliesTo));
     	} else {
             CustomizedEntityFilter filter = new CustomizedEntityFilter();
             filter.setCustomEntityTemplatesOnly(false);
@@ -208,7 +210,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
 	 * @throws MeveoApiException if api exception occurs
 	 * @throws BusinessException if business exception occurs
 	 */
-    public void update(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
+    public CustomFieldTemplate update(CustomFieldTemplateDto postData, String appliesTo) throws MeveoApiException, BusinessException {
 
         if (StringUtils.isBlank(postData.getCode())) {
             missingParameters.add("code");
@@ -263,6 +265,8 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         validateSamples(cft);
 
         customFieldTemplateService.update(cft);
+        
+        return cft;
 
     }
 
@@ -343,7 +347,12 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         }
     }
 
-    /**
+    @Override
+	public boolean exists(CustomFieldTemplateDto dto) {
+		return customFieldTemplateService.exists(dto.getCode(), dto.getAppliesTo());
+	}
+
+	/**
 	 * Same a {@link #createOrUpdate(CustomFieldTemplateDto, String)} but in a new transaction.
 	 *
 	 * @param postData  the post data
@@ -448,7 +457,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         }
         
         if(dto.getRelationship() != null) {
-        	CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getRelationship());
+        	CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCodeLazy(dto.getRelationship());
 			cft.setRelationship(crt);
 
         } else if(dto.getRelationshipName() != null && dto.getEntityClazzCetCode() != null) {
@@ -714,15 +723,12 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
      * @see org.meveo.api.ApiService#createOrUpdate(java.lang.String)
      */
 	@Override
-	public CustomFieldTemplate createOrUpdate(CustomFieldTemplateDto dtoData)
-			throws MeveoApiException, BusinessException {
-		CustomFieldTemplate fieldTemplate = this.customFieldTemplateService.findByCodeAndAppliesTo(dtoData.getCode(), dtoData.getAppliesTo());
-		if (fieldTemplate == null) {
-			this.create(dtoData, dtoData.getAppliesTo());
+	public CustomFieldTemplate createOrUpdate(CustomFieldTemplateDto dtoData) throws MeveoApiException, BusinessException {
+		if (!this.customFieldTemplateService.exists(dtoData.getCode(), dtoData.getAppliesTo())) {
+			return this.create(dtoData, dtoData.getAppliesTo());
 		} else {
-			this.update(dtoData, dtoData.getAppliesTo());
+			return this.update(dtoData, dtoData.getAppliesTo());
 		}
-		return fieldTemplate;
 	}
 
 	@Override

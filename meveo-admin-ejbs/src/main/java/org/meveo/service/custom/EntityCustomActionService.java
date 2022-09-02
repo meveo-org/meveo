@@ -144,4 +144,13 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
 	        gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
         }
     }
+
+    public boolean exists(String code, String appliesTo) {
+        return !getEntityManager()
+    			.createQuery("SELECT 1 FROM EntityCustomAction WHERE code = :code and appliesTo = :appliesTo")
+                .setParameter("code", code)
+                .setParameter("appliesTo",appliesTo)
+                .getResultList()
+                .isEmpty();
+    }
 }

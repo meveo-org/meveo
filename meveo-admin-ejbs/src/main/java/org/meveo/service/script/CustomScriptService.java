@@ -600,7 +600,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
                 if ("ERROR".equals(diagnostic.getKind().name())) {
-                    errorMessage += diagnostic.getMessage(Locale.getDefault()) + "\n in file " + diagnostic.getSource().getName() + " at line " + diagnostic.getLineNumber() + "\n\n";
+                    errorMessage += diagnostic.getMessage(Locale.getDefault()); 
+                    if (diagnostic.getSource() != null) {
+                    	errorMessage += "\n in file " + diagnostic.getSource().getName();
+                    }
+                    if (diagnostic.getLineNumber() != -1) {
+                        errorMessage += " at line " + diagnostic.getLineNumber() + "\n\n";
+                    }
                 }
             }
             throw new InvalidScriptException(errorMessage);

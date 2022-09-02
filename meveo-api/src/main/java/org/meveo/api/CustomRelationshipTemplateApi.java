@@ -94,8 +94,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         crt.setAudited(dto.isAudited());
     }
 
-    public void createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto)
-            throws MeveoApiException, BusinessException {
+    public CustomRelationshipTemplate createCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -124,11 +123,12 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         if (!moduleInstallationContext.isActive()) {
         	synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
         }
+        
+        return crt;
 
     }
 
-    public void updateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto)
-            throws MeveoApiException, BusinessException {
+    public CustomRelationshipTemplate updateCustomRelationshipTemplate(CustomRelationshipTemplateDto dto) throws MeveoApiException, BusinessException {
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -156,6 +156,8 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         if (!moduleInstallationContext.isActive()) {
         	synchronizeCustomFields(crt.getAppliesTo(), dto.getFields());
         }
+        
+        return crt;
     }
 
     public void removeCustomRelationshipTemplate(String code) throws MeveoApiException, BusinessException {
@@ -192,13 +194,11 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
         return CustomRelationshipTemplateDto.toDTO(crt, cetFields.values());
     }
 
-    public void createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData)
-            throws MeveoApiException, BusinessException {
-        CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(postData.getCode());
-        if (crt == null) {
-            createCustomRelationshipTemplate(postData);
+    public CustomRelationshipTemplate createOrUpdateCustomRelationshipTemplate(CustomRelationshipTemplateDto postData) throws MeveoApiException, BusinessException {
+        if (!customRelationshipTemplateService.exists(postData.getCode())) {
+            return createCustomRelationshipTemplate(postData);
         } else {
-            updateCustomRelationshipTemplate(postData);
+            return updateCustomRelationshipTemplate(postData);
         }
     }
 
@@ -264,8 +264,7 @@ public class CustomRelationshipTemplateApi extends BaseCrudApi<CustomRelationshi
     @Override
     public CustomRelationshipTemplate createOrUpdate(CustomRelationshipTemplateDto dtoData)
             throws MeveoApiException, BusinessException {
-        createOrUpdateCustomRelationshipTemplate(dtoData);
-        return customRelationshipTemplateService.findByCode(dtoData.getCode());
+    	return createOrUpdateCustomRelationshipTemplate(dtoData);
     }
 
     @Override
