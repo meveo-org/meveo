@@ -65,8 +65,29 @@
                 <f:facet name="footer">
                     <p:commandButton value="#{messages['commons.addNew']}" partialSubmit="true" process="@this #{id}" update="#{id}"
                         actionListener="#{backingBean.addItemToCollection(fieldItem, fieldGenericsType)}" rendered="#{showFields ==null and showButtonAddNew and edit}" />
-                    <p:commandButton rendered="#{showFields !=null and showButtonAddNew and edit and ! newEntity}" value="#{messages['commons.addNew']}"
-                        onclick="alert('not implemented. formListField.xhtml line 52')" />
+                    
+                    <h:panelGroup id="footer-add-new" rendered="#{showFields !=null and showButtonAddNew and edit and ! newEntity}">
+                   		<p:selectOneMenu
+                   			id="footer-add-new-select"
+                   			required="true"
+							value="#{backingBean.entityToAdd[id]}">
+							<f:selectItem itemLabel="" itemValue="#{null}"/>
+							<f:selectItems var="e" 
+								value="#{listBean.listAll()}"
+								itemValue="#{e}" 
+								itemLabel="#{e.code}" 
+								itemDisabled="#{fieldItem.contains(e)}"/>
+							<p:ajax event="change" execute="@this" update="@this" />
+							<hftl:objectConverter/>
+						</p:selectOneMenu>
+						
+                   		<p:commandButton 
+                   			value="#{messages['commons.addNew']}"
+                   			partialSubmit="true"
+                   			process="@this #{id} footer-add-new-select @parent" 
+                   			update="#{id} footer-add-new-select @parent"
+                   			actionListener="#{backingBean.addItemToCollection(fieldItem, fieldGenericsType, backingBean.entityToAdd[id])}"/>
+                    </h:panelGroup>
                 </f:facet>
             </p:dataTable>
 
