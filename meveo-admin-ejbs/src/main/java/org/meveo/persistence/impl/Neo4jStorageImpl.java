@@ -330,7 +330,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 					.toString();
 		}
 		
-		Map<String, Object> result = neo4jDao.executeGraphQLQuery(query.getRepository().getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
+		Map<String, Object> result = neo4jDao.executeGraphQLQuery(query.getStorageConfiguration().getCode(), graphQlQuery, null, null);
 		
 		if(result != null) {
 			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(query.getCet().getCode());

@@ -342,15 +342,6 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
 
-		StorageQuery query = new StorageQuery();
-		query.setCet(cet);
-		query.setFetchFields(actualFetchFields);
-		query.setFilters(filters);
-		query.setPaginationConfiguration(paginationConfiguration);
-		query.setRepository(repository);
-		query.setSubFields(subFields);
-		query.setFetchAllFields(fetchAllFields);
-		
 		// Make sure the filters matches the fields
 		if(filters != null) {
 			filters.keySet()
@@ -364,12 +355,24 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			List<Map<String, Object>> values = provider.findImplementation(storage)
-					.find(query);
-			
-			if (values != null) {
-				values.forEach(resultMap -> mergeData(valuesList, resultMap));
+			for (var conf : repository.getStorageConfigurations(storage)) {
+				StorageQuery query = new StorageQuery();
+				query.setCet(cet);
+				query.setFetchFields(actualFetchFields);
+				query.setFilters(filters);
+				query.setPaginationConfiguration(paginationConfiguration);
+				query.setStorageConfiguration(conf);
+				query.setSubFields(subFields);
+				query.setFetchAllFields(fetchAllFields);
+				
+				List<Map<String, Object>> values = provider.findImplementation(storage)
+						.find(query);
+				
+				if (values != null) {
+					values.forEach(resultMap -> mergeData(valuesList, resultMap));
+				}
 			}
+
 		}
 		
 		// Complete missing data

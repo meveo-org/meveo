@@ -66,7 +66,6 @@ import org.slf4j.Logger;
 
 import liquibase.pro.packaged.S;
 
-@RequestScoped
 public class SQLStorageImpl implements StorageImpl {
 	
 	private UserTransaction userTx;
@@ -258,7 +257,7 @@ public class SQLStorageImpl implements StorageImpl {
 			sqlPaginationConfiguration.setFetchFields(List.copyOf(query.getFetchFields()));
 			
 			if (query.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-				final List<Map<String, Object>> values = customTableService.list(query.getRepository().getSqlConfigurationCode(), query.getCet(), sqlPaginationConfiguration);
+				final List<Map<String, Object>> values = customTableService.list(query.getStorageConfiguration().getCode(), query.getCet(), sqlPaginationConfiguration);
 				values.forEach(v -> replaceKeys(query.getCet(), query.getFetchFields(), v));
 				return values;
 
