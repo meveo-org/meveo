@@ -34,8 +34,7 @@
                     <c:if test="#{deleteButton and edit}">
                         <p:column>
                             <p:tooltip for="deletelink" value="#{messages['commons.delete']}" showEffect="slide" hideEffect="slide" />
-                            <h:commandLink id="deletelink" action="#{backingBean.delete(listElement.id)}"
-                                onclick="if(confirm('#{messages['commons.confirmDelete']}')){return true;}else{return false;}">
+                            <h:commandLink id="deletelink" action="#{backingBean.removeItemFromCollection(fieldItem, listElement)}" >
                                 <h:graphicImage value="/img/delete.gif" style="border:0" />
                             </h:commandLink>
                         </p:column>
@@ -69,7 +68,6 @@
                     <h:panelGroup id="footer-add-new" rendered="#{showFields !=null and showButtonAddNew and edit and ! newEntity}">
                    		<p:selectOneMenu
                    			id="footer-add-new-select"
-                   			required="true"
 							value="#{backingBean.entityToAdd[id]}">
 							<f:selectItem itemLabel="" itemValue="#{null}"/>
 							<f:selectItems var="e" 

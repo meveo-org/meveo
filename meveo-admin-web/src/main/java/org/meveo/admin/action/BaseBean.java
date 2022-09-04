@@ -1307,6 +1307,10 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
         values.add(itemValue);
         entityToAdd.values().remove(itemValue);
     }
+    
+    public <C> void removeItemFromCollection(Collection<C> collection, C value) {
+    	collection.remove(value);
+    }
 
     public List<T> listActive() {
         Map<String, Object> filters = getFilters();
