@@ -169,6 +169,11 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
             return null;
         }
     }
+    
+    @Override
+	public boolean exists(EntityCustomActionDto dto) {
+		return entityCustomActionService.exists(dto.getCode(), dto.getAppliesTo());
+	}
 
     public void remove(String actionCode, String appliesTo) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
 

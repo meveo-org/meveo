@@ -887,34 +887,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     }
     
-    
-	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
-//    	MeveoModule thinModule;
-//    	
-//    	// Generate module.json file
-//		try {
-//			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
-//			thinModule.setCode(module.getCode());
-//			thinModule.setModuleItems(null);
-//			
-//			addFilesToModule(thinModule, module);
-//		} catch (Exception e) {
-//			throw new BusinessException(e);
-//		}
-//		
-//		// Generate maven facet if file does not exists yet
-//		mavenConfigurationService.createDefaultPomFile(module.getCode());
-	}
-	
-	
-    
     @Override
 	public void remove(MeveoModule meveoModule) throws BusinessException {
 		super.remove(meveoModule);
-		
-    	if (meveoModule.getGitRepository() != null) {
-			this.gitRepositoryService.remove(meveoModule.getGitRepository());
-    	}
 	}
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {

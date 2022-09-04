@@ -83,14 +83,23 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected MeveoModuleService meveoModuleService;
 	
 	@Inject
-	private ModuleInstallationContext installationContext;
+	protected ModuleInstallationContext installationContext;
 	
 	@Inject
 	@MeveoRepository
 	protected GitRepository meveoRepository;
-
+	
 	@Inject
 	CommitMessageBean commitMessageBean;
+	
+	public boolean exists(String code) {
+		return !getEntityManager()
+			.createQuery("SELECT 1 FROM " + entityClass.getName() + " WHERE code = :code")
+			.setParameter("code", code)
+			.setMaxResults(1)
+			.getResultList()
+			.isEmpty();
+	}
 	
     /**
      * Find entity by code - strict match.
@@ -319,7 +328,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if (!installationContext.isActive()) {
     		module = findModuleOf(entity);
     	} else {
-    		module = installationContext.getModule();
+    		return;
     	}
     	
     	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
@@ -330,6 +339,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	}
 
     public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
+    	// Skip this step during module installation
+    	if (installationContext.isActive()) {
+    		return;
+    	}
+    	
     	BaseEntityDto businessEntityDto = getDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
@@ -374,6 +388,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws IOException BusinessException
      */
     public void moveFilesToModule(P entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+    	if (installationContext.isActive()) {
+    		return;
+    	}
+    	
 		removeFilesFromModule(entity, oldModule);
 	    addFilesToModule(entity, newModule);
     }

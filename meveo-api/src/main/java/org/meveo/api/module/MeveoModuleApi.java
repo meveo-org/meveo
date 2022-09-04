@@ -232,14 +232,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	public ModuleInstallResult install(List<String> repositories, GitRepository repo) throws BusinessException, MeveoApiException {
 		
-		ModuleInstallResult result = null;
+		if (meveoModuleService.exists(repo.getCode())) {
+			throw new EntityAlreadyExistsException(MeveoModule.class, repo.getCode());
+		}
 		
 		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
 		
 		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
 		moduleDto = buildMeveoModuleFromDirectory(repoDir, moduleDto);
 		
-		result = install(repositories, moduleDto, OnDuplicate.SKIP);
+		var result = install(repositories, moduleDto, OnDuplicate.SKIP);
 		
 		// Copy module files to file explorer
 		try {
@@ -276,8 +278,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	 * @return the installation summary
 	 */
 	public ModuleInstallResult install(List<String> repositories, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(moduleDto.getCode());
-		
 		List<ModuleDependencyDto> missingModules = checkModuleDependencies(moduleDto);
 		if (!missingModules.isEmpty()) {
 			throw new MissingModuleException(missingModules);
@@ -297,7 +297,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			});
 		}
 
-		meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
+		MeveoModule meveoModule = meveoModuleApi.createOrUpdate(moduleDto);
 		
 		// Update installed repositories
 		meveoModule.setRepositories(storageRepositories);
@@ -784,8 +784,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	@Override
 	public MeveoModule createOrUpdate(MeveoModuleDto postData) throws MeveoApiException, BusinessException {
-		MeveoModule meveoModule = meveoModuleService.findByCodeWithFetchEntities(postData.getCode());
-		if (meveoModule == null) {
+		if (!meveoModuleService.exists(postData.getCode())) {
 			// create
 			return create(postData, false);
 			

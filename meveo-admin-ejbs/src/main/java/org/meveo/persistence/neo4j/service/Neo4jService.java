@@ -207,8 +207,8 @@ public class Neo4jService implements CustomPersistenceService {
      * @param cet Template of the data to remove
      */
     public void removeCet(CustomEntityTemplate cet) {
-        for (String repositoryCode : getRepositoriesCode()) {
-            neo4jDao.removeByLabel(repositoryCode, cet.getCode());
+        for (Repository repository : cet.getRepositories()) {
+            neo4jDao.removeByLabel(repository.getCode(), cet.getCode());
         }
     }
 
@@ -227,12 +227,12 @@ public class Neo4jService implements CustomPersistenceService {
             }
         }
 
-        for (String repositoryCode : getRepositoriesCode()) {
+        for (Repository repository : customEntityTemplate.getRepositories()) {
             for (String label : labels) {
             	try {
-            		neo4jDao.addUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+            		neo4jDao.addUniqueConstraint(repository.getCode(), label, MEVEO_UUID);
             	} catch (Exception e) {
-            		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repositoryCode, e);
+            		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repository.getCode(), e);
             	}
             }
         }
@@ -257,9 +257,9 @@ public class Neo4jService implements CustomPersistenceService {
             }
         }
 
-        for (String repositoryCode : getRepositoriesCode()) {
+        for (var repo : customEntityTemplate.getRepositories()) {
             for (String label : labels) {
-                neo4jDao.dropUniqueConstraint(repositoryCode, label, MEVEO_UUID);
+                neo4jDao.dropUniqueConstraint(repo.getCode(), label, MEVEO_UUID);
             }
         }
     }

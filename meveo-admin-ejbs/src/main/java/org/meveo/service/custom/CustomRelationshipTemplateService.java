@@ -138,12 +138,14 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		}
 
 		// Synchronize start and end CETs
-		CustomEntityTemplate startCet = crt.getStartNode();
-		MeveoModule cetModule = cetService.findModuleOf(startCet);
-		cetService.addFilesToModule(startCet, cetModule);
-		CustomEntityTemplate endCrt = crt.getEndNode();
-		MeveoModule cet2Module = cetService.findModuleOf(endCrt);
-		cetService.addFilesToModule(endCrt, cet2Module);
+		if (!installationContext.isActive()) {
+			CustomEntityTemplate startCet = crt.getStartNode();
+			MeveoModule cetModule = cetService.findModuleOf(startCet);
+			cetService.addFilesToModule(startCet, cetModule);
+			CustomEntityTemplate endCrt = crt.getEndNode();
+			MeveoModule cet2Module = cetService.findModuleOf(endCrt);
+			cetService.addFilesToModule(endCrt, cet2Module);
+		}
 
 	}
 
