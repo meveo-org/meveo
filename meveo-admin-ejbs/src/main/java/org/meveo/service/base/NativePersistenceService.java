@@ -162,7 +162,7 @@ public class NativePersistenceService extends BaseService {
     private CustomEntityTemplateService customEntityTemplateService;
 	
     @Inject
-    private SQLStorageImpl sqlStorageImpl;
+    private CrossStorageTransaction sqlStorageImpl;
     
     @Inject
     private CustomFieldsCacheContainerProvider cache;
