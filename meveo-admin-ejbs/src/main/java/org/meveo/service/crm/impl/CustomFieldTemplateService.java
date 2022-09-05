@@ -802,7 +802,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
         String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
 
-        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 
         String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getAppliesTo();
 

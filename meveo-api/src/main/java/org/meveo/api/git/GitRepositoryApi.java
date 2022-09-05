@@ -95,7 +95,8 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
             gitRepositoryService.flush();
         }
 
-        File repositoryDir = GitHelper.getRepositoryDir(currentUser, gitRepositoryDto.getCode());
+        File repositoryDir = new File(GitHelper.getGitDirectory(currentUser), gitRepositoryDto.getCode());
+        
         if(repositoryDir.exists()) {
             org.apache.commons.io.FileUtils.deleteDirectory(repositoryDir);
         }
@@ -129,7 +130,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
                 }
             }
 
-            final File repositoryDir = GitHelper.getRepositoryDir(currentUser, code);
+            final File repositoryDir = GitHelper.getRepositoryDir(currentUser, repository);
             return FileUtils.createZipFile(repositoryDir.getAbsolutePath());
 
         } finally {

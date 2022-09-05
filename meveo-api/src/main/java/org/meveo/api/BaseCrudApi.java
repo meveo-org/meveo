@@ -53,7 +53,7 @@ import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.module.MeveoModule;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
@@ -523,7 +523,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		}
 	}
 	
-	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepository) {
 		ModuleItem item = jpaClass.getAnnotation(ModuleItem.class);
 		if (directoryName.equals(item.path())) {
 			return this.readModuleItem(entityFile, this.dtoClass.getName());

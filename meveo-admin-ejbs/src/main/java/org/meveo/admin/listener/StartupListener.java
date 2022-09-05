@@ -217,7 +217,7 @@ public class StartupListener {
 					"target/*"
 			);
 			
-			File gitRepo = GitHelper.getRepositoryDir(appInitUser.get(), meveoRepo.getCode());
+			File gitRepo = GitHelper.getRepositoryDir(appInitUser.get(), meveoRepo);
 			File gitIgnoreFile = new File(gitRepo, ".gitignore");
 			
 			try {
@@ -242,7 +242,7 @@ public class StartupListener {
 			}
 
 			// Create default pom file
-			mavenConfigurationService.createDefaultPomFile(meveoRepo.getCode());
+			mavenConfigurationService.createDefaultPomFile(meveoRepo);
 
 			try {
 				// Create default maven repository

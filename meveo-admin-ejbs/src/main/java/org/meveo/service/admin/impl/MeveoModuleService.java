@@ -916,7 +916,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 			String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
 			for (String filePath : module.getModuleFiles()) {
 				Path source = Paths.get(chrootDir, filePath);
-				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getCode()).getAbsolutePath(), filePath);
+				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()).getAbsolutePath(), filePath);
 				if(!Files.exists(target) && Files.exists(source)) {
 					Files.createDirectories(target);
 					if (Files.isDirectory(target)) {
@@ -939,7 +939,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	 */
 	public JarOutputStream buildJar(MeveoModule module, OutputStream os) throws IOException {
 		JarOutputStream jos = new JarOutputStream(os);
-		File javaDir = GitHelper.getRepositoryDir(null, module.getCode())
+		File javaDir = GitHelper.getRepositoryDir(null, module.getGitRepository())
 				.toPath()
 				.resolve("facets")
 				.resolve("java")
@@ -961,7 +961,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	 * @return the pom file
 	 */
 	public File findPom(MeveoModule module) {
-		return GitHelper.getRepositoryDir(null, module.getCode())
+		return GitHelper.getRepositoryDir(null, module.getGitRepository())
 				.toPath()
 				.resolve("facets")
 				.resolve("maven")
@@ -989,7 +989,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	
     	File newJsonFile = new File(gitDirectory, "module.json");
     	try {

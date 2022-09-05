@@ -116,6 +116,12 @@
 			onDelete="SET NULL"
 		/>
 	</changeSet>
+	
+	<changeSet id="#608 - Add path to git repo" author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="repository_path" type="varchar(500)"/>
+		</addColumn>
+	</changeSet>
 
 
 </databaseChangeLog>

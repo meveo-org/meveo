@@ -298,7 +298,7 @@ public class MavenConfigurationService implements Serializable {
 	public void generatePom(String message, MeveoModule module,GitRepository repository) {
 		//TODO: Avoid this code when module just got uninstalled
 		
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getCode());
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getGitRepository());
 		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
 
 		log.debug("Generating pom.xml file");
@@ -673,15 +673,15 @@ public class MavenConfigurationService implements Serializable {
 	 * Create the default pom.xml file for the default Meveo git repository if it
 	 * does not exists.
 	 * 
-	 * @param repositoryCode code of the repository
+	 * @param repository the repository
 	 */
-	public void createDefaultPomFile(String repositoryCode) {
+	public void createDefaultPomFile(GitRepository repository) {
 
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repositoryCode);
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repository);
 		File pomFile = new File(gitRepo.getPath() + File.separator + "facets" + File.separator + "maven" + File.separator + "pom.xml");
 
 		if (!pomFile.exists()) {
-			MeveoModule module = moduleService.findByCode(repositoryCode, List.of("moduleDependencies"));
+			MeveoModule module = moduleService.findByCode(repository.getCode(), List.of("moduleDependencies"));
 			generatePom("Initialized default repository", module);
 		}
 	}

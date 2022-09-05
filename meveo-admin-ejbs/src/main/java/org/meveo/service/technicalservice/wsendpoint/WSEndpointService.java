@@ -111,7 +111,7 @@ public class WSEndpointService extends BusinessService<WSEndpoint> {
 	 * @return true if endpoint interface exists
 	 */
 	public boolean isEndpointScriptExists(WSEndpoint endpoint) {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File endpointDir = new File(repositoryDir, "/wsendpoints/" + endpoint.getCode());
 		File f = new File(endpointDir, endpoint.getCode() + ".js");
 
@@ -126,21 +126,21 @@ public class WSEndpointService extends BusinessService<WSEndpoint> {
 	 * @return true if endpoint interface exists
 	 */
 	public boolean isBaseEndpointScriptExists() {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File f = new File(repositoryDir, "/wsendpoints/" + WSEndpoint.ENDPOINT_INTERFACE_JS + ".js");
 
 		return f.exists() && !f.isDirectory();
 	}
 
 	public File getScriptFile(WSEndpoint endpoint) {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File endpointDir = new File(repositoryDir, "/wsendpoints/" + endpoint.getCode());
 		endpointDir.mkdirs();
 		return new File(endpointDir, endpoint.getCode() + ".js");
 	}
 	
 	public File getBaseScriptFile() {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File endpointFile = new File(repositoryDir, "/wsendpoints/" + WSEndpoint.ENDPOINT_INTERFACE_JS + ".js");
 		return endpointFile;
 	}

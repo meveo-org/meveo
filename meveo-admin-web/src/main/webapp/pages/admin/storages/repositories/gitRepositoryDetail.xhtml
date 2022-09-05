@@ -44,11 +44,17 @@
 					field="defaultBranch" />
 				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
 			</h:panelGrid>
-			<h:panelGrid columns="1">
+			<h:panelGrid columns="2">
 				<hftl:formField maxlength="255" allowEdit="false"
 					label="#{messages['gitRepositories.remoteOrigin']}"
 					field="remoteOrigin"
 					listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions actionButtons" />
+					
+				<hftl:formField maxlength="255" allowEdit="true"
+					componentWidth="200"
+					label="Path on hard-drive"
+					field="repositoryPath"
+					listenerUpdate="@this actions actionButtons" />
 			</h:panelGrid>
 			<h:panelGrid columns="2">
 				<h:panelGroup id="defaultRemoteUsername">

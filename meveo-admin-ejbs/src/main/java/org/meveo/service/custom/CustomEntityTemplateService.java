@@ -335,7 +335,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     public String getJsonSchemaContent(CustomEntityTemplate cet) throws IOException {
 
         MeveoModule module = this.findModuleOf(cet);
-        final File cetDir = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/json");
+        final File cetDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), "/facets/json");
         File file = new File(cetDir.getAbsolutePath(), cet.getCode() + "-schema.json");
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
@@ -786,7 +786,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             fileList.add(javaFile);
         }
 
-        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + cet.getAppliesTo());
+        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getGitRepository()), "customFieldTemplates/" + cet.getAppliesTo());
         if (cftDir.exists()) {
 	        for (File cftFile : cftDir.listFiles()) {
 	        	cftFile.delete();
@@ -815,7 +815,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     public void addFilesToModule(CustomEntityTemplate entity, MeveoModule module) throws BusinessException {
         super.addFilesToModule(entity, module);
 
-        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
         String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
         String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
 

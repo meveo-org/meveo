@@ -21,8 +21,6 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -107,6 +105,9 @@ public class GitRepository extends BusinessEntity {
     @Column(name = "is_locked")
     @Type(type = "numeric_boolean")
     private boolean locked;
+    
+    @Column(name = "repository_path")
+    private String repositoryPath;
 
     @Transient
     private String currentBranch;
@@ -125,8 +126,22 @@ public class GitRepository extends BusinessEntity {
     public List<String> getBranches() {
         return branches;
     }
+    
+    /**
+	 * @return the {@link #repositoryPath}
+	 */
+	public String getRepositoryPath() {
+		return repositoryPath;
+	}
 
-    public void setBranches(List<String> branches) {
+	/**
+	 * @param repositoryPath the repositoryPath to set
+	 */
+	public void setRepositoryPath(String repositoryPath) {
+		this.repositoryPath = repositoryPath;
+	}
+
+	public void setBranches(List<String> branches) {
         this.branches = branches;
     }
 
