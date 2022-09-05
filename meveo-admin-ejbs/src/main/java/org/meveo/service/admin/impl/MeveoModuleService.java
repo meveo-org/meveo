@@ -86,6 +86,7 @@ import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.admin.User;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -143,6 +144,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+    
+    @Inject
+    private UserService userService;
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -889,6 +893,11 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Override
 	public void remove(MeveoModule meveoModule) throws BusinessException {
+		if (currentUser != null && currentUser.getCurrentModule() != null && currentUser.getCurrentModule().equals(meveoModule.getCode())) {
+			User user = userService.findByUsername(currentUser.getUserName());
+			user.setCurrentModule(null);
+			currentUser.setCurrentModule(null);
+		}
 		super.remove(meveoModule);
 	}
 
