@@ -37,15 +37,18 @@ public class MeveoFileUtils {
         }
         return true;
     }
-
-    public static String readString(String filePath) throws IOException {
-    	File file = new File(filePath);
+    
+    public static String readString(File file) throws IOException {
     	Charset charset = getCharset(file);
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(file.toPath(), charset)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         }
         return contentBuilder.toString();
+    }
+
+    public static String readString(String filePath) throws IOException {
+    	return readString(new File(filePath));
     }
     
     public static Charset getCharset(File file) throws IOException {
