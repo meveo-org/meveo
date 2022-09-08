@@ -114,6 +114,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-dev-
 
+      # Get current branch name
+      - name: Extract branch name
+        id: extract_branch
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF_NAME})"
+
+      # Determine a tag for new image
+      - name: Set Image Tag
+        id: image_tag
+        env:
+          GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        run: |
+          if ${{ env.GIT_BRANCH == 'master' }}
+          then
+            echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
+            echo "IMAGE_TAG=dev-latest"
+          else
+            echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${GIT_BRANCH}"
+          fi
+
       - name: Build and Push
         id: docker_build_dev
         uses: docker/build-push-action@v2
@@ -122,7 +143,7 @@ jobs:
           file: ./Dockerfile.dev
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/meveo-dev:latest
+          tags:  ${{ secrets.DOCKER_HUB_USERNAME }}/meveo-dev:${{ env.IMAGE_TAG }}
           cache-from: type=local,src=/tmp/.buildx-dev-cache
           cache-to: type=local,dest=/tmp/.buildx-dev-cache
 
