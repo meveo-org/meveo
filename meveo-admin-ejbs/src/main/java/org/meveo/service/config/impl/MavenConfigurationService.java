@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +43,7 @@ import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -325,8 +328,10 @@ public class MavenConfigurationService implements Serializable {
 		try {
 
 			link.getParent().toFile().mkdirs();
-			if (!link.toFile().exists()) {
+			try {
 				Files.createSymbolicLink(link, relativeSrc);
+			} catch (FileAlreadyExistsException e) {
+				//NOOP
 			}
 		} catch (IOException e1) {
 			log.error("Failed to create symbolic link for java source", e1);
@@ -459,8 +464,9 @@ public class MavenConfigurationService implements Serializable {
 	private void writeToPom(Model model, File pomFile) {
 		try {
 			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
-			try (FileWriter fileWriter = new FileWriter(pomFile)) {
-				xmlWriter.write(fileWriter, model);
+			try (StringWriter strWriter = new StringWriter()) {
+				xmlWriter.write(strWriter, model);
+				MeveoFileUtils.writeAndPreserveCharset(strWriter.toString(), pomFile);
 			}
 		} catch (IOException e) {
 			log.error("Can't write to pom.xml", e);
