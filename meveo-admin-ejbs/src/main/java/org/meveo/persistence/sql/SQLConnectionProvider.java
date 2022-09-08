@@ -69,7 +69,7 @@ public class SQLConnectionProvider {
 				sqlConfiguration = configurationMap.computeIfAbsent(sqlConfigurationCode, this::findByCode);
 
 			} catch (NoResultException e) {
-				log.warn("Unknown SQL repository {}, using default configuration", sqlConfigurationCode);
+				throw new IllegalArgumentException("Unknown SQL repository " + sqlConfigurationCode);
 			}
 		}
 
