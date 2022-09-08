@@ -312,9 +312,11 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if (directoryToRemove.exists()) {
     		try {
     			FileUtils.forceDelete(directoryToRemove);
-    	    	List<String> pattern = new ArrayList<String>();
-    	    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			if (module.isAutoCommit()) {
+    				List<String> pattern = new ArrayList<String>();
+    				pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
+    				gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			}
     		} catch (IOException e) {
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
