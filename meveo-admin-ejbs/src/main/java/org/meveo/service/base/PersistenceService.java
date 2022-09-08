@@ -551,7 +551,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 			((IAuditable) entity).updateAudit(currentUser);
 		}
 		
-		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class) || entity.getClass().isAnnotationPresent(ModuleItem.class)) {
 			entityCreatedEventProducer.fire((BaseEntity) entity);
 		}
 
