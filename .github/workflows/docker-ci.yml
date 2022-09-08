@@ -128,8 +128,8 @@ jobs:
         run: |
           if ${{ env.GIT_BRANCH == 'master' }}
           then
-            echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
-            echo "IMAGE_TAG=dev-latest"
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+            echo "IMAGE_TAG=latest"
           else
             echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
             echo "IMAGE_TAG=${GIT_BRANCH}"
