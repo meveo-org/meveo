@@ -165,10 +165,10 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
 		customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
-		CustomEntityTemplate startCet = crt.getStartNode();
+		CustomEntityTemplate startCet = cetService.findById(crt.getStartNode().getId(), List.of("availableStorages")) ;
 		MeveoModule cetModule = cetService.findModuleOf(startCet);
 		cetService.addFilesToModule(startCet, cetModule);
-		CustomEntityTemplate endCrt = crt.getEndNode();
+		CustomEntityTemplate endCrt = cetService.findById(crt.getEndNode().getId(), List.of("availableStorages")) ;
 		MeveoModule cet2Module = cetService.findModuleOf(endCrt);
 		cetService.addFilesToModule(endCrt, cet2Module);
 
