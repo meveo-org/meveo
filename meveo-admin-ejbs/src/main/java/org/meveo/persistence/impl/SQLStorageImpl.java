@@ -648,10 +648,10 @@ public class SQLStorageImpl implements StorageImpl {
         if(cet.storedIn(DBStorageType.SQL)) {
         	if(oldCet.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
         		// Inheritance removed
-        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getSqlConfigurationCode(), cet));
         	} else if(oldCet.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
         		// Inheritance added
-        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getSqlConfigurationCode(), cet));
         	}
         }
 	}
