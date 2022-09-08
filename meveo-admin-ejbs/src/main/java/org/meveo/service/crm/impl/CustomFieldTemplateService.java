@@ -156,6 +156,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return new HashMap<String, CustomFieldTemplate>();
         }
     }
+    
+    /**
+     * Retrieve cft by code, in the fields of the given cet or its ancestors
+     * 
+     * @param code Code of the CFT
+     * @param cet The CET holding the fields
+     * @return the CFT or null
+     */
+    public CustomFieldTemplate find(String code, CustomEntityTemplate cet) {
+    	CustomFieldTemplate cft = this.findByCodeAndAppliesTo(code, cet.getAppliesTo());
+    	if (cft == null && cet.getSuperTemplate() != null) {
+    		cft = this.find(code, cet.getSuperTemplate());
+    	}
+    	return cft;
+    }
 
     public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
         Map<String, CustomFieldTemplate> customFieldTemplates = new HashMap<>();
