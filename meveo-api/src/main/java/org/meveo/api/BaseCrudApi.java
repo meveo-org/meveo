@@ -517,7 +517,7 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
 			Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
 			return new MeveoModuleItemDto(dtoClassName, data);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("Can't read entityFile", e);
 			return null;
 		}

@@ -122,6 +122,12 @@
 			<column name="repository_path" type="varchar(500)"/>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="#609 - Git repo dev mode " author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="dev_mode" type="${type.boolean}" defaultValueNumeric="0"/>
+		</addColumn>
+	</changeSet>
 
 
 </databaseChangeLog>

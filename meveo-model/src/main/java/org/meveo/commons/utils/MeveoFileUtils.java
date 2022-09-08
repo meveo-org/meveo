@@ -25,9 +25,34 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class MeveoFileUtils {
+	
+	public static boolean isFileInDirectory(File file, File directory) {
+		if (!directory.isDirectory()) {
+			return false;
+		}
+		
+		if (file.equals(directory)) {
+			return true;
+		}
+		
+		File tmp = file;
+		while (tmp.getParentFile() != null) {
+			if (tmp.getParentFile().equals(directory)) {
+				return true;
+			}
+			if (tmp.getParentFile().equals(directory.getParentFile())) {
+				return false;
+			}
+			tmp = tmp.getParentFile();
+		}
+		return false;
+	}
 
     public static boolean isValidPath(String path) {
         try {
@@ -59,6 +84,14 @@ public class MeveoFileUtils {
     	}
     }
     
+    /**
+     * Write a string to a file, preserving the existing charset. 
+     * If the file content is identical to the new content, do nothing
+     * 
+     * @param content Content to write
+     * @param file File to create / modify
+     * @throws IOException if the file cannot be modified or created
+     */
     public static void writeAndPreserveCharset(String content, File file) throws IOException {
     	if (!file.getParentFile().exists()) {
     		file.getParentFile().mkdirs();
@@ -70,6 +103,13 @@ public class MeveoFileUtils {
     		charset = StandardCharsets.UTF_8;
     	} else {
     		charset = MeveoFileUtils.getCharset(file);
+    		
+    		byte[] existingContent = Files.readAllBytes(file.toPath());
+    		byte[] contentBytes = content.getBytes(charset);
+    		
+    		if (Arrays.equals(existingContent, contentBytes)) {
+    			return;
+    		}
     	}
     	
     	Files.writeString(file.toPath(), content, charset);

@@ -108,6 +108,13 @@ public class GitRepository extends BusinessEntity {
     
     @Column(name = "repository_path")
     private String repositoryPath;
+    
+    @Column(name = "dev_mode")
+    @Type(type = "numeric_boolean")
+    private boolean devMode;
+
+    @Transient //FIXME: persist it
+    private List<String> watchedDirectories;
 
     @Transient
     private String currentBranch;
@@ -118,12 +125,31 @@ public class GitRepository extends BusinessEntity {
     @Transient
     private String clearDefaultRemotePassword;
     
+    
     @JsonIgnore
     public String getSalt() {
     	return PasswordUtils.getSalt(getRemoteOrigin(), getCode());
     }
+    
+    /**
+	 * @return the {@link #devMode}
+	 */
+	public boolean isDevMode() {
+		return devMode;
+	}
 
-    public List<String> getBranches() {
+
+
+	/**
+	 * @param devMode the devMode to set
+	 */
+	public void setDevMode(boolean devMode) {
+		this.devMode = devMode;
+	}
+
+
+
+	public List<String> getBranches() {
         return branches;
     }
     
@@ -242,4 +268,27 @@ public class GitRepository extends BusinessEntity {
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
+
+	/**
+	 * @return the {@link #watchedDirectories}
+	 */
+	public List<String> getWatchedDirectories() {
+		if (watchedDirectories == null) {
+			watchedDirectories = new ArrayList<>();
+		}
+		
+		if (!watchedDirectories.contains("facets/java")) {
+			watchedDirectories.add("facets/java");
+		}
+		
+		return watchedDirectories;
+	}
+
+	/**
+	 * @param watchedDirectories the watchedDirectories to set
+	 */
+	public void setWatchedDirectories(List<String> watchedDirectories) {
+		this.watchedDirectories = watchedDirectories;
+	}
+    
 }
