@@ -981,6 +981,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	@Override
 	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
+        if (installationContext.isActive()) {
+    		return;
+    	}
+        
 		// Fetch entities for special serialization
 		MeveoModule newModule = findByCodeWithFetchEntities(entity.getCode());
 		getEntityManager().detach(newModule);

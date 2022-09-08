@@ -83,7 +83,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected MeveoModuleService meveoModuleService;
 	
 	@Inject
-	private ModuleInstallationContext installationContext;
+	protected ModuleInstallationContext installationContext;
 	
 	@Inject
 	@MeveoRepository
