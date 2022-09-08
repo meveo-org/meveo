@@ -90,9 +90,6 @@ public class SQLStorageImpl implements StorageImpl {
 	private CustomEntityInstanceService customEntityInstanceService;
 	
 	@Inject
-	private CustomFieldsCacheContainerProvider cache;
-	
-	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
 	
 	@Inject
@@ -436,7 +433,10 @@ public class SQLStorageImpl implements StorageImpl {
 
 	public void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
 		if (sqlFields != null && !sqlFields.isEmpty()) {
-			List<CustomFieldTemplate> cfts = sqlFields.stream().map(field -> cache.getCustomFieldTemplate(field, cet.getAppliesTo())).collect(Collectors.toList());
+			List<CustomFieldTemplate> cfts = sqlFields
+					.stream()
+					.map(field -> this.customFieldTemplateService.find(field, cet))
+					.collect(Collectors.toList());
 
 			customTableService.replaceKeys(cfts, customTableValue);
 		} else {
