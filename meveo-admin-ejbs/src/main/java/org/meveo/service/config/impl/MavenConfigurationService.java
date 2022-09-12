@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +43,7 @@ import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -298,7 +301,7 @@ public class MavenConfigurationService implements Serializable {
 	public void generatePom(String message, MeveoModule module,GitRepository repository) {
 		//TODO: Avoid this code when module just got uninstalled
 		
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getCode());
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getGitRepository());
 		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
 
 		log.debug("Generating pom.xml file");
@@ -325,8 +328,10 @@ public class MavenConfigurationService implements Serializable {
 		try {
 
 			link.getParent().toFile().mkdirs();
-			if (!link.toFile().exists()) {
+			try {
 				Files.createSymbolicLink(link, relativeSrc);
+			} catch (FileAlreadyExistsException e) {
+				//NOOP
 			}
 		} catch (IOException e1) {
 			log.error("Failed to create symbolic link for java source", e1);
@@ -459,8 +464,9 @@ public class MavenConfigurationService implements Serializable {
 	private void writeToPom(Model model, File pomFile) {
 		try {
 			MavenXpp3Writer xmlWriter = new MavenXpp3Writer();
-			try (FileWriter fileWriter = new FileWriter(pomFile)) {
-				xmlWriter.write(fileWriter, model);
+			try (StringWriter strWriter = new StringWriter()) {
+				xmlWriter.write(strWriter, model);
+				MeveoFileUtils.writeAndPreserveCharset(strWriter.toString(), pomFile);
 			}
 		} catch (IOException e) {
 			log.error("Can't write to pom.xml", e);
@@ -673,15 +679,15 @@ public class MavenConfigurationService implements Serializable {
 	 * Create the default pom.xml file for the default Meveo git repository if it
 	 * does not exists.
 	 * 
-	 * @param repositoryCode code of the repository
+	 * @param repository the repository
 	 */
-	public void createDefaultPomFile(String repositoryCode) {
+	public void createDefaultPomFile(GitRepository repository) {
 
-		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repositoryCode);
+		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), repository);
 		File pomFile = new File(gitRepo.getPath() + File.separator + "facets" + File.separator + "maven" + File.separator + "pom.xml");
 
 		if (!pomFile.exists()) {
-			MeveoModule module = moduleService.findByCode(repositoryCode, List.of("moduleDependencies"));
+			MeveoModule module = moduleService.findByCode(repository.getCode(), List.of("moduleDependencies"));
 			generatePom("Initialized default repository", module);
 		}
 	}

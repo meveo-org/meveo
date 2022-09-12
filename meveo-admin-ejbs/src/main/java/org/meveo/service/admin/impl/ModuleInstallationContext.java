@@ -89,6 +89,7 @@ public class ModuleInstallationContext {
 		active = false;
 		this.ModuleCodeInstallation = null;
 		this.repositories = null;
+		this.module = null;
 	}
 
 	/**

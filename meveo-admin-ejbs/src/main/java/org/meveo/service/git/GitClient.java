@@ -142,7 +142,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository);
         WindowCache.reconfigure(new WindowCacheConfig());
         
         if (repoDir.exists()) {
@@ -170,7 +170,7 @@ public class GitClient {
      */
     public void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
-        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository);
         if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());
         } else if(repoDir.exists() && new File(repoDir, ".git").exists()) {
@@ -260,7 +260,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -342,7 +342,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
         List<String> patterns = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(files)) {
@@ -383,7 +383,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to push to");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -428,7 +428,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -479,7 +479,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -563,7 +563,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -598,7 +598,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -632,7 +632,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -666,7 +666,7 @@ public class GitClient {
             throw new BusinessException("Cannot checkout branch " + branch + " because it is blocked.");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -733,7 +733,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -785,7 +785,7 @@ public class GitClient {
         
         List<String> results = new ArrayList<>();
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -841,7 +841,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -876,7 +876,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -906,7 +906,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -948,7 +948,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1006,7 +1006,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1032,7 +1032,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1059,7 +1059,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 

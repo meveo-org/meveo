@@ -117,6 +117,7 @@
 		/>
 	</changeSet>
 	
+
 	<changeSet id="Storage configuration" author="Clément Bareth">
 		<createTable tableName="storage_configuration">
 			<column name="id" type="bigint" autoIncrement="${id.auto}">
@@ -171,5 +172,19 @@
 			<column name="field_types" type="text"/>
 		</addColumn>
 	</changeSet>
+
+	<changeSet id="#608 - Add path to git repo" author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="repository_path" type="varchar(500)"/>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#609 - Git repo dev mode " author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="dev_mode" type="${type.boolean}" defaultValueNumeric="0"/>
+		</addColumn>
+	</changeSet>
+
+
 
 </databaseChangeLog>

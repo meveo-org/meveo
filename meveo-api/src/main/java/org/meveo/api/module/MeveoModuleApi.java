@@ -236,7 +236,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			throw new EntityAlreadyExistsException(MeveoModule.class, repo.getCode());
 		}
 		
-		File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+		File repoDir = GitHelper.getRepositoryDir(null, repo);
 		
 		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
 		moduleDto = buildMeveoModuleFromDirectory(repoDir, moduleDto);
@@ -245,7 +245,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		// Copy module files to file explorer
 		try {
-			importFileFromModule(List.of(moduleDto), GitHelper.getRepositoryDir(currentUser, moduleDto.getCode()));
+			importFileFromModule(List.of(moduleDto), GitHelper.getRepositoryDir(currentUser, repo));
 		} catch (FileNotFoundException e) {
 			throw new BusinessException("Failed to copy module files", e);
 		}
@@ -336,7 +336,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 			
 			if (!result.containsKey(repo)) {
-				File repoDir = GitHelper.getRepositoryDir(null, repo.getCode());
+				File repoDir = GitHelper.getRepositoryDir(null, repo);
 				MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
 				List<ModuleDependencyDto> missingDependencies = checkModuleDependencies(moduleDto);
 				result.putAll(retrieveModuleDependencies(missingDependencies, username, password));
@@ -492,7 +492,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 	
-	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepo) {
+	public MeveoModuleItemDto getItemDtoFromFile(File directory, String fileName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepo) {
 		
 		String[] paths = fileName.split("/");
 		String directoryName = paths[0];
@@ -1676,19 +1676,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		Set<MeveoModuleItemDto> updateItems = new HashSet<>();
 		Set<MeveoModuleItem> deleteItems = new HashSet<>();
 		
-		File directory = GitHelper.getRepositoryDir(null, module.getCode());
+		GitRepository gitRepository = module.getGitRepository();
+		
+		File directory = GitHelper.getRepositoryDir(null, gitRepository);
 
 		for (DiffEntry diff : event.getDiffs()) {
 			MeveoModuleItemDto itemDto;
 			MeveoModuleItem item;
+			String fileName;
 			
 			switch (diff.getChangeType()) {
 			case ADD:
-				installItems.removeIf(Objects::isNull);
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode());
-				if (itemDto != null) {
-					installItems.add(itemDto);
-				}
+				fileName = diff.getNewPath();
+				computeItemsToAdd(installItems, gitRepository, directory, fileName);
 				break;
 				
 			case COPY:
@@ -1696,21 +1696,19 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				break;
 				
 			case DELETE:
-				deleteItems.add(getExistingItemFromFile(directory, diff.getOldPath()));
+				fileName = diff.getOldPath();
+				computeItemsToDelete(deleteItems, directory, fileName);
 				break;
 				
 			case MODIFY:
-				updateItems.removeIf(Objects::isNull);
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), updateItems, module.getCode());
-				if (itemDto != null) {
-					updateItems.add(itemDto);
-				}
+				fileName = diff.getNewPath();
+				compteItemsToUpdate(updateItems, gitRepository, directory, fileName);
 				break;
 				
 			case RENAME:
 				installItems.removeIf(Objects::isNull);
 				item = getExistingItemFromFile(directory, diff.getOldPath());
-				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getCode());
+				itemDto = getItemDtoFromFile(directory, diff.getNewPath(), installItems, module.getGitRepository());
 				
 				if (item != null && itemDto != null) {
 					deleteItems.add(item);
@@ -1724,6 +1722,10 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			}
 		}
 		
+		applyChanges(module, installItems, updateItems, deleteItems);
+	}
+
+	public void applyChanges(MeveoModule module, Set<MeveoModuleItemDto> installItems, Set<MeveoModuleItemDto> updateItems, Set<MeveoModuleItem> deleteItems) throws MeveoApiException, Exception, BusinessException {
 		installItems.removeIf(Objects::isNull);
 		deleteItems.removeIf(Objects::isNull);
 		updateItems.removeIf(Objects::isNull);
@@ -1757,6 +1759,25 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		moduleCtx.end();
 		
 		meveoModuleService.update(module);
+	}
+
+	public void compteItemsToUpdate(Set<MeveoModuleItemDto> updateItems, GitRepository gitRepository, File directory, String fileName) {
+		updateItems.removeIf(Objects::isNull);
+		MeveoModuleItemDto itemDto = getItemDtoFromFile(directory, fileName , updateItems, gitRepository);
+		if (itemDto != null) {
+			updateItems.add(itemDto);
+		}
+	}
+
+	public void computeItemsToDelete(Set<MeveoModuleItem> deleteItems, File directory, String fileName) {
+		var itemtoDelete = getExistingItemFromFile(directory, fileName);
+		if (itemtoDelete != null) {
+			deleteItems.add(itemtoDelete);
+		}
+	}
+
+	public void computeItemsToAdd(Set<MeveoModuleItemDto> installItems, GitRepository gitRepository, File directory, String fileName) {
+		compteItemsToUpdate(installItems, gitRepository, directory, fileName);
 	}
 	
 	public void deleteModuleBeforeRepository(@Observes @Removed GitRepository repository) throws MeveoApiException, BusinessException {

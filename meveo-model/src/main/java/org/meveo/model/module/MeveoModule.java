@@ -101,7 +101,7 @@ public class MeveoModule extends BusinessEntity  {
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "git_repository_id")
     private GitRepository gitRepository;
     

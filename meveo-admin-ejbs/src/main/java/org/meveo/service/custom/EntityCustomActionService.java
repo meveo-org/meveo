@@ -115,7 +115,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
         BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
         String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
 
-        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
         String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
         if(cetCode == null) {
             cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());

@@ -354,7 +354,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		if (extension == ".java") {
 			String path = entity.getCode().replaceAll("\\.", "/");
 
-			File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode() + "/facets/java/");
+			File gitDirectory = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), "/facets/java/");
 			String pathNewFile = path + ".java";
 
 			File newFile = new File(gitDirectory, pathNewFile);

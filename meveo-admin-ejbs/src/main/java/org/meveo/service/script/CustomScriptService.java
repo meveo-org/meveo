@@ -976,15 +976,15 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
      */
     private String getSourcePath() {
         String sourcePath = "";
-
-        File baseDir = new File(GitHelper.getGitDirectory(null));
-
-        for (File moduleDir : baseDir.listFiles()) {
-            File javaSrcDir = new File(moduleDir, "/facets/java");
+        
+        for (var gitRepo : gitRepositoryService.list()) {
+        	File baseDir = GitHelper.getRepositoryDir(null, gitRepo);
+            File javaSrcDir = new File(baseDir, "/facets/java");
             if(javaSrcDir.exists()) {
                 sourcePath += javaSrcDir.getAbsolutePath() + File.pathSeparatorChar;
             }
         }
+
         return sourcePath;
     }
 
@@ -1160,10 +1160,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             File gitDirectory;
             String path;
             if (extension == ".js") {
-                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
                 path = "/facets/javascript/" + scriptInstance.getCode() + extension;
             } else {
-                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
                 path = "/facets/java/" + scriptInstance.getCode().replaceAll("\\.", "/") + extension;
             }
             File directoryToRemove = new File(gitDirectory, path);
@@ -1210,11 +1210,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         MeveoModule module = this.findModuleOf((T) scriptInstance);
 
         if (module == null) {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository), directory);
         } else if (moduleInstallCtx.isActive()) {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModuleCodeInstallation() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModule().getGitRepository()), directory);
         } else {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), directory);
         }
 
         if (!scriptDir.exists()) {

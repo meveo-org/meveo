@@ -44,23 +44,24 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 public class CustomTableRelationService extends NativePersistenceService {
 
     @Inject
-	private CustomFieldsCacheContainerProvider cacheContainerProvider;
-
-    @Inject
     protected ParamBeanFactory paramBeanFactory;
 
     @Inject
 	private CustomFieldTemplateService customFieldTemplateService;
     
-    public String createOrUpdateRelation(String repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    public String createOrUpdateRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    	if (fieldValues == null || fieldValues.isEmpty()) {
+    		return createRelation(repository, crt, startUuid, endUuid, fieldValues);
+    	}
+    	
     	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
     	String id = findIdByUniqueValues(repository, crt, fieldValues, cfts.values());
     	if (id != null) {
     		updateRelation(repository, crt, startUuid, endUuid, fieldValues);
+    		return id;
     	} else {
-    		createRelation(repository, crt, startUuid, endUuid, fieldValues);
+    		return createRelation(repository, crt, startUuid, endUuid, fieldValues);
     	}
-    	return null;
     }
     
 	/**

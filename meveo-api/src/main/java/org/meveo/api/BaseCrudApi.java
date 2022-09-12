@@ -53,7 +53,7 @@ import org.meveo.commons.utils.FileUtils;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.module.MeveoModule;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
@@ -517,13 +517,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
 			Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
 			return new MeveoModuleItemDto(dtoClassName, data);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("Can't read entityFile", e);
 			return null;
 		}
 	}
 	
-	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepository) {
 		ModuleItem item = jpaClass.getAnnotation(ModuleItem.class);
 		if (directoryName.equals(item.path())) {
 			return this.readModuleItem(entityFile, this.dtoClass.getName());

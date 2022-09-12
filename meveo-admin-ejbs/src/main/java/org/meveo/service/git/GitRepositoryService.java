@@ -92,7 +92,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     public void createGitMeveoFolder(GitRepository gitRepository) throws BusinessException {
-        File dir = GitHelper.getRepositoryDir(currentUser, gitRepository.getCode());
+        File dir = GitHelper.getRepositoryDir(currentUser, gitRepository);
         if(dir.exists() && new File(dir, ".git").exists()) {
             return;
         }

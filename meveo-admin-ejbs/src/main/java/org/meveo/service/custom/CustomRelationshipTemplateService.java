@@ -165,10 +165,10 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 
 		customFieldsCache.addUpdateCustomRelationshipTemplate(crt);
 
-		CustomEntityTemplate startCet = crt.getStartNode();
+		CustomEntityTemplate startCet = cetService.findById(crt.getStartNode().getId(), List.of("availableStorages")) ;
 		MeveoModule cetModule = cetService.findModuleOf(startCet);
 		cetService.addFilesToModule(startCet, cetModule);
-		CustomEntityTemplate endCrt = crt.getEndNode();
+		CustomEntityTemplate endCrt = cetService.findById(crt.getEndNode().getId(), List.of("availableStorages")) ;
 		MeveoModule cet2Module = cetService.findModuleOf(endCrt);
 		cetService.addFilesToModule(endCrt, cet2Module);
 
@@ -372,10 +372,10 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		}
 		MeveoModule module = customRelationshipTemplateService.findModuleOf(crt);
 		if (module == null) {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 			path = directory;
 		} else {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 			path = directory;
 		}
 		return new File(repositoryDir, path);
@@ -395,7 +395,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 	public void addFilesToModule(CustomRelationshipTemplate entity, MeveoModule module) throws BusinessException {
 		super.addFilesToModule(entity, module);
 
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 		String pathJavaFile = "facets/java/org/meveo/model/customEntities/" + entity.getCode() + ".java";
 		String pathJsonSchemaFile = "facets/json/" + entity.getCode() + "-schema" + ".json";
 
@@ -455,7 +455,7 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		
         List<File> fileList = new ArrayList<>();
 
-        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getCode()), "customFieldTemplates/" + entity.getAppliesTo());
+        final File cftDir = new File(GitHelper.getRepositoryDir(null, module.getGitRepository()), "customFieldTemplates/" + entity.getAppliesTo());
         if (cftDir.exists()) {
 	        for (File cftFile : cftDir.listFiles()) {
 	        	cftFile.delete();

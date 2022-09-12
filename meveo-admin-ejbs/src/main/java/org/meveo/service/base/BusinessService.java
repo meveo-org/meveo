@@ -306,15 +306,17 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if (module == null) {
     		return;
     	}
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + ".json";
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
     			FileUtils.forceDelete(directoryToRemove);
-    	    	List<String> pattern = new ArrayList<String>();
-    	    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			if (module.isAutoCommit()) {
+    				List<String> pattern = new ArrayList<String>();
+    				pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
+    				gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			}
     		} catch (IOException e) {
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
@@ -347,7 +349,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	BaseEntityDto businessEntityDto = getDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	String path;
 		try {
 			path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";

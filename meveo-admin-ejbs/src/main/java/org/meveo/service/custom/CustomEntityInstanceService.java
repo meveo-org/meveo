@@ -498,7 +498,7 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		String cetCode = entity.getCetCode();
 		String ceiJson = CEIUtils.serialize(entity);
 
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 		String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + cetCode;
 		File newDir = new File(gitDirectory, path);
 		newDir.mkdirs();

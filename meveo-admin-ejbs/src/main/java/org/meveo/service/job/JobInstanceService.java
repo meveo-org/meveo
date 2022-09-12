@@ -230,9 +230,6 @@ public class JobInstanceService extends BusinessService<JobInstance> {
 
     @Override
     public JobInstance update(JobInstance jobInstance) throws BusinessException {
-        if (jobInstance.getJobTemplate().equals("ScriptingJob")) {
-            jobInstance = updateJobInstance(jobInstance);
-        }
         super.update(jobInstance);
         jobCacheContainerProvider.addUpdateJobInstance(jobInstance.getId());
         scheduleUnscheduleJob(jobInstance);
@@ -243,38 +240,6 @@ public class JobInstanceService extends BusinessService<JobInstance> {
         return jobInstance;
     }
     
-    private JobInstance updateJobInstance(JobInstance jobInstance) {
-        List<JobExecutionResultImpl> jobExecutionResults = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(jobInstance.getExecutionResults())) {
-            for (JobExecutionResultImpl job : jobInstance.getExecutionResults()) {
-                jobExecutionResults.add(job);
-            }
-        }
-        getEntityManager().clear();
-        JobInstance instance = findById(jobInstance.getId());
-
-        instance.setJobCategoryEnum(jobInstance.getJobCategoryEnum());
-        instance.setJobTemplate(jobInstance.getJobTemplate());
-        instance.setCode(jobInstance.getCode());
-        instance.setDescription(jobInstance.getDescription());
-        instance.setTimerEntity(jobInstance.getTimerEntity());
-        instance.setParametres(jobInstance.getParametres());
-        instance.setFollowingJob(jobInstance.getFollowingJob());
-        instance.setProviderCode(jobInstance.getProviderCode());
-        instance.setRunOnNodes(jobInstance.getRunOnNodes());
-        instance.setLimitToSingleNode(jobInstance.isLimitToSingleNode());
-        instance.setRunTimeValues(jobInstance.getRunTimeValues());
-        instance.setCfValues(jobInstance.getCfValues());
-
-        instance.getExecutionResults().clear();
-        if (CollectionUtils.isNotEmpty(jobExecutionResults)) {
-            instance.getExecutionResults().addAll(jobExecutionResults);
-        }
-
-        return instance;
-    }
-
-
     @Override
     public void remove(JobInstance jobInstance) throws BusinessException {
 

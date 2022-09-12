@@ -91,9 +91,6 @@ public class SQLStorageImpl implements StorageImpl {
 	private CustomEntityInstanceService customEntityInstanceService;
 	
 	@Inject
-	private CustomFieldsCacheContainerProvider cache;
-	
-	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
 	
 	@Inject
@@ -434,7 +431,10 @@ public class SQLStorageImpl implements StorageImpl {
 
 	public void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
 		if (sqlFields != null && !sqlFields.isEmpty()) {
-			List<CustomFieldTemplate> cfts = sqlFields.stream().map(field -> cache.getCustomFieldTemplate(field, cet.getAppliesTo())).collect(Collectors.toList());
+			List<CustomFieldTemplate> cfts = sqlFields
+					.stream()
+					.map(field -> this.customFieldTemplateService.find(field, cet))
+					.collect(Collectors.toList());
 
 			customTableService.replaceKeys(cfts, customTableValue);
 		} else {
@@ -646,10 +646,10 @@ public class SQLStorageImpl implements StorageImpl {
         if(cet.storedIn(DBStorageType.SQL)) {
         	if(oldCet.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
         		// Inheritance removed
-        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getSqlConfigurationCode(), cet));
         	} else if(oldCet.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
         		// Inheritance added
-        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getSqlConfigurationCode(), cet));
         	}
         }
 	}

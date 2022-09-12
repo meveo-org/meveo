@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
@@ -32,6 +33,9 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Processed;
+import org.meveo.model.dev.FileChangedEvent;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
@@ -48,7 +52,15 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
+import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.script.ScriptUtils;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -392,7 +404,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	}
 	
 	@Override
-	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepository) {
 		final String scriptCode = parseCode(entityFile);
 		
 		// If parsed items contains the dto, noop
@@ -410,7 +422,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 			File jsonFile = new File(GitHelper.getRepositoryDir(null, gitRepository), "/scriptInstances/" + scriptCode + ".json");
 			if (jsonFile.exists()) {
 				return readModuleItem(jsonFile, ScriptInstanceDto.class.getName());
-			}/* else { //FIXME: Scan for a particular annotation
+			} else {
 				// If parsed items does not contains the dto and json file does not exist, create a basic dto
 				ScriptInstanceDto dto = new ScriptInstanceDto();
 				dto.setCode(scriptCode);
@@ -418,13 +430,15 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				try {
 					String script = FileUtils.readFileToString(entityFile, "UTF-8");
 					// Avoid parsing custom entities java files
-					dto.setScript(script);
-					return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
+					if (ScriptUtils.isMeveoScript(script)) {
+						 dto.setScript(script);
+						 return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
+					}
 				} catch (IOException e) {
 					log.error("Can't read java file", e);
 					return null;
 				}
-			}*/
+			}
 		}
 			
 		return super.parseModuleItem(entityFile, directoryName, alreadyParseItems, gitRepository);

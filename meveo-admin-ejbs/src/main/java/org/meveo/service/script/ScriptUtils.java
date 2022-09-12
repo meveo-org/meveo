@@ -25,6 +25,8 @@ import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
+import org.meveo.service.script.module.ModuleScript;
+import org.meveo.service.script.module.ModuleScriptInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,47 @@ import com.github.javaparser.javadoc.JavadocBlockTag;
 public class ScriptUtils {
 
 	private static Logger logger = LoggerFactory.getLogger(ScriptUtils.class);
+	
+	private static String[] SCRIPT_CLASSES = {
+			Script.class.getSimpleName(),
+			"EndpointScript",
+			ModuleScript.class.getSimpleName()
+	};
+	
+	private static String[] SCRIPT_INTERFACES = {
+			ScriptInterface.class.getSimpleName(),
+			ModuleScriptInterface.class.getSimpleName()
+	};
+	
+	public static boolean isMeveoScript(String script) {
+        try {
+        	CompilationUnit compilationUnit = JavaParser.parse(script);
+	        
+	        final ClassOrInterfaceDeclaration classOrInterfaceDeclaration = compilationUnit.getChildNodes().stream().filter(e -> e instanceof ClassOrInterfaceDeclaration)
+	                .map(e -> (ClassOrInterfaceDeclaration) e)
+	                .findFirst()
+	                .get();
+	        
+	        for (var type : SCRIPT_INTERFACES) {
+	        	var parsedType = JavaParser.parseClassOrInterfaceType(type);
+	        	if (classOrInterfaceDeclaration.getImplementedTypes().contains(parsedType)) {
+	        		return true;
+	        	}
+	        }
+	        
+	        for (var type : SCRIPT_CLASSES) {
+	        	var parsedType = JavaParser.parseClassOrInterfaceType(type);
+	        	if (classOrInterfaceDeclaration.getExtendedTypes().contains(parsedType)) {
+	        		return true;
+	        	}
+	        }
+	        
+	        
+	        return false;
+        } catch (Exception e) {
+            return false;
+        }
+	}
 
 	public static ClassAndValue findTypeAndConvert(String type, String value) {
 		ClassAndValue classAndValue = new ClassAndValue();
