@@ -12,7 +12,7 @@
 - [II.1. Persisting an entity](#ii1-persisting-an-entity)
 - [II.2. Find an entity](#ii2-find-an-entity)
 	- [II.2.1. By UUID](#ii21-by-uuid)
-	- [II.2.2. By values](#ii22-by-values)
+	- [II.2.2. By values](#ii22-by-values)	
 - [II.3. List entities](#ii3-list-entities)
 - [II.4. Remove an entity](#ii4-remove-an-entity)
 - [II.5. CREATE, UPDATE, DELETE events](#i5-create-update-delete-events)
@@ -299,6 +299,25 @@ MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
 
 System.out.println("Found MyCet instance: " + cei);
 ```
+if the requirement is to filter results against multiple values, 'by' for the clause, can be used with slight change in field name to trigger multiple values filter against field.
+
+**Example** :
+
+```java
+Repository defaultRepo = repositoryService.findDefaultRepository();
+MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
+    .by("valueOne", "test")
+    .fetch("relationshipOne") // Optional
+    .getResult();
+
+System.out.println("Found MyCet instance: " + cei);
+
+List<MyCet> ceis = crossStorageApi.find(defaultRepo, MyCet.class)
+.by("inList valueOne", valueList)
+.getResults();
+
+```
+
 
 ## II.3. List entities
 
