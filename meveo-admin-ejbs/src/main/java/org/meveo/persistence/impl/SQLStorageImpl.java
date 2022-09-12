@@ -698,7 +698,7 @@ public class SQLStorageImpl implements StorageImpl {
 	public PersistenceActionResult addCRTByUuids(IStorageConfiguration repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
-			String relationUuid = customTableRelationService.createOrUpdateRelation(repository.getCode(), crt, sourceUuid, targetUuid, relationValues);
+			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUuid, targetUuid, relationValues);
 			return new PersistenceActionResult(relationUuid);
 		}
 		

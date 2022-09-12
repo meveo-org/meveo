@@ -32,6 +32,7 @@ import org.meveo.model.BaseEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -49,18 +50,18 @@ public class CustomTableRelationService extends NativePersistenceService {
     @Inject
 	private CustomFieldTemplateService customFieldTemplateService;
     
-    public String createOrUpdateRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    public String createOrUpdateRelation(IStorageConfiguration sqlConfiguration, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
     	if (fieldValues == null || fieldValues.isEmpty()) {
-    		return createRelation(repository, crt, startUuid, endUuid, fieldValues);
+    		return createRelation(sqlConfiguration.getCode(), crt, startUuid, endUuid, fieldValues);
     	}
     	
     	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
-    	String id = findIdByUniqueValues(repository, crt, fieldValues, cfts.values());
+    	String id = findIdByUniqueValues(sqlConfiguration.getCode(), crt, fieldValues, cfts.values());
     	if (id != null) {
-    		updateRelation(repository, crt, startUuid, endUuid, fieldValues);
+    		updateRelation(sqlConfiguration.getCode(), crt, startUuid, endUuid, fieldValues);
     		return id;
     	} else {
-    		return createRelation(repository, crt, startUuid, endUuid, fieldValues);
+    		return createRelation(sqlConfiguration.getCode(), crt, startUuid, endUuid, fieldValues);
     	}
     }
     
