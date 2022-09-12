@@ -1,5 +1,9 @@
 package org.meveo.model.storage;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -7,6 +11,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -17,10 +23,12 @@ import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.ModuleItem;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.persistence.CustomFieldValuesConverter;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.sql.SqlConfiguration;
 
 /**
@@ -35,6 +43,7 @@ import org.meveo.model.sql.SqlConfiguration;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "storage_repository_seq"), })
 @CustomFieldEntity(cftCodePrefix = "REPO")
+@ModuleItem(value = "Repository", path = "repositories")
 public class Repository extends BusinessEntity implements ICustomFieldEntity {
 
 	private static final long serialVersionUID = -93688572926121511L;
@@ -72,6 +81,14 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     @Convert(converter = CustomFieldValuesConverter.class)
     @Column(name = "cf_values", columnDefinition = "text")
     private CustomFieldValues cfValues;
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+		name = "repository_storages", 
+    	joinColumns = @JoinColumn(name = "storage_repository_id"),
+    	inverseJoinColumns = @JoinColumn(name = "storage_configuration_id")
+	)
+    private Set<StorageConfiguration> storages;
 
 	public Repository getParentRepository() {
 		return parentRepository;
@@ -133,6 +150,20 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
 	public void setUserHierarchyLevel(UserHierarchyLevel userHierarchyLevel) {
 		this.userHierarchyLevel = userHierarchyLevel;
 	}
+	
+	/**
+	 * @return the {@link #storages}
+	 */
+	public Set<StorageConfiguration> getStorages() {
+		return storages;
+	}
+
+	/**
+	 * @param storages the storages to set
+	 */
+	public void setStorages(Set<StorageConfiguration> storages) {
+		this.storages = storages;
+	}
 
 	@Override
 	public String getUuid() {
@@ -170,5 +201,29 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     public void clearCfValues() {
         cfValues = null;
     }
+    
+    public Set<IStorageConfiguration> getStorageConfigurations(DBStorageType dbStorageType) {
+		return getAllStorages().stream()
+				.filter(storage -> storage.getDbStorageType().equals(dbStorageType))
+				.collect(Collectors.toSet());
+    }
+    
+    public Set<IStorageConfiguration> getAllStorages() {
+    	Set<IStorageConfiguration> storagesConfigs = new HashSet<>();
+    	if (neo4jConfiguration != null) {
+    		storagesConfigs.add(neo4jConfiguration);
+    	}
+    	
+    	if (sqlConfiguration != null) {
+    		storagesConfigs.add(sqlConfiguration);
+    	}
+    	
+    	if (storages != null) {
+    		storagesConfigs.addAll(storages);
+    	}
+    	
+    	return storagesConfigs;
+    }
+    
 
 }

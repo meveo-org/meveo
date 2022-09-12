@@ -1610,10 +1610,7 @@ public class Neo4jService implements CustomPersistenceService {
         }
     }
     
-    public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
-		if(repository.getNeo4jConfiguration() == null) {
-			return 0;
-		}
+    public int count(String code, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 	
 		String graphQlQuery;
 
@@ -1626,7 +1623,7 @@ public class Neo4jService implements CustomPersistenceService {
 
 		graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 
-		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(repository.getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
+		final Map<String, Object> result = neo4jDao.executeGraphQLQuery(code, graphQlQuery, null, null);
 		if(result == null) {
 			return 0;
 		}

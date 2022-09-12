@@ -19,6 +19,7 @@ package org.meveo.model.persistence;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,9 +29,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
@@ -71,6 +73,10 @@ public class DBStorageType implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "storage_impl_script_id")
 	private ScriptInstance storageImplScript;
+	
+	@Column(name = "field_types", columnDefinition = "TEXT")
+	@Type(type = JsonTypes.JSON_SET)
+	private Set<CustomFieldTypeEnum> supportedFieldTypes;
 	
 	public String name() {
 		return this.code;
@@ -138,6 +144,23 @@ public class DBStorageType implements Serializable {
 	@Override
 	public String toString() {
 		return this.code;
+	}
+
+	/**
+	 * @return the {@link #supportedFieldTypes}
+	 */
+	public Set<CustomFieldTypeEnum> getSupportedFieldTypes() {
+		if (supportedFieldTypes == null || supportedFieldTypes.isEmpty()) {
+			return Set.of(CustomFieldTypeEnum.values());
+		}
+		return supportedFieldTypes;
+	}
+
+	/**
+	 * @param supportedFieldTypes the supportedFieldTypes to set
+	 */
+	public void setSupportedFieldTypes(Set<CustomFieldTypeEnum> supportedFieldTypes) {
+		this.supportedFieldTypes = supportedFieldTypes;
 	}
 	
 }

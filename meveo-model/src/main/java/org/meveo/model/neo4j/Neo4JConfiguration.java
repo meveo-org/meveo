@@ -28,6 +28,11 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.admin.MvCredential;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.security.PasswordUtils;
 
 /**
@@ -43,7 +48,7 @@ import org.meveo.security.PasswordUtils;
 @Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "neo4j_configuration_seq"), })
-public class Neo4JConfiguration extends BusinessEntity {
+public class Neo4JConfiguration extends BusinessEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = 5788790630004555788L;
 
@@ -133,5 +138,70 @@ public class Neo4JConfiguration extends BusinessEntity {
     		String salt = PasswordUtils.getSalt(getCode(), getNeo4jUrl());
     		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
     	}
+	}
+
+	@Override
+	public String getUuid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String clearUuid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ICustomFieldEntity[] getParentCFEntities() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValues() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValuesNullSafe() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void clearCfValues() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public MvCredential getCredential() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getHostname() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Integer getPort() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getConnectionUri() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DBStorageType getDbStorageType() {
+		return DBStorageType.NEO4J;
 	}
 }

@@ -56,6 +56,7 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.persistence.neo4j.service.Neo4jService;
@@ -185,8 +186,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			Map<String, Map<String, Object>> storageValues = provider.findImplementation(storage) 
-					.findByIds(repository, cet, uuids, cfts, selectFields, withEntityReferences);
+			Map<String, Map<String, Object>> storageValues = new HashMap<>();
+			StorageImpl	storageImpl = provider.findImplementation(storage);
+
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				var subValues = storageImpl.findByIds(storageConf, cet, uuids, cfts, selectFields, withEntityReferences);
+				storageValues.putAll(subValues);
+			}
 			
 			if (storageValues != null) {
 				storageValues.forEach((uuid, data) -> {
@@ -253,8 +259,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			Map<String, Object> storageValues = provider.findImplementation(storage) 
-					.findById(repository, cet, uuid, cfts, selectFields, withEntityReferences);
+			StorageImpl	storageImpl = provider.findImplementation(storage);
+			Map<String, Object> storageValues = new HashMap<>();
+			
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				var subValues = storageImpl.findById(storageConf, cet, uuid, cfts, selectFields, withEntityReferences);
+				storageValues.putAll(subValues);
+			}
 			
 			if (storageValues != null) {
 				foudEntity = true;
@@ -331,15 +342,6 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		final List<Map<String, Object>> valuesList = new ArrayList<>();
 
-		StorageQuery query = new StorageQuery();
-		query.setCet(cet);
-		query.setFetchFields(actualFetchFields);
-		query.setFilters(filters);
-		query.setPaginationConfiguration(paginationConfiguration);
-		query.setRepository(repository);
-		query.setSubFields(subFields);
-		query.setFetchAllFields(fetchAllFields);
-		
 		// Make sure the filters matches the fields
 		if(filters != null) {
 			filters.keySet()
@@ -353,12 +355,24 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			List<Map<String, Object>> values = provider.findImplementation(storage)
-					.find(query);
-			
-			if (values != null) {
-				values.forEach(resultMap -> mergeData(valuesList, resultMap));
+			for (var conf : repository.getStorageConfigurations(storage)) {
+				StorageQuery query = new StorageQuery();
+				query.setCet(cet);
+				query.setFetchFields(actualFetchFields);
+				query.setFilters(filters);
+				query.setPaginationConfiguration(paginationConfiguration);
+				query.setStorageConfiguration(conf);
+				query.setSubFields(subFields);
+				query.setFetchAllFields(fetchAllFields);
+				
+				List<Map<String, Object>> values = provider.findImplementation(storage)
+						.find(query);
+				
+				if (values != null) {
+					values.forEach(resultMap -> mergeData(valuesList, resultMap));
+				}
 			}
+
 		}
 		
 		// Complete missing data
@@ -386,10 +400,12 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	public int count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 		for (var storage : cet.getAvailableStorages()) {
-			var count = provider.findImplementation(storage)
-					.count(repository, cet, paginationConfiguration);
-			if (count != null) {
-				return count;
+			var impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				var count = impl.count(storageConf, cet, paginationConfiguration);
+				if (count != null) {
+					return count;
+				}
 			}
 		}
 
@@ -471,8 +487,11 @@ public class CrossStorageService implements CustomPersistenceService {
 	
 	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
 		for (var storage : cet.getAvailableStorages()) {
-			if (provider.findImplementation(storage).exists(repository, cet, uuid)) {
-				return true;
+			StorageImpl impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				if (impl.exists(storageConf, cet, uuid)) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -612,8 +631,11 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			var results = provider.findImplementation(storage)
-					.createOrUpdate(repository, ceiAfterPreEvents, customFieldTemplates, foundId);
+			StorageImpl impl = provider.findImplementation(storage);
+			PersistenceActionResult results = null;
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				results = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
+			}
 			uuid = results.getBaseEntityUuid();
 			if (foundId == null) {
 				ceiAfterPreEvents.setUuid(uuid);
@@ -678,7 +700,10 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			provider.findImplementation(storage).update(repository, ceiToUpdate);
+			StorageImpl impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				impl.update(repository, storageConf, ceiToUpdate);
+			}
 		}
 	}
 
@@ -720,15 +745,16 @@ public class CrossStorageService implements CustomPersistenceService {
 					PersistenceUtils.filterValues(cfts, relationValues, crt, DBStorageType.NEO4J), sourceUuid, targetUuid);
 		}
 		
+		PersistenceActionResult result = null;
+
 		for (var storage : crt.getAvailableStorages()) {
-			var result = provider.findImplementation(storage)
-					.addCRTByUuids(repository, crt, PersistenceUtils.filterValues(cfts, relationValues, crt, storage), sourceUuid, targetUuid);
-			if (result != null) {
-				return result;
+			StorageImpl impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				result = impl.addCRTByUuids(storageConf, crt, PersistenceUtils.filterValues(cfts, relationValues, crt, storage), sourceUuid, targetUuid);
 			}
 		}
 
-		return null;
+		return result;
 	}
 
 	/**
@@ -748,10 +774,16 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 		
 		for (var storage : cet.getAvailableStorages()) {
-			if (uuid != null && provider.findImplementation(storage).exists(repository, cet, uuid)) {
-				break;
+			StorageImpl impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				if (uuid != null && impl.exists(storageConf, cet, uuid)) {
+					return uuid;
+				}
+				uuid = impl.findEntityIdByValues(repository, storageConf, cei);
+				if (uuid != null) {
+					return uuid;
+				}
 			}
-			uuid = provider.findImplementation(storage).findEntityIdByValues(repository, cei);
 		}
 
 		return uuid;
@@ -815,7 +847,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			}
 			
 			for (var storage : cet.getAvailableStorages()) {
-				provider.findImplementation(storage).remove(repository, cet, uuid);
+				StorageImpl impl = provider.findImplementation(storage);
+				for (var storageConf : repository.getStorageConfigurations(storage)) {
+					impl.remove(storageConf, cet, uuid);
+				}
 			}
 	
 			fileSystemService.delete(repository, cet, uuid);
@@ -852,7 +887,10 @@ public class CrossStorageService implements CustomPersistenceService {
 	 */
 	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
 		for (var storage : cft.getStoragesNullSafe()) {
-			provider.findImplementation(storage).setBinaries(repository, cet, cft, uuid, binaries);
+			StorageImpl impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				impl.setBinaries(storageConf, cet, cft, uuid, binaries);
+			}
 		}
 	}
 

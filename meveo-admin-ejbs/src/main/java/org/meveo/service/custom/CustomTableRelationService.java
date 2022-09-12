@@ -55,7 +55,7 @@ public class CustomTableRelationService extends NativePersistenceService {
     	}
     	
     	Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
-    	String id = findIdByUniqueValues(repository.getSqlConfigurationCode(), crt, fieldValues, cfts.values());
+    	String id = findIdByUniqueValues(repository, crt, fieldValues, cfts.values());
     	if (id != null) {
     		updateRelation(repository, crt, startUuid, endUuid, fieldValues);
     		return id;
@@ -75,7 +75,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 	 * @return 
 	 * @throws BusinessException 
 	 */
-    public String createRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
+    public String createRelation(String repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) throws BusinessException {
     	checkParameters(crt, startUuid, endUuid);
     	
     	Map<String, Object> values = new HashMap<>();
@@ -85,7 +85,7 @@ public class CustomTableRelationService extends NativePersistenceService {
     		values.putAll(fieldValues);
     	}
     	
-    	return super.create(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(crt), values, false);
+    	return super.create(repository, SQLStorageConfiguration.getDbTablename(crt), values, false);
     }
 
 	/**
@@ -97,7 +97,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 	 * @param endUuid     Second part of the table's primary key
 	 * @param fieldValues Field values to update on the row. Non-provided fields will not be updated.
 	 */
-	public void updateRelation(Repository repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
+	public void updateRelation(String repository, CustomRelationshipTemplate crt, String startUuid, String endUuid, Map<String, Object> fieldValues) {
     	checkParameters(crt, startUuid, endUuid);
 
     	// If no fields values are supplied, there is nothing to update
@@ -122,7 +122,7 @@ public class CustomTableRelationService extends NativePersistenceService {
 			Map<String, Object> queryParameters = appendUniqueFilters(crt, fieldValues, queryBuilder);
 
 			// Set source and target uuids
-			Query updateQuery = getEntityManager(repository.getSqlConfigurationCode())
+			Query updateQuery = getEntityManager(repository)
 					.createNativeQuery(queryBuilder.toString())
 					.setParameter("startColumn", startUuid)
 					.setParameter("endColumn", endUuid);

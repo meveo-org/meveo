@@ -117,6 +117,62 @@
 		/>
 	</changeSet>
 	
+
+	<changeSet id="Storage configuration" author="Clément Bareth">
+		<createTable tableName="storage_configuration">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="pk_storage_configuration"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="storage_type" type="varchar(255)">
+				<constraints foreignKeyName="fk_db_storage_type" references="db_storage_type(code)"/>
+			</column>
+			<column name="credential_id" type="bigint">
+				<constraints foreignKeyName="fk_mv_credential" references="mv_credential(id)"/>
+			</column>
+			<column name="protocol" type="varchar(255)"/>
+			<column name="hostname" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="port" type="${type.int}"/>
+		</createTable>
+		<createTable tableName="repository_storages">
+			<column name="storage_repository_id" type="bigint">
+				<constraints foreignKeyName="fk_storage_repository_id" references="storage_repository(id)" nullable="false"/>
+			</column>
+			<column name="storage_configuration_id" type="bigint">
+				<constraints foreignKeyName="fk_storage_configuration_id" references="storage_configuration(id)" nullable="false"/>
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="repository_storages" columnNames="storage_repository_id, storage_configuration_id"/>
+		
+	</changeSet>
+	<changeSet id="Storage configuration - missing props" author="Clément Bareth">
+		<addColumn tableName="storage_configuration">
+			<column name="cf_values" type="text"/>
+			<column name="uuid" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Add supported type to db storagetype" author="Clément Bareth">
+		<addColumn tableName="db_storage_type">
+			<column name="field_types" type="text"/>
+		</addColumn>
+	</changeSet>
+
 	<changeSet id="#608 - Add path to git repo" author="Clément Bareth">
 		<addColumn tableName="git_repository">
 			<column name="repository_path" type="varchar(500)"/>
@@ -128,6 +184,7 @@
 			<column name="dev_mode" type="${type.boolean}" defaultValueNumeric="0"/>
 		</addColumn>
 	</changeSet>
+
 
 
 </databaseChangeLog>

@@ -89,6 +89,15 @@
 					<hftl:formField label="#{messages['repository.dataSeparationType']}"
 						field="dataSeparationType"
 						edit="#{repositoryBean.entity.code ne 'default'}" />
+						
+					<hftl:formField label="Storages"
+						field="storages"
+						allowEdit="true"
+						listBean="#{storageConfigurationBean}"
+						valueField="id"
+						showFields="storageConfigurations.code,code;storageConfigurations.type,dbStorageType"
+					/>
+						
 					<h:panelGrid columns="1">
 						<hftl:decorateFormField fieldId="userGroupLevel"
 							label="#{messages['user.userGroupLevel']}" newLine="true">

@@ -59,6 +59,10 @@ public class NullAwareBeanUtilsBean extends BeanUtilsBean {
 	        } catch (final NoSuchMethodException e) {}
 		}
 		
-		super.copyProperty(dest, name, value);
+		try {
+			 super.copyProperty(dest, name, value);
+		} catch (Exception e) {
+			// NOOP
+		}
 	}
 }
