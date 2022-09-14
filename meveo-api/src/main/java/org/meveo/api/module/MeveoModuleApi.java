@@ -241,6 +241,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
 		moduleDto = buildMeveoModuleFromDirectory(repoDir, moduleDto);
 		
+		moduleCtx.setJsonInstallation(false);
 		var result = install(repositories, moduleDto, OnDuplicate.SKIP);
 		
 		// Copy module files to file explorer

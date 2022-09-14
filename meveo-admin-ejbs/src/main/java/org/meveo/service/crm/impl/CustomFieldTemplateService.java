@@ -362,7 +362,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	        }
 		}
 		
-        if (!moduleInstallCtx.isActive()) {
+        if (!moduleInstallCtx.isGitInstallation()) {
             MeveoModule relatedModule = null;
             // Synchronize CET / CRT POJO
             if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
@@ -375,7 +375,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                 customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
             }
 
-            if (relatedModule != null) {
+            if (relatedModule != null && !moduleInstallCtx.isActive()) {
     	        // We only do this sync in case the CFT is created outside of a module installation context
     	        MeveoModuleItem mi = new MeveoModuleItem();
     	        mi.setMeveoModule(relatedModule);
@@ -484,8 +484,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         
 		MeveoModule relatedModule = null;
 		
+		if (moduleInstallCtx.isGitInstallation()) {
+			return cftUpdated;
+		}
+		
         if (moduleInstallCtx.isActive()) {
-            relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+            relatedModule = moduleInstallCtx.getModule();
         }
 
         // Synchronize CET / CRT POJO

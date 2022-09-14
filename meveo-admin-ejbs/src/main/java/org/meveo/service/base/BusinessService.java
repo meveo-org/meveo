@@ -326,13 +326,18 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     @Override
     public void afterUpdateOrCreate(P entity) throws BusinessException {
-    	MeveoModule module;
-    	if (!installationContext.isActive()) {
-    		module = findModuleOf(entity);
-    	} else {
+    	if (installationContext.isGitInstallation()) {
     		return;
     	}
     	
+    	MeveoModule module;
+    	if (installationContext.isJsonInstallation()) {
+    		module = installationContext.getModule();
+    	} else {
+    		module = findModuleOf(entity);
+    	}
+    	
+		
     	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
     		addFilesToModule(entity,  module);
     	} else if (module != null) {
@@ -341,11 +346,6 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	}
 
     public void addFilesToModule(P entity, MeveoModule module) throws BusinessException {
-    	// Skip this step during module installation
-    	if (installationContext.isActive()) {
-    		return;
-    	}
-    	
     	BaseEntityDto businessEntityDto = getDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
