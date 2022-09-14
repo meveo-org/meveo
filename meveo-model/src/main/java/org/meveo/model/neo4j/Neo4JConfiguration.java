@@ -19,8 +19,6 @@ package org.meveo.model.neo4j;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -28,6 +26,7 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.admin.MvCredential;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -48,6 +47,7 @@ import org.meveo.security.PasswordUtils;
 @Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "neo4j_configuration_seq"), })
+@CustomFieldEntity(cftCodePrefix = "NEO4J")
 public class Neo4JConfiguration extends BusinessEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = 5788790630004555788L;

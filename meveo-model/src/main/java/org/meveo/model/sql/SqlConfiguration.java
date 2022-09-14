@@ -12,6 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.admin.MvCredential;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -30,6 +31,7 @@ import org.meveo.security.PasswordUtils;
 @Table(name = "sql_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "sql_configuration_seq"), })
+@CustomFieldEntity(cftCodePrefix = "SQL")
 public class SqlConfiguration extends BusinessEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = 6630494504219053910L;
