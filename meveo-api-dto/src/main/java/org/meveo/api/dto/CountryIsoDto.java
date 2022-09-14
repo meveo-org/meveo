@@ -74,7 +74,11 @@ public class CountryIsoDto extends BaseEntityDto {
         countryCode = e.getCode();
         description = e.getDescription();
         nationality = e.getNationality();
-        currencyCode = e.getCurrency().getCurrencyCode();
+        
+        if (e.getCurrency() != null) {
+        	currencyCode = e.getCurrency().getCurrencyCode();
+        }
+        
         languageDescriptions = new ArrayList<>();
 
         if (e.getLanguage() != null) {
