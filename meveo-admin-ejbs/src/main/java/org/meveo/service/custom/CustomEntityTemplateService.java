@@ -337,6 +337,9 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
         MeveoModule module = this.findModuleOf(cet);
         final File cetDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), "/facets/json");
         File file = new File(cetDir.getAbsolutePath(), cet.getCode() + "-schema.json");
+        if (!file.exists()) {
+            MeveoFileUtils.writeAndPreserveCharset(this.jSONSchemaGenerator.generateSchema(file.getAbsolutePath(), cet), file);
+        }
         byte[] mapData = Files.readAllBytes(file.toPath());
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> jsonMap = objectMapper.readValue(mapData, HashMap.class);
