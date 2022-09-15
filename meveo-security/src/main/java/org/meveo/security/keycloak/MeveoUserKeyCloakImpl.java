@@ -77,6 +77,7 @@ public class MeveoUserKeyCloakImpl extends MeveoUser {
 
             if (accessToken.getOtherClaims() != null) {
                 this.providerCode = (String) accessToken.getOtherClaims().get(CLAIM_PROVIDER);
+                this.attributes = accessToken.getOtherClaims();
             }
 
             // Import realm roles
