@@ -26,16 +26,15 @@ public class NpmHelper {
 		
 		if (isWindows()) {
 			command.add("npm.cmd");
+			if (args != null) {
+				for(var arg : args) {
+					command.add(arg);
+				}
+			}
 		} else {
 			command.add("bash");
 			command.add("-c");
-			command.add("npm");
-		}
-		
-		if (args != null) {
-			for(var arg : args) {
-				command.add(arg);
-			}
+			command.add("npm " + String.join(" ", args));
 		}
 	
 		return command;
