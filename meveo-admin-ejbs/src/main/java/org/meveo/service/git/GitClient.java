@@ -18,6 +18,7 @@ package org.meveo.service.git;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +70,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
@@ -128,6 +130,18 @@ public class GitClient {
     private Logger log;
 
 
+    public void setRemote(GitRepository gitRepository) throws BusinessException {
+    	final File repoDir = GitHelper.getRepositoryDir(null, gitRepository);
+        try (Git git = Git.init().setDirectory(repoDir).call()){
+            var command = git.remoteSetUrl();
+            command.setName("origin");
+            command.setUri(new URIish(gitRepository.getRemoteOrigin()));
+            command.call();
+        } catch (GitAPIException | URISyntaxException e) {
+            throw new BusinessException("Error setting remote origin of " + gitRepository.getCode(), e);
+
+        }
+    }
 
     /**
      * Remove the corresponding git repository from file system
@@ -465,11 +479,12 @@ public class GitClient {
      * @param gitRepository Repository to update
      * @param username      Optional - Username to use when pulling
      * @param password      Optional - Password to use when pulling
+     * @return true if files has been modified
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      * @throws IllegalArgumentException   if repository has no remote
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
      */
-    public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
+    public boolean pull(GitRepository gitRepository, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -508,15 +523,15 @@ public class GitClient {
                 git.reset().setMode(ResetType.HARD).setRef("origin/" + branch).call();
             }
 
-            triggerCommitEvent(gitRepository, git, headCommitBeforePull);
-            
         	git.submoduleUpdate().call();
+        	
+        	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
-            throw new BusinessException("Cannot pull repository " + gitRepository.getCode(), e);
+            throw new BusinessException("Cannot pull repository " + gitRepository.getCode() + " : " + e.getMessage(), e);
 
         } finally {
             keyLock.unlock(gitRepository.getCode());
@@ -524,7 +539,10 @@ public class GitClient {
 
     }
 
-	protected void triggerCommitEvent(GitRepository gitRepository, Git git, RevCommit headCommitBeforePull) throws AmbiguousObjectException, IncorrectObjectTypeException, IOException, MissingObjectException, GitAPIException, CheckoutConflictException, BusinessException {
+    /**
+     * @return true if files has been modified
+     */
+	protected boolean triggerCommitEvent(GitRepository gitRepository, Git git, RevCommit headCommitBeforePull) throws AmbiguousObjectException, IncorrectObjectTypeException, IOException, MissingObjectException, GitAPIException, CheckoutConflictException, BusinessException {
 		try (RevWalk rw = new RevWalk(git.getRepository())) {
 		    ObjectId head = git.getRepository().resolve(Constants.HEAD);
 		    RevCommit headCommitAfterPull = rw.parseCommit(head);
@@ -544,9 +562,11 @@ public class GitClient {
 		        			.call();
 		        		throw new BusinessException(e);
 		        	}
+		        	return true;
 		        }
 		    }
 		}
+		return false;
 	}
 
     /**

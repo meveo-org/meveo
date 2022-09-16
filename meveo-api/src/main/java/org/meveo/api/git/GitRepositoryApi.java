@@ -251,7 +251,6 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
     }
 
 	private void updateEntity(GitRepositoryDto dto, GitRepository entity) {
-		
 		entity.setReadingRoles(dto.getReadingRoles());
 		entity.setWritingRoles(dto.getWritingRoles());
 		entity.setDefaultRemoteUsername(dto.getRemoteUsername());
@@ -260,6 +259,7 @@ public class GitRepositoryApi extends BaseCrudApi<GitRepository, GitRepositoryDt
 		entity.setDescription(dto.getDescription());
 		entity.setMeveoRepository(dto.isMeveoRepository());
 		entity.setLocked(dto.isLocked());
+		entity.setRemoteOrigin(dto.getRemoteOrigin());
 	}
 
 	@Override

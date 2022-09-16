@@ -220,7 +220,12 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Override
 	public GitRepository update(GitRepository entity) throws BusinessException {
     	super.update(entity);
+    	
     	gitClient.checkout(entity, entity.getDefaultBranch(), true);
+    	if (entity.getRemoteOrigin() != null) {
+    		gitClient.setRemote(entity);
+    	}
+    	
 		return entity;
 	}
 
