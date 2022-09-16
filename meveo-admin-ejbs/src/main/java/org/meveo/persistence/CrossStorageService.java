@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.Session;
+import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -1129,10 +1130,16 @@ public class CrossStorageService implements CustomPersistenceService {
 					try {
 						var session = sqlStorageImpl.getHibernateSession("default");
 						Class<?> clazz = Class.forName(cft.getEntityClazzCetCode());
+						
+						if (clazz.equals(entry.getValue().getClass()) && !HibernateUtils.isLazyLoaded(entry.getValue())) {
+							continue;
+						}
+						
 						values.put(
 							entry.getKey(), 
 							session.find(clazz, entry.getValue())
 						);
+						
 						continue;
 						
 					} catch (ClassNotFoundException e) {
