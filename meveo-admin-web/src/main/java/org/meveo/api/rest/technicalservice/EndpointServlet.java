@@ -50,6 +50,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
+import org.meveo.model.technicalservice.endpoint.EndpointExecutionResult;
 import org.meveo.model.technicalservice.endpoint.EndpointHttpMethod;
 import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
@@ -290,8 +291,11 @@ public class EndpointServlet extends HttpServlet {
 
         // If endpoint is synchronous, execute the script straight and return the response
         if (endpoint.isSynchronous()) {
-            final Map<String, Object> result = endpointApi.execute(endpoint, endpointExecution);
-            String transformedResult = endpointApi.transformData(endpoint, result);
+            EndpointExecutionResult result = endpointApi.execute(endpoint, endpointExecution);
+            if (result.getCriticalError() != null) {
+            	result = endpointApi.execute(endpoint, endpointExecution);
+            }
+            String transformedResult = endpointApi.transformData(endpoint, result.getResults());
             setReponse(transformedResult, endpointExecution);
             return;
         }

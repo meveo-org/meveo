@@ -214,6 +214,17 @@ public class EndpointCacheContainer {
 			}
 		}
 	}
+	
+	public void destroyPooledScript(Endpoint endpoint, ScriptInterface script) {
+		var pool = this.endpointPool.get(endpoint.getCode());
+		if (pool != null) {
+			try {
+				pool.invalidateObject(script);
+			} catch (Exception e) {
+				log.error("Failed to return script to pool", e);
+			}
+		}
+	}
 
 	/*
 	 * returns the endpoint with largest regex matching the path
