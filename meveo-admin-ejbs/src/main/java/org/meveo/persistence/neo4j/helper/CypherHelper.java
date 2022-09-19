@@ -24,8 +24,8 @@ import javax.inject.Inject;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.service.storage.RepositoryService;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
 
 public class CypherHelper {
@@ -52,14 +52,13 @@ public class CypherHelper {
     			
         try {
 
-            final StatementResult result = transaction.run(request, parameters);
+            final Result result = transaction.run(request, parameters);
 
             if(resultAction != null){
                 return resultAction.execute(transaction, result);
                 
             } else {
             	result.consume();
-                transaction.success();
             }
 
         } catch (Exception e) {
@@ -102,9 +101,8 @@ public class CypherHelper {
     	}
 
         try {
-            StatementResult run = transaction.run(request, parameters);
+            Result run = transaction.run(request, parameters);
             run.consume();
-            transaction.success();
             
         } catch (Exception e) {
             if(cypherExceptionHandler != null){

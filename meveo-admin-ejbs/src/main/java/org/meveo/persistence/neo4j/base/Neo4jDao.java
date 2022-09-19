@@ -47,15 +47,13 @@ import org.meveo.persistence.neo4j.graph.Neo4jEntity;
 import org.meveo.persistence.neo4j.graph.Neo4jRelationship;
 import org.meveo.persistence.neo4j.helper.CypherHelper;
 import org.meveo.persistence.neo4j.service.Neo4JRequests;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.exceptions.NoSuchRecordException;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Relationship;
+import org.neo4j.driver.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,7 +280,6 @@ public class Neo4jDao {
                     if(!records.isEmpty()){
                         final Node deletedNode = records.get(0).get(0).asNode();
                         LOGGER.info("Node with id {} and uuid {} deleted", deletedNode.id(), uuid);
-                        transaction.success();
                     } else {
                         crossStorageTransaction.rollbackTransaction(new Exception("Node with uuid " + uuid + " not deleted"), List.of(DBStorageType.NEO4J));
                     }
@@ -313,7 +310,6 @@ public class Neo4jDao {
                     final Node deletedNode = single.get(0).asNode();
                     if(deletedNode != null){
                         LOGGER.info("Node with id {} deleted", deletedNode.id());
-                        transaction.success();
                     } else {
                         LOGGER.error("Node with id {} not deleted", id);
                     }
@@ -452,7 +448,7 @@ public class Neo4jDao {
         query.append(" }");
 
         var transaction = neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration);
-        final StatementResult result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
+        final Result result = transaction.run(query.toString(), Collections.singletonMap("uuid", uuid));
 
 		List<Record> records = result.list();
 		int size = records.size();
@@ -480,7 +476,6 @@ public class Neo4jDao {
             String statement = sub.replace(Neo4JRequests.findNodeId);
 
             final Record result = transaction.run(statement, fieldsKeys).single();
-            transaction.success();
 
             return result.get(0).asString();
         } catch (Exception e) {
@@ -500,7 +495,6 @@ public class Neo4jDao {
 
         try {
             transaction.run("call graphql.idl('" + idl + "')");
-            transaction.success();
             
         	LOGGER.info("Updated IDL for repository {}", neo4jConfiguration);
         } catch (Exception e) {
@@ -524,8 +518,7 @@ public class Neo4jDao {
 
         try {
             // Execute query and parse results
-            final StatementResult result = transaction.run(statement.toString(), values);
-            transaction.success();  // Commit transaction
+            final Result result = transaction.run(statement.toString(), values);
             return result.list()
                     .stream()
                     .map(record -> record.get("result"))
@@ -619,7 +612,7 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
+            final Result result = transaction.run(resolvedStatement, fieldValues);
             List<Record> results = result.list();
 
             if(results.size() > 1) {
@@ -627,7 +620,6 @@ public class Neo4jDao {
             }
 
             node = results.get(0).get(alias).asNode();
-            transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
         	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
@@ -693,9 +685,8 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
+            final Result result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
-            transaction.success();  // Commit transaction
             nodeId = getMeveoUUID(node);
         } catch (Exception e) {
         	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
@@ -743,9 +734,8 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, fieldValues);
+            final Result result = transaction.run(resolvedStatement, fieldValues);
             node = result.single().get(alias).asNode();
-            transaction.success();  // Commit transaction
         } catch (Exception e) {
         	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while updating a Neo4J node: {}", nodeId, e);
@@ -776,15 +766,13 @@ public class Neo4jDao {
         try {
             // Execute query and parse results
             LOGGER.info(resolvedStatement + "\n");
-            final StatementResult result = transaction.run(resolvedStatement, params);
+            final Result result = transaction.run(resolvedStatement, params);
             Set<String> ids = result.list()
                     .stream()
                     .map(record -> record.get(CustomEntityTemplateUniqueConstraint.RETURNED_ID_PROPERTY_NAME))
                     .filter(value -> !value.isNull())
                     .map(Value::asString)
                     .collect(Collectors.toSet());
-
-            transaction.success();
 
             return ids;
         } catch (Exception e) {
@@ -827,13 +815,12 @@ public class Neo4jDao {
 
         try {
             // Execute query and parse results
-            final StatementResult result = transaction.run(statement, values);
+            final Result result = transaction.run(statement, values);
             relationship = result.list()
                 .stream()
                 .findFirst()
                 .map(record -> record.get("relationship").asRelationship()).orElseThrow(() -> new IllegalStateException("No relationship created"));
 
-            transaction.success();  // Commit transaction
         } catch (Exception e) {
         	crossStorageTransaction.rollbackTransaction(e, List.of(DBStorageType.NEO4J));
             LOGGER.error("Error while creating a relation between 2 Neo4J nodes: ({})-[:{}]->({})", startNodeId, label, endNodeId, e);
@@ -930,7 +917,6 @@ public class Neo4jDao {
                     final Node nodeB = single.get(1).asNode();
                     if(nodeA != null & nodeB != null){
                         LOGGER.info("Properties of node {} added to node {} and node {} removed", nodeB.id(), nodeA.id(), nodeB.id());
-                        transaction.success();
                     } else {
                         LOGGER.error("Properties of node {} and {} not merged and node {} not removed", secondNodeId, firstNodeId, secondNodeId);
                     }
@@ -1036,8 +1022,6 @@ public class Neo4jDao {
 	                        LOGGER.info("Relationship {} attached ({})", relationship.id(), relationId);
 	                    }
                     }
-                    
-                    t.success();
                     
                     return null;
                 },

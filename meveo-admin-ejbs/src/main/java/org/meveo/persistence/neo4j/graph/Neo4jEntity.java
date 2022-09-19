@@ -16,13 +16,13 @@
 
 package org.meveo.persistence.neo4j.graph;
 
-import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.types.Node;
-
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import org.neo4j.driver.Values;
+import org.neo4j.driver.internal.InternalNode;
+import org.neo4j.driver.types.Node;
 
 public class Neo4jEntity extends InternalNode implements Neo4jItem {
 
