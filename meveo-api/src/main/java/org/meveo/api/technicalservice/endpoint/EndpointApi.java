@@ -219,6 +219,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 				executionResult.setResults(functionService.execute(executionEngine, parameterMap, !usePool));
 			}
 		} catch (Error error) {
+			hasScriptError = true;
 			executionResult.setCriticalError(error);
 		} catch (Exception exception) {
 			executionResult.setError(exception);
