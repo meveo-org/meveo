@@ -89,10 +89,6 @@ RUN cd $HOME \
 ### ------------------------- Jboss Wildfly - End ----------------------------- ###
 
 
-# Change to the jboss user
-USER jboss
-
-
 ### ------------------------- Keycloak ----------------------------- ###
 # Ref: https://github.com/keycloak/keycloak-containers/blob/10.0.2/adapter-wildfly/Dockerfile
 
