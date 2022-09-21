@@ -69,10 +69,6 @@ RUN cd $HOME \
 ### ------------------------- Jboss Wildfly - End ----------------------------- ###
 
 
-# Change to the jboss user
-USER jboss
-
-
 ### ------------------------- Keycloak ----------------------------- ###
 # Ref: https://github.com/keycloak/keycloak-containers/blob/10.0.2/adapter-wildfly/Dockerfile
 
@@ -230,5 +226,8 @@ RUN cd /tmp/meveo \
 
 COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
+
+# Change to the jboss user
+USER jboss
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]

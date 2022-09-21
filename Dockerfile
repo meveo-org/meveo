@@ -234,4 +234,7 @@ EXPOSE 8080 8787 9990
 COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
+# Change to the jboss user
+USER jboss
+
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
