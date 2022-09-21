@@ -197,8 +197,8 @@ RUN npm config set unsafe-perm true
 RUN node --version
 RUN npm --version
 
-RUN ln -s "${PWD}/$(which node)" /usr/bin/node
-RUN ln -s "${PWD}/$(which npm)" /usr/bin/npm
+RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/node" /usr/bin/node
+RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/npm" /usr/bin/npm
 
 ### ------------------------- Configurations ----------------------------- ###
 
