@@ -172,6 +172,10 @@ RUN set -ex \
     && rm glowroot.zip \
     && ls ${JBOSS_HOME}/glowroot/glowroot.jar
     
+# Config Sudoers
+RUN echo "Defaults:jboss   lecture = never" >> /etc/sudoers \
+    && echo "Cmnd_Alias CRON_CMD = /etc/init.d/cron" >> /etc/sudoers \
+    && echo "jboss    ALL=(ALL:ALL) NOPASSWD: CRON_CMD" >> /etc/sudoers
     
 ### ------------------------- NodeJs & NPM ------------------------------- ###
 
