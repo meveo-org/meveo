@@ -168,11 +168,6 @@ RUN set -ex \
     && rm glowroot.zip \
     && ls ${JBOSS_HOME}/glowroot/glowroot.jar
     
-# Config Sudoers
-RUN echo "Defaults:jboss   lecture = never" >> /etc/sudoers \
-    && echo "Cmnd_Alias CRON_CMD = /etc/init.d/cron" >> /etc/sudoers \
-    && echo "jboss    ALL=(ALL:ALL) NOPASSWD: CRON_CMD" >> /etc/sudoers
-    
 ### ------------------------- NodeJs & NPM ------------------------------- ###
 
 ENV NODE_VERSION=16.14.0
@@ -199,6 +194,9 @@ RUN npm --version
 
 RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/node" /usr/bin/node
 RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/npm" /usr/bin/npm
+
+# Change to the jboss user
+USER jboss
 
 ### ------------------------- Configurations ----------------------------- ###
 
@@ -229,8 +227,5 @@ EXPOSE 8080 8787 9990
 
 COPY --chown=jboss:jboss docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
-
-# Change to the jboss user
-USER jboss
 
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
