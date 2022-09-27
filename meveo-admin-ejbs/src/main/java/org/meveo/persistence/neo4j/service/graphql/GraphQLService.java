@@ -18,13 +18,13 @@ package org.meveo.persistence.neo4j.service.graphql;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringJoiner;
 import java.util.TreeMap;
@@ -38,8 +38,6 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.persistence.CacheRetrieveMode;
-import javax.ws.rs.NotFoundException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.meveo.commons.utils.StringUtils;
@@ -53,8 +51,8 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.GraphQLQueryField;
 import org.meveo.model.customEntities.Mutation;
 import org.meveo.model.neo4j.GraphQLRequest;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4JConstants;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -62,8 +60,6 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.slf4j.Logger;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -85,44 +81,58 @@ public class GraphQLService {
     private CustomFieldTemplateService customFieldTemplateService;
     
     @Inject
+    private Neo4jConfigurationService neo4jConfigurationService;
+    
+    @Inject
     @MeveoJpa
     private EntityManagerWrapper entityManagerWrapper;
+    
+    @Inject
+    private GraphQlClient graphQlClient;
+    
+    private static String getRelationshipDirective(Neo4JConfiguration neo4jConfiguration) {
+    	if (neo4jConfiguration.getDbVersion().startsWith("3")) {
+    		return "@relation(name: \"";
+    	} else {
+    		return "@relationship(type: \"";
+    	}
+    }
 
     public Map<String, Object> executeGraphQLRequest(GraphQLRequest graphQLRequest, String neo4jConfiguration) {
-
-        return neo4jDao.executeGraphQLQuery(
-                neo4jConfiguration,
-                graphQLRequest.getQuery(),
-                graphQLRequest.getVariables(),
-                graphQLRequest.getOperationName()
-        );
+    	Neo4JConfiguration neo4jRepo = neo4jConfigurationService.findByCode(neo4jConfiguration);
+    	if (neo4jRepo.getGraphqlApiUrl() != null) {
+    		return graphQlClient.executeGraphQlRequest(graphQLRequest, neo4jRepo.getGraphqlApiUrl());
+    	} else {
+    		return neo4jDao.executeGraphQLQuery(
+    				neo4jConfiguration,
+    				graphQLRequest.getQuery(),
+    				graphQLRequest.getVariables(),
+    				graphQLRequest.getOperationName()
+				);
+    	}
     }
 
     public Map<String, Object> executeGraphQLRequest(String query, String neo4jConfiguration) {
-        return neo4jDao.executeGraphQLQuery(neo4jConfiguration, query, null, null);
+    	Neo4JConfiguration neo4jRepo = neo4jConfigurationService.findByCode(neo4jConfiguration);
+    	if (neo4jRepo.getGraphqlApiUrl() != null) {
+    		GraphQLRequest graphQLRequest = new GraphQLRequest();
+    		graphQLRequest.setQuery(query);
+    		return graphQlClient.executeGraphQlRequest(graphQLRequest, neo4jRepo.getGraphqlApiUrl());
+    	} else {
+    		return neo4jDao.executeGraphQLQuery(neo4jConfiguration, query, null, null);
+    	}
     }
 
     /**
      * Update the IDL for every neo4j repositories
      */
     public void updateIDL() {
-    	Instant start = Instant.now();
-    	log.debug("Computing IDL ...");
-        final Collection<GraphQLEntity> entities = getEntities();
-        String idl = getIDL(entities);
-    	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
-
         final List<String> neo4jConfigurations = entityManagerWrapper.getEntityManager()
                 .createQuery("SELECT c.code from Neo4JConfiguration c WHERE disabled = false", String.class)
                 .getResultList();
 
         for (String neo4jConfiguration : neo4jConfigurations) {
-            List<String> missingEntities = validateIdl(idl);
-            if (CollectionUtils.isEmpty(missingEntities)) {
-                neo4jDao.updateIDL(neo4jConfiguration, idl);
-            } else {
-                log.error("Cannot update IDL, missing entities : {}", missingEntities);
-            }
+        	updateIDL(neo4jConfiguration);
         }
 
     }
@@ -133,25 +143,31 @@ public class GraphQLService {
      * @param neo4jConfiguration Repository to update
      */
     public void updateIDL(String neo4jConfiguration) {
+    	Neo4JConfiguration neo4jRepo = neo4jConfigurationService.findByCode(neo4jConfiguration);
+    	
     	Instant start = Instant.now();
     	log.debug("Computing IDL ...");
-        final Collection<GraphQLEntity> entities = getEntities();
-        String idl = getIDL(entities);
+        final Collection<GraphQLEntity> entities = getEntities(neo4jRepo);
+        String idl = getIDL(entities, neo4jRepo);
     	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
         List<String> missingEntities = validateIdl(idl);
         if (CollectionUtils.isEmpty(missingEntities)) {
-            neo4jDao.updateIDL(neo4jConfiguration, idl);
+        	if (neo4jRepo.getGraphqlApiUrl() != null) {
+        		graphQlClient.updateIdl(idl, neo4jRepo.getGraphqlApiUrl());
+        	} else {
+        		neo4jDao.updateIDL(neo4jConfiguration, idl);
+        	}
         } else{
             log.error("Cannot update IDL, missing entities : {} in IDL \n{}", missingEntities, idl);
         }
     }
 
-    public String getIDL() {
-        final Collection<GraphQLEntity> entities = getEntities();
-        return getIDL(entities);
+    public String getIDL(Neo4JConfiguration neo4jConfiguration) {
+        final Collection<GraphQLEntity> entities = getEntities(neo4jConfiguration);
+        return getIDL(entities, neo4jConfiguration);
     }
 
-    private String getIDL(Collection<GraphQLEntity> graphQLEntities) {
+    private String getIDL(Collection<GraphQLEntity> graphQLEntities, Neo4JConfiguration neo4jConfiguration) {
         StringBuilder idl = new StringBuilder();
 
         idl.append("scalar GraphQLLong\n");
@@ -172,13 +188,22 @@ public class GraphQLService {
                 }
                 idl.append(graphQLField.getFieldType());
 
-                if (graphQLField.isMultivialued()) {
-                    idl.append("]");
+                if (neo4jConfiguration.getDbVersion().startsWith("3")) {
+                    if (graphQLField.isMultivialued()) {
+                        idl.append("]");
+                    }
+                    
+                    if (graphQLField.isRequired()) {
+                        idl.append("!");
+                    }
+                } else {
+                	 if (graphQLField.isMultivialued()) {
+                         idl.append("!]!");
+                     } else if (graphQLField.isRequired()) {
+                         idl.append("!");
+                     }
                 }
-
-                if (graphQLField.isRequired()) {
-                    idl.append("!");
-                }
+  
 
                 if (graphQLField.getQuery() != null) {
                     idl.append(" ").append(graphQLField.getQuery());
@@ -191,12 +216,12 @@ public class GraphQLService {
             idl.append("}\n\n");
         }
         
-        idl.append(getMutations());
+        idl.append(getMutations(neo4jConfiguration));
 
         return idl.toString();
     }
 
-    private Collection<GraphQLEntity> getEntities() {
+    private Collection<GraphQLEntity> getEntities(Neo4JConfiguration neo4jConfiguration) {
         Map<String, GraphQLEntity> graphQLEntities = new TreeMap<>();
 
         // Binary entity
@@ -214,7 +239,7 @@ public class GraphQLService {
             GraphQLEntity graphQLEntity = new GraphQLEntity();
             graphQLEntity.setName(cet.getCode());
 
-            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts, neo4jConfiguration);
 
             // Always add "meveo_uuid" field
             graphQLFields.add(new GraphQLField("meveo_uuid", "String", true));
@@ -283,7 +308,7 @@ public class GraphQLService {
             String typeName = relationshipTemplate.getGraphQlTypeName() == null ? endNode.getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
 
-            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts);
+            SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts, neo4jConfiguration);
 
             GraphQLField to = new GraphQLField();
             to.setFieldName("to");
@@ -318,7 +343,7 @@ public class GraphQLService {
                                     entityRefField.setFieldName(customFieldTemplate.getCode());
                                     entityRefField.setMultivalued(customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST);
                                     entityRefField.setFieldType(endNode.getCode());
-                                    entityRefField.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
+                                    entityRefField.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
                                     source.getGraphQLFields().add(entityRefField);
                                 });
 
@@ -328,7 +353,7 @@ public class GraphQLService {
                             sourceNameSingular.setFieldName(relationshipTemplate.getSourceNameSingular());
                             sourceNameSingular.setMultivalued(false);
                             sourceNameSingular.setFieldType(endNode.getCode());
-                            sourceNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
+                            sourceNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNameSingular);
                         }
 
@@ -338,7 +363,7 @@ public class GraphQLService {
                             sourceNamePlural.setFieldName(relationshipTemplate.getSourceNamePlural());
                             sourceNamePlural.setMultivalued(true);
                             sourceNamePlural.setFieldType(endNode.getCode());
-                            sourceNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: OUT)");
+                            sourceNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
                             source.getGraphQLFields().add(sourceNamePlural);
                         }
 
@@ -373,7 +398,7 @@ public class GraphQLService {
                             targetNameSingular.setFieldName(relationshipTemplate.getTargetNameSingular());
                             targetNameSingular.setMultivalued(false);
                             targetNameSingular.setFieldType(startNode.getCode());
-                            targetNameSingular.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
+                            targetNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNameSingular);
                         }
 
@@ -383,7 +408,7 @@ public class GraphQLService {
                             targetNamePlural.setFieldName(relationshipTemplate.getTargetNamePlural());
                             targetNamePlural.setMultivalued(true);
                             targetNamePlural.setFieldType(startNode.getCode());
-                            targetNamePlural.setQuery("@relation(name: \"" + relationshipTemplate.getName() + "\", direction: IN)");
+                            targetNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN)");
                             target.getGraphQLFields().add(targetNamePlural);
                         }
 
@@ -413,7 +438,7 @@ public class GraphQLService {
         return graphQLEntities.values();
     }
 
-    private SortedSet<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts) {
+    private SortedSet<GraphQLField> getGraphQLFields(Map<String, CustomFieldTemplate> cfts, Neo4JConfiguration neo4jConfiguration) {
         SortedSet<GraphQLField> graphQLFields = new TreeSet<>();
         for (CustomFieldTemplate customFieldTemplate : cfts.values()) {
 
@@ -451,7 +476,7 @@ public class GraphQLService {
                         }
 
                         graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
-                        graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
+                        graphQLField.setQuery(getRelationshipDirective(neo4jConfiguration) + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
                     case BINARY:
                         if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
@@ -460,7 +485,7 @@ public class GraphQLService {
                         }
 
                         graphQLField.setFieldType(Neo4JConstants.FILE_LABEL);
-                        graphQLField.setQuery("@relation(name: \"" + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
+                        graphQLField.setQuery(getRelationshipDirective(neo4jConfiguration) + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
                         break;
                     case CHILD_ENTITY:
                     case EMBEDDED_ENTITY:
@@ -480,31 +505,31 @@ public class GraphQLService {
         return graphQLFields;
     }
     
-    private String getMutations() {
+    @SuppressWarnings("unchecked")
+	private String getMutations(Neo4JConfiguration configuration) {
     	// Retrieve all existing mutations
-    	List<String> mutationsLists = customEntityTemplateService.getEntityManager()
-    		.createNativeQuery("SELECT mutations "
-    				+ "FROM cust_cet "
-    				+ "WHERE mutations IS NOT null")
-    		.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.USE)
-    		.setHint("org.hibernate.readOnly", true)
-    		.getResultList();
+    	List<List<Mutation>> mutationsLists = customEntityTemplateService.getEntityManager()
+    			.createQuery("SELECT DISTINCT cet.neo4JStorageConfiguration.mutations "
+    					+ "FROM CustomEntityTemplate cet "
+    					+ "WHERE cet.neo4JStorageConfiguration.mutations IS NOT NULL")
+    			.getResultList();
 
     	if(!mutationsLists.isEmpty()) {
-
-            // Flatten the lists
-            List<Mutation> mutations = (List<Mutation>) mutationsLists.stream()
-                    .map(e -> JacksonUtil.fromString(e, new TypeReference<List<Mutation>>() {
-                    }))
+    		// Flatten the lists
+            Set<Mutation> mutations = (Set<Mutation>) mutationsLists.stream()
                     .flatMap(List::stream)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
 
             StringBuilder mutationsStr = new StringBuilder("schema {\n\tmutation: Mutations\n} \n");
 
             StringJoiner mutationsJoiner = new StringJoiner("\n\t", "\ntype Mutations {\n\t", "\n}");
 
             for (Mutation mutation : mutations) {
-                mutationsJoiner.add(mutation.toString());
+            	if (configuration.getDbVersion().startsWith("3")) {
+            		mutationsJoiner.add(mutation.toString3());
+            	} else {
+            		mutationsJoiner.add(mutation.toString4());
+            	}
             }
 
             mutationsStr.append(mutationsJoiner.toString());

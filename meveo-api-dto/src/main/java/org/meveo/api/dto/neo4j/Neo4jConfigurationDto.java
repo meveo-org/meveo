@@ -34,6 +34,9 @@ public class Neo4jConfigurationDto extends BusinessEntityDto {
 	 */
 	@ApiModelProperty("Neo4j password")
 	private String neo4jPassword;
+	
+	@ApiModelProperty("Graphql Endpoint")
+	private String graphqlApiUrl;
 
 	public Neo4jConfigurationDto() {
 
@@ -46,6 +49,7 @@ public class Neo4jConfigurationDto extends BusinessEntityDto {
 			neo4jUrl = e.getNeo4jUrl();
 			neo4jLogin = e.getNeo4jLogin();
 			neo4jPassword = e.getNeo4jPassword();
+			graphqlApiUrl = e.getGraphqlApiUrl();
 		}
 	}
 
@@ -72,4 +76,19 @@ public class Neo4jConfigurationDto extends BusinessEntityDto {
 	public void setNeo4jPassword(String neo4jPassword) {
 		this.neo4jPassword = neo4jPassword;
 	}
+
+	/**
+	 * @return the {@link #graphqlApiUrl}
+	 */
+	public String getGraphqlApiUrl() {
+		return graphqlApiUrl;
+	}
+
+	/**
+	 * @param graphqlApiUrl the graphqlApiUrl to set
+	 */
+	public void setGraphqlApiUrl(String graphqlApiUrl) {
+		this.graphqlApiUrl = graphqlApiUrl;
+	}
+	
 }

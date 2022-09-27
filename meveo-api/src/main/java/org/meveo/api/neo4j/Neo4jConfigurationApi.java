@@ -35,6 +35,7 @@ public class Neo4jConfigurationApi extends BaseApi {
 		target.setNeo4jUrl(source.getNeo4jUrl());
 		target.setNeo4jLogin(source.getNeo4jLogin());
 		target.setClearPassword(source.getNeo4jPassword());
+		target.setGraphqlApiUrl(source.getGraphqlApiUrl());
 
 		return target;
 	}

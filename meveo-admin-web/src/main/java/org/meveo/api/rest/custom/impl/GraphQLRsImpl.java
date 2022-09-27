@@ -32,8 +32,8 @@ public class GraphQLRsImpl implements GraphQLRS {
 	private String neo4jConfiguration;
 
 	@Override
-	public String getIdl() {
-		return graphQLService.getIDL();
+	public String getIdl(String neo4jConfiguration) {
+		return graphQLService.getIDL(neo4jRepoService.findByCode(neo4jConfiguration));
 	}
 
 	@Override

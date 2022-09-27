@@ -102,7 +102,7 @@ public class Neo4jConnectionProvider {
     }
 
     public Session getSession() {
-        return getSession(null);
+        return getSession(defaultConfiguration);
     }
 
     /**
@@ -118,32 +118,26 @@ public class Neo4jConnectionProvider {
                 LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
             }
         }
-
+        
+        return getSession(neo4JConfiguration);
+    }
+    
+    /**
+     * @return a neo4j session, or null if a problem has occured
+     */
+    public Session getSession(Neo4JConfiguration neo4JConfiguration) {
         try{
-        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfigurationCode, this::generateDriver);
+        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfiguration.getCode(), code -> createDriver(neo4JConfiguration));
         	synchronized (this) {
                 return driver.session();
             }
         }catch (Exception e){
-            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
-        	DRIVER_MAP.remove(neo4JConfigurationCode);
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
+        	DRIVER_MAP.remove(neo4JConfiguration.getCode());
             return null;
         }
 
     }
-
-	private synchronized Driver generateDriver(String neo4JConfigurationCode) {
-		Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
-		if (neo4JConfigurationCode != null) {
-			try {
-				neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
-			} catch (NoResultException e) {
-				LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
-			}
-		}
-
-		return createDriver(neo4JConfiguration);
-	}
 
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
 		String salt = PasswordUtils.getSalt(neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl());
