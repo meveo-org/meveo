@@ -224,7 +224,7 @@ public class Neo4jService implements CustomPersistenceService {
         for (Repository repository : customEntityTemplate.getRepositories()) {
             for (String label : labels) {
             	try {
-            		neo4jDao.addUniqueConstraint(repository.getCode(), label, MEVEO_UUID);
+            		neo4jDao.addUniqueConstraint(repository.getNeo4jConfiguration(), label, MEVEO_UUID);
             	} catch (Exception e) {
             		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repository.getCode(), e);
             	}

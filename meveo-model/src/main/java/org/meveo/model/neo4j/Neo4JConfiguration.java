@@ -239,4 +239,8 @@ public class Neo4JConfiguration extends BusinessEntity implements IStorageConfig
 		this.dbVersion = dbVersion;
 	}
 	
+	public boolean isV3() {
+		return this.dbVersion.startsWith("3");
+	}
+	
 }

@@ -39,7 +39,9 @@ import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.neo4j.NonUniqueResult;
@@ -182,32 +184,48 @@ public class Neo4jDao {
 	 * @param label              Label on which to add the constraint
 	 * @param property           Property on which to add the constraint
 	 */
-    public void addUniqueConstraint(String neo4jConfiguration, String label, String property) {
-        StringBuilder query = new StringBuilder()
-        		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
-        		.append("ASSERT n.").append(property).append(" IS UNIQUE");
-        
-        StringBuilder checkConstraintQuery = new StringBuilder()
-        		.append("CALL db.constraints() YIELD description \n")
-        		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
-        		.append("'\n RETURN COUNT(*) ");
+    public void addUniqueConstraint(Neo4JConfiguration neo4jConfiguration, String label, String property) {
+    	if (neo4jConfiguration.isV3()) {
+    		StringBuilder query = new StringBuilder()
+            		.append("CREATE CONSTRAINT ON (n:").append(label).append(")\n")
+            		.append("ASSERT n.").append(property).append(" IS UNIQUE");
+            
+            StringBuilder checkConstraintQuery = new StringBuilder()
+            		.append("CALL db.constraints() YIELD description \n")
+            		.append("WHERE description contains '").append(property.toLowerCase()).append(":").append(label) 
+            		.append("'\n RETURN COUNT(*) ");
 
-    	Long exists = cypherHelper.execute(
-			neo4jConfiguration,
-			checkConstraintQuery.toString(),
-			Map.of(),
-            (transaction, result) -> result.single().get(0).asLong()
-        );
-    	
-    	if (exists == 0) {
-	        cypherHelper.update(
-        		neo4jConfiguration,
+        	Long exists = cypherHelper.execute(
+    			neo4jConfiguration.getCode(),
+    			checkConstraintQuery.toString(),
+    			Map.of(),
+                (transaction, result) -> result.single().get(0).asLong()
+            );
+        	
+        	if (exists == 0) {
+    	        cypherHelper.update(
+            		neo4jConfiguration.getCode(),
+            		query.toString(),
+            		null,
+            		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
+            		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration.getCode())
+        		);
+        	}
+    	} else {
+    		StringBuilder query = new StringBuilder()
+        		.append("CREATE CONSTRAINT IF NOT EXISTS \n")
+        		.append("FOR (n:").append(label).append(")\n")
+        		.append("REQUIRE (n.").append(property).append(") IS UNIQUE");
+    		
+    		cypherHelper.update(
+        		neo4jConfiguration.getCode(),
         		query.toString(),
         		null,
-        		e -> LOGGER.debug("Unique constraint {}({}) already exists", label, property),
-        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
+        		e -> LOGGER.error("Failed to create unique constraint", e),
+        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration.getCode())
     		);
     	}
+        
     }
 
     /**
@@ -217,16 +235,30 @@ public class Neo4jDao {
 	 * @param label              Label on which to add the index
 	 * @param property           Property on which to add the index
 	 */
-    public void createIndex(String neo4jConfiguration, String label, String property) {
-        StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
+    public void createIndex(Neo4JConfiguration neo4jConfiguration, String label, String property) {
+    	if (neo4jConfiguration.isV3()) {
+            StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX ON :").append(label).append("(").append(property).append(")");
+            cypherHelper.update(
+        		neo4jConfiguration.getCode(),
+        		createIndexQuery.toString(),
+        		null,
+        		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
+        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration.getCode())
+    		);
+    	} else {
+            StringBuilder createIndexQuery = new StringBuilder("CREATE INDEX IF NOT EXISTS \n")
+            		.append("FOR (n:").append(label).append(")\n")
+            		.append("ON (n.").append(property).append(")");
+            cypherHelper.update(
+        		neo4jConfiguration.getCode(),
+        		createIndexQuery.toString(),
+        		null,
+        		e -> LOGGER.error("Failed to create index", e),
+        		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration.getCode())
+    		);
+    	}
+    	
 
-        cypherHelper.update(
-    		neo4jConfiguration,
-    		createIndexQuery.toString(),
-    		null,
-    		e -> LOGGER.debug("Index on {}({}) already exists", label, property),
-    		neo4jStorageImpl.getNeo4jTransaction(neo4jConfiguration)
-		);
     }
 
     /**

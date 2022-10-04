@@ -42,6 +42,7 @@ import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.async.AsyncSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,6 +131,23 @@ public class Neo4jConnectionProvider {
         	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfiguration.getCode(), code -> createDriver(neo4JConfiguration));
         	synchronized (this) {
                 return driver.session();
+            }
+        }catch (Exception e){
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
+        	DRIVER_MAP.remove(neo4JConfiguration.getCode());
+            return null;
+        }
+
+    }
+    
+    /**
+     * @return a neo4j session, or null if a problem has occured
+     */
+    public AsyncSession getSessionAsync(Neo4JConfiguration neo4JConfiguration) {
+        try{
+        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfiguration.getCode(), code -> createDriver(neo4JConfiguration));
+        	synchronized (this) {
+                return driver.asyncSession();
             }
         }catch (Exception e){
             LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
