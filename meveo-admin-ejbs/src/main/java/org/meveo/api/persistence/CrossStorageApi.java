@@ -98,7 +98,8 @@ public class CrossStorageApi{
 	public <T> T find(Repository repository, String uuid, Class<T> cetClass) throws EntityDoesNotExistsException {
 		CustomEntityTemplate cet = getCet(cetClass);
 		Map<String, Object> values = crossStorageService.find(repository, cet, uuid, true);
-		return JacksonUtil.convert(values, cetClass);
+		var result = CEIUtils.deserialize(values, cetClass);
+		return result;
 	}
 	
 	/**

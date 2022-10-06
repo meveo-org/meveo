@@ -29,9 +29,11 @@ import javax.persistence.Id;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.interfaces.EntityGraph;
 import org.meveo.interfaces.EntityRelation;
+import org.meveo.model.BaseEntity;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
@@ -665,10 +667,14 @@ public class CEIUtils {
 
 				} else {
 					try {
-						var type = setter.getParameters()[0].getParameterizedType();
-						var jacksonType = TypeFactory.defaultInstance().constructType(type);
-						var convertedValue = JacksonUtil.convert(entry.getValue(), jacksonType);
-						setter.invoke(instance, convertedValue);
+						if (entry.getValue() instanceof BaseEntity || entry.getValue() instanceof ICustomFieldEntity) {
+							setter.invoke(instance, entry.getValue());
+						} else {
+							var type = setter.getParameters()[0].getParameterizedType();
+							var jacksonType = TypeFactory.defaultInstance().constructType(type);
+							var convertedValue = JacksonUtil.convert(entry.getValue(), jacksonType);
+							setter.invoke(instance, convertedValue);
+						}
 
 					} catch (IllegalArgumentException e) {
 						try {
