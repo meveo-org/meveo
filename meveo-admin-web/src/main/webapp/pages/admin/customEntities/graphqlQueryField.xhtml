@@ -5,15 +5,13 @@
         <hftl:decorateFormPanel formId="graphqlQueryFieldsDialogForm">
             <ui:define name="fields">
                 <h:panelGrid columns="1">
-                    <h:panelGrid columns="2">
+                    <h:panelGrid columns="3">
                         <hftl:decorateFormField fieldId="fieldName" label="#{messages['graphqlQueryField.fieldName']}">
                             <p:inputText id="fieldName" value="#{customEntityTemplateBean.graphqlQueryField.fieldName}" size="53" maxlength="100"  readonly="#{customEntityTemplateBean.isUpdate}" />
                         </hftl:decorateFormField>
                         <hftl:decorateFormField fieldId="fieldType" label="#{messages['graphqlQueryField.fieldType']}" >
                             <p:inputText id="fieldType" value="#{customEntityTemplateBean.graphqlQueryField.fieldType}" size="53" maxlength="100" disabled="false" />
                         </hftl:decorateFormField>
-                    </h:panelGrid>
-                    <h:panelGrid columns="1">
                         <hftl:decorateFormField fieldId="multivalued" label="#{messages['graphqlQueryField.multivalued']}" >
                             <p:selectBooleanCheckbox id="multivalued" value="#{customEntityTemplateBean.graphqlQueryField.multivalued}">
                             </p:selectBooleanCheckbox>
@@ -21,7 +19,7 @@
                     </h:panelGrid>
                     <h:panelGrid columns="2">
                         <hftl:decorateFormField fieldId="query" label="#{messages['graphqlQueryField.query']}" >
-                            <p:inputText id="query" value="#{customEntityTemplateBean.graphqlQueryField.query}" size="114" maxlength="120"/>
+                            <p:inputTextarea  id="query" value="#{customEntityTemplateBean.graphqlQueryField.query}" cols="150" rows="10"/>
                         </hftl:decorateFormField>
                     </h:panelGrid>
                 </h:panelGrid>

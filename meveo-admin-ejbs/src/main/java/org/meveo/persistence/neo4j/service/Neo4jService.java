@@ -18,8 +18,6 @@ package org.meveo.persistence.neo4j.service;
 
 import static org.meveo.persistence.neo4j.base.Neo4jDao.NODE_ID;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +42,6 @@ import java.util.stream.Collectors;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
-import javax.ejb.EJBException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Event;
@@ -52,7 +49,6 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -63,7 +59,6 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.CETUtils;
-import org.meveo.api.exception.BusinessApiException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
@@ -107,16 +102,15 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.ApplicationProvider;
-import org.meveo.util.PersistenceUtils;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.Values;
+import org.neo4j.driver.exceptions.NoSuchRecordException;
 import org.neo4j.driver.internal.InternalNode;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.Value;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import org.neo4j.driver.v1.types.Node;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -230,7 +224,7 @@ public class Neo4jService implements CustomPersistenceService {
         for (Repository repository : customEntityTemplate.getRepositories()) {
             for (String label : labels) {
             	try {
-            		neo4jDao.addUniqueConstraint(repository.getCode(), label, MEVEO_UUID);
+            		neo4jDao.addUniqueConstraint(repository.getNeo4jConfiguration(), label, MEVEO_UUID);
             	} catch (Exception e) {
             		log.error("Failed to add unique constraint on {}(meveo_uuid) for repository {}", label, repository.getCode(), e);
             	}
@@ -841,16 +835,14 @@ public class Neo4jService implements CustomPersistenceService {
             /* Execute query and parse result inside a relationship.
             If relationship was created fire creation event, fire update event when updated. */
 
-            final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
+            final Result result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 
             // Fire notification for each relation created or updated
             recordList = result.list();
 
-            transaction.success();  // Commit transaction
-
         } catch (Exception e) {
             log.error("Failed to save relationship", e);
-            transaction.failure();
+            transaction.rollback();
         }
 
         List<String> relationUuids = new ArrayList<>();
@@ -913,16 +905,14 @@ public class Neo4jService implements CustomPersistenceService {
             If relationship was created fire creation event, fire update event when updated. */
             LOGGER.info(resolvedStatement);
 
-            final StatementResult result = transaction.run(resolvedStatement, valuesMap);  // Execute query
+            final Result result = transaction.run(resolvedStatement, valuesMap);  // Execute query
 
             // Fire notification for each relation created or updated
             recordList = result.list();
 
-            transaction.success();  // Commit transaction
-
         } catch (Exception e) {
             log.error("Failed to save relationship", e);
-            transaction.failure();
+            transaction.rollback();
         }
 
         List<String> relationUuids = new ArrayList<>();
@@ -1027,7 +1017,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         // Try to find the id of the source node
         String findStartNodeStatement = getStatement(sub, Neo4JRequests.findStartNodeId);
-        final StatementResult run = transaction.run(findStartNodeStatement, parametersValues);
+        final Result run = transaction.run(findStartNodeStatement, parametersValues);
 
         Neo4jEntity startNode = null;
 
@@ -1055,7 +1045,7 @@ public class Neo4jService implements CustomPersistenceService {
                 statement = neo4jDao.appendReturnStatement(statement, startNodeAlias, valuesMap);
                 String updateStatement = getStatement(sub, statement);
 
-                final StatementResult result = transaction.run(updateStatement, parametersValues);  // Execute query
+                final Result result = transaction.run(updateStatement, parametersValues);  // Execute query
 
                 // Fire node update event
                 startNode = new Neo4jEntity(result.single().get(startNodeAlias).asNode(), neo4JConfiguration);
@@ -1068,11 +1058,9 @@ public class Neo4jService implements CustomPersistenceService {
 
             }
 
-            transaction.success();
-
         } catch (Exception e) {
 
-            transaction.failure();
+            transaction.rollback();
             log.error("Transaction for persisting entity with code {} and fields {} was rolled back", cetCode, startNodeValues, e);
             throw new BusinessException(e);
 
@@ -1122,7 +1110,7 @@ public class Neo4jService implements CustomPersistenceService {
             /* Delete the node and all its associated relationships and fire node deletion event */
 
             // Execute query
-            final StatementResult result = transaction.run(deleteStatement, values);
+            final Result result = transaction.run(deleteStatement, values);
             for (Record record : result.list()) {
 
                 // Fire deletion event
@@ -1131,12 +1119,10 @@ public class Neo4jService implements CustomPersistenceService {
                 final long id = record.get("id").asLong();                                      // Parse id
                 internalNode = new InternalNode(id, labels, properties);     // Create Node object
             }
-            transaction.success();
-
         } catch (Exception e) {
 
             log.error("Cannot delete node with code {} and values {}", cetCode, values, e);
-            transaction.failure();
+            transaction.rollback();
             throw new BusinessException(e);
 
         }
@@ -1452,7 +1438,7 @@ public class Neo4jService implements CustomPersistenceService {
         LOGGER.info("Merging node {} into node {}", nodeToMerge.get(MEVEO_UUID), persistentNode.get(MEVEO_UUID));
 
         final List<Relationship> relationships = neo4jDao.findRelationships(configurationCode, nodeToMerge.id(), customEntityTemplate.getCode());
-        List<Long> relIds = relationships.stream().map(org.neo4j.driver.v1.types.Entity::id).collect(Collectors.toList());
+        List<Long> relIds = relationships.stream().map(org.neo4j.driver.types.Entity::id).collect(Collectors.toList());
 
         LOGGER.info("Merging relationships {} of node {} into node {}", relIds, nodeToMerge.id(), persistentNode.id());
         for (Relationship relationship : relationships) {

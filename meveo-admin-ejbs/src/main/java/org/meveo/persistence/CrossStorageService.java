@@ -265,7 +265,9 @@ public class CrossStorageService implements CustomPersistenceService {
 			
 			for (var storageConf : repository.getStorageConfigurations(storage)) {
 				var subValues = storageImpl.findById(storageConf, cet, uuid, cfts, selectFields, withEntityReferences);
-				storageValues.putAll(subValues);
+				if (subValues != null) {
+					storageValues.putAll(subValues);
+				}
 			}
 			
 			if (storageValues != null) {

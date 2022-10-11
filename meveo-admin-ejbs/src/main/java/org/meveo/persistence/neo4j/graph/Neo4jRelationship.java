@@ -16,9 +16,9 @@
 
 package org.meveo.persistence.neo4j.graph;
 
+import org.neo4j.driver.Values;
 import org.neo4j.driver.internal.InternalRelationship;
-import org.neo4j.driver.v1.Values;
-import org.neo4j.driver.v1.types.Relationship;
+import org.neo4j.driver.types.Relationship;
 
 public class Neo4jRelationship extends InternalRelationship implements Neo4jItem {
 

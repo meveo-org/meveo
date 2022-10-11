@@ -16,7 +16,7 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.impl.SQLStorageImpl;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
 
 /**

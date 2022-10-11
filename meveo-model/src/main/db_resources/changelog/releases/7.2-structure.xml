@@ -184,7 +184,14 @@
 			<column name="dev_mode" type="${type.boolean}" defaultValueNumeric="0"/>
 		</addColumn>
 	</changeSet>
-
-
+	
+	<changeSet id="#606 - Upgrade neo4j" author="Clément Bareth">
+		<addColumn tableName="neo4j_configuration">
+			<column name="db_version" type="varchar(255)" defaultValue="3.5.X">
+				<constraints nullable="false"/>
+			</column>
+			<column name="graphql_api_url" type="varchar(255)"></column>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

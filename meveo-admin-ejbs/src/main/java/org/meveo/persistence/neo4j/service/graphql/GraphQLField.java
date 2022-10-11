@@ -25,6 +25,7 @@ public class GraphQLField implements Comparable {
     private boolean multivialued;
     private boolean required;
     private String query;
+    private String defaultValue;
 
     public GraphQLField() {}
 
@@ -96,4 +97,18 @@ public class GraphQLField implements Comparable {
 
        return 0;
     }
+    
+    /**
+	 * @return the {@link #defaultValue}
+	 */
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+	
+	/**
+	 * @param defaultValue the defaultValue to set
+	 */
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 }

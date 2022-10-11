@@ -47,9 +47,9 @@ import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
 
 @RequestScoped
@@ -503,13 +503,13 @@ public class Neo4jStorageImpl implements StorageImpl {
 		if(neo4jTx == null) {
 			throw new IllegalStateException("No running transaction for " + repository.getCode());
 		}
-		neo4jTx.success();
+		neo4jTx.commit();
 		neo4jTx.close();
 	}
 
 	@Override
 	public void rollbackTransaction(int stackedCalls) {
-		neo4jTransactions.values().forEach(Transaction::failure);
+		neo4jTransactions.values().forEach(Transaction::rollback);
 		
 		if(stackedCalls == 0) {
 			neo4jTransactions.values().forEach(Transaction::close);
@@ -520,7 +520,12 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	@PreDestroy
 	public void destroy() {
-		neo4jTransactions.values().forEach(s -> s.close());
+		neo4jTransactions.values().forEach(tx -> {
+			if (tx.isOpen()) {
+				tx.commit();
+			}
+			tx.close();
+		});
 		neo4jSessions.values().forEach(Session::close);
 		
 		neo4jTransactions.clear();

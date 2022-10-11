@@ -78,6 +78,12 @@ public class Neo4JConfiguration extends BusinessEntity implements IStorageConfig
 	@Column(name = "neo4j_password")
 	private String neo4jPassword;
 	
+	@Column(name = "db_version")
+	private String dbVersion;
+	
+	@Column(name = "graphql_api_url")
+	private String graphqlApiUrl;
+	
 	@Transient
 	private String clearPassword;
 	
@@ -204,4 +210,37 @@ public class Neo4JConfiguration extends BusinessEntity implements IStorageConfig
 	public DBStorageType getDbStorageType() {
 		return DBStorageType.NEO4J;
 	}
+
+	/**
+	 * @return the {@link #graphqlApiUrl}
+	 */
+	public String getGraphqlApiUrl() {
+		return graphqlApiUrl;
+	}
+
+	/**
+	 * @param graphqlApiUrl the graphqlApiUrl to set
+	 */
+	public void setGraphqlApiUrl(String graphqlApiUrl) {
+		this.graphqlApiUrl = graphqlApiUrl;
+	}
+
+	/**
+	 * @return the {@link #dbVersion}
+	 */
+	public String getDbVersion() {
+		return dbVersion;
+	}
+
+	/**
+	 * @param dbVersion the dbVersion to set
+	 */
+	public void setDbVersion(String dbVersion) {
+		this.dbVersion = dbVersion;
+	}
+	
+	public boolean isV3() {
+		return this.dbVersion.startsWith("3");
+	}
+	
 }

@@ -156,7 +156,7 @@ RUN set -ex \
     && unzip glowroot.zip \
     && rm glowroot.zip \
     && ls ${JBOSS_HOME}/glowroot/glowroot.jar
-    
+
 ### ------------------------- Configurations ----------------------------- ###
 
 

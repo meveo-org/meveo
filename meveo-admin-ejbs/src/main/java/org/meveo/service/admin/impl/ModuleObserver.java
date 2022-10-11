@@ -112,6 +112,7 @@ public class ModuleObserver {
 		
 		BusinessEntity entity = item.getItemEntity();
 		
+		//FIXME: Don't do that on module uninstallation
 		if (entity != null) {
 			MeveoModule mainModule = moduleService.findByCode("Meveo");
 			BusinessService businessService = bsf.find(entity);
