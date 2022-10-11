@@ -169,17 +169,27 @@ public class GraphQLService {
 
     private String getIDL(Collection<GraphQLEntity> graphQLEntities, Neo4JConfiguration neo4jConfiguration) {
         StringBuilder idl = new StringBuilder();
-
-        idl.append("scalar GraphQLLong\n");
-        idl.append("scalar GraphQLBigDecimal\n\n");
-
-        for (GraphQLEntity graphQLEntity : graphQLEntities) {
+        
+        List<GraphQLEntity> sortedEntities = new ArrayList<>(graphQLEntities);
+        sortedEntities.sort((e1, e2) -> {
+        	if (e1.isInterface() && !e2.isInterface()) {
+        		return -1;
+        	}
+        	
+        	if (e2.isInterface() && !e1.isInterface()) {
+        		return 1;
+        	}
+        	
+        	return 0;
+        });
+        
+        for (GraphQLEntity graphQLEntity : sortedEntities) {
             // Skip if entity ended not having fields
             if (graphQLEntity.getGraphQLFields().isEmpty()) {
                 continue;
             }
 
-            idl.append("type ").append(graphQLEntity.getName()).append(" {\n");
+            idl.append(graphQLEntity.isInterface() ? "interface " : "type ").append(graphQLEntity.getName()).append(" {\n");
             for (GraphQLField graphQLField : graphQLEntity.getGraphQLFields()) {
                 idl.append("\t").append(graphQLField.getFieldName()).append(": ");
 
@@ -207,6 +217,14 @@ public class GraphQLService {
 
                 if (graphQLField.getQuery() != null) {
                     idl.append(" ").append(graphQLField.getQuery());
+                }
+                
+                if (StringUtils.isNoBlank(graphQLField.getDefaultValue())) {
+                	if (graphQLField.getFieldType().equals("Boolean")) {
+                		idl.append(" ").append("@coalesce(value: " + graphQLField.getDefaultValue() + ")");
+                	} else {
+                		idl.append(" ").append("@coalesce(value: \"" + graphQLField.getDefaultValue() + "\")");
+                	}
                 }
 
                 idl.append("\n");
@@ -307,20 +325,11 @@ public class GraphQLService {
 
             String typeName = relationshipTemplate.getGraphQlTypeName() == null ? endNode.getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
             graphQLEntity.setName(typeName);
+            graphQLEntity.setInterface(true);
+            
+            String propertiesInterface = cfts == null || cfts.isEmpty() ? ")" : ", properties: \"" + typeName + "\")";
 
             SortedSet<GraphQLField> graphQLFields = getGraphQLFields(cfts, neo4jConfiguration);
-
-            GraphQLField to = new GraphQLField();
-            to.setFieldName("to");
-            to.setFieldType(endNode.getCode());
-            to.setQuery("@cypher(statement: \"MATCH ()-[this]->(to) RETURN to\")");
-            graphQLFields.add(to);
-
-            GraphQLField from = new GraphQLField();
-            from.setFieldName("from");
-            from.setFieldType(startNode.getCode());
-            from.setQuery("@cypher(statement: \"MATCH (from)-[this]->() RETURN from\")");
-            graphQLFields.add(from);
 
             graphQLEntity.setGraphQLFields(graphQLFields);
 
@@ -343,7 +352,8 @@ public class GraphQLService {
                                     entityRefField.setFieldName(customFieldTemplate.getCode());
                                     entityRefField.setMultivalued(customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST);
                                     entityRefField.setFieldType(endNode.getCode());
-                                    entityRefField.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
+                                    entityRefField.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT" + propertiesInterface);
+                                    
                                     source.getGraphQLFields().add(entityRefField);
                                 });
 
@@ -353,7 +363,7 @@ public class GraphQLService {
                             sourceNameSingular.setFieldName(relationshipTemplate.getSourceNameSingular());
                             sourceNameSingular.setMultivalued(false);
                             sourceNameSingular.setFieldType(endNode.getCode());
-                            sourceNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
+                            sourceNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT" + propertiesInterface);
                             source.getGraphQLFields().add(sourceNameSingular);
                         }
 
@@ -363,27 +373,11 @@ public class GraphQLService {
                             sourceNamePlural.setFieldName(relationshipTemplate.getSourceNamePlural());
                             sourceNamePlural.setMultivalued(true);
                             sourceNamePlural.setFieldType(endNode.getCode());
-                            sourceNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT)");
+                            sourceNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: OUT" + propertiesInterface);
+                            
                             source.getGraphQLFields().add(sourceNamePlural);
                         }
 
-                        // Relationships field
-                        if (relationshipTemplate.getRelationshipsFieldSource() != null) {
-                            GraphQLField outgoingRelationship = new GraphQLField();
-                            outgoingRelationship.setFieldName(relationshipTemplate.getRelationshipsFieldSource());
-                            outgoingRelationship.setMultivalued(true);
-                            outgoingRelationship.setFieldType(typeName);
-
-                            final String query = String.format(
-                                    "@cypher(statement: \"MATCH (this)-[rel:%s]->(n:%s) RETURN rel\")",
-                                    relationshipTemplate.getName(),
-                                    endNode.getCode()
-                            );
-
-                            outgoingRelationship.setQuery(query);
-
-                            source.getGraphQLFields().add(outgoingRelationship);
-                        }
                     });
 
             // Add fields to target (and sub-targets)
@@ -398,7 +392,7 @@ public class GraphQLService {
                             targetNameSingular.setFieldName(relationshipTemplate.getTargetNameSingular());
                             targetNameSingular.setMultivalued(false);
                             targetNameSingular.setFieldType(startNode.getCode());
-                            targetNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN)");
+                            targetNameSingular.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN" + propertiesInterface);
                             target.getGraphQLFields().add(targetNameSingular);
                         }
 
@@ -408,27 +402,10 @@ public class GraphQLService {
                             targetNamePlural.setFieldName(relationshipTemplate.getTargetNamePlural());
                             targetNamePlural.setMultivalued(true);
                             targetNamePlural.setFieldType(startNode.getCode());
-                            targetNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN)");
+                            targetNamePlural.setQuery(getRelationshipDirective(neo4jConfiguration) + relationshipTemplate.getName() + "\", direction: IN" + propertiesInterface);
                             target.getGraphQLFields().add(targetNamePlural);
                         }
 
-                        // Relationships field
-                        if (relationshipTemplate.getRelationshipsFieldTarget() != null) {
-                            GraphQLField relationship = new GraphQLField();
-                            relationship.setFieldName(relationshipTemplate.getRelationshipsFieldTarget());
-                            relationship.setMultivalued(true);
-                            relationship.setFieldType(typeName);
-
-                            final String query = String.format(
-                                    "@cypher(statement: \"MATCH (n:%s)-[rel:%s]->(this) RETURN rel\")",
-                                    startNode.getCode(),
-                                    relationshipTemplate.getName()
-                            );
-
-                            relationship.setQuery(query);
-
-                            target.getGraphQLFields().add(relationship);
-                        }
                     });
 
             add(graphQLEntities, graphQLEntity);
@@ -449,55 +426,42 @@ public class GraphQLService {
 
             GraphQLField graphQLField = new GraphQLField();
             graphQLField.setFieldName(customFieldTemplate.getCode());
+            graphQLField.setDefaultValue(customFieldTemplate.getDefaultValue());
+            graphQLField.setMultivalued(customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST);
+            graphQLField.setRequired(customFieldTemplate.isValueRequired());
 
-            if (customFieldTemplate.isIdentifier()) {
-                graphQLField.setRequired(true);
-                graphQLField.setFieldType("ID");
-                graphQLField.setMultivalued(false);
-            } else {
-                graphQLField.setMultivalued(customFieldTemplate.getStorageType() == CustomFieldStorageTypeEnum.LIST);
-                graphQLField.setRequired(customFieldTemplate.isValueRequired());
+            switch (customFieldTemplate.getFieldType()) {
+                case LONG:
+                case DATE:
+                    graphQLField.setFieldType("BigInt");
+                    break;
+                case DOUBLE:
+                    graphQLField.setFieldType("Float");
+                    break;
+                case BOOLEAN:
+                    graphQLField.setFieldType("Boolean");
+                    break;
+                case ENTITY:
+                	continue;
+                case BINARY:
+                    if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
+                        log.warn("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
+                        continue;
+                    }
 
-                switch (customFieldTemplate.getFieldType()) {
-                    case LONG:
-                    case DATE:
-                        graphQLField.setFieldType("GraphQLLong");
-                        break;
-                    case DOUBLE:
-                        graphQLField.setFieldType("GraphQLBigDecimal");
-                        break;
-                    case BOOLEAN:
-                        graphQLField.setFieldType("Boolean");
-                        break;
-                    case ENTITY:
-                        if (StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
-                            log.warn("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
-                            continue;
-                        }
-
-                        graphQLField.setFieldType(customFieldTemplate.getEntityClazzCetCode());
-                        graphQLField.setQuery(getRelationshipDirective(neo4jConfiguration) + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
-                        break;
-                    case BINARY:
-                        if(StringUtils.isBlank(customFieldTemplate.getRelationshipName())) {
-                            log.warn("CFT " + customFieldTemplate.getAppliesTo() + "#" + customFieldTemplate.getCode() + " has no relationship name defined");
-                            continue;
-                        }
-
-                        graphQLField.setFieldType(Neo4JConstants.FILE_LABEL);
-                        graphQLField.setQuery(getRelationshipDirective(neo4jConfiguration) + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
-                        break;
-                    case CHILD_ENTITY:
-                    case EMBEDDED_ENTITY:
-                    case LIST:
-                    case SECRET:
-                    case STRING:
-                    case TEXT_AREA:
-                    case LONG_TEXT:
-                    default:
-                        graphQLField.setFieldType("String");
-                        break;
-                }
+                    graphQLField.setFieldType(Neo4JConstants.FILE_LABEL);
+                    graphQLField.setQuery(getRelationshipDirective(neo4jConfiguration) + customFieldTemplate.getRelationshipName() + "\", direction: OUT)");
+                    break;
+                case CHILD_ENTITY:
+                case EMBEDDED_ENTITY:
+                case LIST:
+                case SECRET:
+                case STRING:
+                case TEXT_AREA:
+                case LONG_TEXT:
+                default:
+                    graphQLField.setFieldType("String");
+                    break;
             }
 
             graphQLFields.add(graphQLField);
@@ -550,7 +514,7 @@ public class GraphQLService {
 
     public List<String> validateIdl(String idl) {
         List<String> result = new ArrayList<>();
-        String pattern = "\\t\\w+: \\[?(?!(?:String|Boolean|GraphQLLong|ID|GraphQLBigDecimal)!?)(\\w*)\\]?!?\\s";
+        String pattern = "\\t\\w+: \\[?(?!(?:String|Boolean|BigInt|ID|Float)!?)(\\w*)\\]?!?\\s";
         // Create a Pattern object
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.

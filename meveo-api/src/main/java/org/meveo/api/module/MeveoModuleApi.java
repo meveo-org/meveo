@@ -239,7 +239,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		File repoDir = GitHelper.getRepositoryDir(null, repo);
 		
 		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);
-		moduleDto = buildMeveoModuleFromDirectory(repoDir, moduleDto);
+		moduleDto = buildMeveoModuleFromDirectory("", repoDir, moduleDto);
 		
 		moduleCtx.setJsonInstallation(false);
 		var result = install(repositories, moduleDto, OnDuplicate.SKIP);
@@ -350,16 +350,17 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private MeveoModuleDto buildMeveoModuleFromDirectory(File repoDir, MeveoModuleDto moduleDto) throws BusinessException, MeveoApiException {
+	private MeveoModuleDto buildMeveoModuleFromDirectory(String rootDirName, File repoDir, MeveoModuleDto moduleDto) throws BusinessException, MeveoApiException {
 		Map<String, String> entityDtoNamebyPath = getEntitiesPathsMapping();
 		
 		for (File directory : repoDir.listFiles()) {
 			if (!directory.isDirectory()) {
 				continue;
 			}
-			String directoryName = directory.getName();
+			String directoryName = StringUtils.isBlank(rootDirName) ? directory.getName() : rootDirName + "/" + directory.getName();
 			String dtoClassName = entityDtoNamebyPath.get(directoryName);
 			if (dtoClassName == null) {
+				buildMeveoModuleFromDirectory(directoryName, directory, moduleDto);
 				continue;
 			}
 			

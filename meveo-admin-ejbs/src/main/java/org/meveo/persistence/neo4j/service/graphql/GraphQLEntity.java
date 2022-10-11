@@ -23,6 +23,7 @@ public class GraphQLEntity {
 
     private String name;
     private SortedSet<GraphQLField> graphQLFields;
+    private boolean isInterface;
 
     public String getName() {
         return name;
@@ -39,4 +40,18 @@ public class GraphQLEntity {
     public void setGraphQLFields(SortedSet<GraphQLField> graphQLFields) {
         this.graphQLFields = graphQLFields;
     }
+    
+    /**
+	 * @param isInterface the isInterface to set
+	 */
+	public void setInterface(boolean isInterface) {
+		this.isInterface = isInterface;
+	}
+	
+	/**
+	 * @return the {@link #isInterface}
+	 */
+	public boolean isInterface() {
+		return isInterface;
+	}
 }
