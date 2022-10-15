@@ -47,6 +47,7 @@ public interface FileSystemRs extends IBaseRs {
 	@Path("/binaries/{repositoryCode}/{cetCode}/{uuid}/{cftCode}")
 	@ApiOperation(value = "Find binary by index and code repository and code cet and uuid and code cft")
 	Response findBinary(@QueryParam(BinaryStorageUtils.INDEX) @ApiParam("Index") Integer index,
+			@QueryParam("fileName") @ApiParam("Name of the file to retrieve") String fileName,
 			@PathParam("repositoryCode") @ApiParam("Code of the repository") String repositoryCode,
 			@PathParam("cetCode") @ApiParam("Code of the custom entity template") String cetCode, @PathParam("uuid") @ApiParam("uuid") String uuid,
 			@PathParam("cftCode") @ApiParam("Code of the custom field template") String cftCode)

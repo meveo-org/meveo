@@ -30,6 +30,7 @@ import org.meveo.model.CustomEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.MeveoMatrix;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
@@ -168,6 +169,9 @@ public class CustomFieldValue implements Serializable {
     @JsonSerialize(contentUsing = FileSerializer.class)
     @JsonDeserialize(contentUsing = FileDeserializer.class)
     private List<File> listFileValue;
+    
+    @JsonProperty("listBinaries")
+    private List<BinaryProvider> listBinaries;
 
     /**
      * Map of String type value
@@ -367,6 +371,8 @@ public class CustomFieldValue implements Serializable {
         	return (List<T>) listMapValue;
         } else if(listFileValue != null) {
             return (List<T>) listFileValue;
+        } else if (listBinaries != null) {
+        	return (List<T>) listBinaries;
         }
 
         return null;
@@ -404,6 +410,14 @@ public class CustomFieldValue implements Serializable {
             for (Object listItem : listValue) {
                 if(listItem instanceof File){
                     listFileValue.add((File) listItem);
+                }
+            }
+
+        } else if(itemClass == BinaryProvider.class) {
+    	    listBinaries = new ArrayList<>();
+            for (Object listItem : listValue) {
+                if(listItem instanceof BinaryProvider){
+                	listBinaries.add((BinaryProvider) listItem);
                 }
             }
 
