@@ -10,9 +10,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.admin.action.BaseCrudBean;
+import org.meveo.admin.action.admin.custom.CustomFieldDataEntryBean;
+import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.storage.StorageConfigurationApi;
 import org.meveo.api.storage.StorageConfigurationDto;
+import org.meveo.elresolver.ELException;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.StorageConfiguration;
 import org.meveo.persistence.DBStorageTypeService;
@@ -24,6 +28,9 @@ import org.meveo.service.storage.StorageConfigurationService;
 public class StorageConfigurationBean extends BaseCrudBean<StorageConfiguration, StorageConfigurationDto> {
 
 	private static final long serialVersionUID = 6594956459968308089L;
+	
+    @Inject
+    protected CustomFieldDataEntryBean customFieldDataEntryBean;
 
 	@Inject
 	private transient StorageConfigurationService service;
@@ -60,6 +67,12 @@ public class StorageConfigurationBean extends BaseCrudBean<StorageConfiguration,
 	@Override
 	protected IPersistenceService<StorageConfiguration> getPersistenceService() {
 		return service;
+	}
+
+	@Override
+	public String saveOrUpdate() throws BusinessException, ELException {
+		customFieldDataEntryBean.saveCustomFieldsToEntity((ICustomFieldEntity) entity, entity.isTransient());
+		return super.saveOrUpdate();
 	}
 
 }
