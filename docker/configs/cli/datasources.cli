@@ -10,13 +10,20 @@
 #/subsystem=datasources/data-source=ExampleDS:remove
 
 # Add a meveo datasource
-xa-data-source add --name=meveo \
+data-source add --name=meveo \
     --jndi-name=java:jboss/datasources/MeveoAdminDatasource \
     --enabled=true \
+    --jta=true \
     --use-java-context=true \
     --use-ccm=false \
-    --xa-datasource-properties=[ServerName=${meveo.admin.server.name},PortNumber=${meveo.admin.port.number},DatabaseName=${meveo.admin.database.name}] \
-    --driver-name=${meveo.admin.database.driver} \
+  	--spy=false \
+  	--statistics-enabled=false \
+  	--tracking=false \
+  	--connection-url=jdbc:postgresql://postgres:${meveo.admin.port.number}/${meveo.admin.database.name} \
+  	--driver-name=${meveo.admin.database.driver} \
+  	--datasource-class=org.postgresql.ds.PGPoolingDataSource \
+  	--new-connection-sql="select 1" \
+  	--transaction-isolation=TRANSACTION_READ_COMMITTED \
     --min-pool-size=${meveo.admin.database.min-pool-size} \
     --max-pool-size=${meveo.admin.database.max-pool-size} \
     --pool-prefill=false \
