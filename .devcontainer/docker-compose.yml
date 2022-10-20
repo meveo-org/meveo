@@ -57,7 +57,7 @@ services:
       ports:
         - 8081:8080
   meveo:
-      image: manaty/meveo-dev:latest 
+      image: manaty/meveo-dev:latest
       #build: 
       #  context: ../
       #  dockerfile: Dockerfile.dev
@@ -73,7 +73,7 @@ services:
         WILDFLY_DEBUG_PORT: 8787
         WILDFLY_CUSTOM_XMMS: "1024m"
         WILDFLY_CUSTOM_XMMX: "2048m"
-        JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
+        # JAVA_EXTRA_OPTS: -XX:HotswapAgent=core
       ports:
         - 8080:8080
         - 8787:8787
