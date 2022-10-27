@@ -1,5 +1,6 @@
 package org.meveo.api;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,11 +14,11 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -32,7 +33,6 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
@@ -610,7 +610,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         } else {
             try {
                 String jsonSchema = customEntityTemplateService.getJsonSchemaContent(customEntityTemplate);
-                return Response.ok(jsonSchema).build();
+                
+                var builder = Response.ok(jsonSchema);
+                
+                CacheControl cc = new CacheControl();
+                cc.setMaxAge((int) Duration.ofDays(1).toSeconds());
+                cc.setPrivate(true);
+                builder.cacheControl(cc);
+                
+                return builder.build();
             } catch (Exception e) {
                 return Response.status(404).entity(e.getMessage()).build();
             }
