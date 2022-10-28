@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
@@ -521,6 +522,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param appliesTo entity (appliesTo value)
      * @return A map of custom field templates with template code as a key or NULL if cache key not found
      */
+    @javax.ejb.Lock(LockType.READ)
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
         CacheKeyStr key = new CacheKeyStr(null, appliesTo);
 
@@ -542,13 +544,21 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
 //            lock.unlock();
         }
         if(cfMaps == null || cfMaps.isEmpty()) {
-            cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
-            if(cfMaps != null){
-                cfMaps.forEach((k,v) -> {
-                    customFieldTemplateService.detach(v);
-                    addUpdateCustomFieldTemplate(v);
-                });
-            }
+        	Lock lock = cacheLock.writeLock();
+        	try {
+        		cfMaps = cftsByAppliesTo.get(key);
+        		if(cfMaps == null || cfMaps.isEmpty()) {
+	        		cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
+	        		if(cfMaps != null){
+	        			cfMaps.forEach((k,v) -> {
+	        				customFieldTemplateService.detach(v);
+	        				addUpdateCustomFieldTemplate(v);
+	        			});
+	        		}
+        		}
+        	} finally {
+        		lock.unlock();
+        	}
         }
         return cfMaps;
     }
