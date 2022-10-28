@@ -1614,7 +1614,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		cei.setDescription((String) values.get("description"));
 
 		// Init fields of CEI
-		Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
+		Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
 		if (cei.getUuid() != null) {
 			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
 			try {
