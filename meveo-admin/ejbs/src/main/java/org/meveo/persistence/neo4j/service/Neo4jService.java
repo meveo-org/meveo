@@ -354,7 +354,7 @@ public class Neo4jService implements CustomPersistenceService {
         }
 
         final Map<String, CustomFieldTemplate> cfts = fields.keySet().stream()
-                .map(code -> customFieldsCache.getCustomFieldTemplate(code, cet.getAppliesTo()))
+                .map(code -> customFieldTemplateService.findByCodeAndAppliesTo(code, cet.getAppliesTo()))
                 .collect(
                         Collectors.toMap(BusinessEntity::getCode, Function.identity())
                 );
@@ -1468,7 +1468,7 @@ public class Neo4jService implements CustomPersistenceService {
                     log.warn("No CRT available for relation type {} and node label {}", type, customEntityTemplate.getCode());
                     uniqueFields = relationProperties;  // If we do not find the CRT, we consider every field as unique
                 } else {
-                    final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldsCache.getCustomFieldTemplates(CustomRelationshipTemplate.getAppliesTo(correspondingCrts.get(0)));
+                    final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.findByAppliesTo(CustomRelationshipTemplate.getAppliesTo(correspondingCrts.get(0)));
                     validateAndConvertCustomFields(customFieldTemplates, relationProperties, uniqueFields, true);
                     if (correspondingCrts.size() > 1) {
                         log.warn("Multiple CRT available for relation type {} and nodeToMerge label {} : {}", type, customEntityTemplate.getCode(), correspondingCrts);
@@ -1501,7 +1501,7 @@ public class Neo4jService implements CustomPersistenceService {
 
         LOGGER.info("Merging properties of node {} into node {} then removing node {}", nodeToMerge.id(), persistentNode.id(), nodeToMerge.id());
 
-        List<String> updatableKeys = customFieldsCache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo())
+        List<String> updatableKeys = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo())
                 .values()
                 .stream()
                 .filter(customFieldTemplate -> customFieldTemplate.isAllowEdit() && !customFieldTemplate.isUnique())

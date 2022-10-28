@@ -343,7 +343,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	@Override
 	public PersistenceActionResult addSourceEntityUniqueCrt(Repository repository, String relationCode, Map<String, Object> sourceValues, Map<String, Object> targetValues) throws ELException, BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(relationCode);
-		var cfts = cache.getCustomFieldTemplates(crt.getAppliesTo());
+		var cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
 		if (!crt.isUnique()) {
 			throw new IllegalArgumentException("CRT must be unique !");
@@ -453,7 +453,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			cei.setUuid(ceiToSave.getUuid());
 		}
 				
-		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? cache.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
+		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
 		cei.setCet(cet);
 		cei.setFieldTemplates(customFieldTemplates);
 
@@ -621,7 +621,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		final CustomEntityTemplate endNode = crt.getEndNode();
 		final CustomEntityTemplate startNode = crt.getStartNode();
 		
-		var cfts = cache.getCustomFieldTemplates(crt.getAppliesTo());
+		var cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
 		// All Neo4j storage
 		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J) && startNode.getAvailableStorages().contains(DBStorageType.NEO4J) && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)) {
@@ -642,7 +642,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	@Override
 	public PersistenceActionResult addCRTByUuids(Repository repository, String relationCode, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws ELException, BusinessException {
 		CustomRelationshipTemplate crt = cache.getCustomRelationshipTemplate(relationCode);
-		var cfts = cache.getCustomFieldTemplates(crt.getAppliesTo());
+		var cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
 		// All neo4j storage
 		if (isEverythingStoredInNeo4J(crt)) {
@@ -1014,7 +1014,7 @@ public class CrossStorageService implements CustomPersistenceService {
 
 	public void fetchEntityReferences(Repository repository, CustomModelObject customModelObject, Map<String, Object> values, Map<String, Set<String>> subFields) throws EntityDoesNotExistsException {
 		for (Map.Entry<String, Object> entry : new HashSet<>(values.entrySet())) {
-			CustomFieldTemplate cft = cache.getCustomFieldTemplate(entry.getKey(), customModelObject.getAppliesTo());
+			CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(entry.getKey(), customModelObject.getAppliesTo());
 			if (cft != null && cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
 				CustomEntityTemplate cet = cache.getCustomEntityTemplate(cft.getEntityClazzCetCode());
 				
@@ -1054,7 +1054,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				Map<String, Set<String>> subSubFields = PersistenceUtils.extractSubFields(fetchFields);
 
 				if (fetchFields.contains("*")) {
-					fetchFields = cache.getCustomFieldTemplates(cet.getAppliesTo()).keySet();
+					fetchFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).keySet();
 				}
 				
 				if(cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {

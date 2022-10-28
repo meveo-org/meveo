@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
@@ -521,34 +522,20 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param appliesTo entity (appliesTo value)
      * @return A map of custom field templates with template code as a key or NULL if cache key not found
      */
+    @javax.ejb.Lock(LockType.READ)
     public Map<String, CustomFieldTemplate> getCustomFieldTemplates(String appliesTo) {
         CacheKeyStr key = new CacheKeyStr(null, appliesTo);
 
         Map<String, CustomFieldTemplate> cfMaps;
-//        Lock lock = cacheLock.readLock();
-//        lock.lock();
-        try {
-            cfMaps = cftsByAppliesTo.get(key);
-            if(cfMaps == null) {
-            	// Handle case insensitivity
-            	for(CacheKeyStr cacheKey : cftsByAppliesTo.keySet()) {
-            		if(cacheKey.getKey().toUpperCase().equals(appliesTo.toUpperCase())) {
-            			cfMaps = cftsByAppliesTo.get(cacheKey);
-            			break;
-            		}
-            	}
-            }
-        } finally {
-//            lock.unlock();
-        }
-        if(cfMaps == null || cfMaps.isEmpty()) {
-            cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
-            if(cfMaps != null){
-                cfMaps.forEach((k,v) -> {
-                    customFieldTemplateService.detach(v);
-                    addUpdateCustomFieldTemplate(v);
-                });
-            }
+        cfMaps = cftsByAppliesTo.get(key);
+        if(cfMaps == null) {
+        	// Handle case insensitivity
+        	for(CacheKeyStr cacheKey : cftsByAppliesTo.keySet()) {
+        		if(cacheKey.getKey().toUpperCase().equals(appliesTo.toUpperCase())) {
+        			cfMaps = cftsByAppliesTo.get(cacheKey);
+        			break;
+        		}
+        	}
         }
         return cfMaps;
     }
@@ -649,6 +636,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param entity Entity
      * @return Custom field template
      */
+    @javax.ejb.Lock(LockType.READ)
     public CustomFieldTemplate getCustomFieldTemplate(String code, ICustomFieldEntity entity) {
         try {
             return getCustomFieldTemplate(code, CustomFieldTemplateUtils.calculateAppliesToValue(entity));
@@ -666,6 +654,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
      * @param appliesTo Entity appliesTo value
      * @return Custom field template or NULL if not found
      */
+    @javax.ejb.Lock(LockType.READ)
     public CustomFieldTemplate getCustomFieldTemplate(String code, String appliesTo) {
     	if(code == null) throw new IllegalArgumentException("Code should be provided");
     	
