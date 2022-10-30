@@ -378,6 +378,20 @@ public class CustomFieldValue implements Serializable {
         return null;
     }
     
+    /**
+	 * @return the {@link #listStringValue}
+	 */
+	public List<String> getListStringValue() {
+		return listStringValue;
+	}
+	
+	/**
+	 * @return the {@link #listFileValue}
+	 */
+	public List<File> getListFileValue() {
+		return listFileValue;
+	}
+    
     public void setListValue(List listValue, Class<?> itemClass) {
     	if(itemClass == null) {
     		return;

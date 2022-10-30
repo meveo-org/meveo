@@ -27,7 +27,12 @@ public class BinaryPersistenceApi {
 	public List<BinaryProvider> getBinaries(String repositoryCode, String cetCode, String uuid, String cftCode) throws EntityDoesNotExistsException {
 		Repository repository = repositoryService.findByCode(repositoryCode);
 		
-		CustomEntityInstance cei = crossStorageApi.find(repository, uuid, cetCode);
+		CustomEntityInstance cei = crossStorageApi.find(repository, cetCode)
+			.id(uuid)
+			.select(cftCode)
+			.getResult();
+		
+		 // = crossStorageApi.find(repository, uuid, cetCode);
 		return cei.getCfValues().getCfValue(cftCode).getListValue();
 	}
 	

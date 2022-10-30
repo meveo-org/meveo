@@ -147,9 +147,9 @@ public class CrossStorageRequest<T> {
 		try {
 			List<Map<String, Object>> values = new ArrayList<>();
 			if (id != null) {
-				values.add(api.findById(repository, cet, id, null, new HashMap<>(), true));
+				values.add(api.findById(repository, cet, id, configuration.getFetchFields(), new HashMap<>(), true));
 			} else if (ids != null) {
-				values = api.findByIds(repository, cet, ids, null, new HashMap<>(), true);
+				values = api.findByIds(repository, cet, ids, configuration.getFetchFields(), new HashMap<>(), true);
 			} else {
 				values = api.find(repository, cet, configuration);
 			}
