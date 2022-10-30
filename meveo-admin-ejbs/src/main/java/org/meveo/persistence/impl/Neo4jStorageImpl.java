@@ -45,6 +45,7 @@ import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.Session;
@@ -75,6 +76,9 @@ public class Neo4jStorageImpl implements StorageImpl {
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 	
 	@Inject
 	private Logger log;
@@ -308,7 +312,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(StorageQuery query) throws EntityDoesNotExistsException {
-		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(query.getCet().getAppliesTo());
+		final Map<String, CustomFieldTemplate> fields = cftService.findByAppliesTo(query.getCet().getAppliesTo());
 
 		// Check if filters contains a field not stored in Neo4J
 		var dontFilterOnNeo4J = query.getFilters() != null && query.getFilters().keySet().stream()

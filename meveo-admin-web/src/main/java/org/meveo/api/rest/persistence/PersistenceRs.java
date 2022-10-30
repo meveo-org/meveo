@@ -99,6 +99,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -164,6 +165,9 @@ public class PersistenceRs {
 	
 	@Inject
 	private CustomEntityInstanceService customEntityInstanceService;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 	
 	@Inject
 	private CustomTableService customTableService;
@@ -314,7 +318,7 @@ public class PersistenceRs {
 
 		if (seeDecrypted && currentUser.hasRole(customEntityTemplate.getDecrpytPermission())) {
 			var cei = CEIUtils.fromMap(values, customEntityTemplate);
-			var hash = CEIUtils.getHash(cei, cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo()));
+			var hash = CEIUtils.getHash(cei, cftService.findByAppliesTo(customEntityTemplate.getAppliesTo()));
 			for (var entry : values.entrySet()) {
 				if (entry.getValue() instanceof String) {
 					String strVal = (String) entry.getValue();
@@ -602,7 +606,7 @@ public class PersistenceRs {
 	 */
 	@SuppressWarnings("rawtypes")
 	private void convertFiles(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, boolean base64) throws IOException {
-		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
+		Map<String, CustomFieldTemplate> customFieldTemplates = cftService.findByAppliesTo(customEntityTemplate.getAppliesTo());
 
 		if (base64) {
 			for (Map.Entry<String, Object> entry : new HashMap<>(values).entrySet()) {

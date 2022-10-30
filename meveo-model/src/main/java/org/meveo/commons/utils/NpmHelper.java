@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,27 @@ public class NpmHelper {
 		}
 	
 		return command;
+	}
+	
+	public static int npm(File directory, Consumer<BufferedReader> callback, String... commands) throws IOException {
+		ProcessBuilder processBuilder = new ProcessBuilder()
+				.command(npmCmd(commands))
+				.directory(directory)
+				.redirectErrorStream(true);
+		
+		try {
+			Process process = processBuilder.start();
+			
+			try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				if (callback != null) {
+					callback.accept(reader);
+				}
+			}
+			
+			return process.waitFor();
+		} catch (InterruptedException e) {
+			return -100;
+		}
 	}
 	
 	public static int npmInstallDependencies(File directory) throws IOException {

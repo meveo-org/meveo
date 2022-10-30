@@ -200,7 +200,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		repository = repositoryService.findByCode(repositoryCode);
 
 		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode, List.of("availableStorages"));
-		customFieldTemplates = cacheContainerProvider.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
+		customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
 
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);

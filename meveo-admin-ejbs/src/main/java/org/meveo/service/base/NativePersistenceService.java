@@ -398,7 +398,7 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? cache.getCustomFieldTemplates(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
+		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
 		return create(sqlConnectionCode, cei, returnId, false, cfts, true);
 	}
 
@@ -679,7 +679,7 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
+		var cfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo());
 		update(sqlConnectionCode, cei, false, cfts.values(), false);
 	}
 
