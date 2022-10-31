@@ -21,6 +21,7 @@ import javax.transaction.Transactional.TxType;
 
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -63,6 +64,9 @@ public class MenuBean implements Serializable {
 	}
 	
 	public DynamicMenuModel getMenu() {
+		if (menu == null) {
+			init();
+		}
 		return menu;
 	}
 	
@@ -299,7 +303,12 @@ public class MenuBean implements Serializable {
 	
 	@Transactional(value = TxType.REQUIRES_NEW)
 	private void cetChange(@Observes(during = TransactionPhase.AFTER_SUCCESS, notifyObserver = Reception.IF_EXISTS) CustomEntityTemplate cet) {
-		init();
+		menu = null;
+	}
+	
+	@Transactional(value = TxType.REQUIRES_NEW)
+	private void categoryChanged(@Observes(during = TransactionPhase.AFTER_SUCCESS, notifyObserver = Reception.IF_EXISTS) CustomEntityCategory category) {
+		menu = null;
 	}
 
 }
