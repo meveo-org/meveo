@@ -80,6 +80,7 @@ import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -653,15 +654,17 @@ public class PersistenceRs {
 					.forEach(binaryField -> {
 						Object binaryFieldValue = values.get(binaryField.getCode());
 						if (binaryFieldValue instanceof String) {
-							String url = buildFileUrl(customEntityTemplate, values, binaryField);
+							String url = buildFileUrl(customEntityTemplate, values, binaryField, null, binaryFieldValue);
 							values.put(binaryField.getCode(), url);
 
 						} else if (binaryFieldValue instanceof Collection) {
 							List<String> urls = new ArrayList<>();
-							for (int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
-								String url = buildFileUrl(customEntityTemplate, values, binaryField);
-								url += "?index=" + index;
+							
+							int index = 0;
+							for (Object binaryItem : (Collection) binaryFieldValue) {
+								String url = buildFileUrl(customEntityTemplate, values, binaryField, index, binaryItem);
 								urls.add(url);
+								index++;
 							}
 							values.put(binaryField.getCode(), urls);
 						}
@@ -677,11 +680,35 @@ public class PersistenceRs {
 	 * @param values               Actual values of the entity
 	 * @param binaryField          Field holding the file reference
 	 */
-	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
+	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField, Integer index, Object binaryValue) {
 		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
 
-		return new StringBuilder("/api/rest/fileSystem/binaries/").append(repositoryCode).append("/").append(customEntityTemplate.getCode()).append("/").append(uuid).append("/")
-				.append(binaryField.getCode()).toString();
+		if (binaryValue instanceof BinaryProvider) {
+			return ((BinaryProvider) binaryValue).getFileName();
+		}
+		
+		if (binaryValue instanceof File) {
+			return ((File) binaryValue).getName();
+		}
+		
+		if (binaryValue instanceof String) {
+			return (String) binaryValue;
+		}
+		
+		StringBuilder builder = new StringBuilder("/api/rest/fileSystem/binaries/")
+				.append(repositoryCode).append("/")
+				.append(customEntityTemplate.getCode())
+				.append("/")
+				.append(uuid)
+				.append("/")
+				.append(binaryField.getCode());
+		
+		if (index != null) {
+			builder.append("index=")
+				.append(index);
+		}
+
+		return builder.toString();
 	}
 
 	/**
