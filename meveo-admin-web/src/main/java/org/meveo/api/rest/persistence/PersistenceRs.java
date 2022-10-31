@@ -78,6 +78,7 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.BinaryProvider;
@@ -667,6 +668,13 @@ public class PersistenceRs {
 								index++;
 							}
 							values.put(binaryField.getCode(), urls);
+							if (binaryField.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+								if (urls.isEmpty()) {
+									values.put(binaryField.getCode(), null);
+								} else {
+									values.put(binaryField.getCode(), urls.get(0));
+								}
+							}
 						}
 					});
 		}
