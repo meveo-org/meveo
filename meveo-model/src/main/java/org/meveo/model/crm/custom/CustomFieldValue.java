@@ -1030,6 +1030,7 @@ public class CustomFieldValue implements Serializable {
         return ((stringValue == null || stringValue.isEmpty()) && dateValue == null && longValue == null && doubleValue == null
                 && (listStringValue == null || listStringValue.isEmpty()) && (listDateValue == null || listDateValue.isEmpty())
                 && (listLongValue == null || listLongValue.isEmpty()) && (listDoubleValue == null || listDoubleValue.isEmpty())
+                && (booleanValue == null) 
                 && (listEntityValue == null || listEntityValue.isEmpty()) && (mapStringValue == null || mapStringValue.isEmpty())
                 && (mapDateValue == null || mapDateValue.isEmpty()) && (mapLongValue == null || mapLongValue.isEmpty()) && (mapDoubleValue == null || mapDoubleValue.isEmpty())
                 && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()))
