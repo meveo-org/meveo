@@ -10,6 +10,10 @@ import javax.validation.constraints.Size;
 import org.hibernate.annotations.GenericGenerator;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.ExportIdentifier;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.admin.MvCredential;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.persistence.DBStorageType;
 
 /**
  * Configuration used to access a Binary storage repository.
@@ -20,7 +24,7 @@ import org.meveo.model.ExportIdentifier;
 @Entity
 @Table(name = "binary_storage_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @org.hibernate.annotations.Parameter(name = "sequence_name", value = "binary_storage_configuration_seq"), })
-public class BinaryStorageConfiguration extends BaseEntity {
+public class BinaryStorageConfiguration extends BaseEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = -1378468359266231255L;
 
@@ -53,5 +57,65 @@ public class BinaryStorageConfiguration extends BaseEntity {
 
 	public void setRootPath(String rootPath) {
 		this.rootPath = rootPath;
+	}
+
+	@Override
+	public String getUuid() {
+		return this.code;
+	}
+
+	@Override
+	public String clearUuid() {
+		return null;
+	}
+
+	@Override
+	public ICustomFieldEntity[] getParentCFEntities() {
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValues() {
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValuesNullSafe() {
+		return null;
+	}
+
+	@Override
+	public void clearCfValues() {
+		
+	}
+
+	@Override
+	public MvCredential getCredential() {
+		return null;
+	}
+
+	@Override
+	public String getProtocol() {
+		return null;
+	}
+
+	@Override
+	public String getHostname() {
+		return null;
+	}
+
+	@Override
+	public Integer getPort() {
+		return null;
+	}
+
+	@Override
+	public String getConnectionUri() {
+		return null;
+	}
+
+	@Override
+	public DBStorageType getDbStorageType() {
+		return DBStorageType.FILE_SYSTEM;
 	}
 }

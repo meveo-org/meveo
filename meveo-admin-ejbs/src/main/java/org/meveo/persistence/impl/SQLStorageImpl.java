@@ -325,19 +325,11 @@ public class SQLStorageImpl implements StorageImpl {
 	public void update(Repository repository, IStorageConfiguration conf, CustomEntityInstance ceiToUpdate) throws BusinessException {
 		try {
 			Map<String, CustomFieldTemplate> customFieldTemplates = ceiToUpdate.getFieldTemplates();
-			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
 			Map<String, Object> values = ceiToUpdate.getCfValuesAsValues();
 			
 			// Custom table
 			if (ceiToUpdate.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
 				Map<String, Object> sqlValues = PersistenceUtils.filterValues(customFieldTemplates, values, ceiToUpdate.getCet(), DBStorageType.SQL);
-	
-				if (!CollectionUtils.isEmpty(binariesInSql)) {
-					List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
-	
-					final Map<String, Object> existingBinariesFields = customTableService.findById(repository.getSqlConfigurationCode(), ceiToUpdate.getCet(), ceiToUpdate.getUuid(), binariesFieldsToFetch);
-					fileSystemService.updateBinaries(repository, ceiToUpdate.getUuid(), ceiToUpdate.getCet(), binariesInSql, sqlValues, existingBinariesFields);
-				}
 	
 				customTableService.update(repository.getSqlConfigurationCode(), ceiToUpdate.getCet(), ceiToUpdate);
 			} else {
@@ -345,12 +337,6 @@ public class SQLStorageImpl implements StorageImpl {
 				final CustomEntityInstance cei = customEntityInstanceService.findByUuid(ceiToUpdate.getCet().getCode(), ceiToUpdate.getUuid());
 				cei.setRepository(repository);
 				
-				// Update binaries
-				if (CollectionUtils.isNotEmpty(binariesInSql)) {
-					final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-					fileSystemService.updateBinaries(repository, cei.getUuid(), ceiToUpdate.getCet(), binariesInSql, values, existingValues);
-				}
-	
 				CustomFieldValues customFieldValues = new CustomFieldValues();
 				values.forEach(customFieldValues::setValue);
 				cei.setCfValues(customFieldValues);
@@ -364,21 +350,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 	@Override
 	public void setBinaries(IStorageConfiguration repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
-		Object valueToSave = binaries;
-		List<String> paths = binaries.stream().map(File::getPath).collect(Collectors.toList());
 
-		if (cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
-			valueToSave = paths.isEmpty() ? null : paths.get(0);
-		}
-
-		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			customTableService.updateValue(repository.getCode(), SQLStorageConfiguration.getDbTablename(cet), uuid, cft.getDbFieldname(), valueToSave);
-		} else {
-			CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-			CustomFieldValues cfValues = cei.getCfValues();
-			cfValues.setValue(cft.getCode(), valueToSave);
-			customEntityInstanceService.update(cei);
-		}
 	}
 
 	@Override
@@ -472,23 +444,10 @@ public class SQLStorageImpl implements StorageImpl {
 		if (cei == null) {
 			cei = ceiToSave;
 
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
-			}
-
-			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
-				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
-			}
-
 			customEntityInstanceService.create(cei);
 
 		} else {
 			cei.setRepository(repository);
-			
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
-			}
 
 			cei.setCfValuesOld(cei.getCfValues());
 			cei.setCfValues(ceiToSave.getCfValues());
@@ -538,20 +497,6 @@ public class SQLStorageImpl implements StorageImpl {
 			customFieldInstanceService.setCfValues(tempCei, cei.getCetCode(), oldCfValues);
 			cei.setCfValuesOld(tempCei.getCfValues());
 			
-			// Update binaries
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
-
-				Map<String, Object> existingBinariesField = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID, binariesFieldsToFetch);
-				fileSystemService.updateBinaries(repository, 
-						cei.getUuid(), 
-						cei.getCet(), 
-						binariesInSql, 
-						cei.getCfValuesAsValues(), 
-						existingBinariesField);
-
-			}
-			
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			customEntityInstanceUpdate.fire(cei);
 
@@ -559,16 +504,6 @@ public class SQLStorageImpl implements StorageImpl {
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			cei.setUuid(uuid);
 
-			// Save binaries
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-
-				final Map<CustomFieldTemplate, Object> binariesPaths = fileSystemService.updateBinaries(repository, uuid, cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), null);
-
-				for (Map.Entry<CustomFieldTemplate, Object> binary : binariesPaths.entrySet()) {
-					customTableService.updateValue(repository.getSqlConfigurationCode(), cei.getTableName(), uuid, binary.getKey().getDbFieldname(), binary.getValue());
-				}
-			}
-			
 			customEntityInstanceCreate.fire(cei);
 		}
 

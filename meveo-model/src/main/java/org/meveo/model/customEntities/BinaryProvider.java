@@ -3,6 +3,9 @@
  */
 package org.meveo.model.customEntities;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.function.Supplier;
 
@@ -17,16 +20,26 @@ public class BinaryProvider {
 	@JsonIgnore
 	private Supplier<InputStream> provider;
 	
-	/**
-	 * Instantiates a new BinaryProvider
-	 *
-	 * @param fieldName
-	 * @param provider
-	 */
-	public BinaryProvider(String fieldName, Supplier<InputStream> provider) {
+	@JsonIgnore
+	private boolean overwrite;
+	
+	public BinaryProvider(String fileName, Supplier<InputStream> provider, boolean overwrite) {
 		super();
-		this.fileName = fieldName;
+		this.fileName = fileName;
 		this.provider = provider;
+		this.overwrite = overwrite;
+	}
+	
+	public BinaryProvider(File file) {
+		this.fileName = file.getName();
+		this.provider = () -> {
+			try {
+				return new FileInputStream(file);
+			} catch (FileNotFoundException e) {
+				return null;
+			}
+		};
+		this.overwrite = true;
 	}
 
 	/**
@@ -42,6 +55,13 @@ public class BinaryProvider {
 	@JsonIgnore
 	public InputStream getBinary() {
 		return provider.get();
+	}
+	
+	/**
+	 * @return the {@link #overwrite}
+	 */
+	public boolean isOverwrite() {
+		return overwrite;
 	}
 	
 }

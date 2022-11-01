@@ -1546,4 +1546,55 @@ public class CustomFieldValue implements Serializable {
         entityReferenceValueForGUI = null;
         entityReferenceValue = null;
     }
+    
+    @JsonIgnore
+    public Set<String> getFileNames() {
+		Set<String> fileNames = new HashSet<>();
+		if (stringValue != null) {
+			fileNames.add(stringValue);
+		}
+		
+		if (listStringValue != null) {
+			fileNames.addAll(listStringValue);
+		}
+		
+		File fileValue = getFileValue();
+		if (fileValue != null) {
+			fileNames.add(fileValue.getName());
+		} 
+			
+		List<File> filesValue = listFileValue;
+		if (filesValue != null) {
+			fileNames.addAll(filesValue.stream().map(File::getName).collect(Collectors.toList()));
+		}
+		
+		if (listBinaries != null) {
+			List<String> binaryProvidersNames = listBinaries.stream()
+					.map(BinaryProvider::getFileName)
+					.collect(Collectors.toList());
+			fileNames.addAll(binaryProvidersNames);
+		}
+		
+		return fileNames;
+    }
+    
+    @JsonIgnore
+    public Set<BinaryProvider> getBinaries() {
+    	List<File> files = new ArrayList<>();
+		if (fileValue != null) {
+			files.add(fileValue);
+		} 
+			
+		if (listFileValue != null) {
+			files.addAll(listFileValue);
+		}
+		
+		Set<BinaryProvider> binaryProviders = new HashSet<>();
+		binaryProviders.addAll(files.stream().map(BinaryProvider::new).collect(Collectors.toList()));
+		if (listBinaries != null) {
+			binaryProviders.addAll(listBinaries);
+		}
+		
+		return binaryProviders;
+    }
 }

@@ -17,9 +17,11 @@
 package org.meveo.model.persistence;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,15 +46,27 @@ public class DBStorageType implements Serializable {
 	
 	public static final DBStorageType SQL;
 	public static final DBStorageType NEO4J;
+	public static final DBStorageType FILE_SYSTEM;
 	
 	static {
+		Set<CustomFieldTypeEnum> allTypesButBinaries = Arrays.stream(CustomFieldTypeEnum.values())
+			.filter(value -> value != CustomFieldTypeEnum.BINARY)
+			.collect(Collectors.toSet());
+		
 		SQL = new DBStorageType();
 		SQL.code = "SQL";
 		SQL.storageImplName = "org.meveo.persistence.impl.SQLStorageImpl";
+		SQL.setSupportedFieldTypes(allTypesButBinaries);
 		
 		NEO4J = new DBStorageType();
 		NEO4J.code = "NEO4J";
 		NEO4J.storageImplName = "org.meveo.persistence.impl.Neo4jStorageImpl";
+		NEO4J.setSupportedFieldTypes(allTypesButBinaries);
+		
+		FILE_SYSTEM = new DBStorageType();
+		FILE_SYSTEM.code = "FILE_SYSTEM";
+		FILE_SYSTEM.storageImplName = "org.meveo.service.storage.FileSystemService";
+		FILE_SYSTEM.setSupportedFieldTypes(Set.of(CustomFieldTypeEnum.BINARY));
 	}
 	
 	public static DBStorageType valueOf(String name) {

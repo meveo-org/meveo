@@ -222,6 +222,10 @@ public class Repository extends BusinessEntity implements ICustomFieldEntity {
     		storagesConfigs.addAll(storages);
     	}
     	
+    	if (binaryStorageConfiguration != null) {
+    		storagesConfigs.add(binaryStorageConfiguration);
+    	}
+    	
     	return storagesConfigs;
     }
     

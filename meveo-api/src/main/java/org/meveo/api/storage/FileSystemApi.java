@@ -81,7 +81,7 @@ public class FileSystemApi extends BaseApi {
 
 		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
 		} else {
-			return fileSystemService.findBinaryStaticPath(repository, cetCode, uuid, cft, index);
+			return fileSystemService.findBinaryStaticPath(repository.getBinaryStorageConfiguration(), cetCode, uuid, cft, index);
 		}
 
 	}

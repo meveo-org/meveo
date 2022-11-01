@@ -277,35 +277,6 @@ public class Neo4jStorageImpl implements StorageImpl {
 
 			}
 
-			// Persist binaries in file system
-			final Map<CustomFieldTemplate, Object> binariesByCft = fileSystemService.updateBinaries(repository, uuid, cet, customFieldTemplates.values(), neo4jValues, existingBinaries);
-
-			// Handle binaries references stored in Neo4J
-			for (Map.Entry<CustomFieldTemplate, Object> binary : binariesByCft.entrySet()) {
-				if (binary.getValue() instanceof String) {
-					neo4jService.updateBinary(uuid, neo4JCode, cet, binary.getKey(), (String) binary.getValue());
-
-				} else if (binary.getValue() instanceof Collection) {
-					// Delete binaries present in previous values and not in persisted values
-					List<String> previousBinaries = (List<String>) existingBinaries.get(binary.getKey().getCode());
-					if (previousBinaries != null) {
-						for (String previousBinary : previousBinaries) {
-							// Check if existing files were deleted and remove them from neo4j if they were
-							if (!new File(previousBinary).exists()) {
-								neo4jService.removeBinary(uuid, neo4JCode, cet, binary.getKey(), previousBinary);
-							}
-						}
-					}
-
-					// Add or update remaining binaries
-					neo4jService.addBinaries(uuid, neo4JCode, cet, binary.getKey(), (Collection<String>) binary.getValue());
-
-					// All binaries were deleted
-				} else if (binary.getValue() == null) {
-					neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, binary.getKey());
-				}
-			}
-
 		}
 	}
 
