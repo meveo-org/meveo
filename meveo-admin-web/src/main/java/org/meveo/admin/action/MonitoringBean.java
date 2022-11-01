@@ -132,7 +132,7 @@ public class MonitoringBean implements Serializable {
                 String productVersion = Version.appVersion;
                 String macAddress = getMacAddress();
                 String md5 = "";
-                String creationDate = Version.build_time;
+                String creationDate = Version.buildTime;
                 String updateDate = sdf.format(startupDate);
                 String keyEntreprise = paramBeanFactory.getInstance().getProperty("monitoring.enterpriseKey", "");
 
