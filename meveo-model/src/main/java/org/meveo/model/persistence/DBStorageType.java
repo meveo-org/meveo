@@ -65,7 +65,7 @@ public class DBStorageType implements Serializable {
 		
 		FILE_SYSTEM = new DBStorageType();
 		FILE_SYSTEM.code = "FILE_SYSTEM";
-		FILE_SYSTEM.storageImplName = "org.meveo.service.storage.FileSystemService";
+		FILE_SYSTEM.storageImplName = "org.meveo.service.storage.FileSystemImpl";
 		FILE_SYSTEM.setSupportedFieldTypes(Set.of(CustomFieldTypeEnum.BINARY));
 	}
 	
