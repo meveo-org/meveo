@@ -10,6 +10,10 @@
 	<artifactId>meveo-admin-ejbs</artifactId>
 	<name>Meveo Admin Web Application - EJBs Module</name>
 	<packaging>jar</packaging>
+	<properties>
+		<buildTime>${maven.build.timestamp}</buildTime>
+		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+	</properties>
 	<build>
 		<resources>
 			<resource>
@@ -94,8 +98,8 @@
 					<replacements>
 						<replacement>
 							<!--suppress UnresolvedMavenProperty -->
-							<token>@buildtime@</token>
-							<value>${maven.build.timestamp}</value>
+							<token>@buildTime@</token>
+							<value>${buildTime}</value>
 						</replacement>
 						<replacement>
 							<!--suppress UnresolvedMavenProperty -->
