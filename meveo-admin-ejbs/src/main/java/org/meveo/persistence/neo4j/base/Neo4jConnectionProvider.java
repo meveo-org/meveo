@@ -38,7 +38,9 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.security.PasswordUtils;
+import org.neo4j.driver.AuthToken;
 import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Config;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Session;
@@ -160,7 +162,16 @@ public class Neo4jConnectionProvider {
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
 		String salt = PasswordUtils.getSalt(neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl());
 		String pwd = PasswordUtils.decrypt(salt, neo4JConfiguration.getNeo4jPassword());
-		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd));
+		
+		Config config;
+		if (neo4JConfiguration.getProtocol().contains("+s")) {
+			config = Config.builder().withoutEncryption().build();
+		} else {
+			config = Config.builder().build();
+		}
+		 
+		AuthToken auth = AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd);
+		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), auth, config);
 		// Test connection
 		driver.session().close();
 		return driver;
