@@ -134,6 +134,14 @@ public class UserService extends PersistenceService<User> {
         }
     }
 
+    public User findByUuid(String uuid) {
+        try {
+            return (User) getEntityManager().createQuery("from User where uuid = :uuid").setParameter("uuid", uuid).getSingleResult();
+        } catch (NoResultException ex) {
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public List<Role> getAllRolesExcept(String rolename1, String rolename2) {
         return getEntityManager().createQuery("from MeveoRole as r where r.name<>:name1 and r.name<>:name2").setParameter("name1", rolename1).setParameter("name2", rolename2)
