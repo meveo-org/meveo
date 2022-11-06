@@ -70,7 +70,7 @@ public class DBStorageType implements Serializable {
 	}
 	
 	public static DBStorageType valueOf(String name) {
-		return List.of(SQL, NEO4J).stream()
+		return List.of(SQL, NEO4J, FILE_SYSTEM).stream()
 			.filter(e -> e.code.equals(name))
 			.findFirst()
 			.orElse(null);

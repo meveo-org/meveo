@@ -269,6 +269,13 @@ public class CustomFieldValue implements Serializable {
     public File getFileValue(){
         return fileValue;
     }
+    
+    public BinaryProvider getBinaryValue() {
+    	if (listBinaries == null || listBinaries.isEmpty()) {
+    		return null;
+    	}
+    	return listBinaries.get(0);
+    }
 
     public void setStringValue(String stringValue) {
         this.stringValue = stringValue;
@@ -980,7 +987,7 @@ public class CustomFieldValue implements Serializable {
      */
     public boolean isValueEmptyForGui() {
         boolean isEmpty = ((stringValue == null || stringValue.isEmpty()) && dateValue == null && longValue == null && doubleValue == null && entityReferenceValueForGUI == null
-                && (mapValuesForGUI == null || mapValuesForGUI.isEmpty()) && (matrixValuesForGUI == null || matrixValuesForGUI.isEmpty())
+                && (mapValuesForGUI == null || mapValuesForGUI.isEmpty()) && (matrixValuesForGUI == null || matrixValuesForGUI.isEmpty()) && (listBinaries == null || listBinaries.isEmpty())
                 && (childEntityValuesForGUI == null || childEntityValuesForGUI.isEmpty()));
 
         if (isEmpty) {
@@ -1596,5 +1603,17 @@ public class CustomFieldValue implements Serializable {
 		}
 		
 		return binaryProviders;
+    }
+    
+    public BinaryProvider getBinary(String name) {
+    	var binaries = getBinaries();
+    	if (name == null && !binaries.isEmpty()) {
+    		return binaries.iterator().next();
+    	}
+    	
+    	return binaries.stream()
+    			.filter(binary -> binary.getFileName().equals(name))
+    			.findFirst()
+    			.orElse(null);
     }
 }

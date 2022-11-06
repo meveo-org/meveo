@@ -25,6 +25,7 @@
 			column2="description">
 		</hftl:entityPopup>
 		<hftl:entityPopup id="binaryStorageConfigurationPopup"
+			allowEdit="true"
 			header="#{messages['binaryStorageConfiguration.title']}"
 			updateField=":formRepository:binaryStorageConfigurationId :formRepository:binaryStorageConfigurationId_text"
 			selection="#{repositoryBean.entity.binaryStorageConfiguration}"
@@ -84,8 +85,7 @@
 					<hftl:formField id="binaryStorageConfigurationId"
 						label="#{messages['binaryStorageConfiguration.title']}"
 						field="binaryStorageConfiguration" valueLabelField="code"
-						popup="true" popupId="binaryStorageConfigurationPopup"
-						edit="#{repositoryBean.entity.code ne 'default'}" />
+						listBean="#{binaryStorageConfigurationBean}"/>
 					<hftl:formField label="#{messages['repository.dataSeparationType']}"
 						field="dataSeparationType"
 						edit="#{repositoryBean.entity.code ne 'default'}" />

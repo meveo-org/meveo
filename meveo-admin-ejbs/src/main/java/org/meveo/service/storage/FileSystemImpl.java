@@ -75,7 +75,7 @@ public class FileSystemImpl implements StorageImpl {
 				}
 			});
 		
-		return null;
+		return result;
 	}
 
 	@Override
@@ -159,7 +159,7 @@ public class FileSystemImpl implements StorageImpl {
 
 	@Override
 	public Integer count(IStorageConfiguration repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
-		return 0;
+		return null;
 	}
 
 	@Override

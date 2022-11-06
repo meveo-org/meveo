@@ -193,5 +193,19 @@
 			<column name="graphql_api_url" type="varchar(255)"></column>
 		</addColumn>
 	</changeSet>
+	
+	<changeSet id="#627 - Modify file system storage" author="Clément Bareth">
+    	<insert tableName="db_storage_type">
+    		<column name="code" value="FILE_SYSTEM"></column>
+    		<column name="storage_impl_name" value="org.meveo.service.storage.FileSystemImpl"></column>
+    	</insert>
+	</changeSet>
+	
+	<changeSet id="#627 - Add type restrictions to type" author="Clément Bareth">
+    	<insert tableName="db_storage_type">
+    		<column name="code" value="FILE_SYSTEM"></column>
+    		<column name="storage_impl_name" value="org.meveo.service.storage.FileSystemImpl"></column>
+    	</insert>
+	</changeSet>
 
 </databaseChangeLog>

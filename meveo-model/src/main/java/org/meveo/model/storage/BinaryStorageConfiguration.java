@@ -1,5 +1,7 @@
 package org.meveo.model.storage;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -9,6 +11,7 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.meveo.model.BaseEntity;
+import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ExportIdentifier;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.admin.MvCredential;
@@ -24,6 +27,7 @@ import org.meveo.model.persistence.DBStorageType;
 @Entity
 @Table(name = "binary_storage_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = { @org.hibernate.annotations.Parameter(name = "sequence_name", value = "binary_storage_configuration_seq"), })
+@CustomFieldEntity(cftCodePrefix = "FILE_SYSTEM")
 public class BinaryStorageConfiguration extends BaseEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = -1378468359266231255L;
@@ -118,4 +122,27 @@ public class BinaryStorageConfiguration extends BaseEntity implements IStorageCo
 	public DBStorageType getDbStorageType() {
 		return DBStorageType.FILE_SYSTEM;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(code);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		
+		if (this == obj)
+			return true;
+		if (getClass() != obj.getClass())
+			return false;
+		BinaryStorageConfiguration other = (BinaryStorageConfiguration) obj;
+		return Objects.equals(code, other.code);
+	}
+	
 }

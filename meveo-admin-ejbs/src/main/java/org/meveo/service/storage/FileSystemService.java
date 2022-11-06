@@ -336,7 +336,7 @@ public class FileSystemService {
 
 		File directory = new File(fullPath);
 		if (!directory.exists()) {
-			throw new BusinessApiException("Directory does not exists: " + directory.getPath());
+			return Collections.emptyList();
 		}
 
 		if(!directory.isDirectory()){

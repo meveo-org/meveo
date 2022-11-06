@@ -48,13 +48,14 @@
 		label="#{cft.description}#{cft.valueRequired?' *':''}"
 		componentWidth="100" displayOneLine="false">
 
-		<h:outputText title="#{field.stringValue}"
+		<h:outputText title="#{field.binaryValue.fileName}"
 			value="#{of:abbreviate(field.stringValue, 25)}"></h:outputText>
-		<p:commandButton ajax="false" rendered="#{field.stringValue != null}"
+		<p:commandButton ajax="false" rendered="#{field.binaryValue != null}"
 			onclick="PrimeFaces.monitorDownload(start, stop);"
 			icon="fa fa-arrow-down" immediate="true">
+			<span>#{field.binaryValue.fileName}</span>
 			<p:fileDownload
-				value="#{customFieldDataEntryBean.downloadFile(field.stringValue)}">
+				value="#{customFieldDataEntryBean.downloadFile(field, field.binaryValue.fileName)}">
 			</p:fileDownload>
 		</p:commandButton>
 		<p:inputText id="#{viewBinaryId}" type="hidden"
