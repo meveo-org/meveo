@@ -68,7 +68,7 @@ public class DefaultMeveoModuleInitializer {
 			userTx.setTransactionTimeout((int) Duration.ofHours(1).toSeconds());
 			
 			Map<String, String> message = new HashMap<String, String>();
-			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/default/module.json");
+			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveo-module/module.json");
 			File moduleFile = new File(path);
 			MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
 			List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
