@@ -70,14 +70,15 @@ public class DefaultMeveoModuleInitializer {
 			Map<String, String> message = new HashMap<String, String>();
 			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveo-module/module.json");
 			File moduleFile = new File(path);
-			MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
-			List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
-			for (ModuleDependencyDto moduleDependencyDto : moduleDependencyDtos) {
-				
+			Map<String, Object> meveoRoot = JacksonUtil.read(moduleFile, Map.class);
+			List<Map<String, Object>> meveoModules = (List<Map<String, Object>>) meveoRoot.get("moduleDependencies");
+
+			for (Map<String, Object> moduleMap : meveoModules) {
+				MeveoModuleDto moduleDto = JacksonUtil.convert(moduleMap, MeveoModuleDto.class);
 				userTx.begin();
-				String moduleCode = moduleDependencyDto.getCode();
-				String moduleGitUrl = moduleDependencyDto.getGitUrl();
-				String moduleBranch = moduleDependencyDto.getGitBranch();
+				String moduleCode = moduleDto.getCode();
+				String moduleGitUrl = (String) moduleMap.get("gitUrl");
+				String moduleBranch = (String) moduleMap.get("gitBranch");
 				try {
 					GitRepository repository = null;
 					GitRepositoryDto repositoryDto = null;
@@ -110,7 +111,7 @@ public class DefaultMeveoModuleInitializer {
 						repository = gitRepositoryApi.exists(repositoryDto) ? gitRepositoryApi.update(repositoryDto) : gitRepositoryApi.create(repositoryDto, false, username, password);
 
 						// Manage dependencies
-						LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(List.of(moduleDependencyDto), username, password);
+						LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(moduleDto.getModuleDependencies(), username, password);
 						for (GitRepository repo : gitRepos.keySet()) {
 							ModuleDependencyDto dependencyDto = gitRepos.get(repo);
 							dependencyDto.setInstalling(true);
