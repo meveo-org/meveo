@@ -64,6 +64,7 @@ import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
@@ -2102,6 +2103,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
 				.limit(3)
 				.collect(Collectors.toList());
+	}
+	
+	public boolean shouldDisplayCode(String cetCode) {
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		return cet == null || (cet.storedIn(DBStorageType.SQL) && !cet.isStoreAsTable());
 	}
 
 }

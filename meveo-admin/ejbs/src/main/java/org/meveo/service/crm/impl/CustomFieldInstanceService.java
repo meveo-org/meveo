@@ -267,11 +267,6 @@ public class CustomFieldInstanceService extends BaseService {
              }
         }
         
-        // Set code = uuid for entities with no codes
-        entities.stream()
-	    	.filter(e -> e instanceof CustomEntityInstance)
-	    	.filter(e -> e.getCode() == null)
-	    	.forEach(e -> e.setCode((String) ((CustomEntityInstance) e).getValuesNullSafe().get("code")));
         entities.stream()
         	.filter(e -> e instanceof CustomEntityInstance)
         	.filter(e -> e.getCode() == null)
@@ -631,7 +626,6 @@ public class CustomFieldInstanceService extends BaseService {
 
 					if (value instanceof Map) {
 						Map<String, Object> valueAsMap = (Map<String, Object>) value;
-						entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
 						entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
 						if (entityReferenceWrapper.getUuid() == null) {
 							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
@@ -639,7 +633,6 @@ public class CustomFieldInstanceService extends BaseService {
 						
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
-						fetchCode(cft, (String) value, entityReferenceWrapper);
 					} else if (value instanceof EntityReferenceWrapper) {
 					    entityReferenceWrapper = (EntityReferenceWrapper) value;
                     }
@@ -657,7 +650,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 							if (item instanceof Map) {
 								Map<String, Object> valueAsMap = (Map<String, Object>) item;
-								itemWrapper.setCode((String) valueAsMap.get("code"));
+								itemWrapper.setCode((String) valueAsMap.get("uuid"));
 								itemWrapper.setUuid((String) valueAsMap.get("uuid"));
 								if (itemWrapper.getUuid() == null) {
 									itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
