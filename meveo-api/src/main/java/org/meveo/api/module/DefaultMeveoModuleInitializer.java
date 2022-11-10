@@ -110,13 +110,15 @@ public class DefaultMeveoModuleInitializer {
 
 						repository = gitRepositoryApi.exists(repositoryDto) ? gitRepositoryApi.update(repositoryDto) : gitRepositoryApi.create(repositoryDto, false, username, password);
 
-						// Manage dependencies
-						LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(moduleDto.getModuleDependencies(), username, password);
-						for (GitRepository repo : gitRepos.keySet()) {
-							ModuleDependencyDto dependencyDto = gitRepos.get(repo);
-							dependencyDto.setInstalling(true);
-							moduleApi.install(null, repo);
-							dependencyDto.setInstalled(true);
+						// Manage dependencies 
+						if (moduleDto.getModuleDependencies() != null) {
+							LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(moduleDto.getModuleDependencies(), username, password);
+							for (GitRepository repo : gitRepos.keySet()) {
+								ModuleDependencyDto dependencyDto = gitRepos.get(repo);
+								dependencyDto.setInstalling(true);
+								moduleApi.install(null, repo);
+								dependencyDto.setInstalled(true);
+							}
 						}
 
 						moduleApi.install(null, repository);
