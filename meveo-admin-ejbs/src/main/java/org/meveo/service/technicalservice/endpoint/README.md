@@ -20,8 +20,8 @@ It is the responsibility of the Script to implement that its execution is done w
 In case the script is executed in an asynchronous way, then after the max delay in case the execute method has not yet returned
 then the cancel method of the script is called. It should stop the execution and return immediatly the current result.
 
-If the script extends [EndpointScript](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/EndpointScript.java)
-then the [EndpointRequest](../../../../../../../../../../meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) is set , and in case the call is synchronous the EndpointResponse is set.
+If the script extends [EndpointScript](/meveo-api/src/main/java/org/meveo/api/rest/technicalservice/EndpointScript.java)
+then the [EndpointRequest](/meveo-api/src/main/java/org/meveo/api/rest/technicalservice/impl/EndpointRequest.java) is set , and in case the call is synchronous the EndpointResponse is set.
 If the script does not extend EndpointScript then the request (and response in synchronous case) are set
 in the parameters `request` and `response` respectively.
 
