@@ -7,18 +7,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public class BinaryProvider {
+public class BinaryProvider implements Serializable {
+
+	private static final long serialVersionUID = 656893414063747937L;
 
 	@JsonValue
 	private String fileName;
 	
 	@JsonIgnore
-	private Supplier<InputStream> provider;
+	private transient Supplier<InputStream> provider;
 	
 	@JsonIgnore
 	private boolean overwrite;

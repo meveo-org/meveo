@@ -1585,6 +1585,20 @@ public class CustomFieldValue implements Serializable {
 		return fileNames;
     }
     
+    /**
+	 * @return the {@link #listBinaries}
+	 */
+	public List<BinaryProvider> getListBinaries() {
+		return listBinaries;
+	}
+	
+	/**
+	 * @param listBinaries the listBinaries to set
+	 */
+	public void setListBinaries(List<BinaryProvider> listBinaries) {
+		this.listBinaries = listBinaries;
+	}
+    
     @JsonIgnore
     public Set<BinaryProvider> getBinaries() {
     	List<File> files = new ArrayList<>();

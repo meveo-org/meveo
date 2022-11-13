@@ -52,11 +52,11 @@
 		<p:dataTable id="#{fieldPrefix}_customFields_binaries" lazy="false"
 			editable="#{edit and !disabled}" editMode="cell" reflow="false"
 			resizableColumns="true" rowIndexVar="rowIndex"
-			value="#{field.mapValuesForGUI}" var="path">
+			value="#{field.listBinaries}" var="binary">
 
 			<p:column headerText="#{messages['customFieldTemplate.filePath']}">
-				<h:outputText title="#{path['value']}"
-					value="#{of:abbreviate(path['value'], 25)}"></h:outputText>
+				<h:outputText title="#{binary.fileName}"
+					value="#{of:abbreviate(binary.fileName, 25)}"></h:outputText>
 			</p:column>
 
 			<p:column headerText="#{messages['commons.actions']}"
@@ -65,15 +65,14 @@
 					onclick="PrimeFaces.monitorDownload(start, stop);"
 					icon="fa fa-arrow-down" immediate="true">
 					<p:fileDownload
-						value="#{customFieldDataEntryBean.downloadFile(path['value'])}">
+						value="#{customFieldDataEntryBean.downloadFile(field, binary.fileName)}">
 					</p:fileDownload>
 				</p:commandButton>
 				<p:commandButton icon="ui-icon-minus" partialSubmit="false"
 					process="@this" update="@form"
-					action="#{field.mapValuesForGUI.remove(path)}" >
+					action="#{field.listBinaries.remove(binary)}" >
 					
-					<p:collector unique="true" value="#{path['value']}" removeFrom="#{field.listValue}"/>
-					<p:collector unique="true" value="#{path['value']}" addTo="#{customFieldDataEntryBean.filesToDeleteOnExit}"/>
+					<p:collector unique="true" value="#{binary}" removeFrom="#{field.listBinaries}"/>
 					
 					<p:confirm header="#{messages['commons.confirmationHeader']}"
 						message="#{messages['commons.confirmDelete']}"

@@ -1,9 +1,12 @@
 package org.meveo.service.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -11,35 +14,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FilenameUtils;
-import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
-import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.elresolver.ValueExpressionWrapper;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
-import org.meveo.model.customEntities.BinaryProvider;
-import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.customEntities.CustomModelObject;
-import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.storage.BinaryStorageConfiguration;
-import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.persistence.PersistenceActionResult;
-import org.meveo.persistence.StorageImpl;
-import org.meveo.persistence.StorageQuery;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -293,11 +281,20 @@ public class FileSystemService {
 
 		storage = storage + File.separator + params.getFilename();
 
-		try(InputStream is = params.getContents()){
-			FileUtils.copyFile(storage, is);
+		File file = new File(storage);
+		try(InputStream is = params.getContents()) {
+			if (file.exists() && is instanceof FileInputStream) {
+				try {
+					Files.copy(is, file.toPath(),  StandardCopyOption.REPLACE_EXISTING);
+				} catch (FileSystemException e) {
+					//NOOP - the file we are trying to write is the same file
+				}
+			} else {
+				Files.copy(is, file.toPath(),  StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
-		return new File(storage).getPath();
+		return file.getPath();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -345,7 +342,7 @@ public class FileSystemService {
 
 		final File[] files = directory.listFiles();
 		if(files == null || files.length == 0){
-			return null;
+			return Collections.emptyList();
 		}
 
 		return Arrays.asList(files);

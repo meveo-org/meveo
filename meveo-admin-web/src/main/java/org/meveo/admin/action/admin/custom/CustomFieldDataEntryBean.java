@@ -1331,7 +1331,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			}
 
 			// Populate customFieldValue.listValue from mapValuesForGUI field
-		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST && cft.getFieldType() != CustomFieldTypeEnum.BINARY) {
 
 			List<Object> listValue = new ArrayList<Object>();
 			for (Map<String, Object> listItem : customFieldValue.getMapValuesForGUI()) {
@@ -2007,24 +2007,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 
 		if (isSingle) {
 			cfv.setListValue(List.of(provider));
-			initAfterUpload();
 
 		} else {
-			var newList = new ArrayList<>(cfv.getBinaries());
-			newList.add(provider);
-			initAfterUpload();
-//			List<Map<String, Object>> mapValues = cfv.getMapValuesForGUI();
-//			Map<String, Object> mapValue = new HashMap<>();
-//			if (mapValues != null && !mapValues.isEmpty()) {
-//				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
-//				mapValues.add(mapValue);
-//
-//			} else {
-//				mapValues = new ArrayList<>();
-//				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
-//				mapValues.add(mapValue);
-//			}
-//			cfv.setMapValuesForGUI(mapValues);
+			if (cfv.getListBinaries() == null) {
+				cfv.setListBinaries(new ArrayList<>());
+			}
+			cfv.getListBinaries().add(provider);
 		}
 	}
 
