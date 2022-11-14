@@ -912,4 +912,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return super.findByCode(code, List.of("availableStorages"));
 	}
 
+    public String getModule(String cetCode) {
+       return getEntityManager()
+                .createNamedQuery("CustomEntityTemplate.module", MeveoModule.class)
+                .setParameter("code", cetCode)
+                .getSingleResult()
+                .getCode();
+    }
+
 }

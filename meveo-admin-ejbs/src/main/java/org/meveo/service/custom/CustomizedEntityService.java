@@ -140,7 +140,7 @@ public class CustomizedEntityService implements Serializable {
 
 		if (filter.getCecId() != null) {
 			List<CustomizedEntity> entities = new ArrayList<>();
-			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getCecId()));
+			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getCecId(), filter.getModuleCode()));
 			Collections.sort(entities, sortEntitiesBy(filter.getSortBy(), filter.getSortOrder()));
 
 			return entities;
@@ -157,7 +157,7 @@ public class CustomizedEntityService implements Serializable {
 				entities.addAll(searchJobs(filter.getEntityName()));
 			}
 
-			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getPrimitiveEntity()));
+			entities.addAll(searchCustomEntityTemplates(filter.getEntityName(), filter.getPrimitiveEntity(), filter.getModuleCode()));
 
 			if (filter.isIncludeRelationships()) {
 				entities.addAll(searchCustomRelationshipTemplates(filter.getEntityName()));
@@ -224,7 +224,7 @@ public class CustomizedEntityService implements Serializable {
 	 * 
 	 * @return A list of custom entity templates.
 	 */
-	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, String primitiveEntity) {
+	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, String primitiveEntity, String module) {
 		List<CustomizedEntity> entities = new ArrayList<>();
 		List<CustomEntityTemplate> customEntityTemplates;
 
@@ -254,14 +254,17 @@ public class CustomizedEntityService implements Serializable {
 		CustomEntityCategory cec = null;
 		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
 			cec = customEntityTemplate.getCustomEntityCategory();
+			String belongingModule = customEntityTemplateService.getModule(customEntityTemplate.getCode());
+			if (module == null || module.equals("Meveo") || module.equals(belongingModule) ) {
 			entities.add(
 					new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
+				}
 		}
 
 		return entities;
 	}
     
-	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, Long cecId) {
+	private List<CustomizedEntity> searchCustomEntityTemplates(String entityName, Long cecId, String module) {
 		List<CustomizedEntity> entities = new ArrayList<>();
 		List<CustomEntityTemplate> customEntityTemplates = null;
 		if (entityName == null || CustomEntityTemplate.class.getSimpleName().toLowerCase().contains(entityName)) {
@@ -272,7 +275,9 @@ public class CustomizedEntityService implements Serializable {
 		CustomEntityCategory cec = null;
 		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
 			cec = customEntityTemplate.getCustomEntityCategory();
-			if (cec != null && cec.getId().equals(cecId)) {
+			String belongingModule = customEntityTemplateService.getModule(customEntityTemplate.getCode());
+			if (cec != null && cec.getId().equals(cecId)
+				&& (module == null || module.equals("Meveo") || module.equals(belongingModule)) ) {
 				entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
 			}
 		}

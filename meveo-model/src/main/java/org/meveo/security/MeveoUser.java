@@ -306,7 +306,7 @@ public abstract class MeveoUser implements Serializable {
 	 * @return the {@link #currentModule}
 	 */
 	public String getCurrentModule() {
-		return currentModule;
+		return this.currentModule;
 	}
 
 }
