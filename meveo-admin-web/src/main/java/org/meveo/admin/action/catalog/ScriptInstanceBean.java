@@ -584,6 +584,7 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 	public TreeNode computeRootNode() {
 		Map<String, Object> filters = this.getFilters();
+
 		String code = "";
 		boolean isExpand = true;
 		if (this.filters.containsKey("code")) {
@@ -592,10 +593,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 		List<ScriptInstanceDto> scriptInstances = new ArrayList<>();
 		if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
-			scriptInstances = scriptInstanceApi.getScriptsForTreeView(code);
+			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getUserCurrentModule(), code);
 			isExpand = true;
 		} else {
-			scriptInstances = scriptInstanceApi.getScriptsForTreeView(null);
+			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getUserCurrentModule(), null);
 		}
 		rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
 		rootNode.setExpanded(isExpand);

@@ -679,12 +679,9 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		return null;
 	}
 	
+	@Override
 	public String getUserCurrentModule() {
-		if (currentUser.getCurrentModule() == null) {
-			return "Meveo";
-		}
-		
-		return currentUser.getCurrentModule();
+		return super.getUserCurrentModule();
 	}
 	
 	public void setUserCurrentModule(String moduleCode) {

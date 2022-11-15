@@ -37,7 +37,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
     @PostConstruct
     public void init() {
     	this.filters.put("customEntity", true);
-        this.filters.put("userCurrentModule", this.currentUser.getCurrentModule());
+        this.filters.put("userCurrentModule", this.getUserCurrentModule());
     }    
 
     public LazyDataModel<CustomizedEntity> getCustomizedEntities() {

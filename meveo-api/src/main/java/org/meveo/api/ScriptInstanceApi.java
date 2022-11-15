@@ -96,20 +96,52 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type
 	 *         and error.
 	 */
-	public List<ScriptInstanceDto> getScriptsForTreeView(String code) {
-		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
+	public List<ScriptInstanceDto> getScriptsForTreeView(String module, String code) {
+		StringBuilder query = new StringBuilder("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s \n");		
 
-		if (code != null) {
-			query.append(" WHERE upper(s.code) LIKE :code");
+		String filterByModuleCriteria = getFilterByModuleCriteria(module);
+
+		String filterbyCode = getFilterByScriptCodeCriteria(code);
+
+		String filterCriteria = combineCriteria(filterByModuleCriteria, filterbyCode);
+
+		if (hasFilter(filterCriteria)) {
+			query.append(" WHERE " + filterCriteria);
 		}
 
 		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager().createQuery(query.toString(), ScriptInstanceDto.class);
 
-		if (code != null) {
+		if (hasFilter(filterByModuleCriteria)) {
+			jpaQuery.setParameter("moduleCode", module);
+		}
+
+		if (hasFilter(filterbyCode)) {
 			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
 		}
 
 		return jpaQuery.getResultList();
+	}
+
+	private boolean hasFilter(String filterCriteria) {
+		return filterCriteria != null && filterCriteria != org.apache.commons.lang.StringUtils.EMPTY;
+	}
+
+	private String combineCriteria(String... criterias) {
+		return Stream.of(criterias)
+					.filter(s -> s != null && !s.isEmpty())
+					.collect(Collectors.joining(" AND "));
+	}
+
+	private String getFilterByScriptCodeCriteria(String code) {
+		return code == null 
+			? org.apache.commons.lang.StringUtils.EMPTY
+			: "upper(s.code) LIKE :code";
+	}
+
+	private String getFilterByModuleCriteria(String moduleCode) {
+		return moduleCode == null || moduleCode.equals("Meveo") 
+			? org.apache.commons.lang.StringUtils.EMPTY
+			: "EXISTS (FROM MeveoModuleItem mi JOIN MeveoModule m ON m.id = mi.meveoModule WHERE mi.itemClass = 'org.meveo.model.scripts.ScriptInstance' AND s.code = mi.itemCode AND m.code = :moduleCode) \n";
 	}
 
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
