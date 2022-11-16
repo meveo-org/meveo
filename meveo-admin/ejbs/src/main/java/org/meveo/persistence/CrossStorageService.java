@@ -188,7 +188,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			Map<String, Object> storageValues = provider.findImplementation(storage) 
 					.findById(repository, cet, uuid, cfts, selectFields, withEntityReferences);
 			
-			if (storageValues != null) {
+			if (storageValues != null && !storageValues.isEmpty()) {
 				foudEntity = true;
 				values.putAll(storageValues);
 			}
