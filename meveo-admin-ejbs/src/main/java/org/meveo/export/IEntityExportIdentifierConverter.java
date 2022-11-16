@@ -50,7 +50,7 @@ public class IEntityExportIdentifierConverter implements Converter {
     private boolean ignoreNotFoundFK;
     private Provider forceToProvider;
     private IEntityClassConverter iEntityClassConverter;
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(IEntityExportIdentifierConverter.class);
 
     /**
      * 

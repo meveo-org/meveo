@@ -1,7 +1,6 @@
 package org.meveo.security.keycloak;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +34,7 @@ import org.meveo.model.shared.Name;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.UserAuthTimeCache;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 @Stateless
@@ -51,8 +51,7 @@ public class CurrentUserProvider {
     @Inject
     private UserAuthTimeCache userAuthTimeCache;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(CurrentUserProvider.class);
     
     @Inject 
     private BeanManager beanManager;

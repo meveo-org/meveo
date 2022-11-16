@@ -60,6 +60,8 @@ import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
 
@@ -71,6 +73,8 @@ import com.github.javaparser.ast.CompilationUnit;
  */
 @Stateless
 public class CustomRelationshipTemplateService extends BusinessService<CustomRelationshipTemplate> {
+
+    private static Logger log = LoggerFactory.getLogger(CustomRelationshipTemplateService.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -481,5 +485,10 @@ public class CustomRelationshipTemplateService extends BusinessService<CustomRel
 		CustomRelationshipTemplateDto dto = (CustomRelationshipTemplateDto) super.getDto(entity);
 		dto.setFields(null);
 		return dto;
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

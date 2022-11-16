@@ -92,6 +92,8 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.ast.CompilationUnit;
@@ -110,7 +112,8 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     private final static String CLASSES_DIR = "/classes";
 
     private static boolean useCETCache = true;
-
+    
+    private static Logger log = LoggerFactory.getLogger(CustomEntityTemplateService.class);
 
     /**
      * @param currentUser the current meveo user
@@ -910,6 +913,11 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 	@Override
 	public CustomEntityTemplate findByCode(String code) {
 		return super.findByCode(code, List.of("availableStorages"));
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 
 }

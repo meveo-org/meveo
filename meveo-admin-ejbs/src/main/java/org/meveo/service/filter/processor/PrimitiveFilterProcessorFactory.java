@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class PrimitiveFilterProcessorFactory {
 
-	private Logger logger = LoggerFactory.getLogger(PrimitiveFilterProcessorFactory.class);
+	private static Logger logger = LoggerFactory.getLogger(PrimitiveFilterProcessorFactory.class);
 
 	private List<PrimitiveFilterProcessor> processors;
 	private PrimitiveFilterProcessor defaultProcessor;

@@ -20,6 +20,7 @@ import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.communication.impl.EmailSender;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author phung
@@ -31,8 +32,7 @@ public class EmailNotifier {
     @Inject
     NotificationHistoryService notificationHistoryService;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(EmailNotifier.class);
 
     @Inject
     private EmailSender emailSender;

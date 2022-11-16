@@ -35,6 +35,7 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Asynchronous FlatFile processing.
@@ -50,8 +51,7 @@ public class FlatFileProcessingAsync {
 	private static final String THREAD_POOL_SIZE = FlatFileProcessingJob.FLAT_FILE_PROCESSING_JOB_THREAD_POOL_SIZE;
 
 	/** The log. */
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(FlatFileProcessingAsync.class);
 
 	/** The unit flat file processing job bean. */
 	@Inject

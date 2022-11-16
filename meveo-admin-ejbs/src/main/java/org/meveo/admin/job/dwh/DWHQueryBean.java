@@ -41,6 +41,7 @@ import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class DWHQueryBean {
@@ -55,8 +56,7 @@ public class DWHQueryBean {
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(DWHQueryBean.class);
 
     @Inject
     private JobExecutionService jobExecutionService;

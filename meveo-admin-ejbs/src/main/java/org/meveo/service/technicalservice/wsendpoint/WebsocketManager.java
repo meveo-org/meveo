@@ -35,13 +35,13 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Startup
 @Singleton
 public class WebsocketManager {
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(WebsocketManager.class);
 
 	@Inject
 	private WebsocketClientService wsClientService;

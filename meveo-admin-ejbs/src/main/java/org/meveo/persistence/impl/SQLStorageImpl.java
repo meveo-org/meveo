@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
@@ -27,7 +26,6 @@ import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -36,7 +34,6 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.customEntities.CustomEntityInstance;
@@ -47,7 +44,6 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
-import org.meveo.model.storage.StorageConfiguration;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
@@ -63,8 +59,7 @@ import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
-
-import liquibase.pro.packaged.S;
+import org.slf4j.LoggerFactory;
 
 public class SQLStorageImpl implements StorageImpl {
 	
@@ -75,8 +70,7 @@ public class SQLStorageImpl implements StorageImpl {
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(SQLStorageImpl.class);
 	
 	@Inject
 	private CustomTableRelationService customTableRelationService;

@@ -31,6 +31,7 @@ import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Message Driven Bean to handle data synchronization between cluster nodes. Messages are read from a topic "topic/CLUSTEREVENTTOPIC".
@@ -44,8 +45,7 @@ import org.slf4j.Logger;
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 public class ClusterEventMonitor implements MessageListener {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ClusterEventMonitor.class);
 
     @Inject
     private JobInstanceService jobInstanceService;

@@ -21,7 +21,6 @@ package org.meveo.service.base;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +60,8 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author phung
@@ -125,7 +126,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 //        try {
 //            return query.getSingleResult();
 //        } catch (NoResultException e) {
-//            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+//            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
 //            return null;
 //        }
     }
@@ -173,10 +174,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return (P) qb.getQuery(getEntityManager()).getSingleResult();
 
         } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
             return null;
         } catch (NonUniqueResultException e) {
-            log.error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
+            getLogger().error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
             return (P) qb.getQuery(getEntityManager()).getResultList().get(0);
         }
     }
@@ -228,10 +229,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
         try {
             return (BusinessEntity) qb.getQuery(getEntityManager()).getSingleResult();
         } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
             return null;
         } catch (NonUniqueResultException e) {
-            log.error("More than one entity of type {} with code {} found", entityClass, code);
+            getLogger().error("More than one entity of type {} with code {} found", entityClass, code);
             return null;
         }
     }
@@ -341,7 +342,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
     		addFilesToModule(entity,  module);
     	} else if (module != null) {
-    		log.info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
+    		getLogger().info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
     	}
 	}
 
@@ -373,7 +374,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	        try {
 	            message+=" "+commitMessageBean.getCommitMessage();
 	        } catch (ContextNotActiveException e) {
-	            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+	            getLogger().warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
 	        }
 			gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
     	}

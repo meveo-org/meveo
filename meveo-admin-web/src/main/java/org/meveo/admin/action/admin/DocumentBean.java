@@ -48,6 +48,7 @@ import org.meveo.model.Document;
 import org.meveo.model.crm.Provider;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ConversationScoped
@@ -55,8 +56,7 @@ public class DocumentBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(DocumentBean.class);
 
     private List<Document> documents;
 

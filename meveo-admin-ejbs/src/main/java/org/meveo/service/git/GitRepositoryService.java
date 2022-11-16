@@ -40,6 +40,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Persistence class for GitRepository
@@ -70,8 +71,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Inject
     private GitClient gitClient;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(GitRepositoryService.class);
 
     @Inject
     @CurrentUser

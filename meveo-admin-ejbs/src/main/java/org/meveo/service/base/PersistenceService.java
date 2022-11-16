@@ -84,9 +84,10 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic implementation that provides the default implementation for
@@ -100,7 +101,9 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
 	protected Class<E> entityClass;
-
+	
+    private static Logger DEFAULT_LOG = LoggerFactory.getLogger(PersistenceService.class);
+	
 	/**
 	 * Entity list search parameter name - parameter's value contains entity class
 	 */
@@ -225,7 +228,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @return Updated entity
 	 */
 	public E updateNoCheck(E entity) {
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 		updateAudit(entity);
 		return getEntityManager().merge(entity);
 	}
@@ -236,7 +239,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E findById(Long id) {
 
-		log.trace("Find {}/{} by id", entityClass.getSimpleName(), id);
+		getLogger().trace("Find {}/{} by id", entityClass.getSimpleName(), id);
 		return getEntityManager().find(entityClass, id);
 
 	}
@@ -246,15 +249,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 */
 	@Override
 	public E findById(Long id, boolean refresh) {
-		log.trace("start of find {}/{} by id ..", entityClass.getSimpleName(), id);
+		getLogger().trace("start of find {}/{} by id ..", entityClass.getSimpleName(), id);
 		E e = getEntityManager().find(entityClass, id);
 		if (e != null) {
 			if (refresh) {
-				log.debug("refreshing loaded entity");
+				getLogger().debug("refreshing loaded entity");
 				getEntityManager().refresh(e);
 			}
 		}
-		log.trace("end of find {}/{} by id. Result found={}.", entityClass.getSimpleName(), id, e != null);
+		getLogger().trace("end of find {}/{} by id. Result found={}.", entityClass.getSimpleName(), id, e != null);
 		return e;
 
 	}
@@ -275,7 +278,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	@SuppressWarnings("unchecked")
 	public E findById(Long id, List<String> fetchFields, boolean refresh) {
-		log.debug("start of find {}/{} by id ..", getEntityClass().getSimpleName(), id);
+		getLogger().debug("start of find {}/{} by id ..", getEntityClass().getSimpleName(), id);
 		final Class<? extends E> productClass = getEntityClass();
 		StringBuilder queryString = new StringBuilder("from " + productClass.getName() + " a");
 		if (fetchFields != null && !fetchFields.isEmpty()) {
@@ -292,11 +295,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (!results.isEmpty()) {
 			e = results.get(0);
 			if (refresh) {
-				log.debug("refreshing loaded entity");
+				getLogger().debug("refreshing loaded entity");
 				getEntityManager().refresh(e);
 			}
 		}
-		log.trace("end of find {}/{} by id. Result found={}.", getEntityClass().getSimpleName(), id, e != null);
+		getLogger().trace("end of find {}/{} by id. Result found={}.", getEntityClass().getSimpleName(), id, e != null);
 		return e;
 	}
 
@@ -327,11 +330,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	public E disable(E entity) throws BusinessException {
 
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
-			log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			preDisable(entity);
 			entity = getEntityManager().merge(entity);
 			postDisable(entity);
-			log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -339,10 +342,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	public E disableNoMerge(E entity) throws BusinessException {
 
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
-			log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			preDisable(entity);
 			postDisable(entity);
-			log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -374,13 +377,13 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E enable(E entity) throws BusinessException {
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isDisabled()) {
-			log.debug("start of enable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of enable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			((EnableEntity) entity).setDisabled(false);
 			((IAuditable) entity).updateAudit(currentUser);
 			if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
 				entityEnabledEventProducer.fire((BaseEntity) entity);
 			}
-			log.trace("end of enable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of enable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -389,7 +392,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public void remove(E entity) throws BusinessException {
 		
-		log.debug("start of remove {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of remove {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 		entity = findById((Long) entity.getId());
 		if (entity != null) {
 
@@ -425,12 +428,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 					ImageUploadEventHandler<E> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
 					imageUploadEventHandler.deleteImage(entity);
 				} catch (IOException e) {
-					log.error("Failed deleting image file");
+					getLogger().error("Failed deleting image file");
 				}
 			}
 		}
 
-		log.trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity != null ? entity.getId() : "");
+		getLogger().trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity != null ? entity.getId() : "");
 	}
 
 	/**
@@ -496,7 +499,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E update(E entity, boolean asyncEvent) throws BusinessException {
 
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
 		preUpdate(entity, asyncEvent);
 
@@ -514,14 +517,14 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
 		return entity;
 	}
 
 	public E updateNoMerge(E entity) throws BusinessException {
 
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
 		preUpdate(entity);
 
@@ -529,7 +532,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		
 		return entity;
 	}
@@ -543,7 +546,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 */
 	@Override
 	public void create(E entity) throws BusinessException {
-		log.debug("Start creation of entity {}", entity.getClass().getSimpleName());
+		getLogger().debug("Start creation of entity {}", entity.getClass().getSimpleName());
 
 		beforeUpdateOrCreate(entity);
 
@@ -570,7 +573,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
 	}
 
 	/**
@@ -697,7 +700,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 
 		if (getEntityManager().contains(entity)) {
-			log.trace("Entity {}/{} will be refreshed) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().trace("Entity {}/{} will be refreshed) ..", getEntityClass().getSimpleName(), entity.getId());
 			getEntityManager().refresh(entity);
 			return entity;
 		} else {
@@ -1040,7 +1043,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 									try {
 										classes.add(Class.forName((String) classNameOrClass));
 									} catch (ClassNotFoundException e) {
-										log.error("Search by a type will be ignored - unknown class {}", classNameOrClass);
+										getLogger().error("Search by a type will be ignored - unknown class {}", classNameOrClass);
 									}
 								}
 							}
@@ -1066,7 +1069,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 									queryBuilder.addSqlCriterion("type(a) != :typeClass", "typeClass", Class.forName((String) filterValue));
 								}
 							} catch (ClassNotFoundException e) {
-								log.error("Search by a type will be ignored - unknown class {}", filterValue);
+								getLogger().error("Search by a type will be ignored - unknown class {}", filterValue);
 							}
 						}
 
@@ -1356,6 +1359,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
 	public E findByCode(String code) {
 		throw new UnsupportedOperationException();
+	}
+	
+	public Logger getLogger() {
+		return DEFAULT_LOG;
 	}
 
 }

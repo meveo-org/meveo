@@ -18,12 +18,12 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.communication.impl.SseManager;
 import org.meveo.service.communication.impl.WebsocketNotifManager;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 class WebNotifier {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(WebNotifier.class);
 
 	@Inject
 	private SseManager sseManager;

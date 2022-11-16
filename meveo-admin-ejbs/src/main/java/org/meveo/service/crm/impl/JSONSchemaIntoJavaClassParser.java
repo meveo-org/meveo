@@ -26,6 +26,7 @@ import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -60,8 +61,7 @@ public class JSONSchemaIntoJavaClassParser {
 	@Inject
 	private CustomFieldTemplateService customFieldService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(JSONSchemaIntoJavaClassParser.class);
 
     private Map<String, Object> jsonMap;
 

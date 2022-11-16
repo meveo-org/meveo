@@ -34,14 +34,14 @@ import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
 import org.meveo.persistence.StorageQuery;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FileSystemImpl implements StorageImpl {
 	
 	@Inject
 	private FileSystemService fileSystemService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(FileSystemImpl.class);
 	
 	@Override
 	public boolean exists(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) {

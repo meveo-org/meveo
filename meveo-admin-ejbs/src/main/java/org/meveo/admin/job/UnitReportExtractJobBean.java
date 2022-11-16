@@ -18,6 +18,7 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.service.finance.ReportExtractService;
 import org.meveo.service.script.finance.ReportExtractScript;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Extension class for JobExtractReport to start a new transaction.
@@ -31,8 +32,7 @@ public class UnitReportExtractJobBean {
     
     private ParamBean paramBean = ParamBean.getInstance();
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(UnitReportExtractJobBean.class);
 
     @Inject
     private ReportExtractService reportExtractService;

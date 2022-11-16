@@ -34,6 +34,7 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
  
 
 
@@ -53,8 +54,7 @@ public class GitRepositoryWatcher {
 	@Inject
 	private MeveoModuleService meveoModuleService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(GitRepositoryWatcher.class);
 
 	private Map<String, FileAlterationMonitor> monitors = new ConcurrentHashMap<>();
 

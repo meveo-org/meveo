@@ -36,8 +36,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
@@ -52,7 +52,6 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -87,6 +86,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.synchronization.KeyLock;
 import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Git client class to manipulate repositories
@@ -127,8 +127,7 @@ public class GitClient {
     private KeyLock keyLock;
     
     @Inject
-    private Logger log;
-
+    private static Logger log = LoggerFactory.getLogger(GitClient.class);
 
     public void setRemote(GitRepository gitRepository) throws BusinessException {
     	final File repoDir = GitHelper.getRepositoryDir(null, gitRepository);

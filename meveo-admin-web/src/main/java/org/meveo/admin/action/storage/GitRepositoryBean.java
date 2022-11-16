@@ -23,7 +23,6 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingModuleException;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.api.module.MeveoModuleApi;
@@ -44,6 +43,7 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller for managing git repository model.
@@ -70,8 +70,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	@Inject
 	private MeveoModuleService moduleService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(GitRepositoryBean.class);
 
 	@Inject
 	private GitClient gitClient;

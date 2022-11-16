@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseService {
 	private static final Random RANDOM = new Random();
-
+	
     @Inject
     @CurrentUser
     protected MeveoUser currentUser;
@@ -43,8 +43,6 @@ public abstract class BaseService {
     @Inject
     @ApplicationProvider
     protected Provider appProvider;
-
-	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	@Inject
 	@Default

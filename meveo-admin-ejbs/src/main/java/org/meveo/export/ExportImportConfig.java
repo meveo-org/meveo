@@ -48,7 +48,7 @@ public class ExportImportConfig {
      */
     private Map<Class<? extends IEntity>, String[]> exportIdMapping;
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(ExportImportConfig.class);
 
     public ExportImportConfig() {
 

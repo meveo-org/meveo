@@ -20,7 +20,7 @@ public class JobLoggingInterceptor implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 8509493016090519457L;
-	private Logger log = LoggerFactory.getLogger(this.getClass());
+	private static Logger log = LoggerFactory.getLogger(JobLoggingInterceptor.class);
 
 	@AroundInvoke
 	public Object aroundInvoke(InvocationContext invocationContext)

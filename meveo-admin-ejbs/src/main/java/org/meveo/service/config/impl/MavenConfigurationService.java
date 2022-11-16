@@ -1,7 +1,6 @@
 package org.meveo.service.config.impl;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -43,7 +42,6 @@ import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -83,6 +81,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manage the maven configuration.
@@ -127,8 +126,7 @@ public class MavenConfigurationService implements Serializable {
 	@Inject
 	private GitRepositoryService gitRepositoryService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(MavenConfigurationService.class);
 
 	@Inject
 	private RemoteRepositoryService remoteRepositoryService;

@@ -3,20 +3,14 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.io.IOException;
-
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
-import javax.enterprise.event.TransactionPhase;
 import javax.inject.Inject;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.event.qualifier.Created;
-import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.MvCredential;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -29,9 +23,8 @@ import org.meveo.model.storage.Repository;
 import org.meveo.model.storage.StorageConfiguration;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.base.BusinessService;
-import org.meveo.service.base.BusinessServiceFinder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestScoped
 public class ModuleObserver {
@@ -39,8 +32,7 @@ public class ModuleObserver {
     @PersistenceUnit(unitName = "MeveoAdmin")
 	private EntityManagerFactory emf;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(ModuleObserver.class);
 	
 	@Inject
 	private MeveoModuleService moduleService;

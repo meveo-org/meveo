@@ -68,6 +68,8 @@ import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -90,6 +92,8 @@ public class CustomTableService extends NativePersistenceService {
      * File prefix indicating that imported data should be appended to exiting data
      */
     public static final String FILE_APPEND = "_append";
+    
+    private static Logger log = LoggerFactory.getLogger(CustomTableService.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;

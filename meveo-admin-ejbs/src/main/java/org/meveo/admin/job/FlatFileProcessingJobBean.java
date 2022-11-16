@@ -32,6 +32,7 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class FlatFileProcessingJobBean.
@@ -44,8 +45,7 @@ import org.slf4j.Logger;
 public class FlatFileProcessingJobBean {
 
     /** The log. */
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(FlatFileProcessingJobBean.class);
 
     /** The script instance service. */
     @Inject

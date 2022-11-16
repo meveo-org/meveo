@@ -15,6 +15,7 @@ import org.meveo.admin.listener.ApplicationInitializer;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.Provider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages providers connection to DB.
@@ -36,8 +37,7 @@ public class TenantRegistry {
     @Resource
     private TimerService timerService;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(TenantRegistry.class);
 
     /**
      * Unregister a tenant/provider.
