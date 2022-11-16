@@ -26,6 +26,7 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.BusinessServiceFinder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestScoped
 public class ModuleObserver {
@@ -33,8 +34,7 @@ public class ModuleObserver {
     @PersistenceUnit(unitName = "MeveoAdmin")
 	private EntityManagerFactory emf;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(ModuleObserver.class);
 		
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Transactional(value = TxType.REQUIRES_NEW)

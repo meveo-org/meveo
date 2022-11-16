@@ -32,6 +32,7 @@ import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -50,8 +51,7 @@ public class FileSystemService {
 	@Inject
 	private RepositoryService repositoryService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(FileSystemService.class);
 	
 	/**
 	 * Remove the folders corresponding to a given field

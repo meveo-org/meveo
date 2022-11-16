@@ -46,12 +46,16 @@ import org.meveo.model.communication.MediaEnum;
 import org.meveo.model.communication.MessageSenderConfig;
 import org.meveo.model.crm.Email;
 import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Email service implementation.
  */
 @Stateless
 public class EmailService extends PersistenceService<Email> {
+
+    private static Logger log = LoggerFactory.getLogger(EmailService.class);
 
     @Inject
     private MailerSessionFactory mailerSessionFactory;
@@ -177,5 +181,10 @@ public class EmailService extends PersistenceService<Email> {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

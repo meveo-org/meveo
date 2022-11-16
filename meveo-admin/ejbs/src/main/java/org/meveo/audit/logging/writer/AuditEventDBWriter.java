@@ -9,13 +9,16 @@ import org.meveo.audit.logging.dto.AuditEvent;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.audit.logging.AuditLog;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
  **/
 @Stateless
 public class AuditEventDBWriter extends PersistenceService<AuditLog> {
-
+	
 	public void write(AuditEvent auditEvent) throws BusinessException {
 		AuditLog auditLog = new AuditLog();
 		auditLog.setAction(auditEvent.getAction());

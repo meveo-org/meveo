@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  **/
 public class PerformanceInterceptor {
 
-	private Logger log = LoggerFactory.getLogger(PerformanceInterceptor.class);
+	private static Logger log = LoggerFactory.getLogger(PerformanceInterceptor.class);
 
 	@AroundInvoke
 	Object measureTime(InvocationContext ctx) throws Exception {

@@ -18,6 +18,21 @@
  */
 package org.meveo.service.billing.impl;
 
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
@@ -30,25 +45,15 @@ import org.meveo.model.catalog.Calendar;
 import org.meveo.model.catalog.CounterTemplate;
 import org.meveo.model.catalog.CounterTypeEnum;
 import org.meveo.model.notification.Notification;
-import org.meveo.service.base.PersistenceService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class CounterInstanceService extends PersistenceService<CounterInstance> {
+	
+	private static Logger log = LoggerFactory.getLogger(CounterInstanceService.class);
 
     @Inject
     private CounterPeriodService counterPeriodService;
@@ -395,4 +400,9 @@ public class CounterInstanceService extends PersistenceService<CounterInstance> 
             return counterPeriod.getValue();
         }
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

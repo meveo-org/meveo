@@ -67,6 +67,8 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -76,6 +78,8 @@ import org.meveo.service.git.MeveoRepository;
 @Stateless
 @Default
 public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
+
+    private static Logger log = LoggerFactory.getLogger(ScriptInstanceService.class);
 
 	@Inject
 	private ModuleInstallationContext moduleInstallationContext;
@@ -380,6 +384,11 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 		ScriptInstanceDto dto = (ScriptInstanceDto) super.getDto(entity);
 		dto.setScript(null);
 		return dto;
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 
 }

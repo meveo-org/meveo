@@ -2,21 +2,26 @@ package org.meveo.service.technicalservice.wsendpoint;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
 import javax.websocket.CloseReason;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.CloseReason.CloseCodes;
+import javax.websocket.server.PathParam;
+import javax.websocket.server.ServerEndpoint;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.UserMessageCacheContainerProvider;
@@ -27,13 +32,14 @@ import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ServerEndpoint("/ws/{endpoint-name}")
 @Stateless
 public class WebsocketServerEndpoint {
-	@Inject
-	private Logger log;
-
+	
+	private static Logger log = LoggerFactory.getLogger(WebsocketServerEndpoint.class);
+	
 	@Inject
 	private WSEndpointService wsEndpointService;
 

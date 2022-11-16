@@ -27,6 +27,7 @@ import org.meveo.service.storage.RepositoryService;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CypherHelper {
 
@@ -36,8 +37,7 @@ public class CypherHelper {
     @Inject
     private RepositoryService repositoryService;
     
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(CypherHelper.class);
 
     @SuppressWarnings("javadoc")
 	public <T> T execute(

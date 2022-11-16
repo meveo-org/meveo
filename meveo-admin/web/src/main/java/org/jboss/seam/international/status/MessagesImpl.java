@@ -38,8 +38,6 @@ public class MessagesImpl implements Messages {
     @Inject
     private MessageFactory factory;
 
-    // private Logger log = LoggerFactory.getLogger(this.getClass());
-
     public void clear() {
         Iterator<FacesMessage> it = FacesContext.getCurrentInstance().getMessages();
         while (it.hasNext()) {

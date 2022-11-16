@@ -39,6 +39,8 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.keycloak.client.KeycloakAdminClientService;
 import org.meveo.model.crm.Provider;
 import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provider service implementation.
@@ -50,6 +52,8 @@ import org.meveo.service.base.PersistenceService;
  */
 @Stateless
 public class ProviderService extends PersistenceService<Provider> {
+
+    private static Logger log = LoggerFactory.getLogger(ProviderService.class);
 
     /**
      * The tenant registry to add or remove a new tenant.
@@ -178,4 +182,9 @@ public class ProviderService extends PersistenceService<Provider> {
 
         }
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

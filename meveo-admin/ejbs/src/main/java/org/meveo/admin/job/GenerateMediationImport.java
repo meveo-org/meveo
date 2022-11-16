@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import org.meveo.commons.utils.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -31,8 +32,7 @@ public class GenerateMediationImport {
 		new GenerateMediationImport();
 	}
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(GenerateMediationImport.class);
 
 	public GenerateMediationImport() {
 		System.out.println("start creating mediation file...");

@@ -44,9 +44,12 @@ import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EJB for managing technical services endpoints
@@ -60,6 +63,8 @@ import org.meveo.service.git.MeveoRepository;
 public class EndpointService extends BusinessService<Endpoint> {
 
 	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
+
+    private static Logger log = LoggerFactory.getLogger(EndpointService.class);
 
 	@Inject
 	private GitClient gitClient;
@@ -261,5 +266,10 @@ public class EndpointService extends BusinessService<Endpoint> {
 				throw new BusinessException(entity.getCode() +" endpoint is invalid. Missing param " + entity.getPathParameters().get(i));
 			}
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

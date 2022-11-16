@@ -35,8 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
@@ -82,6 +82,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.synchronization.KeyLock;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Git client class to manipulate repositories
@@ -122,8 +123,7 @@ public class GitClient {
     private KeyLock keyLock;
     
     @Inject
-    private Logger log;
-
+    private static Logger log = LoggerFactory.getLogger(GitClient.class);
 
 
     /**

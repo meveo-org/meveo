@@ -42,7 +42,7 @@ public abstract class CrossStorageDataModel extends LazyDataModel<Map<String, Ob
 	
 	private CustomFieldTemplateService cftService = CDI.current().select(CustomFieldTemplateService.class).get();
 
-	private Logger log = LoggerFactory.getLogger(CrossStorageDataModel.class);
+	private static Logger log = LoggerFactory.getLogger(CrossStorageDataModel.class);
 
 	private Integer rowCount;
 

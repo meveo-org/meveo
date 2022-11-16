@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JoinedAutoStaleObjectEvictingPersister extends JoinedSubclassEntityPersister {
 
-	private Logger log = LoggerFactory.getLogger(this.getClass());
+	private static Logger log = LoggerFactory.getLogger(JoinedAutoStaleObjectEvictingPersister.class);
 
 	public JoinedAutoStaleObjectEvictingPersister(PersistentClass persistentClass, EntityDataAccess cacheAccessStrategy, NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {

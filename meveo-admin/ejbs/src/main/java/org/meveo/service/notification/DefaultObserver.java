@@ -17,7 +17,10 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.ftp.event.*;
+import org.meveo.admin.ftp.event.FileDelete;
+import org.meveo.admin.ftp.event.FileDownload;
+import org.meveo.admin.ftp.event.FileRename;
+import org.meveo.admin.ftp.event.FileUpload;
 import org.meveo.audit.logging.annotations.MeveoAudit;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
@@ -33,10 +36,10 @@ import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.Disabled;
 import org.meveo.event.qualifier.Enabled;
 import org.meveo.event.qualifier.InboundRequestReceived;
+import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.event.qualifier.Processed;
 import org.meveo.event.qualifier.Rejected;
 import org.meveo.event.qualifier.Removed;
-import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.event.qualifier.Terminated;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.event.qualifier.UpdatedAfterTx;
@@ -73,6 +76,7 @@ import org.meveo.service.billing.impl.CounterValueInsufficientException;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.Script;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default observer for all the events.
@@ -86,8 +90,7 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class DefaultObserver {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(DefaultObserver.class);
 	
 	@Inject
 	private BeanManager manager;

@@ -16,7 +16,7 @@ public class AuthenticationProvider {
     @Inject
     private HttpServletRequest httpRequest;
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(AuthenticationProvider.class);
 
     public String logout() {
         try {

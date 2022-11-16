@@ -89,7 +89,6 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.CrossStorageTransaction;
-import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -97,6 +96,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.PostgresReserverdKeywords;
 import org.meveo.util.MeveoParamBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic implementation that provides the default implementation for
@@ -108,6 +109,8 @@ import org.meveo.util.MeveoParamBean;
  */
 public class NativePersistenceService extends BaseService {
 	
+    private static Logger log = LoggerFactory.getLogger(NativePersistenceService.class);
+
 	@FunctionalInterface
 	public static interface SqlAction {
 		void doWork(PreparedStatement ps) throws Exception;

@@ -2,8 +2,6 @@ package org.meveo.service.custom;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +17,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
@@ -35,7 +32,6 @@ import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.ModulePostUninstall;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldValues;
@@ -44,13 +40,10 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
-import org.meveo.service.admin.impl.MeveoModuleHelper;
-import org.meveo.service.admin.impl.ModuleUninstall;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -59,6 +52,8 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.wf.WFActionService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ibm.icu.math.BigDecimal;
 
@@ -71,6 +66,8 @@ import com.ibm.icu.math.BigDecimal;
 @Stateless
 public class CustomEntityInstanceService extends BusinessService<CustomEntityInstance> {
 
+	private static Logger log = LoggerFactory.getLogger(CustomEntityInstanceService.class);
+	
 	@Inject
 	private CustomFieldsCacheContainerProvider cetCache;
 
@@ -517,6 +514,11 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 			log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
 		}
 		gitClient.commitFiles(module.getGitRepository(), Collections.singletonList(newDir), message);
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 
 }

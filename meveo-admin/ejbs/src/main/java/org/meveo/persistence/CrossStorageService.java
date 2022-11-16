@@ -33,7 +33,6 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
@@ -70,6 +69,7 @@ import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -100,8 +100,7 @@ public class CrossStorageService implements CustomPersistenceService {
 	@Inject
 	private CustomFieldInstanceService customFieldInstanceService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CrossStorageService.class);
 	
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;

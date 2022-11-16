@@ -66,11 +66,13 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.service.storage.RepositoryService;
-
-import com.github.javaparser.utils.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class GenericModuleService<T extends MeveoModule> extends BusinessService<T> {
+
+    private static Logger log = LoggerFactory.getLogger(GenericModuleService.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -482,5 +484,10 @@ public class GenericModuleService<T extends MeveoModule> extends BusinessService
             return null;
         }
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 
 }

@@ -67,6 +67,7 @@ import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -92,8 +93,7 @@ public class StartupListener {
 	@Inject
 	private RemoteRepositoryService remoteRepositoryService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(StartupListener.class);
 
 	@Inject
 	@MeveoJpa

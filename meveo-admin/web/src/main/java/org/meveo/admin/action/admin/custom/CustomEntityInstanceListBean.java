@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 @ViewScoped
 public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 
-	private Logger log = LoggerFactory.getLogger(CustomEntityInstanceListBean.class);
+	private static Logger log = LoggerFactory.getLogger(CustomEntityInstanceListBean.class);
 	private static final long serialVersionUID = 2227098775326177111L;
 
 	private List<CustomFieldTemplate> customFieldTemplateList = new ArrayList<>();

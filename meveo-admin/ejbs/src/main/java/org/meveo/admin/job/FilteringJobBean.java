@@ -31,6 +31,7 @@ import org.meveo.service.filter.FilterService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The FilteringJobBean have 2 mains inputs :ScriptInstance and Filter. For each filtered entity the scriptInstance are executed.
@@ -41,8 +42,7 @@ import org.slf4j.Logger;
 @Stateless
 public class FilteringJobBean {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(FilteringJobBean.class);
 
     @Inject
     private FilterService filterService;

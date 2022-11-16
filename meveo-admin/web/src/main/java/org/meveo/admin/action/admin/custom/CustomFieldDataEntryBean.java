@@ -108,7 +108,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private static final long serialVersionUID = 2587695185934268809L;
 
 	/** Logger. */
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	protected static Logger log = LoggerFactory.getLogger(CustomFieldDataEntryBean.class);
 
 	/**
 	 * Custom field templates grouped into tabs and field groups

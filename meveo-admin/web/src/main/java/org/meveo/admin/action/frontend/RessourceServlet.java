@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* originally from @author BalusC in LGPL licence
 ** @link http://balusc.blogspot.com/2009/02/fileservlet-supporting-resume-and.html
@@ -36,8 +37,7 @@ public class RessourceServlet extends HttpServlet {
     private static final long DEFAULT_EXPIRE_TIME = 604800000L; // ..ms = 1 week.
     private static final String MULTIPART_BOUNDARY = "MULTIPART_BYTERANGES";
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(RessourceServlet.class);
 
     /** paramBeanFactory */
     @Inject

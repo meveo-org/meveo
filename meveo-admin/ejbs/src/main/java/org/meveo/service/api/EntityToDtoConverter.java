@@ -33,12 +33,12 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class EntityToDtoConverter {
 
-    @Inject
-    private Logger logger;
+    private static Logger logger = LoggerFactory.getLogger(EntityToDtoConverter.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;

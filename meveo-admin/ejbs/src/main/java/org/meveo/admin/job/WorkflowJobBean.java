@@ -27,12 +27,12 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.filter.FilterService;
 import org.meveo.service.wf.WorkflowService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class WorkflowJobBean {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(WorkflowJobBean.class);
 
     @Inject
     private FilterService filterService;

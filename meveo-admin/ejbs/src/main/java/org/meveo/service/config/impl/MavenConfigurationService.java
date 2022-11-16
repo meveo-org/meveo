@@ -1,7 +1,6 @@
 package org.meveo.service.config.impl;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -80,6 +79,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.storage.RemoteRepositoryService;
 import org.meveo.util.Version;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manage the maven configuration.
@@ -124,8 +124,7 @@ public class MavenConfigurationService implements Serializable {
 	@Inject
 	private GitRepositoryService gitRepositoryService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(MavenConfigurationService.class);
 
 	@Inject
 	private RemoteRepositoryService remoteRepositoryService;

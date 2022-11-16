@@ -18,6 +18,7 @@ import org.jboss.seam.international.status.Messages;
 import org.meveo.commons.utils.ParamBean;
 import org.primefaces.PrimeFaces;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.unix4j.Unix4j;
 import org.unix4j.unix.grep.GrepOption;
 import org.unix4j.unix.grep.GrepOptions;
@@ -35,7 +36,7 @@ public class LogViewerBean implements Serializable {
 	private static final long serialVersionUID = 3761175276890871506L;
 
 	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(LogViewerBean.class);
 
 	@Inject
 	protected Messages messages;

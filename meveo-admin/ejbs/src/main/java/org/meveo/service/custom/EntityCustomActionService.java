@@ -31,9 +31,13 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 import org.meveo.service.git.GitHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
+
+    private static Logger log = LoggerFactory.getLogger(EntityCustomActionService.class);
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -142,4 +146,9 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
         }
         gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

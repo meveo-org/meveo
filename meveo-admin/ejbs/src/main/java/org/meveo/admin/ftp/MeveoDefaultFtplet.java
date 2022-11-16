@@ -20,14 +20,16 @@ import org.meveo.model.mediation.ActionEnum;
 import org.meveo.model.mediation.MeveoFtpFile;
 import org.meveo.service.admin.impl.UserService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class MeveoDefaultFtplet extends DefaultFtplet {
-	@Inject
-	private Logger log;
+	
+	private static Logger log = LoggerFactory.getLogger(MeveoDefaultFtplet.class);
 
 	@Inject
 	@FileUpload
+	
 	private Event<MeveoFtpFile> upload;
 
 	@Inject

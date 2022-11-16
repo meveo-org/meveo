@@ -22,7 +22,7 @@ public class IEntityHibernateProxyConverter implements Converter {
 
     private ExportImportConfig exportImportConfig;
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(IEntityHibernateProxyConverter.class);
 
     public IEntityHibernateProxyConverter(ExportImportConfig exportImportConfig) {
         this.exportImportConfig = exportImportConfig;

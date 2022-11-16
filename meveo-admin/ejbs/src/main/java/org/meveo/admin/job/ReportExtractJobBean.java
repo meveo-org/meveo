@@ -24,6 +24,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.finance.ReportExtractService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * List all ReportExtract and dispatched for asynch execution.
@@ -38,8 +39,7 @@ public class ReportExtractJobBean implements Serializable {
 
     private static final long serialVersionUID = 9159856207913605563L;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ReportExtractJobBean.class);
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;

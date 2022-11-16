@@ -21,6 +21,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptUtils;
 import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This service is use to build the endpoint interface from a template file. The
@@ -45,8 +46,7 @@ public class ESGeneratorService {
 	@Inject
 	private ESGeneratorService esGeneratorService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(ESGeneratorService.class);
 
 	/**
 	 * Generates an endpoint interface in js code using a template file.

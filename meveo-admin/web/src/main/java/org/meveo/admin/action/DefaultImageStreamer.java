@@ -19,6 +19,7 @@ import org.meveo.util.ApplicationProvider;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -29,8 +30,7 @@ import org.slf4j.Logger;
 @ApplicationScoped
 public class DefaultImageStreamer {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(DefaultImageStreamer.class);
 
     @Inject
     @ApplicationProvider

@@ -35,7 +35,7 @@ public class MeveoFtpUserManager extends AbstractUserManager {
     private static final int HOUR = 60 * 60;
     private static final String ADMINISTRATOR = "administrateur";
 
-    private Logger log = LoggerFactory.getLogger(MeveoFtpUserManager.class);
+    private static Logger log = LoggerFactory.getLogger(MeveoFtpUserManager.class);
 
     private UserService userService;
 

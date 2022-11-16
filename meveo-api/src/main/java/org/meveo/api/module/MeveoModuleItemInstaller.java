@@ -1,6 +1,5 @@
 package org.meveo.api.module;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +32,6 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -43,9 +41,7 @@ import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
-import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.MvCollectionUtils;
@@ -56,7 +52,6 @@ import org.meveo.model.DatePeriod;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.ModulePostInstall;
 import org.meveo.model.ModulePostUninstall;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -69,10 +64,8 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.Repository;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
@@ -87,6 +80,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Meveo module installer.
@@ -105,8 +99,7 @@ public class MeveoModuleItemInstaller {
     @Inject
     private EntityCustomActionApi entityCustomActionApi;
     
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(MeveoModuleItemInstaller.class);
     
     @Inject
     private MeveoModuleService meveoModuleService;

@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
@@ -35,6 +34,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.config.impl.MavenConfigurationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Allows the user to download a jar file from Meveo. Directory hierarchy is
@@ -64,8 +64,7 @@ public class MavenFileServlet extends HttpServlet {
 	@Inject
 	private MeveoModuleService moduleService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(MavenFileServlet.class);
 	
 	private String userPath;
 

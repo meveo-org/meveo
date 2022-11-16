@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class RunCallable implements Runnable {
 
-	private Logger log = LoggerFactory.getLogger(RunCallable.class);
+	private static Logger log = LoggerFactory.getLogger(RunCallable.class);
 
 	Callable<?> callable;
 

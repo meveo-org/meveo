@@ -41,6 +41,8 @@ import org.meveo.model.jobs.JobInstance;
 import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class JobExecutionService.
@@ -51,6 +53,8 @@ import org.meveo.service.base.PersistenceService;
  */
 @Stateless
 public class JobExecutionService extends PersistenceService<JobExecutionResultImpl> {
+
+    private static Logger log = LoggerFactory.getLogger(JobExecutionService.class);
 
     /**
      * job instance service.
@@ -381,5 +385,10 @@ public class JobExecutionService extends PersistenceService<JobExecutionResultIm
 		} else {
 			return null;
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

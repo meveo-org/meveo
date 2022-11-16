@@ -57,6 +57,7 @@ import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.script.weld.MeveoBeanManager;
 import org.meveo.service.technicalservice.endpoint.pool.ScriptInterfacePoolFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Clément Bareth *
@@ -67,9 +68,8 @@ import org.slf4j.Logger;
 @Startup
 public class EndpointCacheContainer {
 
-
 	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(EndpointCacheContainer.class);
 
 	@Resource(lookup = "java:jboss/infinispan/cache/meveo/endpoints-results")
 	private Cache<String, PendingResult> pendingExecutions;

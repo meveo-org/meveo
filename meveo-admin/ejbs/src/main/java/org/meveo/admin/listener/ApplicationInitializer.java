@@ -23,6 +23,7 @@ import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Takes care of initializing/loading various application services/data
@@ -52,8 +53,7 @@ public class ApplicationInitializer {
     @Inject
     private EntityManagerProvider entityManagerProvider;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ApplicationInitializer.class);
 
     @Inject
     private NotificationCacheContainerProvider notifCache;

@@ -17,26 +17,26 @@
  */
 package org.meveo.api.rest.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.MediaType;
+
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.BaseEntityDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
-import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.rest.IBaseBaseCrudRs;
 import org.meveo.model.IEntity;
 import org.slf4j.Logger;
-
-import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ServerErrorException;
-import javax.ws.rs.core.MediaType;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -50,8 +50,7 @@ import java.io.InputStream;
  */
 public abstract class BaseCrudRs<T extends IEntity, D extends BaseEntityDto> extends BaseRs implements IBaseBaseCrudRs {
 	
-	@Inject
-	private Logger logger;
+	private static Logger logger = LoggerFactory.getLogger(BaseCrudRs.class);
 	
 	public abstract BaseCrudApi<T, D> getBaseCrudApi();
 	

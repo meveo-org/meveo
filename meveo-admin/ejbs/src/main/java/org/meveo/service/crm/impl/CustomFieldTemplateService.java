@@ -60,6 +60,8 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -69,6 +71,8 @@ import org.meveo.util.PersistenceUtils;
  */
 @Stateless
 public class CustomFieldTemplateService extends BusinessService<CustomFieldTemplate> {
+
+    private static Logger log = LoggerFactory.getLogger(CustomFieldTemplateService.class);
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
@@ -848,5 +852,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
         gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 
 }

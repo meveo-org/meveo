@@ -41,8 +41,11 @@ import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.security.Role;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.hierarchy.impl.UserHierarchyLevelService;
 import org.meveo.service.storage.RepositoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User service implementation.
@@ -55,6 +58,8 @@ import org.meveo.service.storage.RepositoryService;
 public class UserService extends PersistenceService<User> {
 
     static User systemUser = null;
+    
+    private static Logger log = LoggerFactory.getLogger(UserService.class);
     
     @Inject
     private UserHierarchyLevelService userHierarchyLevelService;
@@ -286,4 +291,9 @@ public class UserService extends PersistenceService<User> {
     	List<UserHierarchyLevel> userLevels = userHierarchyLevelService.buildHierarchy(rootNode);
     	return repositoryService.findByUserHierarchyLevels(userLevels);
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }
