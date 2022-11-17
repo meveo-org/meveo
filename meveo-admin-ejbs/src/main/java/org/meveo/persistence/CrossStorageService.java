@@ -265,11 +265,11 @@ public class CrossStorageService implements CustomPersistenceService {
 				var subValues = storageImpl.findById(storageConf, cet, uuid, cfts, selectFields, withEntityReferences);
 				if (subValues != null) {
 					storageValues.putAll(subValues);
+					foudEntity = true;
 				}
 			}
 			
 			if (storageValues != null) {
-				foudEntity = true;
 				values.putAll(storageValues);
 			}
 			
