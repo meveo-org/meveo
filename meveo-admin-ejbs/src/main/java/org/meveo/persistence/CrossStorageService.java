@@ -268,7 +268,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				}
 			}
 			
-			if (storageValues != null && !storageValues.isEmpty()) {
+			if (storageValues != null) {
 				foudEntity = true;
 				values.putAll(storageValues);
 			}
