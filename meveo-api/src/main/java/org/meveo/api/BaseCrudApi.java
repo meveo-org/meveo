@@ -56,6 +56,8 @@ import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.util.NullAwareBeanUtilsBean;
 import org.primefaces.model.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -80,9 +82,12 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi
 		implements ApiService<E, T> {
 
+	private static Logger log = LoggerFactory.getLogger(BaseCrudApi.class);
+
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
 	private Set<File> fileImport = new HashSet<>();
+	
 
 	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();

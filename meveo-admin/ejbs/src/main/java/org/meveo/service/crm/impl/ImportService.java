@@ -18,7 +18,7 @@ public abstract class ImportService {
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());    
+    private static Logger log = LoggerFactory.getLogger(ImportService.class);    
 
     @Inject
     private CustomFieldInstanceService customFieldInstanceService;

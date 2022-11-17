@@ -49,6 +49,15 @@ import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.script.ScriptUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -56,6 +65,8 @@ import org.meveo.service.script.ScriptInstanceService;
  **/
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(ScriptInstanceApi.class);
 
 	@Inject
 	private ModuleInstallationContext moduleInstallationContext;

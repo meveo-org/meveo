@@ -18,9 +18,13 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.User;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.security.SecuredBusinessEntityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListFilter extends SecureMethodResultFilter {
 
+	private static Logger log = LoggerFactory.getLogger(ListFilter.class);
+	
     @Inject
     private SecuredBusinessEntityService securedBusinessEntityService;
 
@@ -29,7 +33,6 @@ public class ListFilter extends SecureMethodResultFilter {
     public Object filterResult(Method methodContext, Object result, MeveoUser currentUser, User user) throws MeveoApiException {
         if (result == null) {
             // result is empty. no need to filter.
-            log.warn("Result is empty. Skipping filter...");
             return result;
         }
 

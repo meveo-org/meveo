@@ -71,6 +71,8 @@ import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.util.Json;
 
@@ -84,6 +86,8 @@ import io.swagger.util.Json;
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(EndpointApi.class);
 
 	@Inject
 	@Processed

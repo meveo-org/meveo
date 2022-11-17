@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  **/
 public abstract class BaseWs {
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseWs.class);
 
     @Resource
     protected WebServiceContext webServiceContext;

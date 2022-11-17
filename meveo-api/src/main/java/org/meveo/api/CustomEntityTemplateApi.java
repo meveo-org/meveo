@@ -541,7 +541,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
             throws MissingParameterException, ELException {
         new EntityCustomizationDto();
         EntityCustomizationDto result = new EntityCustomizationDto();
-		log.debug("IPIEL: listELFiltered");
 
 		if (StringUtils.isBlank(appliesTo)) {
 			missingParameters.add("appliesTo");

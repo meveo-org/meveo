@@ -88,7 +88,7 @@ public abstract class Job {
     @Inject
     private AuditOrigin auditOrigin;
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(Job.class);
 
     /**
      * Execute job instance with results published to a given job execution result entity.

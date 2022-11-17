@@ -79,6 +79,8 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Meveo module bean
@@ -92,6 +94,8 @@ import org.primefaces.model.TreeNode;
 public abstract class GenericModuleBean<T extends MeveoModule> extends BaseCrudBean<T, MeveoModuleDto> {
 
     private static final long serialVersionUID = 8332852624069548417L;
+    
+    private static Logger log = LoggerFactory.getLogger(GenericModuleBean.class);
 
     @Inject
     protected MeveoModuleService meveoModuleService;

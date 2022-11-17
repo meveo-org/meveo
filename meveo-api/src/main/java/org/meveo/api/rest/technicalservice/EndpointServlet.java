@@ -56,6 +56,7 @@ import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
 import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -79,8 +80,7 @@ public class EndpointServlet extends HttpServlet {
 
     private static final long serialVersionUID = -8425320629325242067L;
 
-    @Inject
-    public Logger log;
+    private static Logger log = LoggerFactory.getLogger(EndpointServlet.class);
     
     @EJB
     private EndpointApi endpointApi;

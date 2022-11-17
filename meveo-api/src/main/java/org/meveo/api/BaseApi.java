@@ -82,7 +82,7 @@ import org.slf4j.LoggerFactory;
  **/
 public abstract class BaseApi {
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseApi.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;

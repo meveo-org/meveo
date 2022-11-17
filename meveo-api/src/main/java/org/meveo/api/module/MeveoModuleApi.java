@@ -159,6 +159,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	private static boolean initalized = false;
+	
+	private static Logger log = LoggerFactory.getLogger(MeveoModuleApi.class);
 
 	@Inject
 	private MeveoModuleService meveoModuleService;

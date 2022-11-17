@@ -29,6 +29,8 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.view.ServiceBasedLazyDataModel;
 import org.primefaces.model.LazyDataModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -39,6 +41,8 @@ import org.primefaces.model.LazyDataModel;
 public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     private static final long serialVersionUID = 1L;
+    
+    private static Logger log = LoggerFactory.getLogger(JobInstanceBean.class);
 
     @Inject
     private JobInstanceService jobInstanceService;

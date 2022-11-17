@@ -48,6 +48,8 @@ import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link WFTransition} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create,
@@ -58,6 +60,8 @@ import org.primefaces.model.TreeNode;
 public class WfTransitionBean extends BaseBean<WFTransition> {
 
     private static final long serialVersionUID = 1L;
+    
+    private static Logger log = LoggerFactory.getLogger(WfTransitionBean.class);
 
     private static final String EL = "#{mv:getBean('OrderService').routeToUserGroup(entity,'%s')}";
 

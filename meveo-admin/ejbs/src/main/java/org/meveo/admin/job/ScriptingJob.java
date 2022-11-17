@@ -22,6 +22,8 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.service.job.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -29,6 +31,8 @@ import org.meveo.service.job.Job;
  */
 @Stateless
 public class ScriptingJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(ScriptingJob.class);
 
     /** The scripting job bean. */
     @Inject

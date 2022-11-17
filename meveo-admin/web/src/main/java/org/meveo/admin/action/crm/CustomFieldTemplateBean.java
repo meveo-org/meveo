@@ -42,6 +42,8 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.DualListModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bean for managing {@link CustomFieldTemplate}.
@@ -55,6 +57,8 @@ import org.primefaces.model.DualListModel;
 public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldTemplate> {
 
     private static final long serialVersionUID = 9099292371182275568L;
+    
+    private static Logger log = LoggerFactory.getLogger(CustomFieldTemplateBean.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;

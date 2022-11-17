@@ -13,6 +13,7 @@ import javax.inject.Named;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provider used to set current user repository for a given session
@@ -28,11 +29,10 @@ public class CurrentRepositoryProvider implements Serializable {
 	
 	private static final long serialVersionUID = -1161560465567580602L;
 
+	private static Logger log = LoggerFactory.getLogger(CurrentRepositoryProvider.class);
+	
 	@Inject
 	private transient RepositoryService repositoryService;
-
-	@Inject
-	private transient Logger log;
 	
 	private Repository repository;
 

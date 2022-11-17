@@ -27,6 +27,8 @@ import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.event.TreeDragDropEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for
@@ -41,6 +43,8 @@ import org.primefaces.model.TreeNode;
 @Named
 @ViewScoped
 public class UserHierarchyLevelBean extends BaseBean<UserHierarchyLevel> {
+	
+	private static Logger log = LoggerFactory.getLogger(UserHierarchyLevelBean.class);
 
 	private static final long serialVersionUID = 1L;
 	private static final String ROOT = "Root";

@@ -20,6 +20,8 @@ import org.meveo.model.filter.Filter;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.filter.FilterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -29,6 +31,8 @@ import org.meveo.service.filter.FilterService;
 public class FilterBean extends BaseBean<Filter> {
 
 	private static final long serialVersionUID = 6689238784280187702L;
+	
+	private static Logger log = LoggerFactory.getLogger(FilterBean.class);
 
 	@Inject
 	private FilterService filterService;

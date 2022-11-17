@@ -58,6 +58,8 @@ import org.meveo.service.wf.WFActionService;
 import org.meveo.service.wf.WFTransitionService;
 import org.meveo.service.wf.WorkflowService;
 import org.omnifaces.cdi.Param;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link Workflow} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create,
@@ -73,6 +75,9 @@ import org.omnifaces.cdi.Param;
 public class WorkflowBean extends BaseBean<Workflow> {
 
     private static final long serialVersionUID = 1L;
+    
+    private static Logger log = LoggerFactory.getLogger(WorkflowBean.class);
+    
     private static final String LESS_SEPARATOR = " < ";
     private static final String LESS_SEPARATOR_NO_SPACE_LEFT = "< ";
     private static final String LESS_SEPARATOR_NO_SPACE_RIGHT = " <";

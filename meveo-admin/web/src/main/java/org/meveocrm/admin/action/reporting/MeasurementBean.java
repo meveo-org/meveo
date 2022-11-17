@@ -59,6 +59,8 @@ import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
 import org.omnifaces.util.Messages;
 import org.primefaces.event.CellEditEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -70,6 +72,8 @@ import org.primefaces.event.CellEditEvent;
 public class MeasurementBean extends BaseBean<MeasuredValue> {
 
     private static final long serialVersionUID = 883901110961710869L;
+    
+    private static Logger log = LoggerFactory.getLogger(MeasurementBean.class);
 
     @Inject
     MeasuredValueService measuredValueService;

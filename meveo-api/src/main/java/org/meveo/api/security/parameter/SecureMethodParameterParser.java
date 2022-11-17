@@ -17,9 +17,6 @@ import org.slf4j.Logger;
  */
 public abstract class SecureMethodParameterParser<T> {
 
-    @Inject
-    protected Logger log;
-
     /**
      * This method implements the algorithm for parsing method parameters from {@link SecuredBusinessEntityMethod} annotated methods.
      * 

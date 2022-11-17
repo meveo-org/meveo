@@ -65,6 +65,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (loading, update) for custom field value related operations
@@ -86,8 +87,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public static final String MEVEO_CET_CACHE = "meveo-cet-cache";
     public static final String MEVEO_CRT_CACHE = "meveo-crt-cache";
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(CustomFieldsCacheContainerProvider.class);
 
     @EJB
     private CustomFieldTemplateService customFieldTemplateService;

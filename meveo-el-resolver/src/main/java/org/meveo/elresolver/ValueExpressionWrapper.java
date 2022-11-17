@@ -15,14 +15,14 @@ public class ValueExpressionWrapper {
     private static final String MAPPER_CLASS_NAME = "mapper.class.name";
 
     static ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
+    
+    protected static Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
 
     private SimpleELResolver simpleELResolver;
 
     private ELContext context;
 
     private ValueExpression ve;
-
-    static protected Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
 
     static HashMap<String, ValueExpressionWrapper> valueExpressionWrapperMap = new HashMap<>();
 

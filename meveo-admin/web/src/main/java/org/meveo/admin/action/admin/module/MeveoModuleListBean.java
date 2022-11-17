@@ -45,6 +45,8 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.ModuleUninstall;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Clément Bareth
@@ -56,6 +58,8 @@ import org.primefaces.model.TreeNode;
 public class MeveoModuleListBean extends MeveoModuleBean {
 
     private static final long serialVersionUID = 1L;
+    
+    private static Logger log = LoggerFactory.getLogger(MeveoModuleListBean.class);
 
     @Inject
     private MeveoModuleApi moduleApi;
