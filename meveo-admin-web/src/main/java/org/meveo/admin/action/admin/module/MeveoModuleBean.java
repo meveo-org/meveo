@@ -66,6 +66,8 @@ import org.meveo.util.view.MessagesHelper;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -85,6 +87,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static Logger log = LoggerFactory.getLogger(MeveoModuleBean.class);
 	
 	@Inject
 	private UserService userService;

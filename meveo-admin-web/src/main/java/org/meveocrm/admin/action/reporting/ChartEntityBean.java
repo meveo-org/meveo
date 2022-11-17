@@ -35,10 +35,14 @@ import org.primefaces.model.chart.ChartSeries;
 import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.LineChartSeries;
 import org.primefaces.model.chart.PieChartModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Dependent
 public class ChartEntityBean<T extends Chart, CM extends ChartModel, EM extends ChartEntityModel<T, CM>> extends BaseBean<T> {
 
+	private static Logger log = LoggerFactory.getLogger(ChartEntityBean.class);
+			
 	@Inject
 	protected ChartService<T> chartService;
 

@@ -26,7 +26,7 @@ public class ValueExpressionWrapper {
 
     private static final String MAPPER_CLASS_NAME = "mapper.class.name";
     
-    static protected Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
+    protected static Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
 
     static ExpressionFactory expressionFactory;
 

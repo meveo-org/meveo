@@ -138,8 +138,6 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		Repository repository = (Repository) attrs.get("repository");
 		CustomFieldValues fieldValues = (CustomFieldValues) attrs.get("values");
 		
-		log.info("" + repository);
-
 		if (repository != null) {
 			repository = repositoryService.retrieveIfNotManaged(repository);
 		}
@@ -164,8 +162,6 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 		
 		rootPath = fileSystemService.persists(params, fieldValues.getValues());
 		
-		log.debug("binary path={}", rootPath);
-		
 		if (isSingle) {
 			cfv.setStringValue(rootPath);
 
@@ -189,7 +185,7 @@ public class CustomTableRowDetailBean extends CustomTableBean implements Seriali
 					Files.delete(path);
 					
 				} catch (IOException e) {
-					log.debug("File does not exists {}", path.getFileName());
+					
 				}
 			}
 		}

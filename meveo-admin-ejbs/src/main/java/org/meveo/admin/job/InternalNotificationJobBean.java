@@ -28,6 +28,7 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.notification.ScriptNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class InternalNotificationJobBean.
@@ -38,8 +39,7 @@ import org.slf4j.Logger;
 public class InternalNotificationJobBean {
 
     /** The log. */
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(InternalNotificationJobBean.class);
 
     /** The job execution service . */
     @Inject

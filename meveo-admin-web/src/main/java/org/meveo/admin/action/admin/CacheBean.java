@@ -48,13 +48,15 @@ import org.meveo.util.view.LazyDataModelWSize;
 import org.omnifaces.cdi.Param;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
 public class CacheBean implements Serializable {
 
     private static final long serialVersionUID = -8072659867697109888L;
-
+    
     @Inject
     private NotificationCacheContainerProvider notificationCacheContainerProvider;
 
@@ -69,10 +71,6 @@ public class CacheBean implements Serializable {
 
     @Inject
     private UserMessageCacheContainerProvider userMessageCacheContainerProvider;
-
-    /** Logger. */
-    @Inject
-    protected org.slf4j.Logger log;
 
     @Inject
     protected Messages messages;

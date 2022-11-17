@@ -41,7 +41,6 @@ public class MeveoInstanceApi extends BaseApi {
 	private MavenConfigurationService mavenConfigurationService;
 
 	public void create(MeveoInstanceDto postData) throws MeveoApiException, BusinessException {
-		log.debug("meveo instance api create by code {}", postData.getCode());
 		if (StringUtils.isBlank(postData.getCode())) {
 			missingParameters.add("code");
 		}

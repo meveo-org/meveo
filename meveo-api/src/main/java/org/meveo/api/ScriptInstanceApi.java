@@ -56,6 +56,8 @@ import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.script.ScriptUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -68,6 +70,8 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
  **/
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(ScriptInstanceApi.class);
 
 	@Inject
 	private ModuleInstallationContext moduleInstallationContext;

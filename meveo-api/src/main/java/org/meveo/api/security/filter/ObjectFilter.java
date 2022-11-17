@@ -16,9 +16,13 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.admin.User;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.security.SecuredBusinessEntityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ObjectFilter extends SecureMethodResultFilter {
 
+	private static Logger log = LoggerFactory.getLogger(ObjectFilter.class);
+	
     @Inject
     private SecuredBusinessEntityService securedBusinessEntityService;
 

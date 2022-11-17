@@ -8,12 +8,13 @@ import javax.inject.Inject;
 
 import org.meveo.model.IEntity;
 import org.primefaces.model.SelectableDataModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EntityListDataModelPF<T extends IEntity> extends ListDataModel<T> implements
 		SelectableDataModel<T> {
 
-	@Inject
-	protected org.slf4j.Logger log;
+	private static Logger log = LoggerFactory.getLogger(EntityListDataModelPF.class);
 
 	private T[] selectedItems;
 

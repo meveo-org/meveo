@@ -15,6 +15,8 @@ import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.job.JobInstanceService;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -29,6 +31,8 @@ import java.util.List;
 public abstract class BackingCustomBean <T extends BusinessEntity> extends BaseBean<T> {
 
     private static final long serialVersionUID = 1187554162639618526L;
+    
+    private static Logger log = LoggerFactory.getLogger(BackingCustomBean.class);
 
     @Inject
     protected CustomFieldTemplateService customFieldTemplateService;

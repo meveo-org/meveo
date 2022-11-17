@@ -57,9 +57,8 @@ public class WebsocketServerEndpoint {
 	}
 	
 	@Inject
-	public WebsocketServerEndpoint(Logger log, WSEndpointService wsEndpointService, ConcreteFunctionService concreteFunctionService, UserMessageCacheContainerProvider userMessageCacheProvider) {
+	public WebsocketServerEndpoint(WSEndpointService wsEndpointService, ConcreteFunctionService concreteFunctionService, UserMessageCacheContainerProvider userMessageCacheProvider) {
 		super();
-		this.log = log;
 		this.wsEndpointService = wsEndpointService;
 		this.concreteFunctionService = concreteFunctionService;
 		this.userMessageCacheProvider = userMessageCacheProvider;

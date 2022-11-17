@@ -33,6 +33,8 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MultiLanguageFieldService;
 import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -41,6 +43,8 @@ import org.meveo.service.base.PersistenceService;
  */
 @Stateless
 public class MultiLanguageFieldApi extends BaseApi {
+	
+	private static Logger log = LoggerFactory.getLogger(MultiLanguageFieldApi.class);
 
     @Inject
     private MultiLanguageFieldService multiLanguageFieldService;

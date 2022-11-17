@@ -18,6 +18,8 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.custom.CustomRelationshipTemplateRs;
 import org.meveo.api.rest.impl.BaseRs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rachid AITYAAZZA
@@ -26,6 +28,8 @@ import org.meveo.api.rest.impl.BaseRs;
 @Interceptors({ WsRestApiInterceptor.class })
 public class CustomRelationshipTemplateRsImpl extends BaseRs implements CustomRelationshipTemplateRs {
 
+	private static Logger log = LoggerFactory.getLogger(CustomRelationshipTemplateRsImpl.class);
+			
     @Inject
     private CustomRelationshipTemplateApi customRelationshipTemplateApi;
 

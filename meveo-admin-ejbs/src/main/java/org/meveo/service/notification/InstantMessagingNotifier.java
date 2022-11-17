@@ -20,14 +20,14 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.skype.Skype;
 
 @Stateless
 public class InstantMessagingNotifier {
 
-    @Inject
-    Logger log;
+	private static Logger log = LoggerFactory.getLogger(InstantMessagingNotifier.class);
 
     private Session mailSession;
 

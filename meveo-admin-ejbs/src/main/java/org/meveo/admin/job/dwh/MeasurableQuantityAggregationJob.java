@@ -25,9 +25,13 @@ import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class MeasurableQuantityAggregationJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(MeasurableQuantityAggregationJob.class);
 
     @Inject
     private MeasurableQuantityService mqService;
