@@ -1,6 +1,7 @@
 package org.meveo.service.config.impl;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
