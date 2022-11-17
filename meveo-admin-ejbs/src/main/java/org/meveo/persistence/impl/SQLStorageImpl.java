@@ -648,7 +648,7 @@ public class SQLStorageImpl implements StorageImpl {
 	public <T> T beginTransaction(IStorageConfiguration repository, int stackedCalls) {
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION && stackedCalls == 0) {
-				userTx.begin();
+				// userTx.begin();
 			}
 			
 			return (T) getHibernateSession(repository.getCode());
@@ -660,13 +660,13 @@ public class SQLStorageImpl implements StorageImpl {
 
 	@Override
 	public void commitTransaction(IStorageConfiguration repository) {
-		try {
-			if(userTx != null) {
-				userTx.commit();
-			}
-		} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
-			throw new RuntimeException(e);
-		}
+//		try {
+//			if(userTx != null) {
+//				// userTx.commit();
+//			}
+//		} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
+//			throw new RuntimeException(e);
+//		}
 		
 	}
 
@@ -696,7 +696,7 @@ public class SQLStorageImpl implements StorageImpl {
 			});
 			hibernateSessions.clear();
 			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
-				userTx.commit();
+				// userTx.commit();
 			}
 		} catch (Exception e) {
 			log.error("Error destroying {}", this, e);
@@ -706,7 +706,7 @@ public class SQLStorageImpl implements StorageImpl {
 	public org.hibernate.Session getHibernateSession(String repository) {
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION) {
-				userTx.begin();
+				// userTx.begin();
 			}
 			return hibernateSessions.computeIfAbsent(repository, sqlConnectionProvider::getSession);
 		} catch (Exception e) {
