@@ -3,6 +3,7 @@
  */
 package org.meveo.admin.action.admin.endpoint;
 
+import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -37,6 +38,13 @@ public class WebsocketClientBean extends BaseCrudBean<WebsocketClient, Websocket
 	public WebsocketClientBean() {
 		super(WebsocketClient.class); 
 	}
+
+	@PostConstruct
+	@Override
+    public void init() {
+		super.init();
+        this.filters.put("moduleBelonging", this.getUserCurrentModule());
+    }
 	
 	@Override
 	public BaseCrudApi<WebsocketClient, WebsocketClientDto> getBaseCrudApi() {

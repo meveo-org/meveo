@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,6 +54,13 @@ public class NotificationHistoryBean extends BaseBean<NotificationHistory> {
 	public NotificationHistoryBean() {
 		super(NotificationHistory.class);
 	}
+
+	@PostConstruct
+	@Override
+    public void init() {
+		super.init();
+        this.filters.put("moduleBelonging", this.getUserCurrentModule());
+    }
 
 	@Override
 	protected IPersistenceService<NotificationHistory> getPersistenceService() {

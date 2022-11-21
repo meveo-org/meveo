@@ -18,6 +18,7 @@
  */
 package org.meveo.admin.action.notification;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Named;
 
@@ -26,4 +27,11 @@ import javax.inject.Named;
 public class EmailNotificationListBean extends EmailNotificationBean {
 
     private static final long serialVersionUID = -3037867704912788042L;
+
+    @PostConstruct
+	@Override
+    public void init() {
+		super.init();
+        this.filters.put("moduleBelonging", this.getUserCurrentModule());
+    }
 }
