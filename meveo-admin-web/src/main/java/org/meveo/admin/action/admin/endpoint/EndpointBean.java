@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -107,6 +108,13 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		
 		return entity;
 	}
+
+	@PostConstruct
+	@Override
+    public void init() {
+		super.init();
+        this.filters.put("moduleBelonging", this.getUserCurrentModule());
+    }
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {

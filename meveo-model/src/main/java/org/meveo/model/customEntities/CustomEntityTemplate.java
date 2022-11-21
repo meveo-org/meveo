@@ -78,7 +78,7 @@ import org.meveo.model.storage.Repository;
 		@NamedQuery(name = "CustomEntityTemplate.PrimitiveType", query = "SELECT cet.neo4JStorageConfiguration.primitiveType FROM CustomEntityTemplate cet WHERE code = :code"),
 		@NamedQuery(name = "CustomEntityTemplate.getCETsByCategoryId", query = "SELECT cet FROM CustomEntityTemplate cet WHERE cet.customEntityCategory.id = :id"),
 		@NamedQuery(name = "CustomEntityTemplate.ReSetCategoryEmptyByCategoryId", query = "UPDATE CustomEntityTemplate cet SET cet.customEntityCategory=NULL WHERE cet.customEntityCategory.id = :id"),
-		@NamedQuery(name = "CustomEntityTemplate.module", query = "SELECT m FROM MeveoModule m JOIN MeveoModuleItem mi ON m.id = mi.meveoModule JOIN CustomEntityTemplate cet ON mi.itemCode = cet.code WHERE cet.code = :code") })
+		@NamedQuery(name = "CustomEntityTemplate.moduleBelonging", query = "SELECT m FROM MeveoModule m JOIN MeveoModuleItem mi ON m.id = mi.meveoModule JOIN CustomEntityTemplate cet ON mi.itemCode = cet.code WHERE cet.code = :code") })
 @ObservableEntity
 @ImportOrder(2)
 public class CustomEntityTemplate extends BusinessEntity implements Comparable<CustomEntityTemplate>, CustomModelObject {

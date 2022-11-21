@@ -925,13 +925,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @return query to filter entities according pagination configuration data.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public QueryBuilder getQuery(PaginationConfiguration config) {
+	public QueryBuilder getQuery(PaginationConfiguration config) {		
 
 		final Class<? extends E> entityClass = getEntityClass();
 
+		final String entityAlias = "a";
+
 		Map<String, Object> filters = config.getFilters();
 
-		QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", config.getFetchFields());
+		QueryBuilder queryBuilder = new QueryBuilder(entityClass, entityAlias, config.getFetchFields());
 
 		if (filters != null && !filters.isEmpty()) {
 
@@ -946,7 +948,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 					Object filterValue = filters.get(key);
 					if (filterValue == null) {
 						continue;
-					}
+					}					
 
 					// Key format is: condition field1 field2 or condition-field1-field2-fieldN
 					// example: "ne code", condition=ne, fieldName=code, fieldName2=null
@@ -1178,14 +1180,23 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 							}
 
 						} else if (filterValue instanceof String) {
+							if ("moduleBelonging".equals(key) && "Meveo".equals(filterValue)) {
+								continue;
+							}
 
-							// if contains dot, that means join is needed
-							String filterString = (String) filterValue;
-							boolean wildcard = (filterString.contains("*"));
-							if (wildcard) {
-								queryBuilder.addCriterionWildcard("a." + fieldName, filterString, true, "ne".equals(condition));
+							if ("moduleBelonging".equals(key)) {
+								String jpqlFilterByModule = "EXISTS (FROM MeveoModule m JOIN MeveoModuleItem mi ON m.id = mi.meveoModule WHERE mi.itemClass = '" + entityClass.getName() + "' AND mi.itemCode = " + entityAlias + ".code AND m.code = :moduleCode)";
+								queryBuilder.addSqlCriterion(jpqlFilterByModule, "moduleCode", filterValue);
 							} else {
-								queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
+
+								// if contains dot, that means join is needed
+								String filterString = (String) filterValue;
+								boolean wildcard = (filterString.contains("*"));
+								if (wildcard) {
+									queryBuilder.addCriterionWildcard("a." + fieldName, filterString, true, "ne".equals(condition));
+								} else {
+									queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
+								}
 							}
 
 						} else if (filterValue instanceof Date) {
