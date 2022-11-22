@@ -47,7 +47,7 @@ import org.primefaces.model.DualListModel;
  */
 @Named
 @ViewScoped
-public class EndpointBean extends BaseBean<Endpoint> {
+public class EndpointBean extends ModuleItemBaseBean<Endpoint> {
 
 	private static final long serialVersionUID = 1895532923500996522L;
 
@@ -108,13 +108,6 @@ public class EndpointBean extends BaseBean<Endpoint> {
 		
 		return entity;
 	}
-
-	@PostConstruct
-	@Override
-    public void init() {
-		super.init();
-        this.filters.put("moduleBelonging", this.getUserCurrentModule());
-    }
 
 	@Override
 	protected List<String> getFormFieldsToFetch() {

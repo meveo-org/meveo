@@ -27,7 +27,17 @@
 			backingBean="#{endpointListBean}">
 			<hftl:searchField label="#{messages['endpoint.service']}"
 				field="code" />
+
+			<p:selectOneMenu
+				id="select-working-module"
+				label="Working module"
+				style="min-width: 80px"
+				value="#{endpointListBean.workingModule}"
+				converter="omnifaces.SelectItemsConverter">
+				<f:selectItems value="#{endpointListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+			</p:selectOneMenu>
 		</hftl:searchPanel>
+		
 
 		<hftl:dataList label="#{messages['endpoint.title']}"
 			addToModule="true" backingBean="#{endpointListBean}">
