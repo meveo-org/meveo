@@ -35,9 +35,10 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 	private List<CustomizedEntity> selectedCustomizedEntities;
     
     @PostConstruct
-    public void init() {
+    public void init() {                
     	this.filters.put("customEntity", true);
-        this.filters.put("userCurrentModule", this.getUserCurrentModule());
+        this.setWorkingModule(super.getUserCurrentModule());
+        this.filters.put("moduleBelonging", this.getWorkingModule());
     }    
 
     public LazyDataModel<CustomizedEntity> getCustomizedEntities() {
@@ -89,7 +90,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 String sortBy = sortOrder != null ? sortOrder.name() : null;
                 String primitiveEntity = (String) filters.get("primitiveEntity");
                 primitiveEntity = primitiveEntity == null ? "0" : primitiveEntity;
-                String currentModule = (String) filters.get("userCurrentModule");
+                String moduleBelonging = (String) filters.get("moduleBelonging");
                 
                 CustomizedEntityFilter filter = new CustomizedEntityFilter();
                 filter.setEntityName(query);                
@@ -97,7 +98,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 filter.setSortBy(sortField);
                 filter.setSortBy(sortBy);
                 filter.setPrimitiveEntity(primitiveEntity);
-                filter.setModuleCode(currentModule);
+                filter.setModuleCode(moduleBelonging);
                 
 				if (StringUtils.isBlank(cecId)) {
 					filter.setIncludeNonManagedEntities(false);

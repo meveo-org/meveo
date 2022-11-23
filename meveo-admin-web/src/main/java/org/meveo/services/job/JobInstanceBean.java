@@ -2,7 +2,6 @@ package org.meveo.services.job;
 
 import java.util.*;
 
-import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -61,13 +60,6 @@ public class JobInstanceBean extends CustomFieldBean<JobInstance> {
 
     public JobInstanceBean() {
         super(JobInstance.class);
-    }
-
-    @PostConstruct
-	@Override
-    public void init() {
-		super.init();
-        this.filters.put("moduleBelonging", this.getUserCurrentModule());
     }
 
     @Override

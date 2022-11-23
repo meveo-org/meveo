@@ -43,6 +43,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -61,7 +62,6 @@ import org.meveo.model.scripts.ScriptInstanceError;
 import org.meveo.model.scripts.ScriptInstanceNode;
 import org.meveo.model.scripts.ScriptSourceTypeEnum;
 import org.meveo.model.security.Role;
-import org.meveo.model.wf.WFAction;
 import org.meveo.service.admin.impl.RoleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
@@ -87,7 +87,7 @@ import com.github.javaparser.ast.CompilationUnit;
 @Named
 @ViewScoped
 @ViewBean
-public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
+public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 	private static final long serialVersionUID = 1L;
 	private static final String JAVA = "java";
 	private static final String ES5 = "es5";
@@ -593,10 +593,10 @@ public class ScriptInstanceBean extends BaseBean<ScriptInstance> {
 
 		List<ScriptInstanceDto> scriptInstances = new ArrayList<>();
 		if (!org.meveo.commons.utils.StringUtils.isBlank(code)) {
-			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getUserCurrentModule(), code);
+			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getWorkingModule(), code);
 			isExpand = true;
 		} else {
-			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getUserCurrentModule(), null);
+			scriptInstances = scriptInstanceApi.getScriptsForTreeView(this.getWorkingModule(), null);
 		}
 		rootNode = new DefaultTreeNode("document", new ScriptInstanceNode("", ""), null);
 		rootNode.setExpanded(isExpand);

@@ -1,6 +1,5 @@
-package org.meveo.admin.action.admin.endpoint;
+package org.meveo.admin.action;
 
-import org.meveo.admin.action.BaseBean;
 import org.meveo.model.IEntity;
 
 import java.util.List;
@@ -14,16 +13,17 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 
 @Named
 public abstract class ModuleItemBaseBean<T extends IEntity> extends BaseBean<T>{
+
     private String workingModule;
 
     @Inject
     private MeveoModuleService meveoModuleService;
 
-    public ModuleItemBaseBean() {
+    protected ModuleItemBaseBean() {
         super();
     }
     
-    public ModuleItemBaseBean(Class<T> clazz) {
+    protected ModuleItemBaseBean(Class<T> clazz) {
     	super(clazz);
     }
 
@@ -31,7 +31,7 @@ public abstract class ModuleItemBaseBean<T extends IEntity> extends BaseBean<T>{
 	@Override
     public void init() {
 		super.init();
-        workingModule = this.getUserCurrentModule();
+        this.workingModule = super.getUserCurrentModule();
         this.filters.put("moduleBelonging", workingModule);
     }
 

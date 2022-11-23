@@ -27,11 +27,4 @@ import javax.inject.Named;
 public class JobTriggerListBean extends JobTriggerBean {
 
     private static final long serialVersionUID = -3037867704912788045L;
-
-    @PostConstruct
-	@Override
-    public void init() {
-		super.init();
-        this.filters.put("moduleBelonging", this.getUserCurrentModule());
-    }
 }

@@ -27,11 +27,4 @@ import javax.inject.Named;
 public class WorkflowListBean extends WorkflowBean {
 
     private static final long serialVersionUID = -3037867704912788052L;
-
-    @PostConstruct
-	@Override
-    public void init() {
-		super.init();
-        this.filters.put("moduleBelonging", this.getUserCurrentModule());
-    }
 }

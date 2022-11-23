@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.XmlUtil;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -26,7 +26,7 @@ import org.meveo.service.filter.FilterService;
  **/
 @Named
 @ViewScoped
-public class FilterBean extends BaseBean<Filter> {
+public class FilterBean extends ModuleItemBaseBean<Filter> {
 
 	private static final long serialVersionUID = 6689238784280187702L;
 

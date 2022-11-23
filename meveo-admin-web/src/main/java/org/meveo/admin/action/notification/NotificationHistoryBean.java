@@ -49,18 +49,9 @@ public class NotificationHistoryBean extends BaseBean<NotificationHistory> {
 	@Inject
 	private ScriptNotificationService notificationService;
 	
-
-
 	public NotificationHistoryBean() {
 		super(NotificationHistory.class);
 	}
-
-	@PostConstruct
-	@Override
-    public void init() {
-		super.init();
-        this.filters.put("moduleBelonging", this.getUserCurrentModule());
-    }
 
 	@Override
 	protected IPersistenceService<NotificationHistory> getPersistenceService() {
