@@ -1015,7 +1015,6 @@ public class SettingsWsImpl extends BaseWs implements SettingsWs {
         ActionStatus result = new ActionStatus(ActionStatusEnum.SUCCESS, "");
 
         try {
-            log.debug("start to create in meveoInstanceApi");
             meveoInstanceApi.create(meveoInstanceDto);
         } catch (Exception e) {
             processException(e, result);

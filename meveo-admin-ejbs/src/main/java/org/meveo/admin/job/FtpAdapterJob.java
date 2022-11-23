@@ -18,12 +18,16 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class FtpAdapterJob connect to the given ftp server and get files from the given remote path.
  */
 @Stateless
 public class FtpAdapterJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(FtpAdapterJob.class);
 
     /** The ftp adapter job bean. */
     @Inject

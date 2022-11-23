@@ -18,6 +18,8 @@ import org.meveo.service.admin.impl.LanguageService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.crm.impl.ProviderService;
 import org.primefaces.model.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -30,6 +32,8 @@ import java.util.List;
 @SuppressWarnings("deprecation")
 @Stateless
 public class ProviderApi extends BaseApi {
+	
+	private static Logger log = LoggerFactory.getLogger(ProviderApi.class);
 
     @Inject
     private ProviderService providerService;

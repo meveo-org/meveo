@@ -59,6 +59,8 @@ import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.technicalservice.TechnicalServiceService;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TechnicalService management api.
@@ -69,6 +71,8 @@ import org.meveo.service.technicalservice.endpoint.EndpointService;
  */
 public abstract class TechnicalServiceApi<T extends TechnicalService, D extends TechnicalServiceDto> extends BaseCrudApi<T, D> {
 
+	private static Logger log = LoggerFactory.getLogger(TechnicalServiceApi.class);
+	
     /**
 	 * Instantiates a new technical service api.
 	 *

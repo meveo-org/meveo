@@ -221,7 +221,7 @@ import org.slf4j.Logger;
 
 public class PooledScriptExample extends Script {
 
-    private Logger log = LoggerFactory.getLogger(PooledScriptExample.class);
+    private static Logger log = LoggerFactory.getLogger(PooledScriptExample.class);
 
     private String uuid;
 

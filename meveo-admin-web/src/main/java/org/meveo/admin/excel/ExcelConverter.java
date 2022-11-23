@@ -67,7 +67,7 @@ public class ExcelConverter {
 	@Inject
 	private ResourceBundle resourceMessages;
 
-	private Logger log = LoggerFactory.getLogger(ExcelConverter.class);
+	private static Logger log = LoggerFactory.getLogger(ExcelConverter.class);
 
 	/**
 	 * Generates file for export

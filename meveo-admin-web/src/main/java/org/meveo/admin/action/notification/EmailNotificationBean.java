@@ -29,6 +29,8 @@ import org.meveo.service.notification.EmailNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link EmailNotification} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -43,6 +45,8 @@ import org.primefaces.model.UploadedFile;
 public class EmailNotificationBean extends BaseNotificationBean<EmailNotification> {
 
     private static final long serialVersionUID = 6473465285480945644L;
+    
+    private static Logger log = LoggerFactory.getLogger(EmailNotificationBean.class);
 
     @Inject
     private EmailNotificationService emailNotificationService;

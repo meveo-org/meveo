@@ -22,6 +22,8 @@ import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -32,6 +34,8 @@ import org.meveo.service.job.Job;
  */
 @Stateless
 public class FlatFileProcessingJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(FlatFileProcessingJob.class);
 
     private static final String FLAT_FILE_PROCESSING_JOB_ARCHIVE_DIR = "FlatFileProcessingJob_archiveDir";
 

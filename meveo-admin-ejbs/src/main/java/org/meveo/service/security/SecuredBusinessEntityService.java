@@ -15,6 +15,7 @@ import org.meveo.model.admin.SecuredEntity;
 import org.meveo.model.admin.User;
 import org.meveo.service.base.PersistenceService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SecuredBusinessEntity Service base class.
@@ -23,8 +24,8 @@ import org.slf4j.Logger;
  */
 @Stateless
 public class SecuredBusinessEntityService extends PersistenceService<BusinessEntity> {
-    @Inject
-    protected Logger log;
+
+	private static Logger log = LoggerFactory.getLogger(SecuredBusinessEntityService.class);
 
     public BusinessEntity getEntityByCode(Class<? extends BusinessEntity> entityClass, String code) {
         if (entityClass == null) {

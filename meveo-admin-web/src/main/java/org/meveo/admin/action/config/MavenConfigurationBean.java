@@ -48,7 +48,7 @@ public class MavenConfigurationBean implements Serializable {
 	private static final long serialVersionUID = -6715787921470318028L;
 
 	/** Logger. */
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	private static Logger log = LoggerFactory.getLogger(MavenConfigurationBean.class);
 
 	@Inject
 	private transient ResourceBundle bundle;

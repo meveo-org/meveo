@@ -20,6 +20,7 @@ import org.meveo.event.qualifier.PostRemoved;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.scripts.ScriptInstance;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -29,8 +30,7 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class ScriptInstanceObserver {
 
-	@Inject
-	private transient Logger log;
+	private static Logger log = LoggerFactory.getLogger(ScriptInstanceObserver.class);
 
 	@Inject
 	private transient MavenDependencyService mavenDependencyService;

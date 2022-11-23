@@ -11,6 +11,7 @@ import javax.inject.Singleton;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.security.Interceptor.SecuredBusinessEntityMethod;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a singleton object that takes an annotation and the method parameters
@@ -28,8 +29,7 @@ public class SecureMethodParameterHandler {
 	@Inject
 	private Instance<SecureMethodParameterParser<?>> parsers;
 
-	@Inject
-	protected Logger log;
+	private static Logger log = LoggerFactory.getLogger(SecureMethodParameterHandler.class);
 
 	@SuppressWarnings("rawtypes")
 	private Map<Class<? extends SecureMethodParameterParser>, SecureMethodParameterParser<?>> parserMap = new HashMap<>();

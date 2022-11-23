@@ -71,6 +71,8 @@ import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -88,6 +90,9 @@ import com.github.javaparser.ast.CompilationUnit;
 @ViewScoped
 @ViewBean
 public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
+	
+	private static Logger log = LoggerFactory.getLogger(ScriptInstanceBean.class);
+			
 	private static final long serialVersionUID = 1L;
 	private static final String JAVA = "java";
 	private static final String ES5 = "es5";

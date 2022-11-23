@@ -35,10 +35,15 @@ import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class WFTransitionService extends PersistenceService<WFTransition> {
 	
+    private static Logger log = LoggerFactory.getLogger(WFTransitionService.class);
+
 	@Inject
 	private WFActionService wfActionService;
 
@@ -145,5 +150,10 @@ public class WFTransitionService extends PersistenceService<WFTransition> {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void remove(WFTransition entity) throws BusinessException {
 		super.remove(entity);
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

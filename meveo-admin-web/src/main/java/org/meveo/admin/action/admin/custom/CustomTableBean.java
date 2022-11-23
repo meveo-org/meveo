@@ -60,6 +60,8 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Clement Bareth
@@ -71,6 +73,8 @@ import org.primefaces.model.UploadedFile;
 public class CustomTableBean extends BaseBean<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = -2748591950645172132L;
+	
+	private static Logger log = LoggerFactory.getLogger(CustomTableBean.class);
 
 	@Inject
 	private transient CustomTableService customTableService;

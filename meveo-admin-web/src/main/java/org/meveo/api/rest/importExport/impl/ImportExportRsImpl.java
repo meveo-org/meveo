@@ -33,6 +33,8 @@ import org.meveo.api.rest.importExport.ImportExportRs;
 import org.meveo.export.EntityExportImportService;
 import org.meveo.export.ExportImportStatistics;
 import org.meveo.export.RemoteAuthenticationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrius Karpavicius
@@ -41,6 +43,8 @@ import org.meveo.export.RemoteAuthenticationException;
 @ApplicationScoped
 @Interceptors({ WsRestApiInterceptor.class })
 public class ImportExportRsImpl extends BaseRs implements ImportExportRs {
+	
+	private static Logger log = LoggerFactory.getLogger(ImportExportRsImpl.class);
 
     @Inject
     private EntityExportImportService entityExportImportService;

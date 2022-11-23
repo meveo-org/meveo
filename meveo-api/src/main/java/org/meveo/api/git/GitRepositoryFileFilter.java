@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GitRepositoryFileFilter implements FileFilter {
 	
-	private Logger LOG = LoggerFactory.getLogger(GitRepositoryFileFilter.class);
+	private static Logger LOG = LoggerFactory.getLogger(GitRepositoryFileFilter.class);
 	
 	private List<File> watchedDirectories = new ArrayList<>();
 

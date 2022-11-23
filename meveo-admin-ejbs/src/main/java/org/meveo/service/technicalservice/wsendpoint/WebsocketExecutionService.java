@@ -7,22 +7,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
 import org.meveo.model.technicalservice.wsendpoint.Websocket;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WebsocketExecutionService {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(WebsocketExecutionService.class);
 
 	public boolean onOpen(Session session, EndpointConfig config, Websocket wsEndpoint, ScriptInterface executionEngine) {
 		Map<String, Object> context = new HashMap<>();

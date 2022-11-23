@@ -11,6 +11,8 @@ import org.meveo.model.jobs.JobCategoryEnum;
 import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -24,6 +26,8 @@ import java.util.regex.Pattern;
 
 @Stateless
 public class FileProcessingJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(FileProcessingJob.class);
 
     private static final String FILE_PROCESSING_JOB_ARCHIVE_DIR = "FileProcessingJob_archiveDir";
 

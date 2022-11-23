@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
@@ -71,7 +70,6 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -111,6 +109,8 @@ import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EJB for managing MeveoModule entities
@@ -120,6 +120,8 @@ import org.meveo.service.script.ScriptInstanceService;
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
+
+    private static Logger log = LoggerFactory.getLogger(MeveoModuleService.class);
 
     @Inject
     private MeveoInstanceService meveoInstanceService;

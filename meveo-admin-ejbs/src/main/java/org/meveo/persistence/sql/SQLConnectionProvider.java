@@ -30,6 +30,7 @@ import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.security.PasswordUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -48,8 +49,7 @@ public class SQLConnectionProvider {
 	@PersistenceUnit(unitName = "MeveoAdmin")
 	private EntityManagerFactory emf;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(SQLConnectionProvider.class);
 
 	private SqlConfiguration defaultSqlConfiguration = new SqlConfiguration();
 	private static final Map<String, SqlConfiguration> configurationMap = new ConcurrentHashMap<>();

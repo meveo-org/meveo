@@ -128,7 +128,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Logger. */
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseBean.class);
 
     @Inject
     protected ResourceBundle resourceBundle;

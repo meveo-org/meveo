@@ -42,6 +42,8 @@ import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.XStreamException;
@@ -60,6 +62,8 @@ import com.thoughtworks.xstream.mapper.MapperWrapper;
  **/
 @Stateless
 public class FilterService extends BusinessService<Filter> {
+
+    private static Logger log = LoggerFactory.getLogger(FilterService.class);
 
     @Inject
     protected CustomFieldTemplateService customFieldTemplateService;
@@ -517,4 +521,9 @@ public class FilterService extends BusinessService<Filter> {
         
         return filteredQueryBuilder;
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

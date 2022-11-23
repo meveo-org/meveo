@@ -16,13 +16,32 @@
 
 package org.meveo.api.git;
 
+import static org.eclipse.jgit.transport.SideBandOutputStream.CH_ERROR;
+import static org.eclipse.jgit.transport.SideBandOutputStream.MAX_BUF;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.PacketLineOut;
 import org.eclipse.jgit.transport.SideBandOutputStream;
-import org.keycloak.KeycloakPrincipal;
-import org.keycloak.representations.AccessToken;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
@@ -35,22 +54,7 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
 import org.slf4j.Logger;
-
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.*;
-
-import static org.eclipse.jgit.transport.SideBandOutputStream.CH_ERROR;
-import static org.eclipse.jgit.transport.SideBandOutputStream.MAX_BUF;
+import org.slf4j.LoggerFactory;
 
 /**
  * Servlet enabling git through HTTP(s)
@@ -81,8 +85,7 @@ public class MeveoGitServlet extends GitServlet {
     @Inject
     private GitRepositoryService gitRepositoryService;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(MeveoGitServlet.class);
 
     @Inject
     @CommitReceived

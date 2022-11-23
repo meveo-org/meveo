@@ -17,9 +17,6 @@ import org.slf4j.Logger;
  */
 public abstract class SecureMethodResultFilter {
 
-    @Inject
-    protected Logger log;
-
     /**
      * This method returns the class instance. It is used by the {@link SecureMethodResultFilterFactory} for locating the correct filter.
      * 

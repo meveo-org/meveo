@@ -96,7 +96,7 @@ public class ModuleReleaseApi {
 
 	private static boolean initalized = false;
 
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	private static Logger log = LoggerFactory.getLogger(ModuleReleaseApi.class);
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;

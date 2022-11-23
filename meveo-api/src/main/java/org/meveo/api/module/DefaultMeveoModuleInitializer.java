@@ -18,10 +18,12 @@ import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
-import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import javax.ws.rs.client.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
@@ -37,6 +39,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.git.GitClient;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -57,8 +60,7 @@ public class DefaultMeveoModuleInitializer {
 	@Inject
 	private MeveoModuleService meveoModuleService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(DefaultMeveoModuleInitializer.class);
 
 	public Map<String, String> init(UpdateModulesParameters parameters) throws MeveoApiException, IOException, BusinessException {
 		String username = parameters.getGitCredentials().getUsername();

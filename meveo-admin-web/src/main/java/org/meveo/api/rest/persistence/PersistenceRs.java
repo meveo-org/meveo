@@ -162,8 +162,7 @@ public class PersistenceRs {
 	@Inject
 	private CrossStorageTransaction crossStorageTx;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(PersistenceRs.class);
 	
 	@Inject
 	private CustomEntityInstanceService customEntityInstanceService;

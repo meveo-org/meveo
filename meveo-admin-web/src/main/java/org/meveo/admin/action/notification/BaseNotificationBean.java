@@ -12,6 +12,8 @@ import org.meveo.model.notification.InboundRequest;
 import org.meveo.model.notification.Notification;
 import org.meveo.model.notification.NotificationEventTypeEnum;
 import org.meveo.service.notification.DefaultObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.Entity;
 import java.util.ArrayList;
@@ -26,6 +28,8 @@ import java.util.List;
 public abstract class BaseNotificationBean<T extends Notification>  extends UpdateMapTypeFieldBean<T>{
 
 	private static final long serialVersionUID = 1L;
+	
+	private static Logger log = LoggerFactory.getLogger(BaseNotificationBean.class);
 	
 	public BaseNotificationBean(){
 	}

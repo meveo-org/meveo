@@ -45,6 +45,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -56,6 +58,8 @@ import org.primefaces.model.UploadedFile;
 public class MeasurableQuantityBean extends BaseBean<MeasurableQuantity> {
 
     private static final long serialVersionUID = -1644247310944456827L;
+    
+    private static Logger log = LoggerFactory.getLogger(MeasurableQuantityBean.class);
 
     @Inject
     MeasurableQuantityService measurableQuantityService;

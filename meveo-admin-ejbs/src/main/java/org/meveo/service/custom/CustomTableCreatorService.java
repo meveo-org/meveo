@@ -49,9 +49,9 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import liquibase.Contexts;
 import liquibase.LabelExpression;
@@ -82,7 +82,6 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.MigrationFailedException;
-import liquibase.precondition.core.NotPrecondition;
 import liquibase.precondition.core.PreconditionContainer;
 import liquibase.precondition.core.PreconditionContainer.ErrorOption;
 import liquibase.precondition.core.PreconditionContainer.FailOption;
@@ -106,8 +105,7 @@ public class CustomTableCreatorService implements Serializable {
 	@Inject
 	private EntityManagerProvider entityManagerProvider;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CustomTableCreatorService.class);
 
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;

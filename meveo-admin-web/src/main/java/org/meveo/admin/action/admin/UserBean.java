@@ -79,6 +79,8 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link User} (extends {@link BaseBean} that
@@ -95,6 +97,8 @@ import org.primefaces.model.UploadedFile;
 public class UserBean extends CustomFieldBean<User> {
 
 	private static final long serialVersionUID = 1L;
+	
+	private static Logger log = LoggerFactory.getLogger(UserBean.class);
 
 	/** Injected @{link User} service. Extends {@link PersistenceService}. */
 	@Inject

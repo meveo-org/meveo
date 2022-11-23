@@ -37,6 +37,7 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
@@ -47,8 +48,7 @@ public class EntityExportImportBean implements Serializable {
     private static String FILTER_TEMPLATENAME = "templateName";
     private static String FILTER_COMPLEX = "complex";
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(EntityExportImportBean.class);
 
     /** Search filters. */
     protected Map<String, Object> filters = new HashMap<String, Object>();

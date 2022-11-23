@@ -52,14 +52,19 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CalendarService;
 import org.meveo.service.catalog.impl.DayInYearService;
 import org.meveo.service.catalog.impl.HourInDayService;
+import org.meveocrm.admin.action.reporting.ConfigIssuesReportingBean;
 import org.omnifaces.cdi.Param;
 import org.primefaces.model.DualListModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
 public class CalendarBean extends BaseBean<Calendar> {
 
     private static final long serialVersionUID = 1L;
+    
+    private static Logger log = LoggerFactory.getLogger(CalendarBean.class);
 
     /** Injected @{link Calendar} service. Extends {@link PersistenceService}. */
     @Inject

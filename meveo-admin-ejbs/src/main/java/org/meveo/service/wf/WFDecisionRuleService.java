@@ -25,9 +25,14 @@ import javax.persistence.NoResultException;
 
 import org.meveo.model.wf.WFDecisionRule;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class WFDecisionRuleService extends PersistenceService<WFDecisionRule> {
+
+    private static Logger log = LoggerFactory.getLogger(WFDecisionRuleService.class);
 
     @SuppressWarnings("unchecked")
     public List<String> getDistinctNameWFTransitionRules() {
@@ -95,4 +100,9 @@ public class WFDecisionRuleService extends PersistenceService<WFDecisionRule> {
         }
         return wfDecisionRule;
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

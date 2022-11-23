@@ -32,6 +32,8 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.model.security.Permission;
 import org.meveo.model.security.Role;
 import org.meveo.service.base.PersistenceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -39,6 +41,8 @@ import org.meveo.service.base.PersistenceService;
  */
 @Stateless
 public class PermissionService extends PersistenceService<Permission> {
+
+    private static Logger log = LoggerFactory.getLogger(PermissionService.class);
 
     @Inject
     private RoleService roleService;
@@ -112,6 +116,11 @@ public class PermissionService extends PersistenceService<Permission> {
 
         return permissionEntity;
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
     
 
 }

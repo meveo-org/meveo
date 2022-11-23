@@ -20,6 +20,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.service.admin.impl.UserService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -31,8 +32,9 @@ import org.slf4j.Logger;
 // @Startup
 @Singleton
 public class MeveoMinaFTPListener {
-    @Inject
-    private Logger log;
+    
+    private static Logger log = LoggerFactory.getLogger(MeveoMinaFTPListener.class);
+    
     @Inject
     private UserService userService;
 

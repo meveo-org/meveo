@@ -22,6 +22,7 @@ import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (loading, update) for simple user message related operations
@@ -36,8 +37,7 @@ public class UserMessageCacheContainerProvider implements Serializable { // Cach
 
     private static final long serialVersionUID = -2866707126175429823L;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(UserMessageCacheContainerProvider.class);
 
     //@EJB
     //private ScriptNotificationService notificationService;

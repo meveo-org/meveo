@@ -60,6 +60,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.neo4j.Neo4jConfigurationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -68,8 +69,7 @@ public class GraphQLService {
     @Inject
     private Neo4jDao neo4jDao;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(GraphQLService.class);
 
     @Inject
     private CustomEntityTemplateService customEntityTemplateService;

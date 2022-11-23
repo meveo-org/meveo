@@ -33,12 +33,17 @@ import org.meveo.event.monitoring.ClusterEventPublisher;
 import org.meveo.model.security.Role;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User Role service implementation.
  */
 @Stateless
 public class RoleService extends PersistenceService<Role> {
+
+    private static Logger log = LoggerFactory.getLogger(RoleService.class);
 
     @Inject
     private CurrentUserProvider currentUserProvider;
@@ -93,4 +98,9 @@ public class RoleService extends PersistenceService<Role> {
 
         clusterEventPublisher.publishEvent(role, CrudActionEnum.remove);
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

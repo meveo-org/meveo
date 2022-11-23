@@ -40,6 +40,8 @@ import org.meveo.service.notification.ScriptNotificationService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -50,6 +52,8 @@ import org.primefaces.model.UploadedFile;
 public class NotificationBean extends BaseNotificationBean<ScriptNotification> {
 
     private static final long serialVersionUID = 6473465285480945644L;
+    
+    private static Logger log = LoggerFactory.getLogger(NotificationBean.class);
 
     @Inject
     private ScriptNotificationService notificationService;

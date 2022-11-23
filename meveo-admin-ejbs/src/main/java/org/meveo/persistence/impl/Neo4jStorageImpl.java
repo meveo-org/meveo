@@ -52,6 +52,7 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
 import org.neo4j.driver.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestScoped
 public class Neo4jStorageImpl implements StorageImpl {
@@ -80,8 +81,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Inject
 	private CustomFieldTemplateService cftService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(Neo4jStorageImpl.class);
 	
 	@Override
 	public String findEntityIdByValues(Repository repo, IStorageConfiguration conf, CustomEntityInstance cei) {

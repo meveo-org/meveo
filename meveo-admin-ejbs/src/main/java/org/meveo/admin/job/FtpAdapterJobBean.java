@@ -38,6 +38,7 @@ import org.meveo.model.jobs.JobInstance;
 import org.meveo.service.job.FtpImportedFileService;
 import org.meveo.service.job.JobExecutionService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Class FtpAdapterJobBean.
@@ -49,8 +50,7 @@ import org.slf4j.Logger;
 public class FtpAdapterJobBean {
 
     /** The log. */
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(FtpAdapterJobBean.class);
 
     /** The ftp imported file service. */
     @Inject

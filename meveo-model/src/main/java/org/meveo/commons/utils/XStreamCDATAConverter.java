@@ -15,7 +15,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  **/
 public class XStreamCDATAConverter implements Converter {
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(XStreamCDATAConverter.class);
 
     public static final String CDATA_START = "<![CDATA[";
     public static final String CDATA_END = "]]>";

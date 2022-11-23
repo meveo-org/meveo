@@ -21,11 +21,15 @@ import org.meveo.api.logging.WsRestApiInterceptor;
 import org.meveo.api.rest.dwh.MeasurableQuantityRs;
 import org.meveo.api.rest.impl.BaseRs;
 import org.meveo.model.dwh.MeasurementPeriodEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestScoped
 @Interceptors({ WsRestApiInterceptor.class })
 public class MeasurableQuantityRsImpl extends BaseRs implements MeasurableQuantityRs {
 
+	private static Logger log = LoggerFactory.getLogger(MeasurableQuantityRsImpl.class);
+	
 	@Inject
 	private MeasurableQuantityApi measurableQuantityApi;
 

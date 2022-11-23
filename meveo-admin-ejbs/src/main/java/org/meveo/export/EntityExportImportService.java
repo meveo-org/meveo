@@ -122,6 +122,7 @@ import org.primefaces.model.LazyDataModel;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.MarshallingStrategy;
 import com.thoughtworks.xstream.XStream;
@@ -172,8 +173,7 @@ public class EntityExportImportService implements Serializable {
     @ApplicationProvider
     protected Provider appProvider;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(EntityExportImportService.class);
 
     @Inject
     private NotificationCacheContainerProvider notificationCacheContainerProvider;

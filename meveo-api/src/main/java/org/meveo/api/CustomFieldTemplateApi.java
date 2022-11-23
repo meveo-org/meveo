@@ -40,6 +40,8 @@ import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
 import org.meveo.util.EntityCustomizationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +52,8 @@ import java.io.IOException;
  **/
 @Stateless
 public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, CustomFieldTemplateDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(CustomFieldTemplateApi.class);
 	
 	@Inject
     private CalendarService calendarService;

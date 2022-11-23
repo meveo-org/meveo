@@ -18,6 +18,7 @@ import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.impl.SQLStorageImpl;
 import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bean that handles the transactions for the cross storage
@@ -43,8 +44,7 @@ public class CrossStorageTransaction {
 	
 	private List<StorageImpl> storages; 
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CrossStorageTransaction.class);
 	
 	private int stackedCalls = 0;
 	

@@ -34,6 +34,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.notification.ScriptNotificationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (loading, update) for event notification related operations
@@ -49,8 +50,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
 
     private static final long serialVersionUID = 358151068726872948L;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(NotificationCacheContainerProvider.class);
 
     @EJB
     private ScriptNotificationService notificationService;

@@ -15,6 +15,7 @@ import javax.inject.Named;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
+import org.meveo.admin.action.catalog.CalendarBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
@@ -61,6 +62,8 @@ import org.slf4j.LoggerFactory;
 public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemplate> {
 
 	private static final long serialVersionUID = 1187554162639618526L;
+	
+	private static Logger log = LoggerFactory.getLogger(CustomEntityTemplateBean.class);
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;

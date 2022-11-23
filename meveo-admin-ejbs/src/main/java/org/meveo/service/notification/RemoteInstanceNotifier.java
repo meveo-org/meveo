@@ -8,9 +8,6 @@ import org.slf4j.Logger;
 @SuppressWarnings("deprecation")
 @Stateless
 public class RemoteInstanceNotifier {
-
-	@Inject
-	private Logger log;
 	
 	public void invoke(String input,String url) {
 		/*

@@ -24,6 +24,7 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.cache.UserMessageCacheContainerProvider;
 import org.meveo.commons.utils.ParamBean;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -37,8 +38,7 @@ public class CachesInitializer {
 
     // private static final String INFINISPAN_CACHE_LOCATION = "infinispan-cache.location";
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(CachesInitializer.class);
 
 //    @Resource(lookup = "java:jboss/infinispan/container/meveo")
     private EmbeddedCacheManager cacheContainer;

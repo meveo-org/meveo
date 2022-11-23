@@ -43,7 +43,7 @@ public class XLSFile implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private Logger log = LoggerFactory.getLogger(XLSFile.class);
+	private static Logger log = LoggerFactory.getLogger(XLSFile.class);
 
 	private File file;
 	private List<String[]> contexts;

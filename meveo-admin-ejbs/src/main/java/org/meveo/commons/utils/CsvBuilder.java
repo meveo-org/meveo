@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 public class CsvBuilder {
 
-	private Logger log = LoggerFactory.getLogger(CsvBuilder.class);
+	private static Logger log = LoggerFactory.getLogger(CsvBuilder.class);
 
 	/** Creates a new instance of CsvBuilder */
 	private final static String BREAK_LINE = "\r\n";

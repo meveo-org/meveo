@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -16,8 +17,7 @@ import org.slf4j.Logger;
 @Stateless
 public class ParamBeanFactory {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ParamBeanFactory.class);
 
     @Inject
     @CurrentUser

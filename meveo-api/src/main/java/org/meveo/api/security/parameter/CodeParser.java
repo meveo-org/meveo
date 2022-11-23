@@ -37,7 +37,6 @@ public class CodeParser extends SecureMethodParameterParser<BusinessEntity> {
             entity.setCode(code);
         } catch (InstantiationException | IllegalAccessException e) {
             String message = String.format("Failed to create new %s instance.", entityClass.getSimpleName());
-            log.error(message, e);
             throw new InvalidParameterException(message);
         }
 
