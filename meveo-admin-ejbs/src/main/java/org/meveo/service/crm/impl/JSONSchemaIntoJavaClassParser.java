@@ -24,12 +24,14 @@ import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.customEntities.MeveoMatrix;
 import org.meveo.model.customEntities.annotations.Relation;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -37,6 +39,7 @@ import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -352,10 +355,7 @@ public class JSONSchemaIntoJavaClassParser {
 	                                    
             						} else {
             							vd.setType("List<" + crtCode + ">");
-//            							var fieldDeclaration = classDeclaration.addPrivateField("List<" + crtCode + ">", code);
-//            		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
-            		                    // fieldDeclaration.addVariable(vd);
-            							//continue;
+            							addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
             						}
             					}
             					
@@ -473,6 +473,68 @@ public class JSONSchemaIntoJavaClassParser {
             }
 
         }
+    }
+    
+    private void addPrimitiveEntitySetter(CustomRelationshipTemplate crt, CustomFieldTemplate cft, CompilationUnit compilationUnit, ClassOrInterfaceDeclaration clazz) {
+    	CustomEntityTemplate cet = cetService.findByCode(cft.getEntityClazzCetCode());
+    	if (!cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+    		return;
+    	}
+    	compilationUnit.addImport(JacksonUtil.class);
+    	compilationUnit.addImport(Collection.class);
+    	compilationUnit.addImport(JsonSetter.class);
+    	
+    	String methodName = "set" + cft.getCode().substring(0, 1).toUpperCase() + cft.getCode().substring(1);
+    	MethodDeclaration primitiveSetter = clazz.addMethod(methodName, Keyword.PRIVATE);
+    	primitiveSetter.addAnnotation(JsonSetter.class);
+    	
+    	String typeName;
+    	switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
+	    	case DATE:
+	    		typeName = "Instant";
+	    		compilationUnit.addImport(Instant.class);
+	    		break;
+	    	case DOUBLE:
+	    		typeName = "Double";
+	    		compilationUnit.addImport(Double.class);
+	    		break;
+	    	case LONG:
+	    		typeName = "Long";
+	    		compilationUnit.addImport(Long.class);
+	    		break;
+	    	case STRING:
+	    		typeName = "String";
+	    		compilationUnit.addImport(String.class);
+	    		break;
+	    	default:
+	    		typeName = "Object";
+	    		break;
+		}
+    	
+    	if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+    		primitiveSetter.addParameter("Collection<" + typeName + ">", cft.getCode());
+    		
+        	String body = "{ this." + cft.getCode() + " = new ArrayList<>();"
+        				+ "if (" + cft.getCode() + " != null) { \n"
+        				+ "  for (var item : " + cft.getCode() + ") { \n"
+        				+ "    var entity = JacksonUtil.convert(item, " + cet.getCode() + ".class); \n"
+        				+ "    var relation = new " + crt.getCode() + "(this, entity); \n"
+        				+ "    this." + cft.getCode() + ".add(relation); \n"
+        				+ "  } \n"
+        				+ "}}\n";
+        	primitiveSetter.setBody(JavaParser.parseBlock(body));
+        	
+    	} else {
+    		primitiveSetter.addParameter(typeName, cft.getCode());
+    		
+        	String body = "{ this." + cft.getCode() + " = null;\n"
+        				+ "if (" + cft.getCode() + " != null) { \n"
+        				+ "  var entity = JacksonUtil.convert(item, " + cet.getCode() + ".class); \n"
+    					+ "  var relation = new " + crt.getCode() + "(this, entity); \n"
+    					+ "  this." + cft.getCode() + " = (relation); \n"
+    					+ "}}";
+        	primitiveSetter.setBody(JavaParser.parseBlock(body));
+    	}
     }
     
     private FieldDeclaration getMatrixField(CustomFieldTemplate cft, CompilationUnit compilationUnit) {
