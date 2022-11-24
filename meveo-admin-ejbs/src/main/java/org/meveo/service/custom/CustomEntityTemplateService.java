@@ -920,12 +920,4 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 		return log;
 	}
 
-    public String getModuleBelonging(String cetCode) {
-        return getEntityManager()
-                 .createNamedQuery("CustomEntityTemplate.moduleBelonging", MeveoModule.class)
-                 .setParameter("code", cetCode)
-                 .getSingleResult()
-                 .getCode();
-    }
-
 }

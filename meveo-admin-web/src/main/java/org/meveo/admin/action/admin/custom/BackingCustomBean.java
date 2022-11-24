@@ -1,6 +1,6 @@
 package org.meveo.admin.action.admin.custom;
 
-import org.meveo.admin.action.ModuleItemBaseBean;
+import org.meveo.admin.action.BaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.commons.utils.ReflectionUtils;
@@ -28,7 +28,7 @@ import java.util.List;
  */
 @Named
 @ViewScoped
-public abstract class BackingCustomBean <T extends BusinessEntity> extends ModuleItemBaseBean<T> {
+public abstract class BackingCustomBean <T extends BusinessEntity> extends BaseBean<T> {
 
     private static final long serialVersionUID = 1187554162639618526L;
     

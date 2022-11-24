@@ -254,7 +254,7 @@ public class CustomizedEntityService implements Serializable {
 		CustomEntityCategory cec = null;
 		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
 			cec = customEntityTemplate.getCustomEntityCategory();
-			String belongingModule = customEntityTemplateService.getModuleBelonging(customEntityTemplate.getCode());
+			String belongingModule = customEntityTemplateService.findModuleOf(customEntityTemplate).getCode();
 			if (module == null || module.equals("Meveo") || module.equals(belongingModule) ) {
 			entities.add(
 					new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));
@@ -275,7 +275,7 @@ public class CustomizedEntityService implements Serializable {
 		CustomEntityCategory cec = null;
 		for (CustomEntityTemplate customEntityTemplate : customEntityTemplates) {
 			cec = customEntityTemplate.getCustomEntityCategory();
-			String belongingModule = customEntityTemplateService.getModuleBelonging(customEntityTemplate.getCode());
+			String belongingModule = customEntityTemplateService.findModuleOf(customEntityTemplate).getCode();
 			if (cec != null && cec.getId().equals(cecId)
 				&& (module == null || module.equals("Meveo") || module.equals(belongingModule)) ) {
 				entities.add(new CustomizedEntity(customEntityTemplate.getCode(), CustomEntityTemplate.class, customEntityTemplate.getId(), customEntityTemplate.getDescription(), cec));

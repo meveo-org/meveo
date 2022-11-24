@@ -37,7 +37,7 @@
                     <p:selectOneMenu
                         id="select-working-module"
                         style="min-width: 80px"
-                        value="#{customEntityTemplateListBean.workingModule}"
+                        value="#{customEntityTemplateListBean.filters['workingModule']}"
                         converter="omnifaces.SelectItemsConverter">
                         <f:selectItems value="#{customEntityTemplateListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
                     </p:selectOneMenu>
