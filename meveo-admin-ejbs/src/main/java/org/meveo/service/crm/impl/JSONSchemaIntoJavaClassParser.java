@@ -317,6 +317,8 @@ public class JSONSchemaIntoJavaClassParser {
                     if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
                             compilationUnit.addImport("java.util.List");
+                            vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
+                            compilationUnit.addImport(ArrayList.class);
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
                             if (value.containsKey("$ref")) {
             					// Handle entity references
@@ -328,31 +330,35 @@ public class JSONSchemaIntoJavaClassParser {
             						if(relationFields == null || relationFields.isEmpty()) {
 										fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
 	                					compilationUnit.addImport(Relation.class);
+	                					
+	                                    String ref = (String) value.get("$ref");
+	                                    if (ref != null) {
+	                                        String[] data = ref.split("/");
+	                                        if (data.length > 0) {
+	                                            String name = data[data.length - 1];
+	                                            
+	                                            try {
+	                                            	Class.forName(name);
+	                                            	compilationUnit.addImport(name);
+	                                                String[] className = name.split("\\.");
+	                                                name = className[className.length -1];
+	                                            } catch (ClassNotFoundException e) {
+	                                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
+	                                            }
+	                                            
+	                                        	vd.setType("List<" + name + ">");
+	                                        }
+	                                    }
+	                                    
             						} else {
-            							var fieldDeclaration = classDeclaration.addPrivateField("List<" + crtCode + ">", code);
-            		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
-            							continue;
+            							vd.setType("List<" + crtCode + ">");
+//            							var fieldDeclaration = classDeclaration.addPrivateField("List<" + crtCode + ">", code);
+//            		                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+            		                    // fieldDeclaration.addVariable(vd);
+            							//continue;
             						}
             					}
             					
-                                String ref = (String) value.get("$ref");
-                                if (ref != null) {
-                                    String[] data = ref.split("/");
-                                    if (data.length > 0) {
-                                        String name = data[data.length - 1];
-                                        
-                                        try {
-                                        	Class.forName(name);
-                                        	compilationUnit.addImport(name);
-                                            String[] className = name.split("\\.");
-                                            name = className[className.length -1];
-                                        } catch (ClassNotFoundException e) {
-                                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                        }
-                                        
-                                        vd.setType("List<" + name + ">");
-                                    }
-                                }
                             } else if (value.containsKey("type")) {
                                 if (value.get("type").equals("integer")) {
                                     vd.setType("List<Long>");
@@ -366,9 +372,6 @@ public class JSONSchemaIntoJavaClassParser {
                             } else if (value.containsKey("enum")) {
                                 vd.setType("List<String>");
                             }
-                            
-                            vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
-                            compilationUnit.addImport(ArrayList.class);
                         } else if (values.get("type").equals("object")) {
                             compilationUnit.addImport("java.util.Map");
                             Map<String, Object> patternProperties = (Map<String, Object>) values.get("patternProperties");

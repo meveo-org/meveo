@@ -189,6 +189,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 			return null;
 		
 		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		CustomEntityTemplate cetTarget = customEntityTemplateService.findByCode(targetCode);
+
 		List<CustomRelationshipTemplate> relations = customRelationshipTemplateService.findBySourceOrTarget(cetCode, targetCode);
 		
 		while(cet.getSuperTemplate() != null) {
@@ -196,7 +198,13 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 			relations.addAll(crts);
 			cet = cet.getSuperTemplate();
 		}
-
+		
+		while (cetTarget.getSuperTemplate() != null) {
+			List<CustomRelationshipTemplate> crts = customRelationshipTemplateService.findBySourceOrTarget(cetCode, cetTarget.getSuperTemplate().getCode());
+			relations.addAll(crts);
+			cetTarget = cetTarget.getSuperTemplate();
+		}
+		
 		return relations;
 	}
 
