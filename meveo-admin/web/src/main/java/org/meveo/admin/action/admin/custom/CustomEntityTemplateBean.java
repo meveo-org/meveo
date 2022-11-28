@@ -390,6 +390,62 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
+	public void addParentFields(CustomEntityTemplate parentCET) {
+
+		String parentCetPrefix = parentCET.getAppliesTo();
+
+		Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesToNoCache(parentCetPrefix);
+
+		if (parentCET != null && parentCET.getNeo4JStorageConfiguration() != null && parentCET.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+			fields.remove("value");
+		}
+
+		// Init primitve types
+		for (CustomFieldTemplate field : fields.values()) {
+			if (!StringUtils.isBlank(field.getEntityClazz())) {
+				final String cetCode = CustomFieldTemplate.retrieveCetCode(field.getEntityClazz());
+				field.setPrimitiveType(customEntityTemplateService.getPrimitiveType(cetCode));
+			}
+		}
+
+		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), "Parent", true);
+
+		// Append actions into the hierarchy of tabs and fieldgroups
+		Map<String, EntityCustomAction> customActions = entityActionScriptService.findByAppliesTo(parentCetPrefix);
+		groupedCFTAndActions.append(customActions.values());
+
+		// Create tabs
+		for (GroupedCustomField level1 : groupedCFTAndActions.getChildren()) {			
+			SortedTreeNode level1Node = new SortedTreeNode(level1.getType(), level1.getData(), groupedFields, level1.getType() == GroupedCustomFieldTreeItemType.tab);
+
+			// Create fields of field groups
+			for (GroupedCustomField level2 : level1.getChildren()) {
+				SortedTreeNode level2Node = new SortedTreeNode(level2.getType(), level2.getData(), level1Node, level2.getType() == GroupedCustomFieldTreeItemType.fieldGroup);
+
+				// Create fields
+				for (GroupedCustomField level3 : level2.getChildren()) {
+					new SortedTreeNode(level3.getType(), level3.getData(), level2Node, null);
+				}
+			}
+		}
+
+		if (cachedTreeNodes != null && !cachedTreeNodes.isEmpty()) {
+			for (TreeNode tabNode : cachedTreeNodes) {// tab
+				TreeNode existedTab = getChildNodeByValue(groupedFields, tabNode.getData().toString());
+				if (existedTab == null) {// check tab
+					existedTab = new SortedTreeNode(GroupedCustomFieldTreeItemType.tab, tabNode.getData(), groupedFields, true);
+
+				}
+				for (TreeNode fieldGroupNode : tabNode.getChildren()) {// field groups of tab
+					TreeNode existedFieldGroup = getChildNodeByValue(existedTab, fieldGroupNode.getData().toString());
+					if (existedFieldGroup == null) {
+						existedFieldGroup = new SortedTreeNode(GroupedCustomFieldTreeItemType.fieldGroup, fieldGroupNode.getData(), existedTab, null);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Gets the fields.
 	 *
@@ -454,6 +510,12 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 					}
 				}
 			}
+		}
+
+		CustomEntityTemplate parentTemplate = entityTemplate.getSuperTemplate();
+
+		if (parentTemplate != null) {
+			this.addParentFields(parentTemplate);
 		}
 
 		return groupedFields;
