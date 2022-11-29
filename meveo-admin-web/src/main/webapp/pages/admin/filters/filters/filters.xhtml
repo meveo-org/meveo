@@ -19,6 +19,15 @@
 		<hftl:searchPanel label="#{messages['filter.search']}" backingBean="#{filterListBean}">
             <hftl:searchField label="#{messages['BusinessEntity.code']}" field="code" />
             <hftl:searchField label="#{messages['BusinessEntity.description']}" id="description" field="description" />
+            <hftl:decorateFormField label="Belonging Module">
+                <p:selectOneMenu
+                    id="select-working-module"
+                    style="min-width: 80px"
+                    value="#{filterListBean.workingModule}"
+                    converter="omnifaces.SelectItemsConverter">
+                    <f:selectItems value="#{filterListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                </p:selectOneMenu>
+            </hftl:decorateFormField>
         </hftl:searchPanel>
 
         <hftl:dataList label="#{messages['filter.title']}" noClose="false" addToModule="true" backingBean="#{filterListBean}">

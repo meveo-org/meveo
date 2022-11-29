@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -18,7 +19,7 @@ import javax.transaction.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.jboss.seam.international.status.Messages;
 import org.jboss.seam.international.status.builder.BundleKey;
-import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.technicalservice.endpoint.EndpointApi;
@@ -46,7 +47,7 @@ import org.primefaces.model.DualListModel;
  */
 @Named
 @ViewScoped
-public class EndpointBean extends BaseBean<Endpoint> {
+public class EndpointBean extends ModuleItemBaseBean<Endpoint> {
 
 	private static final long serialVersionUID = 1895532923500996522L;
 

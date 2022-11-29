@@ -20,6 +20,15 @@
         <hftl:searchPanel label="#{messages['menu.inboundRequests']}" columns="2" backingBean="#{inboundRequestListBean}" renderNewButton="true">
             <hftl:searchField label="#{messages['commons.date']}" field="auditable" childField="created" />
             <hftl:searchField label="#{messages['inboundRequest.remoteAddress']}" field="remoteAddr" />
+            <hftl:decorateFormField label="Belonging Module">
+                <p:selectOneMenu
+                    id="select-working-module"
+                    style="min-width: 80px"
+                    value="#{inboundRequestListBean.workingModule}"
+                    converter="omnifaces.SelectItemsConverter">
+                    <f:selectItems value="#{inboundRequestListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                </p:selectOneMenu>
+            </hftl:decorateFormField>
         </hftl:searchPanel>
 
         <!-- ===================================== SEARCH RESULTS ======================================= -->

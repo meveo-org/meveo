@@ -23,6 +23,16 @@
             <hftl:searchField label="#{messages['workflow.field']}" field="wfType" size="50" autocompleteBean="#{workflowBean}" autocompleteMethod="autocompleteClassNames"
                 isAutocomplete="true" />
             <hftl:searchField label="#{messages['commons.status']}" field="status" />
+
+            <hftl:decorateFormField label="Belonging Module">
+                <p:selectOneMenu
+                    id="select-working-module"
+                    style="min-width: 80px"
+                    value="#{workflowListBean.workingModule}"
+                    converter="omnifaces.SelectItemsConverter">
+                    <f:selectItems value="#{workflowListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                </p:selectOneMenu>
+            </hftl:decorateFormField>
         </hftl:searchPanel>
 
         <hftl:dataList label="#{messages['dunningPlan.title']}" backingBean="#{workflowListBean}" addToModule="true" sortBy="code">

@@ -36,6 +36,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.seam.international.status.builder.BundleKey;
 import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.admin.action.admin.ViewBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.web.interceptor.ActionMethod;
@@ -45,7 +46,6 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.scripts.FunctionIO;
 import org.meveo.model.wf.WFAction;
 import org.meveo.model.wf.WFTransition;
 import org.meveo.model.wf.Workflow;
@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
 @Named
 @ViewScoped
 @ViewBean
-public class WorkflowBean extends BaseBean<Workflow> {
+public class WorkflowBean extends ModuleItemBaseBean<Workflow> {
 
     private static final long serialVersionUID = 1L;
     

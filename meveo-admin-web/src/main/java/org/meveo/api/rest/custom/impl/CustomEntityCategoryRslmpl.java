@@ -90,7 +90,7 @@ public class CustomEntityCategoryRslmpl extends BaseRs implements CustomEntityCa
 		CustomEntityCategoryResponseDto result = new CustomEntityCategoryResponseDto();
 
         try {
-            result.setCustomEntityCategory(customEntityCategoryApi.find(code));;
+            result.setCustomEntityCategory(customEntityCategoryApi.find(code));
             
         } catch (Exception e) {
             processException(e, result.getActionStatus());

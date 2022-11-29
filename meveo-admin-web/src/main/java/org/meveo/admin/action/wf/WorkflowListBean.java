@@ -18,6 +18,7 @@
  */
 package org.meveo.admin.action.wf;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ConversationScoped;
 import javax.inject.Named;
 

@@ -5,7 +5,7 @@ import java.util.List;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.model.technicalservice.wsendpoint.WSEndpoint;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.technicalservice.wsendpoint.WSEndpointService;
@@ -16,7 +16,7 @@ import org.meveo.service.technicalservice.wsendpoint.WSEndpointService;
  */
 @Named
 @ViewScoped
-public class WsEndpointBean extends BaseBean<WSEndpoint> {
+public class WsEndpointBean extends ModuleItemBaseBean<WSEndpoint> {
 
   @Inject
   private WSEndpointService wsEndpointService;

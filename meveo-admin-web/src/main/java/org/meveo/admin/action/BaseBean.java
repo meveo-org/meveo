@@ -1464,6 +1464,13 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 	public void setEntityToAdd(Map<String, Object> entityToAdd) {
 		this.entityToAdd = entityToAdd;
 	}
+
+    protected String getUserCurrentModule() {
+        return this.currentUser == null 
+                || this.currentUser.getCurrentModule() == null 
+                ? "Meveo"
+                : this.currentUser.getCurrentModule();
+    }
 	
 	
 }
