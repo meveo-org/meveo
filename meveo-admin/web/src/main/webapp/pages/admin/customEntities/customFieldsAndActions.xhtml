@@ -102,7 +102,7 @@
 						rendered="#{(node.type == 'field' or node.type == 'action') and entity.active != null and entity.active.toString() == 'false'}" />
 				</p:column>
 				<p:column headerText="#{messages['commons.actions']}" width="12%">
-					<h:panelGroup rendered="#{node.type == 'tab'}">
+					<h:panelGroup rendered="#{node.type == 'tab' and not node.isDisplayOnly()}">
 						<p:tooltip for="editTabBtn" value="#{messages['commons.edit']}"
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="editTabBtn" icon="ui-icon-document"
@@ -183,7 +183,7 @@
 							update=":fieldsForm:fields" rendered="#{node.canMoveDown()}" />
 					</h:panelGroup>
 
-					<h:panelGroup rendered="#{node.type == 'fieldGroup'}">
+					<h:panelGroup rendered="#{node.type == 'fieldGroup' and not node.isDisplayOnly()}">
 						<p:tooltip for="editFieldGroupBtn"
 							value="#{messages['commons.edit']}" showEffect="slide"
 							hideEffect="slide" />
@@ -239,7 +239,7 @@
 							update=":fieldsForm:fields" rendered="#{node.canMoveDown()}" />
 					</h:panelGroup>
 
-					<h:panelGroup rendered="#{node.type == 'field'}">
+					<h:panelGroup rendered="#{node.type == 'field' and not node.isDisplayOnly()}">
 
 						<p:tooltip for="editFieldBtn" value="#{messages['commons.edit']}"
 							showEffect="slide" hideEffect="slide" />
@@ -247,8 +247,7 @@
 							icon="ui-icon-document"
 							oncomplete="PF('cftDialog').show(); return false;"
 							action="#{customFieldTemplateBean.initEntity(entity.id)}"
-							update=":cftDialog :cftForm"
-							rendered="#{not entity.isDisplayOnly()}">
+							update=":cftDialog :cftForm">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.backViewSave}"
 								value="customizedEntity" />
@@ -256,7 +255,7 @@
 
 
 						<p:commandButton id="enablelink" icon="ui-icon-circle-check"
-							rendered="#{entity.disabled and not entity.isDisplayOnly()}"
+							rendered="#{entity.disabled}"
 							actionListener="#{customEntityTemplateBean.refreshFields}"
 							action="#{customFieldTemplateBean.enable()}" update="@form">
 							<f:setPropertyActionListener
@@ -265,7 +264,7 @@
 								message="#{messages['commons.confirmEnable']}" />
 						</p:commandButton>
 						<p:commandButton id="disablelink" icon="ui-icon-circle-close"
-							rendered="#{not entity.disabled and not entity.isDisplayOnly()}"
+							rendered="#{not entity.disabled}"
 							actionListener="#{customEntityTemplateBean.refreshFields}"
 							action="#{customFieldTemplateBean.disable()}" update="@form">
 							<f:setPropertyActionListener
@@ -282,8 +281,7 @@
 							hideEffect="slide" />
 
 						<p:commandButton id="copylink" icon="ui-icon-copy"
-							update=":copyCFTForm" oncomplete="PF('copyCFTDialog').show()"
-							rendered="#{not entity.isDisplayOnly()}">
+							update=":copyCFTForm" oncomplete="PF('copyCFTDialog').show()">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.entity}" value="#{entity}" />
 						</p:commandButton>
@@ -300,8 +298,7 @@
 						<p:tooltip for="deletelink" value="#{messages['commons.delete']}"
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="deletelink" icon="ui-icon-trash"
-							oncomplete="fieldsDoDelete()"
-							rendered="#{not entity.isDisplayOnly()}">
+							oncomplete="fieldsDoDelete()">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.entity}" value="#{entity}" />
 							<p:confirm header="#{messages['commons.confirmationHeader']}"
@@ -314,19 +311,21 @@
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="moveUpFBtn" icon="ui-icon-arrowthick-1-n"
 							action="#{customEntityTemplateBean.moveUp(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveUp() and not entity.isDisplayOnly()}" />
+							update=":fieldsForm:fields" 
+							rendered="#{node.canMoveUp()}" />
 
 						<p:tooltip for="moveDownFBtn"
 							value="#{messages['action.moveDown']}" showEffect="slide"
 							hideEffect="slide" />
 						<p:commandButton id="moveDownFBtn" icon="ui-icon-arrowthick-1-s"
 							action="#{customEntityTemplateBean.moveDown(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveDown() and not entity.isDisplayOnly()}" />
+							update=":fieldsForm:fields" 
+							rendered="#{node.canMoveDown()}" />
 
 					</h:panelGroup>
 
 
-					<h:panelGroup rendered="#{node.type == 'action'}">
+					<h:panelGroup rendered="#{node.type == 'action' and not node.isDisplayOnly()}">
 
 						<p:tooltip for="editActionBtn" value="#{messages['commons.edit']}"
 							showEffect="slide" hideEffect="slide" />

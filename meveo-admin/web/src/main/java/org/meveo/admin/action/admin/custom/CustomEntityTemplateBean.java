@@ -411,12 +411,9 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				final String cetCode = CustomFieldTemplate.retrieveCetCode(field.getEntityClazz());
 				field.setPrimitiveType(customEntityTemplateService.getPrimitiveType(cetCode));
 			}
-
-			//Cannot edit parent CFTs
-			field.setDisplayOnly(true);
 		}
 
-		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), "Parent", true);
+		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), "ParentCET", false);
 
 		// Append actions into the hierarchy of tabs and fieldgroups
 		Map<String, EntityCustomAction> customActions = entityActionScriptService.findByAppliesTo(parentCetPrefix);
@@ -424,31 +421,15 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 
 		// Create tabs
 		for (GroupedCustomField level1 : groupedCFTAndActions.getChildren()) {			
-			SortedTreeNode level1Node = new SortedTreeNode(level1.getType(), level1.getData(), groupedFields, level1.getType() == GroupedCustomFieldTreeItemType.tab);
+			SortedTreeNode level1Node = new SortedTreeNode(level1.getType(), level1.getData(), groupedFields, level1.getType() == GroupedCustomFieldTreeItemType.tab, true);
 
 			// Create fields of field groups
 			for (GroupedCustomField level2 : level1.getChildren()) {
-				SortedTreeNode level2Node = new SortedTreeNode(level2.getType(), level2.getData(), level1Node, level2.getType() == GroupedCustomFieldTreeItemType.fieldGroup);
+				SortedTreeNode level2Node = new SortedTreeNode(level2.getType(), level2.getData(), level1Node, level2.getType() == GroupedCustomFieldTreeItemType.fieldGroup, true);
 
 				// Create fields
 				for (GroupedCustomField level3 : level2.getChildren()) {
-					new SortedTreeNode(level3.getType(), level3.getData(), level2Node, null);
-				}
-			}
-		}
-
-		if (cachedTreeNodes != null && !cachedTreeNodes.isEmpty()) {
-			for (TreeNode tabNode : cachedTreeNodes) {// tab
-				TreeNode existedTab = getChildNodeByValue(groupedFields, tabNode.getData().toString());
-				if (existedTab == null) {// check tab
-					existedTab = new SortedTreeNode(GroupedCustomFieldTreeItemType.tab, tabNode.getData(), groupedFields, true);
-
-				}
-				for (TreeNode fieldGroupNode : tabNode.getChildren()) {// field groups of tab
-					TreeNode existedFieldGroup = getChildNodeByValue(existedTab, fieldGroupNode.getData().toString());
-					if (existedFieldGroup == null) {
-						existedFieldGroup = new SortedTreeNode(GroupedCustomFieldTreeItemType.fieldGroup, fieldGroupNode.getData(), existedTab, null);
-					}
+					new SortedTreeNode(level3.getType(), level3.getData(), level2Node, null, true);
 				}
 			}
 		}
@@ -504,6 +485,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			}
 		}
 
+		this.addParentCFTs(entityTemplate.getSuperTemplate());
+
 		if (cachedTreeNodes != null && !cachedTreeNodes.isEmpty()) {
 			for (TreeNode tabNode : cachedTreeNodes) {// tab
 				TreeNode existedTab = getChildNodeByValue(groupedFields, tabNode.getData().toString());
@@ -519,8 +502,6 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				}
 			}
 		}
-
-		this.addParentCFTs(entityTemplate.getSuperTemplate());
 
 		return groupedFields;
 	}
@@ -1187,6 +1168,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 	public class SortedTreeNode extends DefaultTreeNode {
 
 		private static final long serialVersionUID = 3694377290046737073L;
+		private boolean isDisplayOnly = false;
 
 		/**
 		 * Instantiates a new sorted tree node.
@@ -1203,11 +1185,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		 * @param parent   the parent
 		 * @param expanded the expanded
 		 */
-		public SortedTreeNode(GroupedCustomFieldTreeItemType type, Object data, TreeNode parent, Boolean expanded) {
+		public SortedTreeNode(GroupedCustomFieldTreeItemType type, Object data, TreeNode parent, Boolean expanded, boolean isDisplayOnly) {
 			super(type.name(), data, parent);
 			if (expanded != null && expanded) {
 				this.setExpanded(true);
 			}
+
+			this.isDisplayOnly = isDisplayOnly;
+		}
+
+		public SortedTreeNode(GroupedCustomFieldTreeItemType type, Object data, TreeNode parent, Boolean expanded) {
+			this(type, data, parent, expanded, false);
 		}
 
 		/**
@@ -1256,8 +1244,8 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			return null;
 		}
 
-		public boolean isReadonly() {
-			return false;
+		public boolean isDisplayOnly() {
+			return this.isDisplayOnly;
 		}
 
 		/**
