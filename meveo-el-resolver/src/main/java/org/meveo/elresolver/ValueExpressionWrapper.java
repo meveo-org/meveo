@@ -4,19 +4,31 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.el.*;
+import javax.el.ArrayELResolver;
+import javax.el.BeanELResolver;
+import javax.el.CompositeELResolver;
+import javax.el.ELContext;
+import javax.el.ELResolver;
+import javax.el.ExpressionFactory;
+import javax.el.FunctionMapper;
+import javax.el.ListELResolver;
+import javax.el.MapELResolver;
+import javax.el.ValueExpression;
+import javax.el.VariableMapper;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.el.ExpressionFactoryImpl;
+
 public class ValueExpressionWrapper {
 
     private static final String MAPPER_CLASS_NAME = "mapper.class.name";
-
-    static ExpressionFactory expressionFactory = ExpressionFactory.newInstance();
     
     protected static Logger log = LoggerFactory.getLogger(ValueExpressionWrapper.class);
+
+    static ExpressionFactory expressionFactory;
 
     private SimpleELResolver simpleELResolver;
 
@@ -24,9 +36,24 @@ public class ValueExpressionWrapper {
 
     private ValueExpression ve;
 
-    static HashMap<String, ValueExpressionWrapper> valueExpressionWrapperMap = new HashMap<>();
-
     private static FunctionMapper functionMapper = null;
+    
+    static {
+//    	while (expressionFactory == null) {
+//    		try {
+//    			expressionFactory = ExpressionFactoryImpl.newInstance();
+//    		} catch (Exception e) {
+//    			e.printStackTrace();
+//    			try {
+//					Thread.sleep(1000);
+//				} catch (InterruptedException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+//    			// throw new RuntimeException(e);
+//    		}
+//    	}
+    }
 
     /**
      * Evaluate expression.
@@ -211,14 +238,7 @@ public class ValueExpressionWrapper {
     }
 
     private static Object getValue(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
-        ValueExpressionWrapper result = null;
-        if (valueExpressionWrapperMap.containsKey(expression)) {
-            result = valueExpressionWrapperMap.get(expression);
-        }
-        if (result == null) {
-            result = new ValueExpressionWrapper(expression, userMap, resultClass);
-        }
-        return result.getValue(userMap);
+        return new ValueExpressionWrapper(expression, userMap, resultClass).getValue(userMap);
     }
 
     protected Map<String,Object> getAdditionalSources(String expression, Map<Object, Object> userMap){
@@ -244,37 +264,47 @@ public class ValueExpressionWrapper {
     }
 
     protected ValueExpressionWrapper(String expression, Map<Object, Object> userMap, @SuppressWarnings("rawtypes") Class resultClass) {
-        Map<String, Object> additionalSources = getAdditionalSources(expression, userMap);
-        if (!additionalSources.isEmpty())
-        	userMap.putAll(additionalSources);
-        simpleELResolver = new SimpleELResolver(userMap);
-        final VariableMapper variableMapper = new SimpleVariableMapper();
-        if(functionMapper == null) {
-            functionMapper = getMapper();
+        try {
+        	Map<String, Object> additionalSources = getAdditionalSources(expression, userMap);
+        	if (!additionalSources.isEmpty())
+            	userMap.putAll(additionalSources);
+            simpleELResolver = new SimpleELResolver(userMap);
+            final VariableMapper variableMapper = new SimpleVariableMapper();
+            if(functionMapper == null) {
+                functionMapper = getMapper();
+            }
+            final CompositeELResolver compositeELResolver = new CompositeELResolver();
+            compositeELResolver.add(simpleELResolver);
+            compositeELResolver.add(new ArrayELResolver());
+            compositeELResolver.add(new ListELResolver());
+            compositeELResolver.add(new BeanELResolver());
+            compositeELResolver.add(new MapELResolver());
+            context = new ELContext() {
+                @Override
+                public ELResolver getELResolver() {
+                    return compositeELResolver;
+                }
+
+                @Override
+                public FunctionMapper getFunctionMapper() {
+                    return functionMapper;
+                }
+
+                @Override
+                public VariableMapper getVariableMapper() {
+                    return variableMapper;
+                }
+            };
+            
+            if (expressionFactory == null) {
+            	expressionFactory = new ExpressionFactoryImpl();//ExpressionFactoryImpl.newInstance();
+            }
+            
+            ve = expressionFactory.createValueExpression(context, expression, resultClass);
+        } catch (Exception e) {
+        	throw new RuntimeException("Failed to init ValueExpressionWrapper", e);
         }
-        final CompositeELResolver compositeELResolver = new CompositeELResolver();
-        compositeELResolver.add(simpleELResolver);
-        compositeELResolver.add(new ArrayELResolver());
-        compositeELResolver.add(new ListELResolver());
-        compositeELResolver.add(new BeanELResolver());
-        compositeELResolver.add(new MapELResolver());
-        context = new ELContext() {
-            @Override
-            public ELResolver getELResolver() {
-                return compositeELResolver;
-            }
-
-            @Override
-            public FunctionMapper getFunctionMapper() {
-                return functionMapper;
-            }
-
-            @Override
-            public VariableMapper getVariableMapper() {
-                return variableMapper;
-            }
-        };
-        ve = expressionFactory.createValueExpression(context, expression, resultClass);
+        
     }
 
     private Object getValue(Map<Object, Object> userMap) {

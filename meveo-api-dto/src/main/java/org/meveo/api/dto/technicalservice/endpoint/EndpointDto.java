@@ -147,7 +147,7 @@ public class EndpointDto extends BusinessEntityDto implements Serializable {
     private String path;
     
     @JsonProperty
-    private EndpointPool pool;
+    private EndpointPool pool = new EndpointPool();
     
     public EndpointDto() {
     	super();

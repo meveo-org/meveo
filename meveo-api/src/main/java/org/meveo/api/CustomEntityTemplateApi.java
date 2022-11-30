@@ -1,5 +1,6 @@
 package org.meveo.api;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,11 +14,11 @@ import javax.ejb.Stateless;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomEntityTemplateUniqueConstraintDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -32,7 +33,6 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
-import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.crm.CustomEntityTemplateUniqueConstraint;
@@ -128,8 +128,6 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
 	public CustomEntityTemplate create(CustomEntityTemplateDto dto) throws MeveoApiException, BusinessException {
 
-        checkPrimitiveEntity(dto);
-
         if (StringUtils.isBlank(dto.getCode())) {
             missingParameters.add("code");
         }
@@ -139,9 +137,11 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 
         handleMissingParameters();
 
-        if (customEntityTemplateService.findByCode(dto.getCode()) != null) {
+        if (customEntityTemplateService.exists(dto.getCode())) {
             throw new EntityAlreadyExistsException(CustomEntityTemplate.class, dto.getCode());
         }
+        
+        checkPrimitiveEntity(dto);
         
         boolean storeAsTable = false;
 		if (dto.getSqlStorageConfiguration() != null) {
@@ -190,14 +190,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         try {
         	
 			if (dto.getCustomEntityCategoryCode() != null) {
-				CustomEntityCategory customEntityCategory = customEntityCategoryService.findByCode(dto.getCustomEntityCategoryCode());
-				if (customEntityCategory == null) {
-					customEntityCategory = new CustomEntityCategory();
+				if (!customEntityCategoryService.exists(dto.getCustomEntityCategoryCode())) {
+					CustomEntityCategory customEntityCategory = new CustomEntityCategory();
 					customEntityCategory.setCode(dto.getCustomEntityCategoryCode());
 					customEntityCategory.setName(dto.getCustomEntityCategoryCode());
 					customEntityCategoryService.create(customEntityCategory);
+					cet.setCustomEntityCategory(customEntityCategory);
+				} else {
+					cet.setCustomEntityCategory(customEntityCategoryService.findByCodeLazy(dto.getCustomEntityCategoryCode()));
 				}
-				cet.setCustomEntityCategory(customEntityCategory);
 			}
 			
 			customEntityTemplateService.create(cet);
@@ -384,8 +385,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
     
     @Override
     public CustomEntityTemplate createOrUpdate(CustomEntityTemplateDto postData) throws MeveoApiException, BusinessException {
-        CustomEntityTemplate cet = customEntityTemplateService.findByCode(postData.getCode());
-        if (cet == null) {
+        if (!customEntityTemplateService.exists(postData.getCode())) {
             return create(postData);
         } else {
             return updateEntityTemplate(postData, false);
@@ -609,7 +609,15 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         } else {
             try {
                 String jsonSchema = customEntityTemplateService.getJsonSchemaContent(customEntityTemplate);
-                return Response.ok(jsonSchema).build();
+                
+                var builder = Response.ok(jsonSchema);
+                
+                CacheControl cc = new CacheControl();
+                cc.setMaxAge((int) Duration.ofDays(1).toSeconds());
+                cc.setPrivate(true);
+                builder.cacheControl(cc);
+                
+                return builder.build();
             } catch (Exception e) {
                 return Response.status(404).entity(e.getMessage()).build();
             }

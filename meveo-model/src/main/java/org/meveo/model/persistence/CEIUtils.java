@@ -522,7 +522,13 @@ public class CEIUtils {
 			pojoAsMap = new HashMap<>();
 			values.entrySet().stream().forEach(e -> {
 				if (e.getValue() != null && e.getValue().getClass().getAnnotation(Entity.class) != null) {
-					pojoAsMap.put(e.getKey(), getIdValue(e.getValue()));
+					if (e.getValue() instanceof BusinessEntity) {
+						// Convert to EntityReferenceWrapper
+						var reference = new EntityReferenceWrapper((BusinessEntity) e.getValue());
+						pojoAsMap.put(e.getKey(), reference);
+					} else {
+						pojoAsMap.put(e.getKey(), getIdValue(e.getValue()));
+					}
 				} else {
 					pojoAsMap.put(e.getKey(), e.getValue());
 				}

@@ -66,6 +66,32 @@ WORKDIR /opt/jboss
 
 ### ------------------------- base-end ------------------------- ###
 
+### ------------------------- NodeJs & NPM ------------------------------- ###
+
+ENV NODE_VERSION=16.14.0
+# RUN apt install -y curl
+
+ENV NVM_DIR=./.nvm
+
+RUN mkdir -p .nvm \
+	&& chown -R jboss:jboss .nvm
+	
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+
+ENV PATH="./.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+
+RUN npm config set user 0
+RUN npm config set unsafe-perm true
+	
+RUN node --version
+RUN npm --version
+
+RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/node" /usr/bin/node
+RUN ln -s "${PWD}/.nvm/versions/node/v${NODE_VERSION}/bin/npm" /usr/bin/npm
 
 ### ------------------------- Jboss Wildfly ----------------------------- ###
 # Ref: https://github.com/jboss-dockerfiles/wildfly/blob/18.0.1.Final/Dockerfile
@@ -88,10 +114,8 @@ RUN cd $HOME \
 
 ### ------------------------- Jboss Wildfly - End ----------------------------- ###
 
-
 # Change to the jboss user
 USER jboss
-
 
 ### ------------------------- Keycloak ----------------------------- ###
 # Ref: https://github.com/keycloak/keycloak-containers/blob/10.0.2/adapter-wildfly/Dockerfile
@@ -172,31 +196,6 @@ RUN set -ex \
     && rm glowroot.zip \
     && ls ${JBOSS_HOME}/glowroot/glowroot.jar
     
-    
-### ------------------------- NodeJs & NPM ------------------------------- ###
-
-ENV NODE_VERSION=16.14.0
-# RUN apt install -y curl
-
-ENV NVM_DIR=./.nvm
-
-RUN mkdir -p .nvm \
-	&& chown -R jboss:jboss .nvm
-	
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-
-ENV PATH="./.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-
-RUN npm config set user 0
-RUN npm config set unsafe-perm true
-	
-RUN node --version
-RUN npm --version
-
 ### ------------------------- Configurations ----------------------------- ###
 
 
@@ -216,7 +215,7 @@ COPY --chown=jboss:jboss docker/configs/props ${JBOSS_HOME}/props
 COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-model/src/main/db_resources /opt/jboss/liquibase/db_resources
 
 ### meveo.war
-COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-admin/web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
+COPY --chown=jboss:jboss --from=build-meveo /usr/src/meveo/meveo-admin-web/target/meveo.war ${JBOSS_HOME}/standalone/deployments/meveo.war
 
 # Ensure signals are forwarded to the JVM process correctly for graceful shutdown
 ENV LAUNCH_JBOSS_IN_BACKGROUND true

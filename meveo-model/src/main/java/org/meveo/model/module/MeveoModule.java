@@ -101,7 +101,7 @@ public class MeveoModule extends BusinessEntity  {
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "git_repository_id")
     private GitRepository gitRepository;
     
@@ -142,6 +142,10 @@ public class MeveoModule extends BusinessEntity  {
     @Column(name = "is_in_draft")
     private boolean isInDraft = true;
     
+    @Type(type = "numeric_boolean")
+    @Column(name = "auto_commit")
+    private boolean autoCommit = false;
+    
     @PrePersist()
     @PreUpdate()
     public void processDisabled() {
@@ -152,6 +156,20 @@ public class MeveoModule extends BusinessEntity  {
     		setDisabled(false);
     	}
     }
+    
+    /**
+	 * @param autoCommit the autoCommit to set
+	 */
+	public void setAutoCommit(boolean autoCommit) {
+		this.autoCommit = autoCommit;
+	}
+	
+	/**
+	 * @return the {@link #autoCommit}
+	 */
+	public boolean isAutoCommit() {
+		return autoCommit;
+	}
 
     public Set<MeveoModuleItem> getModuleItems() {
         return moduleItems;

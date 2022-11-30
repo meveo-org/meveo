@@ -104,6 +104,8 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@JsonProperty("moduleFiles")
 	private List<String> moduleFiles;
 	
+    private boolean autoCommit = false;
+	
 	private String repository;
 
 	/**
@@ -127,9 +129,24 @@ public class MeveoModuleDto extends BaseDataModelDto {
 		this.moduleDependencies=new ArrayList<>();
 		this.currentVersion = meveoModule.getCurrentVersion();
 		this.isInDraft=meveoModule.getIsInDraft();
+		this.autoCommit = meveoModule.isAutoCommit();
 		if (meveoModule.getScript() != null) {
 			this.setScript(new ScriptInstanceDto(meveoModule.getScript(), meveoModule.getScript().getScript()));
 		}
+	}
+	
+    /**
+	 * @param autoCommit the autoCommit to set
+	 */
+	public void setAutoCommit(boolean autoCommit) {
+		this.autoCommit = autoCommit;
+	}
+	
+	/**
+	 * @return the {@link #autoCommit}
+	 */
+	public boolean isAutoCommit() {
+		return autoCommit;
 	}
 	
 	/**

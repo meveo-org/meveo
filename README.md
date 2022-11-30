@@ -40,36 +40,36 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 ### Configuration
 
-- [System settings](./meveo-admin/ejbs/src/main/java/org/meveo/admin/configuration)
+- [System settings](./meveo-admin-ejbs/src/main/java/org/meveo/admin/configuration)
 - [Module](./meveo-api/src/main/java/org/meveo/api/module)
-- [User Hierarchy](./meveo-admin/ejbs/src/main/java/org/meveo/service/hierarchy)
+- [User Hierarchy](./meveo-admin-ejbs/src/main/java/org/meveo/service/hierarchy)
 
 ### Development
-- [Git](https://github.com/meveo-org/meveo/tree/master/meveo-admin/ejbs/src/main/java/org/meveo/service/git)
+- [Git](./meveo-admin-ejbs/src/main/java/org/meveo/service/git)
 
 ### Ontology
 
-- [Base API](./meveo-admin/ejbs/src/main/java/org/meveo/api/base/sql)
-- [Persistence](./meveo-admin/ejbs/src/main/java/org/meveo/api/persistence)
-- [Custom Entity](./meveo-admin/ejbs/src/main/java/org/meveo/service/custom)
+- [Base API](./meveo-admin-ejbs/src/main/java/org/meveo/api/base/sql)
+- [Persistence](./meveo-admin-ejbs/src/main/java/org/meveo/api/persistence)
+- [Custom Entity](./meveo-admin-ejbs/src/main/java/org/meveo/service/custom)
 
 ### Services
 
-- [Functions](./meveo-admin/ejbs/src/main/java/org/meveo/service/script)
-- [Rest Endpoints](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
-- [Websocket Endpoints](./meveo-admin/ejbs/src/main/java/org/meveo/service/technicalservice/wsendpoint)
-- [Lifecycle Workflows](./meveo-admin/ejbs/src/main/java/org/meveo/service/wf)
-- [Notification](./meveo-admin/ejbs/src/main/java/org/meveo/service/notification)
+- [Functions](./meveo-admin-ejbs/src/main/java/org/meveo/service/script)
+- [Rest Endpoints](./meveo-admin-ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
+- [Websocket Endpoints](./meveo-admin-ejbs/src/main/java/org/meveo/service/technicalservice/wsendpoint)
+- [Lifecycle Workflows](./meveo-admin-ejbs/src/main/java/org/meveo/service/wf)
+- [Notification](./meveo-admin-ejbs/src/main/java/org/meveo/service/notification)
 
 ### Frontend
 
- - [Static pages](./meveo-admin/web/src/main/java/org/meveo/admin/action/frontend)
+ - [Static pages](./meveo-admin-web/src/main/java/org/meveo/admin/action/frontend)
  - [Module Webapp](https://github.com/meveo-org/module-webapprouter)
 
 ### Clustering
 Meveo can be deployed in a wildfly cluster to scale its capabilities.
 Infinispan cache can be replicated/distributed/scaterred among nodes.
-A JMS topic is used to [publish events](./meveo-admin/ejbs/src/main/java/org/meveo/event/monitoring) to the cluster nodes.
+A JMS topic is used to [publish events](./meveo-admin-ejbs/src/main/java/org/meveo/event/monitoring) to the cluster nodes.
 
 ## REST API Reference
 

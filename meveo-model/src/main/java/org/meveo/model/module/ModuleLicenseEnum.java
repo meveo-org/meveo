@@ -39,5 +39,10 @@ public enum ModuleLicenseEnum {
 		}
 		return null;
 	}
+	
+	@Override
+	public String toString() {
+		return this.label;
+	}
 
 }

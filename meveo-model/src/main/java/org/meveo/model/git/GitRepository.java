@@ -21,8 +21,6 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -77,7 +75,7 @@ public class GitRepository extends BusinessEntity {
      * (Optional) Remote origin url if the repository is hosted somewhere else than locally
      */
     @Size(max = 255)
-    @Column(name = "remote_origin", updatable = false, length = 255)
+    @Column(name = "remote_origin", updatable = true, length = 255)
     private String remoteOrigin;
 
     /**
@@ -107,6 +105,16 @@ public class GitRepository extends BusinessEntity {
     @Column(name = "is_locked")
     @Type(type = "numeric_boolean")
     private boolean locked;
+    
+    @Column(name = "repository_path")
+    private String repositoryPath;
+    
+    @Column(name = "dev_mode")
+    @Type(type = "numeric_boolean")
+    private boolean devMode;
+
+    @Transient //FIXME: persist it
+    private List<String> watchedDirectories;
 
     @Transient
     private String currentBranch;
@@ -117,16 +125,49 @@ public class GitRepository extends BusinessEntity {
     @Transient
     private String clearDefaultRemotePassword;
     
+    
     @JsonIgnore
     public String getSalt() {
     	return PasswordUtils.getSalt(getRemoteOrigin(), getCode());
     }
+    
+    /**
+	 * @return the {@link #devMode}
+	 */
+	public boolean isDevMode() {
+		return devMode;
+	}
 
-    public List<String> getBranches() {
+
+
+	/**
+	 * @param devMode the devMode to set
+	 */
+	public void setDevMode(boolean devMode) {
+		this.devMode = devMode;
+	}
+
+
+
+	public List<String> getBranches() {
         return branches;
     }
+    
+    /**
+	 * @return the {@link #repositoryPath}
+	 */
+	public String getRepositoryPath() {
+		return repositoryPath;
+	}
 
-    public void setBranches(List<String> branches) {
+	/**
+	 * @param repositoryPath the repositoryPath to set
+	 */
+	public void setRepositoryPath(String repositoryPath) {
+		this.repositoryPath = repositoryPath;
+	}
+
+	public void setBranches(List<String> branches) {
         this.branches = branches;
     }
 
@@ -227,4 +268,27 @@ public class GitRepository extends BusinessEntity {
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
+
+	/**
+	 * @return the {@link #watchedDirectories}
+	 */
+	public List<String> getWatchedDirectories() {
+		if (watchedDirectories == null) {
+			watchedDirectories = new ArrayList<>();
+		}
+		
+		if (!watchedDirectories.contains("facets/java")) {
+			watchedDirectories.add("facets/java");
+		}
+		
+		return watchedDirectories;
+	}
+
+	/**
+	 * @param watchedDirectories the watchedDirectories to set
+	 */
+	public void setWatchedDirectories(List<String> watchedDirectories) {
+		this.watchedDirectories = watchedDirectories;
+	}
+    
 }

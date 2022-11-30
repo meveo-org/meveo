@@ -1,0 +1,57 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:hftl="http://hftl.org" xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:p="http://primefaces.org/ui" template="/layout/template.xhtml">
+
+	<ui:define name="metadata">
+		<f:metadata>
+			<f:event type="preRenderView" listener="#{storageConfigurationBean.preRenderView}" />
+		</f:metadata>
+	</ui:define>
+
+	<ui:define name="body">
+		<h:form id="crumbmenuForm">
+			<p:breadCrumb homeDisplay="text" id="crumbmenu">
+				<p:menuitem value="#{messages['menu.configuration']}" disabled="true" />
+				<p:menuitem value="Storage configurations" outcome="storageConfigurations" />
+			</p:breadCrumb>
+		</h:form>
+
+		<hftl:searchPanel label="#{messages['repository.search']}" exportToXml="true" exportToCsv="true" exportToJson="true"
+			backingBean="#{storageConfigurationBean}" columns="3">
+			<hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
+		</hftl:searchPanel>
+
+		<hftl:dataList exportXlsxButton="false" formId="storages" backingBean="#{storageConfigurationBean}" sortBy="code">
+
+			<hftl:column label="#{messages['businessEntity.code']}" field="code" />
+			<hftl:column label="#{messages['businessEntity.description']}" field="description" />
+			<p:column headerText="Credential">
+				#{entity.credential.code}
+			</p:column>
+			<p:column headerText="Storage type">
+				#{entity.dbStorageType.code}
+			</p:column>
+			
+			<hftl:actionsColumn permission="#{currentUser.hasRole('administrationVisualization')}" renderDeleteLink="false">
+				<ui:define name="actionButtons">
+					<p:commandButton icon="ui-icon-trash" immediate="true" onclick="PF('deleteDialog').show();" rendered="#{!(entity.code eq'default')}">
+						<f:setPropertyActionListener target="#{storageConfigurationBean.entity}" value="#{entity}" />
+					</p:commandButton>
+				</ui:define>
+			</hftl:actionsColumn>
+
+		</hftl:dataList>
+
+		<p:dialog id="deleteDialog" header="#{messages['commons.confirmationHeader']}" widgetVar="deleteDialog" modal="true" height="150" width="250">
+			<h:form id="deleteDialogForm">
+				<h:panelGrid columns="1">
+					#{messages['commons.confirmDelete']}
+				</h:panelGrid>
+				<h:panelGroup layout="block" styleClass="form-panel-actions">
+					<p:commandButton action="#{storageConfigurationBean.delete(storageConfigurationBean.entity, storageConfigurationBean.forceDelete)}" update=":searchForm:search_messages" value="#{messages['commons.yes']}" styleClass="ui-confirmdialog-yes" icon="pi pi-check" oncomplete="PF('deleteDialog').hide();" />
+	        		<p:commandButton value="#{messages['commons.no']}" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" onclick="PF('deleteDialog').hide();" />
+	        	</h:panelGroup>
+        	</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

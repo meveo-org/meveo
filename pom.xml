@@ -4,7 +4,7 @@
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>7.1.1-beta.1</version>
+	<version>7.1.1-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,13 +21,14 @@
 	<scm>
 		<connection>${scm.url}</connection>
 		<developerConnection>${scm.url}</developerConnection>
-		<tag>7.1.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<modules>
 		<module>meveo-model</module>
 		<module>meveo-security</module>
-		<module>meveo-admin</module>
+		<module>meveo-admin-web</module>
+		<module>meveo-admin-ejbs</module>
 		<module>meveo-api</module>
 		<module>meveo-api-dto</module>
 		<module>meveo-json-schema</module>
@@ -51,6 +52,11 @@
 	</distributionManagement>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+			    <groupId>org.jboss.spec.javax.websocket</groupId>
+			    <artifactId>jakarta.websocket-client-api</artifactId>
+			    <version>2.0.0.Final</version>
+			</dependency>
 			<dependency>
 				<groupId>org.unix4j</groupId>
 				<artifactId>unix4j-command</artifactId>

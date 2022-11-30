@@ -49,6 +49,11 @@ public enum CustomFieldMapKeyEnum {
     public String getLabel() {
         return this.getClass().getSimpleName() + "." + this.name();
     }
+    
+    @Override
+    public String toString() {
+    	return getLabel();
+    }
 
     public boolean isKeyUse() {
         return keyUse;

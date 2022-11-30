@@ -13,6 +13,7 @@ public class EndpointExecutionResult {
 	private final Map<String, Object> parameters;
 	private Map<String, Object> results;
 	private Throwable error;
+	private Error criticalError;
 	
 	public EndpointExecutionResult(Endpoint endpoint, Map<String, Object> parameters) {
 		this.endpoint = endpoint;
@@ -59,6 +60,21 @@ public class EndpointExecutionResult {
 	 */
 	public Map<String, Object> getParameters() {
 		return parameters;
+	}
+
+	/**
+	 * @return the {@link #criticalError}
+	 */
+	public Error getCriticalError() {
+		return criticalError;
+	}
+
+	/**
+	 * @param criticalError the criticalError to set
+	 */
+	public void setCriticalError(Error criticalError) {
+		this.criticalError = criticalError;
+		this.error  = criticalError;
 	}
 	
 }

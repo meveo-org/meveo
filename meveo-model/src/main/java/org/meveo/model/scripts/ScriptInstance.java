@@ -168,14 +168,29 @@ public class ScriptInstance extends CustomScript implements Comparable<ScriptIns
 		return "ScriptInstance [code=" + code + ", description=" + description + ", id=" + id + "]";
 	}
 	
-	public Set<ScriptInstance> getTransitiveScripts() {
-		if (getImportScriptInstances() != null && !getImportScriptInstances().isEmpty()) {
-			return Stream.concat(getImportScriptInstances().stream(), 
-					getImportScriptInstances().stream().flatMap(script -> script.getTransitiveScripts().stream()))
-					.collect(Collectors.toSet());
-		} else {
+	public Set<ScriptInstance> getTransitiveScripts(Set<ScriptInstance> dependencies) {
+		if (dependencies.contains(this)) {
 			return Set.of();
 		}
+		
+		dependencies.addAll(getImportScriptInstancesNullSafe());
+		
+		for (var si : getImportScriptInstancesNullSafe()) {
+			si.getTransitiveScripts(dependencies);
+		}
+		
+		 return dependencies;
+//		
+//		if (getImportScriptInstances() != null && !getImportScriptInstances().isEmpty()) {
+//			Stream<ScriptInstance> firstStream = getImportScriptInstances().stream();
+//			Stream<ScriptInstance> secondStream = getImportScriptInstances()
+//					.stream()
+//					.flatMap(script -> script.getTransitiveScripts(dependencies).stream());
+//			return Stream.concat(firstStream,secondStream)
+//					.collect(Collectors.toSet());
+//		} else {
+//			return Set.of();
+//		}
 	}
 
 	@Override
@@ -184,11 +199,11 @@ public class ScriptInstance extends CustomScript implements Comparable<ScriptIns
 			return -1;
 		}
 		
-		if (this.getTransitiveScripts().contains(o)) {
+		if (this.getTransitiveScripts(new HashSet<>()).contains(o)) {
 			return 1;
 		}
 		
-		if (o.getTransitiveScripts().contains(this)) {
+		if (o.getTransitiveScripts(new HashSet<>()).contains(this)) {
 			return -1;
 		}
 		

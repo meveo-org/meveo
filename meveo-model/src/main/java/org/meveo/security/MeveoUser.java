@@ -75,6 +75,10 @@ public abstract class MeveoUser implements Serializable {
     protected Map<String, List<String>> whiteList;
     
     protected Map<String, List<String>> blackList;
+    
+    protected String currentModule;
+
+    protected Map<String, Object> attributes;
 
     protected Map<String, Object> attributes;
 
@@ -94,6 +98,7 @@ public abstract class MeveoUser implements Serializable {
         this.whiteList = user.whiteList;
         this.blackList = user.blackList;
         this.mail = user.mail;
+        this.currentModule = user.currentModule;
     }
 
     public MeveoUser(String userName, String providerCode) {
@@ -290,6 +295,20 @@ public abstract class MeveoUser implements Serializable {
 
 	public void setLocale(String locale) {
 		this.locale = locale;
+	}
+	
+	/**
+	 * @param currentModule the currentModule to set
+	 */
+	public void setCurrentModule(String currentModule) {
+		this.currentModule = currentModule;
+	}
+	
+	/**
+	 * @return the {@link #currentModule}
+	 */
+	public String getCurrentModule() {
+		return this.currentModule;
 	}
 
 }

@@ -17,8 +17,11 @@
 package org.meveo.model.persistence;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,9 +31,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.scripts.ScriptInstance;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
@@ -42,19 +46,31 @@ public class DBStorageType implements Serializable {
 	
 	public static final DBStorageType SQL;
 	public static final DBStorageType NEO4J;
+	public static final DBStorageType FILE_SYSTEM;
 	
 	static {
+		Set<CustomFieldTypeEnum> allTypesButBinaries = Arrays.stream(CustomFieldTypeEnum.values())
+			.filter(value -> value != CustomFieldTypeEnum.BINARY)
+			.collect(Collectors.toSet());
+		
 		SQL = new DBStorageType();
 		SQL.code = "SQL";
 		SQL.storageImplName = "org.meveo.persistence.impl.SQLStorageImpl";
+		SQL.setSupportedFieldTypes(allTypesButBinaries);
 		
 		NEO4J = new DBStorageType();
 		NEO4J.code = "NEO4J";
 		NEO4J.storageImplName = "org.meveo.persistence.impl.Neo4jStorageImpl";
+		NEO4J.setSupportedFieldTypes(allTypesButBinaries);
+		
+		FILE_SYSTEM = new DBStorageType();
+		FILE_SYSTEM.code = "FILE_SYSTEM";
+		FILE_SYSTEM.storageImplName = "org.meveo.service.storage.FileSystemImpl";
+		FILE_SYSTEM.setSupportedFieldTypes(Set.of(CustomFieldTypeEnum.BINARY));
 	}
 	
 	public static DBStorageType valueOf(String name) {
-		return List.of(SQL, NEO4J).stream()
+		return List.of(SQL, NEO4J, FILE_SYSTEM).stream()
 			.filter(e -> e.code.equals(name))
 			.findFirst()
 			.orElse(null);
@@ -71,6 +87,10 @@ public class DBStorageType implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "storage_impl_script_id")
 	private ScriptInstance storageImplScript;
+	
+	@Column(name = "field_types", columnDefinition = "TEXT")
+	@Type(type = JsonTypes.JSON_SET)
+	private Set<CustomFieldTypeEnum> supportedFieldTypes;
 	
 	public String name() {
 		return this.code;
@@ -138,6 +158,23 @@ public class DBStorageType implements Serializable {
 	@Override
 	public String toString() {
 		return this.code;
+	}
+
+	/**
+	 * @return the {@link #supportedFieldTypes}
+	 */
+	public Set<CustomFieldTypeEnum> getSupportedFieldTypes() {
+		if (supportedFieldTypes == null || supportedFieldTypes.isEmpty()) {
+			return Set.of(CustomFieldTypeEnum.values());
+		}
+		return supportedFieldTypes;
+	}
+
+	/**
+	 * @param supportedFieldTypes the supportedFieldTypes to set
+	 */
+	public void setSupportedFieldTypes(Set<CustomFieldTypeEnum> supportedFieldTypes) {
+		this.supportedFieldTypes = supportedFieldTypes;
 	}
 	
 }

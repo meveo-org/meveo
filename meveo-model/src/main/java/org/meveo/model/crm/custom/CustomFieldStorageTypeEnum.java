@@ -25,4 +25,9 @@ public enum CustomFieldStorageTypeEnum {
     public String getLabel() {
         return this.getClass().getSimpleName() + "." + this.name();
     }
+    
+    @Override
+    public String toString() {
+    	return this.getLabel();
+    }
 }

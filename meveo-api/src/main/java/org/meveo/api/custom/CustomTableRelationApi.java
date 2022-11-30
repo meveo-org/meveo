@@ -100,7 +100,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
 
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
-        	customTableRelationService.createRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	customTableRelationService.createRelation(defaultRepository.getSqlConfigurationCode(), crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
     }
     
@@ -116,7 +116,7 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		CustomRelationshipTemplate crt = customRelationshipTemplateService.findByCode(dto.getCustomTableCode());
 		
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
-        	customTableRelationService.updateRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        	customTableRelationService.updateRelation(defaultRepository.getSqlConfigurationCode(), crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         }
 	}
 
@@ -129,9 +129,9 @@ public class CustomTableRelationApi extends BaseApi implements ICustomTableApi<C
 		
         for(CustomTableRelationRecordDto record : dto.getRecords()) {
         	if(customTableRelationService.exists(crt, record.getStartUuid(), record.getEndUuid(), record.getValues())) {
-        		customTableRelationService.updateRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        		customTableRelationService.updateRelation(defaultRepository.getSqlConfigurationCode(), crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         	}else {
-        		customTableRelationService.createRelation(defaultRepository, crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
+        		customTableRelationService.createRelation(defaultRepository.getSqlConfigurationCode(), crt, record.getStartUuid(), record.getEndUuid(), record.getValues());
         	}
         }
 	}

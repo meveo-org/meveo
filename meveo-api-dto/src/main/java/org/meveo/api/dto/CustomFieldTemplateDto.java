@@ -19,6 +19,8 @@ import org.meveo.model.crm.custom.CustomFieldMapKeyEnum;
 import org.meveo.model.crm.custom.CustomFieldMatrixColumn;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
+import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -1247,6 +1249,17 @@ public class CustomFieldTemplateDto extends BaseEntityDto {
 
 	public void setPersisted(boolean persisted) {
 		this.persisted = persisted;
+	}
+	
+	public String getFullCode() {
+		if(appliesTo.startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+			return CustomEntityTemplate.getCodeFromAppliesTo(appliesTo)  + "." + code;
+		} else if (appliesTo.startsWith(CustomRelationshipTemplate.CRT_PREFIX)){
+			return CustomRelationshipTemplate.getCodeFromAppliesTo(appliesTo)  + "." + code;
+
+		} else {
+			return appliesTo + "." + code;
+		}
 	}
 	
 }

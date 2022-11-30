@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- ~ (C) Copyright 2018-2020 Webdrone SAS (https://www.webdrone.fr/) and contributors. ~ ~ This program is free software: you can redistribute it and/or 
+	modify it under the terms of the ~ GNU Affero General Public License as published by the Free Software Foundation, either version 3 ~ of the License, or 
+	(at your option) any later version. ~ ~ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without ~ even the implied 
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. This program is ~ not suitable for any direct or indirect application in MILITARY industry 
+	See the GNU Affero ~ General Public License for more details. ~ ~ You should have received a copy of the GNU Affero General Public License along with this 
+	program. ~ If not, see <http://www.gnu.org/licenses/>. -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.2.xsd">
+  	
+   	<changeSet id="Disable autocommit #587 " author="Clément Bareth">
+   		<addColumn tableName="meveo_module">
+   			<column name="auto_commit" defaultValueNumeric="1" type="${type.boolean}"></column>
+   		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Link user to module - #588" author="Clément Bareth">
+		<addColumn tableName="adm_user">
+			<column name="current_module" type="bigint">
+				<constraints foreignKeyName="fk_current_module" referencedTableName="meveo_module" referencedColumnNames="id" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id=" internalize mv-credential module #591 " author="Clément Bareth">
+		<createTable tableName="mv_credential">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="mv_credential_pkey"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="service_id" type="bigint"/>
+			<column name="header_value" type="varchar(255)"/>
+			<column name="public_key" type="varchar(255)"/>
+			<column name="token" type="varchar(255)"/>
+			<column name="private_key" type="varchar(255)"/>
+			<column name="domain_name" type="varchar(255)"/>
+			<column name="password" type="varchar(255)"/>
+			<column name="authentication_type" type="varchar(255)"/>
+			<column name="header_key" type="varchar(255)"/>
+			<column name="refresh_token" type="varchar(255)"/>
+			<column name="status" type="varchar(255)"/>
+			<column name="username" type="varchar(255)"/>
+            <column name="token_expiry" type="datetime" />
+            <column name="last_connection" type="datetime" />
+            <column name="credit" type="bigint"/>
+            <column name="cf_values" type="text"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="Add missing props -  #591 " author="Clément Bareth">
+		<addColumn tableName="mv_credential">
+			<column name="api_key" type="varchar(255)" />
+		</addColumn>
+
+		<addColumn tableName="mv_credential">
+			<column name="uuid" type="varchar(255)" />
+
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Websocket client" author="Clément Bareth">
+		<createTable tableName="websocket_client">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="websocket_client_pkey"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="service_id" type="bigint">
+				<constraints foreignKeyName="fk_websocket_client_function" references="meveo_function(id)"/>
+			</column>
+			<column name="secured" type="${type.boolean}" defaultValueNumeric="1">
+				<constraints nullable="false"/>
+			</column>
+			<column name="url" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="retry_delay" type="${type.int}" defaultValueNumeric="60"></column>
+			<column name="nb_max_retry" type="${type.int}" defaultValueNumeric="100"></column>
+		</createTable>
+	</changeSet>
+	
+	<changeSet id="Alter fk_current_module constraint : set null on delete" author="Clément Bareth">
+		<dropForeignKeyConstraint baseTableName="adm_user" constraintName="fk_current_module"/>
+		<addForeignKeyConstraint
+			constraintName="fk_current_module"
+			referencedTableName="meveo_module"
+			referencedColumnNames="id"
+			baseTableName="adm_user"
+			baseColumnNames="current_module"
+			onDelete="SET NULL"
+		/>
+	</changeSet>
+	
+
+	<changeSet id="Storage configuration" author="Clément Bareth">
+		<createTable tableName="storage_configuration">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="pk_storage_configuration"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			<column name="storage_type" type="varchar(255)">
+				<constraints foreignKeyName="fk_db_storage_type" references="db_storage_type(code)"/>
+			</column>
+			<column name="credential_id" type="bigint">
+				<constraints foreignKeyName="fk_mv_credential" references="mv_credential(id)"/>
+			</column>
+			<column name="protocol" type="varchar(255)"/>
+			<column name="hostname" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="port" type="${type.int}"/>
+		</createTable>
+		<createTable tableName="repository_storages">
+			<column name="storage_repository_id" type="bigint">
+				<constraints foreignKeyName="fk_storage_repository_id" references="storage_repository(id)" nullable="false"/>
+			</column>
+			<column name="storage_configuration_id" type="bigint">
+				<constraints foreignKeyName="fk_storage_configuration_id" references="storage_configuration(id)" nullable="false"/>
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="repository_storages" columnNames="storage_repository_id, storage_configuration_id"/>
+		
+	</changeSet>
+	<changeSet id="Storage configuration - missing props" author="Clément Bareth">
+		<addColumn tableName="storage_configuration">
+			<column name="cf_values" type="text"/>
+			<column name="uuid" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="Add supported type to db storagetype" author="Clément Bareth">
+		<addColumn tableName="db_storage_type">
+			<column name="field_types" type="text"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="#608 - Add path to git repo" author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="repository_path" type="varchar(500)"/>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#609 - Git repo dev mode " author="Clément Bareth">
+		<addColumn tableName="git_repository">
+			<column name="dev_mode" type="${type.boolean}" defaultValueNumeric="0"/>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#606 - Upgrade neo4j" author="Clément Bareth">
+		<addColumn tableName="neo4j_configuration">
+			<column name="db_version" type="varchar(255)" defaultValue="3.5.X">
+				<constraints nullable="false"/>
+			</column>
+			<column name="graphql_api_url" type="varchar(255)"></column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet id="#627 - Modify file system storage" author="Clément Bareth">
+    	<insert tableName="db_storage_type">
+    		<column name="code" value="FILE_SYSTEM"></column>
+    		<column name="storage_impl_name" value="org.meveo.service.storage.FileSystemImpl"></column>
+    	</insert>
+	</changeSet>
+	
+	<changeSet id="#627 - Add type restrictions to file system storage type" author="Clément Bareth">
+    	<update tableName="db_storage_type">
+    		<column name="field_types" value="[&quot;BINARY&quot;]"></column>
+    		<where>code='FILE_SYSTEM'</where>
+   		</update>
+	</changeSet>
+	
+	<changeSet id="#627 - Add file system storage to existing binaries type" author="Clément Bareth">
+    	<sql>
+    		INSERT INTO cft_db_storage (cft_id, db_storage_code)
+    		SELECT id as cft_id, 'FILE_SYSTEM' as db_storage_code 
+    		FROM crm_custom_field_tmpl
+    		WHERE field_type = 'BINARY'
+    		ON CONFLICT DO NOTHING;
+   		</sql>
+   		
+  		 <sql>
+    		INSERT INTO cet_db_storage (cet_id, db_storage_code)
+    		SELECT DISTINCT id as cet_id, 'FILE_SYSTEM' as db_storage_code 
+    		FROM cust_cet AS cet
+    		WHERE EXISTS (
+    			SELECT 1 
+    			FROM crm_custom_field_tmpl AS cft
+    			WHERE field_type='BINARY' AND cft.applies_to = 'CE_' || cet.code
+  			)
+  			ON CONFLICT DO NOTHING;
+   		</sql>
+	</changeSet>
+
+</databaseChangeLog>

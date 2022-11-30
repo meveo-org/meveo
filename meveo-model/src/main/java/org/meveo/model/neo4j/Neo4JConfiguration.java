@@ -19,8 +19,6 @@ package org.meveo.model.neo4j;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -28,6 +26,12 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.CustomFieldEntity;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.admin.MvCredential;
+import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.security.PasswordUtils;
 
 /**
@@ -43,7 +47,8 @@ import org.meveo.security.PasswordUtils;
 @Table(name = "neo4j_configuration", uniqueConstraints = @UniqueConstraint(columnNames = { "code" }))
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 		@Parameter(name = "sequence_name", value = "neo4j_configuration_seq"), })
-public class Neo4JConfiguration extends BusinessEntity {
+@CustomFieldEntity(cftCodePrefix = "NEO4J")
+public class Neo4JConfiguration extends BusinessEntity implements IStorageConfiguration {
 
 	private static final long serialVersionUID = 5788790630004555788L;
 
@@ -72,6 +77,12 @@ public class Neo4JConfiguration extends BusinessEntity {
 	 */
 	@Column(name = "neo4j_password")
 	private String neo4jPassword;
+	
+	@Column(name = "db_version")
+	private String dbVersion;
+	
+	@Column(name = "graphql_api_url")
+	private String graphqlApiUrl;
 	
 	@Transient
 	private String clearPassword;
@@ -134,4 +145,102 @@ public class Neo4JConfiguration extends BusinessEntity {
     		this.neo4jPassword = PasswordUtils.encrypt(salt, clearPassword);
     	}
 	}
+
+	@Override
+	public String getUuid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String clearUuid() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ICustomFieldEntity[] getParentCFEntities() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValues() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CustomFieldValues getCfValuesNullSafe() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void clearCfValues() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public MvCredential getCredential() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getHostname() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Integer getPort() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getConnectionUri() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DBStorageType getDbStorageType() {
+		return DBStorageType.NEO4J;
+	}
+
+	/**
+	 * @return the {@link #graphqlApiUrl}
+	 */
+	public String getGraphqlApiUrl() {
+		return graphqlApiUrl;
+	}
+
+	/**
+	 * @param graphqlApiUrl the graphqlApiUrl to set
+	 */
+	public void setGraphqlApiUrl(String graphqlApiUrl) {
+		this.graphqlApiUrl = graphqlApiUrl;
+	}
+
+	/**
+	 * @return the {@link #dbVersion}
+	 */
+	public String getDbVersion() {
+		return dbVersion;
+	}
+
+	/**
+	 * @param dbVersion the dbVersion to set
+	 */
+	public void setDbVersion(String dbVersion) {
+		this.dbVersion = dbVersion;
+	}
+	
+	public boolean isV3() {
+		return this.dbVersion.startsWith("3");
+	}
+	
 }
