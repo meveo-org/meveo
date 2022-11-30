@@ -635,7 +635,10 @@ public class CrossStorageService implements CustomPersistenceService {
 			StorageImpl impl = provider.findImplementation(storage);
 			PersistenceActionResult results = null;
 			for (var storageConf : repository.getStorageConfigurations(storage)) {
-				results = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
+				var intermediateResults = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
+				if (intermediateResults != null) {
+					results = intermediateResults;
+				}
 			}
 			if (results != null) {
 				uuid = results.getBaseEntityUuid();
