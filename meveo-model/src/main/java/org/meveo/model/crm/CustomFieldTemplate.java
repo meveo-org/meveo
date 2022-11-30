@@ -1849,4 +1849,5 @@ public class CustomFieldTemplate extends BusinessEntity {
 	public void setPersisted(boolean persisted) {
 		this.persisted = persisted;
 	}
+
 }

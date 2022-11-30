@@ -80,8 +80,6 @@ public abstract class MeveoUser implements Serializable {
 
     protected Map<String, Object> attributes;
 
-    protected Map<String, Object> attributes;
-
 
     public MeveoUser() {
     }

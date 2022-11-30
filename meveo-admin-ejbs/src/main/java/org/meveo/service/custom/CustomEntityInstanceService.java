@@ -523,9 +523,4 @@ public class CustomEntityInstanceService extends BusinessService<CustomEntityIns
 		return log;
 	}
 
-	@Override
-	public Logger getLogger() {
-		return log;
-	}
-
 }
