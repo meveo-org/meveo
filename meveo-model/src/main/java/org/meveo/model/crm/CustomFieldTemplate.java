@@ -1850,4 +1850,14 @@ public class CustomFieldTemplate extends BusinessEntity {
 		this.persisted = persisted;
 	}
 	
+    @Transient
+    private boolean isDisplayOnly;
+
+	public void setDisplayOnly(boolean isDisplayOnly) {
+        this.isDisplayOnly = isDisplayOnly;
+    }
+
+    public boolean isDisplayOnly() {
+        return this.isDisplayOnly;
+    }
 }

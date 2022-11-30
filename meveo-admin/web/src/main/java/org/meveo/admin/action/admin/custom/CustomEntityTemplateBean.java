@@ -390,7 +390,11 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		}
 	}
 
-	public void addParentFields(CustomEntityTemplate parentCET) {
+	public void addParentCFTs(CustomEntityTemplate parentCET) {
+
+		if (parentCET == null) {
+			return;
+		}
 
 		String parentCetPrefix = parentCET.getAppliesTo();
 
@@ -399,13 +403,17 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 		if (parentCET != null && parentCET.getNeo4JStorageConfiguration() != null && parentCET.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 			fields.remove("value");
 		}
-
-		// Init primitve types
+		
 		for (CustomFieldTemplate field : fields.values()) {
+
+			// Init primitve types
 			if (!StringUtils.isBlank(field.getEntityClazz())) {
 				final String cetCode = CustomFieldTemplate.retrieveCetCode(field.getEntityClazz());
 				field.setPrimitiveType(customEntityTemplateService.getPrimitiveType(cetCode));
 			}
+
+			//Cannot edit parent CFTs
+			field.setDisplayOnly(true);
 		}
 
 		GroupedCustomField groupedCFTAndActions = new GroupedCustomField(fields.values(), "Parent", true);
@@ -512,11 +520,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			}
 		}
 
-		CustomEntityTemplate parentTemplate = entityTemplate.getSuperTemplate();
-
-		if (parentTemplate != null) {
-			this.addParentFields(parentTemplate);
-		}
+		this.addParentCFTs(entityTemplate.getSuperTemplate());
 
 		return groupedFields;
 	}
@@ -1250,6 +1254,10 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 				return guiPosition;
 			}
 			return null;
+		}
+
+		public boolean isReadonly() {
+			return false;
 		}
 
 		/**

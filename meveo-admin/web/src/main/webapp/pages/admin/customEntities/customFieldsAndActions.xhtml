@@ -247,7 +247,8 @@
 							icon="ui-icon-document"
 							oncomplete="PF('cftDialog').show(); return false;"
 							action="#{customFieldTemplateBean.initEntity(entity.id)}"
-							update=":cftDialog :cftForm">
+							update=":cftDialog :cftForm"
+							rendered="#{not entity.isDisplayOnly()}">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.backViewSave}"
 								value="customizedEntity" />
@@ -255,7 +256,7 @@
 
 
 						<p:commandButton id="enablelink" icon="ui-icon-circle-check"
-							rendered="#{entity.disabled}"
+							rendered="#{entity.disabled and not entity.isDisplayOnly()}"
 							actionListener="#{customEntityTemplateBean.refreshFields}"
 							action="#{customFieldTemplateBean.enable()}" update="@form">
 							<f:setPropertyActionListener
@@ -264,7 +265,7 @@
 								message="#{messages['commons.confirmEnable']}" />
 						</p:commandButton>
 						<p:commandButton id="disablelink" icon="ui-icon-circle-close"
-							rendered="#{not entity.disabled}"
+							rendered="#{not entity.disabled and not entity.isDisplayOnly()}"
 							actionListener="#{customEntityTemplateBean.refreshFields}"
 							action="#{customFieldTemplateBean.disable()}" update="@form">
 							<f:setPropertyActionListener
@@ -281,7 +282,8 @@
 							hideEffect="slide" />
 
 						<p:commandButton id="copylink" icon="ui-icon-copy"
-							update=":copyCFTForm" oncomplete="PF('copyCFTDialog').show()">
+							update=":copyCFTForm" oncomplete="PF('copyCFTDialog').show()"
+							rendered="#{not entity.isDisplayOnly()}">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.entity}" value="#{entity}" />
 						</p:commandButton>
@@ -298,7 +300,8 @@
 						<p:tooltip for="deletelink" value="#{messages['commons.delete']}"
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="deletelink" icon="ui-icon-trash"
-							oncomplete="fieldsDoDelete()">
+							oncomplete="fieldsDoDelete()"
+							rendered="#{not entity.isDisplayOnly()}">
 							<f:setPropertyActionListener
 								target="#{customFieldTemplateBean.entity}" value="#{entity}" />
 							<p:confirm header="#{messages['commons.confirmationHeader']}"
@@ -311,14 +314,14 @@
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="moveUpFBtn" icon="ui-icon-arrowthick-1-n"
 							action="#{customEntityTemplateBean.moveUp(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveUp()}" />
+							update=":fieldsForm:fields" rendered="#{node.canMoveUp() and not entity.isDisplayOnly()}" />
 
 						<p:tooltip for="moveDownFBtn"
 							value="#{messages['action.moveDown']}" showEffect="slide"
 							hideEffect="slide" />
 						<p:commandButton id="moveDownFBtn" icon="ui-icon-arrowthick-1-s"
 							action="#{customEntityTemplateBean.moveDown(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveDown()}" />
+							update=":fieldsForm:fields" rendered="#{node.canMoveDown() and not entity.isDisplayOnly()}" />
 
 					</h:panelGroup>
 
@@ -382,14 +385,16 @@
 							showEffect="slide" hideEffect="slide" />
 						<p:commandButton id="moveUpABtn" icon="ui-icon-arrowthick-1-n"
 							action="#{customEntityTemplateBean.moveUp(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveUp()}" />
+							update=":fieldsForm:fields" 
+							rendered="#{node.canMoveUp()}" />
 
 						<p:tooltip for="moveDownABtn"
 							value="#{messages['action.moveDown']}" showEffect="slide"
 							hideEffect="slide" />
 						<p:commandButton id="moveDownABtn" icon="ui-icon-arrowthick-1-s"
 							action="#{customEntityTemplateBean.moveDown(node)}"
-							update=":fieldsForm:fields" rendered="#{node.canMoveDown()}" />
+							update=":fieldsForm:fields" 
+							rendered="#{node.canMoveDown()}" />
 
 					</h:panelGroup>
 
