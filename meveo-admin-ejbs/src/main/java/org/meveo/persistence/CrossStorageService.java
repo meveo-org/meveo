@@ -637,9 +637,11 @@ public class CrossStorageService implements CustomPersistenceService {
 			for (var storageConf : repository.getStorageConfigurations(storage)) {
 				results = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
 			}
-			uuid = results.getBaseEntityUuid();
-			if (foundId == null) {
-				ceiAfterPreEvents.setUuid(uuid);
+			if (results != null) {
+				uuid = results.getBaseEntityUuid();
+				if (foundId == null) {
+					ceiAfterPreEvents.setUuid(uuid);
+				}
 			}
 		}
 

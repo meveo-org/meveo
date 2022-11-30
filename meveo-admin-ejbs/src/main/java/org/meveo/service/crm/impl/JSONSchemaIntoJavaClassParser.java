@@ -427,12 +427,13 @@ public class JSONSchemaIntoJavaClassParser {
     					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
 							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
 							String crtCode = fieldDefinition.getRelationship().getCode();
-							// If CRT has no relation, directly use the target node as field type
+							// If CRT has no fields, directly use the target node as field type
 							if(relationFields == null || relationFields.isEmpty()) {
 		    					// Add @Relation annotation
 								fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
 	        					compilationUnit.addImport(Relation.class);
 							} else {
+								addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
 								var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
 			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
 								continue;
@@ -485,8 +486,8 @@ public class JSONSchemaIntoJavaClassParser {
     	compilationUnit.addImport(JsonSetter.class);
     	
     	String methodName = "set" + cft.getCode().substring(0, 1).toUpperCase() + cft.getCode().substring(1);
-    	MethodDeclaration primitiveSetter = clazz.addMethod(methodName, Keyword.PRIVATE);
-    	primitiveSetter.addAnnotation(JsonSetter.class);
+    	MethodDeclaration primitiveSetter = clazz.addMethod(methodName, Keyword.PUBLIC);
+    	
     	
     	String typeName;
     	switch (cet.getNeo4JStorageConfiguration().getPrimitiveType()) {
@@ -513,6 +514,7 @@ public class JSONSchemaIntoJavaClassParser {
     	
     	if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
     		primitiveSetter.addParameter("Collection<" + typeName + ">", cft.getCode());
+    		primitiveSetter.addAnnotation(JsonSetter.class);
     		
         	String body = "{ this." + cft.getCode() + " = new ArrayList<>();"
         				+ "if (" + cft.getCode() + " != null) { \n"
@@ -529,7 +531,7 @@ public class JSONSchemaIntoJavaClassParser {
     		
         	String body = "{ this." + cft.getCode() + " = null;\n"
         				+ "if (" + cft.getCode() + " != null) { \n"
-        				+ "  var entity = JacksonUtil.convert(item, " + cet.getCode() + ".class); \n"
+        				+ "  var entity = JacksonUtil.convert(" + cft.getCode() + ", " + cet.getCode() + ".class); \n"
     					+ "  var relation = new " + crt.getCode() + "(this, entity); \n"
     					+ "  this." + cft.getCode() + " = (relation); \n"
     					+ "}}";
