@@ -94,7 +94,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	}
 
 	public LazyDataModel<Map<String, Object>> getNativeDataModel() throws NamingException {
-
+		filters.remove("moduleBelonging");
 		return getNativeDataModel(filters);
 	}
 
