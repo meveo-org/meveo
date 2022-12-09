@@ -16,6 +16,8 @@
 
 package org.meveo.api.rest.technicalservice;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +29,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -39,7 +40,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.ws.rs.core.MediaType;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -58,9 +58,6 @@ import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  * Servlet that allows to execute technical services through configured endpoints.<br>
@@ -82,10 +79,10 @@ public class EndpointServlet extends HttpServlet {
     private static final long serialVersionUID = -8425320629325242067L;
 
     private static Logger log = LoggerFactory.getLogger(EndpointServlet.class);
-    
+
     @EJB
     private EndpointApi endpointApi;
-    
+
     @Inject
     private StartupListener startupListener;
 
@@ -115,6 +112,29 @@ public class EndpointServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doPutPost(req, resp,EndpointHttpMethod.PUT);
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        String method = req.getMethod();
+
+        if (method.equals(EndpointHttpMethod.PATCH.name())) {
+            this.doPatch(req, resp);
+
+        } else {
+            super.service(req, resp);
+        }
+    }
+
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+            .setParameters(new HashMap<>(req.getParameterMap()))
+            .setMethod(EndpointHttpMethod.PATCH)
+            .createEndpointExecution();
+
+        doRequest(endpointExecution, false);
     }
 
     protected void doPutPost(HttpServletRequest req, HttpServletResponse resp,EndpointHttpMethod method) throws ServletException, IOException {
@@ -187,7 +207,7 @@ public class EndpointServlet extends HttpServlet {
     		endpointExecution.getResp().setStatus(503);
     		return;
     	}
-    	
+
         // Retrieve endpoint
         final Endpoint endpoint = endpointExecution.getEndpoint();
 
@@ -205,7 +225,7 @@ public class EndpointServlet extends HttpServlet {
                     requiredParameters.add(tsParameterMapping);
                 }
             }
-            
+
             if (CollectionUtils.isNotEmpty(requiredParameters)) {
                 for (TSParameterMapping param : requiredParameters) {
                     String parameterName = param.getEndpointParameter().getParameter();
