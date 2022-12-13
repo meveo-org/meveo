@@ -60,6 +60,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Websocket Endpoints](./meveo-admin-ejbs/src/main/java/org/meveo/service/technicalservice/wsendpoint)
 - [Lifecycle Workflows](./meveo-admin-ejbs/src/main/java/org/meveo/service/wf)
 - [Notification](./meveo-admin-ejbs/src/main/java/org/meveo/service/notification)
+- [File system storage](./meveo-admin-ejbs/src/main/java/org/meveo/service/storage)
 
 ### Frontend
 
