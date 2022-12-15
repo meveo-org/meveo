@@ -68,6 +68,15 @@ public class CrossStorageRequest<T> {
 		}
 		return this;
 	}
+
+	public CrossStorageRequest<T> or(List<String> fields, Object value) {
+		var filterKey = "FilterMultiColumnWithOR " + String.join(" ", fields);
+		var filterValue = value instanceof CustomEntity
+							? ((CustomEntity) value).getUuid()
+							: value;
+		configuration.getFilters().put(filterKey, filterValue);
+		return this;
+	}
 	
 	public CrossStorageRequest<T> limit(int limit) {
 		configuration.setNumberOfRows(limit);
