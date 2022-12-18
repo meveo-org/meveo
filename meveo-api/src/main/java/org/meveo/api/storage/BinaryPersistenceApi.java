@@ -3,6 +3,7 @@
  */
 package org.meveo.api.storage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -32,8 +33,7 @@ public class BinaryPersistenceApi {
 			.select(cftCode)
 			.getResult();
 		
-		 // = crossStorageApi.find(repository, uuid, cetCode);
-		return cei.getCfValues().getCfValue(cftCode).getListValue();
+		return new ArrayList<BinaryProvider>(cei.getCfValues().getCfValue(cftCode).getBinaries());
 	}
 	
 }

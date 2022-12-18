@@ -19,9 +19,6 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
 import javax.persistence.NonUniqueResultException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
@@ -34,8 +31,10 @@ import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Updated;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
@@ -56,6 +55,7 @@ import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.storage.FileSystemImpl;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
@@ -106,6 +106,9 @@ public class SQLStorageImpl implements StorageImpl {
     
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
+    
+    @Inject
+    private FileSystemImpl fileSystemimpl;
 
 	@Override
 	public boolean exists(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) {
@@ -220,7 +223,29 @@ public class SQLStorageImpl implements StorageImpl {
 			throw new RuntimeException(e);
 		}
 		
+		List<CustomFieldTemplate> binariesInSql = cfts
+				.values()
+				.stream()
+				.filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
+				.filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL))
+				.collect(Collectors.toList());
+		
 		if (foundEntity) {
+			// Convert files to binary provider
+			binariesInSql.forEach(cft -> {
+				Object filePath = (String) values.get(cft.getCode());
+				if (filePath != null) {
+					if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+						File file = new File((String) filePath);
+						values.put(cft.getCode(), new BinaryProvider(file));
+					} else {
+						List<BinaryProvider> binaries = ((Collection<String>) filePath).stream()
+							.map(path -> new BinaryProvider(new File(path)))
+							.collect(Collectors.toList());
+						values.put(cft.getCode(), binaries);
+					}
+				}
+			});
 			return values;
 		} else {
 			return null;
@@ -308,6 +333,10 @@ public class SQLStorageImpl implements StorageImpl {
 			} catch (Exception e) {
 				throw new BusinessException(e);
 			}
+			
+			createOrUpdateBinaries(repository, cei, customFieldTemplates, binariesInSql);
+			
+			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 
 			persistedEntities.add(new EntityRef(uuid, cei.getCet().getCode()));
 		}
@@ -315,16 +344,35 @@ public class SQLStorageImpl implements StorageImpl {
 		return new PersistenceActionResult(persistedEntities, uuid);
 	}
 
+	private void createOrUpdateBinaries(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, List<CustomFieldTemplate> binariesInSql) throws BusinessException {
+		fileSystemimpl.createOrUpdate(repository, null, cei, customFieldTemplates, cei.getUuid());
+		// Update CEI binary values
+		binariesInSql.forEach(cft -> {
+			try {
+				List<File> files = fileSystemService.findBinaries(repository.getBinaryStorageConfiguration(), cei.getCet(), cei.getUuid(), cft, cei.getCfValuesAsValues());
+				if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !files.isEmpty()) {
+					cei.getCfValues().setValue(cft.getCode(), files.get(0));
+				} else {
+					cei.getCfValues().setValue(cft.getCode(), files);
+				}
+			} catch (BusinessApiException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+	}
+
 	@Override
 	public void update(Repository repository, IStorageConfiguration conf, CustomEntityInstance ceiToUpdate) throws BusinessException {
 		try {
 			Map<String, CustomFieldTemplate> customFieldTemplates = ceiToUpdate.getFieldTemplates();
+			
+			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
 			Map<String, Object> values = ceiToUpdate.getCfValuesAsValues();
 			
 			// Custom table
 			if (ceiToUpdate.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-				Map<String, Object> sqlValues = PersistenceUtils.filterValues(customFieldTemplates, values, ceiToUpdate.getCet(), DBStorageType.SQL);
-	
+				createOrUpdateBinaries(repository, ceiToUpdate, customFieldTemplates, binariesInSql);
 				customTableService.update(repository.getSqlConfigurationCode(), ceiToUpdate.getCet(), ceiToUpdate);
 			} else {
 				// CEI storage
@@ -334,8 +382,13 @@ public class SQLStorageImpl implements StorageImpl {
 				CustomFieldValues customFieldValues = new CustomFieldValues();
 				values.forEach(customFieldValues::setValue);
 				cei.setCfValues(customFieldValues);
+				
+				createOrUpdateBinaries(repository, ceiToUpdate, customFieldTemplates, binariesInSql);
+				
 				customEntityInstanceService.update(cei);
 			}
+			
+			fileSystemimpl.createOrUpdate(repository, conf, ceiToUpdate, customFieldTemplates, ceiToUpdate.getUuid());
 		} catch (Exception e) {
 			throw new BusinessException(e);
 		}

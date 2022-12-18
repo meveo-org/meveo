@@ -1385,7 +1385,10 @@ public class CustomFieldValue implements Serializable {
 
         } else if(value instanceof File) {
             fileValue = (File) value;
-
+            
+        } else if (value instanceof BinaryProvider) {
+        	listBinaries = new ArrayList<BinaryProvider>();
+        	listBinaries.add((BinaryProvider) value);
         } else if (value instanceof BusinessEntity) {
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));
 

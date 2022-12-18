@@ -51,7 +51,7 @@ public class FileSystemRsImpl extends BaseRs implements FileSystemRs {
 				}
 				
 				if (binaryProvider != null) {
-					return Response.ok(binaryProvider.getBinary()).build();
+					return Response.ok(binaryProvider.getBinary(), binaryProvider.getContentType()).build();
 				}
 			}
 		

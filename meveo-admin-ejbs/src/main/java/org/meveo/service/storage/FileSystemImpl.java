@@ -33,6 +33,7 @@ import org.meveo.model.storage.Repository;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
 import org.meveo.persistence.StorageQuery;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,9 @@ public class FileSystemImpl implements StorageImpl {
 	
 	@Inject
 	private FileSystemService fileSystemService;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 	
 	private static Logger log = LoggerFactory.getLogger(FileSystemImpl.class);
 	
@@ -63,7 +67,7 @@ public class FileSystemImpl implements StorageImpl {
 			.filter(cft -> fetchFields.contains(cft.getCode()))
 			.forEach(cft -> {
 				try {
-					List<BinaryProvider> binaries = fileSystemService.findBinariesStaticPath((BinaryStorageConfiguration) repository, cet.getCode(), uuid, cft)
+					List<BinaryProvider> binaries = fileSystemService.findBinaries((BinaryStorageConfiguration) repository, cet, uuid, cft, Map.of())
 							.stream()
 							.filter(File::exists)
 							.map(BinaryProvider::new)
@@ -90,6 +94,7 @@ public class FileSystemImpl implements StorageImpl {
 		
 		String rootPath = repository != null && repository.getBinaryStorageConfiguration() != null ? repository.getBinaryStorageConfiguration().getRootPath() : "";
 
+		Map<String, Object> persistedValues = new HashMap<>();
 		customFieldTemplates.values()
 		.stream()
 		.filter(cft -> cft.getFieldType() == CustomFieldTypeEnum.BINARY)
@@ -114,7 +119,7 @@ public class FileSystemImpl implements StorageImpl {
 				params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
 				
 				try {
-					fileSystemService.persists(params);
+					persistedValues.put(cft.getCode(), fileSystemService.persists(params));
 				} catch (IOException e) {
 					log.error("Failed to persist binary", e);
 				}
@@ -122,7 +127,7 @@ public class FileSystemImpl implements StorageImpl {
 			
 			// Remove objects not present on the updated list
 			try {
-				fileSystemService.findBinariesStaticPath(repository.getBinaryStorageConfiguration(), cei.getCetCode(), uuid, cft)
+				fileSystemService.findBinaries(repository.getBinaryStorageConfiguration(), cei.getCet(), uuid, cft, cei.getCfValuesAsValues())
 						.stream()
 						.filter(file -> !fileNames.contains(file.getName()))
 						.forEach(file -> {
@@ -134,7 +139,13 @@ public class FileSystemImpl implements StorageImpl {
 			}
 		});
 		
-		return new PersistenceActionResult(uuid);
+		PersistenceActionResult results = new PersistenceActionResult(uuid);
+		
+		if (persistedValues.isEmpty()) {
+			results.setPersistedValues(persistedValues);
+		}
+		
+		return results;
 	}
 
 	@Override
@@ -153,7 +164,20 @@ public class FileSystemImpl implements StorageImpl {
 
 	@Override
 	public void remove(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
-		// TODO Auto-generated method stub
+		cftService.findByAppliesTo(cet.getAppliesTo()).values()
+			.stream()
+			.filter(cft -> cft.getFieldType() == CustomFieldTypeEnum.BINARY)
+			.forEach(cft -> {
+				try {
+					fileSystemService.findBinaries((BinaryStorageConfiguration) repository, cet, uuid, cft, Map.of()) //XXX: Fix in case of dynamic
+					.stream()
+					.forEach(file -> {
+						file.delete();
+					});
+				} catch (BusinessApiException e) {
+					log.error("Failed to delete file", e);
+				}
+			});
 		
 	}
 

@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -24,6 +25,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.elresolver.ValueExpressionWrapper;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.BinaryStorageConfiguration;
@@ -315,6 +317,34 @@ public class FileSystemService {
 		}
 
 		return new File(filePath);
+	}
+	
+	public List<File> findBinaries(BinaryStorageConfiguration repository, CustomEntityTemplate cet, String uuid, CustomFieldTemplate cft, Map<String, Object> values) throws BusinessApiException {
+		// The file path expression contains an EL, so we need to retrieve the entity to get the evaluated file path
+		if(BinaryStorageUtils.filePathContainsEL(cft)){
+			return findBinariesDynamicPath(values, cft.getCode());
+
+		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
+		} else {
+			return findBinariesStaticPath(repository, cet.getCode(), uuid, cft);
+		}
+	}
+	
+	public List<File> findBinariesDynamicPath(Map<String, Object> values, String cftCode) {
+		String filePath;
+
+		Object filePathOrfilePaths = values.get(cftCode);
+		if(filePathOrfilePaths instanceof String){
+			List.of(new File((String) filePathOrfilePaths));
+		} else if(filePathOrfilePaths instanceof Collection){
+			return ((Collection<String>) filePathOrfilePaths).stream()
+						.map(File::new)
+						.collect(Collectors.toList());
+		} else {
+			return List.of();
+		}
+		
+		return List.of();
 	}
 	
 	

@@ -19,6 +19,8 @@ package org.meveo.api.rest.persistence;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -59,6 +61,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.GZIP;
@@ -690,16 +693,20 @@ public class PersistenceRs {
 	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField, Integer index, Object binaryValue) {
 		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
 
+		String fileName = null;
 		if (binaryValue instanceof BinaryProvider) {
-			return ((BinaryProvider) binaryValue).getFileName();
+			fileName = ((BinaryProvider) binaryValue).getFileName();
 		}
 		
 		if (binaryValue instanceof File) {
-			return ((File) binaryValue).getName();
+			fileName = ((File) binaryValue).getName();
 		}
 		
 		if (binaryValue instanceof String) {
-			return (String) binaryValue;
+			fileName = (String) binaryValue;
+			if (fileName.contains(File.separator)) {
+				fileName = FilenameUtils.getName(fileName);
+			}
 		}
 		
 		StringBuilder builder = new StringBuilder("/api/rest/fileSystem/binaries/")
@@ -708,12 +715,8 @@ public class PersistenceRs {
 				.append("/")
 				.append(uuid)
 				.append("/")
-				.append(binaryField.getCode());
-		
-		if (index != null) {
-			builder.append("index=")
-				.append(index);
-		}
+				.append(binaryField.getCode())
+				.append("?fileName=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
 
 		return builder.toString();
 	}
