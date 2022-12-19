@@ -141,7 +141,7 @@ public class FileSystemImpl implements StorageImpl {
 		
 		PersistenceActionResult results = new PersistenceActionResult(uuid);
 		
-		if (persistedValues.isEmpty()) {
+		if (!persistedValues.isEmpty()) {
 			results.setPersistedValues(persistedValues);
 		}
 		

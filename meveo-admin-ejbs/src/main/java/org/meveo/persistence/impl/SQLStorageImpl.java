@@ -233,17 +233,22 @@ public class SQLStorageImpl implements StorageImpl {
 		if (foundEntity) {
 			// Convert files to binary provider
 			binariesInSql.forEach(cft -> {
-				Object filePath = (String) values.get(cft.getCode());
-				if (filePath != null) {
-					if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
-						File file = new File((String) filePath);
-						values.put(cft.getCode(), new BinaryProvider(file));
-					} else {
-						List<BinaryProvider> binaries = ((Collection<String>) filePath).stream()
-							.map(path -> new BinaryProvider(new File(path)))
-							.collect(Collectors.toList());
-						values.put(cft.getCode(), binaries);
+				try {
+					Object filePath = values.get(cft.getCode());
+					if (filePath != null) {
+						if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+							File file = new File((String) filePath);
+							values.put(cft.getCode(), new BinaryProvider(file));
+						} else {
+							List<BinaryProvider> binaries = ((Collection<String>) filePath).stream()
+									.map(path -> new BinaryProvider(new File(path)))
+									.collect(Collectors.toList());
+							values.put(cft.getCode(), binaries);
+						}
 					}
+					
+				} catch (Exception e) {
+					log.warn("Failed to retrieve binary: {}", e.getMessage());
 				}
 			});
 			return values;
