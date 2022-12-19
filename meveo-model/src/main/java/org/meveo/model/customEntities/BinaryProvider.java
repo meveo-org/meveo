@@ -6,8 +6,10 @@ package org.meveo.model.customEntities;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,6 +21,8 @@ public class BinaryProvider implements Serializable {
 
 	@JsonValue
 	private String fileName;
+	
+	private String contentType;
 	
 	@JsonIgnore
 	private transient Supplier<InputStream> provider;
@@ -43,6 +47,12 @@ public class BinaryProvider implements Serializable {
 			}
 		};
 		this.overwrite = true;
+		
+		try {
+			this.contentType = Files.probeContentType(file.toPath());
+		} catch (IOException e) {
+			// NOOP
+		}
 	}
 
 	/**
@@ -65,6 +75,13 @@ public class BinaryProvider implements Serializable {
 	 */
 	public boolean isOverwrite() {
 		return overwrite;
+	}
+	
+	/**
+	 * @return the {@link #contentType}
+	 */
+	public String getContentType() {
+		return contentType;
 	}
 	
 }

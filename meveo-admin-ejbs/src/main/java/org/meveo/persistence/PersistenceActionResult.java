@@ -16,15 +16,17 @@
 
 package org.meveo.persistence;
 
-import org.meveo.persistence.scheduler.EntityRef;
-
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+
+import org.meveo.persistence.scheduler.EntityRef;
 
 public class PersistenceActionResult {
 
     private Set<EntityRef> persistedEntities;
     private String baseEntityUuid;
+    private Map<String, Object> persistedValues;
 
     public PersistenceActionResult(Set<EntityRef> persistedEntities, String baseEntityUuid) {
         this.persistedEntities = persistedEntities;
@@ -43,4 +45,19 @@ public class PersistenceActionResult {
     public String getBaseEntityUuid() {
         return baseEntityUuid;
     }
+
+	/**
+	 * @return the {@link #persistedValues}
+	 */
+	public Map<String, Object> getPersistedValues() {
+		return persistedValues;
+	}
+
+	/**
+	 * @param persistedValues the persistedValues to set
+	 */
+	public void setPersistedValues(Map<String, Object> persistedValues) {
+		this.persistedValues = persistedValues;
+	}
+    
 }
