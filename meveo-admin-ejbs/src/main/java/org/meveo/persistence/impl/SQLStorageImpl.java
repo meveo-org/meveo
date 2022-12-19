@@ -361,8 +361,7 @@ public class SQLStorageImpl implements StorageImpl {
 					cei.getCfValues().setValue(cft.getCode(), files);
 				}
 			} catch (BusinessApiException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.warn("Error while persisting binaries", e);
 			}
 		});
 	}
