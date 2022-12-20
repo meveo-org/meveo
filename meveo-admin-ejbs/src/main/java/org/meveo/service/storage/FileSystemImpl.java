@@ -110,10 +110,12 @@ public class FileSystemImpl implements StorageImpl {
 				params.setUuid(uuid);
 				params.setCftCode(cft.getCode());
 				params.setFilePath(cft.getFilePath());
-				// params.setContentType(file.getContentType());
+				params.setContentType(binary.getContentType());
 				params.setFilename(binary.getFileName());
 				params.setInputStream(binary.getBinary());
-				// params.setFileSizeInBytes(file.getSize());
+				if (binary.getFileSize() != null) {
+					params.setFileSizeInBytes(binary.getFileSize());
+				}
 				params.setFileExtensions(cft.getFileExtensions());
 				params.setContentTypes(cft.getContentTypes());
 				params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());

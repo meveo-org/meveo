@@ -24,6 +24,8 @@ public class BinaryProvider implements Serializable {
 	
 	private String contentType;
 	
+	private Long fileSize;
+	
 	@JsonIgnore
 	private transient Supplier<InputStream> provider;
 	
@@ -38,6 +40,10 @@ public class BinaryProvider implements Serializable {
 	}
 	
 	public BinaryProvider(File file) {
+		if (!file.exists()) {
+			throw new RuntimeException(new FileNotFoundException(file.getAbsolutePath() + " does not exists"));
+		}
+		
 		this.fileName = file.getName();
 		this.provider = () -> {
 			try {
@@ -50,9 +56,26 @@ public class BinaryProvider implements Serializable {
 		
 		try {
 			this.contentType = Files.probeContentType(file.toPath());
-		} catch (IOException e) {
+			this.fileSize = Files.size(file.toPath());
+		} catch (Exception e) {
 			// NOOP
 		}
+		
+		
+	}
+	
+	/**
+	 * @param contentType the contentType to set
+	 */
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+	
+	/**
+	 * @param fileSize the fileSize to set
+	 */
+	public void setFileSize(Long fileSize) {
+		this.fileSize = fileSize;
 	}
 
 	/**
@@ -82,6 +105,13 @@ public class BinaryProvider implements Serializable {
 	 */
 	public String getContentType() {
 		return contentType;
+	}
+	
+	/**
+	 * @return the {@link #fileSize}
+	 */
+	public Long getFileSize() {
+		return fileSize;
 	}
 	
 }
