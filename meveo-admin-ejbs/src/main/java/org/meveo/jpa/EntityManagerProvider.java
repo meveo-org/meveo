@@ -29,11 +29,14 @@ import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceUnit;
+import javax.transaction.UserTransaction;
 
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
@@ -80,13 +83,13 @@ public class EntityManagerProvider {
         log.trace("Produce EM for provider {}", providerCode);
 
         if (providerCode == null || !isMultiTenancyEnabled) {
+        	FacesContext facesContext = FacesContext.getCurrentInstance();
+        	if (facesContext == null || facesContext.getCurrentPhaseId() == null) {
+        		// Create a container managed persistence context main provider, for API and JOBs
+        		return new EntityManagerWrapper(emfForJobs, false);
 
-            // Create an container managed persistence context main provider, for API and JOBs
-            if (FacesContext.getCurrentInstance() == null) {
-                return new EntityManagerWrapper(emfForJobs, false);
-
-                // Create an application managed persistence context main provider, for GUI
-            } else {
+        	} else {
+        		// Create an application managed persistence context main provider, for GUI
                 final EntityManager em = emf.createEntityManager();
                 EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(
                 		this.getClass().getClassLoader(),
