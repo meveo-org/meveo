@@ -59,6 +59,7 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -113,7 +114,7 @@ public class NativePersistenceService extends BaseService {
 
 	@FunctionalInterface
 	public static interface SqlAction {
-		void doWork(PreparedStatement ps) throws Exception;
+		void doWork(PreparedStatement ps) throws SQLException;
 	}
 
 	/**
@@ -747,50 +748,44 @@ public class NativePersistenceService extends BaseService {
 
 		StringBuilder sql = new StringBuilder();
 		
-		try {
-			sql.append("UPDATE ").append(tableName).append(" SET ");
-			boolean first = true;
-			for (String fieldName : values.keySet()) {
-				String fieldNameInSQL = PostgresReserverdKeywords.escapeAndFormat(fieldName);
+		sql.append("UPDATE ").append(tableName).append(" SET ");
+		boolean first = true;
+		for (String fieldName : values.keySet()) {
+			String fieldNameInSQL = PostgresReserverdKeywords.escapeAndFormat(fieldName);
 
-				if (fieldName.equals(FIELD_ID)) {
-					continue;
-				}
-
-				if (!first) {
-					sql.append(",");
-				}
-				if (values.get(fieldName) == null) {
-					sql.append(fieldNameInSQL).append(" = NULL");
-
-				} else {
-					sql.append(fieldNameInSQL).append(" = ? ");
-				}
-				first = false;
+			if (fieldName.equals(FIELD_ID)) {
+				continue;
 			}
 
-			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
+			if (!first) {
+				sql.append(",");
+			}
+			if (values.get(fieldName) == null) {
+				sql.append(fieldNameInSQL).append(" = NULL");
 
-			doUpdate(sqlConnectionCode, sql.toString(), ps -> {
-				int parameterIndex = 1;
-				for (String fieldName : values.keySet()) {
-					Object fieldValue = values.get(fieldName);
-					if (fieldValue != null && fieldName != "uuid") {
-						setParameterValue(ps, parameterIndex++, fieldValue);
-					}
-				}
-			});
-
-			CustomTableRecord record = new CustomTableRecord();
-			record.setUuid((String) values.get(FIELD_ID));
-			record.setCetCode(cei.getTableName());
-
-			customTableRecordUpdate.fire(record);
-
-		} catch (Exception e) {
-			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);
-			throw e;
+			} else {
+				sql.append(fieldNameInSQL).append(" = ? ");
+			}
+			first = false;
 		}
+
+		sql.append(" WHERE uuid='" + cei.getUuid() + "'");
+
+		doUpdate(sqlConnectionCode, sql.toString(), ps -> {
+			int parameterIndex = 1;
+			for (String fieldName : values.keySet()) {
+				Object fieldValue = values.get(fieldName);
+				if (fieldValue != null && fieldName != "uuid") {
+					setParameterValue(ps, parameterIndex++, fieldValue);
+				}
+			}
+		});
+
+		CustomTableRecord record = new CustomTableRecord();
+		record.setUuid((String) values.get(FIELD_ID));
+		record.setCetCode(cei.getTableName());
+
+		customTableRecordUpdate.fire(record);
 	}
 	
 	private void doBatch(String sqlConnectionCode, String sql, SqlAction action) {
@@ -833,20 +828,19 @@ public class NativePersistenceService extends BaseService {
 
 			try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 				action.doWork(ps);
-				
 				ps.executeUpdate();
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
 						connection.commit();
 					}
 				}
-			} catch (Exception e) {
-				log.error("Query failed: {}", e.getMessage());
+			} catch (SQLException e) {
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
 						connection.rollback();
 					}
 				}
+				throw e;
 			}
 		});
 	}

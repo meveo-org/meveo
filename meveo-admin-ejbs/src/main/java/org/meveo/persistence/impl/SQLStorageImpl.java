@@ -328,15 +328,11 @@ public class SQLStorageImpl implements StorageImpl {
 			// Update binaries stored in SQL
 			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
 
-			try {
-				if (cei.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-					uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql, customFieldTemplates);
-	
-				} else {
-					uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
-				}
-			} catch (Exception e) {
-				throw new BusinessException(e);
+			if (cei.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
+				uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql, customFieldTemplates);
+
+			} else {
+				uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
 			}
 			
 			createOrUpdateBinaries(repository, cei, customFieldTemplates, binariesInSql);
@@ -483,7 +479,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 	}
 
-	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException {
+	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException {
 		ceiToSave.setRepository(repository);
 		CustomEntityTemplate cet = ceiToSave.getCet();
 		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
@@ -515,7 +511,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 	
 
-	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException {
 		cei.setRepository(repository);
 		
 		String sqlUUID = null;
