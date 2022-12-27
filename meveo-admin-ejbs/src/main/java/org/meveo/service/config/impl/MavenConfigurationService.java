@@ -28,7 +28,10 @@ import javax.ejb.Singleton;
 import javax.ejb.Timeout;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
+import javax.enterprise.event.TransactionPhase;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -178,8 +181,8 @@ public class MavenConfigurationService implements Serializable {
     }
 
 
-	public void onDependencyCreated(@Observes @Created MavenDependency d) {
-		mavenDependencyService.findRelatedScripts(d)
+	public void onDependencyCreated(@Created MavenDependency d) {
+		d.getScripts()
 			.stream()
 				.map(scriptInstanceService::findModuleOf)
 				.filter(Objects::nonNull)

@@ -34,6 +34,11 @@ public class MavenDependencyService {
 				.getResultList();
 	}
 	
+	public void create(ScriptInstance script, MavenDependency mavenDependency) {
+		mavenDependency.getScripts().add(script);
+		emWrapper.getEntityManager().persist(mavenDependency);
+	}
+	
 	public List<MavenDependency> findModuleDependencies(String moduleCode) {
 		String queryString = 
 				  "SELECT DISTINCT md "

@@ -111,7 +111,7 @@ public class ScriptInstanceService extends CustomScriptService<ScriptInstance> {
 			if(persistentMd != null) {
 				mavenDependencies.add(persistentMd);
 			} else {
-				getEntityManager().persist(md);
+				mdService.create(script, md);
 				mavenDependencies.add(md);
 			}
 		}
