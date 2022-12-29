@@ -31,6 +31,9 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Development Installation](./.devcontainer/README.md)
 
+## Modules
+[Module development](./documentation/MODULE_DEVELOPMENT.md)
+
 ## Technical documentation
 
 ### System
