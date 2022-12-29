@@ -357,7 +357,26 @@ public class JSONSchemaIntoJavaClassParser {
             							vd.setType("List<" + crtCode + ">");
             							addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
             						}
-            					}
+            					} else {
+                          String ref = (String) value.get("$ref");
+                          if (ref != null) {
+                              String[] data = ref.split("/");
+                              if (data.length > 0) {
+                                  String name = data[data.length - 1];
+
+                                  try {
+                                      Class.forName(name);
+                                      compilationUnit.addImport(name);
+                                      String[] className = name.split("\\.");
+                                      name = className[className.length - 1];
+                                  } catch (ClassNotFoundException e) {
+                                      compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                                  }
+
+                                  vd.setType("List<" + name + ">");
+                              }
+                          }
+                      }
             					
                             } else if (value.containsKey("type")) {
                                 if (value.get("type").equals("integer")) {
