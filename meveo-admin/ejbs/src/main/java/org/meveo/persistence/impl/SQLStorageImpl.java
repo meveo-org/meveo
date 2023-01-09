@@ -469,7 +469,11 @@ public class SQLStorageImpl implements StorageImpl {
 			cei = ceiToSave;
 
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
+				try {
+					persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
+				} catch (BusinessApiException | IOException e) {
+					throw new BusinessException(e);
+				}
 			}
 
 			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
@@ -483,7 +487,11 @@ public class SQLStorageImpl implements StorageImpl {
 			
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
+				try {
+					persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
+				} catch (BusinessApiException | IOException e) {
+					throw new BusinessException(e);
+				}
 			}
 
 			cei.setCfValuesOld(cei.getCfValues());
@@ -539,12 +547,16 @@ public class SQLStorageImpl implements StorageImpl {
 				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
 
 				Map<String, Object> existingBinariesField = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID, binariesFieldsToFetch);
-				fileSystemService.updateBinaries(repository, 
-						cei.getUuid(), 
-						cei.getCet(), 
-						binariesInSql, 
-						cei.getCfValuesAsValues(), 
-						existingBinariesField);
+				try {
+					fileSystemService.updateBinaries(repository, 
+							cei.getUuid(), 
+							cei.getCet(), 
+							binariesInSql, 
+							cei.getCfValuesAsValues(), 
+							existingBinariesField);
+				} catch (BusinessApiException | IOException e) {
+					throw new BusinessException(e);
+				}
 
 			}
 			
@@ -558,7 +570,12 @@ public class SQLStorageImpl implements StorageImpl {
 			// Save binaries
 			if (CollectionUtils.isNotEmpty(binariesInSql)) {
 
-				final Map<CustomFieldTemplate, Object> binariesPaths = fileSystemService.updateBinaries(repository, uuid, cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), null);
+				Map<CustomFieldTemplate, Object> binariesPaths;
+				try {
+					binariesPaths = fileSystemService.updateBinaries(repository, uuid, cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), null);
+				} catch (BusinessApiException | IOException e) {
+					throw new BusinessException(e);
+				}
 
 				for (Map.Entry<CustomFieldTemplate, Object> binary : binariesPaths.entrySet()) {
 					customTableService.updateValue(repository.getSqlConfigurationCode(), cei.getTableName(), uuid, binary.getKey().getDbFieldname(), binary.getValue());
