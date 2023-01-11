@@ -18,6 +18,7 @@ import org.meveo.model.CustomEntity;
 import org.meveo.model.CustomRelation;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
+import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
@@ -323,60 +324,8 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
                             compilationUnit.addImport(ArrayList.class);
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
-                            if (value.containsKey("$ref")) {
-            					// Handle entity references
-            					var fieldDefinition = fieldsDefinition.get(code);
-            					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
-            						String crtCode = fieldDefinition.getRelationship().getCode();
-            						var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
-            						// If CRT has no relation, directly use the target node as field type
-            						if(relationFields == null || relationFields.isEmpty()) {
-										fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
-	                					compilationUnit.addImport(Relation.class);
-	                					
-	                                    String ref = (String) value.get("$ref");
-	                                    if (ref != null) {
-	                                        String[] data = ref.split("/");
-	                                        if (data.length > 0) {
-	                                            String name = data[data.length - 1];
-	                                            
-	                                            try {
-	                                            	Class.forName(name);
-	                                            	compilationUnit.addImport(name);
-	                                                String[] className = name.split("\\.");
-	                                                name = className[className.length -1];
-	                                            } catch (ClassNotFoundException e) {
-	                                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
-	                                            }
-	                                            
-	                                        	vd.setType("List<" + name + ">");
-	                                        }
-	                                    }
-	                                    
-            						} else {
-            							vd.setType("List<" + crtCode + ">");
-            							addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
-            						}
-            					} else {
-                          String ref = (String) value.get("$ref");
-                          if (ref != null) {
-                              String[] data = ref.split("/");
-                              if (data.length > 0) {
-                                  String name = data[data.length - 1];
-
-                                  try {
-                                      Class.forName(name);
-                                      compilationUnit.addImport(name);
-                                      String[] className = name.split("\\.");
-                                      name = className[className.length - 1];
-                                  } catch (ClassNotFoundException e) {
-                                      compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                                  }
-
-                                  vd.setType("List<" + name + ">");
-                              }
-                          }
-                      }
+                            if (cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY) || cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
+            					parseReferenceList(compilationUnit, fieldsDefinition, classDeclaration, code, fd, vd, cft);
             					
                             } else if (value.containsKey("type")) {
                                 if (value.get("type").equals("integer")) {
@@ -494,6 +443,40 @@ public class JSONSchemaIntoJavaClassParser {
 
         }
     }
+
+	private void parseReferenceList(CompilationUnit compilationUnit, Map<String, CustomFieldTemplate> fieldsDefinition, ClassOrInterfaceDeclaration classDeclaration, String code, FieldDeclaration fd, VariableDeclarator vd, CustomFieldTemplate cft) {
+		// Handle entity references
+		var fieldDefinition = fieldsDefinition.get(code);
+		Map<String, CustomFieldTemplate> relationFields = null;
+		if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+			String crtCode = fieldDefinition.getRelationship().getCode();
+			relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+			if(relationFields == null || relationFields.isEmpty()) {
+				fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+				compilationUnit.addImport(Relation.class);
+			} else {
+				vd.setType("List<" + crtCode + ">");
+				addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
+			}
+		}
+		
+		// If CRT not exist or has no fields, directly use the target node as field type
+		if(relationFields == null || relationFields.isEmpty()) {
+			
+		    String name = cft.getEntityClazzCetCode();
+		    
+		    try {
+		    	Class.forName(name);
+		    	compilationUnit.addImport(name);
+		        String[] className = name.split("\\.");
+		        name = className[className.length -1];
+		    } catch (ClassNotFoundException e) {
+		        compilationUnit.addImport("org.meveo.model.customEntities." + name);
+		    }
+		    
+			vd.setType("List<" + name + ">");
+		}
+	}
     
     private void addPrimitiveEntitySetter(CustomRelationshipTemplate crt, CustomFieldTemplate cft, CompilationUnit compilationUnit, ClassOrInterfaceDeclaration clazz) {
     	CustomEntityTemplate cet = cetService.findByCode(cft.getEntityClazzCetCode());
