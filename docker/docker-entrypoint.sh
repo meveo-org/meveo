@@ -148,7 +148,7 @@ fi
 # because it might need to run some scripts that export the environment variables.
 if [ -d /docker-entrypoint-initdb.d ]; then
     for f in /docker-entrypoint-initdb.d/*.sh; do
-        echo "Run the extra cli shell $(f)"
+        echo "Run the extra cli shell ${f}"
         [ -f "$f" ] && . "$f"
     done
 fi
@@ -156,7 +156,7 @@ fi
 # Run the extra cli
 if [ -d /docker-entrypoint-initdb.d ]; then
     for f in /docker-entrypoint-initdb.d/*.cli; do
-        echo "Run the extra cli $(f)"
+        echo "Run the extra cli ${f}"
         [ -f "$f" ] && ${JBOSS_HOME}/bin/jboss-cli.sh --file=$f
     done
 fi
@@ -177,7 +177,7 @@ if [ ! -f ${JBOSS_HOME}/meveodata/meveo-admin.properties ]; then
     # Add the extra properties files
     if [ -d /docker-entrypoint-initdb.d ]; then
         for props_file in /docker-entrypoint-initdb.d/*.properties; do
-            echo "Add the extra properties from $(props_file)"
+            echo "Add the extra properties from ${props_file}"
             [ -f "${props_file}" ] && cat ${props_file} >> ${TMP_PROPS_INPUT}
             ## Insert a line break for each file
             echo "" >> ${TMP_PROPS_INPUT}
