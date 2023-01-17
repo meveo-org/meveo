@@ -321,8 +321,13 @@ public class JSONSchemaIntoJavaClassParser {
 					var fieldDefinition = fieldsDefinition.get(code);
 					
 					if (fieldDefinition.getEntityClazz() != null) {
-   					 
-    					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+						if (fieldDefinition.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+							compilationUnit.addImport("java.util.List");
+                            vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
+                            compilationUnit.addImport(ArrayList.class);
+                            parseReferenceList(compilationUnit, fieldsDefinition, classDeclaration, code, fd, vd, cft);
+                            
+						} else if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
 							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
 							String crtCode = fieldDefinition.getRelationship().getCode();
 							// If CRT has no fields, directly use the target node as field type
@@ -336,20 +341,21 @@ public class JSONSchemaIntoJavaClassParser {
 			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
 								continue;
 							}
+							
+		                    // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
+	                        String name = CustomFieldTemplate.retrieveCetCode(fieldDefinition.getEntityClazz());
+	                        
+	                        try {
+	                        	Class.forName(name);
+	                        	compilationUnit.addImport(name);
+	                            String[] className = name.split("\\.");
+	                            name = className[className.length -1];
+	                        } catch (ClassNotFoundException e) {
+	                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+	                        }
+	                        
+	                        vd.setType(name);
     					}
-    					
-                        // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
-                        String name = CustomFieldTemplate.retrieveCetCode(fieldDefinition.getEntityClazz());
-                        
-                        try {
-                        	Class.forName(name);
-                        	compilationUnit.addImport(name);
-                            String[] className = name.split("\\.");
-                            name = className[className.length -1];
-                        } catch (ClassNotFoundException e) {
-                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                        }
-                        vd.setType(name);
                         
                     } else if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
@@ -357,10 +363,7 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
                             compilationUnit.addImport(ArrayList.class);
                             Map<String, Object> value = (Map<String, Object>) values.get("items");
-                            if (cft.getFieldType().equals(CustomFieldTypeEnum.CHILD_ENTITY) || cft.getFieldType() == CustomFieldTypeEnum.ENTITY) {
-            					parseReferenceList(compilationUnit, fieldsDefinition, classDeclaration, code, fd, vd, cft);
-            					
-                            } else if (value.containsKey("type")) {
+                            if (value.containsKey("type")) {
                                 if (value.get("type").equals("integer")) {
                                     vd.setType("List<Long>");
                                 } else if (value.get("type").equals("number")) {
