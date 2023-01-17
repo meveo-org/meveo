@@ -318,7 +318,40 @@ public class JSONSchemaIntoJavaClassParser {
 						compilationUnit.addImport(JsonProperty.class);
 					}
 					
-                    if (values.get("type") != null) {
+					var fieldDefinition = fieldsDefinition.get(code);
+					
+					if (fieldDefinition.getEntityClazz() != null) {
+   					 
+    					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
+							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
+							String crtCode = fieldDefinition.getRelationship().getCode();
+							// If CRT has no fields, directly use the target node as field type
+							if(relationFields == null || relationFields.isEmpty()) {
+		    					// Add @Relation annotation
+								fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
+	        					compilationUnit.addImport(Relation.class);
+							} else {
+								addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
+								var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
+			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
+								continue;
+							}
+    					}
+    					
+                        // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
+                        String name = CustomFieldTemplate.retrieveCetCode(fieldDefinition.getEntityClazz());
+                        
+                        try {
+                        	Class.forName(name);
+                        	compilationUnit.addImport(name);
+                            String[] className = name.split("\\.");
+                            name = className[className.length -1];
+                        } catch (ClassNotFoundException e) {
+                            compilationUnit.addImport("org.meveo.model.customEntities." + name);
+                        }
+                        vd.setType(name);
+                        
+                    } else if (values.get("type") != null) {
                         if (values.get("type").equals("array")) {
                             compilationUnit.addImport("java.util.List");
                             vd.setInitializer(JavaParser.parseExpression("new ArrayList<>()"));
@@ -390,41 +423,7 @@ public class JSONSchemaIntoJavaClassParser {
                             vd.setType(type);
                         }
 
-                    } else if (values.get("$ref") != null) {
-    					var fieldDefinition = fieldsDefinition.get(code); 
-    					if(fieldDefinition != null && fieldDefinition.getRelationship() != null) {
-							var relationFields = customFieldService.findByAppliesTo(fieldDefinition.getRelationship().getAppliesTo());
-							String crtCode = fieldDefinition.getRelationship().getCode();
-							// If CRT has no fields, directly use the target node as field type
-							if(relationFields == null || relationFields.isEmpty()) {
-		    					// Add @Relation annotation
-								fd.addSingleMemberAnnotation(Relation.class, '"' + crtCode + '"');
-	        					compilationUnit.addImport(Relation.class);
-							} else {
-								addPrimitiveEntitySetter(fieldDefinition.getRelationship(), cft, compilationUnit, classDeclaration);
-								var fieldDeclaration = classDeclaration.addPrivateField(crtCode, code);
-			                    ((ArrayList<FieldDeclaration>) fds).add(fieldDeclaration);
-								continue;
-							}
-    					}
-    					
-                        String[] data = ((String) values.get("$ref")).split("/");
-                        if (data.length > 0) {
-                            String name = data[data.length - 1];
-                            // Handle cases where prefixed by 'org.meveo.model.customEntities.CustomEntityTemplate -'
-                            name = CustomFieldTemplate.retrieveCetCode(name);
-                            
-                            try {
-                            	Class.forName(name);
-                            	compilationUnit.addImport(name);
-                                String[] className = name.split("\\.");
-                                name = className[className.length -1];
-                            } catch (ClassNotFoundException e) {
-                                compilationUnit.addImport("org.meveo.model.customEntities." + name);
-                            }
-                            vd.setType(name);
-                        }
-                    } else if (values.get("enum") != null && values.get("type") == null) {
+                    }  else if (values.get("enum") != null && values.get("type") == null) {
                         vd.setType("String");
                     }
 
