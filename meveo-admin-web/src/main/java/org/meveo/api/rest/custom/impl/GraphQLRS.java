@@ -31,7 +31,7 @@ public interface GraphQLRS {
 
 	@GET
 	@Path("/idl")
-	String getIdl(String neo4jConfiguration);
+	String getIdl();
 
 	@POST
 	@Path("/idl")
