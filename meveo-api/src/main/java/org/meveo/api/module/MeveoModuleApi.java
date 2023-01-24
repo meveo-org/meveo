@@ -231,13 +231,16 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			initalized = true;
 		}
 	}
+	
+	public ModuleInstallResult reInstall(List<String> repositories, GitRepository repo) throws MeveoApiException, BusinessException {
+		MeveoModule module = meveoModuleService.findByCode(repo.getCode());
+		module.setInstalled(false);
+		meveoModuleService.update(module);
+		
+		return install(repositories, repo);
+	}
 
 	public ModuleInstallResult install(List<String> repositories, GitRepository repo) throws BusinessException, MeveoApiException {
-		
-		if (meveoModuleService.exists(repo.getCode())) {
-			throw new EntityAlreadyExistsException(MeveoModule.class, repo.getCode());
-		}
-		
 		File repoDir = GitHelper.getRepositoryDir(null, repo);
 		
 		MeveoModuleDto moduleDto = parseModuleJsonFile(repo, repoDir);

@@ -110,6 +110,11 @@
 					disabled="#{gitRepositoryBean.isModuleInstalled()}"
 					onclick="PF('installDialog').show()">
 				</p:commandButton>
+				<p:commandButton id="re-install-module"
+					value="Reinstall module"
+					rendered="#{gitRepositoryBean.isModuleInstalled()}"
+					onclick="PF('reInstallDialog').show()">
+				</p:commandButton>
 				<p:button id="meveoModuleDetailButton"
 					rendered="#{gitRepositoryBean.getModuleId() != null}"
 					outcome="meveoModuleDetail" icon="ui-icon-search">
@@ -322,6 +327,22 @@
 					/>
 
 				<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
+					icon="ui-icon-close" />
+					
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog id="reInstallDialog" widgetVar="reInstallDialog" message="Installation parameters " header="#{messages['meveoModule.install']}">
+			<h:form style="margin-top: 5px; margin-bottom: 5px;">
+				<hftl:decorateFormField fieldId="repoPickList" label="Repository :" componentWidth="100" newLine="true">
+					<p:pickList id="repoPickList" value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo}" itemValue="#{repo}"/>
+				</hftl:decorateFormField>
+				<p:commandButton process="@form @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+					value="#{messages['meveoModule.install']}"
+					action="#{gitRepositoryBean.reInstall}"
+					/>
+
+				<p:commandButton onclick="PF('reInstallDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
 					icon="ui-icon-close" />
 					
 			</h:form>

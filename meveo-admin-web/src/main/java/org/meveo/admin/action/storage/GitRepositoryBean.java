@@ -347,6 +347,30 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
 	}
 	
+	public String reInstall() {
+		try {
+			List<String> repos = repositories.getTarget();
+			if (!repos.isEmpty()) {
+				moduleApi.reInstall(repos, entity);
+				messages.info("Module successfully installed");
+			} else {
+				messages.error("At least one repository should be selected");
+			}
+
+		} catch (MissingModuleException e) {
+			this.missingDependencies = e.getMissingModules();
+			PrimeFaces.current().ajax().update("installDeps");
+			PrimeFaces.current().executeScript("PF('installDialog').hide();");
+			PrimeFaces.current().executeScript("PF('installDeps').show();");
+			return null;
+			
+		} catch (Exception e) {
+			MessagesHelper.error(messages, "Failed to install module", e);
+		}
+		
+		return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
+	}
+	
 	public Long getModuleId() {
 		MeveoModule module = moduleService.findByCode(entity.getCode());
 		if(module != null) {
