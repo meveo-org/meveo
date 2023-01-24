@@ -1396,6 +1396,12 @@ public class NativePersistenceService extends BaseService {
 						queryBuilder.addSql((String) filterValue);
 					}
 
+				} else if ("FilterMultiColumnWithOR".equals(condition)) {
+					queryBuilder.startOrClause();
+					for (String field : fields) {						
+						queryBuilder.addCriterion(field, " = ", (String) filterValue, false);
+					}
+					queryBuilder.endOrClause();
 				} else {
 					if (filterValue instanceof String && PersistenceService.SEARCH_IS_NULL.equals(filterValue)) {
 						queryBuilder.addSql(fieldName + " is null ");
