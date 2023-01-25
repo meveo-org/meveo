@@ -220,7 +220,7 @@ public class GraphQLService {
                 }
                 
                 if (StringUtils.isNoBlank(graphQLField.getDefaultValue())) {
-                	if (graphQLField.getFieldType().equals("Boolean")) {
+                	if (graphQLField.getFieldType().equals("Boolean") || graphQLField.getFieldType().equals("Int")) {
                 		idl.append(" ").append("@coalesce(value: " + graphQLField.getDefaultValue() + ")");
                 	} else {
                 		idl.append(" ").append("@coalesce(value: \"" + graphQLField.getDefaultValue() + "\")");
