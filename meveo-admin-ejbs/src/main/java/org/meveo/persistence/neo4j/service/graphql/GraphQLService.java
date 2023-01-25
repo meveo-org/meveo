@@ -188,8 +188,13 @@ public class GraphQLService {
             if (graphQLEntity.getGraphQLFields().isEmpty()) {
                 continue;
             }
-
-            idl.append(graphQLEntity.isInterface() ? "interface " : "type ").append(graphQLEntity.getName()).append(" {\n");
+            
+            if (neo4jConfiguration.getDbVersion().startsWith("3")) {
+            	idl.append(graphQLEntity.isInterface() ? "interface " : "type ").append(graphQLEntity.getName()).append(" {\n");
+            } else {
+            	idl.append(graphQLEntity.isInterface() ? "interface @relationshipProperties" : "type ").append(graphQLEntity.getName()).append(" {\n");
+            }
+            
             for (GraphQLField graphQLField : graphQLEntity.getGraphQLFields()) {
                 idl.append("\t").append(graphQLField.getFieldName()).append(": ");
 
