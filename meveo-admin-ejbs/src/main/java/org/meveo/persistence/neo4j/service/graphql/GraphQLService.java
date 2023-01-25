@@ -150,7 +150,7 @@ public class GraphQLService {
         final Collection<GraphQLEntity> entities = getEntities(neo4jRepo);
         String idl = getIDL(entities, neo4jRepo);
     	log.debug("IDL computation took {}ms", start.until(Instant.now(), ChronoUnit.MILLIS));
-        List<String> missingEntities = validateIdl(idl);
+        List<String> missingEntities = validateIdl(idl, neo4jRepo);
         if (CollectionUtils.isEmpty(missingEntities)) {
         	if (neo4jRepo.getGraphqlApiUrl() != null) {
         		graphQlClient.updateIdl(idl, neo4jRepo.getGraphqlApiUrl());
@@ -516,9 +516,11 @@ public class GraphQLService {
         });
     }
 
-    public List<String> validateIdl(String idl) {
+    public List<String> validateIdl(String idl, Neo4JConfiguration neo4jRepo) {
         List<String> result = new ArrayList<>();
-        String pattern = "\\t\\w+: \\[?(?!(?:String|Boolean|BigInt|ID|Float)!?)(\\w*)\\]?!?\\s";
+        String pattern = neo4jRepo.getDbVersion().startsWith("3") ? 
+        		"\\t\\w+: \\[?(?!(?:String|Boolean|BigInt|ID|Float)!?)(\\w*)\\]?!?\\s" :
+    			"\\t\\w+: \\[?(?!(?:String|Boolean|Int|ID|Float)!?)(\\w*)\\]?!?\\s";
         // Create a Pattern object
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.
