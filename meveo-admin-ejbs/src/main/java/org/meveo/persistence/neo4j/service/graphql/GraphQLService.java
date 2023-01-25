@@ -433,7 +433,11 @@ public class GraphQLService {
             switch (customFieldTemplate.getFieldType()) {
                 case LONG:
                 case DATE:
-                    graphQLField.setFieldType("BigInt");
+                	if (neo4jConfiguration.getDbVersion().startsWith("3")) {
+                		graphQLField.setFieldType("BigInt");
+                	} else {
+                		graphQLField.setFieldType("Int");
+                	}
                     break;
                 case DOUBLE:
                     graphQLField.setFieldType("Float");
