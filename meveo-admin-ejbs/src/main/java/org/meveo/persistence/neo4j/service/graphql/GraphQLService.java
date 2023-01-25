@@ -189,11 +189,7 @@ public class GraphQLService {
                 continue;
             }
             
-            if (neo4jConfiguration.getDbVersion().startsWith("3")) {
-            	idl.append(graphQLEntity.isInterface() ? "interface " : "type ").append(graphQLEntity.getName()).append(" {\n");
-            } else {
-            	idl.append(graphQLEntity.isInterface() ? "interface @relationshipProperties" : "type ").append(graphQLEntity.getName()).append(" {\n");
-            }
+        	idl.append(graphQLEntity.isInterface() ? "interface " : "type ").append(graphQLEntity.getName()).append(" {\n");
             
             for (GraphQLField graphQLField : graphQLEntity.getGraphQLFields()) {
                 idl.append("\t").append(graphQLField.getFieldName()).append(": ");
@@ -329,7 +325,12 @@ public class GraphQLService {
             GraphQLEntity graphQLEntity = new GraphQLEntity();
 
             String typeName = relationshipTemplate.getGraphQlTypeName() == null ? endNode.getCode() + "Relation" : relationshipTemplate.getGraphQlTypeName();
-            graphQLEntity.setName(typeName);
+            if (neo4jConfiguration.getDbVersion().startsWith("3")) {
+            	graphQLEntity.setName(typeName);
+            } else {
+            	graphQLEntity.setName(typeName + " @relationshipProperties");
+            }
+            
             graphQLEntity.setInterface(true);
             
             String propertiesInterface = cfts == null || cfts.isEmpty() ? ")" : ", properties: \"" + typeName + "\")";
