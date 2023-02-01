@@ -73,6 +73,13 @@
 						rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
 						listenerUpdate="actions" />
 				</h:panelGroup>
+				<h:panelGroup id="availableStorages">
+					<hftl:decorateFormField componentWidth="100%" label="List of modified files">
+						<p:pickList id="pickList" value="#{gitRepositoryBean.pendingGitFiles}" var="item" itemLabel="#{item}" itemValue="#{item}">
+							<p:ajax event="transfer" update="commit"/>
+						</p:pickList>
+					</hftl:decorateFormField>
+				</h:panelGroup>
 			</h:panelGrid>
 
 			<h:panelGrid id="actions" columns="6">
@@ -97,6 +104,7 @@
 					actionListener="#{gitRepositoryBean.commit}"
 					rendered="#{gitRepositoryBean.entity.id != null}"
 					immediate="true"
+					disabled="#{gitRepositoryBean.pendingGitFiles.target.isEmpty()}"
 					icon="ui-icon-play" update="@form" />
 				<p:commandButton id="discard"
 					value="Discard"

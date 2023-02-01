@@ -1095,6 +1095,30 @@ public class GitClient {
             keyLock.unlock(gitRepository.getCode());
         }
     }
+    
+    public List<String> listPendingChanges(GitRepository gitRepository) {
+    	List<String> redFiles = new ArrayList<>();
+    	MeveoUser user = currentUser.get();
+    	if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+    	final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
+    	try {
+	    	Git git = Git.open(repositoryDir);
+	    	var status = git.status().call();
+	    	for (String redFile : status.getUncommittedChanges()) {
+	    		redFiles.add(redFile);
+	    	}
+	    	for (String redFile : status.getUntracked()) {
+	    		redFiles.add(redFile);
+	    	}
+    	} catch (IOException ex) {
+    		log.error("Cannot open git with repositoryDir; {}", ex);
+    	} catch (GitAPIException ex) {
+    		log.error("Cannot call git.status: {}", ex);
+    	}
+    	return redFiles;
+    }
 
     protected void createGitMeveoFolder(GitRepository gitRepository, File repoDir) throws BusinessException {
         MeveoUser user = currentUser.get();

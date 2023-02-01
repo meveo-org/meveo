@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
@@ -29,6 +30,7 @@ import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -42,6 +44,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
+import org.python.antlr.PythonParser.return_stmt_return;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +89,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	protected DualListModel<String> repositories;
 	
+	protected DualListModel<String> pendingGitFiles = new DualListModel<String>();
+	
 	private List<ModuleDependencyDto> missingDependencies;
 	
 	private List<String> branchList = List.of();
@@ -106,10 +111,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		if (entity != null && entity.getId() !=null && entity.getCode() != null) {
 			try {
 				branchList = gitClient.listRefs(entity);
+				pendingGitFiles.setSource(gitClient.listPendingChanges(entity));
 			} catch (BusinessException e) {
 				log.warn("Failed to retrieve refs list", e);
 			}
 		}
+		
+
 		
 		return entity;
 	}
@@ -177,7 +185,10 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	}
 	
 	public void commit() throws BusinessException {
-		gitClient.commit(entity, List.of("."), commitMessageBean.getCommitMessage());
+		// List<String> trackedFiles = new ArrayList<String>();
+		if (!pendingGitFiles.getTarget().isEmpty()) {
+			gitClient.commit(entity, pendingGitFiles.getTarget(), commitMessageBean.getCommitMessage());
+		}
 		messages.info("Pending changes successfully commited");
 	}
 	
@@ -241,7 +252,15 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public DualListModel<String> getRepositories() {
 		return repositories;
 	}
-
+	
+	public DualListModel<String> getPendingGitFiles() {
+		return pendingGitFiles;
+	}
+	
+	public void setPendingGitFiles(DualListModel<String> pendingGitFiles) {
+		this.pendingGitFiles = pendingGitFiles;
+	}
+	
 	@Override
 	protected String getListViewName() {
 		return "gitRepositories";
