@@ -1,4 +1,4 @@
-name: Manual-CI-To-DockerHub
+name: Manual-CI-To-DockerHub-Runtime-Only
 
 # Controls when the workflow will run
 on:
