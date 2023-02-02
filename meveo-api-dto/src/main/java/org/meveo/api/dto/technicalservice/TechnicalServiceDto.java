@@ -17,6 +17,7 @@
  */
 package org.meveo.api.dto.technicalservice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TechnicalServiceDto extends FunctionDto {
+public class TechnicalServiceDto extends FunctionDto  implements Comparable<TechnicalServiceDto> {
 
     private static final long serialVersionUID = 5579910176536059520L;
 
@@ -213,4 +214,43 @@ public class TechnicalServiceDto extends FunctionDto {
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
+
+	@Override
+	public int compareTo(TechnicalServiceDto o) {
+		if (o == null)
+			return 1;
+		
+		boolean hasExtendedServices = this.getExtendedServices() != null && !this.getExtendedServices().isEmpty();
+		boolean oHasExtendedServices = o.getExtendedServices() != null && !o.getExtendedServices().isEmpty();
+			
+		if (hasExtendedServices && !oHasExtendedServices)
+			return 1;
+		
+		if (!hasExtendedServices && oHasExtendedServices)
+			return -1;
+					
+		return 0;
+	}
+	
+	public static void main (String... strings) {
+		TechnicalServiceDto abstractDto = new TechnicalServiceDto();
+		abstractDto.setName("abstract");
+		
+		TechnicalServiceDto child1 = new TechnicalServiceDto();
+		child1.setName("child1");
+		child1.setExtendedServices(Set.of("abstract"));
+		
+		TechnicalServiceDto child2 = new TechnicalServiceDto();
+		child2.setName("child2");
+		child2.setExtendedServices(Set.of("abstract"));
+		
+		List<TechnicalServiceDto> list = new ArrayList<>();
+		list.add(child1);
+		list.add(abstractDto);
+		list.add(child2);
+		
+		list.sort(TechnicalServiceDto::compareTo);
+		
+		list.forEach(dto -> System.out.println(dto.getName()));
+	}
 }
