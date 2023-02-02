@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 import javax.annotation.PostConstruct;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
@@ -30,7 +29,6 @@ import org.meveo.api.module.MeveoModuleApi;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
@@ -44,7 +42,6 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
-import org.python.antlr.PythonParser.return_stmt_return;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,15 +176,17 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public int countPendingChanges() throws BusinessException {
 		if (entity != null && entity.getId() != null) {
-			return gitClient.countPendingChanges(entity);
+			// return gitClient.countPendingChanges(entity);
+			return this.pendingGitFiles.getTarget().size();
 		}
 		return 0;
 	}
 	
 	public void commit() throws BusinessException {
-		// List<String> trackedFiles = new ArrayList<String>();
 		if (!pendingGitFiles.getTarget().isEmpty()) {
 			gitClient.commit(entity, pendingGitFiles.getTarget(), commitMessageBean.getCommitMessage());
+			List<String> emptyTarget = new ArrayList<String>();
+			pendingGitFiles.setTarget(emptyTarget);
 		}
 		messages.info("Pending changes successfully commited");
 	}
@@ -259,6 +258,14 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public void setPendingGitFiles(DualListModel<String> pendingGitFiles) {
 		this.pendingGitFiles = pendingGitFiles;
+	}
+	
+	public CommitMessageBean getCommitMessageBean() {
+		return this.commitMessageBean;
+	}
+	
+	public void setCommitMessageBean(CommitMessageBean commitMessageBean) {
+		this.commitMessageBean = commitMessageBean;
 	}
 	
 	@Override
