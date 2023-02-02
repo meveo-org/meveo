@@ -193,6 +193,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public void discard() throws BusinessException {
 		gitClient.discard(entity);
+		pendingGitFiles = new DualListModel<String>();
 		messages.info("Pending changes successfully discarded");
 	}
 	

@@ -109,7 +109,7 @@
 				<p:commandButton id="discard"
 					value="Discard"
 					actionListener="#{gitRepositoryBean.discard}"
-					immediate="true"
+					immediate="false"
 					rendered="#{gitRepositoryBean.entity.id != null}"
 					icon="ui-icon-closethick" update="@form" />
 				<p:commandButton id="install-module"
