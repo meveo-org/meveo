@@ -73,9 +73,9 @@
 						rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
 						listenerUpdate="actions" />
 				</h:panelGroup>
-				<h:panelGroup id="availableStorages">
+				<h:panelGroup id="pendingGitFiles">
 					<hftl:decorateFormField componentWidth="100%" label="List of modified files">
-						<p:pickList id="pickList" value="#{gitRepositoryBean.pendingGitFiles}" var="item" itemLabel="#{item}" itemValue="#{item}">
+						<p:pickList id="pickList" value="#{gitRepositoryBean.pendingGitFiles}" var="item" itemLabel="#{item}" itemValue="#{item}" escape="false">
 							<p:ajax event="transfer" update="commit"/>
 						</p:pickList>
 					</hftl:decorateFormField>
@@ -101,11 +101,11 @@
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
 				<p:commandButton id="commit"
 					value="Commit (#{gitRepositoryBean.countPendingChanges()})"
-					actionListener="#{gitRepositoryBean.commit}"
 					rendered="#{gitRepositoryBean.entity.id != null}"
 					immediate="true"
 					disabled="#{gitRepositoryBean.pendingGitFiles.target.isEmpty()}"
-					icon="ui-icon-play" update="@form" />
+					icon="ui-icon-play"
+					onclick="PF('commitDialog').show()" />
 				<p:commandButton id="discard"
 					value="Discard"
 					actionListener="#{gitRepositoryBean.discard}"
@@ -332,11 +332,29 @@
 				<p:commandButton process="@form @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
 					value="#{messages['meveoModule.install']}"
 					action="#{gitRepositoryBean.install}"
-					/>
+				/>
 
 				<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
-					icon="ui-icon-close" />
+					icon="ui-icon-close"
+				/>
 					
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog id="commitDialog" widgetVar="commitDialog" message="Commit message" header="Commit">
+			<h:form style="margin-top: 5px; margin-bottom: 5px;">
+				<hftl:decorateFormField fieldId="commitField" label="Commit :" componentWidth="100" newLine="true">
+					<p:inputText id="commitField" value="#{gitRepositoryBean.commitMessageBean.commitMessage}" size="50" />
+				</hftl:decorateFormField>
+				<p:commandButton process="@this" id="commitPopup" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+					value="Commit files"
+					action="#{gitRepositoryBean.commit}"
+					onclick="PF('commitDialog').close()"
+				/>
+				<p:commandButton onclick="PF('commitDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
+					icon="ui-icon-close"
+				/>
+				
 			</h:form>
 		</p:confirmDialog>
 		
