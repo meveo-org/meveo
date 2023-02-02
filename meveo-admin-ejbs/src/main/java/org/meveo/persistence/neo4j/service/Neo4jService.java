@@ -347,11 +347,15 @@ public class Neo4jService implements CustomPersistenceService {
             }
         }
 
-        final Map<String, CustomFieldTemplate> cfts = fields.keySet().stream()
-                .map(code -> customFieldTemplateService.findByCodeAndAppliesTo(code, cet.getAppliesTo()))
-                .collect(
-                        Collectors.toMap(BusinessEntity::getCode, Function.identity())
-                );
+        final Map<String, CustomFieldTemplate> cfts = new HashMap<>();
+        for (String field : fields.keySet()) {
+        	CustomFieldTemplate cft = customFieldTemplateService.find(field, cet);
+        	if (cft != null) {
+        		cfts.put(cft.getCode(), cft);
+        	} else {
+        		log.warn("Unkown field passed to persistence : {}#{}", cet.getCode(), field);
+        	}
+        }
 
         Map<String, Object> uniqueFields = new HashMap<>();
         validateAndConvertCustomFields(cfts, fields, uniqueFields, true);
