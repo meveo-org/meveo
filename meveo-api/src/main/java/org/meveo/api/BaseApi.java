@@ -34,6 +34,7 @@ import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldDto;
 import org.meveo.api.dto.CustomFieldValueDto;
 import org.meveo.api.dto.CustomFieldsDto;
+import org.meveo.api.dto.EntityReferenceDto;
 import org.meveo.api.dto.LanguageDescriptionDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.BusinessApiException;
@@ -426,6 +427,14 @@ public abstract class BaseApi {
                 log.debug("Custom field value not applicable for this state of entity lifecycle: code={} for entity {} transient{}. Value will be ignored.", cfDto.getCode(),
                     entity.getClass(), isNewEntity);
                 continue;
+            }
+            
+            if(CustomFieldTypeEnum.ENTITY.equals(cft.getFieldType()) && cfDto.isEmpty(cft.getFieldType(), cft.getStorageType()) && !StringUtils.isBlank(cfDto.getStringValue()) && !StringUtils.isBlank(cft.getEntityClazz())) {
+            	EntityReferenceDto refDto = new EntityReferenceDto();
+            	refDto.setClassname(cft.getEntityClazz());
+            	refDto.setCode(cfDto.getStringValue());
+            	
+            	cfDto.setEntityReferenceValue(refDto);
             }
 
             // Validate that value is not empty when field is mandatory

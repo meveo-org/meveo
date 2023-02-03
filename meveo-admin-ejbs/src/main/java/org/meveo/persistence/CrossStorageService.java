@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.Session;
 import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.IllegalTransitionException;
@@ -44,6 +46,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.event.qualifier.Created;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.Updated;
+import org.meveo.model.BusinessEntity;
 import org.meveo.model.CustomEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -909,6 +912,8 @@ public class CrossStorageService implements CustomPersistenceService {
 				.map(cfts::get)
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
+		
+		Map<String, Object> jpaReferences = new HashMap<>();
 
 		for (CustomFieldTemplate customFieldTemplate : cetFields) {
 			if (CustomFieldTypeEnum.ENTITY.equals(customFieldTemplate.getFieldType())) {
@@ -916,8 +921,15 @@ public class CrossStorageService implements CustomPersistenceService {
 				if(referencedCet != null) {
 					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
 				
+				} else {
+					jpaReferences.put(customFieldTemplate.getCode(), updatedValues.get(customFieldTemplate.getCode()));
 				}
 			}
+		}
+		
+		if(!jpaReferences.isEmpty()) {			
+			fetchEntityReferences(repository, cet, jpaReferences, null);
+			updatedValues.putAll(jpaReferences);
 		}
 
 		return updatedValues;
@@ -1140,10 +1152,17 @@ public class CrossStorageService implements CustomPersistenceService {
 							continue;
 						}
 						
-						values.put(
-							entry.getKey(), 
-							session.find(clazz, entry.getValue())
-						);
+						if(entry.getValue() instanceof Long) {							
+							values.put(
+								entry.getKey(), 
+								session.find(clazz, entry.getValue())
+							);
+						} else if(BusinessEntity.class.isAssignableFrom(clazz)) {	
+							values.put(
+								entry.getKey(),
+								session.unwrap(Session.class).byNaturalId(clazz.getName()).using("code", entry.getValue()).load()
+							);
+						}
 						
 						continue;
 						
