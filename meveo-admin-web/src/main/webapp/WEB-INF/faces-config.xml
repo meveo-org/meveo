@@ -421,6 +421,12 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>marketplace</from-outcome>
+            <to-view-id>/pages/admin/module/marketplace.xhtml
+            </to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>meveoModuleDetail</from-outcome>
             <to-view-id>/pages/admin/module/moduleDetail.xhtml
             </to-view-id>

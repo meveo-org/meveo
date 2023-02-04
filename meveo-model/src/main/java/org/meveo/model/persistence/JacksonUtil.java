@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import org.meveo.commons.utils.FileDeserializer;
 import org.meveo.model.customEntities.CustomEntityInstance;
+import org.meveo.model.typereferences.GenericTypeReferences;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -144,6 +146,15 @@ public class JacksonUtil {
     
     public static <T> T read(InputStream value, TypeReference<T> clazz) throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(value, clazz);
+    }
+    
+    public static Map<String, Object> toMap(InputStream value) throws JsonParseException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.readValue(value, GenericTypeReferences.MAP_STRING_OBJECT);
+    }
+    
+    public static List<Map<String, Object>> toList(InputStream value) throws JsonParseException, JsonMappingException, IOException {
+        var typeRef = new TypeReference<List<Map<String, Object>>>() {};
+    	return OBJECT_MAPPER.readValue(value, typeRef);
     }
 
     @SuppressWarnings("unchecked")

@@ -229,5 +229,68 @@
   			ON CONFLICT DO NOTHING;
    		</sql>
 	</changeSet>
+	
+	<changeSet id="#677 - Module provider" author="Clément Bareth">
+		<createTable tableName="meveo_module_provider">
+			<column name="id" type="bigint" autoIncrement="${id.auto}">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="pk_meveo_module_provider"/>
+			</column>
+			<column name="version" type="int4"/>
+			<column name="disabled" type="${type.boolean}" defaultValueNumeric="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="varchar(100)"/>
+			<column name="updater" type="varchar(100)"/>
+			<column name="created" type="datetime">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated" type="datetime"/>
+			<column name="code" type="varchar(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="varchar(255)"/>
+			
+			<column name="provider_name" type="varchar(255)"/>
+			<column name="provider_url" type="varchar(255)"/>
+			<column name="access_token" type="varchar(255)"/>
+			<column name="ssh_key" type="varchar(255)"/>
+		</createTable>
+	</changeSet>
+	
+	<changeSet id="#677 - Add Meveo provider" author="Clément Bareth">
+		<insert tableName="meveo_module_provider">
+			<column name="code" value="Meveo"></column>
+			<column name="id" valueNumeric="-1"></column>
+			<column name="description" value="Meveo-org provider"></column>
+			<column name="created" value="now()"></column>
+		</insert>
+	</changeSet>
+	
+	<changeSet id="#677 - Add provider_type column" author="Clément Bareth">
+		<addColumn tableName="meveo_module_provider">
+			<column name="provider_type" type="varchar(255)"></column>
+		</addColumn>
+		<delete tableName="meveo_module_provider"></delete>
+		<insert tableName="meveo_module_provider">
+			<column name="code" value="Meveo"></column>
+			<column name="id" valueNumeric="-1"></column>
+			<column name="description" value="Meveo-org provider"></column>
+			<column name="created" value="now()"></column>
+			<column name="provider_type" value="GITHUB"></column>
+		</insert>
+	</changeSet>
+	
+	<changeSet id="#677 - Add provider_name and urls" author="Clément Bareth">
+		<delete tableName="meveo_module_provider"></delete>
+		<insert tableName="meveo_module_provider">
+			<column name="code" value="Meveo"></column>
+			<column name="id" valueNumeric="-1"></column>
+			<column name="description" value="Meveo-org provider"></column>
+			<column name="created" value="now()"></column>
+			<column name="provider_type" value="GITHUB"></column>
+			<column name="provider_name" value="meveo-org"></column>
+			<column name="provider_url" value="https://github.com/meveo-org"></column>
+		</insert>
+	</changeSet>
 
 </databaseChangeLog>
