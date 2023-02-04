@@ -79,6 +79,6 @@ public class CachesInitializer {
             cacheContainer.defineConfiguration(UserMessageCacheContainerProvider.MEVEO_USER_MESSAGE_CACHE, persistentFileConfig);
         }
 
-        log.info("Finished initializing ontology caches");
+        log.info("Finished initializing caches");
     }
 }

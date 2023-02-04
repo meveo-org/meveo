@@ -33,13 +33,19 @@
 		        <h:outputText value="#{module.url}" />
 		    </p:column>
 		 
-<!-- 		    <p:column headerText="Alreay installed"> -->
-<!-- 		        <h:outputText value="#{module.isAlreadyInstalled}" /> -->
-<!-- 		    </p:column> -->
+		    <p:column headerText="Alreay installed">
+		        <h:outputText value="#{module.isAlreadyInstalled()}" />
+		    </p:column>
 		
 		    <p:column headerText="Provider">
-		        <h:outputText value="#{module.provider.code}" />
+		        <h:outputText value="#{module.providerCode}" />
 		    </p:column>
+		
+			<p:column headerText="Action">
+				<p:commandButton value="Install"></p:commandButton>
+				<p:commandButton value="Update"></p:commandButton>
+				<p:commandButton value="Uninstall"></p:commandButton>
+			</p:column>
 		</p:dataTable>
     </ui:define>
 </ui:composition>

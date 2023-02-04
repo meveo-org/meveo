@@ -78,6 +78,20 @@ public class QueryBuilder {
     public QueryBuilder() {
 
     }
+    
+    /**
+	 * @return the {@link #paginationConfiguration}
+	 */
+	public PaginationConfiguration getPaginationConfiguration() {
+		return paginationConfiguration;
+	}
+    
+    /**
+	 * @return the {@link #paginationSortAlias}
+	 */
+	public String getPaginationSortAlias() {
+		return paginationSortAlias;
+	}
 
     /**
      * Get Hibernate native query object
@@ -139,7 +153,7 @@ public class QueryBuilder {
      *
      * @param alias alias of column?
      */
-    private void applyOrdering(String alias) {
+    public void applyOrdering(String alias) {
         if (paginationConfiguration == null) {
             return;
         }
@@ -903,7 +917,7 @@ public class QueryBuilder {
     /**
      * @param alias alias of column?
      */
-    private void applyPagination(String alias) {
+    public void applyPagination(String alias) {
         if (paginationConfiguration == null) {
             return;
         }
@@ -916,7 +930,7 @@ public class QueryBuilder {
     /**
      * @param query query using for pagination.
      */
-    private void applyPagination(Query query) {
+    public void applyPagination(Query query) {
         if (paginationConfiguration == null) {
             return;
         }

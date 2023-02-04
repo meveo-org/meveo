@@ -6,6 +6,7 @@ package org.meveo.admin.action.admin.module;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
@@ -28,15 +29,25 @@ public class InstallableModuleBean implements Serializable {
     @Inject
     protected Messages messages;
     
+    private AtomicBoolean refresh = new AtomicBoolean(false);
+    
 	@Inject
 	private transient MeveoModuleProviderService providerService;
+	
+	public void refresh() {
+		refresh.set(true);
+		modules = null;
+		getModules();
+		refresh.set(false);
+	}
 	
 	public List<InstallableModule> getModules() {
 		if (modules == null) {
 			modules = new ArrayList<>();
 			for (var provider : providerService.list()) {
 				try {
-					modules.addAll(providerService.listInstallableModules(provider));
+					var providerModules = providerService.listInstallableModules(provider, refresh.get());
+					modules.addAll(providerModules);
 				} catch (BusinessException e) {
 					MessagesHelper.error(messages, "Cannot retrieve modules from " + provider.getCode(), e);
 				}

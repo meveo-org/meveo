@@ -3,11 +3,12 @@
  */
 package org.meveo.model.module;
 
+import java.io.Serializable;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+public class InstallableModule implements Serializable {
 
-public class InstallableModule {
+	private static final long serialVersionUID = -5806525342000440081L;
 
 	private String code;
 	
@@ -21,8 +22,7 @@ public class InstallableModule {
 	
 	private String localRepositorySha;
 	
-	@JsonIgnore
-	private MeveoModuleProvider provider;
+	private String providerCode;
 	
 	/**
 	 * @return the {@link #code}
@@ -54,6 +54,13 @@ public class InstallableModule {
 	public boolean isAlreadyInstalled() {
 		return localRepositorySha != null;
 	}
+	
+	public boolean hasUpdate() {
+		if (localRepositorySha != null && commitSha != null) {
+			return !localRepositorySha.equals(commitSha);
+		}
+		return false;
+	}
 	/**
 	 * @return the {@link #url}
 	 */
@@ -66,21 +73,16 @@ public class InstallableModule {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-	/**
-	 * @return the {@link #provider}
-	 */
-	public MeveoModuleProvider getProvider() {
-		return provider;
-	}
+	
 	/**
 	 * @param provider the provider to set
 	 */
 	public void setProvider(MeveoModuleProvider provider) {
-		this.provider = provider;
+		this.providerCode = provider.getCode();
 	}
 	
 	public String getProviderCode() {
-		return provider != null ? provider.getCode() : null;
+		return providerCode;
 	}
 	
 	/**
