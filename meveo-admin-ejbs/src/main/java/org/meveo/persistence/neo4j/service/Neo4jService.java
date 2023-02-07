@@ -368,19 +368,19 @@ public class Neo4jService implements CustomPersistenceService {
     }
     
     public PersistenceActionResult addCetNode(String neo4JConfiguration, CustomEntityInstance cei) {
-    	return addCetNode(neo4JConfiguration, cei.getCet(), cei.getCfValuesAsValues(), cei.getUuid());
+    	return addCetNode(neo4JConfiguration, cei.getCet(), cei.getCfValuesAsValues(), cei.getUuid(), cei.getFieldTemplates());
     }
 
     public PersistenceActionResult addCetNode(String neo4JConfiguration, String cetCode, Map<String, Object> fieldValues) {
         final CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(cetCode);
-        return addCetNode(neo4JConfiguration, cet, fieldValues, null);
+        return addCetNode(neo4JConfiguration, cet, fieldValues, null, null);
     }
 
     public PersistenceActionResult addCetNode(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues) {
-		return addCetNode(neo4JConfiguration, cet, fieldValues, null);
+		return addCetNode(neo4JConfiguration, cet, fieldValues, null, null);
 	}
 
-	public PersistenceActionResult addCetNode(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues, String uuid) {
+	public PersistenceActionResult addCetNode(String neo4JConfiguration, CustomEntityTemplate cet, Map<String, Object> fieldValues, String uuid, Map<String, CustomFieldTemplate> cetFields) {
 
         Set<EntityRef> persistedEntities = new HashSet<>();
         String nodeUuid = null;
@@ -388,7 +388,9 @@ public class Neo4jService implements CustomPersistenceService {
         try {
 
             /* Find unique fields and validate data */
-            Map<String, CustomFieldTemplate> cetFields = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
+        	if (cetFields == null) {
+        		cetFields = customFieldTemplateService.getCftsWithInheritedFields(cet);
+        	}
 
             // Fallback to when entity is defined as primitive but does not have associated CFT
             if (cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
@@ -1047,7 +1049,7 @@ public class Neo4jService implements CustomPersistenceService {
 
                 /* Create the source node */
 
-                addCetNode(neo4JConfiguration, customRelationshipTemplate.getStartNode(), startNodeValues, null);
+                addCetNode(neo4JConfiguration, customRelationshipTemplate.getStartNode(), startNodeValues, null, null);
 
             }
 

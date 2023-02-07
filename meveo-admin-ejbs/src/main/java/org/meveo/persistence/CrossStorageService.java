@@ -441,13 +441,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		final CustomEntityTemplate startNode = crt.getStartNode();
 
 		// Everything is stored in Neo4J
-		if (isEverythingStoredInNeo4J(crt)) {
-			return neo4jService.addSourceNodeUniqueCrt(
-					repository.getNeo4jConfiguration().getCode(),
-					relationCode,
-					PersistenceUtils.filterValues(cfts, sourceValues, crt, DBStorageType.NEO4J),
-					PersistenceUtils.filterValues(cfts, targetValues, crt, DBStorageType.NEO4J));
-		}
+//		if (isEverythingStoredInNeo4J(crt)) {
+//			return neo4jService.addSourceNodeUniqueCrt(
+//					repository.getNeo4jConfiguration().getCode(),
+//					relationCode,
+//					PersistenceUtils.filterValues(cfts, sourceValues, crt, DBStorageType.NEO4J),
+//					PersistenceUtils.filterValues(cfts, targetValues, crt, DBStorageType.NEO4J));
+//		}
 
 		String targetUUUID = findEntityId(repository, targetValues, endNode);
 
@@ -544,14 +544,14 @@ public class CrossStorageService implements CustomPersistenceService {
 			cei.setUuid(ceiToSave.getUuid());
 		}
 				
-		final Map<String, CustomFieldTemplate> customFieldTemplates =  (cet.getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet));
+		final Map<String, CustomFieldTemplate> customFieldTemplates = customFieldTemplateService.getCftsWithInheritedFields(cet);
 		cei.setCet(cet);
 		cei.setFieldTemplates(customFieldTemplates);
 
 		// Create referenced entities and set UUIDs in the values
 		Map<String, Object> tmpValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
 		Map<String, Object> entityValues = createEntityReferences(repository, tmpValues, cet);
-		customFieldInstanceService.setCfValues(cei, cet.getCode(), entityValues);
+		customFieldInstanceService.setCfValues(cei, entityValues);
 
 		String uuid = null;
 
@@ -1152,16 +1152,29 @@ public class CrossStorageService implements CustomPersistenceService {
 							continue;
 						}
 						
-						if(entry.getValue() instanceof Long) {							
+						String code = null;
+						Long id = null;
+						
+						if(entry.getValue() instanceof Long) {
+							id = (Long) entry.getValue();
+						} else if(entry.getValue() instanceof EntityReferenceWrapper) {
+							var ef = (EntityReferenceWrapper) entry.getValue();
+							code = ef.getCode();
+							id = ef.getId();
+						} else {
+							code = (String) entry.getValue();
+						}
+						
+						if (id != null) {
+							values.put(entry.getKey(), session.find(clazz, id));
+						} else if(code != null) {
 							values.put(
-								entry.getKey(), 
-								session.find(clazz, entry.getValue())
-							);
-						} else if(BusinessEntity.class.isAssignableFrom(clazz)) {	
-							values.put(
-								entry.getKey(),
-								session.unwrap(Session.class).byNaturalId(clazz.getName()).using("code", entry.getValue()).load()
-							);
+									entry.getKey(),
+									session.unwrap(Session.class)
+										.byNaturalId(clazz.getName())
+										.using("code", code)
+										.load()
+								);
 						}
 						
 						continue;

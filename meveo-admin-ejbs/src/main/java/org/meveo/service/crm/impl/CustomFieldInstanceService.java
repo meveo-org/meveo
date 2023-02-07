@@ -2423,25 +2423,38 @@ public class CustomFieldInstanceService extends BaseService {
         return emWrapper.getEntityManager();
     }
     
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void setCfValues(CustomEntityInstance cei, Map<String, Object> values) throws BusinessException {
+    	if (cei.getFieldTemplates() == null) {
+    		setCfValues(cei, cei.getCetCode(), values);
+    	} else {
+    		setCfValues(cei, cei.getFieldTemplates(), cei.getCetCode(), values);
+        }
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
+		Map<String, CustomFieldTemplate> cetFields = null;
+		if(entity instanceof CustomEntityInstance) {
+			var cei = (CustomEntityInstance) entity;
+			cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
+		} else {
+			cetFields = customFieldTemplateService.findByAppliesTo(entity);
+		}
+		setCfValues(entity, cetFields, cetCode, values);
+    }
+    
     /**
      * Sets the {@link CustomFieldValues} of a given {@link CustomEntityInstance}.
      * @param entity the custom entity instance
      * @param cetCode custom entity template code
      * @param values map of cft values
+     * @param cetFields the fields definition of the entity
      * @throws BusinessException thrown when values are not set
      */
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
-		Map<String, CustomFieldTemplate> cetFields = null;
+	public void setCfValues(ICustomFieldEntity entity, Map<String, CustomFieldTemplate> cetFields, String cetCode, Map<String, Object> values) throws BusinessException {
 		try {
-			cetFields = customFieldTemplateService.findByAppliesTo(entity);
-			if(entity instanceof CustomEntityInstance) {
-				var cei = (CustomEntityInstance) entity;
-				if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
-					cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
-				}
-			}
-			
 			for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 				Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
 				if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {

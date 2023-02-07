@@ -184,15 +184,16 @@ public class Neo4jStorageImpl implements StorageImpl {
 		String uuid = null;
 		CustomEntityInstance neo4jCei = new CustomEntityInstance();
 		neo4jCei.setCetCode(cei.getCetCode());
-		neo4jCei.setUuid(foundUuid);
+		neo4jCei.setUuid(foundUuid != null ? foundUuid : cei.getUuid());
 		neo4jCei.setCet(cei.getCet());
 		neo4jCei.setRepository(repository);
+		neo4jCei.setFieldTemplates(cei.getFieldTemplates());
 		cei.setRepository(repository);
 		
 		if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
 			Map<String, Object> neo4jValues = PersistenceUtils.filterValues(customFieldTemplates, cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, false);
-			customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
+			customFieldInstanceService.setCfValues(neo4jCei, customFieldTemplates, neo4jCei.getCetCode(), neo4jValues);
 
 			if (!neo4jValues.isEmpty()) {
 				PersistenceActionResult persistenceResult = neo4jService.addCetNode(repository.getNeo4jConfiguration().getCode(), neo4jCei);
