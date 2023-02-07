@@ -17,10 +17,10 @@ import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.interfaces.EntityGraph;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
-import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
 import org.meveo.persistence.scheduler.AtomicPersistencePlan;
@@ -83,6 +83,14 @@ public class CrossStorageApi{
     public List<PersistedItem> persistEntities(Repository repository, EntityGraph entityGraph) throws CyclicDependencyException, ELException, EntityDoesNotExistsException, IOException, BusinessApiException, BusinessException {
         AtomicPersistencePlan atomicPersistencePlan = schedulingService.schedule(entityGraph.getAll());
         return scheduledPersistenceService.persist(repository.getCode(), atomicPersistencePlan);
+    }
+    
+    public void mergeCascade(Repository repository, CustomEntity entity) throws BusinessException {
+		try {
+			persistEntities(repository, CEIUtils.toEntityGraph(List.of(entity)));
+		} catch (CyclicDependencyException | ELException | IOException e) {
+			throw new BusinessException(e);
+		}
     }
 	
 	/**

@@ -130,6 +130,21 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
                     Set<EntityRef> startPersistedEntities = context.getNodeReferences(relationToPersist.getStartEntityToPersist().getName());
                     Set<EntityRef> endPersistedEntities = context.getNodeReferences(relationToPersist.getEndEntityToPersist().getName());
+                    
+                    String sourceUuid = (String) relationToPersist.getStartEntityToPersist().getValues().get("uuid");
+                    String targetUuid = (String) relationToPersist.getEndEntityToPersist().getValues().get("uuid");
+                    
+                    if (sourceUuid != null && targetUuid != null) {
+                    	var cetSource = cacheContainerProvider.getCustomEntityTemplate(relationToPersist.getStartEntityToPersist().getCode());
+                    	if (storageService.exists(repository, cetSource, sourceUuid)) {
+                    		startPersistedEntities.add(new EntityRef(sourceUuid, cetSource.getCode()));
+                    	}
+                    	var cetTarget = cacheContainerProvider.getCustomEntityTemplate(relationToPersist.getStartEntityToPersist().getCode());
+                    	if (storageService.exists(repository, cetTarget, targetUuid)) {
+                    		endPersistedEntities.add(new EntityRef(targetUuid, cetTarget.getCode()));
+                    	}
+                    }
+                    
                     if (startPersistedEntities.isEmpty() || endPersistedEntities.isEmpty()) {
                         // TODO: Make possible to have one node found by its id
                         result = storageService.addCRTByValues(

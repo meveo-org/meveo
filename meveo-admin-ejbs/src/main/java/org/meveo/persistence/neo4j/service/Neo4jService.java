@@ -1711,5 +1711,10 @@ public class Neo4jService implements CustomPersistenceService {
     private String getStatement(StrSubstitutor sub, StringBuffer findStartNodeId) {
         return sub.replace(findStartNodeId).replace('"', '\'');
     }
+
+	@Override
+	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
+		return neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid) != null;
+	}
     
 }

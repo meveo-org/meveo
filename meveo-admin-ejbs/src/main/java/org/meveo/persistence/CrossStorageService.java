@@ -725,16 +725,6 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		var cfts = customFieldTemplateService.findByAppliesTo(crt.getAppliesTo());
 
-		// All Neo4j storage
-		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J) && startNode.getAvailableStorages().contains(DBStorageType.NEO4J) && endNode.getAvailableStorages().contains(DBStorageType.NEO4J)) {
-			return neo4jService.addCRTByNodeValues(
-					repository.getNeo4jConfiguration().getCode(), 
-					relationCode, 
-					PersistenceUtils.filterValues(cfts, relationValues, crt, DBStorageType.NEO4J),
-					PersistenceUtils.filterValues(cfts, sourceValues, crt, DBStorageType.NEO4J),
-					PersistenceUtils.filterValues(cfts, targetValues, crt, DBStorageType.NEO4J));
-		}
-
 		String sourceUUID = findEntityId(repository, sourceValues, startNode);
 		String targetUUUID = findEntityId(repository, targetValues, endNode);
 		

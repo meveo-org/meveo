@@ -54,4 +54,6 @@ public interface CustomPersistenceService {
                 .map(EntityRef::getUuid)
                 .collect(Collectors.toList());
     }
+    
+    public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid);
 }
