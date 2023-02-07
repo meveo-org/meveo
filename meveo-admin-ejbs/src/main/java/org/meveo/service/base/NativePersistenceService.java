@@ -403,7 +403,7 @@ public class NativePersistenceService extends BaseService {
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
 		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
-		return create(sqlConnectionCode, cei, returnId, false, cfts, true);
+		return create(sqlConnectionCode, cei, returnId, cfts, true);
 	}
 
 	/**
@@ -412,18 +412,17 @@ public class NativePersistenceService extends BaseService {
 	 * @param cei              the {@link CustomEntityInstance}
 	 * @param returnId         if true values parameter will be updated with 'uuid'
 	 *                         field value.
-	 * @param isFiltered       if true process only the values that is stored in SQL
 	 * @param cfts             collection of {@link CustomFieldTemplate}
 	 * @param removeNullValues whether to remove the null values from the map
 	 * @return the uuid of the newly created entity
 	 * @throws BusinessException failed to insert the records
 	 */
-	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts,
+	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, Collection<CustomFieldTemplate> cfts,
 			boolean removeNullValues) throws BusinessException {
 		
 		CustomEntityTemplate cet = cei.getCet();
 		
-		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
+		Map<String, Object> values = cei.getCfValuesAsValues(DBStorageType.SQL, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
 				.filter(cft -> cft.getAppliesTo().equals(cet.getAppliesTo()))
 				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
@@ -440,7 +439,7 @@ public class NativePersistenceService extends BaseService {
 				parentCei.setCet(parentTemplate);
 				parentCei.setCfValues(cei.getCfValues());
 				parentCei.setUuid(cei.getUuid());
-				var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
+				var uuid = create(sqlConnectionCode, parentCei, true, cfts, removeNullValues);
 				convertedValues.put("uuid", uuid);	
 			}
 		}
@@ -684,7 +683,7 @@ public class NativePersistenceService extends BaseService {
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
 		var cfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo());
-		update(sqlConnectionCode, cei, false, cfts.values(), false);
+		update(sqlConnectionCode, cei, cfts.values(), false);
 	}
 
 	/**
@@ -693,11 +692,10 @@ public class NativePersistenceService extends BaseService {
 	 *
 	 * @param cei              the {@link CustomEntityInstance}. The cf values must
 	 *                         contain the field uuid.
-	 * @param isFiltered       if true process only the fields with storage=SQL
 	 * @param removeNullValues if true, remove the null values
 	 * @throws BusinessException General exception
 	 */
-	public void update(String sqlConnectionCode, CustomEntityInstance cei, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues)
+	public void update(String sqlConnectionCode, CustomEntityInstance cei, Collection<CustomFieldTemplate> cfts, boolean removeNullValues)
 			throws BusinessException {
 		
 		// Update data in parent template
@@ -707,12 +705,12 @@ public class NativePersistenceService extends BaseService {
 			parentCei.setCet(cei.getCet().getSuperTemplate());
 			parentCei.setCfValues(cei.getCfValues());
 			parentCei.setUuid(cei.getUuid());
-			update(sqlConnectionCode, parentCei, true, parentCfts, removeNullValues);
+			update(sqlConnectionCode, parentCei, parentCfts, removeNullValues);
 		}
 
 		String tableName = PostgresReserverdKeywords.escapeAndFormat(cei.getTableName());
 		
-		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
+		Map<String, Object> sqlValues = cei.getCfValuesAsValues(DBStorageType.SQL, cfts, removeNullValues);
 		var appliesTo = CustomEntityTemplate.getAppliesTo(cei.getCetCode());
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
 				.filter(cft -> cft.getAppliesTo().equals(appliesTo))
@@ -733,7 +731,8 @@ public class NativePersistenceService extends BaseService {
 				);
 
 		for (String key: cftsMap.keySet()) {
-			if (key != null && !values.keySet().contains(key) && cftsMap.get(key).getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+			var cft = cftsMap.get(key);
+			if (key != null && !values.keySet().contains(key) && cft.isSqlStorage() && cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
 				values.put(key, new ArrayList<>());
 			}
 		}

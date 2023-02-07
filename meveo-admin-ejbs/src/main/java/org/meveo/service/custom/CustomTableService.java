@@ -124,7 +124,7 @@ public class CustomTableService extends NativePersistenceService {
 	public String create(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
 		Collection<CustomFieldTemplate> cfts = (cet.getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet)).values();
 		cei.setCet(cet);
-		return create(sqlConnectionCode, cei, true, true, cfts, true);
+		return create(sqlConnectionCode, cei, true, cfts, true);
 	}
 
 	/**
@@ -225,7 +225,7 @@ public class CustomTableService extends NativePersistenceService {
     public void update(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
     	Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
 		cei.setCet(cet);
-    	super.update(sqlConnectionCode, cei, true, cfts, false);
+    	super.update(sqlConnectionCode, cei, cfts, false);
     }
 
     /**
