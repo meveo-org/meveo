@@ -600,7 +600,7 @@ public class Neo4jService implements CustomPersistenceService {
 
 		    for (Object value : values) {
 		        Set<EntityRef> relatedPersistedEntities = new HashSet<>();
-		        if (referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
+		        if (!(value instanceof EntityReferenceWrapper) && referencedCet.getNeo4JStorageConfiguration() != null && referencedCet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 		            Map<String, Object> valueMap = new HashMap<>();
 		            valueMap.put("value", value);
 
@@ -666,18 +666,7 @@ public class Neo4jService implements CustomPersistenceService {
 		return relationshipsToCreate;
 	}
 
-	/**
-	 * @param neo4JConfiguration
-	 * @param cet
-	 * @param relationshipsToCreate
-	 * @param entityReference
-	 * @param referencedCet
-	 * @param value
-	 * @throws IllegalArgumentException
-	 */
 	public void handleUuidReference(String neo4JConfiguration, CustomEntityTemplate cet, Map<EntityRef, String> relationshipsToCreate, CustomFieldTemplate entityReference, CustomEntityTemplate referencedCet, Object value) throws IllegalArgumentException {
-		UUID.fromString((String) value);
-
 		if(StringUtils.isBlank(entityReference.getRelationshipName())){
 		    String errorMessage  = String.format("Attribute relationshipName of CFT %s#%s should not be null", cet.getCode(), entityReference.getCode());
 		    throw new IllegalArgumentException(errorMessage);
