@@ -169,8 +169,6 @@ public class GraphQLService {
 
     private String getIDL(Collection<GraphQLEntity> graphQLEntities, Neo4JConfiguration neo4jConfiguration) {
         StringBuilder idl = new StringBuilder();
-        idl.append("scalar BigInt\n");
-        
         List<GraphQLEntity> sortedEntities = new ArrayList<>(graphQLEntities);
         sortedEntities.sort((e1, e2) -> {
         	if (e1.isInterface() && !e2.isInterface()) {
