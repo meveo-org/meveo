@@ -236,7 +236,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 			throw new BusinessException(e);
 		}
 
-		neo4jDao.updateNodeByNodeId(repository.getCode(), cei.getUuid(), cet.getCode(), neo4jValues, labels);
+		neo4jDao.updateNodeByNodeId(conf.getCode(), cei.getUuid(), cet.getCode(), neo4jValues, labels);
 	}
 	
 	@Override
