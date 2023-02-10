@@ -169,6 +169,7 @@ public class GraphQLService {
 
     private String getIDL(Collection<GraphQLEntity> graphQLEntities, Neo4JConfiguration neo4jConfiguration) {
         StringBuilder idl = new StringBuilder();
+        idl.append("scalar BigInt\n");
         
         List<GraphQLEntity> sortedEntities = new ArrayList<>(graphQLEntities);
         sortedEntities.sort((e1, e2) -> {
@@ -439,11 +440,7 @@ public class GraphQLService {
             switch (customFieldTemplate.getFieldType()) {
                 case LONG:
                 case DATE:
-                	if (neo4jConfiguration.getDbVersion().startsWith("3")) {
-                		graphQLField.setFieldType("BigInt");
-                	} else {
-                		graphQLField.setFieldType("Int");
-                	}
+            		graphQLField.setFieldType("BigInt");
                     break;
                 case DOUBLE:
                     graphQLField.setFieldType("Float");
@@ -526,7 +523,7 @@ public class GraphQLService {
         List<String> result = new ArrayList<>();
         String pattern = neo4jRepo.getDbVersion().startsWith("3") ? 
         		"\\t\\w+: \\[?(?!(?:String|Boolean|BigInt|ID|Float)!?)(\\w*)\\]?!?\\s" :
-    			"\\t\\w+: \\[?(?!(?:String|Boolean|Int|ID|Float)!?)(\\w*)\\]?!?\\s";
+    			"\\t\\w+: \\[?(?!(?:String|Boolean|Int|BigInt|ID|Float)!?)(\\w*)\\]?!?\\s";
         // Create a Pattern object
         Pattern r = Pattern.compile(pattern);
         // Now create matcher object.
