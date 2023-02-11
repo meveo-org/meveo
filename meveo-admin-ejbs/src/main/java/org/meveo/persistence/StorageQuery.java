@@ -7,16 +7,27 @@ import java.util.Map;
 import java.util.Set;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.IStorageConfiguration;
 
-/**
- * 
- * @author heros
- * @since 
- * @version
- */
 public class StorageQuery {
+	
+	public static StorageQuery fromCei(CustomEntityInstance cei, IStorageConfiguration storage) {
+		StorageQuery query = new StorageQuery();
+		query.setCet(cei.getCet());
+		query.setStorageConfiguration(storage);
+		var values = cei.getCfValuesAsValues(storage.getDbStorageType(), cei.getFieldTemplates().values(), true);
+		for (var cft : cei.getFieldTemplates().values()) {
+			if (!cft.isUnique()) {
+				values.remove(cft.getCode());
+			}
+		}
+		query.setFilters(values);
+		return query;
+	}
+	
 	private Map<String, Object> filters;
 	private PaginationConfiguration paginationConfiguration;
 	private CustomEntityTemplate cet;
