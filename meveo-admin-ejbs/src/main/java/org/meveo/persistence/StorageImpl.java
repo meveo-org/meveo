@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.PersistenceException;
+
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -25,7 +27,26 @@ public interface StorageImpl {
 	// -------------------------- CRUD operations -----------------------------
 	boolean exists(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid);
 	
-    String findEntityIdByValues(Repository repository, IStorageConfiguration conf, CustomEntityInstance cei);
+    default String findEntityIdByValues(Repository repository, IStorageConfiguration conf, CustomEntityInstance cei) {
+		StorageQuery query = StorageQuery.fromCei(cei, conf);
+		if (query.getFilters().isEmpty()) {
+			return null;
+		}
+		
+		try {
+			var result = this.find(query);
+			if (result.size() == 1) {
+				return (String) result.get(0).get("uuid");
+			} else if (result.size() > 1) {
+				throw new PersistenceException("Many possible entity for values " + query.getFilters().toString());
+			}
+
+		} catch (EntityDoesNotExistsException e) {
+			throw new PersistenceException("Template does not exists", e);
+		}
+
+		return null;
+    }
     
 	public Map<String, Object> findById(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid, Map<String, CustomFieldTemplate> cfts, Collection<String> fetchFields, boolean withEntityReferences);
     
