@@ -50,9 +50,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBTransactionRolledbackException;
-import javax.ejb.Remote;
 import javax.ejb.Stateless;
-import javax.ejb.Timeout;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.event.Observes;
@@ -98,7 +96,6 @@ import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.commons.utils.FileUtils;
-import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.git.CommitEvent;
@@ -128,7 +125,7 @@ import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.admin.impl.ModuleUninstall;
-import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.QueryBuilderHelper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
@@ -725,7 +722,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 		} else {
 			Map<String, Object> filters = new HashMap<>();
-			filters.put(PersistenceService.SEARCH_ATTR_TYPE_CLASS, clazz);
+			filters.put(QueryBuilderHelper.SEARCH_ATTR_TYPE_CLASS, clazz);
 
 			meveoModules = meveoModuleService.list(new PaginationConfiguration(filters));
 		}

@@ -1369,7 +1369,7 @@ public class NativePersistenceService extends BaseService {
 					// Any of the multiple field values wildcard match the value (OR criteria) - a
 					// diference from "likeCriterias" is that wildcard will be appended to the value
 					// automatically
-				} else if (PersistenceService.SEARCH_WILDCARD_OR.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_WILDCARD_OR.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) {
 						queryBuilder.addSql(field + " like '%" + filterValue + "%'");
@@ -1377,7 +1377,7 @@ public class NativePersistenceService extends BaseService {
 					queryBuilder.endOrClause();
 
 					// Just like wildcardOr but ignoring case :
-				} else if (PersistenceService.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) { // since SEARCH_WILDCARD_OR_IGNORE_CAS , then filterValue is necessary a String
 						//lowercase functions may give different results in postgres/java => to avoid mismatch, postrges's function is the only one used. Example of mismath : Danışmanlık_İth
@@ -1386,7 +1386,7 @@ public class NativePersistenceService extends BaseService {
 					queryBuilder.endOrClause();
 
 					// Search by additional Sql clause with specified parameters
-				} else if (PersistenceService.SEARCH_SQL.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_SQL.equals(condition)) {
 					if (filterValue.getClass().isArray()) {
 						String additionalSql = (String) ((Object[]) filterValue)[0];
 						Object[] additionalParameters = Arrays.copyOfRange(((Object[]) filterValue), 1, ((Object[]) filterValue).length);
@@ -1402,10 +1402,10 @@ public class NativePersistenceService extends BaseService {
 					}
 					queryBuilder.endOrClause();
 				} else {
-					if (filterValue instanceof String && PersistenceService.SEARCH_IS_NULL.equals(filterValue)) {
+					if (filterValue instanceof String && QueryBuilderHelper.SEARCH_IS_NULL.equals(filterValue)) {
 						queryBuilder.addSql(fieldName + " is null ");
 
-					} else if (filterValue instanceof String && PersistenceService.SEARCH_IS_NOT_NULL.equals(filterValue)) {
+					} else if (filterValue instanceof String && QueryBuilderHelper.SEARCH_IS_NOT_NULL.equals(filterValue)) {
 						queryBuilder.addSql(fieldName + " is not null ");
 
 					} else if (filterValue instanceof String) {

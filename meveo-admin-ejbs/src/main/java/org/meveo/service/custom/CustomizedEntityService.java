@@ -21,11 +21,10 @@ import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.jobs.JobInstance;
-import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.QueryBuilderHelper;
 import org.meveo.service.job.Job;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
-import org.primefaces.component.log.Log;
 import org.reflections.Reflections;
 
 /**
@@ -234,17 +233,17 @@ public class CustomizedEntityService implements Serializable {
 		// 0 is default = no filter
 		if (primitiveEntity.equals("1")) {
 			// Neo4J in availableStorages with primitiveEntity=true
-			filters.put("neo4JStorageConfiguration", PersistenceService.SEARCH_IS_NOT_NULL);
+			filters.put("neo4JStorageConfiguration", QueryBuilderHelper.SEARCH_IS_NOT_NULL);
 			filters.put("neo4JStorageConfiguration.primitiveEntity", true);
 
 		} else if (primitiveEntity.equals("2")) {
 			// non primitive entities will be displayed (neo4jStorage=null or
 			// primitiveEntity=false)
-			filters.put(PersistenceService.SEARCH_SQL, "(a.neo4JStorageConfiguration IS NULL OR a.neo4JStorageConfiguration.primitiveEntity=false)");
+			filters.put(QueryBuilderHelper.SEARCH_SQL, "(a.neo4JStorageConfiguration IS NULL OR a.neo4JStorageConfiguration.primitiveEntity=false)");
 		}
 
 		if (!(entityName == null || CustomEntityTemplate.class.getSimpleName().toLowerCase().contains(entityName))) {
-			filters.put(PersistenceService.SEARCH_WILDCARD_OR.concat(" code"), entityName);
+			filters.put(QueryBuilderHelper.SEARCH_WILDCARD_OR.concat(" code"), entityName);
 		}
 
 		paginationConfig.setFilters(filters);

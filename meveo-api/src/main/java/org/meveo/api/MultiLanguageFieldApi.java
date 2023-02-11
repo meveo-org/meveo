@@ -33,6 +33,7 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MultiLanguageFieldService;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.QueryBuilderHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -280,7 +281,7 @@ public class MultiLanguageFieldApi extends BaseApi {
             sql = " 1=:one and (" + sql + ")";
 
             Map<String, Object> filters = new HashMap<>();
-            filters.put(PersistenceService.SEARCH_SQL, new Object[] { sql, "one", 1 });
+            filters.put(QueryBuilderHelper.SEARCH_SQL, new Object[] { sql, "one", 1 });
             PaginationConfiguration paginationConfig = new PaginationConfiguration(filters);
             List<IEntity> entities = persistenceService.list(paginationConfig);
             for (IEntity entity : entities) {
