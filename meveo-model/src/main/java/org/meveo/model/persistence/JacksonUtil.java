@@ -156,6 +156,10 @@ public class JacksonUtil {
     public static Map<String, Object> toMap(InputStream value) throws JsonParseException, JsonMappingException, IOException {
     	return OBJECT_MAPPER.readValue(value, GenericTypeReferences.MAP_STRING_OBJECT);
     }
+    
+    public static Map<String, Object> toMap(Object value) throws JsonParseException, JsonMappingException, IOException {
+    	return OBJECT_MAPPER.convertValue(value, GenericTypeReferences.MAP_STRING_OBJECT);
+    }
 
     public static List<Map<String, Object>> toList(InputStream value) throws JsonParseException, JsonMappingException, IOException {
     	var typeRef = new TypeReference<List<Map<String, Object>>>() {};

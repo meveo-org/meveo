@@ -213,6 +213,10 @@ public class QueryBuilder {
         this(getInitQuery(clazz, alias, fetchFields), alias);
         this.clazz = clazz;
     }
+    
+    public QueryBuilder(String className, String alias, List<String> fetchFields) {
+        this(getInitQuery(className, alias, fetchFields), alias);
+    }
 
     /**
      * Constructor.
@@ -259,6 +263,17 @@ public class QueryBuilder {
      */
     private static String getInitQuery(Class<?> clazz, String alias, List<String> fetchFields) {
         StringBuilder query = new StringBuilder("from " + clazz.getName() + " " + alias);
+        if (fetchFields != null && !fetchFields.isEmpty()) {
+            for (String fetchField : fetchFields) {
+                query.append(" left join fetch " + alias + "." + fetchField);
+            }
+        }
+
+        return query.toString();
+    }
+    
+    private static String getInitQuery(String className, String alias, List<String> fetchFields) {
+        StringBuilder query = new StringBuilder("from " + className + " " + alias);
         if (fetchFields != null && !fetchFields.isEmpty()) {
             for (String fetchField : fetchFields) {
                 query.append(" left join fetch " + alias + "." + fetchField);

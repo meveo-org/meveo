@@ -478,6 +478,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
+		afterUpdateSameTx(entity);
+		
 		getLogger().trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
 		return entity;
@@ -534,6 +536,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
+		afterCreateSameTx(entity);
 		getLogger().trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
 	}
 
@@ -782,6 +785,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Asynchronous
 	protected void afterUpdate(E entity) throws BusinessException {
 	}
+	
+	protected void afterCreateSameTx(E entity) throws BusinessException {
+    	
+    }
+	
+	protected void afterUpdateSameTx(E entity) throws BusinessException {
+    	
+    }
+
 
 	/**
 	 * Creates query to filter entities according data provided in pagination

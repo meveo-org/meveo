@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -90,6 +91,9 @@ import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.meveo.service.script.CharSequenceCompiler;
+import org.meveo.service.script.CharSequenceCompilerException;
+import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.slf4j.Logger;
@@ -130,6 +134,37 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     public static String getClassesDirectory(MeveoUser currentUser) {
         String rootDir = ParamBean.getInstance().getChrootDir(currentUser != null ? currentUser.getProviderCode() : null);
         return rootDir + CLASSES_DIR;
+    }
+    
+    public Class<? extends CustomEntity> getCETClass(CustomEntityTemplate cet) {
+        String classPath = CustomScriptService.CLASSPATH_REFERENCE.get();
+        String className = "org.meveo.model.customEntities." + cet.getCode();
+        
+        CharSequenceCompiler<CustomEntity> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
+    	try {
+    		return compiler.loadClass(className);
+    	} catch (ClassNotFoundException e) {
+    		final File cetJavaDir = cetCompiler.getJavaCetDir(cet, findModuleOf(cet));
+    		final File javaFile = new File(cetJavaDir, cet.getCode() + ".java");
+    		String javaSource;
+    		
+			try {
+				javaSource = MeveoFileUtils.readString(javaFile);
+			} catch (IOException e1) {
+				log.error("Failed to read java file", e1);
+				return null;
+			}
+			
+    		String sourcePath = scriptInstanceService.getSourcePath();
+    		
+			try {
+				return compiler.compile(sourcePath, className, javaSource, null, false, CustomEntity.class);
+			} catch (ClassCastException | CharSequenceCompilerException e1) {
+				log.error("Failed to compile java file", e1);
+				return null;
+			}
+    	}
+		
     }
 
     /**
@@ -198,6 +233,12 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @Inject
     CommitMessageBean commitMessageBean;
 
+    public void afterCreateSameTx(CustomEntityTemplate cet) {
+        for (var storage : cet.getAvailableStorages()) {
+        	provider.findImplementation(storage).cetCreated(cet);
+        }
+    }
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void create(CustomEntityTemplate cet) throws BusinessException {
@@ -228,9 +269,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             throw new RuntimeException(e);
         }
         
-        for (var storage : cet.getAvailableStorages()) {
-        	provider.findImplementation(storage).cetCreated(cet);
-        }
     }
 
     /**
@@ -639,8 +677,6 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
 
     @Override
     public CustomEntityTemplate update(CustomEntityTemplate cet) throws BusinessException {
-        CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
-
         if (!EntityCustomizationUtils.validateOntologyCode(cet.getCode())) {
             throw new IllegalArgumentException("The code of ontology elements must not contain numbers");
         }
@@ -683,14 +719,19 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
             }
         }
 
+        return cetUpdated;
+    }
+    
+    @Override
+    protected void afterUpdateSameTx(CustomEntityTemplate cet) throws BusinessException {
+        CustomEntityTemplate oldValue = customFieldsCache.getCustomEntityTemplate(cet.getCode());
+
         Set<DBStorageType> storages = new HashSet<>();
         storages.addAll(cet.getAvailableStorages());
         storages.addAll(oldValue.getAvailableStorages());
         for (var storage : storages) {
         	provider.findImplementation(storage).cetUpdated(oldValue, cet);
         }
-
-        return cetUpdated;
     }
 
     @Override

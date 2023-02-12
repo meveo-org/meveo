@@ -974,7 +974,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     /**
      * @return
      */
-    private String getSourcePath() {
+    public String getSourcePath() {
         String sourcePath = "";
         
         for (var gitRepo : gitRepositoryService.list()) {
