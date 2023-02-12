@@ -45,6 +45,9 @@ public class CustomEntityClassLoader extends ClassLoader {
 		} catch (ClassNotFoundException e) {
 			String cetCode = name.replaceFirst(".*\\.(.*)", "$1");
 			CustomEntityTemplate cet = cetService.findByCode(cetCode);
+			if (cet == null) {
+				throw e;
+			}
 			return compile(cet);
 		}
 		

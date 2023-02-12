@@ -25,6 +25,7 @@ public class StorageQuery {
 			}
 		}
 		query.setFilters(values);
+		query.setPaginationConfiguration(new PaginationConfiguration(values));
 		return query;
 	}
 	

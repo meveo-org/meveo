@@ -275,6 +275,8 @@
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
 				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-query</artifactId>

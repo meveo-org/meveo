@@ -2,6 +2,7 @@ package org.meveo.service.crm.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class JSONSchemaIntoJavaClassParser {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomRelation.class);
 		compilationUnit.addImport(List.class);
+		compilationUnit.addImport(Serializable.class);
         var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
         
         try {
@@ -153,6 +155,7 @@ public class JSONSchemaIntoJavaClassParser {
     public CompilationUnit parseJsonContentIntoJavaFile(String content, CustomEntityTemplate template) {
         CompilationUnit compilationUnit = new CompilationUnit();
         compilationUnit.addImport(CustomEntity.class);
+        compilationUnit.addImport(Serializable.class);
 		compilationUnit.addImport(List.class);
 
         var fields = customFieldService.findByAppliesTo(template.getAppliesTo());
@@ -178,6 +181,8 @@ public class JSONSchemaIntoJavaClassParser {
             compilationUnit.getClassByName((String) jsonMap.get("id"))
     		.ifPresent(cl -> {
                 cl.addImplementedType(CustomEntity.class);
+                cl.addImplementedType(Serializable.class);
+                
     			cl.tryAddImportToParentCompilationUnit(JsonIgnore.class);
 
     			cl.getMethodsByName("getUuid")
