@@ -275,6 +275,23 @@
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
 				</exclusion>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-query</artifactId>
+			<version>9.4.16.Final</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jboss-logging</artifactId>
+					<groupId>org.jboss.logging</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.jackson</groupId>
+					<artifactId>jackson-core-asl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.jackson</groupId>
+					<artifactId>jackson-mapper-asl</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
