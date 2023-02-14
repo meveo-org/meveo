@@ -339,11 +339,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     @SuppressWarnings("unchecked")
     public List<MeveoModuleItem> findModuleItem(String code, String className, String appliesTo) {
     	List<MeveoModuleItem> res;
-    	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m");
+    	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m", List.of("meveoModule"));
     	qb.addCriterion("itemCode", "=", code, true);
     	qb.addCriterion("itemClass", "=", className, true);
     	qb.addCriterion("appliesTo", "=", appliesTo, true);
-    	
     	try {
     		res = (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
     	} catch (NoResultException e) {
