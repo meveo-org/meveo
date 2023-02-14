@@ -98,6 +98,7 @@ public class GitRepositoryWatcher {
 	private void applyChanges(ChangeType type, File file, GitRepository gitRepository) {
 		File directory = GitHelper.getRepositoryDir(null, gitRepository);
 		String fileName = GitHelper.computeRelativePath(directory, file);
+		MeveoModule module = this.meveoModuleService.findByCodeWithFetchEntities(gitRepository.getCode());
 		log.info("{} detected on {} : {}", type, gitRepository.getCode(), fileName);
 		
 		Set<MeveoModuleItemDto> installItems = new HashSet<>();
@@ -110,11 +111,10 @@ public class GitRepositoryWatcher {
 		} else if (type == ChangeType.MODIFIED) {
 			moduleApi.compteItemsToUpdate(updateItems, gitRepository, directory, fileName);
 		} else if (type == ChangeType.DELETED) {
-			moduleApi.computeItemsToDelete(deleteItems, directory, fileName);
+			moduleApi.computeItemsToDelete(deleteItems, directory, fileName, module.getCode());
 		}
 		
 		if (!installItems.isEmpty() || !updateItems.isEmpty() || !deleteItems.isEmpty()) {
-			MeveoModule module = meveoModuleService.findByCodeWithFetchEntities(gitRepository.getCode());
 			if (module != null) {
 				try {
 					moduleApi.applyChanges(module, installItems, updateItems, deleteItems);
