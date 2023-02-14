@@ -1701,7 +1701,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 				
 			case DELETE:
 				fileName = diff.getOldPath();
-				computeItemsToDelete(deleteItems, directory, fileName, module.getCode());
+				computeItemsToDelete(deleteItems, directory, fileName);
 				break;
 				
 			case MODIFY:
@@ -1773,9 +1773,9 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 	}
 
-	public void computeItemsToDelete(Set<MeveoModuleItem> deleteItems, File directory, String fileName, String moduleCode) {
+	public void computeItemsToDelete(Set<MeveoModuleItem> deleteItems, File directory, String fileName) {
 		var itemtoDelete = getExistingItemFromFile(directory, fileName);
-		if (itemtoDelete != null && itemtoDelete.getMeveoModule().getCode().equals(moduleCode)) {
+		if (itemtoDelete != null) {
 			deleteItems.add(itemtoDelete);
 		}
 	}
