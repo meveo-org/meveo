@@ -11,6 +11,7 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.model.storage.StorageConfiguration;
 import org.meveo.persistence.DBStorageTypeService;
+import org.meveo.service.admin.impl.credentials.MvCredentialService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.storage.StorageConfigurationService;
 
@@ -19,6 +20,9 @@ public class StorageConfigurationApi extends BaseCrudApi<StorageConfiguration, S
 
 	@Inject
 	private StorageConfigurationService configurationService;
+	
+	@Inject
+	private MvCredentialService mvCredentialService;
 	
 	@Inject
 	private DBStorageTypeService dbStorageTypeService;
@@ -31,7 +35,19 @@ public class StorageConfigurationApi extends BaseCrudApi<StorageConfiguration, S
 	public StorageConfiguration fromDto(StorageConfigurationDto dto, StorageConfiguration entity) throws MeveoApiException, BusinessException {
 		entity = super.fromDto(dto, entity);
 		entity.setDbStorageType(dbStorageTypeService.find(dto.getDbStorageType()));
+		entity.setHostname(dto.getHostname());
+		entity.setPort(dto.getPort());
+		entity.setProtocol(dto.getProtocol());
+		if (dto.getCredential() != null) {
+			entity.setCredential(mvCredentialService.findByCode(dto.getCredential()));
+		} else {
+			entity.setCredential(null);
+		}
 		return entity;
+	}
+	
+	public StorageConfigurationDto toDto(StorageConfiguration entity) {
+		return new StorageConfigurationDto(entity);
 	}
 	
 	@Override

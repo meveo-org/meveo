@@ -42,13 +42,13 @@
 						field="description"
 						edit="#{storageConfigurationBean.entity.code ne 'default'}" />
 						
-					<hftl:formField label="Hostname" field="hostname" required="true"/>
+					<hftl:formField label="Hostname" field="hostname" required="false"/>
 						
 					<hftl:formField label="Protocol" field="protocol" required="false"/>
 					
 					<hftl:formField label="Port" field="port" required="false"/>
 						
-					<hftl:formField label="Credential" required="true"
+					<hftl:formField label="Credential" required="false"
 						field="credential" valueField="id" valueLabelField="code"
 						popup="false" listBean="#{mvCredentialBean}" />
 

@@ -21,12 +21,20 @@ public class StorageConfigurationDto extends CFBusinessEntityDto {
 	
 	private Integer port;
 	
+	public StorageConfigurationDto() {
+		
+	}
+	
 	public StorageConfigurationDto(StorageConfiguration conf) {
-		this.credential = conf.getCredential().getCode();
+		if (conf.getCredential() != null) {
+			this.credential = conf.getCredential().getCode();
+		}
 		this.dbStorageType = conf.getDbStorageType().getCode();
 		this.protocol = conf.getProtocol();
 		this.hostname = conf.getHostname();
 		this.port = conf.getPort();
+		this.code = conf.getCode();
+		this.description = conf.getDescription();
 	}
 
 	/**

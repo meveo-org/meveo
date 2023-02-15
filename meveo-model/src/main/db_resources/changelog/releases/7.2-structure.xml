@@ -229,5 +229,9 @@
   			ON CONFLICT DO NOTHING;
    		</sql>
 	</changeSet>
+	
+	<changeSet id="remove non null on storage_configuration.hostname" author="Clément Bareth">
+		<dropNotNullConstraint tableName="storage_configuration" columnName="hostname"/>
+	</changeSet>
 
 </databaseChangeLog>
