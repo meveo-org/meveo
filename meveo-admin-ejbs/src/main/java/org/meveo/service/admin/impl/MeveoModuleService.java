@@ -340,9 +340,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     public List<MeveoModuleItem> findModuleItem(String code, String className, String appliesTo) {
     	List<MeveoModuleItem> res;
     	QueryBuilder qb = new QueryBuilder(MeveoModuleItem.class, "m", List.of("meveoModule"));
-    	qb.addCriterion("itemCode", "=", code, true);
-    	qb.addCriterion("itemClass", "=", className, true);
-    	qb.addCriterion("appliesTo", "=", appliesTo, true);
+    	qb.addCriterion("m.itemCode", "=", code, true);
+    	qb.addCriterion("m.itemClass", "=", className, true);
+    	qb.addCriterion("m.appliesTo", "=", appliesTo, true);
     	try {
     		res = (List<MeveoModuleItem>) qb.getQuery(getEntityManager()).getResultList();
     	} catch (NoResultException e) {
