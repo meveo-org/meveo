@@ -77,4 +77,18 @@ public class ModuleScriptService implements Serializable {
         scriptContext.put(Script.CONTEXT_ENTITY, module);
         scriptInterface.postDisableModule(scriptContext);
     }
+    
+    public ModuleScriptInterface prePull(String scriptCode, MeveoModule module) throws ElementNotFoundException, InvalidScriptException, BusinessException {
+    	ModuleScriptInterface scriptInterface = (ModuleScriptInterface) scriptInstanceService.getScriptInstance(scriptCode);
+        Map<String, Object> scriptContext = new HashMap<String, Object>();
+        scriptContext.put(Script.CONTEXT_ENTITY, module);
+        scriptInterface.prePull(scriptContext);
+        return scriptInterface;
+    }
+    
+    public void postPull(ModuleScriptInterface scriptInterface, MeveoModule module) throws ElementNotFoundException, InvalidScriptException, BusinessException {
+        Map<String, Object> scriptContext = new HashMap<String, Object>();
+        scriptContext.put(Script.CONTEXT_ENTITY, module);
+        scriptInterface.postPull(scriptContext);
+    }
 }
