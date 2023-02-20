@@ -41,4 +41,12 @@ public class ModuleScript extends Script implements ModuleScriptInterface {
     @Override
     public void postDisableModule(java.util.Map<String, Object> methodContext) throws BusinessException {
     }
+    
+    @Override
+    public void prePull(Map<String, Object> methodContext) throws BusinessException {	
+    }
+    
+    @Override
+    public void postPull(Map<String, Object> methodContext) throws BusinessException {	
+    }
 }
