@@ -79,4 +79,24 @@ public interface ModuleScriptInterface extends ScriptInterface {
      * @throws BusinessException business exception.
      */
     public void postDisableModule(Map<String, Object> methodContext) throws BusinessException;
+    
+    /**
+     * Module being deactivated - called after deactivation completes successfully. Not called when active module is being deinstalled - only when deactivating an installed and
+     * active module
+     * 
+     * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+     * 
+     * @throws BusinessException business exception.
+     */
+    public void prePull(Map<String, Object> methodContext) throws BusinessException;
+    
+    /**
+     * Module being deactivated - called after deactivation completes successfully. Not called when active module is being deinstalled - only when deactivating an installed and
+     * active module
+     * 
+     * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+     * 
+     * @throws BusinessException business exception.
+     */
+    public void postPull(Map<String, Object> methodContext) throws BusinessException;
 }

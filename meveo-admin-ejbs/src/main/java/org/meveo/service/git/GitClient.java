@@ -81,8 +81,12 @@ import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
+import org.meveo.service.script.module.ModuleScriptInterface;
+import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.synchronization.KeyLock;
 import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
@@ -125,6 +129,12 @@ public class GitClient {
 
     @Inject
     private KeyLock keyLock;
+    
+    @Inject
+	private MeveoModuleService meveoModuleService;
+    
+    @Inject
+    private ModuleScriptService moduleScriptService; 
     
     @Inject
     private static Logger log = LoggerFactory.getLogger(GitClient.class);
@@ -492,6 +502,18 @@ public class GitClient {
         if (!gitRepository.isRemote()) {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
+        
+        MeveoModule module = meveoModuleService.list().stream()
+        		.filter(m -> m.getGitRepository() != null && gitRepository.getCode().equals(m.getGitRepository().getCode()))
+        		.findFirst()
+        		.get();
+        
+		ModuleScriptInterface moduleScript = null;
+		if (module != null && module.getScript() != null) {
+		    moduleScript = moduleScriptService.prePull(module.getScript().getCode(), module);;
+		} else {
+			log.warn("Couldn't find module script, pull actions can't be executed");
+		}
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
@@ -534,6 +556,10 @@ public class GitClient {
 
         } finally {
             keyLock.unlock(gitRepository.getCode());
+            
+			if (moduleScript != null) {
+				moduleScriptService.postPull(moduleScript, module);
+			}
         }
 
     }
