@@ -503,10 +503,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
         
-        MeveoModule module = meveoModuleService.list().stream()
-        		.filter(m -> m.getGitRepository() != null && gitRepository.getCode().equals(m.getGitRepository().getCode()))
-        		.findFirst()
-        		.get();
+        MeveoModule module = meveoModuleService.findByGitRepoCode(gitRepository.getCode());
         
 		ModuleScriptInterface moduleScript = null;
 		if (module != null && module.getScript() != null) {
@@ -546,6 +543,10 @@ public class GitClient {
 
         	git.submoduleUpdate().call();
         	
+        	if (moduleScript != null) {
+        		moduleScriptService.postPull(moduleScript, module);
+        	}
+        	
         	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 
         } catch (IOException e) {
@@ -556,10 +557,6 @@ public class GitClient {
 
         } finally {
             keyLock.unlock(gitRepository.getCode());
-            
-			if (moduleScript != null) {
-				moduleScriptService.postPull(moduleScript, module);
-			}
         }
 
     }
