@@ -508,8 +508,6 @@ public class GitClient {
 		ModuleScriptInterface moduleScript = null;
 		if (module != null && module.getScript() != null) {
 		    moduleScript = moduleScriptService.prePull(module.getScript().getCode(), module);;
-		} else {
-			log.warn("Couldn't find module script, pull actions can't be executed");
 		}
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
