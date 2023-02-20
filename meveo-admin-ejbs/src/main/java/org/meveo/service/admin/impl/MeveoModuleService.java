@@ -1012,6 +1012,18 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	        gitClient.commitFiles(gitRepository, Collections.singletonList(newJsonFile), message);
     	}
 	}
-	
-	
+
+    public MeveoModule findByGitRepoCode(String repoCode) {
+    	
+    	String query = "";
+    	query += "SELECT m FROM MeveoModule m, GitRepository g ";
+    	query += "WHERE m.gitRepository = g.id ";
+    	query += "AND g.code = '" + repoCode + "'";
+    	
+        try {
+            return getEntityManager().createQuery(query, MeveoModule.class).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }
