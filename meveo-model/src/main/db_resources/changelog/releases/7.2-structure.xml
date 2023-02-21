@@ -234,4 +234,13 @@
 		<dropNotNullConstraint tableName="storage_configuration" columnName="hostname"/>
 	</changeSet>
 
+	<changeSet id="#684 add columns for git repo automatic pulle" author="Quentin Tixier">
+		<addColumn tableName="git_repository">
+			<column name="auto_pull" type="${type.boolean}" defaultValueNumeric="0"/>
+			<column name="auto_pull_timer_id" type="int8">
+				<constraints foreignKeyName="fk_auto_pull_timer_id" references="meveo_timer(id)" nullable="true"/>
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>
