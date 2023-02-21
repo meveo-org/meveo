@@ -79,10 +79,14 @@ import org.meveo.event.qualifier.git.CommitEvent;
 import org.meveo.event.qualifier.git.CommitReceived;
 import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
+import org.meveo.model.ModulePostPull;
+import org.meveo.model.ModulePrePull;
 import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.synchronization.KeyLock;
 import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
@@ -125,6 +129,17 @@ public class GitClient {
 
     @Inject
     private KeyLock keyLock;
+    
+    @Inject
+    private MeveoModuleService meveoModuleService;
+    
+    @Inject
+    @ModulePrePull
+    private Event<MeveoModule> modulePrePull;
+    
+    @Inject
+    @ModulePostPull
+    private Event<MeveoModule> modulePostPull;
     
     @Inject
     private static Logger log = LoggerFactory.getLogger(GitClient.class);
@@ -493,6 +508,9 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
+        MeveoModule module = meveoModuleService.findByGitRepoCode(gitRepository.getCode());
+        modulePrePull.fire(module);
+
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
@@ -523,6 +541,8 @@ public class GitClient {
             }
 
         	git.submoduleUpdate().call();
+        	
+        	modulePostPull.fire(module);
         	
         	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 

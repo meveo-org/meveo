@@ -133,8 +133,6 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.script.module.ModuleScriptInterface;
-import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.reflections.Reflections;
@@ -222,9 +220,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
     
     @Inject
     private DefaultMeveoModuleInitializer defaultMeveoModuleInitializer;
-    
-    @Inject
-    private ModuleScriptService moduleScriptService; 
     
 	public MeveoModuleApi() {
 		super(MeveoModule.class, MeveoModuleDto.class);
@@ -1680,12 +1675,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (module == null) {
 			return;
 		}
-        
-		ModuleScriptInterface moduleScript = null;
-		if (module != null && module.getScript() != null) {
-		    moduleScript = moduleScriptService.prePull(module.getScript().getCode(), module);;
-		}
-		
 		Set<MeveoModuleItemDto> installItems = new HashSet<>();
 		Set<MeveoModuleItemDto> updateItems = new HashSet<>();
 		Set<MeveoModuleItem> deleteItems = new HashSet<>();
@@ -1737,10 +1726,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		}
 		
 		applyChanges(module, installItems, updateItems, deleteItems);
-		
-    	if (moduleScript != null) {
-    		moduleScriptService.postPull(moduleScript, module);
-    	}
 	}
 
 	public void applyChanges(MeveoModule module, Set<MeveoModuleItemDto> installItems, Set<MeveoModuleItemDto> updateItems, Set<MeveoModuleItem> deleteItems) throws MeveoApiException, Exception, BusinessException {
