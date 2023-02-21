@@ -86,9 +86,11 @@ public class ModuleScriptService implements Serializable {
         return scriptInterface;
     }
     
-    public void postPull(ModuleScriptInterface scriptInterface, MeveoModule module) throws ElementNotFoundException, InvalidScriptException, BusinessException {
+    public ModuleScriptInterface postPull(String scriptCode, MeveoModule module) throws ElementNotFoundException, InvalidScriptException, BusinessException {
+        ModuleScriptInterface scriptInterface = (ModuleScriptInterface) scriptInstanceService.getScriptInstance(scriptCode);
         Map<String, Object> scriptContext = new HashMap<String, Object>();
         scriptContext.put(Script.CONTEXT_ENTITY, module);
         scriptInterface.postPull(scriptContext);
+        return scriptInterface;
     }
 }
