@@ -81,12 +81,8 @@ import org.meveo.event.qualifier.git.Commited;
 import org.meveo.exceptions.EntityAlreadyExistsException;
 import org.meveo.model.git.GitBranch;
 import org.meveo.model.git.GitRepository;
-import org.meveo.model.module.MeveoModule;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
-import org.meveo.service.admin.impl.MeveoModuleService;
-import org.meveo.service.script.module.ModuleScriptInterface;
-import org.meveo.service.script.module.ModuleScriptService;
 import org.meveo.synchronization.KeyLock;
 import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
@@ -129,12 +125,6 @@ public class GitClient {
 
     @Inject
     private KeyLock keyLock;
-    
-    @Inject
-	private MeveoModuleService meveoModuleService;
-    
-    @Inject
-    private ModuleScriptService moduleScriptService; 
     
     @Inject
     private static Logger log = LoggerFactory.getLogger(GitClient.class);
@@ -502,13 +492,6 @@ public class GitClient {
         if (!gitRepository.isRemote()) {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
-        
-        MeveoModule module = meveoModuleService.findByGitRepoCode(gitRepository.getCode());
-        
-		ModuleScriptInterface moduleScript = null;
-		if (module != null && module.getScript() != null) {
-		    moduleScript = moduleScriptService.prePull(module.getScript().getCode(), module);;
-		}
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
@@ -540,10 +523,6 @@ public class GitClient {
             }
 
         	git.submoduleUpdate().call();
-        	
-        	if (moduleScript != null) {
-        		moduleScriptService.postPull(moduleScript, module);
-        	}
         	
         	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 
