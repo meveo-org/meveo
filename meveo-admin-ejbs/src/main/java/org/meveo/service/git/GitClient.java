@@ -509,7 +509,9 @@ public class GitClient {
         }
 
         MeveoModule module = meveoModuleService.findByGitRepoCode(gitRepository.getCode());
-        modulePrePull.fire(module);
+        if(module != null) {
+        	modulePrePull.fire(module);        	
+        }
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
@@ -542,7 +544,9 @@ public class GitClient {
 
         	git.submoduleUpdate().call();
         	
-        	modulePostPull.fire(module);
+        	if(module != null) {
+        		modulePostPull.fire(module);
+        	}
         	
         	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 
