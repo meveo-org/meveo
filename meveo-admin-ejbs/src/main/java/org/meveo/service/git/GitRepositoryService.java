@@ -17,10 +17,20 @@
 package org.meveo.service.git;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+import javax.ejb.ScheduleExpression;
 import javax.ejb.Stateless;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.event.TransactionPhase;
@@ -32,12 +42,15 @@ import javax.transaction.Transactional;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.cache.CacheKeyLong;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.event.qualifier.Created;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.git.GitRepository;
+import org.meveo.model.jobs.TimerEntity;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +80,9 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         MEVEO_DIR.setDefaultRemoteUsername(remoteUsername);
         MEVEO_DIR.setClearDefaultRemotePassword(remotePassword);
     }
+    
+    @Resource
+    protected TimerService timerService;
 
     @Inject
     private GitClient gitClient;
@@ -76,6 +92,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Inject
     @CurrentUser
     private MeveoUser currentUser;
+    
+    private static Map<CacheKeyLong, Timer> autoPullTimers = new HashMap<>();
 
     /**
      * Initialize the Meveo repository if not initialized
@@ -195,6 +213,10 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     public void remove( GitRepository entity) throws BusinessException {
         super.remove(entity);
         gitClient.remove(entity);
+        
+        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        	unScheduleAutoPull(entity.getId());
+        }
     }
 
     /**
@@ -206,17 +228,28 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     public void create( GitRepository entity) throws BusinessException {
         gitClient.create(entity, false, null, null);
         super.create(entity);
+        
+        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        	String username = entity.getDefaultRemoteUsername();
+    		String password = PasswordUtils.decrypt(entity.getSalt(), entity.getDefaultRemotePassword());
+    		
+        	scheduleAutoPull(entity, username, password);
+        }
     }
 
     @Transactional
     public GitRepository create( GitRepository entity, boolean failIfExist, String username, String password) throws BusinessException {
         gitClient.create(entity, failIfExist, username, password);
+        
         super.create(entity);
+        
+        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        	scheduleAutoPull(entity, username, password);
+        }
+        
         return entity;
     }
     
-    
-
     @Override
 	public GitRepository update(GitRepository entity) throws BusinessException {
     	super.update(entity);
@@ -224,6 +257,21 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	gitClient.checkout(entity, entity.getDefaultBranch(), true);
     	if (entity.getRemoteOrigin() != null) {
     		gitClient.setRemote(entity);
+    	}
+    	
+    	if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+    		Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), entity.getId()));
+    		String username = entity.getDefaultRemoteUsername();
+    		String password = PasswordUtils.decrypt(entity.getSalt(), entity.getDefaultRemotePassword());
+    		
+    		if(autoPullTimer == null) {
+    			// no timer was set before
+    			scheduleAutoPull(entity, username, password);
+    		} else if(!autoPullTimer.getSchedule().equals(getScheduleExpression(entity.getAutoPullTimer()))) {
+				// timer was changed
+				unScheduleAutoPull(entity.getId());
+				scheduleAutoPull(entity, username, password);
+    		}
     	}
     	
 		return entity;
@@ -254,5 +302,59 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
      */
     public void onCreationFailed(@Observes(during = TransactionPhase.AFTER_FAILURE) @Created GitRepository repo) throws BusinessException {
     	gitClient.remove(repo);
+    }
+    
+    public void scheduleAutoPull(GitRepository repo, String username, String password) {
+    	ScheduleExpression scheduleExpression = getScheduleExpression(repo.getAutoPullTimer());
+    	
+    	TimerConfig timerConfig = new TimerConfig();
+    	
+    	timerConfig.setInfo(new GitPullTask(username, password, repo.getId()));
+    	Timer timer = timerService.createCalendarTimer(scheduleExpression, timerConfig);
+    	
+    	autoPullTimers.put(new CacheKeyLong(currentUser.getProviderCode(), repo.getId()), timer);
+    }
+     
+    public void unScheduleAutoPull(Long repoId) {
+    	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), repoId));
+    	
+    	if(autoPullTimer != null) {
+    		autoPullTimer.cancel();
+    		autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repoId));
+    	} else {
+    		// TODO
+    	}
+    }
+    
+    @Timeout
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public void trigger(Timer timer) {
+    	GitRepository gitRepo = null;
+    	
+    	if (timer.getInfo() instanceof GitPullTask) {
+    		GitPullTask gitPullTask = (GitPullTask) timer.getInfo();
+    		gitRepo = this.findById(gitPullTask.getRepoId());
+    		
+    		try {
+    			gitClient.pull(gitRepo, gitPullTask.getUser(), gitPullTask.getPassword());
+    		} catch (BusinessException e) {
+    			log.error("Couldn't auto pull on repo " + gitRepo.getCode());
+    		}
+    	}
+    }
+    
+    private ScheduleExpression getScheduleExpression(TimerEntity timerEntity) {
+        ScheduleExpression expression = new ScheduleExpression();
+        expression.dayOfMonth(timerEntity.getDayOfMonth());
+        expression.dayOfWeek(timerEntity.getDayOfWeek());
+        expression.end(timerEntity.getEnd());
+        expression.hour(timerEntity.getHour());
+        expression.minute(timerEntity.getMinute());
+        expression.month(timerEntity.getMonth());
+        expression.second(timerEntity.getSecond());
+        expression.start(timerEntity.getStart());
+        expression.year(timerEntity.getYear());
+        expression.timezone(timerEntity.getTimezone());
+        return expression;
     }
 }
