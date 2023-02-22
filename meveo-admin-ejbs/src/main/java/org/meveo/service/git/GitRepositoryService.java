@@ -215,7 +215,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         gitClient.remove(entity);
         
         if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
-        	unScheduleAutoPull(entity.getId());
+        	unScheduleAutoPull(entity);
         }
     }
 
@@ -230,10 +230,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.create(entity);
         
         if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
-        	String username = entity.getDefaultRemoteUsername();
-    		String password = PasswordUtils.decrypt(entity.getSalt(), entity.getDefaultRemotePassword());
-    		
-        	scheduleAutoPull(entity, username, password);
+        	scheduleAutoPull(entity);
         }
     }
 
@@ -244,7 +241,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.create(entity);
         
         if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
-        	scheduleAutoPull(entity, username, password);
+        	scheduleAutoPull(entity);
         }
         
         return entity;
@@ -261,20 +258,17 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	
     	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), entity.getId()));
     	if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
-    		String username = entity.getDefaultRemoteUsername();
-    		String password = PasswordUtils.decrypt(entity.getSalt(), entity.getDefaultRemotePassword());
-    		
     		if(autoPullTimer == null) {
     			// no timer was set before
-    			scheduleAutoPull(entity, username, password);
+    			scheduleAutoPull(entity);
     		} else if(!autoPullTimer.getSchedule().equals(getScheduleExpression(entity.getAutoPullTimer()))) {
 				// timer was changed
-				unScheduleAutoPull(entity.getId());
-				scheduleAutoPull(entity, username, password);
+				unScheduleAutoPull(entity);
+				scheduleAutoPull(entity);
     		}
     	} else if((!entity.isAutoPull() || entity.getAutoPullTimer() == null) && autoPullTimer != null) {
     		// timer was removed
-    		unScheduleAutoPull(entity.getId());
+    		unScheduleAutoPull(entity);
     	}
     	
 		return entity;
@@ -307,44 +301,56 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	gitClient.remove(repo);
     }
     
-    public void scheduleAutoPull(GitRepository repo, String username, String password) {
+    public void scheduleAutoPull(GitRepository repo) {
     	ScheduleExpression scheduleExpression = getScheduleExpression(repo.getAutoPullTimer());
-    	
     	TimerConfig timerConfig = new TimerConfig();
+    	timerConfig.setInfo("auto_pull_" + repo.getId());
+    	timerConfig.setPersistent(false);
     	
-    	timerConfig.setInfo(new GitPullTask(username, password, repo.getId()));
     	Timer timer = timerService.createCalendarTimer(scheduleExpression, timerConfig);
     	
     	autoPullTimers.put(new CacheKeyLong(currentUser.getProviderCode(), repo.getId()), timer);
     	
-    	log.info("Scheduled auto pull for git repo " + repo.getCode() + " with id " + repo.getId());
+    	log.info("Scheduled auto pull for git repo " + repo.getCode());
     }
      
-    public void unScheduleAutoPull(Long repoId) {
-    	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), repoId));
+    public void unScheduleAutoPull(GitRepository repo) {
+    	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), repo.getId()));
     	
     	if(autoPullTimer != null) {
     		autoPullTimer.cancel();
     	}
-    	autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repoId));
+    	autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repo.getId()));
     	
-    	log.info("Unscheuled auto pull for git repo with id " + repoId);
+    	log.info("Unscheduled auto pull for git repo " + repo.getCode());
+    }
+    
+    public void scheduleAllAutoPulls() {
+    	List<GitRepository> activeRepos = this.listActive();
+    	for(GitRepository repo : activeRepos) {
+    		if(repo.isAutoPull() && repo.getAutoPullTimer() != null) {
+    			scheduleAutoPull(repo);
+    		}
+    	}
     }
     
     @Timeout
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public void trigger(Timer timer) {
-    	GitRepository gitRepo = null;
-    	
-    	if (timer.getInfo() instanceof GitPullTask) {
-    		GitPullTask gitPullTask = (GitPullTask) timer.getInfo();
-    		gitRepo = this.findById(gitPullTask.getRepoId());
-    		
-    		try {
-    			gitClient.pull(gitRepo, gitPullTask.getUser(), gitPullTask.getPassword());
-    			log.info("Auto pull on repo " + gitRepo.getCode());
-    		} catch (BusinessException e) {
-    			log.error("Couldn't auto pull on repo " + gitRepo.getCode());
+    	if(timer.getInfo() instanceof String && ((String) timer.getInfo()).startsWith("auto_pull_")) {
+    		GitRepository gitRepo = this.findById(Long.valueOf(((String) timer.getInfo()).replaceAll("auto_pull_", "")));
+    		if(gitRepo != null) {    			
+    			String username = gitRepo.getDefaultRemoteUsername();
+    			String password = PasswordUtils.decrypt(gitRepo.getSalt(), gitRepo.getDefaultRemotePassword());
+    			
+    			try {
+    				gitClient.pull(gitRepo, username, password);
+    				log.info("Auto pull on repo " + gitRepo.getCode());
+    			} catch (BusinessException e) {
+    				log.error("Couldn't auto pull on repo " + gitRepo.getCode());
+    			}
+    		} else {    			
+    			log.error("Couldn't find repo for auto pull with id " + ((String) timer.getInfo()).replaceAll("auto_pull_", ""));
     		}
     	}
     }
