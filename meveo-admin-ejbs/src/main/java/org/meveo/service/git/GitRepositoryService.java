@@ -316,6 +316,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	Timer timer = timerService.createCalendarTimer(scheduleExpression, timerConfig);
     	
     	autoPullTimers.put(new CacheKeyLong(currentUser.getProviderCode(), repo.getId()), timer);
+    	
+    	log.info("Scheduled auto pull for git repo " + repo.getCode() + " with id " + repo.getId());
     }
      
     public void unScheduleAutoPull(Long repoId) {
@@ -323,8 +325,10 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	
     	if(autoPullTimer != null) {
     		autoPullTimer.cancel();
-    		autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repoId));
     	}
+    	autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repoId));
+    	
+    	log.info("Unscheuled auto pull for git repo with id " + repoId);
     }
     
     @Timeout
