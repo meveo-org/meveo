@@ -259,8 +259,8 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     		gitClient.setRemote(entity);
     	}
     	
+    	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), entity.getId()));
     	if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
-    		Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), entity.getId()));
     		String username = entity.getDefaultRemoteUsername();
     		String password = PasswordUtils.decrypt(entity.getSalt(), entity.getDefaultRemotePassword());
     		
@@ -272,6 +272,9 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 				unScheduleAutoPull(entity.getId());
 				scheduleAutoPull(entity, username, password);
     		}
+    	} else if((!entity.isAutoPull() || entity.getAutoPullTimer() == null) && autoPullTimer != null) {
+    		// timer was removed
+    		unScheduleAutoPull(entity.getId());
     	}
     	
 		return entity;
@@ -321,8 +324,6 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	if(autoPullTimer != null) {
     		autoPullTimer.cancel();
     		autoPullTimers.remove(new CacheKeyLong(currentUser.getProviderCode(), repoId));
-    	} else {
-    		// TODO
     	}
     }
     
@@ -337,6 +338,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     		
     		try {
     			gitClient.pull(gitRepo, gitPullTask.getUser(), gitPullTask.getPassword());
+    			log.info("Auto pull on repo " + gitRepo.getCode());
     		} catch (BusinessException e) {
     			log.error("Couldn't auto pull on repo " + gitRepo.getCode());
     		}
