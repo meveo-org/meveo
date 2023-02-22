@@ -44,6 +44,10 @@
 					field="defaultBranch" />
 				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
 				<hftl:formField label="Dev mode" field="devMode"/>
+				<h:panelGrid columns="1">
+					<p:outputLabel value="#{messages['gitRepositories.cloneUrl']}" />
+					<p:outputLabel value="#{gitRepositoryBean.getGitCloneUrl()}" />
+				</h:panelGrid>
 				<hftl:formField label="Automatic pull" field="autoPull"/>
 				<hftl:decorateFormField fieldId="timer" label="Automatic pull timer">
 					<p:selectOneMenu id="timer" value="#{gitRepositoryBean.entity.autoPullTimer}" disabled="#{!gitRepositoryBean.entity.autoPull}">

@@ -1675,7 +1675,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (module == null) {
 			return;
 		}
-		
 		Set<MeveoModuleItemDto> installItems = new HashSet<>();
 		Set<MeveoModuleItemDto> updateItems = new HashSet<>();
 		Set<MeveoModuleItem> deleteItems = new HashSet<>();

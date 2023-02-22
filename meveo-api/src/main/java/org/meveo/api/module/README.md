@@ -54,6 +54,8 @@ The `ModuleScriptInterface` provides several method to react to the module lifec
 - `postEnableModule`: called after the module is enabled
 - `preDisableModule`: called before the module is deactivated
 - `postDisableModule`: called after the module is deactivated
+- `prePull`: called before the git repository linked to the module is pulled
+- `prePull`: called after the git repository linked to the module is pulled
 
 ### Using notifications
 
