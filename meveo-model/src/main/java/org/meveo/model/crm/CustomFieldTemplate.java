@@ -900,7 +900,9 @@ public class CustomFieldTemplate extends BusinessEntity {
 	 * @return the reference entity clazz cet code
 	 */
     public String getReferenceEntityClazzCetCode() {
-        return "Reference to "+ CustomFieldTemplate.retrieveCetCode(entityClazz);
+        boolean isChildEntity = CustomFieldTypeEnum.CHILD_ENTITY.equals(this.fieldType);
+        String labelPrefix = isChildEntity ? "Child entity - " : "Reference to ";
+        return labelPrefix + CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
 
     /**
