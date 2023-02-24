@@ -23,6 +23,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -121,7 +122,7 @@ public class GitRepository extends BusinessEntity {
     @Type(type = "numeric_boolean")
     private boolean autoPull;
     
-    @OneToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auto_pull_timer_id", referencedColumnName = "id")
     private TimerEntity autoPullTimer;
 
