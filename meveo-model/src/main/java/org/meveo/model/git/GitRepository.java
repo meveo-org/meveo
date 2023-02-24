@@ -21,6 +21,10 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -34,6 +38,7 @@ import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
+import org.meveo.model.jobs.TimerEntity;
 import org.meveo.model.persistence.JsonTypes;
 import org.meveo.security.PasswordUtils;
 
@@ -112,6 +117,14 @@ public class GitRepository extends BusinessEntity {
     @Column(name = "dev_mode")
     @Type(type = "numeric_boolean")
     private boolean devMode;
+    
+    @Column(name = "auto_pull")
+    @Type(type = "numeric_boolean")
+    private boolean autoPull;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "auto_pull_timer_id", referencedColumnName = "id")
+    private TimerEntity autoPullTimer;
 
     @Transient //FIXME: persist it
     private List<String> watchedDirectories;
@@ -290,5 +303,20 @@ public class GitRepository extends BusinessEntity {
 	public void setWatchedDirectories(List<String> watchedDirectories) {
 		this.watchedDirectories = watchedDirectories;
 	}
-    
+
+	public boolean isAutoPull() {
+		return autoPull;
+	}
+
+	public void setAutoPull(boolean autoPull) {
+		this.autoPull = autoPull;
+	}
+
+	public TimerEntity getAutoPullTimer() {
+		return autoPullTimer;
+	}
+
+	public void setAutoPullTimer(TimerEntity autoPullTimer) {
+		this.autoPullTimer = autoPullTimer;
+	}
 }
