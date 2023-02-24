@@ -19,12 +19,11 @@ package org.meveo.model.git;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -39,7 +38,6 @@ import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
 import org.meveo.model.ObservableEntity;
 import org.meveo.model.jobs.TimerEntity;
-import org.meveo.model.module.MeveoModuleSource;
 import org.meveo.model.persistence.JsonTypes;
 import org.meveo.security.PasswordUtils;
 
@@ -123,7 +121,7 @@ public class GitRepository extends BusinessEntity {
     @Type(type = "numeric_boolean")
     private boolean autoPull;
     
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "auto_pull_timer_id", referencedColumnName = "id")
     private TimerEntity autoPullTimer;
 
