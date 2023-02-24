@@ -4,12 +4,9 @@
 package org.meveo.model.admin;
 
 import java.time.Instant;
+import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
@@ -30,7 +27,7 @@ public class MvCredential extends BusinessCFEntity {
     private static final long serialVersionUID = 3133165825335371795L;
 
     @Column(name = "api_key")
-	private String apiKey;
+	  private String apiKey;
 
     @Column(name = "header_value")
     private String headerValue;
@@ -74,6 +71,11 @@ public class MvCredential extends BusinessCFEntity {
 
     @Column(name = "username")
     private String username;
+
+    @ElementCollection
+    @Column(name="extra_parameters")
+    private Map<String, String> extraParameters;
+
     
     public String getApiKey() {
         return apiKey;
@@ -201,10 +203,19 @@ public class MvCredential extends BusinessCFEntity {
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
+    public Map<String, String> getExtraParameters() {
+        return extraParameters;
+    }
+
+    public void setExtraParameters(Map<String, String> extraParameters) {
+        this.extraParameters = extraParameters;
+    }
+
     public enum AuthenticationType {
-    	HTTP_BASIC,
-    	HEADER,
+      API_KEY,
+      HEADER,
+      HTTP_BASIC,
     	OAUTH2,
     	SSH
     }
