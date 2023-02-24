@@ -347,7 +347,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     				gitClient.pull(gitRepo, username, password);
     				log.info("Auto pull on repo " + gitRepo.getCode());
     			} catch (BusinessException e) {
-    				log.error("Couldn't auto pull on repo " + gitRepo.getCode());
+    				log.error("Couldn't auto pull on repo " + gitRepo.getCode(), e);
     			}
     		} else {    			
     			log.error("Couldn't find repo for auto pull with id " + ((String) timer.getInfo()).replaceAll("auto_pull_", ""));
