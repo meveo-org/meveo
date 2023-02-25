@@ -19,6 +19,7 @@ import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.Provider;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.crm.impl.ProviderService;
+import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.model.SortOrder;
@@ -66,6 +67,9 @@ public class ApplicationInitializer {
 
     @Inject
     private JobCacheContainerProvider jobCache;
+
+    @Inject
+    private GitRepositoryService gitRepositoryService; 
 
     @Inject
     protected ParamBeanFactory paramBeanFactory;
@@ -121,6 +125,7 @@ public class ApplicationInitializer {
 
         // Register jobs
         jobInstanceService.registerJobs();
+        gitRepositoryService.scheduleAllAutoPulls();
 
         try {
             scriptInstanceService.constructClassPath();

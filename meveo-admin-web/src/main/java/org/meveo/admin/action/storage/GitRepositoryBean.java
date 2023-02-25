@@ -3,6 +3,7 @@ package org.meveo.admin.action.storage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -26,6 +27,7 @@ import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.exception.MissingModuleException;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.api.module.MeveoModuleApi;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -418,5 +420,25 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	 */
 	public List<ModuleDependencyDto> getMissingDependencies() {
 		return missingDependencies;
+	}
+
+	public String getGitCloneUrl() {
+		try {
+			ParamBean paramBean = ParamBean.getInstance();			
+			String webContext = paramBean.getProperty("meveo.admin.webContext", "meveo");
+			String baseUrlConfig = paramBean.getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
+			URL baseUrl = new URL(baseUrlConfig);
+
+			return baseUrl.getProtocol() + "://"
+				+ currentUser.getUserName() 
+				+ ":<password>@" 
+				+ baseUrlConfig.replace(baseUrl.getProtocol() + "://","") 
+				+ webContext 
+				+ "/git/" 
+				+ this.entity.getCode();
+		}
+		catch(Exception  ex) {
+			return ex.toString();
+		}
 	}
 }

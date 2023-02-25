@@ -79,4 +79,22 @@ public interface ModuleScriptInterface extends ScriptInterface {
      * @throws BusinessException business exception.
      */
     public void postDisableModule(Map<String, Object> methodContext) throws BusinessException;
+    
+    /**
+     * Pull on git repository linked to meveo module - called before pulling
+     * 
+     * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+     * 
+     * @throws BusinessException business exception.
+     */
+    public void prePull(Map<String, Object> methodContext) throws BusinessException;
+    
+    /**
+     * Pull on git repository linked to meveo module - called after pulling
+     * 
+     * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+     * 
+     * @throws BusinessException business exception.
+     */
+    public void postPull(Map<String, Object> methodContext) throws BusinessException;
 }

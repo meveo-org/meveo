@@ -84,6 +84,7 @@ import org.meveo.commons.utils.MeveoFileUtils;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Removed;
+import org.meveo.model.CustomEntity;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
@@ -313,6 +314,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             Collection<?> collection = (Collection<?>) JacksonUtil.convert(classAndValue.getValue(), jacksonType);
                             method.invoke(scriptInstance, collection);
 
+                        } else if (classAndValue.getValue() instanceof CustomEntity) {
+                            Object convertedValue = JacksonUtil.convert(classAndValue.getValue(), method.getParameters()[0].getType());
+                            method.invoke(scriptInstance, convertedValue);
+                            
                         } else {
                             staticLogger.error("Failed to invoke setter {} with input values {}", method.getName(), context);
                             throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());

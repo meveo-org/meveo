@@ -1675,7 +1675,6 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		if (module == null) {
 			return;
 		}
-		
 		Set<MeveoModuleItemDto> installItems = new HashSet<>();
 		Set<MeveoModuleItemDto> updateItems = new HashSet<>();
 		Set<MeveoModuleItem> deleteItems = new HashSet<>();
@@ -1747,7 +1746,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		// Add new items
 		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(installItems)) {
-			meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.FAIL);
+			meveoModuleItemInstaller.unpackAndInstallModuleItem(module, itemDto, OnDuplicate.SKIP);
 		}
 		
 		// Update existing items
