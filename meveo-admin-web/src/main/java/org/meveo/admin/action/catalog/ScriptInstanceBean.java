@@ -19,6 +19,7 @@
 package org.meveo.admin.action.catalog;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import org.meveo.api.dto.ScriptInstanceDto;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.JpaAmpNewTx;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Accessor;
 import org.meveo.model.scripts.CustomScript;
 import org.meveo.model.scripts.FunctionIO;
@@ -68,12 +70,14 @@ import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.NodeSelectEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 
@@ -121,11 +125,15 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 	private List<ScriptIO> outputs = new ArrayList<>();
 
 	private List<MavenDependency> mavenDependencies;
+	private List<ScriptTemplate> scriptTemplates = new ArrayList<>();
+	
 	private MavenDependency mavenDependency = new MavenDependency();
 
 	private TreeNode rootNode;
 
     private TreeNode selectedNode;
+    
+    private ScriptTemplate selectedTemplate;
 
     public void initialize() {
         rootNode = computeRootNode();
@@ -198,15 +206,71 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 			return;
 		}
 	}
+	
+	public void onTemplateSelected(SelectEvent event) {
+		if (selectedTemplate != null) {
+			String template = selectedTemplate.getTemplate();
+			if (template != null) {
+				entity.setScript(template);
+			}
+		}
+	}
+	
+	/**
+	 * @param selectedTemplate the selectedTemplate to set
+	 */
+	public void setSelectedTemplate(ScriptTemplate selectedTemplate) {
+		this.selectedTemplate = selectedTemplate;
+	}
+	
+	/**
+	 * @return the {@link #selectedTemplate}
+	 */
+	public ScriptTemplate getSelectedTemplate() {
+		return selectedTemplate;
+	}
+	
+	public List<ScriptTemplate> getScriptTemplates() throws Exception {
+		return this.getScriptTemplates(null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<ScriptTemplate> getScriptTemplates(String query) throws Exception {
+		if (scriptTemplates.isEmpty()) {
+			scriptTemplates = JacksonUtil.read(
+					this.getClass().getResourceAsStream("/templates/functions.json"), 
+					new TypeReference<List<ScriptTemplate>>() {}
+				);
+		}
+		
+		if (StringUtils.isBlank(query)) {
+			return scriptTemplates;
+		}
+		
+		List<ScriptTemplate> selection = new ArrayList<>();
+		scriptTemplates.forEach(template -> {
+			if (template.getCode().toLowerCase().contains(query.toLowerCase())) {
+				selection.add(template);
+			} else {
+				String description = template.getDescription();
+				if (description != null && description.toLowerCase().contains(query.toLowerCase())) {
+					selection.add(template);
+				}
+			}
+		});
+		return selection;
+	}
 
-	@SuppressWarnings("deprecation")
 	public String getSourceCode() throws IOException {
 		if (!StringUtils.isBlank(entity.getScript())) {
 			return entity.getScript();
 		}
 
 		if (entity.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-			return IOUtils.toString(this.getClass().getResourceAsStream("/templates/DefaultScript.java"));
+			return IOUtils.toString(
+					this.getClass().getResourceAsStream("/templates/DefaultScript.java"),
+					StandardCharsets.UTF_8
+				);
 		}
 
 		return null;

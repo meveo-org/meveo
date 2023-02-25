@@ -1,0 +1,10 @@
+[
+	{
+		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/PersistEntityScript.java",
+		"description": "Create and persist an entity"
+	},
+	{
+		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/UpdateEntityScript.java",
+		"description": "Update an existing entity"
+	}
+]

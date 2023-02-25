@@ -48,8 +48,41 @@
             <div style="display: inline-flex">
 	            <hftl:formField label="#{messages['scriptInstance.sourceTypeEnum']}" field="sourceTypeEnum" required="true"
 	                            listenerUpdate="@this scriptCode scriptSource scriptJava"/>
-	                            
-	            <hftl:formField label="Transaction management type" field="transactionType" 
+
+				<hftl:decorateFormField label="Template" fieldId="template" rendered="#{scriptInstanceBean.entity.transient}">
+					<p:autoComplete id="template" value="#{scriptInstanceBean.selectedTemplate}"
+						var="t"
+						itemValue="#{t}"
+						itemLabel="#{t.code}"
+						completeMethod="#{scriptInstanceBean.getScriptTemplates}"
+						dropdown="true"
+						placeholder="Select a template ..."
+						autoSelection="true"
+						queryDelay="1"
+						cache="true"
+						queryMode="hybrid"
+						forceSelection="true">
+
+						<p:ajax event="itemSelect" process="@this" listener="#{scriptInstanceBean.onTemplateSelected}" update="scriptSource"/>
+						<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.getScriptTemplates()}" />                                
+						
+						<p:column style="width:10%">
+							<f:facet name="header">
+								<h:outputText value="Name" />
+							</f:facet>
+							<h:outputText value="#{t.code}" />
+						</p:column>
+						<p:column>
+							<f:facet name="header">
+								<h:outputText value="Description" />
+							</f:facet>
+							<h:outputText value="#{t.description}" />
+						</p:column>
+					</p:autoComplete>
+
+				</hftl:decorateFormField>
+
+				<hftl:formField label="Transaction management type" field="transactionType" 
 	            				required="true" componentWidth="max-content" 
 	                            listenerUpdate="@this" noTranslateLabel="true"/>
 	                            
@@ -215,5 +248,11 @@
                 <h:outputText value="#{log}" />
             </p:column>
         </p:dataTable>
+        
+        <script>
+        	function customFilter(itemLabel, filterValue) {
+			    console.log(itemLabel, filterValue);
+			}
+        </script>
     </ui:define>
 </ui:composition>
