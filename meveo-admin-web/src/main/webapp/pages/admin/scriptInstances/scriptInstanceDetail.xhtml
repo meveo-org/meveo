@@ -49,6 +49,22 @@
 	            <hftl:formField label="#{messages['scriptInstance.sourceTypeEnum']}" field="sourceTypeEnum" required="true"
 	                            listenerUpdate="@this scriptCode scriptSource scriptJava"/>
 
+			    <p:dialog widgetVar="warnPopup" 
+			    	showEffect="fade" 
+			    	hideEffect="fade"
+			    	resizable="false"
+			    	header="You will lose any changes">
+			        <p:commandButton value="Cancel"
+			        	icon="ui-icon-cancel"
+			        	onclick="PF('warnPopup').hide()"
+			        	update="template"
+			        	actionListener="#{scriptInstanceBean.abortScriptUpdateFromTemplate}" />
+			        <p:commandButton value="Continue" 
+			        	icon="ui-icon-check"
+			        	onclick="PF('warnPopup').hide()"
+			        	actionListener="#{scriptInstanceBean.updateScriptFromTemplate}"/>
+			    </p:dialog>
+    
 				<hftl:decorateFormField label="Template" fieldId="template" rendered="#{scriptInstanceBean.entity.transient}">
 					<p:autoComplete id="template" value="#{scriptInstanceBean.selectedTemplate}"
 						var="t"
@@ -63,7 +79,7 @@
 						queryMode="hybrid"
 						forceSelection="true">
 
-						<p:ajax event="itemSelect" process="@this" listener="#{scriptInstanceBean.onTemplateSelected}" update="scriptSource"/>
+						<p:ajax event="itemSelect" process="@this" listener="#{scriptInstanceBean.onTemplateSelected}"/>
 						<o:converter converterId="omnifaces.ListConverter" list="#{scriptInstanceBean.getScriptTemplates()}" />                                
 						
 						<p:column style="width:10%">
@@ -96,7 +112,10 @@
 	                    			   value="#{scriptInstanceBean.sourceCode}"
 	                    			   extraKeys="{ 'Ctrl-Space': function(cm) {CodeMirror.showHint(cm, CodeMirror.hint.javaHint);}}"
 	                    			   smartIndent="true"
-	                                   lineNumbers="true" required="true"/>
+	                                   lineNumbers="true" required="true">
+	                                   
+                                   <f:ajax event="change"/>
+                         </pe:codeMirror>
 	                    <h:panelGroup layout="block" styleClass="form-panel-actions">
 	                        <p:commandButton value="#{messages['scriptInstance.testCompilation']}"
 	                                         action="#{scriptInstanceBean.testCompilation}" update="@form:scriptErrors :growl"/>

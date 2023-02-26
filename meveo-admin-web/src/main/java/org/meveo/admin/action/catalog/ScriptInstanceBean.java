@@ -35,9 +35,11 @@ import java.util.stream.Collectors;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ValueChangeEvent;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -69,6 +71,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.MavenDependencyService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.omnifaces.util.Ajax;
+import org.primefaces.PrimeFaces;
 import org.primefaces.event.NodeSelectEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultTreeNode;
@@ -134,6 +138,7 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
     private TreeNode selectedNode;
     
     private ScriptTemplate selectedTemplate;
+    private boolean valueUpdated;
 
     public void initialize() {
         rootNode = computeRootNode();
@@ -207,13 +212,41 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 		}
 	}
 	
-	public void onTemplateSelected(SelectEvent event) {
+	public void updateScriptFromTemplate() {
 		if (selectedTemplate != null) {
 			String template = selectedTemplate.getTemplate();
 			if (template != null) {
 				entity.setScript(template);
+				valueUpdated = false;
 			}
+			Ajax.update("scriptInstanceForm:scriptSource");
 		}
+	}
+	
+	public void abortScriptUpdateFromTemplate() {
+		selectedTemplate = null;
+	}
+	
+	/**
+	 * @return the {@link #valueUpdated}
+	 */
+	public boolean isValueUpdated() {
+		return valueUpdated;
+	}
+	
+	public void onTemplateSelected(SelectEvent event) {
+		if (valueUpdated) {
+			PrimeFaces.current().executeScript("PF('warnPopup').show();");
+		} else {
+			updateScriptFromTemplate();
+		}
+
+	}
+	
+	public void valueChanged(javax.faces.event.AjaxBehaviorEvent e) {
+	}
+	
+	public void valueChanged() {
 	}
 	
 	/**
@@ -236,6 +269,10 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 	
 	@SuppressWarnings("unchecked")
 	public List<ScriptTemplate> getScriptTemplates(String query) throws Exception {
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpSession session = (HttpSession) context.getExternalContext().getSession(true);
+        session.getMaxInactiveInterval();
+        
 		if (scriptTemplates.isEmpty()) {
 			scriptTemplates = JacksonUtil.read(
 					this.getClass().getResourceAsStream("/templates/functions.json"), 
@@ -278,6 +315,7 @@ public class ScriptInstanceBean extends ModuleItemBaseBean<ScriptInstance> {
 
 	public void setSourceCode(String sourceCode) {
 		this.getEntity().setScript(sourceCode);
+		valueUpdated = true;
 	}
 
 	public void initCompilationErrors() {
