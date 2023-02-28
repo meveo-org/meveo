@@ -20,7 +20,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -37,7 +36,6 @@ import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.persistence.DBStorageType;
-import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.PersistenceActionResult;
@@ -50,7 +48,6 @@ import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
-import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
@@ -75,9 +72,6 @@ public class Neo4jStorageImpl implements StorageImpl {
 	
 	@Inject
 	private CustomFieldInstanceService customFieldInstanceService;
-	
-	@Inject
-	private FileSystemService fileSystemService;
 	
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
@@ -259,11 +253,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 		neo4jService.addBinaries(uuid, repository.getCode(), cet, cft, binariesPaths);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void updateNeo4jBinaries(Repository repository, CustomEntityTemplate cet, Map<String, CustomFieldTemplate> customFieldTemplates, String uuid, Map<String, Object> neo4jValues) throws IOException, BusinessApiException {
 		List<CustomFieldTemplate> binariesInNeo4J = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.NEO4J)).collect(Collectors.toList());
-
-		String neo4JCode = repository.getNeo4jConfiguration().getCode();
 
 		if (!CollectionUtils.isEmpty(binariesInNeo4J)) {
 
@@ -475,6 +466,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	public void init() {
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T beginTransaction(IStorageConfiguration repository, int stackedCalls) {
 		return (T) getNeo4jTransaction(repository.getCode());
