@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.meveo.model.storage.Repository;
+import org.meveo.persistence.impl.Neo4jStorageImpl;
+
 /**
  * 
  * @author clement.bareth
@@ -24,13 +29,19 @@ public class GraphQLQueryBuilder {
 	private Integer limit;
 	private Integer offset;
 	private GraphQLQueryBuilder parent;
+	private boolean isV3 = true;
 	
-	public static GraphQLQueryBuilder create(String type) {
-		return new GraphQLQueryBuilder(type);
+	public static GraphQLQueryBuilder create(Neo4JConfiguration configuration, String type) {
+		return new GraphQLQueryBuilder(configuration, type);
 	}
 	
-	private GraphQLQueryBuilder (String type) {
-		this.type = type;
+	private GraphQLQueryBuilder (Neo4JConfiguration configuration, String type) {
+		this.isV3 = configuration.getDbVersion().startsWith("3");
+		if (!this.isV3 && type != null) {
+			this.type = GraphQLQueryBuilder.toV4QueryType(type);
+		} else {
+			this.type = type;
+		}
 	}
 	
 	public GraphQLQueryBuilder filter(String name, Object value) {
@@ -77,22 +88,54 @@ public class GraphQLQueryBuilder {
 		} else {
 		
 			String prefixFilter = "(";
-			if(limit != null) {
-				prefixFilter += "first: " + limit + ", ";
+			if ((limit != null || offset != null) && !isV3) {
+				prefixFilter += "options: { ";
 			}
-			if(offset != null) {
-				prefixFilter += "offset: " + offset + ", ";
-			}		
 			
-			filtersStr = filters.isEmpty() ? prefixFilter + ")" : filters.entrySet()
-					.stream()
-					.map(e -> { 
-						if(e.getValue() instanceof String) {
-							return e.getKey() + ":\"" + e.getValue() + "\"";
-						} else {
-							return e.getKey() + ":" + e.getValue();
-						}
-					}).collect(Collectors.joining(",", prefixFilter, ")"));
+			if(limit != null) {
+				if (isV3) {
+					prefixFilter += "first: " + limit + ", ";
+				} else {
+					prefixFilter += "limit: " + limit + ", ";
+				}
+			}
+			
+			if(offset != null) {
+				prefixFilter += "offset: " + offset;
+				if (isV3) {
+					prefixFilter += ", ";
+				} else {
+					prefixFilter += " }";
+				}
+			}
+			
+			if (filters.isEmpty()) {
+				filtersStr = prefixFilter + ")";
+			} else {
+				if (!isV3) {
+					if (offset != null || limit != null) {
+						prefixFilter += ", ";
+					}
+					prefixFilter += "where: {";
+				}
+				
+				filtersStr = filters.entrySet()
+						.stream()
+						.map(e -> { 
+							if(e.getValue() instanceof String) {
+								return e.getKey() + ":\"" + e.getValue() + "\"";
+							} else {
+								return e.getKey() + ":" + e.getValue();
+							}
+						}).collect(Collectors.joining(",", prefixFilter, ""));
+				
+				if (!isV3) {
+					filtersStr += "}";
+				}
+				
+				filtersStr += ")";
+			}
+			
 		}
 		
 		List<String> fieldsList = new ArrayList<>(fields);
@@ -112,5 +155,19 @@ public class GraphQLQueryBuilder {
 			return " " + filtersStr + " {\n" + fieldStr  + "}";
 		}
 	}
+	
+	/**
+	 * Transform an entity type into a graphql query type.
+	 * <br>
+	 * Exemple: User -> users
+	 * 
+	 * @param type the type to transform
+	 * @return the transformed type
+	 */
+	public static String toV4QueryType(String type) {
+		int length = type.length();
+		return Character.toLowerCase(type.charAt(0)) + type.substring(1, length) + "s";
+	}
+
 
 }

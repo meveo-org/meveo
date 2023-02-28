@@ -20,6 +20,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -34,7 +35,9 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.sql.Neo4JStorageConfiguration;
 import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.PersistenceActionResult;
@@ -302,7 +305,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 			graphQlQuery = query.getPaginationConfiguration().getGraphQlQuery();
 			graphQlQuery = graphQlQuery.replaceAll("([\\w)]\\s*\\{)(\\s*\\w*)", "$1meveo_uuid,$2");
 		} else {
-			graphQlQuery = generateGraphQlFromPagination(query.getCet().getCode(), query.getPaginationConfiguration(), query.getFetchFields(), query.getFilters(), query.getSubFields())
+			graphQlQuery = generateGraphQlFromPagination((Neo4JConfiguration) query.getStorageConfiguration(), query.getCet().getCode(), query.getPaginationConfiguration(), query.getFetchFields(), query.getFilters(), query.getSubFields())
 					.toString();
 		}
 		
@@ -347,8 +350,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 		return neo4jService.count(repository.getCode(), cet, paginationConfiguration);
 	}
 
-	private GraphQLQueryBuilder generateGraphQlFromPagination(String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
-		GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(type);
+	private GraphQLQueryBuilder generateGraphQlFromPagination(Neo4JConfiguration repo, String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
+		GraphQLQueryBuilder builder = GraphQLQueryBuilder.create(repo, type);
 		builder.field("meveo_uuid");
 		if(filters != null) {
 			filters.forEach((key, value) -> {
@@ -383,7 +386,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 		for (var subField : subFields.entrySet()) {
 			Set<String> subFetchFields = new HashSet<>(subField.getValue());
 			Map<String, Set<String>> subSubFields = PersistenceUtils.extractSubFields(subFetchFields);
-			GraphQLQueryBuilder subQuery = generateGraphQlFromPagination(null, null, subFetchFields, null, subSubFields);
+			GraphQLQueryBuilder subQuery = generateGraphQlFromPagination(repo, null, null, subFetchFields, null, subSubFields);
 			builder.field(subField.getKey(), subQuery);
 		}
 		
@@ -522,6 +525,29 @@ public class Neo4jStorageImpl implements StorageImpl {
 			throw new RuntimeException("Can't get session for repository " + repository);
 		}
 		return session.beginTransaction();
+	}
+	
+	public static void main(String[] args) {
+		Repository testRepo = new Repository();
+		Neo4JConfiguration testConf = new Neo4JConfiguration();
+		testConf.setDbVersion("4");
+		testRepo.setNeo4jConfiguration(testConf);
+		
+		Neo4jStorageImpl testStorageImpl = new Neo4jStorageImpl();
+		PaginationConfiguration pagination = new PaginationConfiguration();
+		pagination.setFilters(Map.of("id", 3514, "code", "tutu"));
+		pagination.setFetchFields(List.of("domain.meveo_uuid", "toto"));
+		
+		String query = testStorageImpl.generateGraphQlFromPagination(
+				testConf, 
+				"User",
+				pagination, 
+				Set.of("toto"), 
+				pagination.getFilters(), 
+				PersistenceUtils.extractSubFields(new HashSet<>(pagination.getFetchFields())))
+				.toString();
+		
+		System.out.println(query);
 	}
 
 
