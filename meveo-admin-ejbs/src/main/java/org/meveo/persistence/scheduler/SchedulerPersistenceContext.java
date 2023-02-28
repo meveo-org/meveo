@@ -16,7 +16,7 @@
 
 package org.meveo.persistence.scheduler;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +27,7 @@ public class SchedulerPersistenceContext {
     private final Map<String, Set<EntityRef>> nodeReferencesByNodeName = new ConcurrentHashMap<>();
 
     public Set<EntityRef> getNodeReferences(String nodeName) {
-        return nodeReferencesByNodeName.computeIfAbsent(nodeName, key -> Collections.emptySet());
+        return nodeReferencesByNodeName.computeIfAbsent(nodeName, key -> new HashSet<>());
     }
 
     public void putNodeReferences(String nodeName, Set<EntityRef> entityRef) {
