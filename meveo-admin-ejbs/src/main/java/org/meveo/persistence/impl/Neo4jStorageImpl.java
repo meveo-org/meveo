@@ -47,6 +47,7 @@ import org.meveo.persistence.graphql.GraphQLQueryBuilder;
 import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
+import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.storage.FileSystemService;
@@ -83,6 +84,9 @@ public class Neo4jStorageImpl implements StorageImpl {
 	
 	@Inject
 	private CustomFieldTemplateService cftService;
+	
+	@Inject
+	private GraphQLService graphQLService;
 	
 	private static Logger log = LoggerFactory.getLogger(Neo4jStorageImpl.class);
 	
@@ -309,7 +313,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 					.toString();
 		}
 		
-		Map<String, Object> result = neo4jDao.executeGraphQLQuery(query.getStorageConfiguration().getCode(), graphQlQuery, null, null);
+		Map<String, Object> result = graphQLService.executeGraphQLRequest(graphQlQuery, query.getStorageConfiguration().getCode());
 		
 		if(result != null) {
 			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(query.getCet().getCode());
