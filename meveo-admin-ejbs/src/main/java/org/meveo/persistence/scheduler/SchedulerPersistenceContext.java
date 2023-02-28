@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.ImmutableSet;
-
 public class SchedulerPersistenceContext {
     private final Map<String, Set<EntityRef>> nodeReferencesByNodeName = new ConcurrentHashMap<>();
 
@@ -31,6 +29,6 @@ public class SchedulerPersistenceContext {
     }
 
     public void putNodeReferences(String nodeName, Set<EntityRef> entityRef) {
-        nodeReferencesByNodeName.put(nodeName, ImmutableSet.copyOf(entityRef));
+        nodeReferencesByNodeName.put(nodeName, new HashSet<>(entityRef));
     }
 }
