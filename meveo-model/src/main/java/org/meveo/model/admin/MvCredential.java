@@ -12,14 +12,11 @@ import javax.persistence.*;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.persistence.JsonBinaryType;
-import org.meveo.model.persistence.JsonStringType;
+import org.meveo.model.persistence.JsonTypes;
 import org.meveo.security.PasswordUtils;
 
 @Entity
@@ -28,10 +25,6 @@ import org.meveo.security.PasswordUtils;
 @CustomFieldEntity(cftCodePrefix = "CREDENTIAL")
 @ModuleItem(value = "MvCredential", path = "credentials")
 @ModuleItemOrder(1)
-@TypeDefs({
-    @TypeDef(name = "json", typeClass = JsonStringType.class),
-    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-})
 public class MvCredential extends BusinessCFEntity {
 
     private static final long serialVersionUID = 3133165825335371795L;
@@ -82,8 +75,8 @@ public class MvCredential extends BusinessCFEntity {
     @Column(name = "username")
     private String username;
 
-    @Type(type = "jsonb")
-    @Column(name = "extra_parameters", columnDefinition = "json")
+    @Type(type = JsonTypes.JSON)
+    @Column(name = "extra_parameters", columnDefinition = "text")
     private Map<String, String> extraParameters = new HashMap<>();
 
     public String getApiKey() {
