@@ -114,7 +114,6 @@ import org.neo4j.driver.types.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -411,15 +410,6 @@ public class Neo4jService implements CustomPersistenceService {
 
             /* If pre-persist script was defined, execute it. fieldValues map may be modified by the script */
             executePrePersist(neo4JConfiguration, cet, fields);
-            
-            // Check if "uuid" or "meveo_uuid" has been modified
-            String computedUuid = (String) fields.get("uuid");
-            if (computedUuid == null) {
-            	computedUuid = (String) fields.get("meveo_uuid");
-            }
-            if (computedUuid != null && !computedUuid.equals(uuid)) {
-            	uuid = computedUuid;
-            }
             
             // Populate unique fields again after pre presit script as they might have been computed
             validateAndConvertCustomFields(cetFields, fields, uniqueFields, true);
