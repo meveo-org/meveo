@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.meveo.service.admin.impl.credentials;
 
@@ -44,10 +44,20 @@ public class CredentialHelperService {
 		paginationConfiguration.setFilters(new HashMap<>());
 		paginationConfiguration.getFilters().put("domainName", domain);
 
-		List<MvCredential> matchigCredentials = credentialService.list(paginationConfiguration);
+		List<MvCredential> matchingCredentials = credentialService.list(paginationConfiguration);
 
-		if (matchigCredentials.size() > 0) {
-			return matchigCredentials.get(0);
+		if (matchingCredentials.size() > 0) {
+			return matchingCredentials.get(0);
+		} else {
+			return null;
+		}
+	}
+
+	public MvCredential getCredentialByCode(String code) {
+		MvCredential credentialFound = credentialService.findByCode(code);
+
+    if (credentialFound != null) {
+			return credentialFound;
 		} else {
 			return null;
 		}
