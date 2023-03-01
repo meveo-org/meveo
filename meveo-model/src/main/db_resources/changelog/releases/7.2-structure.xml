@@ -68,7 +68,12 @@
 
 		<addColumn tableName="mv_credential">
 			<column name="uuid" type="varchar(255)" />
+		</addColumn>
+	</changeSet>
 
+	<changeSet id="Add extra_parameters to mv_credential - #686" author="Tony Alejandro">
+		<addColumn tableName="mv_credential">
+			<column name="extra_parameters" type="jsonb" />
 		</addColumn>
 	</changeSet>
 	
