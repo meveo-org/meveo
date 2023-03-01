@@ -123,9 +123,7 @@ import com.google.common.collect.ImmutableMap;
  * @lastModifiedVersion 6.4.0
  */
 public class Neo4jService implements CustomPersistenceService {
-    public static final String OVERRIDE_UUID = "override_uuid";
-
-	private static final Comparator<CustomEntityTemplateUniqueConstraint> CONSTRAINT_COMPARATOR = Comparator
+    private static final Comparator<CustomEntityTemplateUniqueConstraint> CONSTRAINT_COMPARATOR = Comparator
 	        .comparingInt(CustomEntityTemplateUniqueConstraint::getTrustScore)
 	        .reversed()
 	        .thenComparingInt(CustomEntityTemplateUniqueConstraint::getPosition);
@@ -415,8 +413,11 @@ public class Neo4jService implements CustomPersistenceService {
             executePrePersist(neo4JConfiguration, cet, fields);
             
             // Check if "uuid" or "meveo_uuid" has been modified
-            String computedUuid = (String) fields.get(Neo4jService.OVERRIDE_UUID);
-            if (computedUuid != null) {
+            String computedUuid = (String) fields.get("uuid");
+            if (computedUuid == null) {
+            	computedUuid = (String) fields.get("meveo_uuid");
+            }
+            if (computedUuid != null && !computedUuid.equals(uuid)) {
             	uuid = computedUuid;
             }
             
