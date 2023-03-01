@@ -64,10 +64,10 @@ jobs:
           then
             echo "IMAGE_TAG=latest" >> $GITHUB_ENV
             echo "IMAGE_TAG=latest"
-          else if ${{ env.GIT_BRANCH == 'develop' }}
+          elif ${{ env.GIT_BRANCH == 'develop' }}
           then
-            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-            echo "IMAGE_TAG=latest"
+            echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
+            echo "IMAGE_TAG=dev-latest"
           else
             echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
             echo "IMAGE_TAG=${GIT_BRANCH}"
@@ -135,6 +135,10 @@ jobs:
           then
             echo "IMAGE_TAG=latest" >> $GITHUB_ENV
             echo "IMAGE_TAG=latest"
+          elif ${{ env.GIT_BRANCH == 'develop' }}
+          then
+            echo "IMAGE_TAG=dev-latest" >> $GITHUB_ENV
+            echo "IMAGE_TAG=dev-latest"
           else
             echo "IMAGE_TAG=${GIT_BRANCH}" >> $GITHUB_ENV
             echo "IMAGE_TAG=${GIT_BRANCH}"
