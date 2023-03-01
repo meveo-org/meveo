@@ -222,9 +222,10 @@ public class JSONSchemaIntoJavaClassParser {
         
         // Generate default constructor
         classDeclaration.addConstructor(Modifier.Keyword.PUBLIC);
-
+        boolean extendsType = false;
         if(template instanceof CustomEntityTemplate) {
         	CustomEntityTemplate cet = (CustomEntityTemplate) template;
+        	extendsType = cet.getSuperTemplate() != null;
         	if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 
             	// Handle primitive entity if value field is not defined
@@ -272,22 +273,33 @@ public class JSONSchemaIntoJavaClassParser {
             	VariableDeclarator variableDeclarator = new VariableDeclarator();
             	variableDeclarator.setType("String");
             	
-            	// Generate constructor with the value
-            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
-    	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
-    	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
+            	if (extendsType) {
+            		// Generate constructor with the value
+                	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+        	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
+        	        	.setBody(JavaParser.parseBlock("{\n super(uuid); \n}"));
+            	} else {
+                	// Generate constructor with the value
+                	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
+        	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
+        	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
+            	}
+
             }
         }
         
         if (classDeclaration != null) {
-            FieldDeclaration field = new FieldDeclaration();
-            VariableDeclarator variable = new VariableDeclarator();
-            variable.setName("uuid");
-            variable.setType("String");
-            field.setModifiers(Modifier.Keyword.PRIVATE);
-            field.addVariable(variable);
-            classDeclaration.addMember(field);
-            ((ArrayList<FieldDeclaration>) fds).add(field);
+        	if (!extendsType) {
+	            FieldDeclaration field = new FieldDeclaration();
+	            VariableDeclarator variable = new VariableDeclarator();
+	            variable.setName("uuid");
+	            variable.setType("String");
+	            field.setModifiers(Modifier.Keyword.PRIVATE);
+	            field.addVariable(variable);
+	            classDeclaration.addMember(field);
+	            ((ArrayList<FieldDeclaration>) fds).add(field);
+        	}
+        	
             if (jsonMap.containsKey("storages")) {
                 compilationUnit.addImport(DBStorageType.class);
                 FieldDeclaration fd = new FieldDeclaration();
