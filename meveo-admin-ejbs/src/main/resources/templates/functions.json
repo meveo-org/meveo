@@ -6,5 +6,9 @@
 	{
 		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/UpdateEntityScript.java",
 		"description": "Update an existing entity"
+	}, 
+	{
+		"url": "https://github.com/meveo-org/meveo.github.io/blob/master/functions/ExempleEndpointScript.java",
+		"description": "Example of REST endpoint script"
 	}
 ]
