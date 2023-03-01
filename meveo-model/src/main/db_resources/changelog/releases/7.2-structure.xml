@@ -68,7 +68,6 @@
 
 		<addColumn tableName="mv_credential">
 			<column name="uuid" type="varchar(255)" />
-
 		</addColumn>
 	</changeSet>
 

@@ -1,19 +1,25 @@
 /**
- * 
+ *
  */
 package org.meveo.model.admin;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 import org.meveo.model.BusinessCFEntity;
 import org.meveo.model.CustomFieldEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModuleItemOrder;
+import org.meveo.model.persistence.JsonBinaryType;
+import org.meveo.model.persistence.JsonStringType;
 import org.meveo.security.PasswordUtils;
 
 @Entity
@@ -22,12 +28,16 @@ import org.meveo.security.PasswordUtils;
 @CustomFieldEntity(cftCodePrefix = "CREDENTIAL")
 @ModuleItem(value = "MvCredential", path = "credentials")
 @ModuleItemOrder(1)
+@TypeDefs({
+    @TypeDef(name = "json", typeClass = JsonStringType.class),
+    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
+})
 public class MvCredential extends BusinessCFEntity {
 
     private static final long serialVersionUID = 3133165825335371795L;
 
     @Column(name = "api_key")
-	  private String apiKey;
+    private String apiKey;
 
     @Column(name = "header_value")
     private String headerValue;
@@ -72,11 +82,10 @@ public class MvCredential extends BusinessCFEntity {
     @Column(name = "username")
     private String username;
 
-    @ElementCollection
-    @Column(name="extra_parameters")
-    private Map<String, String> extraParameters;
+    @Type(type = "jsonb")
+    @Column(name = "extra_parameters", columnDefinition = "json")
+    private Map<String, String> extraParameters = new HashMap<>();
 
-    
     public String getApiKey() {
         return apiKey;
     }
@@ -134,18 +143,18 @@ public class MvCredential extends BusinessCFEntity {
     }
 
     public String getPassword() {
-    	if (!StringUtils.isEmpty(this.passwordSecret)) {
-	    	String salt = PasswordUtils.getSalt(code, username, apiKey, token);
-			return PasswordUtils.decrypt(salt, this.passwordSecret);
-    	}
-    	return null;
+        if (!StringUtils.isEmpty(this.passwordSecret)) {
+            String salt = PasswordUtils.getSalt(code, username, apiKey, token);
+            return PasswordUtils.decrypt(salt, this.passwordSecret);
+        }
+        return null;
     }
 
     public void setPassword(String password) {
-    	if (!StringUtils.isEmpty(password)) {
-    		String salt = PasswordUtils.getSalt(code, username, apiKey, token);
-    		passwordSecret = PasswordUtils.encrypt(salt, password);
-    	}
+        if (!StringUtils.isEmpty(password)) {
+            String salt = PasswordUtils.getSalt(code, username, apiKey, token);
+            passwordSecret = PasswordUtils.encrypt(salt, password);
+        }
     }
 
     public String getDomainName() {
@@ -213,10 +222,10 @@ public class MvCredential extends BusinessCFEntity {
     }
 
     public enum AuthenticationType {
-      API_KEY,
-      HEADER,
-      HTTP_BASIC,
-    	OAUTH2,
-    	SSH
+        API_KEY,
+        HEADER,
+        HTTP_BASIC,
+        OAUTH2,
+        SSH
     }
 }

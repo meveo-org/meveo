@@ -50,7 +50,8 @@ import org.primefaces.model.StreamedContent;
  */
 @Named
 //@ViewScoped
-public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> extends ModuleItemBaseBean<T> implements Serializable {
+public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto>
+    extends UpdateMapTypeFieldBean<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
