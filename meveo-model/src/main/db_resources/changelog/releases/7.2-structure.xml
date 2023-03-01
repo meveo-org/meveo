@@ -73,7 +73,7 @@
 
 	<changeSet id="Add extra_parameters to mv_credential - #686" author="Tony Alejandro">
 		<addColumn tableName="mv_credential">
-			<column name="extra_parameters" type="jsonb" />
+			<column name="extra_parameters" type="${type.json}" />
 		</addColumn>
 	</changeSet>
 	
