@@ -40,6 +40,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
@@ -272,17 +273,19 @@ public class JSONSchemaIntoJavaClassParser {
             } else {
             	VariableDeclarator variableDeclarator = new VariableDeclarator();
             	variableDeclarator.setType("String");
+            	ConstructorDeclaration constructor = classDeclaration
+					.addConstructor(Modifier.Keyword.PUBLIC)
+	        		.addParameter(new Parameter(variableDeclarator.getType(), "uuid"));
             	
             	if (extendsType) {
-            		// Generate constructor with the value
-                	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
-        	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
-        	        	.setBody(JavaParser.parseBlock("{\n super(uuid); \n}"));
+                	BlockStmt constructorBody = JavaParser.parseBodyDeclaration(classDeclaration.getNameAsString() + "(String uuid) {\n super(uuid); \n}")
+                		.findAll(BlockStmt.class)
+                		.get(0);
+                	
+                	constructor.setBody(constructorBody);
             	} else {
                 	// Generate constructor with the value
-                	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
-        	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
-        	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
+            		constructor.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
             	}
 
             }
