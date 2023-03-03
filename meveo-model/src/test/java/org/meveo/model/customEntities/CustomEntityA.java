@@ -77,20 +77,6 @@ public class CustomEntityA implements CustomEntity {
 	}
 
 	/**
-	 * @return the {@link #aToBRelation}
-	 */
-	public AtoB getaToBRelation() {
-		return aToBRelation;
-	}
-
-	/**
-	 * @param aToBRelation the aToBRelation to set
-	 */
-	public void setaToBRelation(AtoB aToBRelation) {
-		this.aToBRelation = aToBRelation;
-	}
-
-	/**
 	 * @return the {@link #targets}
 	 */
 	public List<CustomEntityB> getTargets() {
@@ -105,16 +91,32 @@ public class CustomEntityA implements CustomEntity {
 	}
 
 	/**
+	 * @return the {@link #aToBRelation}
+	 */
+	public AtoB getAToBRelation() {
+		return aToBRelation;
+	}
+
+	/**
+	 * @param aToBRelation the aToBRelation to set
+	 */
+	public void setAToBRelation(AtoB aToBRelation) {
+		this.aToBRelation = aToBRelation;
+	}
+
+	/**
 	 * @return the {@link #aToBmulti}
 	 */
-	public List<AtoBMulti> getaToBmulti() {
+	public List<AtoBMulti> getAToBmulti() {
 		return aToBmulti;
 	}
 
 	/**
 	 * @param aToBmulti the aToBmulti to set
 	 */
-	public void setaToBmulti(List<AtoBMulti> aToBmulti) {
+	public void setAToBmulti(List<AtoBMulti> aToBmulti) {
 		this.aToBmulti = aToBmulti;
 	}
+	
+	
 }

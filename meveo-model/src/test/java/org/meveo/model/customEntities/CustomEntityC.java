@@ -30,8 +30,7 @@ public class CustomEntityC implements CustomEntity {
 	public String getCetCode() {
 		return "CustomEntityC";
 	}
-	
-	
+
 	/**
 	 * @return the {@link #value}
 	 */
@@ -39,12 +38,25 @@ public class CustomEntityC implements CustomEntity {
 		return value;
 	}
 
-
 	/**
 	 * @param value the value to set
 	 */
 	public void setValue(String value) {
 		this.value = value;
+	}
+
+	/**
+	 * @return the {@link #otherValue}
+	 */
+	public String getOtherValue() {
+		return otherValue;
+	}
+
+	/**
+	 * @param otherValue the otherValue to set
+	 */
+	public void setOtherValue(String otherValue) {
+		this.otherValue = otherValue;
 	}
 
 	/**
@@ -61,6 +73,34 @@ public class CustomEntityC implements CustomEntity {
 		this.uuid = uuid;
 	}
 
+	/**
+	 * @return the {@link #circularRef}
+	 */
+	public CtoA getCircularRef() {
+		return circularRef;
+	}
+
+	/**
+	 * @param circularRef the circularRef to set
+	 */
+	public void setCircularRef(CtoA circularRef) {
+		this.circularRef = circularRef;
+	}
+
+	/**
+	 * @return the {@link #list}
+	 */
+	public List<String> getList() {
+		return list;
+	}
+
+	/**
+	 * @param list the list to set
+	 */
+	public void setList(List<String> list) {
+		this.list = list;
+	}
+	
 	@Override
 	public boolean isEqual(CustomEntity other) {
 		if (!(other instanceof CustomEntityC)) {
@@ -73,54 +113,6 @@ public class CustomEntityC implements CustomEntity {
 		}
 		
 		return CustomEntity.super.isEqual(other);
-	}
-
-
-	/**
-	 * @return the {@link #otherValue}
-	 */
-	public String getOtherValue() {
-		return otherValue;
-	}
-
-
-	/**
-	 * @param otherValue the otherValue to set
-	 */
-	public void setOtherValue(String otherValue) {
-		this.otherValue = otherValue;
-	}
-
-
-	/**
-	 * @return the {@link #circularRef}
-	 */
-	public CtoA getCircularRef() {
-		return circularRef;
-	}
-
-
-	/**
-	 * @param circularRef the circularRef to set
-	 */
-	public void setCircularRef(CtoA circularRef) {
-		this.circularRef = circularRef;
-	}
-
-
-	/**
-	 * @return the {@link #list}
-	 */
-	public List<String> getList() {
-		return list;
-	}
-
-
-	/**
-	 * @param list the list to set
-	 */
-	public void setList(List<String> list) {
-		this.list = list;
 	}
 
 }

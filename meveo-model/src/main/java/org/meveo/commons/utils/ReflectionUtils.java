@@ -484,18 +484,23 @@ public class ReflectionUtils {
     }
     
     public static Optional<Object> findValueWithGetter(Object obj, String property) {
-    	return Arrays.stream(obj.getClass().getMethods())
-	        .filter(method -> method.getName().equals(calcGetterName(property)) || method.getName().equals(calcGetterNameBool(property)))
-	        .findFirst()
-	        .map(getter -> {
-				try {
-					getter.trySetAccessible();
-					return getter.invoke(obj);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					logger.error("Cannot invoke getter {}", getter, e);
-					return null;
-				}
-			});
+    	Method getter = Arrays.stream(obj.getClass().getMethods())
+    	        .filter(method -> method.getName().equals(calcGetterName(property)) || method.getName().equals(calcGetterNameBool(property)))
+    	        .findFirst()
+    	        .orElse(null);
+    	
+    	if (getter == null) {
+    		logger.warn("Cannot find getter for property {} on {}", property, obj);
+    		return Optional.empty();
+    	}
+    	
+		try {
+			getter.trySetAccessible();
+			return Optional.ofNullable(getter.invoke(obj));
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			logger.error("Cannot invoke getter {}", getter, e);
+			return Optional.empty();
+		}
     	
     }
 
