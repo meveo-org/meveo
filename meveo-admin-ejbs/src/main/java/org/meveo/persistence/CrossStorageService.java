@@ -360,9 +360,13 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		for (var storage : cet.getAvailableStorages()) {
 			for (var conf : repository.getStorageConfigurations(storage)) {
+				var fetchFields = actualFetchFields.stream()
+						.filter(field -> fields.get(field) != null)
+						.filter(field -> fields.get(field).getStorages().contains(storage))
+						.collect(Collectors.toSet());
 				StorageQuery query = new StorageQuery();
 				query.setCet(cet);
-				query.setFetchFields(actualFetchFields);
+				query.setFetchFields(fetchFields);
 				query.setFilters(filters);
 				query.setPaginationConfiguration(paginationConfiguration);
 				query.setStorageConfiguration(conf);
