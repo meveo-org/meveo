@@ -364,7 +364,7 @@ public class CrossStorageService implements CustomPersistenceService {
 						.filter(field -> fields.get(field) != null)
 						.filter(field -> fields.get(field).getStorages().contains(storage))
 						.collect(Collectors.toSet());
-				log.debug("Fetch fields for storage {} = {}", storage.getCode(), fetchFields);
+				log.info("Fetch fields for storage {} = {}", storage.getCode(), fetchFields);
 				StorageQuery query = new StorageQuery();
 				query.setCet(cet);
 				query.setFetchFields(fetchFields);
