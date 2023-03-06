@@ -364,7 +364,18 @@ public class CrossStorageService implements CustomPersistenceService {
 						.filter(field -> fields.get(field) != null)
 						.filter(field -> fields.get(field).getStorages().contains(storage))
 						.collect(Collectors.toSet());
-				log.info("Fetch fields for storage {} = {}", storage.getCode(), fetchFields);
+				
+				Map<String, Set<String>> storageSubFields = new HashMap<>(subFields);
+				if (subFields != null) {
+					for (String field : subFields.keySet()) {
+						CustomFieldTemplate subField = fields.get(field);
+						if (subField == null || !subField.getStorages().contains(storage)) {
+							storageSubFields.remove(field);
+						}
+					}
+				}
+				
+				log.info("Sub fields for storage {} = {}", storage.getCode(), fetchFields);
 				StorageQuery query = new StorageQuery();
 				query.setCet(cet);
 				query.setFetchFields(fetchFields);
