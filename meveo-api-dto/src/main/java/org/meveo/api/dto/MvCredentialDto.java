@@ -1,51 +1,55 @@
 /**
- * 
+ *
  */
 package org.meveo.api.dto;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.meveo.model.admin.MvCredential;
 import org.meveo.model.admin.MvCredential.AuthenticationType;
 
 public class MvCredentialDto extends CFBusinessEntityDto {
-	
+
 	private static final long serialVersionUID = -7880581224489746541L;
 
 	private String apiKey;
 
-    private String headerValue;
+	private String headerValue;
 
-    private String publicKey;
+	private String publicKey;
 
-    private Instant tokenExpiry;
+	private Instant tokenExpiry;
 
-    private Instant lastConnection;
+	private Instant lastConnection;
 
-    private String token;
+	private String token;
 
-    private String privateKey;
+	private String privateKey;
 
-    private String password;
+	private String password;
 
-    private String domainName;
+	private String domainName;
 
-    private AuthenticationType authenticationType;
+	private AuthenticationType authenticationType;
 
-    private String headerKey;
+	private String headerKey;
 
-    private Long credit;
+	private Long credit;
 
-    private String refreshToken;
+	private String refreshToken;
 
-    private String status;
+	private String status;
 
-    private String username;
-    
+	private String username;
+
+	private Map<String, String> extraParameters = new HashMap<>();
+
 	public MvCredentialDto() {
-		
+
 	}
-	
+
 	public MvCredentialDto(MvCredential credential) {
 		this.apiKey = credential.getApiKey();
 		this.authenticationType = credential.getAuthenticationType();
@@ -64,6 +68,7 @@ public class MvCredentialDto extends CFBusinessEntityDto {
 		this.token = credential.getToken();
 		this.tokenExpiry = credential.getTokenExpiry();
 		this.username = credential.getUsername();
+		this.extraParameters = credential.getExtraParameters();
 	}
 
 	/**
@@ -274,6 +279,20 @@ public class MvCredentialDto extends CFBusinessEntityDto {
 	 */
 	public void setUsername(String username) {
 		this.username = username;
+	}
+
+	/**
+	 * @return the {@link #extraParameters}
+	 */
+	public Map<String, String> getExtraParameters() {
+		return extraParameters;
+	}
+
+	/**
+	 * @param extraParameters the extraParameters to set
+	 */
+	public void setExtraParameters(Map<String, String> extraParameters) {
+		this.extraParameters = extraParameters;
 	}
 
 }
