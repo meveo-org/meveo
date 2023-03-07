@@ -382,7 +382,7 @@ public class CrossStorageService implements CustomPersistenceService {
 				query.setFilters(filters);
 				query.setPaginationConfiguration(paginationConfiguration);
 				query.setStorageConfiguration(conf);
-				query.setSubFields(subFields);
+				query.setSubFields(storageSubFields);
 				query.setFetchAllFields(fetchAllFields);
 				
 				List<Map<String, Object>> values = provider.findImplementation(storage)
