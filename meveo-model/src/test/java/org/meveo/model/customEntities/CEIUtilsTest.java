@@ -74,7 +74,7 @@ public class CEIUtilsTest {
 		CustomEntityB entityB1 = new CustomEntityB();
 		entityB1.setValue("B1");
 		entityB1.setCircularRef(new BtoA(entityB1, entityA));
-		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		entityA.setAToBRelation(new AtoB(entityA, entityB1));
 		
 		CustomEntityC entityC = new CustomEntityC();
 		entityC.setValue("C");
@@ -94,7 +94,7 @@ public class CEIUtilsTest {
 		
 		CustomEntityB entityB1 = new CustomEntityB();
 		entityB1.setValue("B1");
-		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		entityA.setAToBRelation(new AtoB(entityA, entityB1));
 		
 		CustomEntityC entityC = new CustomEntityC();
 		entityC.setValue("C");
@@ -115,7 +115,7 @@ public class CEIUtilsTest {
 		CustomEntityB entityB1 = new CustomEntityB();
 		entityB1.setValue("B1");
 		entityB1.setCircularRef(new BtoA(entityB1, entityA));
-		entityA.setaToBRelation(new AtoB(entityA, entityB1));
+		entityA.setAToBRelation(new AtoB(entityA, entityB1));
 		
 		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA));
 		
@@ -140,8 +140,8 @@ public class CEIUtilsTest {
 		
 		entities.forEach(e -> {
 			var customEntityA = (CustomEntityA) e;
-			assert customEntityA.getaToBRelation() != null;
-			assert customEntityA.getaToBRelation().getTarget() != null;
+			assert customEntityA.getAToBRelation() != null;
+			assert customEntityA.getAToBRelation().getTarget() != null;
 		});
 	}
 	
@@ -158,11 +158,11 @@ public class CEIUtilsTest {
 		
 		AtoBMulti rel1 = new AtoBMulti(entityA, entityB1);
 		rel1.setTest("rel1");
-		entityA.getaToBmulti().add(rel1);
+		entityA.getAToBmulti().add(rel1);
 		
 		AtoBMulti rel2 = new AtoBMulti(entityA, entityB2);
 		rel2.setTest("rel2");
-		entityA.getaToBmulti().add(rel2);
+		entityA.getAToBmulti().add(rel2);
 		
 		EntityGraph graph = CEIUtils.toEntityGraph(List.of(entityA));
 		
@@ -301,11 +301,11 @@ public class CEIUtilsTest {
 		assert sourceEntity.getTarget() != null;
 		assert sourceEntity.getTargets().size() == 2;
 		
-		assert sourceEntity.getaToBRelation() != null;
-		assert sourceEntity.getaToBRelation().getTarget() != null;
+		assert sourceEntity.getAToBRelation() != null;
+		assert sourceEntity.getAToBRelation().getTarget() != null;
 
-		assert sourceEntity.getaToBmulti().size() == 2;
-		sourceEntity.getaToBmulti().forEach(rel -> {
+		assert sourceEntity.getAToBmulti().size() == 2;
+		sourceEntity.getAToBmulti().forEach(rel -> {
 			assert rel.getTarget() != null;
 		});
 		
@@ -332,7 +332,7 @@ public class CEIUtilsTest {
 
 		var b3 = new CustomEntityB();
 		b3.setValue("b3");
-		a1.setaToBRelation(new AtoB(a1, b3));
+		a1.setAToBRelation(new AtoB(a1, b3));
 		
 		var graph = CEIUtils.toEntityGraph(List.of(a1, a2));
 		

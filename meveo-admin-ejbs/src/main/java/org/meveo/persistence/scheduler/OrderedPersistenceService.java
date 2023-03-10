@@ -97,18 +97,7 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
 
                 PersistenceActionResult result = null;
 
-                if (itemToPersist instanceof SourceEntityToPersist) {
-
-                    /* Node is a source node */
-                    final SourceEntityToPersist sourceNode = (SourceEntityToPersist) itemToPersist;
-                    result = storageService.addSourceEntityUniqueCrt(
-                    	  repository,
-                          sourceNode.getRelationToPersist().getCode(),
-                          sourceNode.getValues(),
-                          sourceNode.getRelationToPersist().getEndEntityToPersist().getValues()
-                    );
-
-                } else if (itemToPersist instanceof EntityToPersist) {
+                if (itemToPersist instanceof EntityToPersist) {
 
                     /* Node is target or leaf node */
                     final EntityToPersist entityToPersist = (EntityToPersist) itemToPersist;
@@ -117,6 +106,11 @@ public abstract class OrderedPersistenceService<T extends CustomPersistenceServi
                     cei.setCode((String) entityToPersist.getValues().get("code"));
                     cei.setCetCode(entityToPersist.getCode());
                     cei.setCet(cacheContainerProvider.getCustomEntityTemplate(cei.getCetCode()));
+                    String uuid = (String) entityToPersist.getValues().get("uuid");
+                    if (uuid != null) {
+                    	cei.setUuid(uuid);
+                    }
+                    
                     customFieldInstanceService.setCfValues(cei, entityToPersist.getCode(), itemToPersist.getValues());
 
                     result = storageService.createOrUpdate(repository, cei);

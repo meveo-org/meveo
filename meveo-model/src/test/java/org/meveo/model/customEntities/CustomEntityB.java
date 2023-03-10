@@ -30,8 +30,8 @@ public class CustomEntityB implements CustomEntity {
 	public String getCetCode() {
 		return "CustomEntityB";
 	}
-	
-	
+
+
 	/**
 	 * @return the {@link #value}
 	 */
@@ -45,34 +45,6 @@ public class CustomEntityB implements CustomEntity {
 	 */
 	public void setValue(String value) {
 		this.value = value;
-	}
-
-	/**
-	 * @return the {@link #uuid}
-	 */
-	public String getUuid() {
-		return uuid;
-	}
-
-	/**
-	 * @param uuid the uuid to set
-	 */
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
-
-	@Override
-	public boolean isEqual(CustomEntity other) {
-		if (!(other instanceof CustomEntityB)) {
-			return false;
-		}
-		
-		var otherB = (CustomEntityB) other;
-		if(otherB.value.equals(this.value)) {
-			return true;
-		}
-		
-		return CustomEntity.super.isEqual(other);
 	}
 
 
@@ -93,18 +65,18 @@ public class CustomEntityB implements CustomEntity {
 
 
 	/**
-	 * @return the {@link #target}
+	 * @return the {@link #uuid}
 	 */
-	public CustomEntityC getTarget() {
-		return target;
+	public String getUuid() {
+		return uuid;
 	}
 
 
 	/**
-	 * @param target the target to set
+	 * @param uuid the uuid to set
 	 */
-	public void setTarget(CustomEntityC target) {
-		this.target = target;
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
 	}
 
 
@@ -121,6 +93,36 @@ public class CustomEntityB implements CustomEntity {
 	 */
 	public void setCircularRef(BtoA circularRef) {
 		this.circularRef = circularRef;
+	}
+
+
+	/**
+	 * @return the {@link #target}
+	 */
+	public CustomEntityC getTarget() {
+		return target;
+	}
+
+
+	/**
+	 * @param target the target to set
+	 */
+	public void setTarget(CustomEntityC target) {
+		this.target = target;
+	}
+	
+	@Override
+	public boolean isEqual(CustomEntity other) {
+		if (!(other instanceof CustomEntityB)) {
+			return false;
+		}
+		
+		var otherB = (CustomEntityB) other;
+		if(otherB.value.equals(this.value)) {
+			return true;
+		}
+		
+		return CustomEntity.super.isEqual(other);
 	}
 
 }

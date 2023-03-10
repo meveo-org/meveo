@@ -40,6 +40,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
@@ -222,9 +223,10 @@ public class JSONSchemaIntoJavaClassParser {
         
         // Generate default constructor
         classDeclaration.addConstructor(Modifier.Keyword.PUBLIC);
-
+        boolean extendsType = false;
         if(template instanceof CustomEntityTemplate) {
         	CustomEntityTemplate cet = (CustomEntityTemplate) template;
+        	extendsType = cet.getSuperTemplate() != null;
         	if (cet.getNeo4JStorageConfiguration() != null && cet.getNeo4JStorageConfiguration().isPrimitiveEntity()) {
 
             	// Handle primitive entity if value field is not defined
@@ -271,23 +273,36 @@ public class JSONSchemaIntoJavaClassParser {
             } else {
             	VariableDeclarator variableDeclarator = new VariableDeclarator();
             	variableDeclarator.setType("String");
+            	ConstructorDeclaration constructor = classDeclaration
+					.addConstructor(Modifier.Keyword.PUBLIC)
+	        		.addParameter(new Parameter(variableDeclarator.getType(), "uuid"));
             	
-            	// Generate constructor with the value
-            	classDeclaration.addConstructor(Modifier.Keyword.PUBLIC)
-    	        	.addParameter(new Parameter(variableDeclarator.getType(), "uuid"))
-    	        	.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
+            	if (extendsType) {
+                	BlockStmt constructorBody = JavaParser.parseBodyDeclaration(classDeclaration.getNameAsString() + "(String uuid) {\n super(uuid); \n}")
+                		.findAll(BlockStmt.class)
+                		.get(0);
+                	
+                	constructor.setBody(constructorBody);
+            	} else {
+                	// Generate constructor with the value
+            		constructor.setBody(JavaParser.parseBlock("{\n this.uuid = uuid; \n}"));
+            	}
+
             }
         }
         
         if (classDeclaration != null) {
-            FieldDeclaration field = new FieldDeclaration();
-            VariableDeclarator variable = new VariableDeclarator();
-            variable.setName("uuid");
-            variable.setType("String");
-            field.setModifiers(Modifier.Keyword.PRIVATE);
-            field.addVariable(variable);
-            classDeclaration.addMember(field);
-            ((ArrayList<FieldDeclaration>) fds).add(field);
+        	if (!extendsType) {
+	            FieldDeclaration field = new FieldDeclaration();
+	            VariableDeclarator variable = new VariableDeclarator();
+	            variable.setName("uuid");
+	            variable.setType("String");
+	            field.setModifiers(Modifier.Keyword.PRIVATE);
+	            field.addVariable(variable);
+	            classDeclaration.addMember(field);
+	            ((ArrayList<FieldDeclaration>) fds).add(field);
+        	}
+        	
             if (jsonMap.containsKey("storages")) {
                 compilationUnit.addImport(DBStorageType.class);
                 FieldDeclaration fd = new FieldDeclaration();

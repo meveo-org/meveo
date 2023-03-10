@@ -360,13 +360,29 @@ public class CrossStorageService implements CustomPersistenceService {
 		
 		for (var storage : cet.getAvailableStorages()) {
 			for (var conf : repository.getStorageConfigurations(storage)) {
+				Set<String> fetchFields = actualFetchFields.stream()
+						.filter(field -> fields.get(field) != null)
+						.filter(field -> fields.get(field).getStorages().contains(storage))
+						.collect(Collectors.toSet());
+				
+				Map<String, Set<String>> storageSubFields = new HashMap<>(subFields);
+				if (subFields != null) {
+					for (String field : subFields.keySet()) {
+						CustomFieldTemplate subField = fields.get(field);
+						if (subField == null || !subField.getStorages().contains(storage)) {
+							storageSubFields.remove(field);
+						}
+					}
+				}
+				
+				log.info("Sub fields for storage {} = {}", storage.getCode(), storageSubFields);
 				StorageQuery query = new StorageQuery();
 				query.setCet(cet);
-				query.setFetchFields(actualFetchFields);
+				query.setFetchFields(fetchFields);
 				query.setFilters(filters);
 				query.setPaginationConfiguration(paginationConfiguration);
 				query.setStorageConfiguration(conf);
-				query.setSubFields(subFields);
+				query.setSubFields(storageSubFields);
 				query.setFetchAllFields(fetchAllFields);
 				
 				List<Map<String, Object>> values = provider.findImplementation(storage)

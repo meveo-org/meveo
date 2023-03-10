@@ -282,7 +282,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(StorageQuery query) throws EntityDoesNotExistsException {
-		final Map<String, CustomFieldTemplate> fields = cftService.findByAppliesTo(query.getCet().getAppliesTo());
+		final Map<String, CustomFieldTemplate> fields = cftService.getCftsWithInheritedFields(query.getCet());
 
 		// Check if filters contains a field not stored in Neo4J
 		var dontFilterOnNeo4J = query.getFilters() != null && query.getFilters().keySet().stream()
