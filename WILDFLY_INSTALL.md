@@ -120,7 +120,8 @@ In the eclipse section, we will discuss how we can integrate Keycloak so we can 
 
 ##### Add System Properties
 
-At the end of extensions tag add the following properties.
+* Open the file WILDFLY_HOME\standalone\configuration\standalone.xml
+* At the end of `<extensions>` tag add the following properties.
 
 ```
 <system-properties>
