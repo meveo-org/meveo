@@ -4,14 +4,14 @@ import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.meveo.admin.action.BaseBean;
+import org.meveo.admin.action.ModuleItemBaseBean;
 import org.meveo.model.jobs.TimerEntity;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.job.TimerEntityService;
 
 @Named
 @ViewScoped
-public class TimerEntityBean extends BaseBean<TimerEntity> {
+public class TimerEntityBean extends ModuleItemBaseBean<TimerEntity> {
 
     private static final long serialVersionUID = 1L;
 

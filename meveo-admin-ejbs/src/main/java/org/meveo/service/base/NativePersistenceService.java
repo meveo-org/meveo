@@ -59,6 +59,7 @@ import javax.transaction.Transactional.TxType;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.util.HibernateUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -89,7 +90,6 @@ import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.persistence.CrossStorageTransaction;
-import org.meveo.persistence.impl.SQLStorageImpl;
 import org.meveo.persistence.sql.SQLConnectionProvider;
 import org.meveo.persistence.sql.SqlConfigurationService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
@@ -97,6 +97,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.custom.PostgresReserverdKeywords;
 import org.meveo.util.MeveoParamBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic implementation that provides the default implementation for
@@ -108,9 +110,11 @@ import org.meveo.util.MeveoParamBean;
  */
 public class NativePersistenceService extends BaseService {
 	
+    private static Logger log = LoggerFactory.getLogger(NativePersistenceService.class);
+
 	@FunctionalInterface
 	public static interface SqlAction {
-		void doWork(PreparedStatement ps) throws Exception;
+		void doWork(PreparedStatement ps) throws SQLException;
 	}
 
 	/**
@@ -162,7 +166,7 @@ public class NativePersistenceService extends BaseService {
     private CustomEntityTemplateService customEntityTemplateService;
 	
     @Inject
-    private SQLStorageImpl sqlStorageImpl;
+    private CrossStorageTransaction sqlStorageImpl;
     
     @Inject
     private CustomFieldsCacheContainerProvider cache;
@@ -398,8 +402,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException General exception
 	 */
 	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId) throws BusinessException {
-		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? cache.getCustomFieldTemplates(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
-		return create(sqlConnectionCode, cei, returnId, false, cfts, true);
+		Collection<CustomFieldTemplate> cfts = (cei.getCet().getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cei.getCet())).values();
+		return create(sqlConnectionCode, cei, returnId, cfts, true);
 	}
 
 	/**
@@ -408,18 +412,17 @@ public class NativePersistenceService extends BaseService {
 	 * @param cei              the {@link CustomEntityInstance}
 	 * @param returnId         if true values parameter will be updated with 'uuid'
 	 *                         field value.
-	 * @param isFiltered       if true process only the values that is stored in SQL
 	 * @param cfts             collection of {@link CustomFieldTemplate}
 	 * @param removeNullValues whether to remove the null values from the map
 	 * @return the uuid of the newly created entity
 	 * @throws BusinessException failed to insert the records
 	 */
-	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, boolean isFiltered, Collection<CustomFieldTemplate> cfts,
+	protected String create(String sqlConnectionCode, CustomEntityInstance cei, boolean returnId, Collection<CustomFieldTemplate> cfts,
 			boolean removeNullValues) throws BusinessException {
 		
 		CustomEntityTemplate cet = cei.getCet();
 		
-		Map<String, Object> values = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
+		Map<String, Object> values = cei.getCfValuesAsValues(DBStorageType.SQL, cfts, removeNullValues);
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
 				.filter(cft -> cft.getAppliesTo().equals(cet.getAppliesTo()))
 				.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
@@ -436,7 +439,7 @@ public class NativePersistenceService extends BaseService {
 				parentCei.setCet(parentTemplate);
 				parentCei.setCfValues(cei.getCfValues());
 				parentCei.setUuid(cei.getUuid());
-				var uuid = create(sqlConnectionCode, parentCei, true, isFiltered, cfts, removeNullValues);
+				var uuid = create(sqlConnectionCode, parentCei, true, cfts, removeNullValues);
 				convertedValues.put("uuid", uuid);	
 			}
 		}
@@ -679,8 +682,8 @@ public class NativePersistenceService extends BaseService {
 	 * @throws BusinessException failed updating the entity
 	 */
 	public void update(String sqlConnectionCode, CustomEntityInstance cei) throws BusinessException {
-		var cfts = cache.getCustomFieldTemplates(cei.getCet().getAppliesTo());
-		update(sqlConnectionCode, cei, false, cfts.values(), false);
+		var cfts = customFieldTemplateService.findByAppliesTo(cei.getCet().getAppliesTo());
+		update(sqlConnectionCode, cei, cfts.values(), false);
 	}
 
 	/**
@@ -689,11 +692,10 @@ public class NativePersistenceService extends BaseService {
 	 *
 	 * @param cei              the {@link CustomEntityInstance}. The cf values must
 	 *                         contain the field uuid.
-	 * @param isFiltered       if true process only the fields with storage=SQL
 	 * @param removeNullValues if true, remove the null values
 	 * @throws BusinessException General exception
 	 */
-	public void update(String sqlConnectionCode, CustomEntityInstance cei, boolean isFiltered, Collection<CustomFieldTemplate> cfts, boolean removeNullValues)
+	public void update(String sqlConnectionCode, CustomEntityInstance cei, Collection<CustomFieldTemplate> cfts, boolean removeNullValues)
 			throws BusinessException {
 		
 		// Update data in parent template
@@ -703,12 +705,12 @@ public class NativePersistenceService extends BaseService {
 			parentCei.setCet(cei.getCet().getSuperTemplate());
 			parentCei.setCfValues(cei.getCfValues());
 			parentCei.setUuid(cei.getUuid());
-			update(sqlConnectionCode, parentCei, true, parentCfts, removeNullValues);
+			update(sqlConnectionCode, parentCei, parentCfts, removeNullValues);
 		}
 
 		String tableName = PostgresReserverdKeywords.escapeAndFormat(cei.getTableName());
 		
-		Map<String, Object> sqlValues = cei.getCfValuesAsValues(isFiltered ? DBStorageType.SQL : null, cfts, removeNullValues);
+		Map<String, Object> sqlValues = cei.getCfValuesAsValues(DBStorageType.SQL, cfts, removeNullValues);
 		var appliesTo = CustomEntityTemplate.getAppliesTo(cei.getCetCode());
 		Map<String, CustomFieldTemplate> cftsMap = cfts.stream()
 				.filter(cft -> cft.getAppliesTo().equals(appliesTo))
@@ -729,7 +731,8 @@ public class NativePersistenceService extends BaseService {
 				);
 
 		for (String key: cftsMap.keySet()) {
-			if (key != null && !values.keySet().contains(key) && cftsMap.get(key).getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
+			var cft = cftsMap.get(key);
+			if (key != null && !values.keySet().contains(key) && cft.isSqlStorage() && cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST)) {
 				values.put(key, new ArrayList<>());
 			}
 		}
@@ -744,50 +747,44 @@ public class NativePersistenceService extends BaseService {
 
 		StringBuilder sql = new StringBuilder();
 		
-		try {
-			sql.append("UPDATE ").append(tableName).append(" SET ");
-			boolean first = true;
-			for (String fieldName : values.keySet()) {
-				String fieldNameInSQL = PostgresReserverdKeywords.escapeAndFormat(fieldName);
+		sql.append("UPDATE ").append(tableName).append(" SET ");
+		boolean first = true;
+		for (String fieldName : values.keySet()) {
+			String fieldNameInSQL = PostgresReserverdKeywords.escapeAndFormat(fieldName);
 
-				if (fieldName.equals(FIELD_ID)) {
-					continue;
-				}
-
-				if (!first) {
-					sql.append(",");
-				}
-				if (values.get(fieldName) == null) {
-					sql.append(fieldNameInSQL).append(" = NULL");
-
-				} else {
-					sql.append(fieldNameInSQL).append(" = ? ");
-				}
-				first = false;
+			if (fieldName.equals(FIELD_ID)) {
+				continue;
 			}
 
-			sql.append(" WHERE uuid='" + cei.getUuid() + "'");
+			if (!first) {
+				sql.append(",");
+			}
+			if (values.get(fieldName) == null) {
+				sql.append(fieldNameInSQL).append(" = NULL");
 
-			doUpdate(sqlConnectionCode, sql.toString(), ps -> {
-				int parameterIndex = 1;
-				for (String fieldName : values.keySet()) {
-					Object fieldValue = values.get(fieldName);
-					if (fieldValue != null && fieldName != "uuid") {
-						setParameterValue(ps, parameterIndex++, fieldValue);
-					}
-				}
-			});
-
-			CustomTableRecord record = new CustomTableRecord();
-			record.setUuid((String) values.get(FIELD_ID));
-			record.setCetCode(cei.getTableName());
-
-			customTableRecordUpdate.fire(record);
-
-		} catch (Exception e) {
-			log.error("Failed to insert values into table {} {} sql {}", tableName, values, sql, e);
-			throw e;
+			} else {
+				sql.append(fieldNameInSQL).append(" = ? ");
+			}
+			first = false;
 		}
+
+		sql.append(" WHERE uuid='" + cei.getUuid() + "'");
+
+		doUpdate(sqlConnectionCode, sql.toString(), ps -> {
+			int parameterIndex = 1;
+			for (String fieldName : values.keySet()) {
+				Object fieldValue = values.get(fieldName);
+				if (fieldValue != null && fieldName != "uuid") {
+					setParameterValue(ps, parameterIndex++, fieldValue);
+				}
+			}
+		});
+
+		CustomTableRecord record = new CustomTableRecord();
+		record.setUuid((String) values.get(FIELD_ID));
+		record.setCetCode(cei.getTableName());
+
+		customTableRecordUpdate.fire(record);
 	}
 	
 	private void doBatch(String sqlConnectionCode, String sql, SqlAction action) {
@@ -830,20 +827,19 @@ public class NativePersistenceService extends BaseService {
 
 			try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
 				action.doWork(ps);
-				
 				ps.executeUpdate();
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
 						connection.commit();
 					}
 				}
-			} catch (Exception e) {
-				log.error("Query failed: {}", e.getMessage());
+			} catch (SQLException e) {
 				if (!sqlConnectionCode.equals(SqlConfiguration.DEFAULT_SQL_CONNECTION)) {
 					if (!sqlConnectionProvider.getSqlConfiguration(sqlConnectionCode).isXAResource()) {
 						connection.rollback();
 					}
 				}
+				throw e;
 			}
 		});
 	}
@@ -1373,7 +1369,7 @@ public class NativePersistenceService extends BaseService {
 					// Any of the multiple field values wildcard match the value (OR criteria) - a
 					// diference from "likeCriterias" is that wildcard will be appended to the value
 					// automatically
-				} else if (PersistenceService.SEARCH_WILDCARD_OR.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_WILDCARD_OR.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) {
 						queryBuilder.addSql(field + " like '%" + filterValue + "%'");
@@ -1381,7 +1377,7 @@ public class NativePersistenceService extends BaseService {
 					queryBuilder.endOrClause();
 
 					// Just like wildcardOr but ignoring case :
-				} else if (PersistenceService.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_WILDCARD_OR_IGNORE_CAS.equals(condition)) {
 					queryBuilder.startOrClause();
 					for (String field : fields) { // since SEARCH_WILDCARD_OR_IGNORE_CAS , then filterValue is necessary a String
 						//lowercase functions may give different results in postgres/java => to avoid mismatch, postrges's function is the only one used. Example of mismath : Danışmanlık_İth
@@ -1390,7 +1386,7 @@ public class NativePersistenceService extends BaseService {
 					queryBuilder.endOrClause();
 
 					// Search by additional Sql clause with specified parameters
-				} else if (PersistenceService.SEARCH_SQL.equals(condition)) {
+				} else if (QueryBuilderHelper.SEARCH_SQL.equals(condition)) {
 					if (filterValue.getClass().isArray()) {
 						String additionalSql = (String) ((Object[]) filterValue)[0];
 						Object[] additionalParameters = Arrays.copyOfRange(((Object[]) filterValue), 1, ((Object[]) filterValue).length);
@@ -1399,11 +1395,17 @@ public class NativePersistenceService extends BaseService {
 						queryBuilder.addSql((String) filterValue);
 					}
 
+				} else if ("FilterMultiColumnWithOR".equals(condition)) {
+					queryBuilder.startOrClause();
+					for (String field : fields) {						
+						queryBuilder.addCriterion(field, " = ", (String) filterValue, false);
+					}
+					queryBuilder.endOrClause();
 				} else {
-					if (filterValue instanceof String && PersistenceService.SEARCH_IS_NULL.equals(filterValue)) {
+					if (filterValue instanceof String && QueryBuilderHelper.SEARCH_IS_NULL.equals(filterValue)) {
 						queryBuilder.addSql(fieldName + " is null ");
 
-					} else if (filterValue instanceof String && PersistenceService.SEARCH_IS_NOT_NULL.equals(filterValue)) {
+					} else if (filterValue instanceof String && QueryBuilderHelper.SEARCH_IS_NOT_NULL.equals(filterValue)) {
 						queryBuilder.addSql(fieldName + " is not null ");
 
 					} else if (filterValue instanceof String) {

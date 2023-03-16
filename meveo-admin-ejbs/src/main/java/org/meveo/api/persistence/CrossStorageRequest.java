@@ -37,6 +37,8 @@ public class CrossStorageRequest<T> {
 	private PaginationConfiguration configuration;
 	private CustomEntityTemplate cet;
 	private Set<String> relationsToFetch;
+	private String id;
+	private List<String> ids;
 	
 	public CrossStorageRequest(Repository repo, CrossStorageService api, Class<T> clazz, CustomEntityTemplate cet) {
 		repository = repo;
@@ -48,12 +50,31 @@ public class CrossStorageRequest<T> {
 		this.relationsToFetch = new HashSet<>();
 	}
 	
+	public CrossStorageRequest<T> id(String id) {
+		this.id = id;
+		return this;
+	}
+	
+	public CrossStorageRequest<T> ids(List<String> ids) {
+		this.ids = ids;
+		return this;
+	}
+	
 	public CrossStorageRequest<T> by(String field, Object value) {
 		if (value instanceof CustomEntity) {
 			configuration.getFilters().put(field, ((CustomEntity) value).getUuid());
 		} else {
 			configuration.getFilters().put(field, value);
 		}
+		return this;
+	}
+
+	public CrossStorageRequest<T> or(List<String> fields, Object value) {
+		var filterKey = "FilterMultiColumnWithOR " + String.join(" ", fields);
+		var filterValue = value instanceof CustomEntity
+							? ((CustomEntity) value).getUuid()
+							: value;
+		configuration.getFilters().put(filterKey, filterValue);
 		return this;
 	}
 	
@@ -102,7 +123,15 @@ public class CrossStorageRequest<T> {
 	@SuppressWarnings("unchecked")
 	public List<T> getResults() {
 		try {
-			var results = api.find(repository, cet, configuration);
+			List<Map<String, Object>> results = new ArrayList<>();
+			
+			if (id != null) {
+				results.add(api.findById(repository, cet, id, null, new HashMap<>(), true));
+			} else if (ids != null) {
+				results = api.findByIds(repository, cet, ids, null, new HashMap<>(), true);
+			} else {
+				results = api.find(repository, cet, configuration);
+			}
 			
 			if(!relationsToFetch.isEmpty()) {
 				results.forEach(this::fetch);
@@ -125,7 +154,15 @@ public class CrossStorageRequest<T> {
 	@SuppressWarnings("unchecked")
 	public T getResult() {
 		try {
-			var values = api.find(repository, cet, configuration);
+			List<Map<String, Object>> values = new ArrayList<>();
+			if (id != null) {
+				values.add(api.findById(repository, cet, id, configuration.getFetchFields(), new HashMap<>(), true));
+			} else if (ids != null) {
+				values = api.findByIds(repository, cet, ids, configuration.getFetchFields(), new HashMap<>(), true);
+			} else {
+				values = api.find(repository, cet, configuration);
+			}
+			
 			if(values == null || values.isEmpty()) {
 				return null;
 			}

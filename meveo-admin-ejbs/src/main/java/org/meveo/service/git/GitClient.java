@@ -18,6 +18,7 @@ package org.meveo.service.git;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,8 +36,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PullCommand;
@@ -51,7 +52,6 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.EmptyCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -69,6 +69,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
@@ -85,6 +86,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.synchronization.KeyLock;
 import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Git client class to manipulate repositories
@@ -125,9 +127,20 @@ public class GitClient {
     private KeyLock keyLock;
     
     @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(GitClient.class);
 
+    public void setRemote(GitRepository gitRepository) throws BusinessException {
+    	final File repoDir = GitHelper.getRepositoryDir(null, gitRepository);
+        try (Git git = Git.init().setDirectory(repoDir).call()){
+            var command = git.remoteSetUrl();
+            command.setName("origin");
+            command.setUri(new URIish(gitRepository.getRemoteOrigin()));
+            command.call();
+        } catch (GitAPIException | URISyntaxException e) {
+            throw new BusinessException("Error setting remote origin of " + gitRepository.getCode(), e);
 
+        }
+    }
 
     /**
      * Remove the corresponding git repository from file system
@@ -142,7 +155,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository);
         WindowCache.reconfigure(new WindowCacheConfig());
         
         if (repoDir.exists()) {
@@ -170,7 +183,7 @@ public class GitClient {
      */
     public void create(GitRepository gitRepository, boolean failIfExist, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
-        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repoDir = GitHelper.getRepositoryDir(user, gitRepository);
         if (repoDir.exists() && failIfExist) {
             throw new EntityAlreadyExistsException(GitRepository.class, gitRepository.getCode());
         } else if(repoDir.exists() && new File(repoDir, ".git").exists()) {
@@ -260,7 +273,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -342,7 +355,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
         List<String> patterns = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(files)) {
@@ -383,7 +396,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to push to");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -428,7 +441,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -465,11 +478,12 @@ public class GitClient {
      * @param gitRepository Repository to update
      * @param username      Optional - Username to use when pulling
      * @param password      Optional - Password to use when pulling
+     * @return true if files has been modified
      * @throws UserNotAuthorizedException if user does not have write access to the repository
      * @throws IllegalArgumentException   if repository has no remote
      * @throws BusinessException          if repository cannot be opened or if a problem happen during the pull
      */
-    public void pull(GitRepository gitRepository, String username, String password) throws BusinessException {
+    public boolean pull(GitRepository gitRepository, String username, String password) throws BusinessException {
         MeveoUser user = currentUser.get();
         if (!GitHelper.hasWriteRole(user, gitRepository)) {
             throw new UserNotAuthorizedException(user.getUserName());
@@ -479,7 +493,7 @@ public class GitClient {
             throw new IllegalArgumentException("Repository " + gitRepository.getCode() + " has no remote to pull from");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -508,15 +522,15 @@ public class GitClient {
                 git.reset().setMode(ResetType.HARD).setRef("origin/" + branch).call();
             }
 
-            triggerCommitEvent(gitRepository, git, headCommitBeforePull);
-            
         	git.submoduleUpdate().call();
+        	
+        	return triggerCommitEvent(gitRepository, git, headCommitBeforePull);
 
         } catch (IOException e) {
             throw new BusinessException("Cannot open repository " + gitRepository.getCode(), e);
 
         } catch (GitAPIException e) {
-            throw new BusinessException("Cannot pull repository " + gitRepository.getCode(), e);
+            throw new BusinessException("Cannot pull repository " + gitRepository.getCode() + " : " + e.getMessage(), e);
 
         } finally {
             keyLock.unlock(gitRepository.getCode());
@@ -524,7 +538,10 @@ public class GitClient {
 
     }
 
-	protected void triggerCommitEvent(GitRepository gitRepository, Git git, RevCommit headCommitBeforePull) throws AmbiguousObjectException, IncorrectObjectTypeException, IOException, MissingObjectException, GitAPIException, CheckoutConflictException, BusinessException {
+    /**
+     * @return true if files has been modified
+     */
+	protected boolean triggerCommitEvent(GitRepository gitRepository, Git git, RevCommit headCommitBeforePull) throws AmbiguousObjectException, IncorrectObjectTypeException, IOException, MissingObjectException, GitAPIException, CheckoutConflictException, BusinessException {
 		try (RevWalk rw = new RevWalk(git.getRepository())) {
 		    ObjectId head = git.getRepository().resolve(Constants.HEAD);
 		    RevCommit headCommitAfterPull = rw.parseCommit(head);
@@ -544,9 +561,11 @@ public class GitClient {
 		        			.call();
 		        		throw new BusinessException(e);
 		        	}
+		        	return true;
 		        }
 		    }
 		}
+		return false;
 	}
 
     /**
@@ -563,7 +582,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -598,7 +617,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -632,7 +651,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -666,7 +685,7 @@ public class GitClient {
             throw new BusinessException("Cannot checkout branch " + branch + " because it is blocked.");
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -733,7 +752,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -785,7 +804,7 @@ public class GitClient {
         
         List<String> results = new ArrayList<>();
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -841,7 +860,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -876,7 +895,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -906,7 +925,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -948,7 +967,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1006,7 +1025,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1032,7 +1051,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1059,7 +1078,7 @@ public class GitClient {
             throw new UserNotAuthorizedException(user.getUserName());
         }
 
-        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository.getCode());
+        final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
 
         keyLock.lock(gitRepository.getCode());
 
@@ -1075,6 +1094,30 @@ public class GitClient {
 		} finally {
             keyLock.unlock(gitRepository.getCode());
         }
+    }
+    
+    public List<String> listPendingChanges(GitRepository gitRepository) {
+    	List<String> redFiles = new ArrayList<>();
+    	MeveoUser user = currentUser.get();
+    	if (!GitHelper.hasWriteRole(user, gitRepository)) {
+            throw new UserNotAuthorizedException(user.getUserName());
+        }
+    	final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
+    	try {
+	    	Git git = Git.open(repositoryDir);
+	    	var status = git.status().call();
+	    	for (String redFile : status.getUncommittedChanges()) {
+	    		redFiles.add(redFile);
+	    	}
+	    	for (String redFile : status.getUntracked()) {
+	    		redFiles.add(redFile);
+	    	}
+    	} catch (IOException ex) {
+    		log.error("Cannot open git with repositoryDir; {}", ex);
+    	} catch (GitAPIException ex) {
+    		log.error("Cannot call git.status: {}", ex);
+    	}
+    	return redFiles;
     }
 
     protected void createGitMeveoFolder(GitRepository gitRepository, File repoDir) throws BusinessException {

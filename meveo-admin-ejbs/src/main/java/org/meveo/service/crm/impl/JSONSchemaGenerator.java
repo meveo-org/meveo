@@ -65,6 +65,9 @@ public class JSONSchemaGenerator {
 	
 	@Inject
 	private CustomEntityCategoryService cecService;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 
 	abstract static class CustomTemplateProcessor {
 		abstract String code();
@@ -567,7 +570,7 @@ public class JSONSchemaGenerator {
 			final CustomEntityTemplate customEntityTemplate = cache.getCustomEntityTemplate(refCode);
 			Integer fieldsSize = 0;
 			if(field.getRelationship() != null) {
-				var fields = cache.getCustomFieldTemplates(field.getRelationship().getAppliesTo());
+				var fields = cftService.findByAppliesTo(field.getRelationship().getAppliesTo());
 				fieldsSize = fields == null ? 0 : fields.size();
 			}
 			// Do not make a reference in case of a primitive entity if the relation has no fields
@@ -601,7 +604,7 @@ public class JSONSchemaGenerator {
 
 			@Override
 			Map<String, CustomFieldTemplate> fields() {
-				return cache.getCustomFieldTemplates(entityTemplate.getAppliesTo());
+				return cftService.findByAppliesTo(entityTemplate.getAppliesTo());
 			}
 
 			@Override
@@ -641,7 +644,7 @@ public class JSONSchemaGenerator {
 
 			@Override
 			Map<String, CustomFieldTemplate> fields() {
-				return cache.getCustomFieldTemplates(relationshipTemplate.getAppliesTo());
+				return cftService.findByAppliesTo(relationshipTemplate.getAppliesTo());
 			}
 
 			@Override

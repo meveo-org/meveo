@@ -9,6 +9,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.service.admin.impl.MeveoModuleFilters;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.custom.CustomizedEntity;
 import org.meveo.service.custom.CustomizedEntityFilter;
 import org.meveo.service.custom.CustomizedEntityService;
@@ -28,16 +30,20 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 
     @Inject
     private CustomizedEntityService customizedEntityService;
+
+    @Inject
+    private MeveoModuleService meveoModuleService;
     
-    private LazyDataModel<CustomizedEntity> customizedEntityDM = null;
+    private LazyDataModel<CustomizedEntity> customizedEntityDM = null;    
 
     @SuppressWarnings("unused")
 	private List<CustomizedEntity> selectedCustomizedEntities;
     
     @PostConstruct
-    public void init() {
-    	this.filters.put("customEntity", true);
-    }
+    public void init() {                
+    	this.filters.put("customEntity", true);        
+        this.filters.put("workingModule", super.getUserCurrentModule());
+    }    
 
     public LazyDataModel<CustomizedEntity> getCustomizedEntities() {
 
@@ -88,6 +94,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 String sortBy = sortOrder != null ? sortOrder.name() : null;
                 String primitiveEntity = (String) filters.get("primitiveEntity");
                 primitiveEntity = primitiveEntity == null ? "0" : primitiveEntity;
+                String workingModule = (String) filters.get("workingModule");
                 
                 CustomizedEntityFilter filter = new CustomizedEntityFilter();
                 filter.setEntityName(query);                
@@ -95,6 +102,7 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
                 filter.setSortBy(sortField);
                 filter.setSortBy(sortBy);
                 filter.setPrimitiveEntity(primitiveEntity);
+                filter.setModuleCode(workingModule);
                 
 				if (StringUtils.isBlank(cecId)) {
 					filter.setIncludeNonManagedEntities(false);
@@ -119,4 +127,10 @@ public class CustomEntityTemplateListBean extends CustomEntityTemplateBean {
 
         return customizedEntityDM;
     }
+
+    public List<String> getMeveoModulesCodes() {
+		var filters = new MeveoModuleFilters();
+		filters.setIsInDraft(true);
+		return meveoModuleService.listCodesOnly(filters);
+	}
 }

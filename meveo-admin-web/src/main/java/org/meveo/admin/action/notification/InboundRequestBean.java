@@ -33,6 +33,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.notification.InboundRequestService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link InboundRequest} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their
@@ -47,6 +49,8 @@ import org.primefaces.model.UploadedFile;
 public class InboundRequestBean extends UpdateMapTypeFieldBean<InboundRequest> {
 
     private static final long serialVersionUID = -6762628879784107169L;
+    
+    private static Logger log = LoggerFactory.getLogger(InboundRequestBean.class);
 
     @Inject
     InboundRequestService inboundRequestService;

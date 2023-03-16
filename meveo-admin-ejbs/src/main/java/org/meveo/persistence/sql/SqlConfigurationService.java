@@ -36,6 +36,8 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.service.custom.CustomTableCreatorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -44,6 +46,8 @@ import org.meveo.service.custom.CustomTableCreatorService;
  */
 @Stateless
 public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
+
+    private static Logger log = LoggerFactory.getLogger(SqlConfigurationService.class);
 
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
@@ -338,5 +342,10 @@ public class SqlConfigurationService extends BusinessService<SqlConfiguration> {
 				}
 			}
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

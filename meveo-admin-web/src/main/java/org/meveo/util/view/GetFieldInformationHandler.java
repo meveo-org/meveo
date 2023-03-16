@@ -3,6 +3,7 @@ package org.meveo.util.view;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -195,7 +196,8 @@ public class GetFieldInformationHandler extends TagHandler {
 
         } else if (fieldClassType == Date.class) {
             fieldInfo.fieldType = FieldTypeEnum.Date;
-
+        } else if(fieldClassType == Instant.class) {
+        	fieldInfo.fieldType = FieldTypeEnum.Instant;
         } else if (fieldClassType.isEnum()) {
             fieldInfo.fieldType = FieldTypeEnum.Enum;
             fieldInfo.enumClassname = field.getType().getName();

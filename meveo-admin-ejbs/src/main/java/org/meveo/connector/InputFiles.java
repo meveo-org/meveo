@@ -29,6 +29,7 @@ import javax.xml.bind.JAXBException;
 import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ImportFileFiltre;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author anasseh
@@ -37,7 +38,7 @@ import org.slf4j.Logger;
  */
 
 public abstract class InputFiles {
-	protected Logger log;
+	private static Logger log = LoggerFactory.getLogger(InputFiles.class);
 
 	public void handleFiles(String dirIN, String prefix, String ext, String dirOK, String dirKO) throws InterruptedException {
 		File dir = new File(dirIN);

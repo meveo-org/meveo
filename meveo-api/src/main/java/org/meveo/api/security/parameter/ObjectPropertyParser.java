@@ -52,7 +52,6 @@ public class ObjectPropertyParser extends SecureMethodParameterParser<BusinessEn
             propertyValue = (String) ReflectionUtils.getPropertyValue(dto, property);
         } catch (IllegalAccessException e) {
             String message = String.format("Failed to retrieve property %s.%s.", dto.getClass().getName(), property);
-            log.error(message, e);
             throw new InvalidParameterException(message);
         }
 
@@ -70,7 +69,6 @@ public class ObjectPropertyParser extends SecureMethodParameterParser<BusinessEn
             entity.setCode(code);
         } catch (InstantiationException | IllegalAccessException e) {
             String message = String.format("Failed to create new %s instance.", entityClass.getName());
-            log.error(message, e);
             throw new InvalidParameterException(message);
         }
         return entity;

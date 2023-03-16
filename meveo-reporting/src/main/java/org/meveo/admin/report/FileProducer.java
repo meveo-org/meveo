@@ -32,6 +32,7 @@ import org.meveo.admin.exception.NoTemplateException;
 import org.meveo.model.crm.Provider;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -46,8 +47,8 @@ import net.sf.jasperreports.engine.util.JRLoader;
  */
 @Named
 public class FileProducer {
-    @Inject
-    protected Logger log;
+
+	private static Logger log = LoggerFactory.getLogger(FileProducer.class);
 
     public Map<String, Object> parameters = new HashMap<String, Object>();
 

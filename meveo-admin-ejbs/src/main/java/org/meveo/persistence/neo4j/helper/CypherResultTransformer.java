@@ -16,10 +16,10 @@
 
 package org.meveo.persistence.neo4j.helper;
 
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Transaction;
 
 @FunctionalInterface
 public interface CypherResultTransformer<T> {
-    T execute(Transaction transaction, StatementResult result);
+    T execute(Transaction transaction, Result result);
 }

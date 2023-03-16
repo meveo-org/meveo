@@ -11,7 +11,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.model.ModuleItem;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.git.GitRepository;
@@ -25,6 +24,7 @@ import org.meveo.service.crm.impl.JSONSchemaIntoJavaClassParser;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.CompilationUnit;
 
@@ -57,8 +57,7 @@ public class CustomEntityTemplateCompiler {
     @Inject
     private CustomRelationshipTemplateService customRelationshipTemplateService;
     
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(CustomEntityTemplateCompiler.class);
     
     public String getTemplateSchema(CustomEntityTemplate cet) {
         String schema = jsonSchemaGenerator.generateSchema(cet.getCode(), cet);
@@ -106,10 +105,10 @@ public class CustomEntityTemplateCompiler {
     	File repositoryDir;
     	BusinessService businessService = businessServiceFinder.find(cet);
     	if (module == null) {
-	        repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/json/");
+	        repositoryDir = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository), "/facets/json/");
 	        path = "";
     	} else {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/json/");
+    		repositoryDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), "/facets/json/");
     		path = "";
     	}
         return new File(repositoryDir, path);
@@ -121,10 +120,10 @@ public class CustomEntityTemplateCompiler {
     	File repositoryDir;
     	BusinessService businessService = businessServiceFinder.find(cet);
     	if (module == null) {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + "/facets/java/");
+    		repositoryDir = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository), "/facets/java/");
     		path = "org/meveo/model/customEntities";//+ cet.getClass().getAnnotation(ModuleItem.class).path();
     	} else {
-    		repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + "/facets/java");
+    		repositoryDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), "/facets/java");
     		path = "org/meveo/model/customEntities";// + cet.getClass().getAnnotation(ModuleItem.class).path();
     	}
     	return new File(repositoryDir, path);

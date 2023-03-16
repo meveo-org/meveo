@@ -7,20 +7,32 @@ import java.util.Map;
 import java.util.Set;
 
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
-import org.meveo.model.storage.Repository;
+import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.IStorageConfiguration;
 
-/**
- * 
- * @author heros
- * @since 
- * @version
- */
 public class StorageQuery {
+	
+	public static StorageQuery fromCei(CustomEntityInstance cei, IStorageConfiguration storage) {
+		StorageQuery query = new StorageQuery();
+		query.setCet(cei.getCet());
+		query.setStorageConfiguration(storage);
+		var values = cei.getCfValuesAsValues(storage.getDbStorageType(), cei.getFieldTemplates().values(), true);
+		for (var cft : cei.getFieldTemplates().values()) {
+			if (!cft.isUnique()) {
+				values.remove(cft.getCode());
+			}
+		}
+		query.setFilters(values);
+		query.setPaginationConfiguration(new PaginationConfiguration(values));
+		return query;
+	}
+	
 	private Map<String, Object> filters;
 	private PaginationConfiguration paginationConfiguration;
 	private CustomEntityTemplate cet;
-	private Repository repository;
+	private IStorageConfiguration storageConfiguration;
 	private Set<String> fetchFields;
 	private Map<String, Set<String>> subFields;
 	private boolean fetchAllFields;
@@ -75,16 +87,16 @@ public class StorageQuery {
 		this.cet = cet;
 	}
 	/**
-	 * @return the {@link #repository}
+	 * @return the {@link #storageConfiguration}
 	 */
-	public Repository getRepository() {
-		return repository;
+	public IStorageConfiguration getStorageConfiguration() {
+		return storageConfiguration;
 	}
 	/**
 	 * @param repository the repository to set
 	 */
-	public void setRepository(Repository repository) {
-		this.repository = repository;
+	public void setStorageConfiguration(IStorageConfiguration repository) {
+		this.storageConfiguration = repository;
 	}
 	/**
 	 * @return the {@link #fetchFields}

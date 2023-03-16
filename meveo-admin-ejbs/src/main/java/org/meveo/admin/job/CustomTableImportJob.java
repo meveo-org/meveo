@@ -49,6 +49,8 @@ import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.job.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Import data to custom tables
@@ -59,6 +61,8 @@ import org.meveo.service.job.Job;
  */
 @Stateless
 public class CustomTableImportJob extends Job {
+	
+	private static Logger log = LoggerFactory.getLogger(CustomTableImportJob.class);
 
     @Inject
     private ParamBeanFactory paramBeanFactory;

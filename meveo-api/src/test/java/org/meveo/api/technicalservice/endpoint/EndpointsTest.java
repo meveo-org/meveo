@@ -83,7 +83,7 @@ public class EndpointsTest {
 
         EndpointExecution execution = getEndpointExecution(endpoint);
 
-        final Map<String, Object> execute = endpointApi.execute(endpoint, execution);
+        final Map<String, Object> execute = endpointApi.execute(endpoint, execution).getResults();
 
         Assert.assertEquals("The country is : France", execute.get("resultCountry"));
     }
@@ -101,7 +101,7 @@ public class EndpointsTest {
 
         EndpointExecution execution = getEndpointExecution(endpoint);
 
-        final Map<String, Object> execute = endpointApi.execute(endpoint, execution);
+        final Map<String, Object> execute = endpointApi.execute(endpoint, execution).getResults();
 
         Assert.assertEquals("The budget is 32.0 EUR", execute.get("budget"));
     }
@@ -130,7 +130,7 @@ public class EndpointsTest {
                 .setDelayValue(2L)
                 .createEndpointExecution();
 
-        final Map<String, Object> execute = endpointApi.execute(endpoint, endpointExecution);
+        final Map<String, Object> execute = endpointApi.execute(endpoint, endpointExecution).getResults();
         int counter =  (int) execute.get("counter");
 
         Assert.assertEquals("Counter should be 2", 2, counter);
@@ -149,7 +149,7 @@ public class EndpointsTest {
 
         EndpointExecution execution = getEndpointExecution(endpoint);
 
-        final Map<String, Object> execute = endpointApi.execute(endpoint, execution);
+        final Map<String, Object> execute = endpointApi.execute(endpoint, execution).getResults();
 
         Assert.assertEquals("The city is : New-York", execute.get("resultCity"));
     }

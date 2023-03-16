@@ -26,6 +26,7 @@ import javax.persistence.NoResultException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.httpclient.util.HttpURLConnection;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -43,6 +44,8 @@ import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.base.BusinessService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * MeveoInstance service implementation.
@@ -52,6 +55,8 @@ import org.meveo.service.base.BusinessService;
  */
 @Stateless
 public class MeveoInstanceService extends BusinessService<MeveoInstance> {
+
+    private static Logger log = LoggerFactory.getLogger(MeveoInstanceService.class);
 
 	@Inject
 	private Event<InboundCommunicationEvent> event;
@@ -207,5 +212,10 @@ public class MeveoInstanceService extends BusinessService<MeveoInstance> {
 			log.error("Failed to communicate {}. Reason {}", meveoInstance.getCode(), (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
 			throw new BusinessException("Failed to communicate " + meveoInstance.getCode() + ". Error " + e.getMessage());
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

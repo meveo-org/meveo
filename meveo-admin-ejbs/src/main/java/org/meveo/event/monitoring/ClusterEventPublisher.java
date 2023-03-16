@@ -18,6 +18,7 @@ import org.meveo.model.IEntity;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JMSDestinationDefinitions(value = { @JMSDestinationDefinition(name = "java:/topic/CLUSTEREVENTTOPIC", interfaceName = "javax.jms.Topic", destinationName = "ClusterEventTopic") })
 @Stateless
@@ -25,8 +26,7 @@ public class ClusterEventPublisher implements Serializable {
 
     private static final long serialVersionUID = 4434372450314613654L;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ClusterEventPublisher.class);
 
     @Inject
     private JMSContext context;

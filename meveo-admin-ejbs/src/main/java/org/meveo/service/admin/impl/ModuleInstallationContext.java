@@ -34,6 +34,7 @@ public class ModuleInstallationContext {
 	private List<Repository> repositories;
 	private MeveoModule module;
 	private List<PostInstallAction> postInstallActions = new ArrayList<>();
+	private boolean isJsonInstallation = true;
 	
 	private boolean active;
 	private boolean failed;
@@ -89,6 +90,8 @@ public class ModuleInstallationContext {
 		active = false;
 		this.ModuleCodeInstallation = null;
 		this.repositories = null;
+		this.module = null;
+		this.isJsonInstallation = true;
 	}
 
 	/**
@@ -119,6 +122,26 @@ public class ModuleInstallationContext {
 		}
 	}
 	
+	/**
+	 * @return the {@link #isJsonInstallation}
+	 */
+	public boolean isJsonInstallation() {
+		return active && isJsonInstallation;
+	}
+	
+	public boolean isGitInstallation() {
+		return active && !isJsonInstallation;
+	}
+
+	/**
+	 * @param isJsonInstallation the isJsonInstallation to set
+	 */
+	public void setJsonInstallation(boolean isJsonInstallation) {
+		this.isJsonInstallation = isJsonInstallation;
+	}
+
+
+
 	@FunctionalInterface
 	public static interface PostInstallAction {
 		public void run() throws BusinessException;

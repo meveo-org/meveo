@@ -299,6 +299,21 @@ MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
 
 System.out.println("Found MyCet instance: " + cei);
 ```
+if the requirement is to filter results against multiple values, 'by' for the clause, can be used with slight change in field name to trigger multiple values filter against field.
+
+**Example** :
+
+```java
+Repository defaultRepo = repositoryService.findDefaultRepository();
+MyCet cei = crossStorageApi.find(defaultRepo, MyCet.class)
+    .by("valueOne", "test")
+    .fetch("relationshipOne") // Optional
+    .getResult();
+System.out.println("Found MyCet instance: " + cei);
+List<MyCet> ceis = crossStorageApi.find(defaultRepo, MyCet.class)
+.by("inList valueOne", valueList)
+.getResults();
+```
 
 ## II.3. List entities
 

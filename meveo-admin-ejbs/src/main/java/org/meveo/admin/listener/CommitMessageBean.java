@@ -1,6 +1,7 @@
 package org.meveo.admin.listener;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.SessionScoped;
 import javax.faces.event.AjaxBehaviorEvent;
@@ -14,8 +15,7 @@ public class CommitMessageBean implements Serializable {
 
     private static final long serialVersionUID = -8338330543224047209L;
 
-    @Inject
-    private transient Logger log;
+    private static Logger log = LoggerFactory.getLogger(CommitMessageBean.class);
 
     private String commitMessage="";
 

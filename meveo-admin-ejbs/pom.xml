@@ -4,12 +4,16 @@
 	<parent>
 		<artifactId>meveo</artifactId>
 		<groupId>org.meveo</groupId>
-		<version>7.1.1-SNAPSHOT</version>
+		<version>7.2.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>meveo-admin-ejbs</artifactId>
 	<name>Meveo Admin Web Application - EJBs Module</name>
 	<packaging>jar</packaging>
+	<properties>
+		<buildTime>${maven.build.timestamp}</buildTime>
+		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
+	</properties>
 	<build>
 		<resources>
 			<resource>
@@ -94,8 +98,8 @@
 					<replacements>
 						<replacement>
 							<!--suppress UnresolvedMavenProperty -->
-							<token>@buildtime@</token>
-							<value>${maven.build.timestamp}</value>
+							<token>@buildTime@</token>
+							<value>${buildTime}</value>
 						</replacement>
 						<replacement>
 							<!--suppress UnresolvedMavenProperty -->
@@ -161,6 +165,12 @@
 		</pluginManagement>
 	</build>
 	<dependencies>
+		<dependency>
+		    <groupId>org.glassfish.tyrus.bundles</groupId>
+		    <artifactId>tyrus-standalone-client</artifactId>
+		    <version>1.19</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
@@ -264,6 +274,25 @@
 				<exclusion>
 					<artifactId>jboss-logging</artifactId>
 					<groupId>org.jboss.logging</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-query</artifactId>
+			<version>9.4.16.Final</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jboss-logging</artifactId>
+					<groupId>org.jboss.logging</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.jackson</groupId>
+					<artifactId>jackson-core-asl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.jackson</groupId>
+					<artifactId>jackson-mapper-asl</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -538,14 +567,9 @@
 			<version>1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>neo4j-ogm-http-driver</artifactId>
-			<version>2.0.4</version>
-		</dependency>
-		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<version>1.7.5</version>
+			<version>4.4.9</version>
 		</dependency>
 		<dependency><!-- FIXME: Study if we can make this optional by dynamic download of the jar -->
 		    <groupId>org.python</groupId>

@@ -13,6 +13,8 @@ import org.meveo.model.finance.ReportExtract;
 import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.finance.ReportExtractService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller to manage detail view of {@link ReportExtract}.
@@ -27,6 +29,8 @@ import org.meveo.service.finance.ReportExtractService;
 public class ReportExtractBean extends UpdateMapTypeFieldBean<ReportExtract> {
 
     private static final long serialVersionUID = -3817116164208834748L;
+    
+    private static Logger log = LoggerFactory.getLogger(ReportExtractBean.class);
 
     @Inject
     private ReportExtractService reportExtractService;

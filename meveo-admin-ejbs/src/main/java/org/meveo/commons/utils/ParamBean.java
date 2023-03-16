@@ -331,9 +331,11 @@ public class ParamBean {
 	 * @param category Category name
 	 */
 	public void setProperty(String property, String value, String category) {
-		setProperty(property, value);
-		if (category != null) {
-			categories.put(property, category);
+		if (property != null) {
+			setProperty(property, value);
+			if (category != null) {
+				categories.put(property, category);
+			}
 		}
 	}
 
@@ -374,6 +376,8 @@ public class ParamBean {
 				for (String key : keys) {
 					key = saveConvert(key, true, true);
 					String val = saveConvert((String) properties.get(key), true, true);
+					if (StringUtils.isBlank(key) || val == null)
+						continue;
 					if (categories.containsKey(key)) {
 						if (!lastCategory.equals(categories.get(key))) {
 							lastCategory = categories.get(key);
@@ -449,6 +453,8 @@ public class ParamBean {
 	 * @return escaped string.
 	 */
 	private String saveConvert(String theString, boolean escapeSpace, boolean escapeUnicode) {
+		if (theString == null)
+			return null;
 		int len = theString.length();
 		int bufLen = len * 2;
 		if (bufLen < 0) {

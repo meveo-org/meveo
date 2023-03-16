@@ -24,6 +24,7 @@ import org.meveo.audit.logging.handler.Handler;
 import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.model.DualListModel;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -34,8 +35,7 @@ public class AuditConfigurationBean implements Serializable {
 
 	private static final long serialVersionUID = -2288050777565855090L;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(AuditConfigurationBean.class);
 
 	@Inject
 	private Messages messages;

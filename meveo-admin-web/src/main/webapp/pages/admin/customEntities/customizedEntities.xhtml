@@ -33,6 +33,15 @@
                 <hftl:decorateFormField fieldId="primitiveEntity" label="#{messages['BusinessEntity.primitiveEntity']}">
                     <p:triStateCheckbox id="primitiveEntity" value="#{customEntityTemplateListBean.filters['primitiveEntity']}" rendered="#{empty(customEntityTemplateListBean.filters['cecId'])}"/>  
                 </hftl:decorateFormField>
+                <hftl:decorateFormField label="Belonging Module">
+                    <p:selectOneMenu
+                        id="select-working-module"
+                        style="min-width: 80px"
+                        value="#{customEntityTemplateListBean.filters['workingModule']}"
+                        converter="omnifaces.SelectItemsConverter">
+                        <f:selectItems value="#{customEntityTemplateListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                    </p:selectOneMenu>
+                </hftl:decorateFormField>
             </ui:define>
             <ui:define name="buttons">
                 <p:commandButton id="buttonSearch" value="#{messages['commons.search']}" ajax="true" update="searchResults" />

@@ -23,7 +23,6 @@ import org.meveo.admin.web.interceptor.ActionMethod;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.git.GitRepositoryDto;
 import org.meveo.api.dto.module.ModuleDependencyDto;
-import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingModuleException;
 import org.meveo.api.git.GitRepositoryApi;
 import org.meveo.api.module.MeveoModuleApi;
@@ -44,6 +43,7 @@ import org.primefaces.model.DualListModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller for managing git repository model.
@@ -70,8 +70,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	@Inject
 	private MeveoModuleService moduleService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(GitRepositoryBean.class);
 
 	@Inject
 	private GitClient gitClient;
@@ -86,6 +85,8 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	private String branch;
 	
 	protected DualListModel<String> repositories;
+	
+	protected DualListModel<String> pendingGitFiles = new DualListModel<String>();
 	
 	private List<ModuleDependencyDto> missingDependencies;
 	
@@ -107,10 +108,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		if (entity != null && entity.getId() !=null && entity.getCode() != null) {
 			try {
 				branchList = gitClient.listRefs(entity);
+				pendingGitFiles.setSource(gitClient.listPendingChanges(entity));
 			} catch (BusinessException e) {
 				log.warn("Failed to retrieve refs list", e);
 			}
 		}
+		
+
 		
 		return entity;
 	}
@@ -172,18 +176,24 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public int countPendingChanges() throws BusinessException {
 		if (entity != null && entity.getId() != null) {
-			return gitClient.countPendingChanges(entity);
+			// return gitClient.countPendingChanges(entity);
+			return this.pendingGitFiles.getTarget().size();
 		}
 		return 0;
 	}
 	
 	public void commit() throws BusinessException {
-		gitClient.commit(entity, List.of("."), commitMessageBean.getCommitMessage());
+		if (!pendingGitFiles.getTarget().isEmpty()) {
+			gitClient.commit(entity, pendingGitFiles.getTarget(), commitMessageBean.getCommitMessage());
+			List<String> emptyTarget = new ArrayList<String>();
+			pendingGitFiles.setTarget(emptyTarget);
+		}
 		messages.info("Pending changes successfully commited");
 	}
 	
 	public void discard() throws BusinessException {
 		gitClient.discard(entity);
+		pendingGitFiles = new DualListModel<String>();
 		messages.info("Pending changes successfully discarded");
 	}
 	
@@ -242,7 +252,23 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public DualListModel<String> getRepositories() {
 		return repositories;
 	}
-
+	
+	public DualListModel<String> getPendingGitFiles() {
+		return pendingGitFiles;
+	}
+	
+	public void setPendingGitFiles(DualListModel<String> pendingGitFiles) {
+		this.pendingGitFiles = pendingGitFiles;
+	}
+	
+	public CommitMessageBean getCommitMessageBean() {
+		return this.commitMessageBean;
+	}
+	
+	public void setCommitMessageBean(CommitMessageBean commitMessageBean) {
+		this.commitMessageBean = commitMessageBean;
+	}
+	
 	@Override
 	protected String getListViewName() {
 		return "gitRepositories";
@@ -287,7 +313,7 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public boolean isModuleRepository() {
 		if(entity.getCode()!=null){
-			File gitDir = GitHelper.getRepositoryDir(currentUser, entity.getCode());
+			File gitDir = GitHelper.getRepositoryDir(currentUser, entity);
 			if (gitDir.exists() && gitDir.isDirectory()) {
 			  return Arrays.stream(gitDir.list()).anyMatch(("module.json")::equals);
 			}
@@ -329,6 +355,30 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 			List<String> repos = repositories.getTarget();
 			if (!repos.isEmpty()) {
 				moduleApi.install(repos, entity);
+				messages.info("Module successfully installed");
+			} else {
+				messages.error("At least one repository should be selected");
+			}
+
+		} catch (MissingModuleException e) {
+			this.missingDependencies = e.getMissingModules();
+			PrimeFaces.current().ajax().update("installDeps");
+			PrimeFaces.current().executeScript("PF('installDialog').hide();");
+			PrimeFaces.current().executeScript("PF('installDeps').show();");
+			return null;
+			
+		} catch (Exception e) {
+			MessagesHelper.error(messages, "Failed to install module", e);
+		}
+		
+		return "gitRepositoryDetail.xhtml?faces-redirect=true&objectId=" + entity.getId() + "&edit=true";
+	}
+	
+	public String reInstall() {
+		try {
+			List<String> repos = repositories.getTarget();
+			if (!repos.isEmpty()) {
+				moduleApi.reInstall(repos, entity);
 				messages.info("Module successfully installed");
 			} else {
 				messages.error("At least one repository should be selected");

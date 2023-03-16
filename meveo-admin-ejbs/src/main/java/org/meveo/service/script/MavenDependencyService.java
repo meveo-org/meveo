@@ -34,6 +34,11 @@ public class MavenDependencyService {
 				.getResultList();
 	}
 	
+	public void create(ScriptInstance script, MavenDependency mavenDependency) {
+		mavenDependency.getScripts().add(script);
+		emWrapper.getEntityManager().persist(mavenDependency);
+	}
+	
 	public List<MavenDependency> findModuleDependencies(String moduleCode) {
 		String queryString = 
 				  "SELECT DISTINCT md "
@@ -65,14 +70,8 @@ public class MavenDependencyService {
 	}
 
 	public MavenDependency find(String coordinates) {
-		String queryString = "from MavenDependency where lower(coordinates) = :coordinates ";
-
-		TypedQuery<MavenDependency> query = emWrapper.getEntityManager()
-				.createQuery(queryString, MavenDependency.class)
-				.setParameter("coordinates", coordinates.toLowerCase());
-
 		try {
-			return query.getSingleResult();
+			return emWrapper.getEntityManager().find(MavenDependency.class, coordinates);
 		} catch (NoResultException e) {
 			return null;
 		}

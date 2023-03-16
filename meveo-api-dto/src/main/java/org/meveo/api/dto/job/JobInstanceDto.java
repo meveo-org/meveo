@@ -9,8 +9,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.meveo.api.dto.BusinessEntityDto;
-import org.meveo.api.dto.CustomFieldsDto;
+import org.meveo.api.dto.CFBusinessEntityDto;
 import org.meveo.model.jobs.JobCategoryEnum;
 
 import io.swagger.annotations.ApiModel;
@@ -26,7 +25,7 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "JobInstance")
 @XmlAccessorType(XmlAccessType.FIELD)
 @ApiModel("JobInstanceDto")
-public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobInstanceDto> {
+public class JobInstanceDto extends CFBusinessEntityDto implements Comparable<JobInstanceDto> {
 
     /** The Constant serialVersionUID. */
     private static final long serialVersionUID = 5166093858617578774L;
@@ -48,10 +47,6 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
     /** Parameter to job execution. */
     @ApiModelProperty("Parameter to job execution")
     private String parameter;
-
-    /** Custom fields. */
-    @ApiModelProperty("Custom fields information")
-    private CustomFieldsDto customFields;
 
     /** Job scheduling timer code. */
     @XmlAttribute(required = false)
@@ -140,24 +135,6 @@ public class JobInstanceDto extends BusinessEntityDto implements Comparable<JobI
      */
     public void setParameter(String parameter) {
         this.parameter = parameter;
-    }
-
-    /**
-     * Gets the custom fields.
-     *
-     * @return the custom fields
-     */
-    public CustomFieldsDto getCustomFields() {
-        return customFields;
-    }
-
-    /**
-     * Sets the custom fields.
-     *
-     * @param customFields the new custom fields
-     */
-    public void setCustomFields(CustomFieldsDto customFields) {
-        this.customFields = customFields;
     }
 
     /**

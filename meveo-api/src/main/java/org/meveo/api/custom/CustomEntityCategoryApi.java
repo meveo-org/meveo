@@ -105,8 +105,7 @@ public class CustomEntityCategoryApi extends BaseCrudApi<CustomEntityCategory, C
 
     @Override
     public CustomEntityCategory createOrUpdate(CustomEntityCategoryDto dto) throws MeveoApiException, BusinessException {
-        CustomEntityCategory cec = customEntityCategoryService.findByCode(dto.getCode());
-        if (cec == null) {
+        if (!customEntityCategoryService.exists(dto.getCode())) {
             return create(dto);
         } else {
             return update(dto);

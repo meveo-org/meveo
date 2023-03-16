@@ -24,23 +24,26 @@ import java.util.TreeMap;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceUnit;
+import javax.transaction.UserTransaction;
 
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.security.keycloak.CurrentUserProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles Entity manager instantiation. Based on https://www.tomas-dvorak.cz/posts/jpa-multitenancy/
@@ -59,8 +62,7 @@ public class EntityManagerProvider {
     @Inject
     private CurrentUserProvider currentUserProvider;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(EntityManagerProvider.class);
 
     @Resource(lookup = "java:jboss/infinispan/cache/meveo/meveo-multiTenant-cache")
     private Cache<String, EntityManagerFactory> entityManagerFactories;
@@ -81,13 +83,13 @@ public class EntityManagerProvider {
         log.trace("Produce EM for provider {}", providerCode);
 
         if (providerCode == null || !isMultiTenancyEnabled) {
+        	FacesContext facesContext = FacesContext.getCurrentInstance();
+        	if (facesContext == null || facesContext.getCurrentPhaseId() == null) {
+        		// Create a container managed persistence context main provider, for API and JOBs
+        		return new EntityManagerWrapper(emfForJobs, false);
 
-            // Create an container managed persistence context main provider, for API and JOBs
-            if (FacesContext.getCurrentInstance() == null) {
-                return new EntityManagerWrapper(emfForJobs, false);
-
-                // Create an application managed persistence context main provider, for GUI
-            } else {
+        	} else {
+        		// Create an application managed persistence context main provider, for GUI
                 final EntityManager em = emf.createEntityManager();
                 EntityManager emProxy = (EntityManager) Proxy.newProxyInstance(
                 		this.getClass().getClassLoader(),

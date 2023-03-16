@@ -4,7 +4,7 @@
 	<groupId>org.meveo</groupId>
 	<artifactId>meveo</artifactId>
 	<packaging>pom</packaging>
-	<version>7.1.1-SNAPSHOT</version>
+	<version>7.2.0-SNAPSHOT</version>
 	<name>Meveo Parent Project</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -52,6 +52,11 @@
 	</distributionManagement>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+			    <groupId>org.jboss.spec.javax.websocket</groupId>
+			    <artifactId>jakarta.websocket-client-api</artifactId>
+			    <version>2.0.0.Final</version>
+			</dependency>
 			<dependency>
 				<groupId>org.unix4j</groupId>
 				<artifactId>unix4j-command</artifactId>

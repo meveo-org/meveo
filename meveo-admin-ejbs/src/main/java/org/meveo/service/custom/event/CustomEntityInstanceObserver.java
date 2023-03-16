@@ -27,6 +27,7 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.custom.CustomEntityInstanceAuditService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -38,8 +39,7 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class CustomEntityInstanceObserver {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CustomEntityInstanceObserver.class);
 
 	@Inject
 	private CustomEntityInstanceAuditService customEntityInstanceAuditService;

@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
-import javax.faces.view.ViewScoped;
 import javax.inject.Named;
 
 import org.meveo.admin.exception.BusinessException;
@@ -37,7 +36,6 @@ import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.model.IEntity;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.service.base.local.IPersistenceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -52,7 +50,8 @@ import org.primefaces.model.StreamedContent;
  */
 @Named
 //@ViewScoped
-public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto> extends BaseBean<T> implements Serializable {
+public abstract class BaseCrudBean<T extends IEntity, D extends BaseEntityDto>
+    extends UpdateMapTypeFieldBean<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

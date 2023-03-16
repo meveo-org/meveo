@@ -32,8 +32,11 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
@@ -62,6 +65,7 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomRelationshipTemplateService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (loading, update) for custom field value related operations
@@ -74,6 +78,7 @@ import org.slf4j.Logger;
  */
 @Singleton
 @DependsOn("CachesInitializer")
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class CustomFieldsCacheContainerProvider implements Serializable {
 
     private static final long serialVersionUID = 180156064688145292L;
@@ -82,8 +87,7 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
     public static final String MEVEO_CET_CACHE = "meveo-cet-cache";
     public static final String MEVEO_CRT_CACHE = "meveo-crt-cache";
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(CustomFieldsCacheContainerProvider.class);
 
     @EJB
     private CustomFieldTemplateService customFieldTemplateService;
@@ -525,8 +529,8 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
         CacheKeyStr key = new CacheKeyStr(null, appliesTo);
 
         Map<String, CustomFieldTemplate> cfMaps;
-//        Lock lock = cacheLock.readLock();
-//        lock.lock();
+        Lock lock = cacheLock.readLock();
+        lock.lock();
         try {
             cfMaps = cftsByAppliesTo.get(key);
             if(cfMaps == null) {
@@ -538,19 +542,11 @@ public class CustomFieldsCacheContainerProvider implements Serializable {
             		}
             	}
             }
+            return cfMaps;
         } finally {
-//            lock.unlock();
+        	lock.unlock();
         }
-        if(cfMaps == null || cfMaps.isEmpty()) {
-            cfMaps = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
-            if(cfMaps != null){
-                cfMaps.forEach((k,v) -> {
-                    customFieldTemplateService.detach(v);
-                    addUpdateCustomFieldTemplate(v);
-                });
-            }
-        }
-        return cfMaps;
+
     }
 
     /**

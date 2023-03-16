@@ -10,9 +10,13 @@ import org.meveo.commons.utils.QueryBuilder;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.model.dwh.MeasurableQuantity;
 import org.meveo.service.base.BusinessService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class MeasurableQuantityService extends BusinessService<MeasurableQuantity> {
+
+    private static Logger log = LoggerFactory.getLogger(MeasurableQuantityService.class);
 
     public Object[] executeMeasurableQuantitySQL(MeasurableQuantity mq) {
         try {
@@ -69,4 +73,9 @@ public class MeasurableQuantityService extends BusinessService<MeasurableQuantit
         Query query = queryBuilder.getQuery(getEntityManager());
         return query.getResultList();
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

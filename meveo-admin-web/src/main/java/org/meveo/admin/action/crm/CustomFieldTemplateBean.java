@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -42,6 +43,8 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.DualListModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bean for managing {@link CustomFieldTemplate}.
@@ -55,6 +58,8 @@ import org.primefaces.model.DualListModel;
 public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldTemplate> {
 
     private static final long serialVersionUID = 9099292371182275568L;
+    
+    private static Logger log = LoggerFactory.getLogger(CustomFieldTemplateBean.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -184,6 +189,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 			return null;
 		
 		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		CustomEntityTemplate cetTarget = customEntityTemplateService.findByCode(targetCode);
+
 		List<CustomRelationshipTemplate> relations = customRelationshipTemplateService.findBySourceOrTarget(cetCode, targetCode);
 		
 		while(cet.getSuperTemplate() != null) {
@@ -191,7 +198,13 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 			relations.addAll(crts);
 			cet = cet.getSuperTemplate();
 		}
-
+		
+		while (cetTarget.getSuperTemplate() != null) {
+			List<CustomRelationshipTemplate> crts = customRelationshipTemplateService.findBySourceOrTarget(cetCode, cetTarget.getSuperTemplate().getCode());
+			relations.addAll(crts);
+			cetTarget = cetTarget.getSuperTemplate();
+		}
+		
 		return relations;
 	}
 
@@ -422,6 +435,8 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         if (entity.getFieldType() == CustomFieldTypeEnum.MULTI_VALUE) {
             entity.setStorageType(CustomFieldStorageTypeEnum.MATRIX);
         }
+        
+        initStorages();
     }
 
     /**
@@ -603,25 +618,34 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
 	 */
     public DualListModel<DBStorageType> getStoragesDM() {
     	if(storagesDM == null) {
-    		List<DBStorageType> perksSource = new ArrayList<>();
-            List<DBStorageType> perksTarget = new ArrayList<>();
-
-            // If the CFT has no id, then it's being created, otherwise it's being edited
-        	if(getEntity().getId() == null) {
-        		perksTarget.addAll(cetStorageDM.getTarget());
-        	} else {
-        		perksSource.addAll(cetStorageDM.getTarget());
-	            if (getEntity().getStoragesNullSafe() != null) {
-	                perksTarget.addAll(getEntity().getStoragesNullSafe());		// Persistent data
-	                perksSource.removeAll(getEntity().getStoragesNullSafe());	// Display remaining available storages
-	            }
-        	}
-
-            storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+    		initStorages();
     	}
 
         return storagesDM;
     }
+
+	private void initStorages() {
+		List<DBStorageType> perksSource = new ArrayList<>();
+		List<DBStorageType> perksTarget = new ArrayList<>();
+
+		// If the CFT has no id, then it's being created, otherwise it's being edited
+		List<DBStorageType> availableCets = cetStorageDM.getTarget()
+				.stream()
+				.filter(type -> type.getSupportedFieldTypes().contains(this.entity.getFieldType()))
+				.collect(Collectors.toList());
+		
+		if(getEntity().getId() == null) {
+			perksTarget.addAll(availableCets);
+		} else {
+			perksSource.addAll(availableCets);
+		    if (getEntity().getStoragesNullSafe() != null) {
+		        perksTarget.addAll(getEntity().getStoragesNullSafe());		// Persistent data
+		        perksSource.removeAll(getEntity().getStoragesNullSafe());	// Display remaining available storages
+		    }
+		}
+
+		storagesDM = new DualListModel<DBStorageType>(perksSource, perksTarget);
+	}
 
     /**
 	 * Sets the storages DM.

@@ -13,6 +13,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.util.ApplicationProvider;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -31,8 +32,7 @@ import java.util.Map;
 public class FileProcessingJobBean {
 
     /** The log. */
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(FileProcessingJobBean.class);
 
     /** The script instance service. */
     @Inject

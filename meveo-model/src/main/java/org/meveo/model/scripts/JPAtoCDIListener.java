@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
  */
 public class JPAtoCDIListener {
 
-	private Logger log = LoggerFactory.getLogger(JPAtoCDIListener.class);
-
 	@Inject
 	@Created
 	protected Event<Object> entityCreatedEventProducer;

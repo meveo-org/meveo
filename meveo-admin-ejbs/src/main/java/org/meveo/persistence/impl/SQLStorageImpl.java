@@ -15,19 +15,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.naming.InitialContext;
 import javax.persistence.NonUniqueResultException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.BusinessApiException;
@@ -39,12 +34,14 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageTransaction;
 import org.meveo.persistence.PersistenceActionResult;
@@ -58,13 +55,12 @@ import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.custom.CustomTableRelationService;
 import org.meveo.service.custom.CustomTableService;
+import org.meveo.service.storage.FileSystemImpl;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import liquibase.pro.packaged.S;
-
-@RequestScoped
 public class SQLStorageImpl implements StorageImpl {
 	
 	private UserTransaction userTx;
@@ -74,8 +70,7 @@ public class SQLStorageImpl implements StorageImpl {
 	@Inject
 	private SQLConnectionProvider sqlConnectionProvider;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(SQLStorageImpl.class);
 	
 	@Inject
 	private CustomTableRelationService customTableRelationService;
@@ -88,9 +83,6 @@ public class SQLStorageImpl implements StorageImpl {
 	
 	@Inject
 	private CustomEntityInstanceService customEntityInstanceService;
-	
-	@Inject
-	private CustomFieldsCacheContainerProvider cache;
 	
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
@@ -114,18 +106,21 @@ public class SQLStorageImpl implements StorageImpl {
     
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
+    
+    @Inject
+    private FileSystemImpl fileSystemimpl;
 
 	@Override
-	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
+	public boolean exists(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) {
 		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			return customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid) != null;
+			return customTableService.findById(repository.getCode(), cet, uuid) != null;
 		} else {
 			return customEntityInstanceService.findByUuid(cet.getCode(), uuid) != null;
 		}
 	}
 
 	@Override
-	public String findEntityIdByValues(Repository repository, CustomEntityInstance cei) {
+	public String findEntityIdByValues(Repository repository, IStorageConfiguration conf, CustomEntityInstance cei) {
 		cei.setRepository(repository);
 		
 		String uuid = null;
@@ -135,7 +130,7 @@ public class SQLStorageImpl implements StorageImpl {
 		
 		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 			if(cei.getUuid() != null) {
-				Map<String, Object> values = customTableService.findById(repository.getSqlConfigurationCode(), cet, cei.getUuid());
+				Map<String, Object> values = customTableService.findById(conf.getCode(), cet, cei.getUuid());
 				if(values != null) {
 					uuid = cei.getUuid();
 				}
@@ -157,7 +152,7 @@ public class SQLStorageImpl implements StorageImpl {
 					});
 				
 					if(!uniqueValues.isEmpty()) {
-						uuid = customTableService.findIdByUniqueValues(repository.getSqlConfigurationCode(), cet, uniqueValues, cfts.values());
+						uuid = customTableService.findIdByUniqueValues(conf.getCode(), cet, uniqueValues, cfts.values());
 					}
 				}
 			}
@@ -182,17 +177,15 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public Map<String, Object> findById(Repository repository, CustomEntityTemplate cet, String uuid, Map<String, CustomFieldTemplate> cfts, Collection<String> fetchFields, boolean withEntityReferences) {
+	public Map<String, Object> findById(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid, Map<String, CustomFieldTemplate> cfts, Collection<String> fetchFields, boolean withEntityReferences) {
 		boolean foundEntity = false;
 		Map<String, Object> values = new HashMap<>();
 		
 		try {
-			transaction.beginTransaction(repository, List.of(getStorageType()));
-
 			if (cet.getAvailableStorages().contains(DBStorageType.SQL)) {
 				List<String> sqlFields = PersistenceUtils.filterFields(fetchFields, cfts, DBStorageType.SQL);
 				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-					final Map<String, Object> customTableValue = customTableService.findById(repository.getSqlConfigurationCode(), cet, uuid, sqlFields);
+					final Map<String, Object> customTableValue = customTableService.findById(repository.getCode(), cet, uuid, sqlFields);
 					replaceKeys(cet, sqlFields, customTableValue);
 					if(customTableValue != null) {
 						foundEntity = true;
@@ -221,7 +214,6 @@ public class SQLStorageImpl implements StorageImpl {
 				}
 			}
 
-			transaction.commitTransaction(repository, List.of(getStorageType()));
 		} catch (Exception e) {
 			if(e instanceof EntityDoesNotExistsException) {
 				return null;
@@ -231,7 +223,34 @@ public class SQLStorageImpl implements StorageImpl {
 			throw new RuntimeException(e);
 		}
 		
+		List<CustomFieldTemplate> binariesInSql = cfts
+				.values()
+				.stream()
+				.filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY))
+				.filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL))
+				.collect(Collectors.toList());
+		
 		if (foundEntity) {
+			// Convert files to binary provider
+			binariesInSql.forEach(cft -> {
+				try {
+					Object filePath = values.get(cft.getCode());
+					if (filePath != null) {
+						if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE) {
+							File file = new File((String) filePath);
+							values.put(cft.getCode(), new BinaryProvider(file));
+						} else {
+							List<BinaryProvider> binaries = ((Collection<String>) filePath).stream()
+									.map(path -> new BinaryProvider(new File(path)))
+									.collect(Collectors.toList());
+							values.put(cft.getCode(), binaries);
+						}
+					}
+					
+				} catch (Exception e) {
+					log.warn("Failed to retrieve binary: {}", e.getMessage());
+				}
+			});
 			return values;
 		} else {
 			return null;
@@ -259,7 +278,7 @@ public class SQLStorageImpl implements StorageImpl {
 			sqlPaginationConfiguration.setFetchFields(List.copyOf(query.getFetchFields()));
 			
 			if (query.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-				final List<Map<String, Object>> values = customTableService.list(query.getRepository().getSqlConfigurationCode(), query.getCet(), sqlPaginationConfiguration);
+				final List<Map<String, Object>> values = customTableService.list(query.getStorageConfiguration().getCode(), query.getCet(), sqlPaginationConfiguration);
 				values.forEach(v -> replaceKeys(query.getCet(), query.getFetchFields(), v));
 				return values;
 
@@ -292,7 +311,7 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, String foundUuid) throws BusinessException {
+	public PersistenceActionResult createOrUpdate(Repository repository, IStorageConfiguration conf, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, String foundUuid) throws BusinessException {
 		Map<String, Object> sqlValues = PersistenceUtils.filterValues(customFieldTemplates, cei.getCfValuesAsValues(), cei.getCet(), DBStorageType.SQL, false);
 		String uuid = null;
 		Set<EntityRef> persistedEntities = new HashSet<>();
@@ -309,16 +328,16 @@ public class SQLStorageImpl implements StorageImpl {
 			// Update binaries stored in SQL
 			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
 
-			try {
-				if (cei.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-					uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql, customFieldTemplates);
-	
-				} else {
-					uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
-				}
-			} catch (Exception e) {
-				throw new BusinessException(e);
+			if (cei.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
+				uuid = createOrUpdateSQL(repository, sqlCei, binariesInSql, customFieldTemplates);
+
+			} else {
+				uuid = createOrUpdateCei(repository, sqlCei, binariesInSql);
 			}
+			
+			createOrUpdateBinaries(repository, cei, customFieldTemplates, binariesInSql);
+			
+			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 
 			persistedEntities.add(new EntityRef(uuid, cei.getCet().getCode()));
 		}
@@ -326,41 +345,50 @@ public class SQLStorageImpl implements StorageImpl {
 		return new PersistenceActionResult(persistedEntities, uuid);
 	}
 
+	private void createOrUpdateBinaries(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, List<CustomFieldTemplate> binariesInSql) throws BusinessException {
+		fileSystemimpl.createOrUpdate(repository, null, cei, customFieldTemplates, cei.getUuid());
+		// Update CEI binary values
+		binariesInSql.forEach(cft -> {
+			try {
+				List<File> files = fileSystemService.findBinaries(repository.getBinaryStorageConfiguration(), cei.getCet(), cei.getUuid(), cft, cei.getCfValuesAsValues());
+				if (cft.getStorageType() == CustomFieldStorageTypeEnum.SINGLE && !files.isEmpty()) {
+					cei.getCfValues().setValue(cft.getCode(), files.get(0));
+				} else {
+					cei.getCfValues().setValue(cft.getCode(), files);
+				}
+			} catch (BusinessApiException e) {
+				log.warn("Error while persisting binaries", e);
+			}
+		});
+	}
+
 	@Override
-	public void update(Repository repository, CustomEntityInstance ceiToUpdate) throws BusinessException {
+	public void update(Repository repository, IStorageConfiguration conf, CustomEntityInstance ceiToUpdate) throws BusinessException {
 		try {
 			Map<String, CustomFieldTemplate> customFieldTemplates = ceiToUpdate.getFieldTemplates();
+			
 			List<CustomFieldTemplate> binariesInSql = customFieldTemplates.values().stream().filter(f -> f.getFieldType().equals(CustomFieldTypeEnum.BINARY)).filter(f -> f.getStoragesNullSafe().contains(DBStorageType.SQL)).collect(Collectors.toList());
 			Map<String, Object> values = ceiToUpdate.getCfValuesAsValues();
 			
 			// Custom table
 			if (ceiToUpdate.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
-				Map<String, Object> sqlValues = PersistenceUtils.filterValues(customFieldTemplates, values, ceiToUpdate.getCet(), DBStorageType.SQL);
-	
-				if (!CollectionUtils.isEmpty(binariesInSql)) {
-					List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
-	
-					final Map<String, Object> existingBinariesFields = customTableService.findById(repository.getSqlConfigurationCode(), ceiToUpdate.getCet(), ceiToUpdate.getUuid(), binariesFieldsToFetch);
-					fileSystemService.updateBinaries(repository, ceiToUpdate.getUuid(), ceiToUpdate.getCet(), binariesInSql, sqlValues, existingBinariesFields);
-				}
-	
+				createOrUpdateBinaries(repository, ceiToUpdate, customFieldTemplates, binariesInSql);
 				customTableService.update(repository.getSqlConfigurationCode(), ceiToUpdate.getCet(), ceiToUpdate);
 			} else {
 				// CEI storage
 				final CustomEntityInstance cei = customEntityInstanceService.findByUuid(ceiToUpdate.getCet().getCode(), ceiToUpdate.getUuid());
 				cei.setRepository(repository);
 				
-				// Update binaries
-				if (CollectionUtils.isNotEmpty(binariesInSql)) {
-					final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-					fileSystemService.updateBinaries(repository, cei.getUuid(), ceiToUpdate.getCet(), binariesInSql, values, existingValues);
-				}
-	
 				CustomFieldValues customFieldValues = new CustomFieldValues();
 				values.forEach(customFieldValues::setValue);
 				cei.setCfValues(customFieldValues);
+				
+				createOrUpdateBinaries(repository, ceiToUpdate, customFieldTemplates, binariesInSql);
+				
 				customEntityInstanceService.update(cei);
 			}
+			
+			fileSystemimpl.createOrUpdate(repository, conf, ceiToUpdate, customFieldTemplates, ceiToUpdate.getUuid());
 		} catch (Exception e) {
 			throw new BusinessException(e);
 		}
@@ -368,28 +396,14 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
-		Object valueToSave = binaries;
-		List<String> paths = binaries.stream().map(File::getPath).collect(Collectors.toList());
+	public void setBinaries(IStorageConfiguration repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) throws BusinessException {
 
-		if (cft.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
-			valueToSave = paths.isEmpty() ? null : paths.get(0);
-		}
-
-		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			customTableService.updateValue(repository.getSqlConfigurationCode(), SQLStorageConfiguration.getDbTablename(cet), uuid, cft.getDbFieldname(), valueToSave);
-		} else {
-			CustomEntityInstance cei = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
-			CustomFieldValues cfValues = cei.getCfValues();
-			cfValues.setValue(cft.getCode(), valueToSave);
-			customEntityInstanceService.update(cei);
-		}
 	}
 
 	@Override
-	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
+	public void remove(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
 		if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-			customTableService.remove(repository.getSqlConfigurationCode(), cet, uuid);
+			customTableService.remove(repository.getCode(), cet, uuid);
 		} else {
 			final CustomEntityInstance customEntityInstance = customEntityInstanceService.findByUuid(cet.getCode(), uuid);
 			customEntityInstanceService.remove(customEntityInstance);
@@ -402,7 +416,7 @@ public class SQLStorageImpl implements StorageImpl {
 	
 	
 	@Override
-	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+	public Integer count(IStorageConfiguration repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
 		final List<String> actualFetchFields = paginationConfiguration == null ? null : paginationConfiguration.getFetchFields();
 
 		final Map<String, Object> filters = paginationConfiguration == null ? null : paginationConfiguration.getFilters();
@@ -424,7 +438,7 @@ public class SQLStorageImpl implements StorageImpl {
 			final String dbTablename = SQLStorageConfiguration.getDbTablename(cet);
 
 			if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
-				return (int) customTableService.count(repository.getSqlConfigurationCode(), dbTablename, paginationConfiguration);
+				return (int) customTableService.count(repository.getCode(), dbTablename, paginationConfiguration);
 
 			} else {
 				return (int) customEntityInstanceService.count(cet.getCode(), paginationConfiguration);
@@ -436,7 +450,10 @@ public class SQLStorageImpl implements StorageImpl {
 
 	public void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
 		if (sqlFields != null && !sqlFields.isEmpty()) {
-			List<CustomFieldTemplate> cfts = sqlFields.stream().map(field -> cache.getCustomFieldTemplate(field, cet.getAppliesTo())).collect(Collectors.toList());
+			List<CustomFieldTemplate> cfts = sqlFields
+					.stream()
+					.map(field -> this.customFieldTemplateService.find(field, cet))
+					.collect(Collectors.toList());
 
 			customTableService.replaceKeys(cfts, customTableValue);
 		} else {
@@ -462,7 +479,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 	}
 
-	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException, IOException, BusinessApiException {
+	private String createOrUpdateCei(Repository repository, CustomEntityInstance ceiToSave, Collection<CustomFieldTemplate> binariesInSql) throws BusinessException {
 		ceiToSave.setRepository(repository);
 		CustomEntityTemplate cet = ceiToSave.getCet();
 		Map<String, Object> values = ceiToSave.getCfValuesAsValues();
@@ -474,23 +491,10 @@ public class SQLStorageImpl implements StorageImpl {
 		if (cei == null) {
 			cei = ceiToSave;
 
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, new HashMap<>());
-			}
-
-			for (Map.Entry<CustomFieldTemplate, Object> entry : persistedBinaries.entrySet()) {
-				cei.getCfValues().setValue(entry.getKey().getCode(), entry.getValue());
-			}
-
 			customEntityInstanceService.create(cei);
 
 		} else {
 			cei.setRepository(repository);
-			
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				final Map<String, Object> existingValues = cei.getCfValuesAsValues();
-				persistedBinaries = fileSystemService.updateBinaries(repository, cei.getUuid(), cet, binariesInSql, values, existingValues);
-			}
 
 			cei.setCfValuesOld(cei.getCfValues());
 			cei.setCfValues(ceiToSave.getCfValues());
@@ -507,7 +511,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 	
 
-	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+	private String createOrUpdateSQL(Repository repository, CustomEntityInstance cei, Collection<CustomFieldTemplate> binariesInSql, Map<String, CustomFieldTemplate> cfts) throws BusinessException {
 		cei.setRepository(repository);
 		
 		String sqlUUID = null;
@@ -540,20 +544,6 @@ public class SQLStorageImpl implements StorageImpl {
 			customFieldInstanceService.setCfValues(tempCei, cei.getCetCode(), oldCfValues);
 			cei.setCfValuesOld(tempCei.getCfValues());
 			
-			// Update binaries
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-				List<String> binariesFieldsToFetch = binariesInSql.stream().map(CustomFieldTemplate::getCode).collect(Collectors.toList());
-
-				Map<String, Object> existingBinariesField = customTableService.findById(repository.getSqlConfigurationCode(), cei.getCet(), sqlUUID, binariesFieldsToFetch);
-				fileSystemService.updateBinaries(repository, 
-						cei.getUuid(), 
-						cei.getCet(), 
-						binariesInSql, 
-						cei.getCfValuesAsValues(), 
-						existingBinariesField);
-
-			}
-			
 			customTableService.update(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			customEntityInstanceUpdate.fire(cei);
 
@@ -561,16 +551,6 @@ public class SQLStorageImpl implements StorageImpl {
 			String uuid = customTableService.create(repository.getSqlConfigurationCode(), cei.getCet(), cei);
 			cei.setUuid(uuid);
 
-			// Save binaries
-			if (CollectionUtils.isNotEmpty(binariesInSql)) {
-
-				final Map<CustomFieldTemplate, Object> binariesPaths = fileSystemService.updateBinaries(repository, uuid, cei.getCet(), binariesInSql, cei.getCfValuesAsValues(), null);
-
-				for (Map.Entry<CustomFieldTemplate, Object> binary : binariesPaths.entrySet()) {
-					customTableService.updateValue(repository.getSqlConfigurationCode(), cei.getTableName(), uuid, binary.getKey().getDbFieldname(), binary.getValue());
-				}
-			}
-			
 			customEntityInstanceCreate.fire(cei);
 		}
 
@@ -648,10 +628,10 @@ public class SQLStorageImpl implements StorageImpl {
         if(cet.storedIn(DBStorageType.SQL)) {
         	if(oldCet.getSuperTemplate() != null && cet.getSuperTemplate() == null) {
         		// Inheritance removed
-        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.removeInheritance(sc.getSqlConfigurationCode(), cet));
         	} else if(oldCet.getSuperTemplate() == null && cet.getSuperTemplate() != null) {
         		// Inheritance added
-        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getCode(), cet));
+        		sqlConfs.forEach(sc -> customTableCreatorService.addInheritance(sc.getSqlConfigurationCode(), cet));
         	}
         }
 	}
@@ -697,7 +677,7 @@ public class SQLStorageImpl implements StorageImpl {
 
 
 	@Override
-	public PersistenceActionResult addCRTByUuids(Repository repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
+	public PersistenceActionResult addCRTByUuids(IStorageConfiguration repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
 		// SQL Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.SQL)) {
 			String relationUuid = customTableRelationService.createOrUpdateRelation(repository, crt, sourceUuid, targetUuid, relationValues);
@@ -718,32 +698,28 @@ public class SQLStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public <T> T beginTransaction(Repository repository, int stackedCalls) {
+	public <T> T beginTransaction(IStorageConfiguration repository, int stackedCalls) {
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION && stackedCalls == 0) {
-				userTx.begin();
+				// userTx.begin();
 			}
 			
-			if(repository.getSqlConfiguration() != null) {
-				return (T) getHibernateSession(repository.getSqlConfigurationCode());
-			}
+			return (T) getHibernateSession(repository.getCode());
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		
-		return null;
 	}
 
 	@Override
-	public void commitTransaction(Repository repository) {
-		try {
-			if(userTx != null) {
-				userTx.commit();
-			}
-		} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
-			throw new RuntimeException(e);
-		}
+	public void commitTransaction(IStorageConfiguration repository) {
+//		try {
+//			if(userTx != null) {
+//				// userTx.commit();
+//			}
+//		} catch (SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SystemException e) {
+//			throw new RuntimeException(e);
+//		}
 		
 	}
 
@@ -773,7 +749,7 @@ public class SQLStorageImpl implements StorageImpl {
 			});
 			hibernateSessions.clear();
 			if(userTx != null && userTx.getStatus() == Status.STATUS_ACTIVE) {
-				userTx.commit();
+				// userTx.commit();
 			}
 		} catch (Exception e) {
 			log.error("Error destroying {}", this, e);
@@ -783,7 +759,7 @@ public class SQLStorageImpl implements StorageImpl {
 	public org.hibernate.Session getHibernateSession(String repository) {
 		try {
 			if(userTx != null && userTx.getStatus() == Status.STATUS_NO_TRANSACTION) {
-				userTx.begin();
+				// userTx.begin();
 			}
 			return hibernateSessions.computeIfAbsent(repository, sqlConnectionProvider::getSession);
 		} catch (Exception e) {

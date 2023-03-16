@@ -37,6 +37,8 @@ import org.meveo.service.notification.JobTriggerService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -48,6 +50,8 @@ import org.primefaces.model.UploadedFile;
 public class JobTriggerBean extends BaseNotificationBean<JobTrigger> {
 
     private static final long serialVersionUID = 6473465285480945644L;
+    
+    private static Logger log = LoggerFactory.getLogger(JobTriggerBean.class);
 
     @Inject
     private JobTriggerService jobTriggerService;

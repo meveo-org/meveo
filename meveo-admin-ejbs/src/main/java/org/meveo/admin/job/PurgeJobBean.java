@@ -18,6 +18,7 @@ import org.meveo.service.billing.impl.CounterInstanceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.job.JobExecutionService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class PurgeJobBean implements Serializable {
@@ -33,8 +34,7 @@ public class PurgeJobBean implements Serializable {
     @Inject
     protected CustomFieldInstanceService customFieldInstanceService;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(PurgeJobBean.class);
 
     @Interceptors({ JobLoggingInterceptor.class, PerformanceInterceptor.class })
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

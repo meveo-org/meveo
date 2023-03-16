@@ -78,6 +78,8 @@ public abstract class MeveoUser implements Serializable {
     
     protected String currentModule;
 
+    protected Map<String, Object> attributes;
+
 
     public MeveoUser() {
     }
@@ -140,6 +142,10 @@ public abstract class MeveoUser implements Serializable {
 
     public String getFullName() {
         return fullName;
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 
     /**
@@ -300,7 +306,7 @@ public abstract class MeveoUser implements Serializable {
 	 * @return the {@link #currentModule}
 	 */
 	public String getCurrentModule() {
-		return currentModule;
+		return this.currentModule;
 	}
 
 }

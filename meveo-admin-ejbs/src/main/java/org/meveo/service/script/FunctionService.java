@@ -48,6 +48,8 @@ import org.meveo.model.scripts.test.ExpectedOutput;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.job.JobInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @param <T> Type of function (service, script ...)
@@ -62,6 +64,8 @@ public abstract class FunctionService<T extends Function, E extends ScriptInterf
     private static final Map<CacheKeyStr, List<String>> ALL_LOGS = new ConcurrentHashMap<>();
 
     public static final String FUNCTION_TEST_JOB = "FunctionTestJob";
+    
+    private static Logger log = LoggerFactory.getLogger(FunctionService.class);
 
     @Inject
     private ClusterEventPublisher clusterEventPublisher;

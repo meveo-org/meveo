@@ -35,6 +35,7 @@ import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.storage.IStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.PersistenceActionResult;
 import org.meveo.persistence.StorageImpl;
@@ -44,12 +45,14 @@ import org.meveo.persistence.neo4j.base.Neo4jConnectionProvider;
 import org.meveo.persistence.neo4j.base.Neo4jDao;
 import org.meveo.persistence.neo4j.service.Neo4jService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.PersistenceUtils;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.exceptions.NoSuchRecordException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RequestScoped
 public class Neo4jStorageImpl implements StorageImpl {
@@ -76,13 +79,15 @@ public class Neo4jStorageImpl implements StorageImpl {
 	private CustomFieldsCacheContainerProvider cache;
 	
 	@Inject
-	private Logger log;
+	private CustomFieldTemplateService cftService;
+	
+	private static Logger log = LoggerFactory.getLogger(Neo4jStorageImpl.class);
 	
 	@Override
-	public String findEntityIdByValues(Repository repository, CustomEntityInstance cei) {
+	public String findEntityIdByValues(Repository repo, IStorageConfiguration conf, CustomEntityInstance cei) {
 		try {
 			 return neo4jService.findNodeId(
-					repository.getNeo4jConfiguration().getCode(), 
+					 conf.getCode(), 
 					cei.getCet(), 
 					cei.getValues(getStorageType())
 				);
@@ -95,20 +100,20 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public boolean exists(Repository repository, CustomEntityTemplate cet, String uuid) {
-		Map<String, Object> val = neo4jDao.findNodeById(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
+	public boolean exists(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) {
+		Map<String, Object> val = neo4jDao.findNodeById(repository.getCode(), cet.getCode(), uuid);
 		return val != null && !val.isEmpty();
 	}
 
 	@Override
-	public Map<String, Object> findById(Repository repository, CustomEntityTemplate cet, String uuid, Map<String, CustomFieldTemplate> cfts, Collection<String> selectFields, boolean withEntityReferences) {
+	public Map<String, Object> findById(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid, Map<String, CustomFieldTemplate> cfts, Collection<String> selectFields, boolean withEntityReferences) {
 		Map<String, Object> values = new HashMap<>();
 		boolean foundEntity = false;
 		
 		List<String> neo4jFields = PersistenceUtils.filterFields(selectFields, cfts, DBStorageType.NEO4J);
 		if (!neo4jFields.isEmpty()) {
 			try {
-				String repoCode = repository.getNeo4jConfiguration().getCode();
+				String repoCode = repository.getCode();
 				final Map<String, Object> existingValues = neo4jDao.findNodeById(repoCode, cet.getCode(), uuid, neo4jFields);
 				if (existingValues != null) {
 					foundEntity = true;
@@ -174,20 +179,21 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 	
 	@Override
-	public PersistenceActionResult createOrUpdate(Repository repository, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, String foundUuid) throws BusinessException {
+	public PersistenceActionResult createOrUpdate(Repository repository, IStorageConfiguration storageConfiguration, CustomEntityInstance cei, Map<String, CustomFieldTemplate> customFieldTemplates, String foundUuid) throws BusinessException {
 		
 		String uuid = null;
 		CustomEntityInstance neo4jCei = new CustomEntityInstance();
 		neo4jCei.setCetCode(cei.getCetCode());
-		neo4jCei.setUuid(foundUuid);
+		neo4jCei.setUuid(foundUuid != null ? foundUuid : cei.getUuid());
 		neo4jCei.setCet(cei.getCet());
 		neo4jCei.setRepository(repository);
+		neo4jCei.setFieldTemplates(cei.getFieldTemplates());
 		cei.setRepository(repository);
 		
 		if (cei.getCet().getAvailableStorages().contains(DBStorageType.NEO4J)) {
 
 			Map<String, Object> neo4jValues = PersistenceUtils.filterValues(customFieldTemplates, cei.getValuesNullSafe(), neo4jCei.getCet(), DBStorageType.NEO4J, false);
-			customFieldInstanceService.setCfValues(neo4jCei, neo4jCei.getCetCode(), neo4jValues);
+			customFieldInstanceService.setCfValues(neo4jCei, customFieldTemplates, neo4jCei.getCetCode(), neo4jValues);
 
 			if (!neo4jValues.isEmpty()) {
 				PersistenceActionResult persistenceResult = neo4jService.addCetNode(repository.getNeo4jConfiguration().getCode(), neo4jCei);
@@ -216,7 +222,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 	
 	@Override
-	public void update(Repository repository, CustomEntityInstance cei) throws BusinessException {
+	public void update(Repository repository, IStorageConfiguration conf, CustomEntityInstance cei) throws BusinessException {
 		Map<String, Object> neo4jValues = cei.getValues(DBStorageType.NEO4J);
 
 		CustomEntityTemplate cet = cei.getCet();
@@ -230,20 +236,20 @@ public class Neo4jStorageImpl implements StorageImpl {
 			throw new BusinessException(e);
 		}
 
-		neo4jDao.updateNodeByNodeId(repository.getNeo4jConfiguration().getCode(), cei.getUuid(), cet.getCode(), neo4jValues, labels);
+		neo4jDao.updateNodeByNodeId(conf.getCode(), cei.getUuid(), cet.getCode(), neo4jValues, labels);
 	}
 	
 	@Override
-	public void remove(Repository repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
-		neo4jDao.removeNodeByUUID(repository.getNeo4jConfiguration().getCode(), cet.getCode(), uuid);
+	public void remove(IStorageConfiguration repository, CustomEntityTemplate cet, String uuid) throws BusinessException {
+		neo4jDao.removeNodeByUUID(repository.getCode(), cet.getCode(), uuid);
 	}
 
 	@Override
-	public void setBinaries(Repository repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) {
+	public void setBinaries(IStorageConfiguration repository, CustomEntityTemplate cet, CustomFieldTemplate cft, String uuid, List<File> binaries) {
 		List<String> binariesPaths = binaries.stream().map(File::getPath).collect(Collectors.toList());
 
-		neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft);
-		neo4jService.addBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, cft, binariesPaths);
+		neo4jService.removeBinaries(uuid, repository.getCode(), cet, cft);
+		neo4jService.addBinaries(uuid, repository.getCode(), cet, cft, binariesPaths);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -272,42 +278,13 @@ public class Neo4jStorageImpl implements StorageImpl {
 
 			}
 
-			// Persist binaries in file system
-			final Map<CustomFieldTemplate, Object> binariesByCft = fileSystemService.updateBinaries(repository, uuid, cet, customFieldTemplates.values(), neo4jValues, existingBinaries);
-
-			// Handle binaries references stored in Neo4J
-			for (Map.Entry<CustomFieldTemplate, Object> binary : binariesByCft.entrySet()) {
-				if (binary.getValue() instanceof String) {
-					neo4jService.updateBinary(uuid, neo4JCode, cet, binary.getKey(), (String) binary.getValue());
-
-				} else if (binary.getValue() instanceof Collection) {
-					// Delete binaries present in previous values and not in persisted values
-					List<String> previousBinaries = (List<String>) existingBinaries.get(binary.getKey().getCode());
-					if (previousBinaries != null) {
-						for (String previousBinary : previousBinaries) {
-							// Check if existing files were deleted and remove them from neo4j if they were
-							if (!new File(previousBinary).exists()) {
-								neo4jService.removeBinary(uuid, neo4JCode, cet, binary.getKey(), previousBinary);
-							}
-						}
-					}
-
-					// Add or update remaining binaries
-					neo4jService.addBinaries(uuid, neo4JCode, cet, binary.getKey(), (Collection<String>) binary.getValue());
-
-					// All binaries were deleted
-				} else if (binary.getValue() == null) {
-					neo4jService.removeBinaries(uuid, repository.getNeo4jConfiguration().getCode(), cet, binary.getKey());
-				}
-			}
-
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Map<String, Object>> find(StorageQuery query) throws EntityDoesNotExistsException {
-		final Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(query.getCet().getAppliesTo());
+		final Map<String, CustomFieldTemplate> fields = cftService.findByAppliesTo(query.getCet().getAppliesTo());
 
 		// Check if filters contains a field not stored in Neo4J
 		var dontFilterOnNeo4J = query.getFilters() != null && query.getFilters().keySet().stream()
@@ -329,7 +306,7 @@ public class Neo4jStorageImpl implements StorageImpl {
 					.toString();
 		}
 		
-		Map<String, Object> result = neo4jDao.executeGraphQLQuery(query.getRepository().getNeo4jConfiguration().getCode(), graphQlQuery, null, null);
+		Map<String, Object> result = neo4jDao.executeGraphQLQuery(query.getStorageConfiguration().getCode(), graphQlQuery, null, null);
 		
 		if(result != null) {
 			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(query.getCet().getCode());
@@ -366,8 +343,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 	
 	@Override
-	public Integer count(Repository repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
-		return neo4jService.count(repository, cet, paginationConfiguration);
+	public Integer count(IStorageConfiguration repository, CustomEntityTemplate cet, PaginationConfiguration paginationConfiguration) {
+		return neo4jService.count(repository.getCode(), cet, paginationConfiguration);
 	}
 
 	private GraphQLQueryBuilder generateGraphQlFromPagination(String type, PaginationConfiguration paginationConfiguration, final Set<String> actualFetchFields, final Map<String, Object> filters, Map<String, Set<String>> subFields) {
@@ -472,11 +449,11 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public PersistenceActionResult addCRTByUuids(Repository repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
+	public PersistenceActionResult addCRTByUuids(IStorageConfiguration repository, CustomRelationshipTemplate crt, Map<String, Object> relationValues, String sourceUuid, String targetUuid) throws BusinessException {
 		// Neo4J Storage
 		if (crt.getAvailableStorages().contains(DBStorageType.NEO4J)) {
 			try {
-				return neo4jService.addCRTByNodeIds(repository.getNeo4jConfiguration().getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
+				return neo4jService.addCRTByNodeIds(repository.getCode(), crt.getCode(), relationValues, sourceUuid, targetUuid);
 			} catch (BusinessException e) {
 				throw e;
 			} catch (ELException e) {
@@ -492,25 +469,23 @@ public class Neo4jStorageImpl implements StorageImpl {
 	}
 
 	@Override
-	public <T> T beginTransaction(Repository repository, int stackedCalls) {
-		return (T) getNeo4jTransaction(repository.getNeo4jConfiguration().getCode());
+	public <T> T beginTransaction(IStorageConfiguration repository, int stackedCalls) {
+		return (T) getNeo4jTransaction(repository.getCode());
 	}
 
 	@Override
-	public void commitTransaction(Repository repository) {
-		if(repository.getNeo4jConfiguration() != null) {
-			Transaction neo4jTx = neo4jTransactions.remove(repository.getNeo4jConfiguration().getCode());
-			if(neo4jTx == null) {
-				throw new IllegalStateException("No running transaction for " + repository.getCode());
-			}
-			neo4jTx.success();
-			neo4jTx.close();
+	public void commitTransaction(IStorageConfiguration repository) {
+		Transaction neo4jTx = neo4jTransactions.remove(repository.getCode());
+		if(neo4jTx == null) {
+			throw new IllegalStateException("No running transaction for " + repository.getCode());
 		}
+		neo4jTx.commit();
+		neo4jTx.close();
 	}
 
 	@Override
 	public void rollbackTransaction(int stackedCalls) {
-		neo4jTransactions.values().forEach(Transaction::failure);
+		neo4jTransactions.values().forEach(Transaction::rollback);
 		
 		if(stackedCalls == 0) {
 			neo4jTransactions.values().forEach(Transaction::close);
@@ -521,7 +496,12 @@ public class Neo4jStorageImpl implements StorageImpl {
 	@Override
 	@PreDestroy
 	public void destroy() {
-		neo4jTransactions.values().forEach(s -> s.close());
+		neo4jTransactions.values().forEach(tx -> {
+			if (tx.isOpen()) {
+				tx.commit();
+			}
+			tx.close();
+		});
 		neo4jSessions.values().forEach(Session::close);
 		
 		neo4jTransactions.clear();

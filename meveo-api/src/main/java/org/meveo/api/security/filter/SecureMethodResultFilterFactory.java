@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This factory encapsulates the creation and retrieval of
@@ -29,8 +30,7 @@ public class SecureMethodResultFilterFactory implements Serializable {
 	@Inject
 	private Instance<SecureMethodResultFilter> filters;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(SecureMethodResultFilterFactory.class);
 
 	private Map<Class<? extends SecureMethodResultFilter>, SecureMethodResultFilter> filterMap = new HashMap<>();
 

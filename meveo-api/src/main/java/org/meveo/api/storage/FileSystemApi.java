@@ -17,6 +17,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.storage.BinaryStorageUtils;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.service.storage.RepositoryService;
@@ -33,6 +34,9 @@ public class FileSystemApi extends BaseApi {
 
 	@Inject
 	private CustomFieldsCacheContainerProvider cache;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 
 	@Inject
 	private RepositoryService repositoryService;
@@ -49,7 +53,7 @@ public class FileSystemApi extends BaseApi {
 		}
 		
 		// Retrieve CFT
-		CustomFieldTemplate cft = cache.getCustomFieldTemplate(cftCode, CustomEntityTemplate.getAppliesTo(cetCode));
+		CustomFieldTemplate cft = cftService.findByCodeAndAppliesTo(cftCode, CustomEntityTemplate.getAppliesTo(cetCode));
 		if (cft == null) {
 			throw new EntityDoesNotExistsException(CustomFieldTemplate.class, cftCode);
 		}
@@ -77,7 +81,7 @@ public class FileSystemApi extends BaseApi {
 
 		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
 		} else {
-			return fileSystemService.findBinaryStaticPath(repository, cetCode, uuid, cft, index);
+			return fileSystemService.findBinaryStaticPath(repository.getBinaryStorageConfiguration(), cetCode, uuid, cft, index);
 		}
 
 	}

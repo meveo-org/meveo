@@ -11,6 +11,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -32,6 +34,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.notification.ScriptNotificationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (loading, update) for event notification related operations
@@ -42,12 +45,12 @@ import org.slf4j.Logger;
  * 
  */
 @Singleton
+@Lock(LockType.READ)
 public class NotificationCacheContainerProvider implements Serializable { // CacheContainerProvider, Serializable {
 
     private static final long serialVersionUID = 358151068726872948L;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(NotificationCacheContainerProvider.class);
 
     @EJB
     private ScriptNotificationService notificationService;
@@ -114,7 +117,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      * 
      * @param notif Notification to add
      */
-    // @Lock(LockType.WRITE)
+    @Lock(LockType.WRITE)
     public void addNotificationToCache(Notification notif) {
 
         if (!useNotificationCache) {
@@ -150,6 +153,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      * 
      * @param notif Notification to remove
      */
+    @Lock(LockType.WRITE)
     public void removeNotificationFromCache(Notification notif) {
 
         if (!useNotificationCache) {
@@ -182,6 +186,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      * 
      * @param notif Notification to update
      */
+    @Lock(LockType.WRITE)
     public void updateNotificationInCache(Notification notif) {
 
         if (!useNotificationCache) {
@@ -259,6 +264,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      */
     // @Override
     @Asynchronous
+    @Lock(LockType.WRITE)
     public void refreshCache(String cacheName) {
 
         if (cacheName == null || cacheName.equals(eventNotificationCache.getName()) || cacheName.contains(eventNotificationCache.getName())) {
@@ -273,6 +279,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      * @param cacheName Name of cache to populate or null to populate all caches
      */
     // @Override
+    @Lock(LockType.WRITE)
     public void populateCache(String cacheName) {
 
         if (cacheName == null || cacheName.equals(eventNotificationCache.getName()) || cacheName.contains(eventNotificationCache.getName())) {
@@ -297,6 +304,7 @@ public class NotificationCacheContainerProvider implements Serializable { // Cac
      * @param eventType Event type
      * @param entityOrEvent Entity involved or event containing the entity involved
      */
+    @Lock(LockType.WRITE)
     public void markNoNotifications(NotificationEventTypeEnum eventType, Object entityOrEvent) {
 
         // Determine a base entity

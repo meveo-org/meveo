@@ -38,10 +38,13 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.security.PasswordUtils;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.AuthToken;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Config;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.async.AsyncSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +105,7 @@ public class Neo4jConnectionProvider {
     }
 
     public Session getSession() {
-        return getSession(null);
+        return getSession(defaultConfiguration);
     }
 
     /**
@@ -118,37 +121,57 @@ public class Neo4jConnectionProvider {
                 LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
             }
         }
-
+        
+        return getSession(neo4JConfiguration);
+    }
+    
+    /**
+     * @return a neo4j session, or null if a problem has occured
+     */
+    public Session getSession(Neo4JConfiguration neo4JConfiguration) {
         try{
-        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfigurationCode, this::generateDriver);
+        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfiguration.getCode(), code -> createDriver(neo4JConfiguration));
         	synchronized (this) {
                 return driver.session();
             }
         }catch (Exception e){
-            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfigurationCode, neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
-        	DRIVER_MAP.remove(neo4JConfigurationCode);
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
+        	DRIVER_MAP.remove(neo4JConfiguration.getCode());
+            return null;
+        }
+
+    }
+    
+    /**
+     * @return a neo4j session, or null if a problem has occured
+     */
+    public AsyncSession getSessionAsync(Neo4JConfiguration neo4JConfiguration) {
+        try{
+        	Driver driver = DRIVER_MAP.computeIfAbsent(neo4JConfiguration.getCode(), code -> createDriver(neo4JConfiguration));
+        	synchronized (this) {
+                return driver.asyncSession();
+            }
+        }catch (Exception e){
+            LOGGER.warn("Can't connect to {} ({}): {}", neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl(), e.getMessage(),e);
+        	DRIVER_MAP.remove(neo4JConfiguration.getCode());
             return null;
         }
 
     }
 
-	private synchronized Driver generateDriver(String neo4JConfigurationCode) {
-		Neo4JConfiguration neo4JConfiguration = defaultConfiguration;
-		if (neo4JConfigurationCode != null) {
-			try {
-				neo4JConfiguration = configurationMap.computeIfAbsent(neo4JConfigurationCode, this::findByCode);
-			} catch (NoResultException e) {
-				LOGGER.warn("Unknown Neo4j repository {}, using default configuration", neo4JConfigurationCode);
-			}
-		}
-
-		return createDriver(neo4JConfiguration);
-	}
-
 	public Driver createDriver(Neo4JConfiguration neo4JConfiguration) {
 		String salt = PasswordUtils.getSalt(neo4JConfiguration.getCode(), neo4JConfiguration.getNeo4jUrl());
 		String pwd = PasswordUtils.decrypt(salt, neo4JConfiguration.getNeo4jPassword());
-		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd));
+		
+		Config config;
+		if (neo4JConfiguration.getProtocol().contains("+s")) {
+			config = Config.builder().withoutEncryption().build();
+		} else {
+			config = Config.builder().build();
+		}
+		 
+		AuthToken auth = AuthTokens.basic(neo4JConfiguration.getNeo4jLogin(), pwd);
+		var driver =  GraphDatabase.driver(neo4JConfiguration.getProtocol() + "://" + neo4JConfiguration.getNeo4jUrl(), auth, config);
 		// Test connection
 		driver.session().close();
 		return driver;

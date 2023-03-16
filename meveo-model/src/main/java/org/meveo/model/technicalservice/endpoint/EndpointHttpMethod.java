@@ -25,6 +25,7 @@ package org.meveo.model.technicalservice.endpoint;
  */
 public enum EndpointHttpMethod {
 
+    PATCH,
     GET,
     DELETE,
     POST,

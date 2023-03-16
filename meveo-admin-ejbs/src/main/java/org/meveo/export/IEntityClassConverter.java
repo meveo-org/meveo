@@ -26,7 +26,7 @@ import com.thoughtworks.xstream.mapper.Mapper;
  */
 public class IEntityClassConverter extends ReflectionConverter {
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(IEntityClassConverter.class);
 
     private boolean preserveId;
     private MeveoUser currentUser;

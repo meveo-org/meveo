@@ -36,6 +36,8 @@ import org.meveo.service.notification.WebHookService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Standard backing bean for {@link WebHook} (extends {@link BaseBean} that provides almost all common methods to handle entities filtering/sorting in datatable, their create,
@@ -50,6 +52,8 @@ import org.primefaces.model.UploadedFile;
 public class WebHookBean extends BaseNotificationBean<WebHook> {
 
     private static final long serialVersionUID = -5605274745661054861L;
+    
+    private static Logger log = LoggerFactory.getLogger(WebHookBean.class);
 
     @Inject
     WebHookService webHookService;

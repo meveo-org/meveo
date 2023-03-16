@@ -57,8 +57,12 @@ public class GitHelper {
      * @param code        Code of the git repository
      * @return the {@link File} object linked to the fiven git repository
      */
-    public static File getRepositoryDir(MeveoUser currentUser, String code) {
-        return new File(getGitDirectory(currentUser), code);
+    public static File getRepositoryDir(MeveoUser currentUser, GitRepository repository) {
+    	if (repository.getRepositoryPath() == null) {
+    		return new File(getGitDirectory(currentUser), repository.getCode());
+    	} else {
+    		return new File(repository.getRepositoryPath());
+    	}
     }
 
     public static String computeRelativePath(File repositoryDir, File file) {

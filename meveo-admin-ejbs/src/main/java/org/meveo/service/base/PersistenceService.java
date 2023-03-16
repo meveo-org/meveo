@@ -84,9 +84,10 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.transformer.AliasToEntityOrderedMapResultTransformer;
 import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
-import org.meveo.service.admin.impl.ModuleInstallationContext;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generic implementation that provides the default implementation for
@@ -100,46 +101,9 @@ import org.meveo.service.crm.impl.CustomFieldInstanceService;
  */
 public abstract class PersistenceService<E extends IEntity> extends BaseService implements IPersistenceService<E> {
 	protected Class<E> entityClass;
-
-	/**
-	 * Entity list search parameter name - parameter's value contains entity class
-	 */
-	public static String SEARCH_ATTR_TYPE_CLASS = "type_class";
-	/**
-	 * Entity list search parameter value - parameter's value is null
-	 */
-	public static String SEARCH_IS_NULL = "IS_NULL";
-	/**
-	 * Entity list search parameter value - parameter's value is not null
-	 */
-	public static String SEARCH_IS_NOT_NULL = "IS_NOT_NULL";
-	/**
-	 * Entity list search parameter criteria - wildcard Or
-	 */
-	public static String SEARCH_WILDCARD_OR = "wildcardOr";
-
-	/**
-	 * Entity list search parameter name - parameter's value contains sql statement
-	 */
-	public static String SEARCH_SQL = "SQL";
-
-	/**
-	 * Entity list search parameter name - parameter's value contains filter name
-	 */
-	public static String SEARCH_FILTER = "$FILTER";
-
-	/**
-	 * Entity list search parameter name - parameter's value contains filter
-	 * parameters
-	 */
-	public static String SEARCH_FILTER_PARAMETERS = "$FILTER_PARAMETERS";
-
-	/**
-	 * Entity list search parameter criteria - just like wildcardOr but Ignoring
-	 * case
-	 */
-	public static String SEARCH_WILDCARD_OR_IGNORE_CAS = "wildcardOrIgnoreCase";
-
+	
+    private static Logger DEFAULT_LOG = LoggerFactory.getLogger(PersistenceService.class);
+	
 	@Inject
 	@MeveoJpa
 	private EntityManagerWrapper emWrapper;
@@ -225,7 +189,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @return Updated entity
 	 */
 	public E updateNoCheck(E entity) {
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 		updateAudit(entity);
 		return getEntityManager().merge(entity);
 	}
@@ -236,7 +200,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E findById(Long id) {
 
-		log.trace("Find {}/{} by id", entityClass.getSimpleName(), id);
+		getLogger().trace("Find {}/{} by id", entityClass.getSimpleName(), id);
 		return getEntityManager().find(entityClass, id);
 
 	}
@@ -246,15 +210,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 */
 	@Override
 	public E findById(Long id, boolean refresh) {
-		log.trace("start of find {}/{} by id ..", entityClass.getSimpleName(), id);
+		getLogger().trace("start of find {}/{} by id ..", entityClass.getSimpleName(), id);
 		E e = getEntityManager().find(entityClass, id);
 		if (e != null) {
 			if (refresh) {
-				log.debug("refreshing loaded entity");
+				getLogger().debug("refreshing loaded entity");
 				getEntityManager().refresh(e);
 			}
 		}
-		log.trace("end of find {}/{} by id. Result found={}.", entityClass.getSimpleName(), id, e != null);
+		getLogger().trace("end of find {}/{} by id. Result found={}.", entityClass.getSimpleName(), id, e != null);
 		return e;
 
 	}
@@ -275,7 +239,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	@SuppressWarnings("unchecked")
 	public E findById(Long id, List<String> fetchFields, boolean refresh) {
-		log.debug("start of find {}/{} by id ..", getEntityClass().getSimpleName(), id);
+		getLogger().debug("start of find {}/{} by id ..", getEntityClass().getSimpleName(), id);
 		final Class<? extends E> productClass = getEntityClass();
 		StringBuilder queryString = new StringBuilder("from " + productClass.getName() + " a");
 		if (fetchFields != null && !fetchFields.isEmpty()) {
@@ -292,11 +256,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		if (!results.isEmpty()) {
 			e = results.get(0);
 			if (refresh) {
-				log.debug("refreshing loaded entity");
+				getLogger().debug("refreshing loaded entity");
 				getEntityManager().refresh(e);
 			}
 		}
-		log.trace("end of find {}/{} by id. Result found={}.", getEntityClass().getSimpleName(), id, e != null);
+		getLogger().trace("end of find {}/{} by id. Result found={}.", getEntityClass().getSimpleName(), id, e != null);
 		return e;
 	}
 
@@ -327,11 +291,11 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	public E disable(E entity) throws BusinessException {
 
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
-			log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			preDisable(entity);
 			entity = getEntityManager().merge(entity);
 			postDisable(entity);
-			log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -339,10 +303,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	public E disableNoMerge(E entity) throws BusinessException {
 
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isActive()) {
-			log.debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of disable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			preDisable(entity);
 			postDisable(entity);
-			log.trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of disable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -374,13 +338,13 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E enable(E entity) throws BusinessException {
 		if (entity instanceof EnableEntity && ((EnableEntity) entity).isDisabled()) {
-			log.debug("start of enable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().debug("start of enable {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 			((EnableEntity) entity).setDisabled(false);
 			((IAuditable) entity).updateAudit(currentUser);
 			if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
 				entityEnabledEventProducer.fire((BaseEntity) entity);
 			}
-			log.trace("end of enable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+			getLogger().trace("end of enable {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		}
 		return entity;
 	}
@@ -389,7 +353,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public void remove(E entity) throws BusinessException {
 		
-		log.debug("start of remove {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of remove {} entity (id={}) ..", getEntityClass().getSimpleName(), entity.getId());
 		entity = findById((Long) entity.getId());
 		if (entity != null) {
 
@@ -425,12 +389,12 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 					ImageUploadEventHandler<E> imageUploadEventHandler = new ImageUploadEventHandler<>(currentUser.getProviderCode());
 					imageUploadEventHandler.deleteImage(entity);
 				} catch (IOException e) {
-					log.error("Failed deleting image file");
+					getLogger().error("Failed deleting image file");
 				}
 			}
 		}
 
-		log.trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity != null ? entity.getId() : "");
+		getLogger().trace("end of remove {} entity (id={}).", getEntityClass().getSimpleName(), entity != null ? entity.getId() : "");
 	}
 
 	/**
@@ -496,7 +460,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Override
 	public E update(E entity, boolean asyncEvent) throws BusinessException {
 
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
 		preUpdate(entity, asyncEvent);
 
@@ -514,14 +478,16 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		afterUpdateSameTx(entity);
+		
+		getLogger().trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 
 		return entity;
 	}
 
 	public E updateNoMerge(E entity) throws BusinessException {
 
-		log.debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().debug("start of update {} entity (id={}) ..", entity.getClass().getSimpleName(), entity.getId());
 
 		preUpdate(entity);
 
@@ -529,7 +495,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
+		getLogger().trace("end of update {} entity (id={}).", entity.getClass().getSimpleName(), entity.getId());
 		
 		return entity;
 	}
@@ -543,7 +509,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 */
 	@Override
 	public void create(E entity) throws BusinessException {
-		log.debug("Start creation of entity {}", entity.getClass().getSimpleName());
+		getLogger().debug("Start creation of entity {}", entity.getClass().getSimpleName());
 
 		beforeUpdateOrCreate(entity);
 
@@ -551,7 +517,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 			((IAuditable) entity).updateAudit(currentUser);
 		}
 		
-		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class)) {
+		if (entity instanceof BaseEntity && entity.getClass().isAnnotationPresent(ObservableEntity.class) || entity.getClass().isAnnotationPresent(ModuleItem.class)) {
 			entityCreatedEventProducer.fire((BaseEntity) entity);
 		}
 
@@ -570,7 +536,8 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		
 		afterUpdateOrCreate(entity);
 
-		log.trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
+		afterCreateSameTx(entity);
+		getLogger().trace("end of create {}. entity id={}.", entity.getClass().getSimpleName(), entity.getId());
 	}
 
 	/**
@@ -697,7 +664,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		}
 
 		if (getEntityManager().contains(entity)) {
-			log.trace("Entity {}/{} will be refreshed) ..", getEntityClass().getSimpleName(), entity.getId());
+			getLogger().trace("Entity {}/{} will be refreshed) ..", getEntityClass().getSimpleName(), entity.getId());
 			getEntityManager().refresh(entity);
 			return entity;
 		} else {
@@ -818,6 +785,15 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	@Asynchronous
 	protected void afterUpdate(E entity) throws BusinessException {
 	}
+	
+	protected void afterCreateSameTx(E entity) throws BusinessException {
+    	
+    }
+	
+	protected void afterUpdateSameTx(E entity) throws BusinessException {
+    	
+    }
+
 
 	/**
 	 * Creates query to filter entities according data provided in pagination
@@ -925,311 +901,9 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 	 * @return query to filter entities according pagination configuration data.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public QueryBuilder getQuery(PaginationConfiguration config) {
-
+	public QueryBuilder getQuery(PaginationConfiguration config) {		
 		final Class<? extends E> entityClass = getEntityClass();
-
-		Map<String, Object> filters = config.getFilters();
-
-		QueryBuilder queryBuilder = new QueryBuilder(entityClass, "a", config.getFetchFields());
-
-		if (filters != null && !filters.isEmpty()) {
-
-			if (filters.containsKey(SEARCH_FILTER)) {
-				Filter filter = (Filter) filters.get(SEARCH_FILTER);
-				Map<CustomFieldTemplate, Object> parameterMap = (Map<CustomFieldTemplate, Object>) filters.get(SEARCH_FILTER_PARAMETERS);
-				queryBuilder = new FilteredQueryBuilder(filter, parameterMap, false, false);
-			} else {
-
-				for (String key : filters.keySet()) {
-
-					Object filterValue = filters.get(key);
-					if (filterValue == null) {
-						continue;
-					}
-
-					// Key format is: condition field1 field2 or condition-field1-field2-fieldN
-					// example: "ne code", condition=ne, fieldName=code, fieldName2=null
-					String[] fieldInfo = key.split(" ");
-					String condition = fieldInfo.length == 1 ? null : fieldInfo[0];
-					String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
-					String fieldName2 = fieldInfo.length == 3 ? fieldInfo[2] : null;
-
-					String[] fields = null;
-					if (condition != null) {
-						fields = Arrays.copyOfRange(fieldInfo, 1, fieldInfo.length);
-					}
-
-					// if ranged search - field value in between from - to values. Specifies "from"
-					// value: e.g value<=field.value
-					if ("fromRange".equals(condition)) {
-						if (filterValue instanceof Double) {
-							BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-							queryBuilder.addCriterion("a." + fieldName, " >= ", rationalNumber, true);
-						} else if (filterValue instanceof Number) {
-							queryBuilder.addCriterion("a." + fieldName, " >= ", filterValue, true);
-						} else if (filterValue instanceof Date) {
-							queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
-						} else if (filterValue instanceof Instant) {
-							queryBuilder.addCriterionDateRangeFromTruncatedToDay("a." + fieldName, (Instant) filterValue);
-						}
-
-						// if ranged search - field value in between from - to values. Specifies "to"
-						// value: e.g field.value<=value
-					} else if ("toRange".equals(condition)) {
-						if (filterValue instanceof Double) {
-							BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-							queryBuilder.addCriterion("a." + fieldName, " <= ", rationalNumber, true);
-						} else if (filterValue instanceof Number) {
-							queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, true);
-						} else if (filterValue instanceof Date) {
-							queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
-						} else if (filterValue instanceof Instant) {
-							queryBuilder.addCriterionDateRangeToTruncatedToDay("a." + fieldName, (Instant) filterValue);
-						}
-
-						// Value is in field value (list)
-					} else if ("list".equals(condition)) {
-						String paramName = queryBuilder.convertFieldToParam(fieldName);
-						queryBuilder.addSqlCriterion(":" + paramName + " in elements(a." + fieldName + ")", paramName, filterValue);
-
-						// Field value is in value (list)
-					} else if ("inList".equals(condition) || "not-inList".equals(condition)) {
-
-						boolean isNot = "not-inList".equals(condition);
-
-						Field field = ReflectionUtils.getField(entityClass, fieldName);
-						Class<?> fieldClassType = field.getType();
-
-						// Searching for a list inside a list field requires to join it first as
-						// collection member
-						if (Collection.class.isAssignableFrom(fieldClassType)) {
-
-							String paramName = queryBuilder.convertFieldToParam(fieldName);
-							String collectionItem = queryBuilder.convertFieldToCollectionMemberItem(fieldName);
-
-							// this worked at first, but now complains about distinct clause, so switched to
-							// EXISTS clause instead.
-							// queryBuilder.addCollectionMember(fieldName);
-							// queryBuilder.addSqlCriterion(collectionItem + " IN (:" + paramName + ")",
-							// paramName, filterValue);
-
-							String inListAlias = collectionItem + "Alias";
-							queryBuilder.addSqlCriterion(
-									" exists (select " + inListAlias + " from " + entityClass.getName() + " " + inListAlias + ",IN (" + inListAlias + "." + fieldName + ") as "
-											+ collectionItem + " where " + inListAlias + "=a and " + collectionItem + (isNot ? " NOT " : "") + " IN (:" + paramName + "))",
-									paramName, filterValue);
-
-						} else {
-							if (filterValue instanceof String) {
-								queryBuilder.addSql("a." + fieldName + (isNot ? " NOT " : "") + " IN (" + filterValue + ")");
-							} else if (filterValue instanceof Collection) {
-								String paramName = queryBuilder.convertFieldToParam(fieldName);
-								queryBuilder.addSqlCriterion("a." + fieldName + (isNot ? " NOT " : "") + " IN (:" + paramName + ")", paramName, filterValue);
-							}
-						}
-
-						// Search by an entity type
-					} else if (SEARCH_ATTR_TYPE_CLASS.equals(fieldName)) {
-						if (filterValue instanceof Collection && !((Collection) filterValue).isEmpty()) {
-							List classes = new ArrayList<Class>();
-							for (Object classNameOrClass : (Collection) filterValue) {
-								if (classNameOrClass instanceof Class) {
-									classes.add(classNameOrClass);
-								} else {
-									try {
-										classes.add(Class.forName((String) classNameOrClass));
-									} catch (ClassNotFoundException e) {
-										log.error("Search by a type will be ignored - unknown class {}", classNameOrClass);
-									}
-								}
-							}
-
-							if (condition == null) {
-								queryBuilder.addSqlCriterion("type(a) in (:typeClass)", "typeClass", classes);
-							} else if ("ne".equalsIgnoreCase(condition)) {
-								queryBuilder.addSqlCriterion("type(a) not in (:typeClass)", "typeClass", classes);
-							}
-
-						} else if (filterValue instanceof Class) {
-							if (condition == null) {
-								queryBuilder.addSqlCriterion("type(a) = :typeClass", "typeClass", filterValue);
-							} else if ("ne".equalsIgnoreCase(condition)) {
-								queryBuilder.addSqlCriterion("type(a) != :typeClass", "typeClass", filterValue);
-							}
-
-						} else if (filterValue instanceof String) {
-							try {
-								if (condition == null) {
-									queryBuilder.addSqlCriterion("type(a) = :typeClass", "typeClass", Class.forName((String) filterValue));
-								} else if ("ne".equalsIgnoreCase(condition)) {
-									queryBuilder.addSqlCriterion("type(a) != :typeClass", "typeClass", Class.forName((String) filterValue));
-								}
-							} catch (ClassNotFoundException e) {
-								log.error("Search by a type will be ignored - unknown class {}", filterValue);
-							}
-						}
-
-						// The value is in between two field values
-					} else if ("minmaxRange".equals(condition)) {
-						if (filterValue instanceof Double) {
-							BigDecimal rationalNumber = new BigDecimal((Double) filterValue);
-							queryBuilder.addCriterion("a." + fieldName, " <= ", rationalNumber, false);
-							queryBuilder.addCriterion("a." + fieldName2, " >= ", rationalNumber, false);
-						} else if (filterValue instanceof Number) {
-							queryBuilder.addCriterion("a." + fieldName, " <= ", filterValue, false);
-							queryBuilder.addCriterion("a." + fieldName2, " >= ", filterValue, false);
-						}
-						if (filterValue instanceof Date) {
-							Date value = (Date) filterValue;
-							Calendar c = Calendar.getInstance();
-							c.setTime(value);
-							int year = c.get(Calendar.YEAR);
-							int month = c.get(Calendar.MONTH);
-							int date = c.get(Calendar.DATE);
-							c.set(year, month, date, 0, 0, 0);
-							value = c.getTime();
-							queryBuilder.addCriterion("a." + fieldName, "<=", value, false);
-							queryBuilder.addCriterion("a." + fieldName2, ">=", value, false);
-						}
-
-						// The value is in between two field values with either them being optional
-					} else if ("minmaxOptionalRange".equals(condition)) {
-
-						String paramName = queryBuilder.convertFieldToParam(fieldName);
-
-						String sql = "((a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or (a." + fieldName + "<=:" + paramName + " and :" + paramName + "<a."
-								+ fieldName2 + ") or (a." + fieldName + "<=:" + paramName + " and a." + fieldName2 + " IS NULL) or (a." + fieldName + " IS NULL and :" + paramName
-								+ "<a." + fieldName2 + "))";
-						queryBuilder.addSqlCriterionMultiple(sql, paramName, filterValue);
-
-						// The value range is overlapping two field values with either them being
-						// optional
-					} else if ("overlapOptionalRange".equals(condition)) {
-
-						String paramNameFrom = queryBuilder.convertFieldToParam(fieldName);
-						String paramNameTo = queryBuilder.convertFieldToParam(fieldName2);
-
-						String sql = "(( a." + fieldName + " IS NULL and a." + fieldName2 + " IS NULL) or  ( a." + fieldName + " IS NULL and a." + fieldName2 + ">:" + paramNameFrom
-								+ ") or (a." + fieldName2 + " IS NULL and a." + fieldName + "<:" + paramNameTo + ") or (a." + fieldName + " IS NOT NULL and a." + fieldName2
-								+ " IS NOT NULL and ((a." + fieldName + "<=:" + paramNameFrom + " and :" + paramNameFrom + "<a." + fieldName2 + ") or (:" + paramNameFrom + "<=a."
-								+ fieldName + " and a." + fieldName + "<:" + paramNameTo + "))))";
-
-						if (filterValue.getClass().isArray()) {
-							queryBuilder.addSqlCriterionMultiple(sql, paramNameFrom, ((Object[]) filterValue)[0], paramNameTo, ((Object[]) filterValue)[1]);
-						} else if (filterValue instanceof List) {
-							queryBuilder.addSqlCriterionMultiple(sql, paramNameFrom, ((List) filterValue).get(0), paramNameTo, ((List) filterValue).get(1));
-						}
-
-						// Any of the multiple field values wildcard or not wildcard match the value (OR
-						// criteria)
-					} else if ("likeCriterias".equals(condition)) {
-
-						queryBuilder.startOrClause();
-						if (filterValue instanceof String) {
-							String filterString = (String) filterValue;
-							for (String field : fields) {
-								queryBuilder.addCriterionWildcard("a." + field, filterString, true);
-							}
-						}
-						queryBuilder.endOrClause();
-
-						// Any of the multiple field values wildcard match the value (OR criteria) - a
-						// diference from "likeCriterias" is that wildcard will be appended to the value
-						// automatically
-					} else if (SEARCH_WILDCARD_OR.equals(condition)) {
-						queryBuilder.startOrClause();
-						for (String field : fields) {
-							String filterValueAsStr = (String) filterValue;
-							queryBuilder.addSql("upper(a." + field + ") like '%" + filterValueAsStr.toUpperCase() + "%'");
-						}
-						queryBuilder.endOrClause();
-
-						// Search by additional Sql clause with specified parameters
-					} else if (SEARCH_SQL.equals(key)) {
-						if (filterValue.getClass().isArray()) {
-							String additionalSql = (String) ((Object[]) filterValue)[0];
-							Object[] additionalParameters = Arrays.copyOfRange(((Object[]) filterValue), 1, ((Object[]) filterValue).length);
-							queryBuilder.addSqlCriterionMultiple(additionalSql, additionalParameters);
-						} else {
-							queryBuilder.addSql((String) filterValue);
-						}
-
-					} else {
-						if (filterValue instanceof String && SEARCH_IS_NULL.equals(filterValue)) {
-							Field field = ReflectionUtils.getField(entityClass, fieldName);
-							Class<?> fieldClassType = field.getType();
-
-							if (Collection.class.isAssignableFrom(fieldClassType)) {
-								queryBuilder.addSql("a." + fieldName + " is empty ");
-							} else {
-								queryBuilder.addSql("a." + fieldName + " is null ");
-							}
-
-						} else if (filterValue instanceof String && SEARCH_IS_NOT_NULL.equals(filterValue)) {
-							Field field = ReflectionUtils.getField(entityClass, fieldName);
-							Class<?> fieldClassType = field.getType();
-
-							if (Collection.class.isAssignableFrom(fieldClassType)) {
-
-								queryBuilder.addSql("a." + fieldName + " is not empty ");
-							} else {
-								queryBuilder.addSql("a." + fieldName + " is not null ");
-							}
-
-						} else if (filterValue instanceof String) {
-
-							// if contains dot, that means join is needed
-							String filterString = (String) filterValue;
-							boolean wildcard = (filterString.contains("*"));
-							if (wildcard) {
-								queryBuilder.addCriterionWildcard("a." + fieldName, filterString, true, "ne".equals(condition));
-							} else {
-								queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterString, true);
-							}
-
-						} else if (filterValue instanceof Date) {
-							queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, ((Date) filterValue).toInstant());
-
-						} else if (filterValue instanceof Instant) {
-							queryBuilder.addCriterionDateTruncatedToDay("a." + fieldName, (Instant) filterValue);
-
-						} else if (filterValue instanceof Number) {
-							queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " != " : " = ", filterValue, true);
-
-						} else if (filterValue instanceof Boolean) {
-							queryBuilder.addCriterion("a." + fieldName, "ne".equals(condition) ? " not is" : " is ", filterValue, true);
-
-						} else if (filterValue instanceof Enum) {
-							if (filterValue instanceof IdentifiableEnum) {
-								String enumIdKey = fieldName + "Id";
-								queryBuilder.addCriterion("a." + enumIdKey, "ne".equals(condition) ? " != " : " = ", ((IdentifiableEnum) filterValue).getId(), true);
-							} else {
-								queryBuilder.addCriterionEnum("a." + fieldName, (Enum) filterValue, "ne".equals(condition) ? " != " : " = ");
-							}
-
-						} else if (BaseEntity.class.isAssignableFrom(filterValue.getClass())) {
-							queryBuilder.addCriterionEntity("a." + fieldName, filterValue, "ne".equals(condition) ? " != " : " = ");
-
-						} else if (filterValue instanceof UniqueEntity || filterValue instanceof IEntity) {
-							queryBuilder.addCriterionEntity("a." + fieldName, filterValue, "ne".equals(condition) ? " != " : " = ");
-
-						} else if (filterValue instanceof List) {
-							queryBuilder.addSqlCriterion("a." + fieldName + ("ne".equals(condition) ? " not in  " : " in ") + ":" + fieldName, fieldName, filterValue);
-						}
-					}
-				}
-			}
-		}
-
-		if (filters != null && filters.containsKey("$FILTER")) {
-			Filter filter = (Filter) filters.get("$FILTER");
-			queryBuilder.addPaginationConfiguration(config, filter.getPrimarySelector().getAlias());
-		} else {
-			queryBuilder.addPaginationConfiguration(config, "a");
-		}
-
-		return queryBuilder;
+		return QueryBuilderHelper.getQuery(config, entityClass);
 	}
 
 	protected boolean isConversationScoped() {
@@ -1356,6 +1030,10 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 
 	public E findByCode(String code) {
 		throw new UnsupportedOperationException();
+	}
+	
+	public Logger getLogger() {
+		return DEFAULT_LOG;
 	}
 
 }

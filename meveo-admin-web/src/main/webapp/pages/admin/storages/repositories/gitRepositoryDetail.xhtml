@@ -43,12 +43,19 @@
 					autocompleteMethod="getBranchList"
 					field="defaultBranch" />
 				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
+				<hftl:formField label="Dev mode" field="devMode"/>
 			</h:panelGrid>
-			<h:panelGrid columns="1">
-				<hftl:formField maxlength="255" allowEdit="false"
+			<h:panelGrid columns="2">
+				<hftl:formField maxlength="255" allowEdit="true"
 					label="#{messages['gitRepositories.remoteOrigin']}"
 					field="remoteOrigin"
 					listenerUpdate="@this defaultRemoteUsername defaultRemotePassword actions actionButtons" />
+					
+				<hftl:formField maxlength="255" allowEdit="true"
+					componentWidth="200"
+					label="Path on hard-drive"
+					field="repositoryPath"
+					listenerUpdate="@this actions actionButtons" />
 			</h:panelGrid>
 			<h:panelGrid columns="2">
 				<h:panelGroup id="defaultRemoteUsername">
@@ -65,6 +72,13 @@
 						secret="true"
 						rendered="#{gitRepositoryBean.entity.remoteOrigin != null}"
 						listenerUpdate="actions" />
+				</h:panelGroup>
+				<h:panelGroup id="pendingGitFiles">
+					<hftl:decorateFormField componentWidth="100%" label="List of modified files">
+						<p:pickList id="pickList" value="#{gitRepositoryBean.pendingGitFiles}" var="item" itemLabel="#{item}" itemValue="#{item}" escape="false">
+							<p:ajax event="transfer" update="commit"/>
+						</p:pickList>
+					</hftl:decorateFormField>
 				</h:panelGroup>
 			</h:panelGrid>
 
@@ -87,14 +101,15 @@
 					icon="ui-icon-arrowthick-1-sw" update="@form" />
 				<p:commandButton id="commit"
 					value="Commit (#{gitRepositoryBean.countPendingChanges()})"
-					actionListener="#{gitRepositoryBean.commit}"
 					rendered="#{gitRepositoryBean.entity.id != null}"
 					immediate="true"
-					icon="ui-icon-play" update="@form" />
+					disabled="#{gitRepositoryBean.pendingGitFiles.target.isEmpty()}"
+					icon="ui-icon-play"
+					onclick="PF('commitDialog').show()" />
 				<p:commandButton id="discard"
 					value="Discard"
 					actionListener="#{gitRepositoryBean.discard}"
-					immediate="true"
+					immediate="false"
 					rendered="#{gitRepositoryBean.entity.id != null}"
 					icon="ui-icon-closethick" update="@form" />
 				<p:commandButton id="install-module"
@@ -102,6 +117,11 @@
 					rendered="#{gitRepositoryBean.isModuleRepository()}"
 					disabled="#{gitRepositoryBean.isModuleInstalled()}"
 					onclick="PF('installDialog').show()">
+				</p:commandButton>
+				<p:commandButton id="re-install-module"
+					value="Reinstall module"
+					rendered="#{gitRepositoryBean.isModuleInstalled()}"
+					onclick="PF('reInstallDialog').show()">
 				</p:commandButton>
 				<p:button id="meveoModuleDetailButton"
 					rendered="#{gitRepositoryBean.getModuleId() != null}"
@@ -312,9 +332,43 @@
 				<p:commandButton process="@form @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
 					value="#{messages['meveoModule.install']}"
 					action="#{gitRepositoryBean.install}"
-					/>
+				/>
 
 				<p:commandButton onclick="PF('installDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
+					icon="ui-icon-close"
+				/>
+					
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog id="commitDialog" widgetVar="commitDialog" message="Commit message" header="Commit">
+			<h:form style="margin-top: 5px; margin-bottom: 5px;">
+				<hftl:decorateFormField fieldId="commitField" label="Commit :" componentWidth="100" newLine="true">
+					<p:inputText id="commitField" value="#{gitRepositoryBean.commitMessageBean.commitMessage}" size="50" />
+				</hftl:decorateFormField>
+				<p:commandButton process="@this" id="commitPopup" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+					value="Commit files"
+					action="#{gitRepositoryBean.commit}"
+					onclick="PF('commitDialog').close()"
+				/>
+				<p:commandButton onclick="PF('commitDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
+					icon="ui-icon-close"
+				/>
+				
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:confirmDialog id="reInstallDialog" widgetVar="reInstallDialog" message="Installation parameters " header="#{messages['meveoModule.install']}">
+			<h:form style="margin-top: 5px; margin-bottom: 5px;">
+				<hftl:decorateFormField fieldId="repoPickList" label="Repository :" componentWidth="100" newLine="true">
+					<p:pickList id="repoPickList" value="#{gitRepositoryBean.repositories}" var="repo" itemLabel="#{repo}" itemValue="#{repo}"/>
+				</hftl:decorateFormField>
+				<p:commandButton process="@form @this" id="install_btn" update="@form" icon="ui-icon-check" styleClass="ui-confirmdialog-yes"
+					value="#{messages['meveoModule.install']}"
+					action="#{gitRepositoryBean.reInstall}"
+					/>
+
+				<p:commandButton onclick="PF('reInstallDialog').hide()" value="#{messages['action.cancel']}" type="button" styleClass="ui-confirmdialog-no"
 					icon="ui-icon-close" />
 					
 			</h:form>

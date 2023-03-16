@@ -1,6 +1,7 @@
 package org.meveocrm.admin.action.reporting;
 
 import org.meveo.admin.action.BaseBean;
+import org.meveo.api.ProviderApi;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.catalog.CounterTemplate;
@@ -9,6 +10,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.catalog.impl.CounterTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.primefaces.event.TabChangeEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.faces.view.ViewScoped;
@@ -28,7 +31,8 @@ public class ConfigIssuesReportingBean extends BaseBean<BaseEntity> {
 
     private static final long serialVersionUID = 1L;
 
-
+    private static Logger log = LoggerFactory.getLogger(ConfigIssuesReportingBean.class);
+    
     @Inject
     private CounterTemplateService counterTemplateService;
 

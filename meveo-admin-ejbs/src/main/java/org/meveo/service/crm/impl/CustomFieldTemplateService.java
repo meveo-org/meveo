@@ -60,6 +60,8 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.storage.FileSystemService;
 import org.meveo.util.EntityCustomizationUtils;
 import org.meveo.util.PersistenceUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -69,6 +71,8 @@ import org.meveo.util.PersistenceUtils;
  */
 @Stateless
 public class CustomFieldTemplateService extends BusinessService<CustomFieldTemplate> {
+
+    private static Logger log = LoggerFactory.getLogger(CustomFieldTemplateService.class);
 
     @Inject
     private CustomFieldsCacheContainerProvider customFieldsCache;
@@ -115,15 +119,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
     }
 
     public boolean exists(String code, String appliesTo) {
-        try {
-            return getEntityManager().createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE "
-                            + "code = :code and applies_to = :appliesTo")
-                    .setParameter("code", code)
-                    .setParameter("appliesTo",appliesTo)
-                    .getSingleResult() != null;
-        } catch (NoResultException e) {
-            return false;
-        }
+        return !getEntityManager()
+    			.createNativeQuery("SELECT 1 FROM crm_custom_field_tmpl WHERE code = :code and applies_to = :appliesTo")
+                .setParameter("code", code)
+                .setParameter("appliesTo",appliesTo)
+                .getResultList()
+                .isEmpty();
     }
 
     @SuppressWarnings("unchecked")
@@ -158,6 +159,21 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             // Its ok, handles cases when value that is part of CFT.AppliesTo calculation is not set yet on entity
             return new HashMap<String, CustomFieldTemplate>();
         }
+    }
+    
+    /**
+     * Retrieve cft by code, in the fields of the given cet or its ancestors
+     * 
+     * @param code Code of the CFT
+     * @param cet The CET holding the fields
+     * @return the CFT or null
+     */
+    public CustomFieldTemplate find(String code, CustomEntityTemplate cet) {
+    	CustomFieldTemplate cft = this.findByCodeAndAppliesTo(code, cet.getAppliesTo());
+    	if (cft == null && cet.getSuperTemplate() != null) {
+    		cft = this.find(code, cet.getSuperTemplate());
+    	}
+    	return cft;
     }
 
     public Map<String, CustomFieldTemplate> getCftsWithInheritedFields(CustomEntityTemplate cet) {
@@ -213,7 +229,8 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
                     .createNamedQuery("CustomFieldTemplate.getCFTByAppliesTo", CustomFieldTemplate.class)
                     .setParameter("appliesTo", appliesTo).getResultList();
 
-            Map<String, CustomFieldTemplate> cftMap = values.stream().collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
+            Map<String, CustomFieldTemplate> cftMap = values.stream()
+            		.collect(Collectors.toMap(cft -> cft.getCode(), cft -> cft));
             return cftMap;
 
         } catch (Exception e) {
@@ -259,7 +276,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 
         return null;
     }
-
+    
     /**
      * Find a specific custom field template by a code. Custom field template will be looked up from cache or retrieved from DB.
      *
@@ -349,36 +366,30 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	        }
 		}
 		
-		MeveoModule relatedModule = null;
-		
-        if (moduleInstallCtx.isActive()) {
-            relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
-        }
-
-        // Synchronize CET / CRT POJO
-        if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
-            CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            if(relatedModule == null) {
-                relatedModule = customEntityTemplateService.findModuleOf(cet);
-            }
-            customEntityTemplateService.addFilesToModule(cet, relatedModule);
-        } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
-            CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
-            if (relatedModule == null) {
+        if (!moduleInstallCtx.isGitInstallation()) {
+            MeveoModule relatedModule = null;
+            // Synchronize CET / CRT POJO
+            if (cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
+                CustomEntityTemplate cet = customFieldsCache.getCustomEntityTemplate(CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
+            	relatedModule = customEntityTemplateService.findModuleOf(cet);
+                customEntityTemplateService.addFilesToModule(cet, relatedModule);
+            } else if (cft.getAppliesTo().startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+                CustomRelationshipTemplate crt = customFieldsCache.getCustomRelationshipTemplate(CustomRelationshipTemplate.getCodeFromAppliesTo(cft.getAppliesTo()));
                 relatedModule = customRelationshipTemplateService.findModuleOf(crt);
+                customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
             }
-            customRelationshipTemplateService.addFilesToModule(crt, relatedModule);
+
+            if (relatedModule != null && !moduleInstallCtx.isActive()) {
+    	        // We only do this sync in case the CFT is created outside of a module installation context
+    	        MeveoModuleItem mi = new MeveoModuleItem();
+    	        mi.setMeveoModule(relatedModule);
+    	        mi.setAppliesTo(cft.getAppliesTo());
+    	        mi.setItemClass(CustomFieldTemplate.class.getName());
+    	        mi.setItemCode(cft.getCode());
+    	        meveoModuleService.addModuleItem(mi, relatedModule);
+            }
         }
 
-        // We only do this sync in case the CFT is created outside of a module installation context
-        if (relatedModule != null && !moduleInstallCtx.isActive()) {
-            MeveoModuleItem mi = new MeveoModuleItem();
-            mi.setMeveoModule(relatedModule);
-            mi.setAppliesTo(cft.getAppliesTo());
-            mi.setItemClass(CustomFieldTemplate.class.getName());
-            mi.setItemCode(cft.getCode());
-            meveoModuleService.addModuleItem(mi, relatedModule);
-        }
 	}
 
 	private CustomModelObject getAppliesToTemplate(CustomFieldTemplate cft, String entityCode) {
@@ -477,8 +488,12 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         
 		MeveoModule relatedModule = null;
 		
+		if (moduleInstallCtx.isGitInstallation()) {
+			return cftUpdated;
+		}
+		
         if (moduleInstallCtx.isActive()) {
-            relatedModule = meveoModuleService.findByCode(moduleInstallCtx.getModuleCodeInstallation());
+            relatedModule = moduleInstallCtx.getModule();
         }
 
         // Synchronize CET / CRT POJO
@@ -810,7 +825,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
         String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
 
-        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 
         String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getAppliesTo();
 
@@ -835,5 +850,10 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 	        gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
         }
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 
 }

@@ -32,6 +32,7 @@ import javax.inject.Named;
 import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class to manage other applications : Medina, Vertina, Oudaya, Bayad.
@@ -42,8 +43,7 @@ public class Management implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(Management.class);
 
     /** paramBeanFactory */
     @Inject

@@ -27,6 +27,8 @@ import org.meveo.service.job.Job;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.job.TimerEntityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -34,6 +36,8 @@ import org.meveo.service.job.TimerEntityService;
  */
 @Stateless
 public class JobInstanceApi extends BaseCrudApi<JobInstance, JobInstanceDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(JobInstanceApi.class);
 
     public JobInstanceApi() {
 		super(JobInstance.class, JobInstanceDto.class);

@@ -47,6 +47,8 @@ import org.meveo.model.technicalservice.OutputMeveoProperty;
 import org.meveo.model.technicalservice.TechnicalService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Technical service persistence service.
@@ -55,6 +57,8 @@ import org.meveo.service.script.technicalservice.TechnicalServiceEngine;
  * @param <T> the generic type of service
  */
 public abstract class TechnicalServiceService<T extends TechnicalService> extends FunctionService<T, TechnicalServiceEngine<T>> {
+
+    private static Logger log = LoggerFactory.getLogger(TechnicalServiceService.class);
 
     @Override
 	public List<FunctionIO> getInputs(T function) throws BusinessException {

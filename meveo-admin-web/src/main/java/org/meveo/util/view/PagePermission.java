@@ -24,7 +24,7 @@ public class PagePermission {
 	private static final String JSF = ".jsf";
 	private static final String XHTML = ".xhtml";
 
-	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static Logger logger = LoggerFactory.getLogger(PagePermission.class);
 
 	private List<Page> pages;
 	private String pagesDirectory;

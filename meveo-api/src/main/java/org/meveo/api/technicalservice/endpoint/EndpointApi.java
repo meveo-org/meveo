@@ -71,6 +71,8 @@ import org.meveo.service.technicalservice.endpoint.EndpointResult;
 import org.meveo.service.technicalservice.endpoint.EndpointService;
 import org.meveo.service.technicalservice.endpoint.PendingResult;
 import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.util.Json;
 
@@ -84,6 +86,8 @@ import io.swagger.util.Json;
  */
 @Stateless
 public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(EndpointApi.class);
 
 	@Inject
 	@Processed
@@ -145,8 +149,11 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 		CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
 			try {
-				Map<String, Object> result = execute(endpointExecution, functionService, parameterMap, executionEngine);
-				String data = transformData(endpoint, result);
+				EndpointExecutionResult result = execute(endpointExecution, functionService, parameterMap, executionEngine);
+				 if (result.getCriticalError() != null) {
+					 result = execute(endpointExecution, functionService, parameterMap, executionEngine);
+	            }
+				String data = transformData(endpoint, result.getResults());
 				return new EndpointResult(data, endpoint.getContentType());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -168,7 +175,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 	 * @return The result of the execution
 	 * @throws BusinessException if error occurs while execution
 	 */
-	public Map<String, Object> execute(Endpoint endpoint, EndpointExecution execution)
+	public EndpointExecutionResult execute(Endpoint endpoint, EndpointExecution execution)
 			throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
@@ -183,22 +190,14 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	}
 
-	/**
-	 * @param execution
-	 * @param functionService
-	 * @param parameterMap
-	 * @param executionEngine
-	 * @return
-	 * @throws InterruptedException
-	 * @throws ExecutionException
-	 * @throws BusinessException
-	 */
-	public Map<String, Object> execute(EndpointExecution execution,
+	public EndpointExecutionResult execute(EndpointExecution execution,
 			final FunctionService<?, ScriptInterface> functionService, Map<String, Object> parameterMap,
 			final ScriptInterface executionEngine) throws InterruptedException, ExecutionException, BusinessException {
 
 		EndpointExecutionResult executionResult = new EndpointExecutionResult(execution.getEndpoint(), parameterMap);
 
+		boolean hasScriptError = false;
+		
 		try {
 			// Start endpoint script with timeout if one was set
 			if (execution.getDelayMax() != null) {
@@ -214,23 +213,33 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 					});
 					executionResult.setResults(resultFuture.get(execution.getDelayMax(), execution.getDelayUnit()));
 				} catch (TimeoutException e) {
-					return executionEngine.cancel();
+					executionResult.setResults(executionEngine.cancel());
+					executionResult.setError(e);
 				}
+				
 			} else {
 				EndpointPool endpointPool = execution.getEndpoint().getPool();
 				boolean usePool = endpointPool != null && endpointPool.isUsePool();
 				executionResult.setResults(functionService.execute(executionEngine, parameterMap, !usePool));
 			}
-		} catch (Exception e) {
-			executionResult.setError(e);
-			throw e;
+		} catch (Error error) {
+			hasScriptError = true;
+			executionResult.setCriticalError(error);
+		} catch (Exception exception) {
+			executionResult.setError(exception);
+			throw exception;
 
 		} finally {
-			endpointExecuted.fireAsync(executionResult);
-			endpointCache.returnPooledScript(execution.getEndpoint(), executionEngine);
+			if (!hasScriptError) {
+				endpointCache.returnPooledScript(execution.getEndpoint(), executionEngine);
+				endpointExecuted.fireAsync(executionResult);
+			} else {
+				endpointCache.destroyPooledScript(execution.getEndpoint(), executionEngine);
+				log.warn("Error with script instance for endpoint {}, destroying it ", execution.getEndpoint().getCode());
+			}
 		}
 
-		return executionResult.getResults();
+		return executionResult;
 
 	}
 

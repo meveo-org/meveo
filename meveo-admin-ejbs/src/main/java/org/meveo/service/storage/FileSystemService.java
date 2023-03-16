@@ -1,10 +1,14 @@
 package org.meveo.service.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,23 +19,22 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.meveo.api.exception.BusinessApiException;
-import org.meveo.commons.utils.FileUtils;
 import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.elresolver.ValueExpressionWrapper;
+import org.meveo.exceptions.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
-import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
-import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.storage.BinaryStorageConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.scheduler.EntityRef;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -50,8 +53,7 @@ public class FileSystemService {
 	@Inject
 	private RepositoryService repositoryService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(FileSystemService.class);
 	
 	/**
 	 * Remove the folders corresponding to a given field
@@ -240,7 +242,7 @@ public class FileSystemService {
 	
 	public void delete(BinaryStoragePathParam params, Map<String, Object> values) {
 		if(values == null) {
-			values = Collections.EMPTY_MAP;
+			values = Collections.emptyMap();
 		}
 
 		String storage = getStoragePath(params, values);
@@ -255,7 +257,7 @@ public class FileSystemService {
 	}
 
 	public String persists(BinaryStoragePathParam params) throws IOException {
-		return persists(params, Collections.EMPTY_MAP);
+		return persists(params, Collections.emptyMap());
 	}
 
 	public String persists(BinaryStoragePathParam params, Map<String, Object> values) throws IOException {
@@ -281,172 +283,23 @@ public class FileSystemService {
 
 		storage = storage + File.separator + params.getFilename();
 
-		try(InputStream is = params.getContents()){
-			FileUtils.copyFile(storage, is);
+		File file = new File(storage);
+		try(InputStream is = params.getContents()) {
+			if (file.exists() && is instanceof FileInputStream) {
+				try {
+					Files.copy(is, file.toPath(),  StandardCopyOption.REPLACE_EXISTING);
+				} catch (FileSystemException e) {
+					//NOOP - the file we are trying to write is the same file
+				}
+			} else {
+				Files.copy(is, file.toPath(),  StandardCopyOption.REPLACE_EXISTING);
+			}
 		}
 
-		return new File(storage).getPath();
+		return file.getPath();
 	}
 
-    /**
-     * Save the binaries values to the file system and replace them in the value map by the path where they are stored. <br>
-     * In case of a single storage binary, remove the previous one from file system. <br>
-     * In case of a list storage binary, add it to the current list
-     * TODO: re-make documentation
-     *
-     * @param fields     Fields definition
-     * @param values     Fields values
-     * @param repository Repository where to store binaries
-     * @return the persisted binaries by custom field templates
-     */
-    @SuppressWarnings("unchecked")
-	public Map<CustomFieldTemplate, Object> updateBinaries(Repository repository, 
-			String uuid, 
-			CustomEntityTemplate cet, 
-			Collection<CustomFieldTemplate> fields, 
-			Map<String, Object> values, 
-			Map<String, Object> previousValues) throws IOException, BusinessApiException {
-    	
-        Map<CustomFieldTemplate, Object> binariesSaved = new HashMap<>();
-        for (CustomFieldTemplate field : fields) {
-        	
-            if (field.getFieldType().equals(CustomFieldTypeEnum.BINARY)) {
-                BinaryStoragePathParam binaryStoragePathParam = new BinaryStoragePathParam();
-                binaryStoragePathParam.setCft(field);
-                binaryStoragePathParam.setUuid(uuid);
-                binaryStoragePathParam.setCetCode(cet.getCode());
-                binaryStoragePathParam.setRepository(repository);
-                binaryStoragePathParam.setShowOnExplorer(field.isSaveOnExplorer());
-                binaryStoragePathParam.setFilePath(field.getFilePath());
-
-            	// If key is present but is empty, remove the data and the files
-            	if(values.containsKey(field.getCode()) && StringUtils.isBlank(values.get(field.getCode()))) {
-                    delete(binaryStoragePathParam, previousValues);
-                    binariesSaved.put(field, null);	// Null value indicate we remove those binaries
-                    
-            	} else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE) && values.get(field.getCode()) instanceof File) {
-					// Remove old file
-                    if (previousValues != null && previousValues.get(field.getCode()) != null) {
-                        Object oldFile = previousValues.get(field.getCode());
-
-                        // If file was persisted from CEI, conversion from String to File is automatic
-                        if(oldFile instanceof String) {
-							new File((String) oldFile).delete();
-
-						} else if(oldFile instanceof File) {
-                        	((File) oldFile).delete();
-						}
-                    }
-					
-					try {
-						File tempFile = (File) values.get(field.getCode());
-						binaryStoragePathParam.setFile(tempFile);
-						binaryStoragePathParam.setFilename(tempFile.getName());
-						binaryStoragePathParam.setFileSizeInBytes(tempFile.length());
-
-						try {
-							final String persistedPath = persists(binaryStoragePathParam, values);
-							values.put(field.getCode(), persistedPath);
-							binariesSaved.put(field, persistedPath);
-						} catch (IllegalArgumentException e) {
-							throw new IllegalArgumentException(e.getMessage() + " for field " + field.getCode());
-						}
-						
-					} catch (ClassCastException cce) {
-						// save from GUI
-					}
-
-                } else if (field.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && values.get(field.getCode()) != null) {
-                	List<?> value = (List<?>) values.get(field.getCode());
-                	
-                    // Determine type of the list : String or File
-                    Object firstItem = null;
-                    if(!CollectionUtils.isEmpty(value)) {
-                    	firstItem = value.get(0);
-                    }
-
-                    // Append new persisted files path to existing ones
-					List<String> persistedPaths = new ArrayList<>();
-                    List<File> existingFiles = new ArrayList<>();
-                    if(previousValues != null && previousValues.get(field.getCode()) != null) {
-                        List existingValues = (List) previousValues.get(field.getCode());
-
-                        // When persisted from CEI, the file references are automatically de-serialized so we need to check
-                        if(!existingValues.isEmpty()) {
-							if(existingValues.get(0) instanceof String) {
-								persistedPaths = existingValues;
-								existingFiles = persistedPaths.stream()
-										.map(File::new)
-										.collect(Collectors.toList());
-
-							} else if(existingValues.get(0) instanceof File) {
-								existingFiles = existingValues;
-								persistedPaths = existingFiles.stream()
-										.map(File::getAbsolutePath)
-										.collect(Collectors.toList());
-							}
-						}
-                    }
-
-                    // If list of File, concatenate to existing ones
-                    if(firstItem instanceof File) {
-                        List<File> tempFiles = (List<File>) value;
-	                    for (File tempFile : new ArrayList<>(tempFiles)) {
-	                        binaryStoragePathParam.setFile(tempFile);
-	                        // Use list size to name the file
-	                        binaryStoragePathParam.setFilename(tempFile.getName());
-	
-	                        final String persistedPath = persists(binaryStoragePathParam);
-	                        if (!persistedPaths.contains(persistedPath)) {
-	                            persistedPaths.add(persistedPath);
-	                        }
-	                    }
-	                    
-                    // If list of String, re-order and delete files
-                    } else if (firstItem instanceof String && CollectionUtils.isNotEmpty(persistedPaths)){
-                    	List<String> uris = (List<String>) value;
-                    	
-                    	List<File> filesToReorder = new ArrayList<>();
-                    	
-                    	for(String uri : uris) {
-                        	// We first need to retrieve the path from the URI
-                        	File file;
-                    		
-                        	// Retrieve index
-                    		Integer index = BinaryStorageUtils.getIndexFromURI(uri);
-                    		
-                        	// Retrieve file
-                        	if(BinaryStorageUtils.filePathContainsEL(field)) {
-                        		file = findBinaryDynamicPath(values, field.getCode(), index);
-                        	} else {
-                        		file = findBinaryStaticPath(repository, cet.getCode(), uuid, field, index);
-                        	}
-                        	
-                        	filesToReorder.add(file);
-                    	}
-                    	
-                    	// Delete file that should not be kept
-                    	for(File existingFile : existingFiles) {
-                    		if(!filesToReorder.contains(existingFile)) {
-                    			existingFile.delete();
-                    		}
-                    	}
-                    	
-                    	// Save the paths in the same order as input
-                    	persistedPaths = filesToReorder.stream().map(File::getPath).collect(Collectors.toList());
-                    }
-                    
-                    persistedPaths = persistedPaths.stream().distinct().collect(Collectors.toList());
-
-                    values.put(field.getCode(), persistedPaths);
-                    binariesSaved.put(field, persistedPaths);
-                }
-            }
-        }
-
-        return binariesSaved;
-    }
-    
+	@SuppressWarnings("unchecked")
 	public File findBinaryDynamicPath(Map<String, Object> values, String cftCode, Integer index) {
 		String filePath;
 
@@ -466,12 +319,39 @@ public class FileSystemService {
 		return new File(filePath);
 	}
 	
-	public File findBinaryStaticPath(Repository repository, String cetCode, String uuid, CustomFieldTemplate cft, Integer index) throws BusinessApiException {
-		int i = index == null ? 0 : index;
+	public List<File> findBinaries(BinaryStorageConfiguration repository, CustomEntityTemplate cet, String uuid, CustomFieldTemplate cft, Map<String, Object> values) throws BusinessApiException {
+		// The file path expression contains an EL, so we need to retrieve the entity to get the evaluated file path
+		if(BinaryStorageUtils.filePathContainsEL(cft)){
+			return findBinariesDynamicPath(values, cft.getCode());
 
+		// The file path expression does not contains an EL, so we can re-build the path to the desired binary
+		} else {
+			return findBinariesStaticPath(repository, cet.getCode(), uuid, cft);
+		}
+	}
+	
+	public List<File> findBinariesDynamicPath(Map<String, Object> values, String cftCode) {
+		String filePath;
+
+		Object filePathOrfilePaths = values.get(cftCode);
+		if(filePathOrfilePaths instanceof String){
+			List.of(new File((String) filePathOrfilePaths));
+		} else if(filePathOrfilePaths instanceof Collection){
+			return ((Collection<String>) filePathOrfilePaths).stream()
+						.map(File::new)
+						.collect(Collectors.toList());
+		} else {
+			return List.of();
+		}
+		
+		return List.of();
+	}
+	
+	
+	public List<File> findBinariesStaticPath(BinaryStorageConfiguration repository, String cetCode, String uuid, CustomFieldTemplate cft) throws BusinessApiException {
 		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		if(repository.getBinaryStorageConfiguration() != null) {
-			params.setRootPath(repository.getBinaryStorageConfiguration().getRootPath());
+		if(repository != null) {
+			params.setRootPath(repository.getRootPath());
 		}
 		params.setCetCode(cetCode);
 		params.setUuid(uuid);
@@ -479,11 +359,11 @@ public class FileSystemService {
 		params.setFilePath(cft.getFilePath());
 		params.setShowOnExplorer(cft.isSaveOnExplorer());
 
-		String fullPath = getStoragePath(params, Collections.EMPTY_MAP);
+		String fullPath = getStoragePath(params, Collections.emptyMap());
 
 		File directory = new File(fullPath);
 		if (!directory.exists()) {
-			throw new BusinessApiException("Directory does not exists: " + directory.getPath());
+			return Collections.emptyList();
 		}
 
 		if(!directory.isDirectory()){
@@ -492,9 +372,14 @@ public class FileSystemService {
 
 		final File[] files = directory.listFiles();
 		if(files == null || files.length == 0){
-			return null;
+			return Collections.emptyList();
 		}
 
-		return files[i];
+		return Arrays.asList(files);
+	}
+	
+	public File findBinaryStaticPath(BinaryStorageConfiguration repository, String cetCode, String uuid, CustomFieldTemplate cft, Integer index) throws BusinessApiException {
+		int i = index == null ? 0 : index;
+		return findBinariesStaticPath(repository, cetCode, uuid, cft).get(i);
 	}
 }

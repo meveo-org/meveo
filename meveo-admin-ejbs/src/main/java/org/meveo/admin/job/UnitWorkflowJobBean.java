@@ -14,6 +14,7 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.model.wf.Workflow;
 import org.meveo.service.wf.WorkflowService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -23,8 +24,7 @@ import org.slf4j.Logger;
 @Stateless
 public class UnitWorkflowJobBean {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(UnitWorkflowJobBean.class);
 
     @Inject
     private WorkflowService workflowService;

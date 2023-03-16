@@ -101,7 +101,7 @@ public class MeveoModule extends BusinessEntity  {
     @JoinColumn(name = "script_instance_id")
     private ScriptInstance script;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "git_repository_id")
     private GitRepository gitRepository;
     
@@ -144,7 +144,7 @@ public class MeveoModule extends BusinessEntity  {
     
     @Type(type = "numeric_boolean")
     @Column(name = "auto_commit")
-    private boolean autoCommit = true;
+    private boolean autoCommit = false;
     
     @PrePersist()
     @PreUpdate()

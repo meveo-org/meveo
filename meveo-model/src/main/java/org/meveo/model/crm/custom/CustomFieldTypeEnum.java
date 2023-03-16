@@ -168,4 +168,9 @@ public enum CustomFieldTypeEnum {
 
 		return CustomFieldTypeEnum.LONG;
 	}
+	
+	@Override
+	public String toString() {
+		return this.getLabel();
+	}
 }

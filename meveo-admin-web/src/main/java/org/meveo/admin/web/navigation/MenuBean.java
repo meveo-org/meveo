@@ -21,6 +21,7 @@ import javax.transaction.Transactional.TxType;
 
 import org.meveo.admin.util.ResourceBundle;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
+import org.meveo.model.customEntities.CustomEntityCategory;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
@@ -63,6 +64,9 @@ public class MenuBean implements Serializable {
 	}
 	
 	public DynamicMenuModel getMenu() {
+		if (menu == null) {
+			init();
+		}
 		return menu;
 	}
 	
@@ -95,7 +99,8 @@ public class MenuBean implements Serializable {
 		DefaultSubMenu endpoints = addSubMenu(services, "endpoint", "menu.endpoint");
 		addItem(endpoints, "endpoint", "menu.endpoint.rest", "restEndpoint");
 		addItem(endpoints, "webSocketEndpoints", "menu.endpoint.webSocket", "webSocketEndpoint");
-	
+		addItem(endpoints, "websocketClients", "menu.endpoint.webSocketClient", "webSocketClient");
+
 		DefaultSubMenu jobSubMenu = addSubMenu(services, "jobSubMenu", "menu.jobs");
 		addItem(jobSubMenu, "jobInstances", "menu.jobInstances", "jobs");
 		addItem(jobSubMenu, "timerEntities", "menu.timerEntities", "timers");
@@ -147,6 +152,7 @@ public class MenuBean implements Serializable {
 			
 			if (currentUser.hasRole("administrationVisualization")) {
 				addItem(storages, "repositories", "repository.title");
+				addItem(storages, "storageConfigurations", "storageConfigurations");
 				addItem(storages, "binaryStorageConfigurations", "binaryStorageConfiguration.title");
 				addItem(storages, "sqlConfigurations", "repository.sqlConfiguration");
 				addItem(storages, "neo4jConfigurations", "repository.neo4jConfiguration");
@@ -189,6 +195,7 @@ public class MenuBean implements Serializable {
 		
 		addItem(admin, "meveoModules", "menu.meveoModules", "MeveoModules");
 		addItem(admin, "meveoInstances", "menu.meveoInstance", "MeveoInstances");
+		addItem(admin, "credentials", "menu.credentials", "Credentials");
 		
 	}
 
@@ -299,7 +306,12 @@ public class MenuBean implements Serializable {
 	
 	@Transactional(value = TxType.REQUIRES_NEW)
 	private void cetChange(@Observes(during = TransactionPhase.AFTER_SUCCESS, notifyObserver = Reception.IF_EXISTS) CustomEntityTemplate cet) {
-		init();
+		menu = null;
+	}
+	
+	@Transactional(value = TxType.REQUIRES_NEW)
+	private void categoryChanged(@Observes(during = TransactionPhase.AFTER_SUCCESS, notifyObserver = Reception.IF_EXISTS) CustomEntityCategory category) {
+		menu = null;
 	}
 
 }

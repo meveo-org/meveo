@@ -34,6 +34,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrius Karpavicius
@@ -43,6 +45,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 @Stateless
 public class CustomEntityInstanceApi extends BaseCrudApi<CustomEntityInstance, CustomEntityInstanceDto> {
 
+	private static Logger log = LoggerFactory.getLogger(CustomEntityInstanceApi.class);
+			
 	@Inject
 	private CustomEntityTemplateService customEntityTemplateService;
 

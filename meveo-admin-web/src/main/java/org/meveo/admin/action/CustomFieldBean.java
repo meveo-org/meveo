@@ -16,7 +16,7 @@ import org.meveo.service.crm.impl.CustomFieldTemplateService;
  * 
  * @param <T>
  */
-public abstract class CustomFieldBean<T extends IEntity> extends BaseBean<T> {
+public abstract class CustomFieldBean<T extends IEntity> extends ModuleItemBaseBean<T> {
 
     private static final long serialVersionUID = 1L;
     //

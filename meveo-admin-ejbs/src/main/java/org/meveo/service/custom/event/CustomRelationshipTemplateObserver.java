@@ -26,6 +26,7 @@ import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -37,8 +38,7 @@ import org.slf4j.Logger;
 @Lock(LockType.READ)
 public class CustomRelationshipTemplateObserver {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CustomRelationshipTemplateObserver.class);
 
 	@Inject
 	private CustomTableCreatorService customTableCreatorService;

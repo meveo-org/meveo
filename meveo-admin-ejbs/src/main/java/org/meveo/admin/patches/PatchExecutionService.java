@@ -16,6 +16,7 @@ import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
 import org.meveo.model.patch.PatchExecution;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service to execute patches
@@ -34,8 +35,7 @@ public class PatchExecutionService implements MeveoInitializer {
 	@Any
 	private Instance<Patch> patches;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(PatchExecutionService.class);
 	
 	/**
 	 * Execute every non-executed patch

@@ -56,6 +56,7 @@ import org.omnifaces.cdi.Cookie;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.LazyDataModel;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | czetsuya@gmail.com
@@ -67,8 +68,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	private static final long serialVersionUID = -459772193950603406L;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CustomEntityInstanceBean.class);
 
 	@Inject
 	private CustomizedEntityService customizedEntityService;
@@ -200,7 +200,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 		repository = repositoryService.findByCode(repositoryCode);
 
 		customEntityTemplate = customEntityTemplateService.findByCode(customEntityTemplateCode, List.of("availableStorages"));
-		customFieldTemplates = cacheContainerProvider.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
+		customFieldTemplates = customFieldTemplateService.findByAppliesTo(customEntityTemplate.getAppliesTo());
 
 		entity = new CustomEntityInstance();
 		entity.setCetCode(customEntityTemplateCode);

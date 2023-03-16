@@ -43,7 +43,7 @@ import java.util.Set;
  **/
 public abstract class BaseRs implements IBaseRs {
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseRs.class);
 
     @Inject
     @MeveoParamBean

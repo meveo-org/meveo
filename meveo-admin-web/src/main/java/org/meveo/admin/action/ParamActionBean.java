@@ -19,6 +19,8 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.model.ParamProperty;
 import org.primefaces.component.datatable.DataTable;
 import org.primefaces.event.CellEditEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Wassim Drira
@@ -30,12 +32,11 @@ import org.primefaces.event.CellEditEvent;
 public class ParamActionBean implements Serializable {
 
     private static final long serialVersionUID = -4570971790276879220L;
+    
+    private static Logger log = LoggerFactory.getLogger(ParamActionBean.class);
 
     @Inject
     protected Conversation conversation;
-
-    @Inject
-    private org.slf4j.Logger log;
 
     @Inject
     private transient ResourceBundle bundle;

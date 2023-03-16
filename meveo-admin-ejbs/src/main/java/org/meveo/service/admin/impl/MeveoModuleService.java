@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
@@ -71,7 +70,6 @@ import org.meveo.api.dto.ActionStatus;
 import org.meveo.api.dto.ActionStatusEnum;
 import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
-import org.meveo.api.dto.module.ModuleDependencyDto;
 import org.meveo.api.dto.module.ModuleReleaseDto;
 import org.meveo.api.dto.response.module.MeveoModuleDtosResponse;
 import org.meveo.api.exception.EntityDoesNotExistsException;
@@ -86,6 +84,7 @@ import org.meveo.export.RemoteAuthenticationException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.ModulePostInstall;
+import org.meveo.model.admin.User;
 import org.meveo.model.communication.MeveoInstance;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
@@ -110,6 +109,8 @@ import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EJB for managing MeveoModule entities
@@ -119,6 +120,8 @@ import org.meveo.service.script.ScriptInstanceService;
  */
 @Stateless
 public class MeveoModuleService extends GenericModuleService<MeveoModule> {
+
+    private static Logger log = LoggerFactory.getLogger(MeveoModuleService.class);
 
     @Inject
     private MeveoInstanceService meveoInstanceService;
@@ -143,6 +146,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private ScriptInstanceService scriptInstanceService;
+    
+    @Inject
+    private UserService userService;
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -887,34 +893,14 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     }
     
-    
-	public void postModuleInstall(@Observes @ModulePostInstall MeveoModule module) throws BusinessException {
-//    	MeveoModule thinModule;
-//    	
-//    	// Generate module.json file
-//		try {
-//			thinModule = (MeveoModule) BeanUtilsBean.getInstance().cloneBean(module);
-//			thinModule.setCode(module.getCode());
-//			thinModule.setModuleItems(null);
-//			
-//			addFilesToModule(thinModule, module);
-//		} catch (Exception e) {
-//			throw new BusinessException(e);
-//		}
-//		
-//		// Generate maven facet if file does not exists yet
-//		mavenConfigurationService.createDefaultPomFile(module.getCode());
-	}
-	
-	
-    
     @Override
 	public void remove(MeveoModule meveoModule) throws BusinessException {
+		if (currentUser != null && currentUser.getCurrentModule() != null && currentUser.getCurrentModule().equals(meveoModule.getCode())) {
+			User user = userService.findByUsername(currentUser.getUserName());
+			user.setCurrentModule(null);
+			currentUser.setCurrentModule(null);
+		}
 		super.remove(meveoModule);
-		
-    	if (meveoModule.getGitRepository() != null) {
-			this.gitRepositoryService.remove(meveoModule.getGitRepository());
-    	}
 	}
 
 	public MeveoModule findByCodeWithFetchEntities(String code) {
@@ -932,7 +918,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 			String chrootDir = paramBeanFactory.getInstance().getChrootDir(currentUser.getProviderCode());
 			for (String filePath : module.getModuleFiles()) {
 				Path source = Paths.get(chrootDir, filePath);
-				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getCode()).getAbsolutePath(), filePath);
+				Path target = Paths.get(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()).getAbsolutePath(), filePath);
 				if(!Files.exists(target) && Files.exists(source)) {
 					Files.createDirectories(target);
 					if (Files.isDirectory(target)) {
@@ -955,7 +941,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	 */
 	public JarOutputStream buildJar(MeveoModule module, OutputStream os) throws IOException {
 		JarOutputStream jos = new JarOutputStream(os);
-		File javaDir = GitHelper.getRepositoryDir(null, module.getCode())
+		File javaDir = GitHelper.getRepositoryDir(null, module.getGitRepository())
 				.toPath()
 				.resolve("facets")
 				.resolve("java")
@@ -977,7 +963,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 	 * @return the pom file
 	 */
 	public File findPom(MeveoModule module) {
-		return GitHelper.getRepositoryDir(null, module.getCode())
+		return GitHelper.getRepositoryDir(null, module.getGitRepository())
 				.toPath()
 				.resolve("facets")
 				.resolve("maven")
@@ -1005,7 +991,7 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(dto);
     	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	
     	File newJsonFile = new File(gitDirectory, "module.json");
     	try {

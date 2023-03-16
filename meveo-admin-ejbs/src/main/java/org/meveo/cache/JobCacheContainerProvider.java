@@ -24,6 +24,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.job.JobInstanceService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides cache related services (tracking running jobs) for job running related operations
@@ -37,8 +38,7 @@ public class JobCacheContainerProvider implements Serializable { // CacheContain
 
     private static final long serialVersionUID = -4730906690144309131L;
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(JobCacheContainerProvider.class);
 
     @EJB
     private JobInstanceService jobInstanceService;

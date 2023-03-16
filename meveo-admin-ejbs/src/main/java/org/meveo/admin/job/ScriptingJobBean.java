@@ -18,11 +18,11 @@ import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScriptingJobBean {
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(ScriptingJobBean.class);
 
     @Inject
     private ScriptInstanceService scriptInstanceService;

@@ -70,6 +70,7 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.commons.utils.ReflectionUtils;
 import org.meveo.elresolver.ELException;
 import org.meveo.model.BusinessEntity;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
 import org.meveo.model.VersionedEntity;
@@ -78,6 +79,7 @@ import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.filter.Filter;
+import org.meveo.model.hierarchy.UserHierarchyLevel;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
@@ -126,7 +128,7 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Logger. */
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseBean.class);
 
     @Inject
     protected ResourceBundle resourceBundle;
@@ -201,6 +203,8 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
     private EntityHelperBean entityHelper;
     
     private String partOfModules;
+    
+    private Map<String, Object> entityToAdd = new HashMap<>();
 
     /**
      * Request parameter. A custom back view page instead of a regular list page
@@ -442,6 +446,11 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 
         return back();
     }
+    
+	@ActionMethod
+	public String saveOrUpdate() throws BusinessException, ELException {
+		return saveOrUpdate(false);
+	}
 
     @ActionMethod
     public String saveOrUpdateWithMessage(boolean killConversation) throws BusinessException {
@@ -1287,12 +1296,20 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addItemToCollection(Collection values, Class itemClass) {
-
         try {
-            values.add(itemClass.newInstance());
+    		values.add(itemClass.newInstance());
         } catch (InstantiationException | IllegalAccessException e) {
             log.error("Failed to instantiate a new item of {} class", itemClass.getName());
         }
+    }
+    
+    public <C> void addItemToCollection(Collection<C> values, Class<C> itemClass, C itemValue) {
+        values.add(itemValue);
+        entityToAdd.values().remove(itemValue);
+    }
+    
+    public <C> void removeItemFromCollection(Collection<C> collection, C value) {
+    	collection.remove(value);
     }
 
     public List<T> listActive() {
@@ -1433,4 +1450,27 @@ public abstract class BaseBean<T extends IEntity> implements Serializable {
 		List<Repository> result = repositoryService.list();
 		return result;
 	}
+
+	/**
+	 * @return the {@link #entityToAdd}
+	 */
+	public Map<String, Object> getEntityToAdd() {
+		return entityToAdd;
+	}
+
+	/**
+	 * @param entityToAdd the entityToAdd to set
+	 */
+	public void setEntityToAdd(Map<String, Object> entityToAdd) {
+		this.entityToAdd = entityToAdd;
+	}
+
+    protected String getUserCurrentModule() {
+        return this.currentUser == null 
+                || this.currentUser.getCurrentModule() == null 
+                ? "Meveo"
+                : this.currentUser.getCurrentModule();
+    }
+	
+	
 }

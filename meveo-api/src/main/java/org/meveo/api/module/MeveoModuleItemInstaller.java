@@ -1,6 +1,5 @@
 package org.meveo.api.module;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +32,6 @@ import org.meveo.api.BaseCrudApi;
 import org.meveo.api.CustomFieldTemplateApi;
 import org.meveo.api.EntityCustomActionApi;
 import org.meveo.api.dto.BaseEntityDto;
-import org.meveo.api.dto.BusinessEntityDto;
 import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomEntityTemplateDto;
 import org.meveo.api.dto.CustomFieldTemplateDto;
@@ -43,9 +41,7 @@ import org.meveo.api.dto.EntityCustomActionDto;
 import org.meveo.api.dto.module.MeveoModuleDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.exception.ActionForbiddenException;
-import org.meveo.api.exception.BusinessApiException;
 import org.meveo.api.exception.EntityAlreadyExistsException;
-import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exceptions.ModuleInstallFail;
 import org.meveo.commons.utils.MvCollectionUtils;
@@ -56,7 +52,6 @@ import org.meveo.model.DatePeriod;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleInstall;
 import org.meveo.model.ModuleItemOrder;
-import org.meveo.model.ModulePostInstall;
 import org.meveo.model.ModulePostUninstall;
 import org.meveo.model.VersionedEntity;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -69,11 +64,10 @@ import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.scripts.Function;
 import org.meveo.model.scripts.ScriptInstance;
 import org.meveo.model.storage.Repository;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.admin.impl.MeveoModuleUtils;
 import org.meveo.service.admin.impl.ModuleInstallationContext;
@@ -87,6 +81,7 @@ import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.module.ModuleScriptInterface;
 import org.meveo.service.script.module.ModuleScriptService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Meveo module installer.
@@ -103,10 +98,12 @@ public class MeveoModuleItemInstaller {
     private CustomFieldTemplateApi customFieldTemplateApi;
     
     @Inject
-    private EntityCustomActionApi entityCustomActionApi;
+    private MeveoModuleItemService meveoModuleItemService;
     
     @Inject
-    private Logger log;
+    private EntityCustomActionApi entityCustomActionApi;
+    
+    private static Logger log = LoggerFactory.getLogger(MeveoModuleItemInstaller.class);
     
     @Inject
     private MeveoModuleService meveoModuleService;
@@ -276,39 +273,20 @@ public class MeveoModuleItemInstaller {
 						scriptInstanceService.disable((ScriptInstance) itemEntity);
 						return;
 					}
-					
-		            if (itemEntity instanceof Endpoint) {
-		                Endpoint endpoint = (Endpoint) itemEntity;
-		                if (CollectionUtils.isNotEmpty(endpoint.getPathParametersNullSafe())) {
-		                	meveoModuleService.getEntityManager().createNamedQuery("deletePathParameterByEndpoint")
-		                            .setParameter("endpointId", endpoint.getId())
-		                            .executeUpdate();
-		                }
-		                if (CollectionUtils.isNotEmpty(endpoint.getParametersMapping())) {
-		                	meveoModuleService.getEntityManager().createNamedQuery("TSParameterMapping.deleteByEndpoint")
-		                            .setParameter("endpointId", endpoint.getId())
-		                            .executeUpdate();
-		                }
-		                Function service = concreteFunctionService.findById(endpoint.getService().getId());
-		                meveoModuleService.getEntityManager().createNamedQuery("Endpoint.deleteById")
-		                        .setParameter("endpointId", endpoint.getId())
-		                        .executeUpdate();
-		                log.info("uninstalled endpoint {} / {}", endpoint.getClass(), endpoint.getId());
-		            } else {
-		            	log.info("Uninstalling module item {}", item);
-						if (itemEntity instanceof ScriptInstance) {
-							List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
-							ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
-							if (CollectionUtils.isNotEmpty(entityCustomActions)) {
-								for (EntityCustomAction entityCustomAction : entityCustomActions) {
-									if (entityCustomAction.getScript().equals(scriptInstance)) {
-										entityCustomActionService.remove(entityCustomAction);
-									}
+		            
+	            	log.info("Uninstalling module item {}", item);
+					if (itemEntity instanceof ScriptInstance) {
+						List<EntityCustomAction> entityCustomActions = entityCustomActionService.list();
+						ScriptInstance scriptInstance = scriptInstanceService.findByCode(itemEntity.getCode());
+						if (CollectionUtils.isNotEmpty(entityCustomActions)) {
+							for (EntityCustomAction entityCustomAction : entityCustomActions) {
+								if (entityCustomAction.getScript().equals(scriptInstance)) {
+									entityCustomActionService.remove(entityCustomAction);
 								}
 							}
 						}
-		            	api.getPersistenceService().remove(itemEntity);
-		            }
+					}
+	            	api.getPersistenceService().remove(itemEntity);
 		            
 				} else {
 					
@@ -452,69 +430,7 @@ public class MeveoModuleItemInstaller {
 					moduleItem.setItemEntity(cei);
 					
 					meveoModuleService.addModuleItem(moduleItem, meveoModule);
-                } else if (dto instanceof CustomFieldTemplateDto) {
-	        		CustomFieldTemplateDto cftDto = (CustomFieldTemplateDto) dto;
-	        		if(cftDto.getAppliesTo() == null) {
-	        			return result;
-	        		}
-	        		CustomFieldTemplateDto cft = customFieldTemplateApi.findIgnoreNotFound(cftDto.getCode(), cftDto.getAppliesTo());
-					if (cft != null) {
-						switch (onDuplicate) {
-						case OVERWRITE:
-			            	result.incrNbOverwritten();
-			            	break;
-						case SKIP:
-							result.setNbSkipped(1);
-							skipped = true;
-							break;
-						case FAIL:
-							throw new EntityAlreadyExistsException(CustomFieldTemplate.class, cft.getAppliesTo() + "." + cft.getCode());
-						default:
-							break;
-						}
-					} else {
-		            	result.incrNbAdded();
-					}
-
-		            if(!skipped) {
-			            customFieldTemplateApi.createOrUpdate((CustomFieldTemplateDto) dto, null);
-			            result.addItem(moduleItemDto);
-		            }
-
-		            moduleItem = new MeveoModuleItem(((CustomFieldTemplateDto) dto).getCode(), CustomFieldTemplate.class.getName(),
-			                ((CustomFieldTemplateDto) dto).getAppliesTo(), null);
-		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
-
-		        } else if (dto instanceof EntityCustomActionDto) {
-					EntityCustomActionDto ecaDto = (EntityCustomActionDto) dto;
-					EntityCustomActionDto eca = entityCustomActionApi.findIgnoreNotFound(ecaDto.getCode(), ecaDto.getAppliesTo());
-					if (eca != null) {
-						switch (onDuplicate) {
-						case OVERWRITE:
-							result.incrNbOverwritten();
-							break;
-						case SKIP:
-							result.setNbSkipped(1);
-							skipped = true;
-							break;
-						case FAIL:
-							throw new EntityAlreadyExistsException(EntityCustomAction.class, eca.getCode());
-						default:
-							break;
-						}
-					} else {
-						result.incrNbAdded();
-					}
-
-
-		            if(!skipped) {
-			            result.addItem(moduleItemDto);
-			            entityCustomActionApi.createOrUpdate((EntityCustomActionDto) dto, null);
-		            }
-
-		            moduleItem = new MeveoModuleItem(((EntityCustomActionDto) dto).getCode(), EntityCustomAction.class.getName(), ((EntityCustomActionDto) dto).getAppliesTo(), null);
-		            meveoModuleService.addModuleItem(moduleItem, meveoModule);
-		        } else {
+                } else {
 
 					String moduleItemName = dto.getClass().getSimpleName().substring(0, dto.getClass().getSimpleName().lastIndexOf("Dto"));
 
@@ -527,8 +443,7 @@ public class MeveoModuleItemInstaller {
 
 						log.info("Installing item {} of module with code={}", dto, meveoModule.getCode());
 
-						Object item = findItem(dto, entityClass);
-						if (item != null) {
+						if (itemExists(dto, entityClass)) {
 							switch (onDuplicate) {
 								case OVERWRITE:
 									result.incrNbOverwritten();
@@ -538,7 +453,7 @@ public class MeveoModuleItemInstaller {
 									skipped = true;
 									break;
 								case FAIL: {
-									throw new EntityAlreadyExistsException(String.valueOf(item));
+									throw new EntityAlreadyExistsException(String.valueOf(dto));
 								}
 								default:
 									break;
@@ -627,15 +542,15 @@ public class MeveoModuleItemInstaller {
 		}
 	}
 	
-	private <T> T findItem(BaseEntityDto dto, Class<T> entityClass) throws MeveoApiException, BusinessException {
+	private <T> boolean itemExists(BaseEntityDto dto, Class<T> entityClass) throws MeveoApiException, BusinessException {
 		
 		if (entityClass.isAnnotationPresent(VersionedEntity.class)) {
 		    ApiVersionedService apiService = ApiUtils.getApiVersionedService(entityClass, true);
-		    return (T) apiService.findIgnoreNotFound(dto.getCode(), null, null);
+		    return apiService.findIgnoreNotFound(dto.getCode(), null, null) != null;
 		    
 		} else {
-		    ApiService apiService = ApiUtils.getApiService(entityClass, true);
-		    return (T) apiService.findIgnoreNotFound(dto.getCode());
+			BaseCrudApi apiService = (BaseCrudApi) ApiUtils.getApiService(entityClass, true);
+		    return apiService.exists(dto);
 		}
 	}
 	

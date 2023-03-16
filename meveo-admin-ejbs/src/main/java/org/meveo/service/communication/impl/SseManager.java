@@ -26,6 +26,7 @@ import org.meveo.model.notification.WebNotification;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.notification.WebNotificationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class allow web client to subscribe to WebNotifications and publish
@@ -35,8 +36,7 @@ import org.slf4j.Logger;
 @Singleton
 public class SseManager {
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(SseManager.class);
 
 	@Inject
 	private WebNotificationService webNotificationService;

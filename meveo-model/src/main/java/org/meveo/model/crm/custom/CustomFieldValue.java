@@ -30,6 +30,7 @@ import org.meveo.model.CustomEntity;
 import org.meveo.model.DatePeriod;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.MeveoMatrix;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.JacksonUtil;
@@ -168,6 +169,9 @@ public class CustomFieldValue implements Serializable {
     @JsonSerialize(contentUsing = FileSerializer.class)
     @JsonDeserialize(contentUsing = FileDeserializer.class)
     private List<File> listFileValue;
+    
+    @JsonProperty("listBinaries")
+    private List<BinaryProvider> listBinaries;
 
     /**
      * Map of String type value
@@ -264,6 +268,13 @@ public class CustomFieldValue implements Serializable {
 
     public File getFileValue(){
         return fileValue;
+    }
+    
+    public BinaryProvider getBinaryValue() {
+    	if (listBinaries == null || listBinaries.isEmpty()) {
+    		return null;
+    	}
+    	return listBinaries.get(0);
     }
 
     public void setStringValue(String stringValue) {
@@ -367,10 +378,26 @@ public class CustomFieldValue implements Serializable {
         	return (List<T>) listMapValue;
         } else if(listFileValue != null) {
             return (List<T>) listFileValue;
+        } else if (listBinaries != null) {
+        	return (List<T>) listBinaries;
         }
 
         return null;
     }
+    
+    /**
+	 * @return the {@link #listStringValue}
+	 */
+	public List<String> getListStringValue() {
+		return listStringValue;
+	}
+	
+	/**
+	 * @return the {@link #listFileValue}
+	 */
+	public List<File> getListFileValue() {
+		return listFileValue;
+	}
     
     public void setListValue(List listValue, Class<?> itemClass) {
     	if(itemClass == null) {
@@ -404,6 +431,14 @@ public class CustomFieldValue implements Serializable {
             for (Object listItem : listValue) {
                 if(listItem instanceof File){
                     listFileValue.add((File) listItem);
+                }
+            }
+
+        } else if(itemClass == BinaryProvider.class) {
+    	    listBinaries = new ArrayList<>();
+            for (Object listItem : listValue) {
+                if(listItem instanceof BinaryProvider){
+                	listBinaries.add((BinaryProvider) listItem);
                 }
             }
 
@@ -952,7 +987,7 @@ public class CustomFieldValue implements Serializable {
      */
     public boolean isValueEmptyForGui() {
         boolean isEmpty = ((stringValue == null || stringValue.isEmpty()) && dateValue == null && longValue == null && doubleValue == null && entityReferenceValueForGUI == null
-                && (mapValuesForGUI == null || mapValuesForGUI.isEmpty()) && (matrixValuesForGUI == null || matrixValuesForGUI.isEmpty())
+                && (mapValuesForGUI == null || mapValuesForGUI.isEmpty()) && (matrixValuesForGUI == null || matrixValuesForGUI.isEmpty()) && (listBinaries == null || listBinaries.isEmpty())
                 && (childEntityValuesForGUI == null || childEntityValuesForGUI.isEmpty()));
 
         if (isEmpty) {
@@ -1002,6 +1037,7 @@ public class CustomFieldValue implements Serializable {
         return ((stringValue == null || stringValue.isEmpty()) && dateValue == null && longValue == null && doubleValue == null
                 && (listStringValue == null || listStringValue.isEmpty()) && (listDateValue == null || listDateValue.isEmpty())
                 && (listLongValue == null || listLongValue.isEmpty()) && (listDoubleValue == null || listDoubleValue.isEmpty())
+                && (booleanValue == null) 
                 && (listEntityValue == null || listEntityValue.isEmpty()) && (mapStringValue == null || mapStringValue.isEmpty())
                 && (mapDateValue == null || mapDateValue.isEmpty()) && (mapLongValue == null || mapLongValue.isEmpty()) && (mapDoubleValue == null || mapDoubleValue.isEmpty())
                 && (mapEntityValue == null || mapEntityValue.isEmpty()) && (entityReferenceValue == null || entityReferenceValue.isEmpty()))
@@ -1349,7 +1385,10 @@ public class CustomFieldValue implements Serializable {
 
         } else if(value instanceof File) {
             fileValue = (File) value;
-
+            
+        } else if (value instanceof BinaryProvider) {
+        	listBinaries = new ArrayList<BinaryProvider>();
+        	listBinaries.add((BinaryProvider) value);
         } else if (value instanceof BusinessEntity) {
             setEntityReferenceValue(new EntityReferenceWrapper((BusinessEntity) value));
 
@@ -1516,5 +1555,82 @@ public class CustomFieldValue implements Serializable {
     public void resetEntityReferenceValueForGUI() {
         entityReferenceValueForGUI = null;
         entityReferenceValue = null;
+    }
+    
+    @JsonIgnore
+    public Set<String> getFileNames() {
+		Set<String> fileNames = new HashSet<>();
+		if (stringValue != null) {
+			fileNames.add(stringValue);
+		}
+		
+		if (listStringValue != null) {
+			fileNames.addAll(listStringValue);
+		}
+		
+		File fileValue = getFileValue();
+		if (fileValue != null) {
+			fileNames.add(fileValue.getName());
+		} 
+			
+		List<File> filesValue = listFileValue;
+		if (filesValue != null) {
+			fileNames.addAll(filesValue.stream().map(File::getName).collect(Collectors.toList()));
+		}
+		
+		if (listBinaries != null) {
+			List<String> binaryProvidersNames = listBinaries.stream()
+					.map(BinaryProvider::getFileName)
+					.collect(Collectors.toList());
+			fileNames.addAll(binaryProvidersNames);
+		}
+		
+		return fileNames;
+    }
+    
+    /**
+	 * @return the {@link #listBinaries}
+	 */
+	public List<BinaryProvider> getListBinaries() {
+		return listBinaries;
+	}
+	
+	/**
+	 * @param listBinaries the listBinaries to set
+	 */
+	public void setListBinaries(List<BinaryProvider> listBinaries) {
+		this.listBinaries = listBinaries;
+	}
+    
+    @JsonIgnore
+    public Set<BinaryProvider> getBinaries() {
+    	List<File> files = new ArrayList<>();
+		if (fileValue != null) {
+			files.add(fileValue);
+		} 
+			
+		if (listFileValue != null) {
+			files.addAll(listFileValue);
+		}
+		
+		Set<BinaryProvider> binaryProviders = new HashSet<>();
+		binaryProviders.addAll(files.stream().map(BinaryProvider::new).collect(Collectors.toList()));
+		if (listBinaries != null) {
+			binaryProviders.addAll(listBinaries);
+		}
+		
+		return binaryProviders;
+    }
+    
+    public BinaryProvider getBinary(String name) {
+    	var binaries = getBinaries();
+    	if (name == null && !binaries.isEmpty()) {
+    		return binaries.iterator().next();
+    	}
+    	
+    	return binaries.stream()
+    			.filter(binary -> binary.getFileName().equals(name))
+    			.findFirst()
+    			.orElse(null);
     }
 }

@@ -31,9 +31,13 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.crm.impl.CustomFieldException;
 import org.meveo.service.crm.impl.CustomFieldTemplateUtils;
 import org.meveo.service.git.GitHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class EntityCustomActionService extends BusinessService<EntityCustomAction> {
+
+    private static Logger log = LoggerFactory.getLogger(EntityCustomActionService.class);
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -115,7 +119,7 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
         BaseEntityDto businessEntityDto = businessEntitySerializer.serialize(entity);
         String businessEntityDtoSerialize = JacksonUtil.toString(businessEntityDto);
 
-        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+        File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
         String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
         if(cetCode == null) {
             cetCode = CustomRelationshipTemplate.getCodeFromAppliesTo(entity.getAppliesTo());
@@ -144,4 +148,18 @@ public class EntityCustomActionService extends BusinessService<EntityCustomActio
 	        gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
         }
     }
+
+    public boolean exists(String code, String appliesTo) {
+        return !getEntityManager()
+    			.createQuery("SELECT 1 FROM EntityCustomAction WHERE code = :code and appliesTo = :appliesTo")
+                .setParameter("code", code)
+                .setParameter("appliesTo",appliesTo)
+                .getResultList()
+                .isEmpty();
+    }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

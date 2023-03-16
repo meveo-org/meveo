@@ -249,10 +249,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             throw new BusinessException(resourceMessages.getString("message.scriptInstance.classInvalid", fullClassName));
         }
         if(!moduleInstallCtx.isActive()) {
-            compileScript(script, true);
+            Class<ScriptInterface> compiledClass = compileScript(script, true);
+            if (!ScriptInterface.class.isAssignableFrom(compiledClass)) {
+            	throw new InvalidScriptException("Script should implement ScriptInterface");
+            }
         }
         if (script.getError() != null && script.isError()) {
-            log.error("Failed compiling with error={}", script.getScriptErrors());
+            staticLogger.error("Failed compiling with error={}", script.getScriptErrors());
             throw new BusinessException(resourceMessages.getString("scriptInstance.compilationFailed") + "\n  " + org.apache.commons.lang3.StringUtils.join( script.getScriptErrors(), "\n") );
         }
     }
@@ -311,7 +314,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             method.invoke(scriptInstance, collection);
 
                         } else {
-                            log.error("Failed to invoke setter {} with input values {}", method.getName(), context);
+                            staticLogger.error("Failed to invoke setter {} with input values {}", method.getName(), context);
                             throw new IllegalArgumentException("Can't invoke setter " + method.getName() + " with value of type " + classAndValue.getValue().getClass().getName());
                         }
 
@@ -548,7 +551,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 loadClassInCache(script.getCode());
             }
         } catch (Exception e) {
-            log.error("", e);
+            staticLogger.error("", e);
         }
     }
 
@@ -579,13 +582,31 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         try {
-            compileJavaSources(javaScripts);
+            var compilationResults = compileJavaSources(javaScripts);
+            var invalidScripts = compilationResults.values()
+                	.stream()
+                	.filter(compiledClass -> !ScriptInterface.class.isAssignableFrom(compiledClass))
+                	.collect(Collectors.toList());
+                
+                if (!invalidScripts.isEmpty()) {
+                	String message = invalidScripts.stream()
+                		.map(Class::getName)
+                		.collect(Collectors.joining(",", "Following scripts should implement ScriptInterface : ", "."));
+                	throw new InvalidScriptException(message);
+                }
+                
         } catch (CharSequenceCompilerException e) {
             String errorMessage = "";
             List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
             for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
                 if ("ERROR".equals(diagnostic.getKind().name())) {
-                    errorMessage += diagnostic.getMessage(Locale.getDefault()) + "\n in file " + diagnostic.getSource().getName() + " at line " + diagnostic.getLineNumber() + "\n\n";
+                    errorMessage += diagnostic.getMessage(Locale.getDefault()); 
+                    if (diagnostic.getSource() != null) {
+                    	errorMessage += "\n in file " + diagnostic.getSource().getName();
+                    }
+                    if (diagnostic.getLineNumber() != -1) {
+                        errorMessage += " at line " + diagnostic.getLineNumber() + "\n\n";
+                    }
                 }
             }
             throw new InvalidScriptException(errorMessage);
@@ -614,7 +635,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         if(scriptErrors==null || scriptErrors.isEmpty()){
 
             if (script.getSourceTypeEnum() == ScriptSourceTypeEnum.JAVA) {
-                log.debug("Compile script {}", script.getCode());
+                staticLogger.debug("Compile script {}", script.getCode());
 
                 try {
                     if (!testCompile) {
@@ -625,7 +646,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                     compiledScript = compileJavaSource(script.getScript(), testCompile);
 
                 } catch (CharSequenceCompilerException e) {
-                    log.error("Failed to compile script {}. Compilation errors:", script.getCode());
+                    staticLogger.error("Failed to compile script {}. Compilation errors:", script.getCode());
 
                     List<Diagnostic<? extends JavaFileObject>> diagnosticList = e.getDiagnostics().getDiagnostics();
                     for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticList) {
@@ -641,12 +662,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                             }
 
                             scriptErrors.add(scriptInstanceError);
-                            log.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), script.getCode(), diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getMessage(Locale.getDefault()));
+                            staticLogger.warn("{} script {} location {}:{}: {}", diagnostic.getKind().name(), script.getCode(), diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getMessage(Locale.getDefault()));
                         }
                     }
 
                 } catch (Exception e) {
-                    log.error("Failed while compiling script", e);
+                    staticLogger.error("Failed while compiling script", e);
                     scriptErrors = new ArrayList<>();
                     ScriptInstanceError scriptInstanceError = new ScriptInstanceError();
                     scriptInstanceError.setMessage(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
@@ -699,14 +720,14 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 .collect(Collectors.toList());
 
         if (dependenciesToResolve == null || dependenciesToResolve.isEmpty()) {
-            log.debug("All maven depencencies are already loaded");
+            staticLogger.debug("All maven depencencies are already loaded");
             return result;
         }
 
         String m2FolderPath = mavenConfigurationService.getM2FolderPath();
         if (StringUtils.isBlank(m2FolderPath)){
             String errorStr = "No maven .m2 path defined in maven configuration";
-            log.error(errorStr);
+            staticLogger.error(errorStr);
             ScriptInstanceError error = new ScriptInstanceError();
             error.setMessage(errorStr);
             result.add(error);
@@ -719,7 +740,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 .map(e -> new RemoteRepository.Builder(repoId, "default", e).build())
                 .collect(Collectors.toList());
 
-        log.debug("Found {} repositories", remoteRepositories.size());
+        staticLogger.debug("Found {} repositories", remoteRepositories.size());
         Map<MavenDependency, Set<String>> resolvedDependencies = new HashMap<>();
         for(MavenDependency mavenDependency:dependenciesToResolve){
             Set<String> resolvedDependency = getMavenDependencies(mavenDependency,remoteRepositories);
@@ -727,7 +748,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 resolvedDependencies.put(mavenDependency,resolvedDependency);
             } else {
                 String errorStr = "Cannot find or load maven dependency " + mavenDependency.toString() + ", .m2 path: " + mavenDependency.toLocalM2Path(m2FolderPath);
-                log.error(errorStr);
+                staticLogger.error(errorStr);
                 ScriptInstanceError error = new ScriptInstanceError();
                 error.setMessage(errorStr);
                 result.add(error);
@@ -750,7 +771,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
     private Set<String> getMavenDependencies(MavenDependency e, List<RemoteRepository> remoteRepositories) {
         Set<String> result = null;
-        log.info("Resolving artifacts for {}", e);
+        staticLogger.info("Resolving artifacts for {}", e);
         List<ArtifactResult> artifacts;
 
         DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
@@ -770,7 +791,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         } catch (DependencyResolutionException e1) {
 
             // If local repository resolution failed, try with remote
-            log.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
+            staticLogger.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
 
             try {
                 CollectRequest collectRequestRemote = new CollectRequest();
@@ -782,13 +803,13 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 artifacts = dependencyResult.getArtifactResults();
 
             } catch (Exception e2) {
-                log.error("Fail downloading dependencies {}", e2);
+                staticLogger.error("Fail downloading dependencies {}", e2);
                 return null;
             }
 
         }
 
-        log.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
+        staticLogger.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
 
         result = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
             return artifact.getArtifact().getFile().getPath();
@@ -813,7 +834,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         try {
             compilationUnit = JavaParser.parse(script.getScript());
         } catch (Exception e) {
-            // Skip getter and setters parsing. We don't need to log errors as they will be
+            // Skip getter and setters parsing. We don't need to staticLogger errors as they will be
             // logged later in code.
             return;
         }
@@ -883,7 +904,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             		getters.addAll(extendedScript.getGetters());
             		setters.addAll(extendedScript.getSetters());
             	} else {
-                    log.warn("Class / script not found for type " + type.getNameAsString() + ", getters & setters won't be inferred.");
+                    staticLogger.warn("Class / script not found for type " + type.getNameAsString() + ", getters & setters won't be inferred.");
             	}
             }
 
@@ -911,12 +932,12 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                         var bean = MeveoBeanManager.getInstance().createBean(compiledScript);
                         final Class<ScriptInterface> scriptClass = compiledScript;
 
-                        log.debug("Compiled script {} added to compiled interface map", scriptCode);
+                        staticLogger.debug("Compiled script {} added to compiled interface map", scriptCode);
                         return () -> MeveoBeanManager.getInstance().getInstance(bean, scriptClass);
                     }
             );
         } catch (Exception e) {
-            log.error("Failed to load class {}", scriptCode, e);
+            staticLogger.error("Failed to load class {}", scriptCode, e);
         }
     }
 
@@ -937,7 +958,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         return compiler.compile(sourcePath, fullClassName, javaSrc, errs, isTestCompile, ScriptInterface.class);
     }
 
-    protected void compileJavaSources(List<T> scripts) throws CharSequenceCompilerException {
+    protected Map<String, Class<ScriptInterface>> compileJavaSources(List<T> scripts) throws CharSequenceCompilerException {
         String classPath = CLASSPATH_REFERENCE.get();
         CharSequenceCompiler<ScriptInterface> compiler = new CharSequenceCompiler<>(this.getClass().getClassLoader(), Arrays.asList("-cp", classPath));
         final DiagnosticCollector<JavaFileObject> errs = new DiagnosticCollector<>();
@@ -946,24 +967,24 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         List<JavaFileObjectImpl> compilationUnits = scripts.stream()
                 .map(script -> new JavaFileObjectImpl(script.getCode(), script.getScript()))
                 .collect(Collectors.toList());
-
-        compiler.compile(sourcePath, compilationUnits, errs, false);
+        
+        return compiler.compile(sourcePath, compilationUnits, errs, false);
     }
 
     /**
      * @return
      */
-    private String getSourcePath() {
+    public String getSourcePath() {
         String sourcePath = "";
-
-        File baseDir = new File(GitHelper.getGitDirectory(null));
-
-        for (File moduleDir : baseDir.listFiles()) {
-            File javaSrcDir = new File(moduleDir, "/facets/java");
+        
+        for (var gitRepo : gitRepositoryService.list()) {
+        	File baseDir = GitHelper.getRepositoryDir(null, gitRepo);
+            File javaSrcDir = new File(baseDir, "/facets/java");
             if(javaSrcDir.exists()) {
                 sourcePath += javaSrcDir.getAbsolutePath() + File.pathSeparatorChar;
             }
         }
+
         return sourcePath;
     }
 
@@ -1005,7 +1026,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             List<String> fetchFields = Arrays.asList("mavenDependencies");
             T script = findByCode(scriptCode, fetchFields);
             if (script == null) {
-                log.debug("ScriptInstance with {} does not exist", scriptCode);
+                staticLogger.debug("ScriptInstance with {} does not exist", scriptCode);
                 throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
             }
 
@@ -1018,7 +1039,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             }
 
             if (script.isError()) {
-                log.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
+                staticLogger.debug("ScriptInstance {} failed to compile. Errors: {}", scriptCode, script.getScriptErrors());
                 throw new InvalidScriptException(scriptCode, getEntityClass().getName());
             }
 
@@ -1027,7 +1048,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         }
 
         if (result == null) {
-            log.debug("ScriptInstance with {} does not exist", scriptCode);
+            staticLogger.debug("ScriptInstance with {} does not exist", scriptCode);
             throw new ElementNotFoundException(scriptCode, getEntityClass().getName());
         }
 
@@ -1046,7 +1067,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         try {
             return getScriptInterface(scriptCode);
         } catch (Exception e) {
-            log.error("Failed to instantiate script {}", scriptCode, e);
+            staticLogger.error("Failed to instantiate script {}", scriptCode, e);
             throw new InvalidScriptException(scriptCode, getEntityClass().getName());
         }
     }
@@ -1139,10 +1160,10 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
             File gitDirectory;
             String path;
             if (extension == ".js") {
-                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
                 path = "/facets/javascript/" + scriptInstance.getCode() + extension;
             } else {
-                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+                gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
                 path = "/facets/java/" + scriptInstance.getCode().replaceAll("\\.", "/") + extension;
             }
             File directoryToRemove = new File(gitDirectory, path);
@@ -1156,7 +1177,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
                 try {
                     message+=" "+commitMessageBean.getCommitMessage();
                 } catch (ContextNotActiveException e) {
-                    log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+                    staticLogger.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
                 }
                 gitClient.commitFiles(meveoRepository, Collections.singletonList(file), message);
             }
@@ -1189,11 +1210,11 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
         MeveoModule module = this.findModuleOf((T) scriptInstance);
 
         if (module == null) {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, meveoRepository), directory);
         } else if (moduleInstallCtx.isActive()) {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModuleCodeInstallation() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, moduleInstallCtx.getModule().getGitRepository()), directory);
         } else {
-            scriptDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode() + directory);
+            scriptDir = new File(GitHelper.getRepositoryDir(currentUser, module.getGitRepository()), directory);
         }
 
         if (!scriptDir.exists()) {

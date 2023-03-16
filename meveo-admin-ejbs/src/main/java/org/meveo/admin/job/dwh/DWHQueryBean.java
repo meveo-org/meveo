@@ -33,14 +33,15 @@ import org.meveo.model.jobs.JobExecutionResultImpl;
 import org.meveo.service.job.JobExecutionService;
 import org.meveocrm.services.dwh.MeasurableQuantityService;
 import org.meveocrm.services.dwh.MeasuredValueService;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class DWHQueryBean {
@@ -55,8 +56,7 @@ public class DWHQueryBean {
     @MeveoJpa
     private EntityManagerWrapper emWrapper;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(DWHQueryBean.class);
 
     @Inject
     private JobExecutionService jobExecutionService;
@@ -181,8 +181,8 @@ public class DWHQueryBean {
 
         try {
             // Execute query
-            final StatementResult statementResult = transaction.run(cypherQuery);
-            List<Record> recordList = statementResult.list();
+            final Result Result = transaction.run(cypherQuery);
+            List<Record> recordList = Result.list();
             recordList.forEach(record -> {
                 Object[] recordObject = {
                         record.get(0),  // Date or Value
@@ -194,7 +194,6 @@ public class DWHQueryBean {
                 };
                 results.add(recordObject);
             });
-            transaction.success();
         } catch (Exception e) {
             throw new BusinessException(e);
         } finally {

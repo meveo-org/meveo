@@ -40,8 +40,6 @@ import java.util.Map;
 @Stateless
 public class Neo4jResultParser {
 
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
-	
     public List<GraphDto> searchGraphResultParser(String jsonResult, User user) {
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();

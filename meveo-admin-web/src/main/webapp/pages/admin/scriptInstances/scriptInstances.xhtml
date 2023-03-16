@@ -19,6 +19,15 @@
          				   label="#{messages['scriptInstance.search']}" 
          				   backingBean="#{scriptInstanceListBean}">
              <hftl:searchField label="#{messages['businessEntity.code']}" field="code" />
+             <hftl:decorateFormField label="Belonging Module">
+                <p:selectOneMenu
+                    id="select-working-module"
+                    style="min-width: 80px"
+                    value="#{scriptInstanceListBean.workingModule}"
+                    converter="omnifaces.SelectItemsConverter">
+                    <f:selectItems value="#{scriptInstanceListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                </p:selectOneMenu>
+            </hftl:decorateFormField>
          </hftl:searchPanel>
          <p:panel id="results_panel" width="100%">
              <hftl:decorateFormField fieldId="scriptInstances" label="#{messages['scriptInstance.title']}" newLine="true" style="width : 100%">

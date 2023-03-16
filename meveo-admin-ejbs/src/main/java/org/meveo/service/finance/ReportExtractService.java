@@ -20,8 +20,11 @@ import org.meveo.model.finance.ReportExtractScriptTypeEnum;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.finance.ReportExtractScript;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service for managing ReportExtract entity.
@@ -33,6 +36,8 @@ import org.meveo.service.script.finance.ReportExtractScript;
  **/
 @Stateless
 public class ReportExtractService extends BusinessService<ReportExtract> {
+
+    private static Logger log = LoggerFactory.getLogger(ReportExtractService.class);
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
@@ -173,5 +178,10 @@ public class ReportExtractService extends BusinessService<ReportExtract> {
         }
         return result;
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 
 }

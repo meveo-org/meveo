@@ -21,7 +21,6 @@ package org.meveo.service.base;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +60,8 @@ import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author phung
@@ -83,14 +84,23 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	protected MeveoModuleService meveoModuleService;
 	
 	@Inject
-	private ModuleInstallationContext installationContext;
+	protected ModuleInstallationContext installationContext;
 	
 	@Inject
 	@MeveoRepository
 	protected GitRepository meveoRepository;
-
+	
 	@Inject
 	CommitMessageBean commitMessageBean;
+	
+	public boolean exists(String code) {
+		return !getEntityManager()
+			.createQuery("SELECT 1 FROM " + entityClass.getName() + " WHERE code = :code")
+			.setParameter("code", code)
+			.setMaxResults(1)
+			.getResultList()
+			.isEmpty();
+	}
 	
     /**
      * Find entity by code - strict match.
@@ -116,7 +126,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 //        try {
 //            return query.getSingleResult();
 //        } catch (NoResultException e) {
-//            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+//            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
 //            return null;
 //        }
     }
@@ -164,10 +174,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
             return (P) qb.getQuery(getEntityManager()).getSingleResult();
 
         } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
             return null;
         } catch (NonUniqueResultException e) {
-            log.error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
+            getLogger().error("More than one entity of type {} with code {} found. A first entry is returned.", entityClass, code);
             return (P) qb.getQuery(getEntityManager()).getResultList().get(0);
         }
     }
@@ -219,10 +229,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
         try {
             return (BusinessEntity) qb.getQuery(getEntityManager()).getSingleResult();
         } catch (NoResultException e) {
-            log.debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
+            getLogger().debug("No {} of code {} found", getEntityClass().getSimpleName(), code);
             return null;
         } catch (NonUniqueResultException e) {
-            log.error("More than one entity of type {} with code {} found", entityClass, code);
+            getLogger().error("More than one entity of type {} with code {} found", entityClass, code);
             return null;
         }
     }
@@ -297,15 +307,17 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	if (module == null) {
     		return;
     	}
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	String path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/" + entity.getCode() + ".json";
     	File directoryToRemove = new File(gitDirectory, path);
     	if (directoryToRemove.exists()) {
     		try {
     			FileUtils.forceDelete(directoryToRemove);
-    	    	List<String> pattern = new ArrayList<String>();
-    	    	pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
-    	    	gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			if (module.isAutoCommit()) {
+    				List<String> pattern = new ArrayList<String>();
+    				pattern.add(GitHelper.computeRelativePath(gitDirectory, directoryToRemove));
+    				gitClient.commit(module.getGitRepository(), pattern, "Remove directory " + directoryToRemove.getPath());
+    			}
     		} catch (IOException e) {
     			throw new BusinessException("Folder unsuccessful deleted : " + directoryToRemove.getPath() + ". " + e.getMessage(), e);
     		}
@@ -315,17 +327,22 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 
     @Override
     public void afterUpdateOrCreate(P entity) throws BusinessException {
-    	MeveoModule module;
-    	if (!installationContext.isActive()) {
-    		module = findModuleOf(entity);
-    	} else {
-    		module = installationContext.getModule();
+    	if (installationContext.isGitInstallation()) {
+    		return;
     	}
     	
+    	MeveoModule module;
+    	if (installationContext.isJsonInstallation()) {
+    		module = installationContext.getModule();
+    	} else {
+    		module = findModuleOf(entity);
+    	}
+    	
+		
     	if(module != null && entity.getClass().getAnnotation(ModuleItem.class) != null) {
     		addFilesToModule(entity,  module);
     	} else if (module != null) {
-    		log.info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
+    		getLogger().info("Ignore module file, as this entity is not a moduleItem " + entity.getClass());
     	}
 	}
 
@@ -333,7 +350,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
     	BaseEntityDto businessEntityDto = getDto(entity);
     	String businessEntityDtoSerialize = JacksonUtil.toStringPrettyPrinted(businessEntityDto);
     	
-    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getCode());
+    	File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
     	String path;
 		try {
 			path = entity.getClass().getAnnotation(ModuleItem.class).path() + "/";
@@ -357,7 +374,7 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
 	        try {
 	            message+=" "+commitMessageBean.getCommitMessage();
 	        } catch (ContextNotActiveException e) {
-	            log.warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
+	            getLogger().warn("No active session found for getting commit message when  "+message+" to "+module.getCode());
 	        }
 			gitClient.commitFiles(gitRepository, Collections.singletonList(newDir), message);
     	}
@@ -374,6 +391,10 @@ public abstract class BusinessService<P extends BusinessEntity> extends Persiste
      * @throws IOException BusinessException
      */
     public void moveFilesToModule(P entity, MeveoModule oldModule, MeveoModule newModule) throws BusinessException, IOException {
+    	if (installationContext.isActive()) {
+    		return;
+    	}
+    	
 		removeFilesFromModule(entity, oldModule);
 	    addFilesToModule(entity, newModule);
     }

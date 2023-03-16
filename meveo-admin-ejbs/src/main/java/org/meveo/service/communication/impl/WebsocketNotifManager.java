@@ -11,13 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ejb.Singleton;
 import javax.inject.Inject;
 import javax.websocket.CloseReason;
+import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
-import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
@@ -25,13 +25,14 @@ import org.meveo.model.notification.WebNotification;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.notification.WebNotificationService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ServerEndpoint("/wsnotif/{notif-name}")
 @Singleton
 public class WebsocketNotifManager {
 
 	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(WebsocketNotifManager.class);
 
 	@Inject
 	private WebNotificationService webNotificationService;

@@ -68,6 +68,8 @@ import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.NativePersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -90,6 +92,8 @@ public class CustomTableService extends NativePersistenceService {
      * File prefix indicating that imported data should be appended to exiting data
      */
     public static final String FILE_APPEND = "_append";
+    
+    private static Logger log = LoggerFactory.getLogger(CustomTableService.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -118,9 +122,9 @@ public class CustomTableService extends NativePersistenceService {
 	 * @throws BusinessException failed creating the entity
 	 */
 	public String create(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-		Collection<CustomFieldTemplate> cfts = (cet.getSuperTemplate() == null ? customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet)).values();
+		Collection<CustomFieldTemplate> cfts = (cet.getSuperTemplate() == null ? customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()) : customFieldTemplateService.getCftsWithInheritedFields(cet)).values();
 		cei.setCet(cet);
-		return create(sqlConnectionCode, cei, true, true, cfts, true);
+		return create(sqlConnectionCode, cei, true, cfts, true);
 	}
 
 	/**
@@ -219,9 +223,9 @@ public class CustomTableService extends NativePersistenceService {
 	 */
     @SuppressWarnings("deprecation")
     public void update(String sqlConnectionCode, CustomEntityTemplate cet, CustomEntityInstance cei) throws BusinessException {
-    	Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+    	Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
 		cei.setCet(cet);
-    	super.update(sqlConnectionCode, cei, true, cfts, false);
+    	super.update(sqlConnectionCode, cei, cfts, false);
     }
 
     /**
@@ -726,7 +730,7 @@ public class CustomTableService extends NativePersistenceService {
 		
 		if(cet.getSuperTemplate() != null) {
 			CustomEntityTemplate parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
-			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(parentCet.getAppliesTo());
+			var parentCfts = customFieldTemplateService.findByAppliesTo(parentCet.getAppliesTo());
 			paginationConfiguration.setSuperType(SQLStorageConfiguration.getDbTablename(parentCet));
 			paginationConfiguration.setSuperTypeFields(parentCfts.keySet());
 		}
@@ -757,14 +761,14 @@ public class CustomTableService extends NativePersistenceService {
 		var selectFieldsCopy = selectFields == null ? null : new ArrayList<>(selectFields);
 		
 		// Retrieve fields of the template
-		Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+		Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
 
 		Map<String, Object> data = new HashMap<>();
 		
 		// Complete data with parent table
 		var superTemplate = cet.getSuperTemplate() != null ? customEntityTemplateService.findById(cet.getSuperTemplate().getId()) : null;
 		if(superTemplate != null && superTemplate.storedIn(DBStorageType.SQL)) {
-			var parentCfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(superTemplate.getAppliesTo());
+			var parentCfts = customFieldTemplateService.findByAppliesTo(superTemplate.getAppliesTo());
 			List<String> parentFieldsToSelect;
 			if(selectFieldsCopy != null) {
 				parentFieldsToSelect = new ArrayList<>();
@@ -823,7 +827,7 @@ public class CustomTableService extends NativePersistenceService {
      * @return the converted data
      */
     private List<Map<String, Object>> convertData(List<Map<String, Object>> data, CustomEntityTemplate cet){
-        var cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo());
+		var cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo());
 		if(cet.getSuperTemplate() != null) {
 			var parentCet = customEntityTemplateService.findById(cet.getSuperTemplate().getId());
 			var parentCfts = customFieldTemplateService.findByAppliesTo(parentCet.getAppliesTo());
@@ -874,7 +878,7 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     public boolean sqlCftFilter(CustomEntityTemplate cet, String key) {
-        final CustomFieldTemplate cft = customFieldsCacheContainerProvider.getCustomFieldTemplate(key, cet.getAppliesTo());
+        final CustomFieldTemplate cft = customFieldTemplateService.findByCodeAndAppliesTo(key, cet.getAppliesTo());
         if (cft != null) {
             return cft.getStoragesNullSafe().contains(DBStorageType.SQL);
         }
@@ -929,7 +933,7 @@ public class CustomTableService extends NativePersistenceService {
     }
 
     private Map<String, Object> filterValues(Map<String, Object> values, CustomModelObject cet, boolean removeNullValues) {
-    	Collection<CustomFieldTemplate> cfts = customFieldsCacheContainerProvider.getCustomFieldTemplates(cet.getAppliesTo()).values();
+    	Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
     	
         return values.entrySet()
                 .stream()

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.TypedQuery;
 
@@ -32,6 +33,9 @@ import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
 import org.meveo.api.exception.MissingParameterException;
 import org.meveo.commons.utils.StringUtils;
+import org.meveo.event.qualifier.Processed;
+import org.meveo.model.dev.FileChangedEvent;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.MavenDependency;
@@ -48,7 +52,17 @@ import org.meveo.service.git.GitHelper;
 import org.meveo.service.script.CustomScriptService;
 import org.meveo.service.script.FunctionCategoryService;
 import org.meveo.service.script.MavenDependencyService;
+import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
+import org.meveo.service.script.ScriptUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -56,6 +70,8 @@ import org.meveo.service.script.ScriptInstanceService;
  **/
 @Stateless
 public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanceDto> {
+	
+	private static Logger log = LoggerFactory.getLogger(ScriptInstanceApi.class);
 
 	@Inject
 	private ModuleInstallationContext moduleInstallationContext;
@@ -84,20 +100,52 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	 * @return A list of {@link ScriptInstanceDto} initialized with id, code, type
 	 *         and error.
 	 */
-	public List<ScriptInstanceDto> getScriptsForTreeView(String code) {
-		StringBuffer query = new StringBuffer("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s");
+	public List<ScriptInstanceDto> getScriptsForTreeView(String module, String code) {
+		StringBuilder query = new StringBuilder("SELECT new org.meveo.api.dto.ScriptInstanceDto(id, code, sourceTypeEnum, error) FROM ScriptInstance s \n");		
 
-		if (code != null) {
-			query.append(" WHERE upper(s.code) LIKE :code");
+		String filterByModuleCriteria = getFilterByModuleCriteria(module);
+
+		String filterbyCode = getFilterByScriptCodeCriteria(code);
+
+		String filterCriteria = combineCriteria(filterByModuleCriteria, filterbyCode);
+
+		if (hasFilter(filterCriteria)) {
+			query.append(" WHERE " + filterCriteria);
 		}
 
 		TypedQuery<ScriptInstanceDto> jpaQuery = scriptInstanceService.getEntityManager().createQuery(query.toString(), ScriptInstanceDto.class);
 
-		if (code != null) {
+		if (hasFilter(filterByModuleCriteria)) {
+			jpaQuery.setParameter("moduleCode", module);
+		}
+
+		if (hasFilter(filterbyCode)) {
 			jpaQuery.setParameter("code", "%" + code.toUpperCase() + "%");
 		}
 
 		return jpaQuery.getResultList();
+	}
+
+	private boolean hasFilter(String filterCriteria) {
+		return filterCriteria != null && filterCriteria != org.apache.commons.lang.StringUtils.EMPTY;
+	}
+
+	private String combineCriteria(String... criterias) {
+		return Stream.of(criterias)
+					.filter(s -> s != null && !s.isEmpty())
+					.collect(Collectors.joining(" AND "));
+	}
+
+	private String getFilterByScriptCodeCriteria(String code) {
+		return code == null 
+			? org.apache.commons.lang.StringUtils.EMPTY
+			: "upper(s.code) LIKE :code";
+	}
+
+	private String getFilterByModuleCriteria(String moduleCode) {
+		return moduleCode == null || moduleCode.equals("Meveo") 
+			? org.apache.commons.lang.StringUtils.EMPTY
+			: "EXISTS (FROM MeveoModuleItem mi JOIN MeveoModule m ON m.id = mi.meveoModule WHERE mi.itemClass = 'org.meveo.model.scripts.ScriptInstance' AND s.code = mi.itemCode AND m.code = :moduleCode) \n";
 	}
 
 	public List<ScriptInstanceErrorDto> create(ScriptInstanceDto scriptInstanceDto) throws MeveoApiException, BusinessException {
@@ -392,7 +440,7 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 	}
 	
 	@Override
-	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepository) {
 		final String scriptCode = parseCode(entityFile);
 		
 		// If parsed items contains the dto, noop
@@ -416,8 +464,12 @@ public class ScriptInstanceApi extends BaseCrudApi<ScriptInstance, ScriptInstanc
 				dto.setCode(scriptCode);
 				dto.setType(ScriptSourceTypeEnum.JAVA);
 				try {
-					dto.setScript(FileUtils.readFileToString(entityFile, "UTF-8"));
-					return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
+					String script = FileUtils.readFileToString(entityFile, "UTF-8");
+					// Avoid parsing custom entities java files
+					if (ScriptUtils.isMeveoScript(script)) {
+						 dto.setScript(script);
+						 return new MeveoModuleItemDto(ScriptInstanceDto.class.getName(), JacksonUtil.convert(dto, GenericTypeReferences.MAP_STRING_OBJECT));
+					}
 				} catch (IOException e) {
 					log.error("Can't read java file", e);
 					return null;

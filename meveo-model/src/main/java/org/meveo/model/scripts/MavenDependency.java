@@ -53,6 +53,11 @@ public class MavenDependency implements Serializable {
 	@Column(name = "classifier", updatable = false)
 	private String classifier;
 	
+	@NotFound(action = NotFoundAction.IGNORE)
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "adm_script_maven_dependency", inverseJoinColumns = @JoinColumn(name = "script_instance_id"),  joinColumns = @JoinColumn(name = "maven_coordinates"))
+	private Set<ScriptInstance> scripts = new HashSet<>();
+	
 	@PrePersist
 	public void prePersist() {
 		this.coordinates = this.getBuiltCoordinates();
@@ -157,5 +162,22 @@ public class MavenDependency implements Serializable {
 	public String toString() {
 		return "MavenDependency [coordinates=" + coordinates + "]";
 	}
+
+	/**
+	 * @return the {@link #scripts}
+	 */
+	public Set<ScriptInstance> getScripts() {
+		return scripts;
+	}
+
+	/**
+	 * @param scripts the scripts to set
+	 */
+	public void setScripts(Set<ScriptInstance> scripts) {
+		this.scripts = scripts;
+	}
+	
+	
+	
 	
 }

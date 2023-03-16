@@ -559,7 +559,7 @@
 								label="#{messages['customFieldTemplate.fieldType']}"
 								field="fieldType" required="true" componentWidth="30" actionListenerBean="#{customFieldTemplateBean}"
 								actionListenerMethod="updateDefaultValues" allowEdit="false"
-								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat storageType"
+								listenerUpdate="binaryCFT listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields displayFormat storageType storages"
 								onEventComplete="PF('cftDialog').initPosition()"
 								rendered="#{customFieldTemplateBean.entity.id != null or customFieldTemplateBean.entity.identifier ==false}" />
 								
@@ -578,7 +578,7 @@
 									<f:attribute name="GenericEnumConverter.enumType"
 										value="CustomFieldTypeEnum" />
 									<p:ajax
-										update="listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields storageType"
+										update="listValuesField relationshipPanel defaultValueField entityClazzField validations versioning storageType_enum matrixColumns childEntityFields storageType storages"
 										listener="#{customFieldTemplateBean.updateDefaultValues}"
 										event="change" />
 								</p:selectOneMenu>

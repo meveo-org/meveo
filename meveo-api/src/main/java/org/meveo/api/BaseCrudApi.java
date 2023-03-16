@@ -41,21 +41,27 @@ import org.apache.commons.collections.CollectionUtils;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.dto.BaseEntityDto;
+import org.meveo.api.dto.CFBusinessEntityDto;
 import org.meveo.api.dto.module.MeveoModuleItemDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.EntityDoesNotExistsException;
+import org.meveo.api.exception.InvalidParameterException;
 import org.meveo.api.exception.MeveoApiException;
+import org.meveo.api.exception.MissingParameterException;
 import org.meveo.api.export.ExportFormat;
 import org.meveo.commons.utils.FileUtils;
+import org.meveo.model.ICustomFieldEntity;
 import org.meveo.model.IEntity;
 import org.meveo.model.ModuleItem;
-import org.meveo.model.module.MeveoModule;
+import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.typereferences.GenericTypeReferences;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.util.NullAwareBeanUtilsBean;
 import org.primefaces.model.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -80,14 +86,38 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> extends BaseApi
 		implements ApiService<E, T> {
 
+	private static Logger log = LoggerFactory.getLogger(BaseCrudApi.class);
+
 	private Class<T> dtoClass;
 	private Class<E> jpaClass;
 	private Set<File> fileImport = new HashSet<>();
+	
 
 	public BaseCrudApi(Class<E> jpaClass, Class<T> dtoClass) {
 		super();
 		this.dtoClass = dtoClass;
 		this.jpaClass = jpaClass;
+	}
+
+	@Override
+	public T find(String code) throws EntityDoesNotExistsException, MissingParameterException, InvalidParameterException, MeveoApiException, org.meveo.exceptions.EntityDoesNotExistsException {
+		E entity = getPersistenceService().findByCode(code);
+		if (entity != null) {
+			return toDto(entity);
+		}
+		return null;
+	}
+
+	@Override
+	public E createOrUpdate(T dtoData) throws MeveoApiException, BusinessException {
+		E entity = getPersistenceService().findByCode(dtoData.getCode());
+		entity = fromDto(dtoData, entity);
+		if (entity == null) {
+			getPersistenceService().create(entity);
+			return entity;
+		} else {
+			return getPersistenceService().update(entity);
+		}
 	}
 
 	/**
@@ -114,7 +144,25 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 	 * @return Entity converted
 	 * @throws MeveoApiException
 	 */
-	public abstract T toDto(E entity) throws MeveoApiException;
+	public T toDto(E entity) throws MeveoApiException {
+		try {
+			T dto = dtoClass.getDeclaredConstructor(jpaClass).newInstance(entity);
+			
+			if (entity instanceof ICustomFieldEntity) {
+				ICustomFieldEntity cfEntity = (ICustomFieldEntity) entity;
+				CFBusinessEntityDto cfDto = (CFBusinessEntityDto) dto;
+				if (cfEntity.getCfValues() != null) {
+					populateCustomFields(cfDto.getCustomFields(), cfEntity, entity.getId() == null);
+					var cfValuesDto = entityToDtoConverter.getCustomFieldsDTO(cfEntity, true);
+					cfDto.setCustomFields(cfValuesDto);
+				}
+			}
+			
+			return dto;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			throw new UnsupportedOperationException("Not implemented");
+		}
+	}
 
 	/**
 	 * Build a JPA representation from a DTO
@@ -141,6 +189,14 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 		try {
 			BeanUtilsBean beanUtilsBean = new NullAwareBeanUtilsBean();
 			beanUtilsBean.copyProperties(entity, dto);
+			
+			if (entity instanceof ICustomFieldEntity) {
+				ICustomFieldEntity cfEntity = (ICustomFieldEntity) entity;
+				CFBusinessEntityDto cfDto = (CFBusinessEntityDto) dto;
+				if (cfDto.getCustomFields() != null) {
+					populateCustomFields(cfDto.getCustomFields(), cfEntity, entity.getId() == null);
+				}
+			}
 
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new MeveoApiException("Unable to copy dto to entity. Make sure that the properties match.");
@@ -466,13 +522,13 @@ public abstract class BaseCrudApi<E extends IEntity, T extends BaseEntityDto> ex
 			String fileToString = org.apache.commons.io.FileUtils.readFileToString(entityFile, StandardCharsets.UTF_8);
 			Map<String, Object> data = JacksonUtil.fromString(fileToString, GenericTypeReferences.MAP_STRING_OBJECT);
 			return new MeveoModuleItemDto(dtoClassName, data);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			log.error("Can't read entityFile", e);
 			return null;
 		}
 	}
 	
-	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, String gitRepository) {
+	public MeveoModuleItemDto parseModuleItem(File entityFile, String directoryName, Set<MeveoModuleItemDto> alreadyParseItems, GitRepository gitRepository) {
 		ModuleItem item = jpaClass.getAnnotation(ModuleItem.class);
 		if (directoryName.equals(item.path())) {
 			return this.readModuleItem(entityFile, this.dtoClass.getName());

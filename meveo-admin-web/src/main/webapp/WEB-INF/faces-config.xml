@@ -1482,8 +1482,28 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>credentials</from-outcome>
+            <to-view-id>/pages/admin/credentials/credentials.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+       <navigation-case>
+            <from-outcome>credentialDetail</from-outcome>
+            <to-view-id>/pages/admin/credentials/credentialDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>repositoryDetail</from-outcome>
             <to-view-id>/pages/admin/storages/repositories/repositoryDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+         <navigation-case>
+            <from-outcome>storageConfigurationDetail</from-outcome>
+            <to-view-id>/pages/admin/storages/configurations/storageConfigurationDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>storageConfigurations</from-outcome>
+            <to-view-id>/pages/admin/storages/configurations/storageConfigurations.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
@@ -1519,6 +1539,16 @@
         <navigation-case>
             <from-outcome>webSocketEndpointDetail</from-outcome>
             <to-view-id>/pages/admin/endpoint/webSocketEndpointDetail.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>websocketClients</from-outcome>
+            <to-view-id>/pages/admin/endpoint/websocketClients.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>websocketClientDetail</from-outcome>
+            <to-view-id>/pages/admin/endpoint/websocketClientDetail.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
     </navigation-rule>

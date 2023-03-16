@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.faces.event.ValueChangeEvent;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -192,4 +193,12 @@ public class RepositoryBean extends BaseCrudBean<Repository, RepositoryDto> {
 		userGroupSelectedNode = null;
 		userGroupRootNode = null;
 	}
+
+	@Override
+	public void updateItemInCollection(ValueChangeEvent event) {
+		// TODO Auto-generated method stub
+		super.updateItemInCollection(event);
+	}
+	
+	
 }

@@ -30,6 +30,16 @@
 			<hftl:searchField label="#{messages['tax.code']}" field="code" />
 			<hftl:searchField label="#{messages['tax.description']}"
 				id="description" field="description" />
+
+			<hftl:decorateFormField label="Belonging Module">
+				<p:selectOneMenu
+					id="select-working-module"
+					style="min-width: 80px"
+					value="#{timerEntityListBean.workingModule}"
+					converter="omnifaces.SelectItemsConverter">
+					<f:selectItems value="#{timerEntityListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+				</p:selectOneMenu>
+			</hftl:decorateFormField>
 		</hftl:searchPanel>
 
 		<hftl:dataList label="#{messages['timers.page.title']}"

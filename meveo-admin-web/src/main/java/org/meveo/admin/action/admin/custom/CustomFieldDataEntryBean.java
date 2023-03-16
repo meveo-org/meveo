@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,9 +62,11 @@ import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValueHolder;
 import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.crm.custom.EntityCustomAction;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
+import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.shared.DateUtils;
 import org.meveo.model.sql.SqlConfiguration;
@@ -107,7 +110,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 	private static final long serialVersionUID = 2587695185934268809L;
 
 	/** Logger. */
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	protected static Logger log = LoggerFactory.getLogger(CustomFieldDataEntryBean.class);
 
 	/**
 	 * Custom field templates grouped into tabs and field groups
@@ -1328,7 +1331,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 			}
 
 			// Populate customFieldValue.listValue from mapValuesForGUI field
-		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST) {
+		} else if (cft.getStorageType() == CustomFieldStorageTypeEnum.LIST && cft.getFieldType() != CustomFieldTypeEnum.BINARY) {
 
 			List<Object> listValue = new ArrayList<Object>();
 			for (Map<String, Object> listItem : customFieldValue.getMapValuesForGUI()) {
@@ -1614,7 +1617,7 @@ public class CustomFieldDataEntryBean implements Serializable {
 		cei.setDescription((String) values.get("description"));
 
 		// Init fields of CEI
-		Map<String, CustomFieldTemplate> fields = cache.getCustomFieldTemplates(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
+		Map<String, CustomFieldTemplate> fields = customFieldTemplateService.findByAppliesTo(CustomEntityTemplate.getAppliesTo(cei.getCetCode()));
 		if (cei.getUuid() != null) {
 			CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(cei.getCetCode());
 			try {
@@ -1971,45 +1974,45 @@ public class CustomFieldDataEntryBean implements Serializable {
 		String cetCode = (String) event.getComponent().getAttributes().get("cetCode");
 		CustomFieldValue cfv = (CustomFieldValue) event.getComponent().getAttributes().get("cfv");
 		boolean isSingle = !cft.getStorageType().equals(CustomFieldStorageTypeEnum.LIST) && !cft.getStorageType().equals(CustomFieldStorageTypeEnum.MAP);
-
-		BinaryStoragePathParam params = new BinaryStoragePathParam();
-		params.setShowOnExplorer(cft.isSaveOnExplorer());
-		params.setRootPath(rootPath);
-		params.setCetCode(cetCode);
-		params.setUuid(uuid);
-		params.setCftCode(cft.getCode());
-		params.setFilePath(cft.getFilePath());
-		params.setContentType(file.getContentType());
-		params.setFilename(file.getFileName());
-		params.setInputStream(file.getInputstream());
-		params.setFileSizeInBytes(file.getSize());
-		params.setFileExtensions(cft.getFileExtensions());
-		params.setContentTypes(cft.getContentTypes());
-		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
-
-		// FIXME: Maybe here he takes the existing values and somehow delete them
-		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
+		Path tmpFile = Files.createTempDirectory("uploads").resolve(file.getFileName());
+		filesToDeleteOnExit.add(tmpFile.toFile().getAbsolutePath());
+		
+		try {
+			Files.write(tmpFile, file.getContents());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		BinaryProvider provider = new BinaryProvider(tmpFile.toFile());
+//		BinaryStoragePathParam params = new BinaryStoragePathParam();
+//		params.setShowOnExplorer(cft.isSaveOnExplorer());
+//		params.setRootPath(rootPath);
+//		params.setCetCode(cetCode);
+//		params.setUuid(uuid);
+//		params.setCftCode(cft.getCode());
+//		params.setFilePath(cft.getFilePath());
+//		params.setContentType(file.getContentType());
+//		params.setFilename(file.getFileName());
+//		params.setInputStream(file.getInputstream());
+//		params.setFileSizeInBytes(file.getSize());
+//		params.setFileExtensions(cft.getFileExtensions());
+//		params.setContentTypes(cft.getContentTypes());
+//		params.setMaxFileSizeAllowedInKb(cft.getMaxFileSizeAllowedInKb());
+//
+//		// FIXME: Maybe here he takes the existing values and somehow delete them
+//		rootPath = fileSystemService.persists(params, entity.getCfValuesAsValues());
 
 		log.debug("binary path={}", rootPath);
 
 		if (isSingle) {
-			cfv.setStringValue(rootPath);
-
-			initAfterUpload();
+			cfv.setListValue(List.of(provider));
 
 		} else {
-			List<Map<String, Object>> mapValues = cfv.getMapValuesForGUI();
-			Map<String, Object> mapValue = new HashMap<>();
-			if (mapValues != null && !mapValues.isEmpty()) {
-				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
-				mapValues.add(mapValue);
-
-			} else {
-				mapValues = new ArrayList<>();
-				mapValue.put(CustomFieldValue.MAP_VALUE, rootPath);
-				mapValues.add(mapValue);
+			if (cfv.getListBinaries() == null) {
+				cfv.setListBinaries(new ArrayList<>());
 			}
-			cfv.setMapValuesForGUI(mapValues);
+			cfv.getListBinaries().add(provider);
 		}
 	}
 
@@ -2026,19 +2029,12 @@ public class CustomFieldDataEntryBean implements Serializable {
 		this.repository = repository;
 	}
 
-	public StreamedContent downloadFile(String path) throws IOException {
+	public StreamedContent downloadFile(CustomFieldValue value, String fileName) throws IOException {
+		BinaryProvider binary = value.getBinary(fileName);
+		String filename = FilenameUtils.getName(fileName);
+		// String mimeType = Files.probeContentType(file.toPath());
 
-		if (StringUtils.isBlank(path)) {
-			return null;
-		}
-
-		File file = new File(path);
-		InputStream stream = new FileInputStream(file);
-
-		String filename = FilenameUtils.getName(path);
-		String mimeType = Files.probeContentType(file.toPath());
-
-		return new DefaultStreamedContent(stream, mimeType, filename);
+		return new DefaultStreamedContent(binary.getBinary(), null, filename);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -2102,6 +2098,11 @@ public class CustomFieldDataEntryBean implements Serializable {
 				.sorted((field1, field2) -> field1.getGUIFieldPosition() - field2.getGUIFieldPosition())
 				.limit(3)
 				.collect(Collectors.toList());
+	}
+	
+	public boolean shouldDisplayCode(String cetCode) {
+		CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);
+		return cet == null || (cet.storedIn(DBStorageType.SQL) && !cet.isStoreAsTable());
 	}
 
 }

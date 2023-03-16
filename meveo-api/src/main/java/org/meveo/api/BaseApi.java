@@ -34,6 +34,7 @@ import org.meveo.api.dto.CustomEntityInstanceDto;
 import org.meveo.api.dto.CustomFieldDto;
 import org.meveo.api.dto.CustomFieldValueDto;
 import org.meveo.api.dto.CustomFieldsDto;
+import org.meveo.api.dto.EntityReferenceDto;
 import org.meveo.api.dto.LanguageDescriptionDto;
 import org.meveo.api.dto.response.PagingAndFiltering;
 import org.meveo.api.exception.BusinessApiException;
@@ -67,6 +68,7 @@ import org.meveo.service.base.BusinessEntityService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.PersistenceService;
+import org.meveo.service.base.QueryBuilderHelper;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.util.ApplicationProvider;
@@ -82,7 +84,7 @@ import org.slf4j.LoggerFactory;
  **/
 public abstract class BaseApi {
 
-    protected Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BaseApi.class);
 
     @Inject
     private CustomFieldTemplateService customFieldTemplateService;
@@ -426,6 +428,14 @@ public abstract class BaseApi {
                 log.debug("Custom field value not applicable for this state of entity lifecycle: code={} for entity {} transient{}. Value will be ignored.", cfDto.getCode(),
                     entity.getClass(), isNewEntity);
                 continue;
+            }
+            
+            if(CustomFieldTypeEnum.ENTITY.equals(cft.getFieldType()) && cfDto.isEmpty(cft.getFieldType(), cft.getStorageType()) && !StringUtils.isBlank(cfDto.getStringValue()) && !StringUtils.isBlank(cft.getEntityClazz())) {
+            	EntityReferenceDto refDto = new EntityReferenceDto();
+            	refDto.setClassname(cft.getEntityClazz());
+            	refDto.setCode(cfDto.getStringValue());
+            	
+            	cfDto.setEntityReferenceValue(refDto);
             }
 
             // Validate that value is not empty when field is mandatory
@@ -1013,7 +1023,7 @@ public abstract class BaseApi {
             return filters;
 
             // Search by filter - nothing to convert
-        } else if (filtersToConvert.containsKey(PersistenceService.SEARCH_FILTER)) {
+        } else if (filtersToConvert.containsKey(QueryBuilderHelper.SEARCH_FILTER)) {
             return filtersToConvert;
         }
 
@@ -1031,8 +1041,8 @@ public abstract class BaseApi {
             String fieldName = fieldInfo.length == 1 ? fieldInfo[0] : fieldInfo[1];
 
             // Nothing to convert
-            if (PersistenceService.SEARCH_ATTR_TYPE_CLASS.equals(fieldName) || PersistenceService.SEARCH_SQL.equals(key)
-                    || (value instanceof String && (PersistenceService.SEARCH_IS_NOT_NULL.equals((String) value) || PersistenceService.SEARCH_IS_NULL.equals((String) value)))) {
+            if (QueryBuilderHelper.SEARCH_ATTR_TYPE_CLASS.equals(fieldName) || QueryBuilderHelper.SEARCH_SQL.equals(key)
+                    || (value instanceof String && (QueryBuilderHelper.SEARCH_IS_NOT_NULL.equals((String) value) || QueryBuilderHelper.SEARCH_IS_NULL.equals((String) value)))) {
                 filters.put(key, value);
 
                 // Filter already contains a special
@@ -1223,7 +1233,7 @@ public abstract class BaseApi {
 
             } else if (BusinessEntity.class.isAssignableFrom(targetClass)) {
 
-                if (stringVal.equals(PersistenceService.SEARCH_IS_NULL) || stringVal.equals(PersistenceService.SEARCH_IS_NOT_NULL)) {
+                if (stringVal.equals(QueryBuilderHelper.SEARCH_IS_NULL) || stringVal.equals(QueryBuilderHelper.SEARCH_IS_NOT_NULL)) {
                     return stringVal;
                 }
 
@@ -1240,7 +1250,7 @@ public abstract class BaseApi {
 
             } else if (Role.class.isAssignableFrom(targetClass)) {
                 // special case
-                if (stringVal.equals(PersistenceService.SEARCH_IS_NULL) || stringVal.equals(PersistenceService.SEARCH_IS_NOT_NULL)) {
+                if (stringVal.equals(QueryBuilderHelper.SEARCH_IS_NULL) || stringVal.equals(QueryBuilderHelper.SEARCH_IS_NOT_NULL)) {
                     return stringVal;
                 }
 

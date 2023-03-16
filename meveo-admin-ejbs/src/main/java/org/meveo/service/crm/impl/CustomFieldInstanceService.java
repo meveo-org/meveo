@@ -3,13 +3,28 @@ package org.meveo.service.crm.impl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.annotation.Resource;
-import javax.ejb.*;
+import javax.ejb.Stateless;
+import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
+import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -18,7 +33,6 @@ import javax.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
-import org.meveo.admin.util.pagination.PaginationConfiguration;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.api.persistence.CrossStorageApi;
 import org.meveo.commons.utils.JpaUtils;
@@ -26,7 +40,11 @@ import org.meveo.commons.utils.ParamBeanFactory;
 import org.meveo.event.CFEndPeriodEvent;
 import org.meveo.jpa.EntityManagerWrapper;
 import org.meveo.jpa.MeveoJpa;
-import org.meveo.model.*;
+import org.meveo.model.BaseEntity;
+import org.meveo.model.BusinessEntity;
+import org.meveo.model.DatePeriod;
+import org.meveo.model.ICustomFieldEntity;
+import org.meveo.model.IEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
@@ -40,7 +58,6 @@ import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.JacksonUtil;
-import org.meveo.model.sql.SqlConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.util.CustomFieldUtils;
 import org.meveo.persistence.CrossStorageService;
@@ -53,6 +70,8 @@ import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
 import org.meveo.service.storage.RepositoryService;
 import org.meveo.util.PersistenceUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -65,6 +84,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
  */
 @Stateless
 public class CustomFieldInstanceService extends BaseService {
+	
+    private static Logger log = LoggerFactory.getLogger(CustomFieldInstanceService.class);
 
     @Inject
     private CustomFieldTemplateService cfTemplateService;
@@ -267,11 +288,6 @@ public class CustomFieldInstanceService extends BaseService {
              }
         }
         
-        // Set code = uuid for entities with no codes
-        entities.stream()
-	    	.filter(e -> e instanceof CustomEntityInstance)
-	    	.filter(e -> e.getCode() == null)
-	    	.forEach(e -> e.setCode((String) ((CustomEntityInstance) e).getValuesNullSafe().get("code")));
         entities.stream()
         	.filter(e -> e instanceof CustomEntityInstance)
         	.filter(e -> e.getCode() == null)
@@ -631,7 +647,6 @@ public class CustomFieldInstanceService extends BaseService {
 
 					if (value instanceof Map) {
 						Map<String, Object> valueAsMap = (Map<String, Object>) value;
-						entityReferenceWrapper.setCode((String) valueAsMap.get("code"));
 						entityReferenceWrapper.setUuid((String) valueAsMap.get("uuid"));
 						if (entityReferenceWrapper.getUuid() == null) {
 							entityReferenceWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
@@ -639,7 +654,6 @@ public class CustomFieldInstanceService extends BaseService {
 						
 					} else if (value instanceof String) {
 						entityReferenceWrapper.setUuid((String) value);
-						fetchCode(cft, (String) value, entityReferenceWrapper);
 					} else if (value instanceof EntityReferenceWrapper) {
 					    entityReferenceWrapper = (EntityReferenceWrapper) value;
                     }
@@ -657,7 +671,7 @@ public class CustomFieldInstanceService extends BaseService {
 
 							if (item instanceof Map) {
 								Map<String, Object> valueAsMap = (Map<String, Object>) item;
-								itemWrapper.setCode((String) valueAsMap.get("code"));
+								itemWrapper.setCode((String) valueAsMap.get("uuid"));
 								itemWrapper.setUuid((String) valueAsMap.get("uuid"));
 								if (itemWrapper.getUuid() == null) {
 									itemWrapper.setUuid((String) valueAsMap.get("meveo_uuid"));
@@ -2409,25 +2423,38 @@ public class CustomFieldInstanceService extends BaseService {
         return emWrapper.getEntityManager();
     }
     
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void setCfValues(CustomEntityInstance cei, Map<String, Object> values) throws BusinessException {
+    	if (cei.getFieldTemplates() == null) {
+    		setCfValues(cei, cei.getCetCode(), values);
+    	} else {
+    		setCfValues(cei, cei.getFieldTemplates(), cei.getCetCode(), values);
+        }
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
+		Map<String, CustomFieldTemplate> cetFields = null;
+		if(entity instanceof CustomEntityInstance) {
+			var cei = (CustomEntityInstance) entity;
+			cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
+		} else {
+			cetFields = customFieldTemplateService.findByAppliesTo(entity);
+		}
+		setCfValues(entity, cetFields, cetCode, values);
+    }
+    
     /**
      * Sets the {@link CustomFieldValues} of a given {@link CustomEntityInstance}.
      * @param entity the custom entity instance
      * @param cetCode custom entity template code
      * @param values map of cft values
+     * @param cetFields the fields definition of the entity
      * @throws BusinessException thrown when values are not set
      */
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void setCfValues(ICustomFieldEntity entity, String cetCode, Map<String, Object> values) throws BusinessException {
-		Map<String, CustomFieldTemplate> cetFields = null;
+	public void setCfValues(ICustomFieldEntity entity, Map<String, CustomFieldTemplate> cetFields, String cetCode, Map<String, Object> values) throws BusinessException {
 		try {
-			cetFields = customFieldTemplateService.findByAppliesTo(entity);
-			if(entity instanceof CustomEntityInstance) {
-				var cei = (CustomEntityInstance) entity;
-				if(cei.getCet() != null && cei.getCet().getSuperTemplate() != null) {
-					cetFields = customFieldTemplateService.getCftsWithInheritedFields(cei.getCet());
-				}
-			}
-			
 			for (Map.Entry<String, CustomFieldTemplate> cetField : cetFields.entrySet()) {
 				Object value = values.getOrDefault(cetField.getKey(), values.get(cetField.getValue().getDbFieldname()));
 				if (cetField.getValue().getFieldType().name().equals("BOOLEAN") && value instanceof Integer) {

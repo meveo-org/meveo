@@ -9,6 +9,4 @@ import javax.inject.Named;
  */
 @Named
 @ConversationScoped
-public class WsEndpointListBean extends WsEndpointBean {
-
-}
+public class WsEndpointListBean extends WsEndpointBean {}

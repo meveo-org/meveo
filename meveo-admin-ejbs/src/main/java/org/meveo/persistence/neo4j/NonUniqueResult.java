@@ -16,9 +16,9 @@
 
 package org.meveo.persistence.neo4j;
 
-import org.neo4j.driver.v1.Record;
-
 import java.util.List;
+
+import org.neo4j.driver.Record;
 
 public class NonUniqueResult extends RuntimeException {
 

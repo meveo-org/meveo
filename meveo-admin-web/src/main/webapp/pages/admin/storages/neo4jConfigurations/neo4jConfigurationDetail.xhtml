@@ -27,8 +27,10 @@
             <hftl:formField label="#{messages['businessEntity.code']}" field="code" required="true" validateUnique="true" />
             <hftl:formField label="#{messages['neo4jConfiguration.url']}" field="neo4jUrl" required="true" />
             <hftl:formField label="#{messages['neo4jConfiguration.login']}" field="neo4jLogin" required="true" />            
-            <hftl:formField label="Protocol" field="protocol" required="true"/>
             <hftl:formField label="#{messages['neo4jConfiguration.password']}" field="clearPassword" required="true" secret="true"/>
+            <hftl:formField label="Protocol" field="protocol" required="true"/>
+           	<hftl:formField label="Graphql Endpoint" field="graphqlApiUrl"/>
+           	<hftl:formField label="DB Version" field="dbVersion" allowEdit="false" doNotShowOnNew="true"/>
         	<ui:param name="buttons" value="true" />
         	<ui:define name="buttons">
 				<p:commandButton process="@this" rendered="#{not neo4jConfigurationBean.entity.transient}"

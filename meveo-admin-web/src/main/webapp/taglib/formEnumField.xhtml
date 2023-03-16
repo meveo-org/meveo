@@ -16,10 +16,10 @@
                 	<f:selectItem itemLabel="" />
                 </c:if>
                 <c:if test="#{!noTranslateLabel}">
-                	<f:selectItems value="#{listValues}" var="enumElement" itemValue="#{enumElement}" itemLabel="#{messages[enumElement.label]}" />
+                	<f:selectItems value="#{listValues}" var="enumElement" itemValue="#{enumElement}" itemLabel="#{messages[enumElement.toString()]}" />
                	</c:if>
                	<c:if test="#{noTranslateLabel}">
-                	<f:selectItems value="#{listValues}" var="enumElement" itemValue="#{enumElement}" itemLabel="#{enumElement.label}" />
+                	<f:selectItems value="#{listValues}" var="enumElement" itemValue="#{enumElement}" itemLabel="#{enumElement.toString()}" />
                	</c:if>
                 <f:converter converterId="enumConverter" />
                 <f:attribute name="GenericEnumConverter.enumType" value="#{enumClassname}" />

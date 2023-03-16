@@ -78,6 +78,21 @@ public class QueryBuilder {
     public QueryBuilder() {
 
     }
+    
+
+    /**
+     * @return the {@link #paginationConfiguration}
+     */
+    public PaginationConfiguration getPaginationConfiguration() {
+    	return paginationConfiguration;
+    }
+
+    /**
+     * @return the {@link #paginationSortAlias}
+     */
+    public String getPaginationSortAlias() {
+    	return paginationSortAlias;
+    }
 
     /**
      * Get Hibernate native query object
@@ -139,7 +154,7 @@ public class QueryBuilder {
      *
      * @param alias alias of column?
      */
-    private void applyOrdering(String alias) {
+    public void applyOrdering(String alias) {
         if (paginationConfiguration == null) {
             return;
         }
@@ -198,6 +213,10 @@ public class QueryBuilder {
         this(getInitQuery(clazz, alias, fetchFields), alias);
         this.clazz = clazz;
     }
+    
+    public QueryBuilder(String className, String alias, List<String> fetchFields) {
+        this(getInitQuery(className, alias, fetchFields), alias);
+    }
 
     /**
      * Constructor.
@@ -244,6 +263,17 @@ public class QueryBuilder {
      */
     private static String getInitQuery(Class<?> clazz, String alias, List<String> fetchFields) {
         StringBuilder query = new StringBuilder("from " + clazz.getName() + " " + alias);
+        if (fetchFields != null && !fetchFields.isEmpty()) {
+            for (String fetchField : fetchFields) {
+                query.append(" left join fetch " + alias + "." + fetchField);
+            }
+        }
+
+        return query.toString();
+    }
+    
+    private static String getInitQuery(String className, String alias, List<String> fetchFields) {
+        StringBuilder query = new StringBuilder("from " + className + " " + alias);
         if (fetchFields != null && !fetchFields.isEmpty()) {
             for (String fetchField : fetchFields) {
                 query.append(" left join fetch " + alias + "." + fetchField);
@@ -903,7 +933,7 @@ public class QueryBuilder {
     /**
      * @param alias alias of column?
      */
-    private void applyPagination(String alias) {
+    public void applyPagination(String alias) {
         if (paginationConfiguration == null) {
             return;
         }
@@ -916,7 +946,7 @@ public class QueryBuilder {
     /**
      * @param query query using for pagination.
      */
-    private void applyPagination(Query query) {
+    public void applyPagination(Query query) {
         if (paginationConfiguration == null) {
             return;
         }

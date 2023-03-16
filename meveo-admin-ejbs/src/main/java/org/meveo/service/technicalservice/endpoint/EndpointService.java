@@ -44,9 +44,12 @@ import org.meveo.model.security.DefaultRole;
 import org.meveo.model.technicalservice.endpoint.Endpoint;
 import org.meveo.service.admin.impl.PermissionService;
 import org.meveo.service.base.BusinessService;
+import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.git.GitClient;
 import org.meveo.service.git.GitHelper;
 import org.meveo.service.git.MeveoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EJB for managing technical services endpoints
@@ -60,6 +63,8 @@ import org.meveo.service.git.MeveoRepository;
 public class EndpointService extends BusinessService<Endpoint> {
 
 	public static final String EXECUTE_ENDPOINT_TEMPLATE = "Execute_Endpoint_%s";
+
+    private static Logger log = LoggerFactory.getLogger(EndpointService.class);
 
 	@Inject
 	private GitClient gitClient;
@@ -155,7 +160,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @return true if endpoint interface exists
 	 */
 	public boolean isEndpointScriptExists(Endpoint endpoint) {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File endpointDir = new File(repositoryDir, "/facets/javascript/endpoints/");
 		File f = new File(endpointDir, endpoint.getCode() + ".js");
 
@@ -170,7 +175,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	 * @return true if endpoint interface exists
 	 */
 	public boolean isBaseEndpointScriptExists() {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File f = new File(repositoryDir, "/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
 
 		return f.exists() && !f.isDirectory();
@@ -180,9 +185,9 @@ public class EndpointService extends BusinessService<Endpoint> {
 		File repositoryDir;
 		MeveoModule module = this.findModuleOf(endpoint);
 		if (module == null) {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		} else {
-			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+			repositoryDir = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 		}
 		final File endpointDir = new File(repositoryDir, "/facets/javascript/endpoints/");
 		endpointDir.mkdirs();
@@ -190,7 +195,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	}
 
 	public File getBaseScriptFile() {
-		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository.getCode());
+		final File repositoryDir = GitHelper.getRepositoryDir(currentUser, meveoRepository);
 		final File endpointFile = new File(repositoryDir, "/facets/javascript/endpoints/" + Endpoint.ENDPOINT_INTERFACE_JS + ".js");
 		return endpointFile;
 	}
@@ -202,7 +207,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	public void addFilesToModule(Endpoint entity, MeveoModule module) throws BusinessException {
 		super.addFilesToModule(entity, module);
 
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 		String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
 
 		File newJsFile = new File (gitDirectory, path);
@@ -227,7 +232,7 @@ public class EndpointService extends BusinessService<Endpoint> {
 	@Override
 	public void removeFilesFromModule(Endpoint entity, MeveoModule module) throws BusinessException {
 		super.removeFilesFromModule(entity, module);
-		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository().getCode());
+		File gitDirectory = GitHelper.getRepositoryDir(currentUser, module.getGitRepository());
 		String path = "facets/javascript/endpoints/"+entity.getCode()+".js";
 		File jsFile = new File (gitDirectory, path);
 		jsFile.delete();
@@ -267,5 +272,10 @@ public class EndpointService extends BusinessService<Endpoint> {
 				throw new BusinessException(entity.getCode() +" endpoint is invalid. Missing param " + entity.getPathParameters().get(i));
 			}
 		}
+	}
+
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }

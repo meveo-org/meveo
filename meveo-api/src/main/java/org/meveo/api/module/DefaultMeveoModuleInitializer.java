@@ -18,10 +18,12 @@ import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
-import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import javax.ws.rs.client.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
@@ -37,6 +39,7 @@ import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.git.GitClient;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @TransactionManagement(TransactionManagementType.BEAN)
@@ -57,8 +60,7 @@ public class DefaultMeveoModuleInitializer {
 	@Inject
 	private MeveoModuleService meveoModuleService;
 
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(DefaultMeveoModuleInitializer.class);
 
 	public Map<String, String> init(UpdateModulesParameters parameters) throws MeveoApiException, IOException, BusinessException {
 		String username = parameters.getGitCredentials().getUsername();
@@ -68,16 +70,17 @@ public class DefaultMeveoModuleInitializer {
 			userTx.setTransactionTimeout((int) Duration.ofHours(1).toSeconds());
 			
 			Map<String, String> message = new HashMap<String, String>();
-			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveodata/default/module.json");
+			String path = ParamBean.getInstance().getProperty("meveo.module.default", "/opt/jboss/wildfly/meveo-module/module.json");
 			File moduleFile = new File(path);
-			MeveoModuleDto moduleDto = JacksonUtil.read(moduleFile, MeveoModuleDto.class);
-			List<ModuleDependencyDto> moduleDependencyDtos = moduleDto.getModuleDependencies();
-			for (ModuleDependencyDto moduleDependencyDto : moduleDependencyDtos) {
-				
+			Map<String, Object> meveoRoot = JacksonUtil.read(moduleFile, Map.class);
+			List<Map<String, Object>> meveoModules = (List<Map<String, Object>>) meveoRoot.get("moduleDependencies");
+
+			for (Map<String, Object> moduleMap : meveoModules) {
+				MeveoModuleDto moduleDto = JacksonUtil.convert(moduleMap, MeveoModuleDto.class);
 				userTx.begin();
-				String moduleCode = moduleDependencyDto.getCode();
-				String moduleGitUrl = moduleDependencyDto.getGitUrl();
-				String moduleBranch = moduleDependencyDto.getGitBranch();
+				String moduleCode = moduleDto.getCode();
+				String moduleGitUrl = (String) moduleMap.get("gitUrl");
+				String moduleBranch = (String) moduleMap.get("gitBranch");
 				try {
 					GitRepository repository = null;
 					GitRepositoryDto repositoryDto = null;
@@ -109,13 +112,15 @@ public class DefaultMeveoModuleInitializer {
 
 						repository = gitRepositoryApi.exists(repositoryDto) ? gitRepositoryApi.update(repositoryDto) : gitRepositoryApi.create(repositoryDto, false, username, password);
 
-						// Manage dependencies
-						LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(List.of(moduleDependencyDto), username, password);
-						for (GitRepository repo : gitRepos.keySet()) {
-							ModuleDependencyDto dependencyDto = gitRepos.get(repo);
-							dependencyDto.setInstalling(true);
-							moduleApi.install(null, repo);
-							dependencyDto.setInstalled(true);
+						// Manage dependencies 
+						if (moduleDto.getModuleDependencies() != null) {
+							LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(moduleDto.getModuleDependencies(), username, password);
+							for (GitRepository repo : gitRepos.keySet()) {
+								ModuleDependencyDto dependencyDto = gitRepos.get(repo);
+								dependencyDto.setInstalling(true);
+								moduleApi.install(null, repo);
+								dependencyDto.setInstalled(true);
+							}
 						}
 
 						moduleApi.install(null, repository);

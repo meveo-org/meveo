@@ -40,6 +40,7 @@ import org.meveo.model.bi.JobNameEnum;
 import org.meveo.model.bi.Report;
 import org.meveo.service.bi.impl.ReportService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -64,8 +65,7 @@ public class ReportExecution implements Serializable {
 
     private static String DATE_PATERN = "yyyy.MM.dd";
 
-    @Inject
-    protected Logger log;
+    private static Logger log = LoggerFactory.getLogger(ReportExecution.class);
 
     @Inject
     private ReportService reportService;

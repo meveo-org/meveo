@@ -66,6 +66,11 @@ services:
       - meveo_binary_data:/tmp/meveo/binary/storage
     environment:
       WILDFLY_LOG_CONSOLE_LEVEL: "INFO"    # default: OFF
+      KEYCLOAK_URL: http://host.docker.internal:8081/auth
+      WILDFLY_DEBUG_ENABLE: "true"
+      WILDFLY_DEBUG_PORT: 8787
+      WILDFLY_CUSTOM_XMMS: "512m"
+      WILDFLY_CUSTOM_XMMX: "1024m"
     ports:
       - 8080:8080
     depends_on:

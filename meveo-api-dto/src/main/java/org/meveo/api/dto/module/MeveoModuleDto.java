@@ -104,7 +104,7 @@ public class MeveoModuleDto extends BaseDataModelDto {
 	@JsonProperty("moduleFiles")
 	private List<String> moduleFiles;
 	
-    private boolean autoCommit = true;
+    private boolean autoCommit = false;
 	
 	private String repository;
 

@@ -15,3 +15,6 @@
 
 # Add a logger for meveo class
 /subsystem=logging/logger=org.meveo:add(level="${env.WILDFLY_LOG_MEVEO_LEVEL:INFO}")
+
+# Remove hibernate logs
+/subsystem=logging/logger=org.hibernate.engine.jdbc.spi.SqlExceptionHelper:add(level="OFF")

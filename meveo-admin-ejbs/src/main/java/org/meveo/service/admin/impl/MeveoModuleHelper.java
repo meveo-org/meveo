@@ -3,7 +3,6 @@
  */
 package org.meveo.service.admin.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,16 +11,15 @@ import javax.inject.Inject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.model.BusinessEntity;
 import org.meveo.model.module.MeveoModule;
-import org.meveo.model.module.MeveoModuleItem;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MeveoModuleHelper {
 
 	@Inject
 	private MeveoModuleService moduleService;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(MeveoModuleHelper.class);
 
 	@SuppressWarnings("unchecked")
 	public <T extends BusinessEntity> List<T> getEntities(MeveoModule module, Class<T> entityClass) {

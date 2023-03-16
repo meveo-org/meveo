@@ -22,7 +22,7 @@ public class WsRestApiInterceptor {
     @CurrentUser
     private MeveoUser currentUser;
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(WsRestApiInterceptor.class);
 
     @AroundInvoke
     public Object aroundInvoke(InvocationContext invocationContext) throws Exception {

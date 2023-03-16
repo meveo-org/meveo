@@ -105,13 +105,13 @@ import org.meveo.model.shared.DateUtils;
 @GenericGenerator(name = "ID_GENERATOR", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
         @Parameter(name = "sequence_name", value = "crm_custom_fld_tmp_seq"), })
 @NamedQueries({
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.disabled=false and cft.indexType is not null "),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForCache", query = "SELECT DISTINCT cft from CustomFieldTemplate cft left join fetch cft.storages left join fetch cft.calendar where cft.disabled=false order by cft.appliesTo"),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTForIndex", query = "SELECT DISTINCT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.disabled=false and cft.indexType is not null "),
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByCodeAndAppliesTo", query = "SELECT DISTINCT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.code=:code and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCftUniqueFieldsByApplies", query = "SELECT DISTINCT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.unique=true and cft.appliesTo=:appliesTo", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
-		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.appliesTo=:appliesTo order by cft.code", hints = {
+		@NamedQuery(name = "CustomFieldTemplate.getCFTByAppliesTo", query = "SELECT DISTINCT cft from CustomFieldTemplate cft left join fetch cft.storages where cft.appliesTo=:appliesTo order by cft.code", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "false") }) })
 public class CustomFieldTemplate extends BusinessEntity {
 
@@ -900,7 +900,9 @@ public class CustomFieldTemplate extends BusinessEntity {
 	 * @return the reference entity clazz cet code
 	 */
     public String getReferenceEntityClazzCetCode() {
-        return "Reference to "+ CustomFieldTemplate.retrieveCetCode(entityClazz);
+        boolean isChildEntity = CustomFieldTypeEnum.CHILD_ENTITY.equals(this.fieldType);
+        String labelPrefix = isChildEntity ? "Child entity - " : "Reference to ";
+        return labelPrefix + CustomFieldTemplate.retrieveCetCode(entityClazz);
     }
 
     /**

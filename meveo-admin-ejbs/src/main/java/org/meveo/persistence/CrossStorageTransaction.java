@@ -16,8 +16,9 @@ import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.impl.Neo4jStorageImpl;
 import org.meveo.persistence.impl.SQLStorageImpl;
-import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.Transaction;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bean that handles the transactions for the cross storage
@@ -43,8 +44,7 @@ public class CrossStorageTransaction {
 	
 	private List<StorageImpl> storages; 
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(CrossStorageTransaction.class);
 	
 	private int stackedCalls = 0;
 	
@@ -58,15 +58,22 @@ public class CrossStorageTransaction {
 	}
 
 	public void beginTransaction(Repository repository, List<DBStorageType> storages) {
-		storages.stream()
-			.map(provider::findImplementation)
-			.forEach(storageImpl -> storageImpl.beginTransaction(repository, stackedCalls));
+		for (var storage : storages) {
+			var impl = provider.findImplementation(storage);
+			for (var storageConf : repository.getStorageConfigurations(storage)) {
+				impl.beginTransaction(storageConf, stackedCalls);
+			}
+		}
 
 		stackedCalls++;
 	}
 	
 	public <T> T beginTransaction(Repository repository, DBStorageType storage) {
-		return provider.findImplementation(storage).beginTransaction(repository, stackedCalls);
+		var impl = provider.findImplementation(storage);
+		for (var storageConf : repository.getStorageConfigurations(storage)) {
+			return impl.beginTransaction(storageConf, stackedCalls);
+		}
+		return null;
 	}
 
 	
@@ -74,9 +81,12 @@ public class CrossStorageTransaction {
 		stackedCalls--;
 		
 		if(stackedCalls == 0) {
-			storages.stream()
-				.map(provider::findImplementation)
-				.forEach(storageImpl -> storageImpl.commitTransaction(repository));
+			for (var storage : storages) {
+				var impl = provider.findImplementation(storage);
+				for (var storageConf : repository.getStorageConfigurations(storage)) {
+					impl.commitTransaction(storageConf);
+				}
+			}
 		}
 	}
 	
@@ -95,6 +105,10 @@ public class CrossStorageTransaction {
 	
 	public Session getHibernateSession(String repository) {
 		return sqlStorageImpl.getHibernateSession(repository);
+	}
+	
+	public int getStackedCalls() {
+		return stackedCalls;
 	}
 	
 	@PreDestroy

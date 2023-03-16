@@ -34,7 +34,7 @@ public class BackingBeanActionMethodInterceptor implements Serializable {
 
     private static final long serialVersionUID = -8361765042326423662L;
 
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    private static Logger log = LoggerFactory.getLogger(BackingBeanActionMethodInterceptor.class);
 
     @Inject
     protected Messages messages;

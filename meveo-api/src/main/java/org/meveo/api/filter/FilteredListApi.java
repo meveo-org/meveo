@@ -65,8 +65,6 @@ public class FilteredListApi extends BaseApi {
             result = result.replaceAll("cf(.*):" + entry.getKey(), entry.getValue());
         }
 
-        log.debug("replaced filter xml :" + result);
-
         return result;
     }
 

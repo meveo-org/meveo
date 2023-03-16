@@ -322,7 +322,6 @@ public class WorkflowApi extends BaseCrudApi<Workflow, WorkflowDto> {
         if (businessEntity == null) {
             throw new EntityDoesNotExistsException(BaseEntity.class, baseEntityInstanceId);
         }
-        log.debug("businessEntity.getCode() : " + businessEntity.getCode());
 
         workflowService.executeWorkflow(businessEntity, workflowCode);
     }

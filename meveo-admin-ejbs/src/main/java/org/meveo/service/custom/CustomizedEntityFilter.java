@@ -13,6 +13,7 @@ public class CustomizedEntityFilter {
 	private String sortBy;
 	private String sortOrder;
 	private boolean includeRelationships;
+	private String moduleCode;
 	
 	/**
 	 * 0 - default
@@ -92,5 +93,13 @@ public class CustomizedEntityFilter {
 
 	public void setPrimitiveEntity(String primitiveEntity) {
 		this.primitiveEntity = primitiveEntity;
+	}
+
+	public String getModuleCode() {
+		return this.moduleCode;
+	}
+
+	public void setModuleCode(String moduleCode) {
+		this.moduleCode = moduleCode;
 	}
 }

@@ -19,6 +19,7 @@ package idl.meveo;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.persistence.neo4j.service.graphql.GraphQLService;
 
 import java.util.ArrayList;
@@ -27,10 +28,13 @@ import java.util.List;
 public class TestIDL {
 
     private GraphQLService graphQLService;
+    private Neo4JConfiguration neo4jConfiguration;
 
     @Before
     public void before() {
         graphQLService = new GraphQLService();
+        neo4jConfiguration = new Neo4JConfiguration();
+        neo4jConfiguration.setDbVersion("3.5.0");
     }
 
     /**
@@ -47,7 +51,7 @@ public class TestIDL {
                 "type TypeB {\n" +
                 "  fieldB : String\n" +
                 "}";
-        List<String> stringList = graphQLService.validateIdl(testCase1);
+        List<String> stringList = graphQLService.validateIdl(testCase1, neo4jConfiguration);
 
         Assert.assertEquals(stringList, result);
     }
@@ -63,7 +67,7 @@ public class TestIDL {
         String testCase2 = "type TypeA {\n" +
                 " fieldA : TypeB\n" +
                 "}";
-        List<String> stringList = graphQLService.validateIdl(testCase2);
+        List<String> stringList = graphQLService.validateIdl(testCase2, neo4jConfiguration);
 
         Assert.assertEquals(stringList, result);
     }

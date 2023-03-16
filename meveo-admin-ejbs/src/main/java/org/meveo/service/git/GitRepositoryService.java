@@ -40,6 +40,7 @@ import org.meveo.security.CurrentUser;
 import org.meveo.security.MeveoUser;
 import org.meveo.service.base.BusinessService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Persistence class for GitRepository
@@ -70,8 +71,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Inject
     private GitClient gitClient;
 
-    @Inject
-    private Logger log;
+    private static Logger log = LoggerFactory.getLogger(GitRepositoryService.class);
 
     @Inject
     @CurrentUser
@@ -92,7 +92,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     }
 
     public void createGitMeveoFolder(GitRepository gitRepository) throws BusinessException {
-        File dir = GitHelper.getRepositoryDir(currentUser, gitRepository.getCode());
+        File dir = GitHelper.getRepositoryDir(currentUser, gitRepository);
         if(dir.exists() && new File(dir, ".git").exists()) {
             return;
         }
@@ -220,7 +220,12 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     @Override
 	public GitRepository update(GitRepository entity) throws BusinessException {
     	super.update(entity);
+    	
     	gitClient.checkout(entity, entity.getDefaultBranch(), true);
+    	if (entity.getRemoteOrigin() != null) {
+    		gitClient.setRemote(entity);
+    	}
+    	
 		return entity;
 	}
 

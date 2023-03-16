@@ -23,6 +23,15 @@
         <hftl:searchPanel label="#{messages['endpoint.webSocket.search']}" columns="3"
                           backingBean="#{wsEndpointListBean}">
             <hftl:searchField label="#{messages['menu.endpoint.webSocket']}" field="code"/>
+            <hftl:decorateFormField label="Belonging Module">
+                <p:selectOneMenu
+                    id="select-working-module"                    
+                    style="min-width: 80px"
+                    value="#{wsEndpointListBean.workingModule}"
+                    converter="omnifaces.SelectItemsConverter">
+                    <f:selectItems value="#{wsEndpointListBean.getMeveoModulesCodes()}" var="e" itemLabel="#{e}" />
+                </p:selectOneMenu>
+            </hftl:decorateFormField>
         </hftl:searchPanel>
 
         <hftl:dataList label="#{messages['endpoint.title']}" addToModule="true" backingBean="#{wsEndpointListBean}">

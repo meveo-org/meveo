@@ -41,6 +41,8 @@ import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.custom.EntityCustomActionService;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi | edward.legaspi@manaty.net
@@ -49,6 +51,8 @@ import org.meveo.service.script.ScriptInstanceService;
 @Stateless
 public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, EntityCustomActionDto> {
 
+	private static Logger log = LoggerFactory.getLogger(EntityCustomActionApi.class);
+	
     /**
 	 * Instantiates a new EntityCustomActionApi
 	 *
@@ -169,6 +173,11 @@ public class EntityCustomActionApi extends BaseCrudApi<EntityCustomAction, Entit
             return null;
         }
     }
+    
+    @Override
+	public boolean exists(EntityCustomActionDto dto) {
+		return entityCustomActionService.exists(dto.getCode(), dto.getAppliesTo());
+	}
 
     public void remove(String actionCode, String appliesTo) throws EntityDoesNotExistsException, MissingParameterException, BusinessException {
 

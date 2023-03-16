@@ -56,9 +56,13 @@ import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterfaceSupplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stateless
 public class WorkflowService extends BusinessService<Workflow> {
+
+    private static Logger log = LoggerFactory.getLogger(WorkflowService.class);
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
@@ -427,4 +431,9 @@ public class WorkflowService extends BusinessService<Workflow> {
     public Workflow update(Workflow entity) throws BusinessException {
         return super.update(entity);
     }
+
+	@Override
+	public Logger getLogger() {
+		return log;
+	}
 }

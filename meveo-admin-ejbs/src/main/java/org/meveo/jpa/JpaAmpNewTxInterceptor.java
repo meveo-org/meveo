@@ -27,9 +27,6 @@ public class JpaAmpNewTxInterceptor implements Serializable {
     @Inject
     private EntityManagerProvider entityManagerProvider;
 
-    @Inject
-    private Logger log;
-
     /**
      * Instantiate a new EM if EM is application managed persistence context
      * 

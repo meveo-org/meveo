@@ -28,6 +28,7 @@ import org.meveo.security.keycloak.CurrentUserProvider;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.script.ScriptInstanceService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Edward P. Legaspi
@@ -36,8 +37,7 @@ import org.slf4j.Logger;
 @Stateless
 public class WebHookNotifier {
 
-    @Inject
-    Logger log;
+	private static Logger log = LoggerFactory.getLogger(WebHookNotifier.class);
 
     @Inject
     NotificationHistoryService notificationHistoryService;

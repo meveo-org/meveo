@@ -19,6 +19,7 @@ import org.meveo.event.qualifier.InboundRequestReceived;
 import org.meveo.model.notification.InboundRequest;
 import org.meveo.service.notification.InboundRequestService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * To call this servlet the url must be in this format: /inbound/&lt;provider.code&gt;
@@ -32,7 +33,7 @@ public class InboundServlet extends HttpServlet {
     InboundRequestService inboundRequestService;
 
     @Inject
-    Logger log;
+    private static Logger log = LoggerFactory.getLogger(InboundServlet.class);
 
     @Inject
     @InboundRequestReceived

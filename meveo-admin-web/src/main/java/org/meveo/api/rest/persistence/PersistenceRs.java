@@ -19,6 +19,8 @@ package org.meveo.api.rest.persistence;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -59,6 +61,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.GZIP;
@@ -78,8 +81,10 @@ import org.meveo.interfaces.EntityRelation;
 import org.meveo.model.BaseEntity;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
+import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.CEIUtils;
@@ -99,6 +104,7 @@ import org.meveo.security.MeveoUser;
 import org.meveo.security.PasswordUtils;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
+import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomEntityInstanceService;
 import org.meveo.service.custom.CustomEntityTemplateService;
 import org.meveo.service.custom.CustomTableService;
@@ -159,11 +165,13 @@ public class PersistenceRs {
 	@Inject
 	private CrossStorageTransaction crossStorageTx;
 	
-	@Inject
-	private Logger log;
+	private static Logger log = LoggerFactory.getLogger(PersistenceRs.class);
 	
 	@Inject
 	private CustomEntityInstanceService customEntityInstanceService;
+	
+	@Inject
+	private CustomFieldTemplateService cftService;
 	
 	@Inject
 	private CustomTableService customTableService;
@@ -314,7 +322,7 @@ public class PersistenceRs {
 
 		if (seeDecrypted && currentUser.hasRole(customEntityTemplate.getDecrpytPermission())) {
 			var cei = CEIUtils.fromMap(values, customEntityTemplate);
-			var hash = CEIUtils.getHash(cei, cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo()));
+			var hash = CEIUtils.getHash(cei, cftService.findByAppliesTo(customEntityTemplate.getAppliesTo()));
 			for (var entry : values.entrySet()) {
 				if (entry.getValue() instanceof String) {
 					String strVal = (String) entry.getValue();
@@ -602,7 +610,7 @@ public class PersistenceRs {
 	 */
 	@SuppressWarnings("rawtypes")
 	private void convertFiles(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, boolean base64) throws IOException {
-		Map<String, CustomFieldTemplate> customFieldTemplates = cache.getCustomFieldTemplates(customEntityTemplate.getAppliesTo());
+		Map<String, CustomFieldTemplate> customFieldTemplates = cftService.findByAppliesTo(customEntityTemplate.getAppliesTo());
 
 		if (base64) {
 			for (Map.Entry<String, Object> entry : new HashMap<>(values).entrySet()) {
@@ -649,17 +657,26 @@ public class PersistenceRs {
 					.forEach(binaryField -> {
 						Object binaryFieldValue = values.get(binaryField.getCode());
 						if (binaryFieldValue instanceof String) {
-							String url = buildFileUrl(customEntityTemplate, values, binaryField);
+							String url = buildFileUrl(customEntityTemplate, values, binaryField, null, binaryFieldValue);
 							values.put(binaryField.getCode(), url);
 
 						} else if (binaryFieldValue instanceof Collection) {
 							List<String> urls = new ArrayList<>();
-							for (int index = 0; index < ((Collection<?>) binaryFieldValue).size(); index++) {
-								String url = buildFileUrl(customEntityTemplate, values, binaryField);
-								url += "?index=" + index;
+							
+							int index = 0;
+							for (Object binaryItem : (Collection) binaryFieldValue) {
+								String url = buildFileUrl(customEntityTemplate, values, binaryField, index, binaryItem);
 								urls.add(url);
+								index++;
 							}
 							values.put(binaryField.getCode(), urls);
+							if (binaryField.getStorageType().equals(CustomFieldStorageTypeEnum.SINGLE)) {
+								if (urls.isEmpty()) {
+									values.put(binaryField.getCode(), null);
+								} else {
+									values.put(binaryField.getCode(), urls.get(0));
+								}
+							}
 						}
 					});
 		}
@@ -673,11 +690,35 @@ public class PersistenceRs {
 	 * @param values               Actual values of the entity
 	 * @param binaryField          Field holding the file reference
 	 */
-	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField) {
+	private String buildFileUrl(CustomEntityTemplate customEntityTemplate, Map<String, Object> values, CustomFieldTemplate binaryField, Integer index, Object binaryValue) {
 		String uuid = values.get("uuid") != null ? (String) values.get("uuid") : (String) values.get("meveo_uuid");
 
-		return new StringBuilder("/api/rest/fileSystem/binaries/").append(repositoryCode).append("/").append(customEntityTemplate.getCode()).append("/").append(uuid).append("/")
-				.append(binaryField.getCode()).toString();
+		String fileName = null;
+		if (binaryValue instanceof BinaryProvider) {
+			fileName = ((BinaryProvider) binaryValue).getFileName();
+		}
+		
+		if (binaryValue instanceof File) {
+			fileName = ((File) binaryValue).getName();
+		}
+		
+		if (binaryValue instanceof String) {
+			fileName = (String) binaryValue;
+			if (fileName.contains(File.separator)) {
+				fileName = FilenameUtils.getName(fileName);
+			}
+		}
+		
+		StringBuilder builder = new StringBuilder("/api/rest/fileSystem/binaries/")
+				.append(repositoryCode).append("/")
+				.append(customEntityTemplate.getCode())
+				.append("/")
+				.append(uuid)
+				.append("/")
+				.append(binaryField.getCode())
+				.append("?fileName=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+
+		return builder.toString();
 	}
 
 	/**

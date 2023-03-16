@@ -33,6 +33,8 @@ import org.meveo.util.EntityCustomizationUtils;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.DualListModel;
 import org.primefaces.model.TreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named
 @ViewScoped
@@ -40,6 +42,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
 
     private static final long serialVersionUID = 1187554162639618526L;
 
+    private static Logger log = LoggerFactory.getLogger(CustomRelationshipTemplateBean.class);
     /**
      * Prefix to apply to custom field templates (appliesTo value)
      */
