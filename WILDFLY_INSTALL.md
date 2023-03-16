@@ -16,7 +16,7 @@ The following binaries must be installed in your local environment:
 | PostgreSQL | 9.5 | https://www.postgresql.org/download/ |
 | PGAdmin | 4 | https://www.pgadmin.org/download/ |
 | PostgreSQL Driver | 42.2.5 | https://jdbc.postgresql.org/download.html |
-| Keycloak | >10 | https://www.keycloak.org/downloads.html |
+| Keycloak | >10 | https://www.keycloak.org/downloads.html (tested with 10.x and 18.x) |
 | Keycloak Adapter | >10 | https://www.keycloak.org/downloads.html |
 | Wildfly | 18.0.1.Final | https://wildfly.org/downloads/ |
 | Eclipse | JEE-latest | https://www.eclipse.org/downloads/packages/ |
@@ -67,6 +67,8 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 #### Option 1 - Installing as Standalone Server.
 
 #### Keycloak
+
+This section applies to version 10.x, for 18 the setup is a bit different, pls refer to keycloak documentation.
 
 * Download and extract Keycloak to your PC. Let's call the folder where you extracted the files KEYCLOAK_HOME.
 * Open the file KEYCLOAK_HOME/standalone/configuration/standalone.xml.
@@ -338,7 +340,7 @@ This is another way to install the EGIT plugin in case for some reason that you 
 
 * Select file pom.xml in project meveo-model .
 * Select run as maven, and run with the following options :
-    * **Goals** : liquibase dropAll liquibase:update
+    * **Goals** : liquibase:dropAll liquibase:update
     * **Profiles** : rebuild
     * **Attributes** : 
         * db.url=jdbc:postgresql://localhost:5432/meveo
