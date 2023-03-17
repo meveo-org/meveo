@@ -15,7 +15,7 @@ The following binaries must be installed in your local environment:
 | Maven | latest | https://maven.apache.org/download.cgi |
 | PostgreSQL | 9.5 | https://www.postgresql.org/download/ |
 | PGAdmin | 4 | https://www.pgadmin.org/download/ |
-| PostgreSQL Driver | 42.2.5 | https://jdbc.postgresql.org/download.html |
+| PostgreSQL Driver | 42.5.4 | https://jdbc.postgresql.org/download/ |
 | Keycloak | 10 to 18 | https://www.keycloak.org/downloads.html (tested with 10.x and 18.x) |
 | Keycloak Adapter | 10 to 18 | https://www.keycloak.org/downloads.html |
 | Wildfly | 18.0.1.Final | https://wildfly.org/downloads/ |
@@ -95,11 +95,25 @@ In the eclipse section, we will discuss how we can integrate Keycloak so we can 
 
 ##### Wildfly
 
-* Download the PostgreSQL driver.
-* Download and extract Wildfly into your PC. Let's call the folder where you extracted the files `WILDFLY_HOME`.
-* Inside `WILDFLY_HOME/modules` folder create this folder hierarchy `org/postgresql/main`.
+* Download and extract Wildfly into your PC. 
+```
+curl https://download.jboss.org/wildfly/18.0.1.Final/wildfly-18.0.1.Final.zip -o wildfly-18.0.1.Final.zip
+sudo unzip wildfly-18.0.1.Final.zip -d /opt
+export WILDFLY_HOME=/opt/wildfly-18.0.1.Final/
+```
+ Let's call the folder where you extracted the files `WILDFLY_HOME`.
+* Inside `WILDFLY_HOME/modules` folder create the folder hierarchy `org/postgresql/main`.
+```
+cd $WILDFLY_HOME/modules
+mkdir -p org/postgresql/main
+```
 * Navigate to this folder.
-* Copy and paste the PostgreSQL driver (postgresql-42.2.5.jar) here.
+* download the PostgreSQL driver (postgresql-42.2.5.jar) here.
+```
+cd $WILDFLY_HOME/modules/org/postgresql/main
+curl https://jdbc.postgresql.org/download/postgresql-42.5.4.jar -o postgresql-42.5.4.jar
+```
+
 * Create a new file module.xml with the content below.
 
 ```
@@ -114,6 +128,22 @@ In the eclipse section, we will discuss how we can integrate Keycloak so we can 
         <module name="javax.transaction.api"/>
     </dependencies>
 </module>
+```
+by running the following commands
+```
+sudo touch module.xml
+sudo chown a+w module.xml
+sudo echo "<?xml version='1.0' encoding='UTF-8'?>
+<module xmlns="urn:jboss:module:1.1" name="org.postgresql">
+    <resources>
+        <resource-root path="postgresql-42.2.5.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.transaction.api"/>
+    </dependencies>
+</module>" >>  module.xml
 ```
 
 ###### Add the Keycloak Adapter to Wildfly
