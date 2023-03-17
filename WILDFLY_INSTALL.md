@@ -64,22 +64,30 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 ### Wildfly and Keycloak Installation
 
 
-#### Option 1 - Installing as Standalone Server.
-
 #### Keycloak
 
-This section applies to version 10.x, for 18 the setup is a bit different, pls refer to keycloak documentation.
-
+Keycloak version  10.x:
 * Download and extract Keycloak to your PC. Let's call the folder where you extracted the files KEYCLOAK_HOME.
 * Open the file KEYCLOAK_HOME/standalone/configuration/standalone.xml.
 * Find this line `<socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">` and replace the port-offset:0 with port-offset:1. This means 1 will be added to all default ports. Making the oauth url available at port 8081.
 * To start the server run KEYCLOAK_HOME\bin\standalone.exe.
+
+Keycloak version 18.x using quarkus:
+* Download and extract Keycloak to your PC. Let's call the folder where you extracted the files KEYCLOAK_HOME.
+* Open the file KEYCLOAK_HOME/conf/keycloak.conf 
+* add the line `http-port=8081` at the end
+* start the server in dev mode by running `KEYCLOAK_HOME/bin/./kc.sh start-dev`
+
+Create admin user and meveo realm
 * Try accessing `http://localhost:8081` from your web browser.
 * Create an initial admin user by entering a username and password and proceed to login. You should be able to arrive at the Keycloak admin interface.
 . In the left panel, hover on Master and click Add Realm.
 . In the right panel, click Select a file and choose `meveo-realm.json` file. [Meveo Realm](./src/main/resources/meveo-realm.json)
 . Click create. The Meveo realm should be created and it should now be the selected realm.
 . The default meveo clients, roles and users should be created as well.
+
+
+
 
 To check if meveo realm is correctly configured:
 
