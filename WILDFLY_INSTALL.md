@@ -132,7 +132,7 @@ curl https://jdbc.postgresql.org/download/postgresql-42.5.4.jar -o postgresql-42
 by running the following commands
 ```
 sudo touch module.xml
-sudo chown a+w module.xml
+sudo chmod a+w module.xml
 sudo echo "<?xml version='1.0' encoding='UTF-8'?>
 <module xmlns="urn:jboss:module:1.1" name="org.postgresql">
     <resources>
