@@ -16,8 +16,8 @@ The following binaries must be installed in your local environment:
 | PostgreSQL | 9.5 | https://www.postgresql.org/download/ |
 | PGAdmin | 4 | https://www.pgadmin.org/download/ |
 | PostgreSQL Driver | 42.2.5 | https://jdbc.postgresql.org/download.html |
-| Keycloak | >10 | https://www.keycloak.org/downloads.html (tested with 10.x and 18.x) |
-| Keycloak Adapter | >10 | https://www.keycloak.org/downloads.html |
+| Keycloak | 10 to 18 | https://www.keycloak.org/downloads.html (tested with 10.x and 18.x) |
+| Keycloak Adapter | 10 to 18 | https://www.keycloak.org/downloads.html |
 | Wildfly | 18.0.1.Final | https://wildfly.org/downloads/ |
 | Eclipse | JEE-latest | https://www.eclipse.org/downloads/packages/ |
 
@@ -66,7 +66,7 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 
 #### Keycloak
 
-Keycloak version  10.x:
+Keycloak version 10.x using wildfly:
 * Download and extract Keycloak to your PC. Let's call the folder where you extracted the files KEYCLOAK_HOME.
 * Open the file KEYCLOAK_HOME/standalone/configuration/standalone.xml.
 * Find this line `<socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">` and replace the port-offset:0 with port-offset:1. This means 1 will be added to all default ports. Making the oauth url available at port 8081.
@@ -86,12 +86,9 @@ Create admin user and meveo realm
 . Click create. The Meveo realm should be created and it should now be the selected realm.
 . The default meveo clients, roles and users should be created as well.
 
-
-
-
 To check if meveo realm is correctly configured:
 
- * Click the Users menu and you should see 9 users.
+ * Click the Users menu and you should see 4 users.
  * Click the Clients menu and you should see meveo-web.
 
 In the eclipse section, we will discuss how we can integrate Keycloak so we can start it from there.
