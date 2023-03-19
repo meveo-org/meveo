@@ -177,9 +177,8 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 ```
 ##### Add System Properties
 
-* Open the file WILDFLY_HOME\standalone\configuration\standalone.xml
+* Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml
 * At the end of `<extensions>` tag add the following properties.
-
 ```
 <system-properties>
     <property name="jboss.as.management.blocking.timeout" value="900"/>
@@ -201,7 +200,7 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 </system-properties>
 ```
 
-*Note that we are using the postgres admin account here.
+*Note that we are using the postgres admin account here, replace it in `<your-postgresql-admin-password>`
 
 ##### Add a Datasource
 
