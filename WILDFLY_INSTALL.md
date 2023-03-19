@@ -108,7 +108,7 @@ cd $WILDFLY_HOME/modules
 mkdir -p org/postgresql/main
 ```
 * Navigate to this folder.
-* download the PostgreSQL driver (postgresql-42.2.5.jar) here.
+* download the PostgreSQL driver (postgresql-42.5.4.jar) here.
 ```
 cd $WILDFLY_HOME/modules/org/postgresql/main
 curl https://jdbc.postgresql.org/download/postgresql-42.5.4.jar -o postgresql-42.5.4.jar
@@ -120,7 +120,7 @@ curl https://jdbc.postgresql.org/download/postgresql-42.5.4.jar -o postgresql-42
 <?xml version='1.0' encoding='UTF-8'?>
 <module xmlns="urn:jboss:module:1.1" name="org.postgresql">
     <resources>
-        <resource-root path="postgresql-42.2.5.jar"/>
+        <resource-root path="postgresql-42.5.4.jar"/>
     </resources>
 
     <dependencies>
@@ -136,7 +136,7 @@ sudo chmod a+w module.xml
 sudo echo "<?xml version='1.0' encoding='UTF-8'?>
 <module xmlns="urn:jboss:module:1.1" name="org.postgresql">
     <resources>
-        <resource-root path="postgresql-42.2.5.jar"/>
+        <resource-root path="postgresql-42.5.4.jar"/>
     </resources>
 
     <dependencies>
@@ -204,7 +204,7 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 
 ##### Add a Datasource
 
-* Open the file WILDFLY_HOME\standalone\configuration\standalone.xml.
+* Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml.
 * Search for "subsystem xmlns="urn:jboss:domain:datasources".
 * Add the following datasource configuration.
 
@@ -292,9 +292,11 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 </cache-container>
 ```
 
-##### Download Meveo Properties
+##### Download Meveo Properties 
 
-* Download this file [Meveo properties file](./docker/configs/meveo-admin.properties).
+This step is optional as a file `WILDFLY_HOME\standalone\configuration\meveo-admin.properties` will be created by meveo at startup.
+If you want to change the default you can edit it after startup or :
+* download this file [Meveo properties file](./docker/configs/meveo-admin.properties).
 * Make sure to make the necessary changes depending on your local configuration. See keys like meveo.log.file, binary.storage.path and providers.rootDir.
 * Copy this file into `WILDFLY_HOME\standalone\configuration`.
 
@@ -310,12 +312,17 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 
 ##### Login to Wildfly Server
 
+* Start wildfly
+```
+cd /opt/wildfly-18.0.1.Final/bin
+sudo ./standalone.sh --server-config=standalone-full.xml
+```
 * Open your favorite browser.
 * Enter the url localhost:8080.
 * Click Administration Console.
 * Login using your newly created account.
 
-A completely configured file is available for reference link:standalone.xml[here].
+A completely configured file is available for reference link:standalone.xml.
 
 ### Eclipse
 
