@@ -149,12 +149,32 @@ sudo echo "<?xml version='1.0' encoding='UTF-8'?>
 ###### Add the Keycloak Adapter to Wildfly
 
 * Download the Keycloak Adapter with the same version as the downloaded Keycloak Server.
+```
+cd /opt/wildfly-18.0.1.Final/
+sudo curl https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-oidc-wildfly-adapter-18.0.2.zip -L -o keycloak-oidc-wildfly-adapter-18.0.2.zip
+```
 * Copy the downloaded file into WILDFLY_HOME and extract.
+```
+sudo unzip keycloak-oidc-wildfly-adapter-18.0.2.zip
+sudo rm keycloak-oidc-wildfly-adapter-18.0.2.zip
+```
 * Run command prompt and navigate to WILDFLY_HOME\bin folder.
 * Open WILDFLY_HOME\bin\adapter-install-offline.cli and change the standalone to standalone-full.
-* Execute: jboss-cli.bat --file=adapter-install-offline.cli.
+```
+cd bin
+sudo sed -i 's/standalone.xml/standalone-full.xml/g' adapter-install-offline.cli
+```
+* Execute: jboss-cli.bat --file=adapter-install-offline.cli  (or jboss-cli.sh on linux)
+```
+sudo ./jboss-cli.sh --file=adapter-install-offline.cli
+```
 * A success message should be shown.
-
+```
+{"outcome" => "success"}
+{"outcome" => "success"}
+{"outcome" => "success"}
+{"outcome" => "success"}
+```
 ##### Add System Properties
 
 * Open the file WILDFLY_HOME\standalone\configuration\standalone.xml
