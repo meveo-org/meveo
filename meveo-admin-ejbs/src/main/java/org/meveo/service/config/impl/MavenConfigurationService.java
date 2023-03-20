@@ -314,6 +314,8 @@ public class MavenConfigurationService implements Serializable {
 		model.setArtifactId(module.getCode());
 		model.setVersion(module.getCurrentVersion());
 		model.setModelVersion("4.0.0");
+		model.setDependencyManagement(null);
+		model.setDependencies(null);
 		
 		if (model.getPomFile() == null) {
 			model.setBuild(new Build());
@@ -422,8 +424,8 @@ public class MavenConfigurationService implements Serializable {
 		meveoDependency.setGroupId("org.meveo");
 		meveoDependency.setArtifactId("meveo-api");
 		meveoDependency.setVersion(System.getProperty("meveo.version", Version.appVersion));
-		meveoDependency.setScope("provided");
-		MavenUtils.addOrUpdateDependency(model, meveoDependency);
+		meveoDependency.setScope("import");
+		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoDependency);
 		
 		module.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
@@ -431,7 +433,7 @@ public class MavenConfigurationService implements Serializable {
 			dependency.setArtifactId(meveoModuleDependency.getCode());
 			dependency.setVersion(meveoModuleDependency.getCurrentVersion());
 			dependency.setScope("compile");
-			MavenUtils.addOrUpdateDependency(model, dependency);
+			MavenUtils.addOrUpdateDependency(dependencyManagement, dependency);
 		});
 
 		try {
