@@ -45,9 +45,14 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 
 ### PostgreSQL
 
- Download and install PostgreSQL. Take note of the admin password as we will use it later.
+ * Download and install PostgreSQL
+ 
+### Meveo database creation
 
-### PGAdmin
+We need to create a `meveo` database with owner `meveo` (username: `meveo`, password:`meveo`)
+
+
+Using PGAdmin:
 
 * Download and install PGAdmin.
 * Open PGAdmin, it might ask you for a master password. Enter a password and make sure to remember it.
@@ -61,8 +66,7 @@ Add the %M2_HOME%\bin folder to your Windows environment path just as we did wit
 * Under database tab set Database=meveo, Owner=meveo.
 * Hit Save.
 
-### Wildfly and Keycloak Installation
-
+###  Keycloak and Wildfly Installation
 
 #### Keycloak
 
@@ -192,15 +196,15 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
     <property name="meveo.admin.port.number" value="5432"/>
     <property name="meveo.admin.database.name" value="meveo"/>
     <property name="meveo.admin.database.driver" value="postgresql"/>
-    <property name="meveo.admin.database.username" value="postgres"/>
-    <property name="meveo.admin.database.password" value="<your-postgresql-admin-password>"/>
+    <property name="meveo.admin.database.username" value="meveo"/>
+    <property name="meveo.admin.database.password" value="meveo"/>
     <property name="jboss.tx.node.id" value="meveo-default"/>
     <property name="meveo.keycloak.fixed-hostname" value="localhost"/>
     <property name="resteasy.preferJacksonOverJsonB" value="true"/>
 </system-properties>
 ```
 
-*Note that we are using the postgres admin account here, replace it in `<your-postgresql-admin-password>`
+*Note that we are using the username and password of the meveo database that must be created on postgres
 
 ##### Add a Datasource
 
