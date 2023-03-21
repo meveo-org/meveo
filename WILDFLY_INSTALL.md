@@ -103,18 +103,18 @@ In the eclipse section, we will discuss how we can integrate Keycloak so we can 
 ```
 curl https://download.jboss.org/wildfly/18.0.1.Final/wildfly-18.0.1.Final.zip -o wildfly-18.0.1.Final.zip
 sudo unzip wildfly-18.0.1.Final.zip -d /opt
-export WILDFLY_HOME=/opt/wildfly-18.0.1.Final/
+export WILDFLY_HOME=/opt/wildfly-18.0.1.Final
 ```
  Let's call the folder where you extracted the files `WILDFLY_HOME`.
 * Inside `WILDFLY_HOME/modules` folder create the folder hierarchy `org/postgresql/main`.
 ```
-cd $WILDFLY_HOME/modules
+cd ${WILDFLY_HOME}/modules
 mkdir -p org/postgresql/main
 ```
 * Navigate to this folder.
 * download the PostgreSQL driver (postgresql-42.5.4.jar) here.
 ```
-cd $WILDFLY_HOME/modules/org/postgresql/main
+cd ${WILDFLY_HOME}/modules/org/postgresql/main
 curl https://jdbc.postgresql.org/download/postgresql-42.5.4.jar -o postgresql-42.5.4.jar
 ```
 
@@ -154,7 +154,7 @@ sudo echo "<?xml version='1.0' encoding='UTF-8'?>
 
 * Download the Keycloak Adapter with the same version as the downloaded Keycloak Server.
 ```
-cd /opt/wildfly-18.0.1.Final/
+cd ${WILDFLY_HOME}
 sudo curl https://github.com/keycloak/keycloak/releases/download/18.0.2/keycloak-oidc-wildfly-adapter-18.0.2.zip -L -o keycloak-oidc-wildfly-adapter-18.0.2.zip
 ```
 * Copy the downloaded file into WILDFLY_HOME and extract.
@@ -188,7 +188,7 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
     <property name="jboss.as.management.blocking.timeout" value="900"/>
     <property name="meveo.instance.name" value="demo"/>
     <property name="java.net.preferIPv4Stack" value="true"/>
-    <property name="meveo.keycloak.url" value="http://localhost:8081/auth"/>
+    <property name="meveo.keycloak.url" value="http://localhost:8081"/>
     <property name="meveo.keycloak.secret" value="afe07e5a-68cb-4fb0-8b75-5b6053b07dc3"/>
     <property name="meveo.keycloak.realm" value="meveo"/>
     <property name="meveo.keycloak.client" value="meveo-web"/>
@@ -208,7 +208,7 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 
 ##### Add a Datasource
 
-* Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml.
+* Open the file `${WILDFLY_HOME}\standalone\configuration\standalone-full.xml`.
 * Search for "subsystem xmlns="urn:jboss:domain:datasources".
 * Add the following datasource configuration.
 
@@ -302,12 +302,12 @@ This step is optional as a file `WILDFLY_HOME\standalone\configuration\meveo-adm
 If you want to change the default you can edit it after startup or :
 * download this file [Meveo properties file](./docker/configs/meveo-admin.properties).
 * Make sure to make the necessary changes depending on your local configuration. See keys like meveo.log.file, binary.storage.path and providers.rootDir.
-* Copy this file into `WILDFLY_HOME\standalone\configuration`.
+* Copy this file into `${WILDFLY_HOME}\standalone\configuration`.
 
 ##### Create a Wildfly Admin User
 
 * Open a command prompt.
-* Navigate to WILDFLY_HOME\bin.
+* Navigate to `${WILDFLY_HOME}\bin`.
 * Run add-user.bat.
 * * Select management User
 * Enter your desired user account.
@@ -318,7 +318,7 @@ If you want to change the default you can edit it after startup or :
 
 * Start wildfly
 ```
-cd /opt/wildfly-18.0.1.Final/bin
+cd ${WILDFLY_HOME}/bin
 sudo ./standalone.sh --server-config=standalone-full.xml
 ```
 * Open your favorite browser.
@@ -365,7 +365,7 @@ This is done inside Eclipse IDE. Since we have installed egit component from JBo
 * Right click and then select Clone a Git Repository or click the green icon in the top right corner with the same label.
 * In the URI enter git@github.com:meveo-org/meveo.git, click Next.
 * A selection of branch that you wanted to checkout should appear. By default all branches are selected. Click Next.
-* Select the directory where you want to checkout the project, click Finish.
+* Select the directory where you want to checkout the project, click Finish. we not this directory `${MEVEO_SRC_DIR}`
 * Once the cloning is done, meveo project should appear in your Git Repositories.
 * Right click on the meveo repository and select Import Maven Projects.
 * Make sure that all projects are selected. You can select a working set (use for grouping projects) and then hit finish.
@@ -413,6 +413,12 @@ This is another way to install the EGIT plugin in case for some reason that you 
         * db.password=meveo
         * db.schema=public
         * db.driver=org.postgresql.Driver
+
+in command line :
+```
+cd ${MEVEO_SRC_DIR}/meveo/model
+mvn liquibase:dropAll liquibase:update -Prebuild -D"db.url=jdbc:postgresql://localhost:5432/meveo" -D"db.username=meveo" -D"db.password=meveo" -D"db.schema=public" -D"db.driver=org.postgresql.Driver"
+```
     
 #### Deploying Meveo to Wildfly
 
@@ -423,3 +429,12 @@ This is another way to install the EGIT plugin in case for some reason that you 
 * Open the console log from Window / Show View / Console.
 * If no error is shown, you should be able to access meveo from the URL http://localhost:8080/meveo.
 * Login using the account meveo.admin / meveo.
+
+in command line :
+```
+cd ${MEVEO_SRC_DIR}/
+mvn clean install
+sudo cp ./meveo-admin-web/target/meveo.war ${WILDFLY_HOME}/standalone/deployments/
+```
+
+you should be able to access meveo by opening `http://localhost:8080/meveo` and loging in with `meveo.admin/meveo`
