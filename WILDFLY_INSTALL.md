@@ -183,6 +183,12 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 
 * Open the file WILDFLY_HOME\standalone\configuration\standalone-full.xml
 * At the end of `<extensions>` tag add the following properties.
+
+Note that depending on the keycloak version you have the value of meveo.keycloak.url varies:
+* with keycloak running on wildfly `<property name="meveo.keycloak.url" value="http://localhost:8081"/>`
+* with keycloak running on quarkus `<property name="meveo.keycloak.url" value="http://localhost:8081/auth"/>`
+
+
 ```
 <system-properties>
     <property name="jboss.as.management.blocking.timeout" value="900"/>
@@ -211,6 +217,42 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 * Open the file `${WILDFLY_HOME}\standalone\configuration\standalone-full.xml`.
 * Search for "subsystem xmlns="urn:jboss:domain:datasources".
 * Add the following datasource configuration.
+
+```
+<datasource jta="true" jndi-name="java:jboss/datasources/MeveoAdminDatasource" pool-name="meveo" enabled="true" use-java-context="true" spy="false" use-ccm="false" tracking="false" statistics-enabled="false">
+    <connection-url>jdbc:postgresql://${meveo.admin.server.name}:${meveo.admin.port.number}/${meveo.admin.database.name}</connection-url>
+    <driver>${meveo.admin.database.driver}</driver>
+    <new-connection-sql>select 1</new-connection-sql>
+    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+    <pool>
+        <min-pool-size>1</min-pool-size>
+        <max-pool-size>20</max-pool-size>
+        <prefill>false</prefill>
+        <use-strict-min>false</use-strict-min>
+        <flush-strategy>FailingConnectionOnly</flush-strategy>
+    </pool>
+    <security>
+        <user-name>${meveo.admin.database.username}</user-name>
+        <password>${meveo.admin.database.password}</password>
+    </security>
+    <validation>
+        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
+        <validate-on-match>true</validate-on-match>
+        <background-validation>false</background-validation>
+        <use-fast-fail>true</use-fast-fail>
+        <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"/>
+    </validation>
+    <timeout>
+        <blocking-timeout-millis>60000</blocking-timeout-millis>
+        <idle-timeout-minutes>15</idle-timeout-minutes>
+    </timeout>
+    <statement>
+        <share-prepared-statements>true</share-prepared-statements>
+    </statement>
+</datasource>
+```
+
+If you need a XA datasource you can use instead :
 
 ```
 <xa-datasource jndi-name="java:jboss/datasources/MeveoAdminDatasource" pool-name="meveo" enabled="true" use-java-context="true" use-ccm="false">
