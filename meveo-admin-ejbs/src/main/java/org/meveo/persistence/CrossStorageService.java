@@ -375,7 +375,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					}
 				}
 				
-				log.info("Sub fields for storage {} = {}", storage.getCode(), storageSubFields);
+				log.debug("Sub fields for storage {} = {}", storage.getCode(), storageSubFields);
 				StorageQuery query = new StorageQuery();
 				query.setCet(cet);
 				query.setFetchFields(fetchFields);
