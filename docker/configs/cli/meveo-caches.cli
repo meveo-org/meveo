@@ -1,21 +1,11 @@
 /subsystem=infinispan/cache-container=meveo:add
 
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-multiTenant-cache:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-price-plan:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-usage-charge-template-cache:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-charge-instance-cache:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-counter-cache:add
 
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-edr-cache:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-edr-cache/memory=object:add(size=100000)
 
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-access-cache:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-cft-cache:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-cet-cache:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-notification-cache:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-balance:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-reservedBalance:add
-/subsystem=infinispan/cache-container=meveo/local-cache=meveo-usageChargeInstanceWallet:add
 /subsystem=infinispan/cache-container=meveo/local-cache=meveo-running-jobs:add
 
 /subsystem=infinispan/cache-container=meveo/local-cache=unique-crt:add

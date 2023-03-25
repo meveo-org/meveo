@@ -310,20 +310,9 @@ Search for `subsystem xmlns="urn:jboss:domain:infinispan"` and add the cache con
 ```
 <cache-container name="meveo">
     <local-cache name="meveo-multiTenant-cache"/>
-    <local-cache name="meveo-price-plan"/>
-    <local-cache name="meveo-usage-charge-template-cache"/>
-    <local-cache name="meveo-charge-instance-cache"/>
-    <local-cache name="meveo-counter-cache"/>
-    <local-cache name="meveo-edr-cache">
-        <object-memory size="100000"/>
-    </local-cache>
-    <local-cache name="meveo-access-cache"/>
     <local-cache name="meveo-cft-cache"/>
     <local-cache name="meveo-cet-cache"/>
     <local-cache name="meveo-notification-cache"/>
-    <local-cache name="meveo-balance"/>
-    <local-cache name="meveo-reservedBalance"/>
-    <local-cache name="meveo-usageChargeInstanceWallet"/>
     <local-cache name="meveo-running-jobs"/>
     <local-cache name="unique-crt">
         <expiration interval="300000" lifespan="300000"/>
