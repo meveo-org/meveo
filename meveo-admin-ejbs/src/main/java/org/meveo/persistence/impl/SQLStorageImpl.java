@@ -186,7 +186,7 @@ public class SQLStorageImpl implements StorageImpl {
 				List<String> sqlFields = PersistenceUtils.filterFields(fetchFields, cfts, DBStorageType.SQL);
 				if (cet.getSqlStorageConfiguration().isStoreAsTable()) {
 					final Map<String, Object> customTableValue = customTableService.findById(repository.getCode(), cet, uuid, sqlFields);
-					replaceKeys(cet, sqlFields, customTableValue);
+					replaceKeys(cfts.values(), customTableValue);
 					if(customTableValue != null) {
 						foundEntity = true;
 						values.putAll(customTableValue);
@@ -279,7 +279,8 @@ public class SQLStorageImpl implements StorageImpl {
 			
 			if (query.getCet().getSqlStorageConfiguration().isStoreAsTable()) {
 				final List<Map<String, Object>> values = customTableService.list(query.getStorageConfiguration().getCode(), query.getCet(), sqlPaginationConfiguration);
-				values.forEach(v -> replaceKeys(query.getCet(), query.getFetchFields(), v));
+				Collection<CustomFieldTemplate> cfts=getCFT(query.getCet(), query.getFetchFields());
+				values.forEach(v -> replaceKeys(cfts,  v));
 				return values;
 
 			} else {
@@ -448,18 +449,18 @@ public class SQLStorageImpl implements StorageImpl {
 		return null;
 	}
 
-	public void replaceKeys(CustomEntityTemplate cet, Collection<String> sqlFields, Map<String, Object> customTableValue) {
+	public Collection<CustomFieldTemplate> getCFT(CustomEntityTemplate cet, Collection<String> sqlFields){
 		if (sqlFields != null && !sqlFields.isEmpty()) {
-			List<CustomFieldTemplate> cfts = sqlFields
-					.stream()
+			return sqlFields.stream()
 					.map(field -> this.customFieldTemplateService.find(field, cet))
 					.collect(Collectors.toList());
-
-			customTableService.replaceKeys(cfts, customTableValue);
 		} else {
-			final Collection<CustomFieldTemplate> cfts = customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
-			customTableService.replaceKeys(cfts, customTableValue);
+			return   customFieldTemplateService.findByAppliesTo(cet.getAppliesTo()).values();
 		}
+	}
+
+	public void replaceKeys(Collection<CustomFieldTemplate> cfts, Map<String, Object> customTableValue) {
+		customTableService.replaceKeys(cfts, customTableValue);
 	}
 	
 	private CustomEntityInstance getCustomEntityInstance(String cetCode, String code, Map<String, Object> values) {
