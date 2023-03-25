@@ -47,7 +47,7 @@
 			label="#{customEntityInstanceListBean.customEntityTemplate.name} #{messages['customEntityInstance.search']}"
 			backingBean="#{customEntityInstanceListBean}" renderNewButton="false">
 
-			<hftl:searchField label="#{messages['BusinessEntity.uuid']}" field="uuid"/>
+			<hftl:searchField label="#{messages['BusinessEntity.uuid']}" field="uuid" maxlength="255"/>
 
 			<c:if
 				test="#{customEntityInstanceListBean.customEntityTemplate.storedIn(DBStorageType.SQL)}">
