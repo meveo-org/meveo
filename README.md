@@ -25,7 +25,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Docker Installation](./docker/README.md)
 
-[Installation on a wildfly instance](./WILDFLY_INSTALL.md)
+[Installation on a wildfly instance](./documentation/installation/WILDFLY_INSTALL.md)
 
 [Debugging](./documentation/DEBUGGING.md)
 
