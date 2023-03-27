@@ -131,7 +131,7 @@ sudo ./jboss-cli.sh --file=adapter-install-offline.cli
 ```
 ### Standalone file
 
-You can create the standalone file manually but here we simply used the prepackaged module 
+You can [create the standalone file manually](./WILDFLY_STANDALONE.md) but here we simply used the prepackaged module 
 available in the meveo github repository
 
     
