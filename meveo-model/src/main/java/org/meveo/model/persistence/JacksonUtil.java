@@ -148,6 +148,10 @@ public class JacksonUtil {
         return OBJECT_MAPPER.readValue(value, clazz);
     }
 
+    public static <T> T read(String string, TypeReference<T> typeReference) throws JsonParseException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.readValue(string, typeReference);
+    }
+    
     @SuppressWarnings("unchecked")
     public static <T> T clone(T value) {
         return fromString(toString(value), (Class<T>) value.getClass());

@@ -16,7 +16,9 @@
 
 package org.meveo.api.rest.technicalservice;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -42,6 +44,7 @@ import javax.servlet.http.Part;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.listener.StartupListener;
 import org.meveo.api.rest.technicalservice.impl.EndpointResponse;
@@ -78,6 +81,8 @@ public class EndpointServlet extends HttpServlet {
 
     private static final long serialVersionUID = -8425320629325242067L;
 
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
+
     private static Logger log = LoggerFactory.getLogger(EndpointServlet.class);
 
     @EJB
@@ -92,16 +97,40 @@ public class EndpointServlet extends HttpServlet {
     @Inject
     private EndpointExecutionFactory endpointExecutionFactory;
 
+    private void returnError(HttpServletResponse resp, int status, String error, String message, String details){
+        resp.setStatus(status);
+        resp.setContentType(MediaType.APPLICATION_JSON);
+        JSONObject jsonObject = new JSONObject();
+        if(error!=null){
+            jsonObject.put("error", error);
+        }
+        if(message!=null){
+            jsonObject.put("message", message);
+        }
+        if(details!=null){
+            jsonObject.put("details", details);
+        }
+        try{ 
+            resp.getWriter().println(jsonObject.toString());
+        }catch(IOException e){
+            log.error("Error while writing error response", e);
+        }
+    }
+    
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
+        try {
+            final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                    .setParameters(parameters)
+                    .setMethod(EndpointHttpMethod.DELETE)
+                    .createEndpointExecution();
 
-        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
-                .setParameters(parameters)
-                .setMethod(EndpointHttpMethod.DELETE)
-                .createEndpointExecution();
-
-        doRequest(endpointExecution, true);
+            doRequest(endpointExecution, true);
+        } catch (Exception e) {
+            returnError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error", e.getMessage(), e.toString());
+        }
     }
 
     @Override
@@ -128,77 +157,138 @@ public class EndpointServlet extends HttpServlet {
     }
 
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                .setParameters(new HashMap<>(req.getParameterMap()))
+                .setMethod(EndpointHttpMethod.PATCH)
+                .createEndpointExecution();
 
-        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
-            .setParameters(new HashMap<>(req.getParameterMap()))
-            .setMethod(EndpointHttpMethod.PATCH)
-            .createEndpointExecution();
-
-        doRequest(endpointExecution, false);
+            doRequest(endpointExecution, false);
+        } catch (Exception e) {
+            returnError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error", e.getMessage(), e.toString());
+        }
     }
+
 
     protected void doPutPost(HttpServletRequest req, HttpServletResponse resp,EndpointHttpMethod method) throws ServletException, IOException {
         Map<String, Object> parameters = new HashMap<>();
         String contentType = req.getHeader("Content-Type");
+        try{
+            if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
+                Collection<Part> parts = req.getParts();
+                for(var part : parts) {
+                    Object partValue;
+                    if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_JSON)) {
+                        try {
+                            partValue = JacksonUtil.read(part.getInputStream(), MAP_TYPE_REFERENCE);
+                        } catch (JsonParseException e) {
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                             "Cannot parse part '"+part.getName()+"'' is not a well formed json", 
+                             e.getMessage(), e.getRequestPayloadAsString());
+                             return;
+                        } catch (Exception e){
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                            "Error parsing part '"+part.getName()+"'", 
+                             e.getMessage(), e.toString());
+                            return;
+                        }
+                    } else if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_XML)) {
+                        XmlMapper xmlMapper = new XmlMapper();
+                        try {
+                            partValue = xmlMapper.readValue(part.getInputStream(), MAP_TYPE_REFERENCE);
+                        }  catch (JsonParseException e) {
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                             "Cannot parse part '"+part.getName()+"'' is not a well formed xml", 
+                             e.getMessage(), e.getRequestPayloadAsString());
+                             return;
+                        } catch (Exception e){
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                            "Error parsing part '"+part.getName()+"'", 
+                             e.getMessage(), e.toString());
+                            return;
+                        }
+                    } else if(part.getSubmittedFileName() != null) {
+                        partValue = part.getInputStream();
+                    } else {
+                        partValue = IOUtils.toString(part.getInputStream(), StandardCharsets.UTF_8);
+                    }
+                    parameters.put(part.getName(), partValue);
+                }
 
-        if (contentType != null && contentType.startsWith(MediaType.MULTIPART_FORM_DATA)) {
-        	Collection<Part> parts = req.getParts();
-        	for(var part : parts) {
-        		Object partValue;
-		        if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_JSON)) {
-		        	partValue = JacksonUtil.read(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
-		        } else if (part.getContentType() != null && part.getContentType().startsWith(MediaType.APPLICATION_XML)) {
-		            XmlMapper xmlMapper = new XmlMapper();
-		            partValue = xmlMapper.readValue(part.getInputStream(), new TypeReference<Map<String, Object>>() {});
-		        } else if(part.getSubmittedFileName() != null) {
-		        	partValue = part.getInputStream();
-		        } else {
-		        	partValue = IOUtils.toString(part.getInputStream(), StandardCharsets.UTF_8);
-		        }
-		        parameters.put(part.getName(), partValue);
-        	}
+            } else {
+                String requestBody = StringUtils.readBuffer(req.getReader());
+                parameters.put("REQUEST_BODY",requestBody);
+                if (!StringUtils.isBlank(requestBody) && contentType != null) {
+                    if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
+                        try {
+                            parameters = JacksonUtil.read(requestBody, MAP_TYPE_REFERENCE);
+                        } catch (JsonParseException e) {
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                             "Cannot parse body, it is not a well formed json", 
+                             e.getMessage(), e.getRequestPayloadAsString());
+                             return;
+                        } catch (Exception e){
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                            "Error parsing body", 
+                             e.getMessage(), e.toString());
+                            return;
+                        }
+                    } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
+                        XmlMapper xmlMapper = new XmlMapper();
+                        try {
+                            parameters = xmlMapper.readValue(requestBody, MAP_TYPE_REFERENCE);
+                        } catch (JsonParseException e) {
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                             "Cannot parse body, it is not a well formed xml", 
+                             e.getMessage(), e.getRequestPayloadAsString());
+                             return;
+                        } catch (Exception e){
+                            returnError(resp, HttpServletResponse.SC_BAD_REQUEST,
+                            "Error parsing body", 
+                             e.getMessage(), e.toString());
+                            return;
+                        }
+                    }
+                }
+            }
 
-        } else {
-            String requestBody = StringUtils.readBuffer(req.getReader());
-            parameters.put("REQUEST_BODY",requestBody);
-        	if (!StringUtils.isBlank(requestBody) && contentType != null) {
-		        if (contentType.startsWith(MediaType.APPLICATION_JSON)) {
-		            parameters = JacksonUtil.fromString(requestBody, new TypeReference<Map<String, Object>>() {});
-		        } else if (contentType.startsWith(MediaType.APPLICATION_XML) || contentType.startsWith(MediaType.TEXT_XML)) {
-		            XmlMapper xmlMapper = new XmlMapper();
-		            parameters = xmlMapper.readValue(requestBody, new TypeReference<Map<String, Object>>() {});
-		        }
-        	}
+            final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                    .setParameters(parameters)
+                    .setMethod(EndpointHttpMethod.POST)
+                    .createEndpointExecution();
+
+            doRequest(endpointExecution, false);
+        } catch (Exception e) {
+            returnError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing query", e.getMessage(), e.toString());
         }
-
-        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
-                .setParameters(parameters)
-                .setMethod(EndpointHttpMethod.POST)
-                .createEndpointExecution();
-
-        doRequest(endpointExecution, false);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try{
+            final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                    .setParameters(new HashMap<>(req.getParameterMap()))
+                    .setMethod(EndpointHttpMethod.GET)
+                    .createEndpointExecution();
 
-        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
-                .setParameters(new HashMap<>(req.getParameterMap()))
-                .setMethod(EndpointHttpMethod.GET)
-                .createEndpointExecution();
-
-        doRequest(endpointExecution, false);
+            doRequest(endpointExecution, false);
+        } catch (Exception e) {
+            returnError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing query", e.getMessage(), e.toString());
+        }
     }
 
     @Override
     protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        try {
+            final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
+                    .setParameters(new HashMap<>(req.getParameterMap()))
+                    .setMethod(EndpointHttpMethod.HEAD)
+                    .createEndpointExecution();
 
-        final EndpointExecution endpointExecution = endpointExecutionFactory.getExecutionBuilder(req, resp)
-                .setParameters(new HashMap<>(req.getParameterMap()))
-                .setMethod(EndpointHttpMethod.HEAD)
-                .createEndpointExecution();
-
-        doRequest(endpointExecution, false);
+            doRequest(endpointExecution, false);
+        } catch (Exception e) {
+            returnError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error processing query", e.getMessage(), e.toString());
+        }
     }
 
 
@@ -213,7 +303,9 @@ public class EndpointServlet extends HttpServlet {
 
         if(endpoint==null){
                 endpointExecution.getResp().setStatus(404);
-                endpointExecution.getResp().getWriter().print("Endpoint not found");
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("error", "Endpoint not found");
+                endpointExecution.getResp().getWriter().print(jsonObject.toString());
                 return;
         }
 
@@ -234,7 +326,9 @@ public class EndpointServlet extends HttpServlet {
                     	parameterName = param.getParameterName();
                 	if(!endpointExecution.getParameters().containsKey(parameterName)) {
 	                    endpointExecution.getResp().setStatus(400);
-						endpointExecution.getResp().getWriter().println("Parameter '" + parameterName + "' is missing");
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("error", "Parameter '" + parameterName + "' is missing");
+						endpointExecution.getResp().getWriter().println(jsonObject.toString());
 		                return;
                 	}
                 }
@@ -245,7 +339,9 @@ public class EndpointServlet extends HttpServlet {
         boolean endpointSecurityEnabled = Boolean.parseBoolean(ParamBean.getInstance().getProperty("endpointSecurityEnabled", "true"));
         if (endpointSecurityEnabled && endpoint != null && !endpointApi.isUserAuthorized(endpoint)) {
             endpointExecution.getResp().setStatus(403);
-            endpointExecution.getResp().getWriter().print("You are not authorized to access this endpoint");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("error", "You are not authorized to access this endpoint");
+            endpointExecution.getResp().getWriter().print(jsonObject.toString());
             return;
         }
 
@@ -285,8 +381,7 @@ public class EndpointServlet extends HttpServlet {
             }
         } catch (Exception e) {
             log.error("Error while executing request", e);
-            endpointExecution.getResp().setStatus(500);
-            endpointExecution.getResp().getWriter().print(e.toString());
+            returnError(endpointExecution.getResp(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while executing request", e.getMessage(), e.toString());
         } finally {
             if(endpointExecution.getResponse().getOutput() == null) {
                 endpointExecution.getResp().getWriter().flush();
