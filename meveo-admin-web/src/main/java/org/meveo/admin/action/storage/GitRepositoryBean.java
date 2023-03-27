@@ -425,15 +425,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public String getGitCloneUrl() {
 		try {
 			ParamBean paramBean = ParamBean.getInstance();			
-			String webContext = paramBean.getProperty("meveo.admin.webContext", "meveo");
-			String baseUrlConfig = paramBean.getProperty("meveo.admin.baseUrl", "http://localhost:8080/");
+			String baseUrlConfig = paramBean.getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo");
 			URL baseUrl = new URL(baseUrlConfig);
 
 			return baseUrl.getProtocol() + "://"
 				+ currentUser.getUserName() 
 				+ ":<password>@" 
 				+ baseUrlConfig.replace(baseUrl.getProtocol() + "://","") 
-				+ webContext 
 				+ "/git/" 
 				+ this.entity.getCode();
 		}
