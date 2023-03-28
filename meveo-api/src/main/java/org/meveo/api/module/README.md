@@ -2,7 +2,15 @@
 
 A Module is an entity containing CET, CRT, CFT, CEI, Functions, endpoints, notification, files.
 
-It can be exported / imported as a [json file](./../../../../../../../../meveo-api-dto/src/main/java/org/meveo/api/dto/module/MeveoModuleDto.java)
+It is essentially a git repository with json files containg the definition of the ontology (data model), endpoints, functions, jobs, notifications, credentials, ...
+
+It also contains facets that allow to use different views of the module in a specific computer language / framework / context
+For instance 
+* a function written in java will have its code in `/facets/java`
+* an entity will have its json schema in `/facets/json` and its java class in `facet/java`
+* an endpoint will have a javascript class allowing to easily call the endpoint in a frontend or node program in `/facets/javascript/endpoint/`
+
+For legacy purpose it can also be exported / imported as a [json file](./../../../../../../../../meveo-api-dto/src/main/java/org/meveo/api/dto/module/MeveoModuleDto.java)
 
 ## Create a new module
 
