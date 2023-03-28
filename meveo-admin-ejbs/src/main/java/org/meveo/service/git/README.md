@@ -44,9 +44,9 @@ and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want
 
 ## Git API
 
-You can use the git service in 
+You can use meveo Git service in 
 * meveo web interface, under the menu "Configuration > Storages > Git repositories"
-* as a Rest APS, see [these postman examples](https://github.com/meveo-org/meveo/tree/develop/src/test/apiTests/postman/tests/Git)
+* as a Rest API, see [these postman examples](https://github.com/meveo-org/meveo/tree/develop/src/test/apiTests/postman/tests/Git)
 * directly from your functions, see the usage of `org.meveo.service.git.GitRepositoryService` in this [module function](https://github.com/meveo-org/module-webapprouter/blob/master/facets/java/org/manaty/webapp/WebApp.java)
 
 ## Cloning locally a meveo git repository 
