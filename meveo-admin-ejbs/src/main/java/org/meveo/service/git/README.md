@@ -1,12 +1,35 @@
-# Git
+# Git repositories
 
 Meveo is a git server and client.
 
-Each meveo module has a dedicated repository
+Each meveo module has a dedicated repository.
+You typically install an existing meveo module by cloning its git repository in meveo.
+In the admin console
+* go to "Configuration > Storages > Git repositories" and click the button `New`
+* input a code for the repo (that must be unique in your meveo instance)
+* input the branch you will uses (for instance on github master might not exist, type main)
+* input the `https` url of the remote origin, for instance `https://github.com/meveo-org/mv-elastic`
+* optionally enter a path in the drive where to store the repository (relative to root path of meveodata where all meveo files are stored and accessible via the menu `Execution > Filexplorer`), by default it is store in the `git` directory
+* If your repository requires authentication, input the username and password (for github it is a personal access token)
+* If you want to automatically pull from the origin at a predefined interval, you can select a timer in the autopull combo. You create create your own timers in `Services > Jobs > Timers` 
+* Click `Save` button
+
+![image](https://user-images.githubusercontent.com/16659140/228106851-e1c7d98a-0421-487c-b264-e8ece831dd14.png)
+
+Meveo will ask again for the username and password, it is usefull if you dont want to store the credentials in meveo). You can leave it blank if your repo is public
+
+![image](https://user-images.githubusercontent.com/16659140/228107079-ce533502-536b-4274-bb08-afafd73fe1f8.png)
+
+You should now see the repository in the list
+
+![image](https://user-images.githubusercontent.com/16659140/228107243-b9200639-7f44-46bb-a2da-3cfd5fdf5eb7.png)
+
+and see its files in the file explorer (menu `Execution > Filexplorer`)
+
+![image](https://user-images.githubusercontent.com/16659140/228107585-ce59b795-8ded-405d-97e4-9964b4e7dd17.png)
 
 
-
-## Cloning a module
+## Cloning locally a module 
 
 You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
 
