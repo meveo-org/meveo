@@ -90,32 +90,11 @@ git clone https://meveo.admin:adminpassword@mydomain.com/meveo/git/myModule
 
 To be able to edit the scripts for a given module, you can clone it locally using the code 
 of the module as the code of the git repository.
+![image](https://user-images.githubusercontent.com/16659140/228126009-cd1a2379-84e2-4c14-97f0-3d8469970d5e.png)
+by doing so, each time you create an entity, function,... it will automatically be associated to that module.
 
-## open the module as a maven project
-
-In order to have all the meveo dependencies available locally, you should add you personal 
-github token to your maven settings.xml file.
-
-- [Generate your token](https://github.com/settings/tokens/new) with the following permissions : `read:packages`
-- Configure the github repository in your `~/.m2/settings.xml` file : 
-
-```xml
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-    <server>
-        <id>github</id>
-        <username>GITHUB_ACCOUNT_NAME</username>
-        <password>GITHUB_TOKEN</password>
-    </server>
-</settings>
-```
-
-you can now open the project in vscode
-
-```
-cd myModule/facets/maven
-code .
-```
+When selecting a `Current Module` you also automatically filters all the items in their cruds that belong to the module.
+This means that if you for instance go to `
 
 # Publish to Github
 With no pre-existing repo:
