@@ -31,24 +31,19 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Development Installation](./.devcontainer/README.md)
 
-## Modules
-[Module development](./documentation/MODULE_DEVELOPMENT.md)
+[Module development Installation](./documentation/MODULE_DEVELOPMENT.md)
 
-## Technical documentation
-
-### System
+### Security & Monitoring
 
 - [Security](./meveo-model/src/main/java/org/meveo/security/README.md)
   [Monitoring](./meveo-api/src/main/java/org/meveo/api/rest/monitoring/README.md)
 
 ### Configuration
 
+- [Git repositories](./meveo-admin-ejbs/src/main/java/org/meveo/service/git)
+- [Modules](./meveo-api/src/main/java/org/meveo/api/module)
 - [System settings](./meveo-admin-ejbs/src/main/java/org/meveo/admin/configuration)
-- [Module](./meveo-api/src/main/java/org/meveo/api/module)
 - [User Hierarchy](./meveo-admin-ejbs/src/main/java/org/meveo/service/hierarchy)
-
-### Development
-- [Git](./meveo-admin-ejbs/src/main/java/org/meveo/service/git)
 
 ### Ontology
 
