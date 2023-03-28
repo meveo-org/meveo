@@ -41,6 +41,14 @@ When the `lock` flag is set the Rest endpoint for checking out a repo will deny 
 When a repository has the flag `devMode` set, meveo will detect whenever a file in the repository is overriden (before even commited)
 and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe
 
+
+### Git API
+
+You can use the git service in 
+* meveo web interface, under the menu "Configuration > Storages > Git repositories"
+* as a Rest APS, see [these postman examples](https://github.com/meveo-org/meveo/tree/develop/src/test/apiTests/postman/tests/Git)
+* directly from your functions, see the usage of `org.meveo.service.git.GitRepositoryService` in this [module function](https://github.com/meveo-org/module-webapprouter/blob/master/facets/java/org/manaty/webapp/WebApp.java)
+
 ## Cloning locally a meveo git repository 
 
 You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
