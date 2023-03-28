@@ -248,4 +248,10 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="#684 remove redundant auto_pull" author="Sebastien Michea">
+		<dropColumn tableName="git_repository">
+			<column name="auto_pull"/>  
+		</dropColumn>  
+	</changeSet>
+
 </databaseChangeLog>

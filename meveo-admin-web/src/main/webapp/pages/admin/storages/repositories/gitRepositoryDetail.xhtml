@@ -48,9 +48,8 @@
 					<p:outputLabel value="#{messages['gitRepositories.cloneUrl']}" />
 					<p:outputLabel value="#{gitRepositoryBean.getGitCloneUrl()}" />
 				</h:panelGrid>
-				<hftl:formField label="Automatic pull" field="autoPull"/>
 				<hftl:decorateFormField fieldId="timer" label="Automatic pull timer">
-					<p:selectOneMenu id="timer" value="#{gitRepositoryBean.entity.autoPullTimer}" disabled="#{!gitRepositoryBean.entity.autoPull}">
+					<p:selectOneMenu id="timer" value="#{gitRepositoryBean.entity.autoPullTimer}">
 						<hftl:objectConverter />
 						<f:selectItem itemLabel="#{messages['commons.select']}"/>
 						<f:selectItems value="#{timerEntityBean.listAll()}" var="t_" itemLabel="#{t_.code}" itemValue="#{t_}" />

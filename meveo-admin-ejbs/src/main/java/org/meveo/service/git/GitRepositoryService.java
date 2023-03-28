@@ -214,7 +214,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         super.remove(entity);
         gitClient.remove(entity);
         
-        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        if(entity.getAutoPullTimer() != null) {
         	unScheduleAutoPull(entity);
         }
     }
@@ -229,7 +229,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         gitClient.create(entity, false, null, null);
         super.create(entity);
         
-        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        if(entity.getAutoPullTimer() != null) {
         	scheduleAutoPull(entity);
         }
     }
@@ -240,7 +240,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
         
         super.create(entity);
         
-        if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+        if(entity.getAutoPullTimer() != null) {
         	scheduleAutoPull(entity);
         }
         
@@ -257,7 +257,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     	}
     	
     	Timer autoPullTimer = autoPullTimers.get(new CacheKeyLong(currentUser.getProviderCode(), entity.getId()));
-    	if(entity.isAutoPull() && entity.getAutoPullTimer() != null) {
+    	if(entity.getAutoPullTimer() != null) {
     		if(autoPullTimer == null) {
     			// no timer was set before
     			scheduleAutoPull(entity);
@@ -266,7 +266,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
 				unScheduleAutoPull(entity);
 				scheduleAutoPull(entity);
     		}
-    	} else if((!entity.isAutoPull() || entity.getAutoPullTimer() == null) && autoPullTimer != null) {
+    	} else if(entity.getAutoPullTimer() == null && autoPullTimer != null) {
     		// timer was removed
     		unScheduleAutoPull(entity);
     	}
@@ -328,7 +328,7 @@ public class GitRepositoryService extends BusinessService<GitRepository> {
     public void scheduleAllAutoPulls() {
     	List<GitRepository> activeRepos = this.listActive();
     	for(GitRepository repo : activeRepos) {
-    		if(repo.isAutoPull() && repo.getAutoPullTimer() != null) {
+    		if(repo.getAutoPullTimer() != null) {
     			scheduleAutoPull(repo);
     		}
     	}

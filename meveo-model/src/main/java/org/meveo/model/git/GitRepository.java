@@ -118,10 +118,6 @@ public class GitRepository extends BusinessEntity {
     @Type(type = "numeric_boolean")
     private boolean devMode;
     
-    @Column(name = "auto_pull")
-    @Type(type = "numeric_boolean")
-    private boolean autoPull;
-    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auto_pull_timer_id", referencedColumnName = "id")
     private TimerEntity autoPullTimer;
@@ -302,14 +298,6 @@ public class GitRepository extends BusinessEntity {
 	 */
 	public void setWatchedDirectories(List<String> watchedDirectories) {
 		this.watchedDirectories = watchedDirectories;
-	}
-
-	public boolean isAutoPull() {
-		return autoPull;
-	}
-
-	public void setAutoPull(boolean autoPull) {
-		this.autoPull = autoPull;
 	}
 
 	public TimerEntity getAutoPullTimer() {
