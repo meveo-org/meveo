@@ -4,13 +4,14 @@ Meveo is a git server and client.
 
 Each meveo module has a dedicated repository.
 
-# Cloning in meveo a remote git repository
+## Cloning in meveo a remote git repository
 
 You typically install an existing meveo module by cloning its git repository in meveo.
 In the admin console
 * go to "Configuration > Storages > Git repositories" and click the button `New`
 * input a code for the repo (that must be unique in your meveo instance)
 * input the branch you will uses (for instance on github master might not exist, type main)
+* Select if the dev mode is active (see section below)
 * input the `https` url of the remote origin, for instance `https://github.com/meveo-org/mv-elastic`
 * optionally enter a path in the drive where to store the repository (relative to root path of meveodata where all meveo files are stored and accessible via the menu `Execution > Filexplorer`), by default it is store in the `git` directory
 * If your repository requires authentication, input the username and password (for github it is a personal access token)
@@ -31,6 +32,14 @@ and see its files in the file explorer (menu `Execution > Filexplorer`)
 
 ![image](https://user-images.githubusercontent.com/16659140/228107585-ce59b795-8ded-405d-97e4-9964b4e7dd17.png)
 
+### Lock
+
+When the `lock` flag is set the Rest endpoint for checking out a repo will deny the checkout of the repository's default branch
+
+### Dev mode
+
+When a repository has the flag `devMode` set, meveo will detect whenever a file in the repository is overriden (before even commited)
+and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe
 
 ## Cloning locally a meveo git repository 
 
