@@ -69,6 +69,9 @@ You can use meveo Git service in
 * as a Rest API, see [these postman examples](https://github.com/meveo-org/meveo/tree/develop/src/test/apiTests/postman/tests/Git)
 * directly from your functions, see the usage of `org.meveo.service.git.GitRepositoryService` in this [module function](https://github.com/meveo-org/module-webapprouter/blob/master/facets/java/org/manaty/webapp/WebApp.java)
 
+Note that branch creation or deletion and checkout are not available on the web interface.
+
+
 ## Cloning locally a meveo git repository 
 
 You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
