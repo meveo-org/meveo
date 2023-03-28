@@ -31,12 +31,9 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
 [Development Installation](./.devcontainer/README.md)
 
-[Module development Installation](./documentation/MODULE_DEVELOPMENT.md)
+[Module development Installation](./documentation/MODULE_DEVELOPMENT.md))
 
-### Security & Monitoring
-
-- [Security](./meveo-model/src/main/java/org/meveo/security/README.md)
-  [Monitoring](./meveo-api/src/main/java/org/meveo/api/rest/monitoring/README.md)
+## Using Meveo
 
 ### Configuration
 
@@ -64,6 +61,13 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 
  - [Static pages](./meveo-admin-web/src/main/java/org/meveo/admin/action/frontend)
  - [Module Webapp](https://github.com/meveo-org/module-webapprouter)
+
+## Operating Meveo
+
+### Security & Monitoring
+
+- [Security](./meveo-model/src/main/java/org/meveo/security/README.md)
+  [Monitoring](./meveo-api/src/main/java/org/meveo/api/rest/monitoring/README.md
 
 ### Clustering
 Meveo can be deployed in a wildfly cluster to scale its capabilities.
