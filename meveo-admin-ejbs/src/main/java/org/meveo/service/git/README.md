@@ -4,6 +4,11 @@ Meveo is a git server and client.
 
 Each meveo module has a dedicated repository.
 
+## Creating a git repository
+
+Although it is possible to create a git repository, add files in it then commit [manually, by REST api or programmatically](#git-api) 
+You will most generally create a git repository transparently when [creating a module](https://github.com/meveo-org/meveo/tree/develop/meveo-api/src/main/java/org/meveo/api/module), as each module as an associated git repository.
+
 ## Cloning in meveo a remote git repository
 
 You typically install an existing meveo module by cloning its git repository in meveo.
@@ -41,6 +46,21 @@ When the `lock` flag is set the Rest endpoint for checking out a repo will deny 
 When a repository has the flag `devMode` set, meveo will detect whenever a file in the repository is overriden (before even commited)
 and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe
 
+## Git Actions
+
+Once you have a git repository you can perform standard actions like commit,push, fetch and pull.
+
+### Pull
+
+The pull action can be called with specific credentials (username and password) or use the default one set in the repository.
+This works when the url of the remote origin starts with `http`, if it is an `ssh` url then in that case it is the ssh key of the
+connected user that is used for authentication.
+
+If the git repository is associated to a module then a [ModulePrePull](https://github.com/meveo-org/meveo/blob/develop/meveo-model/src/main/java/org/meveo/model/ModulePrePull.java) and a [ModulePostPull](https://github.com/meveo-org/meveo/blob/develop/meveo-model/src/main/java/org/meveo/model/ModulePostPull.java) event is triggered before and after the pull. Those even can be handled by a [module script](https://github.com/meveo-org/meveo/tree/develop/meveo-api/src/main/java/org/meveo/api/module#using-the-module-script).
+
+## Module installation
+
+If you cloned a remote git repository that correspond to a meveo module, then you can install the module from the screen of the git repository by clicking the `Install Module` button.
 
 ## Git API
 
