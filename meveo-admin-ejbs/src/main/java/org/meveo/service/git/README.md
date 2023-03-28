@@ -42,7 +42,7 @@ When a repository has the flag `devMode` set, meveo will detect whenever a file 
 and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe
 
 
-### Git API
+## Git API
 
 You can use the git service in 
 * meveo web interface, under the menu "Configuration > Storages > Git repositories"
