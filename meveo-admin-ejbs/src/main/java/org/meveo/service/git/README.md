@@ -3,6 +3,9 @@
 Meveo is a git server and client.
 
 Each meveo module has a dedicated repository.
+
+# Cloning in meveo a remote git repository
+
 You typically install an existing meveo module by cloning its git repository in meveo.
 In the admin console
 * go to "Configuration > Storages > Git repositories" and click the button `New`
@@ -29,7 +32,7 @@ and see its files in the file explorer (menu `Execution > Filexplorer`)
 ![image](https://user-images.githubusercontent.com/16659140/228107585-ce59b795-8ded-405d-97e4-9964b4e7dd17.png)
 
 
-## Cloning locally a module 
+## Cloning locally a meveo git repository 
 
 You can clone locally a module git repository hosted in a meveo instance, let say the default `myModule` module from an instance deployed on `https://mydomain.com/meveo` 
 
