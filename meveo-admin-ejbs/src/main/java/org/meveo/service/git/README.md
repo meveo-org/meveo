@@ -44,7 +44,8 @@ When the `lock` flag is set the Rest endpoint for checking out a repo will deny 
 ### Dev mode
 
 When a repository has the flag `devMode` set, meveo will detect whenever a file in the repository is overriden (before even commited)
-and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe
+and will emit a `org.meveo.model.dev.FileChangedEvent` that your code might want to observe.
+It will more important analyse the files modified and update the module (compile the functions, create or update entites,...)
 
 ## Git Actions
 
