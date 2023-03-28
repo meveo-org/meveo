@@ -62,6 +62,7 @@ The default neo4j credentials are: `neo4j / neo4j123`
 ### Externalize all meveo files
 
 To store all meveo files (git files, maven .m2, webapps ...) outside the docker image, first stop the containers and remove the volumes
+
 **Beware that the `-v` option delete the volume, so all meveo data like modules will be lost**
 
 ```sh
