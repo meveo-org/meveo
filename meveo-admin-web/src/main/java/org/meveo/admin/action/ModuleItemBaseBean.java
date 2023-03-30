@@ -5,19 +5,14 @@ import org.meveo.model.IEntity;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.meveo.service.admin.impl.MeveoModuleFilters;
-import org.meveo.service.admin.impl.MeveoModuleService;
 
 @Named
 public abstract class ModuleItemBaseBean<T extends IEntity> extends BaseBean<T>{
 
     private String workingModule;
-
-    @Inject
-    private MeveoModuleService meveoModuleService;
 
     protected ModuleItemBaseBean() {
         super();

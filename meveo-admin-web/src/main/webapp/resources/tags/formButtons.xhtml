@@ -241,7 +241,7 @@
 						</h:panelGroup>
 					</h:panelGroup>
 	
-					<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{backingBean.selectedMeveoModule}"
+					<p:dataTable id="resultModuleTable" var="e" paginator="true" resizableColumns="true" value="#{meveoModuleBean.meveoModules}" rows="10" selection="#{cc.attrs.backingBean.selectedMeveoModule}"
 								 rowKey="#{e.id}" lazy="#{lazy}">
 						<p:column id="multiSelectModule" selectionMode="single" width="4%" exportable="false" toggleable="false" />
 						<p:ajax event="rowSelectCheckbox" />
@@ -262,7 +262,7 @@
 							<p:commandButton value="#{messages['meveoModuleItem.addToModule']}" process="@form @parent" partialSubmit="true"
 											 partialSubmitFilter=":not([name*='omitFromSubmit'])" update="@form @form:moduleGrowl"
 											 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addToModuleDlg').hide()"
-											 action="#{backingBean.addToModule}">
+											 action="#{cc.attrs.backingBean.addToModule}">
 								<p:resetInput target="@form" />
 							</p:commandButton>
 							<p:commandButton value="#{messages['commons.close']}" update="@form"

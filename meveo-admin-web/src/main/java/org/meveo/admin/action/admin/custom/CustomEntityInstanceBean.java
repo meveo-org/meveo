@@ -1,6 +1,7 @@
 package org.meveo.admin.action.admin.custom;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +21,6 @@ import org.meveo.admin.action.CustomFieldBean;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.IllegalTransitionException;
 import org.meveo.admin.web.interceptor.ActionMethod;
-import org.meveo.cache.CustomFieldsCacheContainerProvider;
 import org.meveo.elresolver.ELException;
 import org.meveo.jpa.CurrentRepositoryProvider;
 import org.meveo.model.BusinessEntity;
@@ -34,11 +34,15 @@ import org.meveo.model.crm.custom.CustomFieldValues;
 import org.meveo.model.crm.custom.EntityCustomAction;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.CEIUtils;
 import org.meveo.model.persistence.DBStorageType;
+import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.storage.Repository;
 import org.meveo.model.util.KeyValuePair;
 import org.meveo.persistence.CrossStorageService;
+import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.MeveoValueExpressionWrapper;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.crm.impl.CustomFieldInstanceService;
@@ -89,9 +93,6 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	protected RepositoryService repositoryService;
 
 	@Inject
-	private CustomFieldsCacheContainerProvider cacheContainerProvider;
-
-	@Inject
 	protected CurrentRepositoryProvider repositoryProvider;
 	
 	@Inject
@@ -99,7 +100,7 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 
 	@Inject
 	private transient ScriptInstanceService scriptInstanceService;
-	
+
 	private Map<String, Boolean> secretToDisplayInClear = new HashMap<>();
 
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
@@ -220,7 +221,9 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 					customFieldInstanceService.setCfValues(entity, customEntityTemplateCode, cfValues);
 					entity.setCfValuesOld((CustomFieldValues) SerializationUtils.clone(entity.getCfValues()));
 				}
-
+				setObjectId((long) uuid.hashCode());
+				partOfModules = meveoModuleService.getRelatedModulesAsString(entity.getUuid(), CustomEntityInstance.class.getName(), entity.getCetCode());
+  
 			} catch (Exception e) {
 				log.error("Error during entity init", e);
 			}
@@ -577,6 +580,27 @@ public class CustomEntityInstanceBean extends CustomFieldBean<CustomEntityInstan
 	public boolean canUserUpdateEntity() {
 		return currentUser.hasRole(customEntityTemplate.getModifyPermission());
 	}
-	
-	
+
+    public void addToModule() throws BusinessException  {
+        if (entity != null) {
+        	MeveoModule module = meveoModuleService.findById(selectedMeveoModule.getId(), Arrays.asList("moduleItems", "patches", "releases", "moduleDependencies", "moduleFiles"));
+        	try {
+				MeveoModuleItem item = new MeveoModuleItem(entity.getUuid(), CustomEntityInstance.class.getName(), entity.getCetCode(), null);
+				item.setItemEntity(entity);
+        		if (!module.getModuleItems().contains(item)) {
+					try {
+						meveoModuleService.addModuleItem(item, module);
+					} catch (BusinessException e2) {
+						throw new BusinessException("Entity cannot be added to the module", e2);
+					}
+					
+				} else {
+					messages.error(new BundleKey("messages", "meveoModule.error.moduleItemExisted"), entity.getUuid(), module.getCode());
+					return;
+				}
+			} catch (BusinessException e) {
+				throw new BusinessException("Entity cannot be added or removeed from the module", e);
+			}
+        }
+    }
 }
