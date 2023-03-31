@@ -10,6 +10,7 @@ Creating a credential can be done directly from the meveo admin page. Follow the
 4. This should display the following form:
 
 ![image](https://user-images.githubusercontent.com/6660853/229021964-19506463-194f-410a-8415-c4d4f467f2a3.png)
+
 5. Fill out the form as needed to connect to the API.  The fields are described below.
     - `Authentication type` - the type of authentication, it will allow entering additional details specific to that type.  There are 5 available types.
       - `API_KEY`
@@ -24,6 +25,7 @@ Creating a credential can be done directly from the meveo admin page. Follow the
     - `Status` - may contain the status of the API
     - `Username` - the username used to connect to the API
     - `Extra parameters` - allows storing multiple key value pairs that may be used to connect to the API
+
 6. Additional fields will be available based on the `Authentication type` selected.
     - `API_KEY`
       - `API key` - this key is usually provided by the API upon registration that is usually sent either in the header or as a request/query parameter.
