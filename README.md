@@ -41,7 +41,7 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Modules](./meveo-api/src/main/java/org/meveo/api/module)
 - [System settings](./meveo-admin-ejbs/src/main/java/org/meveo/admin/configuration)
 - [User Hierarchy](./meveo-admin-ejbs/src/main/java/org/meveo/service/hierarchy)
-- [Credentials] (./meveo-admin-ejbs/src/main/java/org/meveo/service/admin/impl/credentials)
+- [Credentials](./meveo-admin-ejbs/src/main/java/org/meveo/service/admin/impl/credentials)
 
 ### Ontology
 
