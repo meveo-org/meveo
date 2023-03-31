@@ -72,6 +72,11 @@
 	<c:if test="${empty exportButton}">
 		<c:set var="exportButton" value="false" />
 	</c:if>
+
+	<c:if test="${empty exportSelection}">
+		<c:set var="exportSelection" value="true" />
+	</c:if>
+
 	<c:if test="${empty exportXlsxButton}">
 		<c:set var="exportXlsxButton" value="true" />
 	</c:if>
@@ -211,7 +216,7 @@
 <!-- 					type="button" rendered="#{backingBean.getBaseCrudApi() != null}" -->
 <!-- 					onclick="PF('exportSelectionDialog').show()" /> -->
 				<p:commandButton id="buttonSelectionExportJson"
-					rendered="#{backingBean.getBaseCrudApi() != null}"
+					rendered="#{backingBean.getBaseCrudApi() != null and exportSelection}"
 					value="#{messages['commons.exportSelection']}" ajax="false"
 					onclick="PrimeFaces.monitorDownload(null, closeExportDialog)">
 					<p:fileDownload id="exportFileDownload"
