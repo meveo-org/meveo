@@ -44,4 +44,4 @@ Creating a credential can be done directly from the meveo admin page. Follow the
 
 
 ## Sample Template
-A sample template is available at: [ExampleCredentialsScript](https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleCredentialsScript.java)
+A sample template is available at: [ExampleCredentialsScript]([https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleCredentialsScript.java](https://github.com/meveo-org/meveo.github.io/blob/master/functions/ExampleCredentialsScript.java))
