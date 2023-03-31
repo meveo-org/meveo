@@ -10,5 +10,9 @@
 	{
 		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleEndpointScript.java",
 		"description": "Example of REST endpoint script"
+	},
+	{
+		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleCredentialsScript.java",
+		"description": "Call API using meveo credentials"
 	}
 ]
