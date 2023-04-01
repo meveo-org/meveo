@@ -77,6 +77,7 @@
 						listenerUpdate="actions" />
 				</h:panelGroup>
 				<h:panelGroup id="defaultRemotePassword">
+					<h:outputText value="*pass is set already" rendered="#{gitRepositoryBean.entity.defaultRemotePassword != null}"/>
 					<hftl:formField
 						label="#{messages['gitRepositories.defaultRemotePassword']}"
 						field="clearDefaultRemotePassword" componentWidth="30"
@@ -197,7 +198,7 @@
 							value="#{gitRepositoryBean.username}" size="50" />
 					</hftl:decorateFormField>
 					<hftl:decorateFormField fieldId="password"
-						label="#{messages['gitRepositories.password']}">
+						label="#{messages['gitRepositories.password']} #{(gitRepositoryBean.entity.defaultRemotePassword != null)?'(default pass is set)':''}">
 						<h:inputSecret autocomplete="off" id="password"
 							value="#{gitRepositoryBean.password}" size="50" redisplay="true" />
 					</hftl:decorateFormField>
@@ -226,7 +227,7 @@
 							value="#{gitRepositoryBean.username}" size="50" />
 					</hftl:decorateFormField>
 					<hftl:decorateFormField fieldId="password"
-						label="#{messages['gitRepositories.password']}">
+						label="#{messages['gitRepositories.password']} #{(gitRepositoryBean.entity.defaultRemotePassword != null)?'(default pass is set)':''}">
 						<h:inputSecret autocomplete="off" id="password"
 							value="#{gitRepositoryBean.password}" size="50" redisplay="true" />
 					</hftl:decorateFormField>
@@ -255,7 +256,7 @@
 							value="#{gitRepositoryBean.username}" size="50" />
 					</hftl:decorateFormField>
 					<hftl:decorateFormField fieldId="password"
-						label="#{messages['gitRepositories.password']}">
+						label="#{messages['gitRepositories.password']} #{(gitRepositoryBean.entity.defaultRemotePassword != null)?'(default pass is set)':''}">
 						<h:inputSecret autocomplete="off" id="password"
 							value="#{gitRepositoryBean.password}" size="50" redisplay="true" />
 					</hftl:decorateFormField>
@@ -283,7 +284,7 @@
 							size="50" />
 					</hftl:decorateFormField>
 					<hftl:decorateFormField fieldId="password"
-						label="#{messages['gitRepositories.password']}">
+						label="#{messages['gitRepositories.password']} #{(gitRepositoryBean.entity.defaultRemotePassword != null)?'(default pass is set)':''}">
 						<h:inputSecret id="password" value="#{gitRepositoryBean.password}"
 							maxlength="50" redisplay="true" />
 					</hftl:decorateFormField>
@@ -425,7 +426,7 @@
 						<hftl:decorateFormField fieldId="username" label="#{messages['gitRepositories.username']}">
 							<p:inputText id="username" value="#{gitRepositoryBean.username}" size="50" />
 						</hftl:decorateFormField>
-						<hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}">
+						<hftl:decorateFormField fieldId="password" label="#{messages['gitRepositories.password']}  #{(gitRepositoryBean.entity.defaultRemotePassword != null)?'(default pass is set)':''}">
 							<h:inputSecret id="password" value="#{gitRepositoryBean.password}" maxlength="50" redisplay="true" />
 						</hftl:decorateFormField>
 					</h:panelGrid>
