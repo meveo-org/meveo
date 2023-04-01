@@ -176,6 +176,18 @@ public class MeveoModuleBean extends GenericModuleBean<MeveoModule> {
 		return meveoModuleService;
 	}
 
+
+	@Override
+    public MeveoModule initEntity() {
+		super.initEntity();
+		/* if it is a new module we set its repos and tell its installed already */
+		if (getObjectId() == null){
+			entity.setRepositories(repositoryService.list());
+			entity.setInstalled(true);
+		}
+		return entity;
+	}
+	
 	/**
 	 * initialize Modules
 	 */

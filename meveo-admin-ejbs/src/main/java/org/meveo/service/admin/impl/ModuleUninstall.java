@@ -3,10 +3,13 @@
  */
 package org.meveo.service.admin.impl;
 
+import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
+import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.module.MeveoModule;
 
 public class ModuleUninstall {
@@ -29,6 +32,9 @@ public class ModuleUninstall {
 	@PathParam("code")
 	private String moduleCode;
 	
+	private List<CustomEntityTemplate> cets;
+            
+
 	@Deprecated
 	public ModuleUninstall() {
 		
@@ -277,5 +283,14 @@ public class ModuleUninstall {
 		}
 		
 		
+	}
+
+	
+	public List<CustomEntityTemplate> getCets() {
+		return cets;
+	}
+
+	public void setCets(List<CustomEntityTemplate> cets) {
+		this.cets = cets;
 	}
 }

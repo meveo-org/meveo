@@ -250,7 +250,7 @@ public abstract class PersistenceService<E extends IEntity> extends BaseService 
 		queryString.append(" where a.id = :id");
 		Query query = getEntityManager().createQuery(queryString.toString());
 		query.setParameter("id", id);
-
+		query.setMaxResults(1);
 		List<E> results = query.getResultList();
 		E e = null;
 		if (!results.isEmpty()) {

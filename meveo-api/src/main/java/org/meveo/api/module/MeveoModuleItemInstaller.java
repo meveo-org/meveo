@@ -166,6 +166,10 @@ public class MeveoModuleItemInstaller {
         
         List<MeveoModuleItem> moduleItems = meveoModuleService.getSortedModuleItemsForUninstall(module.getModuleItems());
 
+		//we store the cets to be able to delete them after the uninstall
+		List<CustomEntityTemplate> cets = new ArrayList<>();
+		options.setCets(cets);
+		
         // Load items
         for (MeveoModuleItem item : List.copyOf(moduleItems)) {
             // check if moduleItem is linked to other active module
@@ -179,8 +183,13 @@ public class MeveoModuleItemInstaller {
 			}
 
             meveoModuleService.loadModuleItem(item);
+
+			if (item.getItemClass().equals(CustomEntityTemplate.class.getName())) {
+            	cets.add((CustomEntityTemplate)item.getItemEntity());
+			}
         }
         
+
         for (MeveoModuleItem item : moduleItems) {
             uninstallItem(options, moduleScript, item);
         }

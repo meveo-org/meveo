@@ -918,7 +918,7 @@ public class CustomEntityTemplateService extends BusinessService<CustomEntityTem
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void afterModuleUninstall(@Observes @ModulePostUninstall ModuleUninstall event, MeveoModuleHelper moduleHelper) {
         if (event.removeData() && event.removeItems()) {
-            List<CustomEntityTemplate> cets = moduleHelper.getEntities(event.module(), CustomEntityTemplate.class);
+            List<CustomEntityTemplate> cets =event.getCets();
             List<Repository> repositories = event.module().getRepositories();
             cets.stream()
                     .map(e -> {
