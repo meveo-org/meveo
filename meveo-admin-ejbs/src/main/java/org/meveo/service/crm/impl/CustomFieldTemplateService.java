@@ -353,7 +353,7 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             super.create(cft);
         } catch (Exception e) {
             customFieldsCache.removeCustomFieldTemplate(cft);
-            throw e;
+            throw new BusinessException(e);
         }
 
         String entityCode = EntityCustomizationUtils.getEntityCode(cft.getAppliesTo());
@@ -362,7 +362,11 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
 		
 		if (appliesToTemplate != null && cft.getStorages() != null) {
 	        for (var storage : cft.getStorages()) {
-	        	provider.findImplementation(storage).cftCreated(appliesToTemplate, cft);
+                try {
+	        	    provider.findImplementation(storage).cftCreated(appliesToTemplate, cft);
+                } catch (Exception e) {
+                    throw new BusinessException(e);
+                }
 	        }
 		}
 		
