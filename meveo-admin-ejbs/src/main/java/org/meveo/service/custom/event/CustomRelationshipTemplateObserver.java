@@ -15,23 +15,26 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.logging.LoggedEvent;
 import org.meveo.event.qualifier.CreatedAfterTx;
 import org.meveo.event.qualifier.PostRemoved;
+import org.meveo.event.qualifier.Removed;
 import org.meveo.event.qualifier.UpdatedAfterTx;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
+import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.persistence.sql.SQLStorageConfiguration;
 import org.meveo.model.sql.SqlConfiguration;
+import org.meveo.service.admin.impl.MeveoModuleItemService;
+import org.meveo.service.base.BusinessService;
+import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.custom.CustomTableCreatorService;
 import org.meveo.service.storage.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.12
- */
+
 @Singleton
 @Startup
 @LoggedEvent
@@ -45,7 +48,31 @@ public class CustomRelationshipTemplateObserver {
 
 	@Inject
 	private RepositoryService repositoryService;
+	@Inject
+    private BusinessServiceFinder businessServiceFinder;
+	
+	@Inject
+	private MeveoModuleItemService meveoModuleItemService;
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void onRemoved(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Removed CustomRelationshipTemplate crt) throws BusinessException {
 
+		log.debug("CRT onRemoved observer={}", crt);
+		BusinessService businessService = businessServiceFinder.find(crt);
+		MeveoModule module = businessService.findModuleOf(crt);
+    	try {
+    		if (module != null) {
+    			businessService.removeFilesFromModule(crt, module);
+				MeveoModuleItem item = meveoModuleItemService.findByBusinessEntity(crt);
+				if (item != null) {
+					module.removeItem(item);
+				}
+    		}
+		} catch (BusinessException e) {
+			throw new BusinessException("CRT: " + crt.getCode() + " cannot be removed");
+		}
+
+	}
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCrtCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @CreatedAfterTx CustomRelationshipTemplate crt) throws BusinessException {
 

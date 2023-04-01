@@ -23,16 +23,15 @@ import org.meveo.event.qualifier.Updated;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityInstanceAuditParameter;
 import org.meveo.model.module.MeveoModule;
+import org.meveo.model.module.MeveoModuleItem;
+import org.meveo.service.admin.impl.MeveoModuleItemService;
 import org.meveo.service.base.BusinessService;
 import org.meveo.service.base.BusinessServiceFinder;
 import org.meveo.service.custom.CustomEntityInstanceAuditService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Edward P. Legaspi | czetsuya@gmail.com
- * @version 6.11.0
- */
+
 @Singleton
 @Startup
 @LoggedEvent
@@ -49,6 +48,9 @@ public class CustomEntityInstanceObserver {
 	
     @Inject
     private BusinessServiceFinder businessServiceFinder;
+
+	@Inject
+	private MeveoModuleItemService meveoModuleItemService;
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void onCreated(@Observes(during = TransactionPhase.AFTER_SUCCESS) @Created CustomEntityInstance cei) {
@@ -94,6 +96,10 @@ public class CustomEntityInstanceObserver {
     	try {
     		if (module != null) {
     			businessService.removeFilesFromModule(cei, module);
+				MeveoModuleItem item = meveoModuleItemService.findByBusinessEntity(cei);
+				if (item != null) {
+					module.removeItem(item);
+				}
     		}
 		} catch (BusinessException e) {
 			throw new BusinessException("CEI: " + cei.getCode() + " cannot be removed");
