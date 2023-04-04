@@ -57,6 +57,12 @@
 					displayOneLine="false" componentWidth="100"
 					actionListenerBean="#{endpointBean}"
 					actionListenerMethod="onFunctionChange" />
+
+				<p:link outcome="scriptInstanceDetail" 	target="_blank" value="↗" style="font-size: x-large; vertical-align: bottom; text-align: left; padding-right: inherit;">
+					<f:param name="objectId" value="#{endpointBean.getScriptInstance().getId()}"/>
+					<f:param name="edit" value="true"/>
+				</p:link>
+
 				<hftl:formField label="#{messages['endpoint.description']}"
 					field="description" />
 				<hftl:decorateFormField field="method" fieldId="method"
