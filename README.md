@@ -48,15 +48,17 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 - [Base API](./meveo-admin-ejbs/src/main/java/org/meveo/api/base/sql)
 - [Persistence](./meveo-admin-ejbs/src/main/java/org/meveo/api/persistence)
 - [Custom Entity](./meveo-admin-ejbs/src/main/java/org/meveo/service/custom)
+- [File system storage](./meveo-admin-ejbs/src/main/java/org/meveo/service/storage)
 
 ### Services
 
 - [Functions](./meveo-admin-ejbs/src/main/java/org/meveo/service/script)
 - [Rest Endpoints](./meveo-admin-ejbs/src/main/java/org/meveo/service/technicalservice/endpoint)
 - [Websocket Endpoints](./meveo-admin-ejbs/src/main/java/org/meveo/service/technicalservice/wsendpoint)
+
+### Workflows & Notifications
 - [Lifecycle Workflows](./meveo-admin-ejbs/src/main/java/org/meveo/service/wf)
 - [Notification](./meveo-admin-ejbs/src/main/java/org/meveo/service/notification)
-- [File system storage](./meveo-admin-ejbs/src/main/java/org/meveo/service/storage)
 
 ### Frontend
 
