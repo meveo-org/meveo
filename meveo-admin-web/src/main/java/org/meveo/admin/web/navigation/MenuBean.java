@@ -265,7 +265,10 @@ public class MenuBean implements Serializable {
 				List<CustomEntityTemplate> firstLevelCets = Optional.ofNullable(category.getCustomEntityTemplates())
 						.orElse(List.of())
 						.stream()
-						.filter(cet -> cet.getSuperTemplate() == null || !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
+						.filter(cet -> cet.isStoreAsTable() 
+										&& (cet.getSuperTemplate() == null 
+											|| !category.getCustomEntityTemplates().contains(cet.getSuperTemplate()))
+								)
 						.collect(Collectors.toList());
 				
 				if (!firstLevelCets.isEmpty()) {
@@ -278,7 +281,9 @@ public class MenuBean implements Serializable {
 		confCet.setFetchFields(List.of("subTemplates"));
 		
 		List<CustomEntityTemplate> cetsWithoutCategories = customEntityTemplateService.list(confCet).stream()
-			.filter(cet -> cet.getCustomEntityCategory() == null && cet.getSuperTemplate() == null)
+			.filter(cet -> cet.isStoreAsTable() 
+							&& cet.getCustomEntityCategory() == null 
+							&& cet.getSuperTemplate() == null)
 			.collect(Collectors.toList());
 		
 		if (!cetsWithoutCategories.isEmpty()) {
