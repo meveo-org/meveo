@@ -1,5 +1,7 @@
 package org.meveo.service.crm.impl;
 
+import java.io.File;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -54,6 +56,7 @@ import org.meveo.model.crm.custom.CustomFieldStorageTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.crm.custom.CustomFieldValue;
 import org.meveo.model.crm.custom.CustomFieldValues;
+import org.meveo.model.customEntities.BinaryProvider;
 import org.meveo.model.customEntities.CustomEntityInstance;
 import org.meveo.model.customEntities.CustomEntityTemplate;
 import org.meveo.model.persistence.DBStorageType;
@@ -714,6 +717,10 @@ public class CustomFieldInstanceService extends BaseService {
         		
         	} else {
         		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
+                if(cft.getFieldType() == CustomFieldTypeEnum.BINARY && (cfValue.getListBinaries() == null
+                        || cfValue.getListBinaries().isEmpty())){
+                    cfValue.setListBinaries(Arrays.asList(new BinaryProvider(new File(value.toString()))));
+                }
         	}
         	
             log.trace("Setting CF value 2. Code: {}, cfValue {}", cfCode, cfValue);
