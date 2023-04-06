@@ -47,7 +47,7 @@
 	<hftl:decorateFormField for="#{fieldPrefix}viewBinaryValue"
 		label="#{cft.description}#{cft.valueRequired?' *':''}"
 		componentWidth="100" displayOneLine="false" >
-		<p:outputPanel id="wrapper">
+		<p:outputPanel >
 			<h:outputText title="#{field.binaryValue.fileName}"
 						  value="#{of:abbreviate(field.stringValue, 25)}"></h:outputText>
 			<p:commandButton ajax="false" rendered="#{field.binaryValue != null}"
