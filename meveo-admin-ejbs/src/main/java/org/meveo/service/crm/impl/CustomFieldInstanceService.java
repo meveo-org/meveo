@@ -717,7 +717,7 @@ public class CustomFieldInstanceService extends BaseService {
         		
         	} else {
         		cfValue = entity.getCfValuesNullSafe().setValue(cfCode, value);
-                if(cft.getFieldType() == CustomFieldTypeEnum.BINARY && (cfValue.getListBinaries() == null
+                if(value!=null && cft.getFieldType() == CustomFieldTypeEnum.BINARY && (cfValue.getListBinaries() == null
                         || cfValue.getListBinaries().isEmpty())){
                     cfValue.setListBinaries(Arrays.asList(new BinaryProvider(new File(value.toString()))));
                 }
