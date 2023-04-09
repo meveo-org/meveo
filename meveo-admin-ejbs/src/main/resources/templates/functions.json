@@ -14,5 +14,13 @@
 	{
 		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleCredentialsScript.java",
 		"description": "Call API using meveo credentials"
+	},
+	{
+		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExampleModuleScript.java",
+		"description": "Check Role exist before a module is installed"
+	},
+	{
+		"url": "https://raw.githubusercontent.com/meveo-org/meveo.github.io/master/functions/ExecuteScriptByCode.java",
+		"description": "Call a script by its code"
 	}
 ]
