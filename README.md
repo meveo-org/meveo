@@ -38,8 +38,9 @@ Fontend kitchensink demo https://frontend.meveo.org for a demo of all the web co
 ### Configuration
 
 - [Git repositories](./meveo-admin-ejbs/src/main/java/org/meveo/service/git)
-- [Modules](./meveo-api/src/main/java/org/meveo/api/module)
 - [System settings](./meveo-admin-ejbs/src/main/java/org/meveo/admin/configuration)
+- [Modules](./meveo-api/src/main/java/org/meveo/api/module)
+- [Users](.meveo-admin-ejbs/src/main/java/org/meveo/service/admin/impl/README.md)
 - [User Hierarchy](./meveo-admin-ejbs/src/main/java/org/meveo/service/hierarchy)
 - [Credentials](./meveo-admin-ejbs/src/main/java/org/meveo/service/admin/impl/credentials)
 
