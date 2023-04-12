@@ -72,6 +72,7 @@
 	</changeSet>
 
 	<changeSet id="Add extra_parameters to mv_credential - #686" author="Tony Alejandro">
+		<validCheckSum>0898717c76fa135fcea13957b7ba4013</validCheckSum>
 		<addColumn tableName="mv_credential">
 			<column name="extra_parameters" type="${type.json}" />
 		</addColumn>
