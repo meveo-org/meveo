@@ -72,10 +72,13 @@
 	</changeSet>
 
 	<changeSet id="Add extra_parameters to mv_credential - #686" author="Tony Alejandro">
-		<validCheckSum>0898717c76fa135fcea13957b7ba4013</validCheckSum>
 		<addColumn tableName="mv_credential">
-			<column name="extra_parameters" type="${type.json}" />
+			<column name="extra_parameters" type="jsonb" />
 		</addColumn>
+	</changeSet>
+
+	<changeSet id="change extra_parameters type to json - #686" author="Tony Alejandro">
+		<modifyDataType tableName="mv_credential" columnName="extra_parameters" newDataType="${type.json}" />
 	</changeSet>
 	
 	<changeSet id="Websocket client" author="Clément Bareth">
