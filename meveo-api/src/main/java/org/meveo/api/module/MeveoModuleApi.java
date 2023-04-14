@@ -1774,8 +1774,13 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 
 	public void computeItemsToDelete(Set<MeveoModuleItem> deleteItems, File directory, String fileName, String moduleCode) {
 		var itemtoDelete = getExistingItemFromFile(directory, fileName);
-		if (itemtoDelete != null && itemtoDelete.getMeveoModule().getCode().equals(moduleCode)) {
-			deleteItems.add(itemtoDelete);
+		if (itemtoDelete != null) {
+			if (itemtoDelete.getMeveoModule() == null) {
+				log.warn("Item without module: {}", itemtoDelete);
+				deleteItems.add(itemtoDelete);
+			} else if (itemtoDelete.getMeveoModule().getCode().equals(moduleCode)) {
+				deleteItems.add(itemtoDelete);
+			}
 		}
 	}
 
