@@ -303,8 +303,11 @@ public class MavenConfigurationService implements Serializable {
 		//TODO: Avoid this code when module just got uninstalled
 		
 		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getGitRepository());
-		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
-
+		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();		
+			
+		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
+		source.toFile().mkdirs();
+	
 		log.debug("Generating pom.xml file");
 		
 		File pomFile = this.moduleService.findPom(module);
@@ -319,25 +322,6 @@ public class MavenConfigurationService implements Serializable {
 		
 		if (model.getPomFile() == null) {
 			model.setBuild(new Build());
-		}
-		
-		// Create symlink for java folder
-		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
-		source.toFile().mkdirs();
-		
-		Path link = Paths.get(gitRepo.getPath(), "facets", "maven", "src", "main", "java");
-		Path relativeSrc = link.getParent().relativize(source);
-		
-		try {
-
-			link.getParent().toFile().mkdirs();
-			try {
-				Files.createSymbolicLink(link, relativeSrc);
-			} catch (FileAlreadyExistsException e) {
-				//NOOP
-			}
-		} catch (IOException e1) {
-			log.error("Failed to create symbolic link for java source", e1);
 		}
 		
 		// Create .gitignore file
