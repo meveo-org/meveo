@@ -374,7 +374,7 @@ public class MavenConfigurationService implements Serializable {
 		Parent parent = new Parent();
 		parent.setArtifactId("facets");
 		parent.setGroupId("org.meveo");
-		parent.setVersion("1.0.0");
+		parent.setVersion(module.getCurrentVersion());
 		model.setParent(parent);
 
 		model.setGroupId("org.meveo");//TODO: Add group id to module
