@@ -969,6 +969,15 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 				.resolve("pom.xml")
 				.toFile();
 	}
+	
+	
+	public File findParentPom(MeveoModule module) {
+		return GitHelper.getRepositoryDir(null, module.getGitRepository())
+				.toPath()
+				.resolve("facets")
+				.resolve("pom.xml")
+				.toFile();
+	}
 
 	@Override
 	public void addFilesToModule(MeveoModule entity, MeveoModule module) throws BusinessException {
