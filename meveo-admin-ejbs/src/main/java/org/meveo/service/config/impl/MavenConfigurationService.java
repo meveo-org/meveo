@@ -323,7 +323,7 @@ public class MavenConfigurationService implements Serializable {
 			log.error("Failed to create gitignore", e1);
 		}
 
-		log.debug("Generating pom.xml file---***");
+		log.debug("Generating pom.xml file---");
 
         generateParentPom(message,module,repository);
 
@@ -332,7 +332,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
      private void generateParentPom(String message, MeveoModule module,GitRepository repository) {
-		log.debug("Generating pom.xml file---parents***");
+		
 		File pomFile = this.moduleService.findParentPom(module);
 		final Model model = MavenUtils.readModel(pomFile);
 
@@ -367,7 +367,7 @@ public class MavenConfigurationService implements Serializable {
 	}
 
     private void generateChildPom (String message, MeveoModule module,GitRepository repository,Path file) {
- 	log.debug("Generating pom.xml file---childs***");
+ 	
     	File pomFile = this.moduleService.findPom(module);
 		final Model model = MavenUtils.readModel(pomFile);
 
