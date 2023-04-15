@@ -43,6 +43,7 @@ import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
 import org.apache.maven.model.Repository;
 import org.apache.maven.model.RepositoryPolicy;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
@@ -301,47 +302,87 @@ public class MavenConfigurationService implements Serializable {
 	
 	public void generatePom(String message, MeveoModule module,GitRepository repository) {
 		//TODO: Avoid this code when module just got uninstalled
-		
+
 		File gitRepo = GitHelper.getRepositoryDir(currentUser.get(), module.getGitRepository());
-		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();		
-			
+		Paths.get(gitRepo.getPath(), "facets", "maven").toFile().mkdirs();
+
 		Path source = Paths.get(gitRepo.getPath(), "facets", "java");
 		source.toFile().mkdirs();
-	
-		log.debug("Generating pom.xml file");
-		
-		File pomFile = this.moduleService.findPom(module);
-		final Model model = MavenUtils.readModel(pomFile);
-		 
-		model.setGroupId("org.meveo");//TODO: Add group id to module
-		model.setArtifactId(module.getCode());
-		model.setVersion(module.getCurrentVersion());
-		model.setModelVersion("4.0.0");
-		model.setDependencyManagement(null);
-		model.setDependencies(null);
-		
-		if (model.getPomFile() == null) {
-			model.setBuild(new Build());
-		}
-		
+
 		// Create .gitignore file
 		Path gitIgnore = Paths.get(gitRepo.getPath(), "facets", "maven", ".gitignore");
 		List<String> ignoredPatterns = List.of(
 				"src/main/java/**",
 				"target/"
 			);
-		
+
 		String gitIgnoreFile = String.join("\n", ignoredPatterns);
 		try {
 			MeveoFileUtils.writeAndPreserveCharset(gitIgnoreFile, gitIgnore.toFile());
 		} catch (IOException e1) {
 			log.error("Failed to create gitignore", e1);
 		}
-		
+
+		log.debug("Generating pom.xml file---***");
+
+        generateParentPom(message,module,repository);
+
+		generateChildPom(message,module,repository,gitIgnore);
+
+	}
+
+     private void generateParentPom(String message, MeveoModule module,GitRepository repository) {
+		log.debug("Generating pom.xml file---parents***");
+		File pomFile = this.moduleService.findParentPom(module);
+		final Model model = MavenUtils.readModel(pomFile);
+
+		model.setGroupId("org.meveo");//TODO: Add group id to module
+		model.setArtifactId("facets");
+		model.setVersion(module.getCurrentVersion());
+		model.setModelVersion("4.0.0");
+		model.setDependencyManagement(null);
+		model.setDependencies(null);
+		model.setPackaging("pom");
+
 		Properties properties = new Properties();
 		properties.setProperty("maven.compiler.target", "11");
 		properties.setProperty("maven.compiler.source", "11");
 		model.setProperties(properties);
+
+		List<String> modules = List.of("maven");
+		model.setModules(modules);
+
+		writeToPom(model, pomFile);
+
+		List<File> updatedFiles = List.of(pomFile);
+
+		if (module.isAutoCommit()) {
+			try {
+				gitClient.commitFiles(repository, updatedFiles, message);
+			} catch (BusinessException e) {
+				log.error("Can't commit pom.xml file", e);
+			}
+		}
+
+	}
+
+    private void generateChildPom (String message, MeveoModule module,GitRepository repository,Path file) {
+ 	log.debug("Generating pom.xml file---childs***");
+    	File pomFile = this.moduleService.findPom(module);
+		final Model model = MavenUtils.readModel(pomFile);
+
+		Parent parent = new Parent();
+		parent.setArtifactId("facets");
+		parent.setGroupId("org.meveo");
+		parent.setVersion("1.0.0");
+		model.setParent(parent);
+
+		model.setGroupId("org.meveo");//TODO: Add group id to module
+		model.setArtifactId(module.getCode());
+		model.setVersion(module.getCurrentVersion());
+		model.setModelVersion("4.0.0");
+		model.setDependencyManagement(null);
+		model.setDependencies(null);
 
 		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
 		if (CollectionUtils.isNotEmpty(remoteRepositories)) {
@@ -349,11 +390,11 @@ public class MavenConfigurationService implements Serializable {
 				MavenUtils.addRepository(model, remoteRepository);
 			}
 		}
-		
+
 		// Include meveo bom
 		DependencyManagement dependencyManagement = new DependencyManagement();
 		model.setDependencyManagement(dependencyManagement);
-		
+
 		Dependency meveoBom = new Dependency();
 		meveoBom.setGroupId("org.meveo");
 		meveoBom.setArtifactId("meveo");
@@ -361,7 +402,7 @@ public class MavenConfigurationService implements Serializable {
 		meveoBom.setScope("import");
 		meveoBom.setVersion(System.getProperty("meveo.version", Version.appVersion));
 		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoBom);
-		
+
 		Dependency wildflyBom = new Dependency();
 		wildflyBom.setGroupId("org.wildfly.bom");
 		wildflyBom.setArtifactId("wildfly-jakartaee8-with-tools");
@@ -369,7 +410,7 @@ public class MavenConfigurationService implements Serializable {
 		wildflyBom.setScope("import");
 		wildflyBom.setVersion("18.0.1.Final");
 		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom);
-		
+
 		Dependency wildflyBom2 = new Dependency();
 		wildflyBom2.setGroupId("org.wildfly.bom");
 		wildflyBom2.setArtifactId("wildfly-jakartaee8");
@@ -377,7 +418,7 @@ public class MavenConfigurationService implements Serializable {
 		wildflyBom2.setScope("import");
 		wildflyBom2.setVersion("18.0.1.Final");
 		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom2);
-		
+
 		Dependency wildflyBom3 = new Dependency();
 		wildflyBom3.setGroupId("org.wildfly");
 		wildflyBom3.setArtifactId("wildfly-feature-pack");
@@ -385,7 +426,7 @@ public class MavenConfigurationService implements Serializable {
 		wildflyBom3.setScope("import");
 		wildflyBom3.setVersion("18.0.1.Final");
 		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom3);
-		
+
 		// Use maven pkg repo before meveo instance repo
 		Repository githubRepo = new Repository();
 		githubRepo.setId("github");
@@ -403,14 +444,14 @@ public class MavenConfigurationService implements Serializable {
 		}
 		ownInstance.setUrl(baseUrl + System.getProperty("meveo.moduleName", "meveo") + "/maven");
 		MavenUtils.addRepository(model, ownInstance);
-		
+
 		Dependency meveoDependency = new Dependency();
 		meveoDependency.setGroupId("org.meveo");
 		meveoDependency.setArtifactId("meveo-api");
 		meveoDependency.setVersion(System.getProperty("meveo.version", Version.appVersion));
 		meveoDependency.setScope("import");
 		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoDependency);
-		
+
 		module.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
 			dependency.setGroupId("org.meveo");
@@ -434,10 +475,14 @@ public class MavenConfigurationService implements Serializable {
 			log.error("Error retrieving maven dependencies", e);
 		}
 
-		List<File> updatedFiles = List.of(pomFile, gitIgnore.toFile(), link.toFile());
-		
-		writeToPom(model, pomFile); 
-		
+		Build build = new Build();
+		build.setSourceDirectory("../java");
+		model.setBuild(build);
+
+		List<File> updatedFiles = List.of(pomFile, file.toFile());
+
+		writeToPom(model, pomFile);
+
 		if (module.isAutoCommit()) {
 			try {
 				gitClient.commitFiles(repository, updatedFiles, message);
@@ -446,7 +491,7 @@ public class MavenConfigurationService implements Serializable {
 			}
 		}
 
-	}
+ 	}
 
 	private void writeToPom(Model model, File pomFile) {
 		try {
