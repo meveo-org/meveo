@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.CaseUtils;
+import org.meveo.commons.utils.CamelCaseConverter;
+import org.meveo.commons.utils.CamelCaseUtils;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.model.storage.Repository;
 import org.meveo.persistence.impl.Neo4jStorageImpl;
@@ -165,9 +168,7 @@ public class GraphQLQueryBuilder {
 	 * @return the transformed type
 	 */
 	public static String toV4QueryType(String type) {
-		int length = type.length();
-		return Character.toLowerCase(type.charAt(0)) + type.substring(1, length) + "s";
+		return CamelCaseUtils.camelCase(type, true) + "s";
 	}
-
-
+	
 }
