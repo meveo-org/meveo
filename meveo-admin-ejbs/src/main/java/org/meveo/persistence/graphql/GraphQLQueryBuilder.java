@@ -9,13 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.CaseUtils;
-import org.meveo.commons.utils.CamelCaseConverter;
 import org.meveo.commons.utils.CamelCaseUtils;
 import org.meveo.model.neo4j.Neo4JConfiguration;
-import org.meveo.model.storage.Repository;
-import org.meveo.persistence.impl.Neo4jStorageImpl;
 
 /**
  * 
