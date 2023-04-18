@@ -32,6 +32,7 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.StringUtils;
 import org.meveo.admin.exception.BusinessException;
@@ -2485,19 +2486,24 @@ public class CustomFieldInstanceService extends BaseService {
 			        entityReferenceWrapper.setId(((BigInteger) value).longValue());
 			        value = entityReferenceWrapper;
 			        
-			    } /* else if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof String) {
-			    	EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
-			        if (cetField.getValue().getEntityClazz().equals(User.class.getName())) {
-			            User user = userService.findById(((BigInteger) value).longValue());
-			            entityReferenceWrapper.setCode(user.getUserName());
-			        } else if (cetField.getValue().getEntityClazz().equals(Provider.class.getName())) {
-			            Provider provider = providerService.findById(((BigInteger) value).longValue());
-			            entityReferenceWrapper.setCode(provider.getCode());
-			        }
-			        entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
-			        entityReferenceWrapper.setId(((BigInteger) value).longValue());
-			        value = entityReferenceWrapper;
-			    } */
+			    } else if (cetField.getValue().getFieldType().name().equals("ENTITY") && value instanceof String) {
+			    	if (cetField.getValue().getEntityClazzCetCode().contains(".")) {	// We are dealing with BusinessEntity
+				    	TypedQuery<Long> query = emWrapper.getEntityManager().createQuery(
+				    			"SELECT id FROM " + cetField.getValue().getEntityClazz() + " WHERE code = :code"
+				    			, Long.class);
+				    	query.setParameter("code", value);
+				    	
+				    	try {
+				    		EntityReferenceWrapper entityReferenceWrapper = new EntityReferenceWrapper();
+				    		entityReferenceWrapper.setClassname(cetField.getValue().getEntityClazz());
+				    		entityReferenceWrapper.setId(query.getSingleResult());
+				    		entityReferenceWrapper.setCode((String) value);
+				    		value = entityReferenceWrapper;
+				    	} catch (Exception e) {
+				    		//NOOP
+				    	}
+			    	}
+			    }
 
 			    setCFValue(entity, cetField.getKey(), value);
 			}
