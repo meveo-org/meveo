@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * @author Edward P. Legaspi <czetsuya@gmail.com>
@@ -40,6 +41,7 @@ public class BusinessEntity extends EnableEntity implements ISearchable {
     @Column(name = "code", nullable = false, length = 255)
     @Size(max = 255, min = 1)
     @NaturalId
+    @JsonValue
     protected String code;
 
     /**
