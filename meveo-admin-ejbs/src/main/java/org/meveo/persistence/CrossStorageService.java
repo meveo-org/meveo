@@ -649,24 +649,24 @@ public class CrossStorageService implements CustomPersistenceService {
 			throw new RuntimeException(e);
 		}
 		
-		for (var storage : cet.getAvailableStorages()) {
-			StorageImpl impl = provider.findImplementation(storage);
-			PersistenceActionResult results = null;
-			for (var storageConf : repository.getStorageConfigurations(storage)) {
-				var intermediateResults = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
-				if (intermediateResults != null) {
-					results = intermediateResults;
-				}
-			}
-			if (results != null) {
-				uuid = results.getBaseEntityUuid();
-				if (foundId == null) {
-					ceiAfterPreEvents.setUuid(uuid);
-				}
-			}
-		}
-
 		try {
+		
+			for (var storage : cet.getAvailableStorages()) {
+				StorageImpl impl = provider.findImplementation(storage);
+				PersistenceActionResult results = null;
+				for (var storageConf : repository.getStorageConfigurations(storage)) {
+					var intermediateResults = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
+					if (intermediateResults != null) {
+						results = intermediateResults;
+					}
+				}
+				if (results != null) {
+					uuid = results.getBaseEntityUuid();
+					if (foundId == null) {
+						ceiAfterPreEvents.setUuid(uuid);
+					}
+				}
+			}
 			
 			if(cetClassInstance != null) {
 				if(foundId != null) {
