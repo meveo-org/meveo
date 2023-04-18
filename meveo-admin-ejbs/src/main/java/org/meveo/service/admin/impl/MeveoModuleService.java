@@ -109,6 +109,8 @@ import org.meveo.service.git.GitRepositoryService;
 import org.meveo.service.job.JobExecutionService;
 import org.meveo.service.job.JobInstanceService;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.module.ModuleScriptInterface;
+import org.meveo.service.script.module.ModuleScriptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,6 +151,9 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
     
     @Inject
     private UserService userService;
+    
+    @Inject
+    private ModuleScriptService moduleScriptService;
 
     @Inject
     CommitMessageBean commitMessageBean;
@@ -546,6 +551,10 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 
 	public void releaseModule(MeveoModule entity, String nextVersion) throws BusinessException {
         entity = findById(entity.getId(), Arrays.asList("moduleItems", "patches", "moduleDependencies", "moduleFiles"));
+        ModuleScriptInterface moduleScript = null;
+        if (entity.getScript() != null) {
+        	moduleScript = moduleScriptService.preRelease(entity.getScript().getCode(), entity);
+        }
         ModuleRelease moduleRelease = new ModuleRelease();
         moduleRelease.setCode(entity.getCode());
         moduleRelease.setDescription(entity.getDescription());
@@ -628,11 +637,13 @@ public class MeveoModuleService extends GenericModuleService<MeveoModule> {
 		} catch (IOException e) {
 			throw new BusinessException("Can't install artifact to .m2", e);
 		}
-        
         entity.setCurrentVersion(nextVersion);
         moduleRelease.setMeveoModule(entity);
         entity.getReleases().add(moduleRelease);
         this.update(entity);
+        if (moduleScript != null) {
+        	moduleScriptService.postRelease(moduleScript, entity);
+        }
     }
 
 	/**

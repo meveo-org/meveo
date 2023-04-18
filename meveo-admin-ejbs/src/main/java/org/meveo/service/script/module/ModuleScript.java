@@ -9,13 +9,21 @@ import org.meveo.service.script.Script;
  * @author Andrius Karpavicius
  **/
 public class ModuleScript extends Script implements ModuleScriptInterface {
+	
+	@Override
+	public void preReleaseModule(Map<String, Object> methodContext) throws BusinessException {
+	}
+	
+	@Override
+	public void postReleaseModule(Map<String, Object> methodContext) throws BusinessException {
+	}
 
     @Override
     public void preInstallModule(Map<String, Object> methodContext) throws BusinessException {
     }
 
     @Override
-    public void postInstallModule(java.util.Map<String, Object> methodContext) throws BusinessException {
+    public void postInstallModule(Map<String, Object> methodContext) throws BusinessException {
     }
 
     @Override
@@ -27,19 +35,19 @@ public class ModuleScript extends Script implements ModuleScriptInterface {
     }
 
     @Override
-    public void preEnableModule(java.util.Map<String, Object> methodContext) throws BusinessException {
+    public void preEnableModule(Map<String, Object> methodContext) throws BusinessException {
     }
 
     @Override
-    public void postEnableModule(java.util.Map<String, Object> methodContext) throws BusinessException {
+    public void postEnableModule(Map<String, Object> methodContext) throws BusinessException {
     }
 
     @Override
-    public void preDisableModule(java.util.Map<String, Object> methodContext) throws BusinessException {
+    public void preDisableModule(Map<String, Object> methodContext) throws BusinessException {
     }
 
     @Override
-    public void postDisableModule(java.util.Map<String, Object> methodContext) throws BusinessException {
+    public void postDisableModule(Map<String, Object> methodContext) throws BusinessException {
     }
     
     @Override

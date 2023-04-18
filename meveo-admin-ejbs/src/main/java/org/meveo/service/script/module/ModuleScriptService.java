@@ -13,6 +13,7 @@ import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
+import org.meveo.service.script.ScriptInterface;
 
 @Stateless
 public class ModuleScriptService implements Serializable {
@@ -21,6 +22,19 @@ public class ModuleScriptService implements Serializable {
 
     @Inject
     private ScriptInstanceService scriptInstanceService;
+    
+    public ModuleScriptInterface preRelease(String scriptCode, MeveoModule module) throws BusinessException {
+    	ModuleScriptInterface scriptInterface = (ModuleScriptInterface) scriptInstanceService.getScriptInstance(scriptCode);
+    	Map<String, Object> scriptContext = new HashMap<String, Object>();
+    	scriptInterface.preReleaseModule(scriptContext);
+    	return scriptInterface;
+    }
+    
+    public void postRelease(ModuleScriptInterface scriptInterface, MeveoModule module) throws BusinessException {
+    	Map<String, Object> scriptContext = new HashMap<String, Object>();
+    	scriptContext.put(Script.CONTEXT_ENTITY, module);
+    	scriptInterface.postReleaseModule(scriptContext);
+    }
 
     public ModuleScriptInterface preInstallModule(String scriptCode, MeveoModule module) throws ElementNotFoundException, InvalidScriptException, BusinessException {
         ModuleScriptInterface scriptInterface = (ModuleScriptInterface) scriptInstanceService.getScriptInstance(scriptCode);
