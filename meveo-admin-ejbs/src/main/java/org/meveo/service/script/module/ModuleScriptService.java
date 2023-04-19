@@ -13,7 +13,6 @@ import org.meveo.admin.exception.InvalidScriptException;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.service.script.Script;
 import org.meveo.service.script.ScriptInstanceService;
-import org.meveo.service.script.ScriptInterface;
 
 @Stateless
 public class ModuleScriptService implements Serializable {
