@@ -6,6 +6,24 @@ import org.meveo.admin.exception.BusinessException;
 import org.meveo.service.script.ScriptInterface;
 
 public interface ModuleScriptInterface extends ScriptInterface {
+	
+	/**
+	 * Module being released - called before the release starts
+	 * 
+	 * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+	 * 
+	 * @throws BusinessException business exception.
+	 */
+	public void preReleaseModule(Map<String, Object> methodContext) throws BusinessException;
+	
+	/**
+	 * Module being released - called after the release complete successfully
+	 * 
+	 * @param methodContext Method variables in a form of a map where CONTEXT_ENTITY=MeveoModule
+	 * 
+	 * @throws BusinessException business exception.
+	 */
+	public void postReleaseModule(Map<String, Object> methodContext) throws BusinessException;
 
     /**
      * Module being installed - called before installation starts
