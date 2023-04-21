@@ -658,6 +658,7 @@ public class CrossStorageService implements CustomPersistenceService {
 					var intermediateResults = impl.createOrUpdate(repository, storageConf, ceiAfterPreEvents, customFieldTemplates, foundId);
 					if (intermediateResults != null) {
 						results = intermediateResults;
+						persistedEntities.addAll(results.getPersistedEntities());
 					}
 				}
 				if (results != null) {
