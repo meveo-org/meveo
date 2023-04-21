@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.atteo.evo.inflector.English;
 import org.meveo.commons.utils.CamelCaseUtils;
 import org.meveo.model.neo4j.Neo4JConfiguration;
 import org.meveo.util.Inflector;
