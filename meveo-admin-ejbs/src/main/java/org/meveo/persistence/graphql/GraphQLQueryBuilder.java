@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.atteo.evo.inflector.English;
 import org.meveo.commons.utils.CamelCaseUtils;
 import org.meveo.model.neo4j.Neo4JConfiguration;
+import org.meveo.util.Inflector;
 
 /**
  * 
@@ -163,7 +165,14 @@ public class GraphQLQueryBuilder {
 	 * @return the transformed type
 	 */
 	public static String toV4QueryType(String type) {
-		return CamelCaseUtils.camelCase(type, true) + "s";
+		String queryType = CamelCaseUtils.camelCase(type, true);
+		return Inflector.getInstance().pluralize(queryType);
+	}
+	
+	public static void main (String...strings) {
+		System.out.println(toV4QueryType("SPInvestigation"));
+		System.out.println(toV4QueryType("Media"));
+		System.out.println(toV4QueryType("Criterion"));
 	}
 	
 }
