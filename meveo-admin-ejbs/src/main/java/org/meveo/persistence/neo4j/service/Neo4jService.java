@@ -434,7 +434,8 @@ public class Neo4jService implements CustomPersistenceService {
                     
                 } else {
                     Map<String, Object> editableFields = getEditableFields(cetFields, fields);
-                    String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), uniqueFields, fields, editableFields, labels, uuid);
+                    // Pass an empty map as unique fields to force merge using only the uuid as merge key
+                    String nodeId = neo4jDao.mergeNode(neo4JConfiguration, cet.getCode(), Map.of(), fields, editableFields, labels, uuid);
                     
                     if(nodeId != null) {
                     	persistedEntities.add(new EntityRef(nodeId, cet.getCode()));
