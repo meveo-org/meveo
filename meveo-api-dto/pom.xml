@@ -16,6 +16,7 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
