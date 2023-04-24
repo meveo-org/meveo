@@ -257,7 +257,6 @@
 		<dependency>
 			<groupId>org.omnifaces</groupId>
 			<artifactId>omnifaces</artifactId>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.primefaces</groupId>
