@@ -49,6 +49,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 	private LazyDataModel<Map<String, Object>> nativeDataModel;
 
 	private List<Map<String, Object>> selectedValues;
+	private  List<CustomEntityDataTableColumn> dataTableColumns = new ArrayList<CustomEntityDataTableColumn>();
 
 	public void initialize() {
 
@@ -77,6 +78,7 @@ public class CustomEntityInstanceListBean extends CustomEntityInstanceBean {
 						if(groupedCustomField.getData() instanceof CustomFieldTemplate) {
 							CustomFieldTemplate cft = (CustomFieldTemplate) groupedCustomField.getData();
 							list.add(cft);
+							dataTableColumns.add(new CustomEntityDataTableColumn(cft.getDescription(), cft.getCode()));
 						}
 					}
 					i++;
