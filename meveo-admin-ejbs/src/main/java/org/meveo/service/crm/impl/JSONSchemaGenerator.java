@@ -703,7 +703,7 @@ public class JSONSchemaGenerator {
 		};
 	}
 
-	private List<String> buildDBStorageType(List<DBStorageType> dbStorageTypes) {
+	private List<String> buildDBStorageType(Collection<DBStorageType> dbStorageTypes) {
 		List<String> dbStorageTypeAsString = new ArrayList<>();
 		if (dbStorageTypes != null) {
 			for (DBStorageType dbStorageType : dbStorageTypes) {

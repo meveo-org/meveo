@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JSONSchemaIntoTemplateParser {
 
@@ -73,7 +75,7 @@ public class JSONSchemaIntoTemplateParser {
     private void parseStorage(Map<String, Object> jsonMap, CustomEntityTemplateDto customEntityTemplateDto) {
         if (jsonMap.containsKey("storages")) {
             List<String> storages = (List<String>) jsonMap.get("storages");
-            List<DBStorageType> storageTypeList = new ArrayList<>();
+            Set<DBStorageType> storageTypeList = new HashSet<>();
             for (String storage : storages) {
                 storageTypeList.add(DBStorageType.valueOf(storage));
             }
@@ -223,7 +225,7 @@ public class JSONSchemaIntoTemplateParser {
     private void parseStorageCRT(Map<String, Object> jsonMap, CustomRelationshipTemplateDto customRelationshipTemplateDto) {
         if (jsonMap.containsKey("storages")) {
             List<String> storages = (List<String>) jsonMap.get("storages");
-            List<DBStorageType> storageTypeList = new ArrayList<>();
+            Set<DBStorageType> storageTypeList = new HashSet<>();
             for (String storage : storages) {
                 storageTypeList.add(DBStorageType.valueOf(storage));
             }

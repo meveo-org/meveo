@@ -18,7 +18,9 @@
 package org.meveo.model.customEntities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -68,7 +70,14 @@ import org.meveo.model.storage.Repository;
         parameters = {@org.hibernate.annotations.Parameter(name = "sequence_name", value = "CUST_CRT_SEQ")}
 )
 @NamedQueries({
-        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt from CustomRelationshipTemplate crt JOIN FETCH crt.availableStorages where crt.disabled=false  "),
+        @NamedQuery(name = "CustomRelationshipTemplate.getCRTForCache", query = "SELECT crt "
+        		+ "FROM CustomRelationshipTemplate crt "
+        		+ "JOIN FETCH crt.availableStorages "
+        		+ "JOIN FETCH crt.startNode startNode "
+        		+ "    JOIN FETCH startNode.availableStorages "
+        		+ "JOIN FETCH crt.endNode endNode "
+        		+ "    JOIN FETCH endNode.availableStorages "
+        		+ "WHERE crt.disabled=false"),
         @NamedQuery(name = "CustomRelationshipTemplate.findByStartEndAndName", query = "SELECT crt from CustomRelationshipTemplate crt " +
                 "WHERE crt.startNode.code = :startCode " +
                 "AND crt.endNode.code = :endCode " +
@@ -103,7 +112,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 //    @Type(type = JsonTypes.JSON_LIST)
 	@ManyToMany
 	@JoinTable(name = "crt_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "crt_id"))
-    private List<DBStorageType> availableStorages;
+    private Set<DBStorageType> availableStorages;
 
     /**
      * Json list type. ex : ["firstName","lastName","birthDate"]
@@ -207,8 +216,8 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	 *
 	 * @return the available storages
 	 */
-    public List<DBStorageType> getAvailableStorages() {
-		return availableStorages != null ? availableStorages : new ArrayList<>();
+    public Set<DBStorageType> getAvailableStorages() {
+		return availableStorages != null ? availableStorages : new HashSet<>();
 	}
     
     public void addStorage(DBStorageType e) {
@@ -221,7 +230,7 @@ public class CustomRelationshipTemplate extends BusinessEntity implements Compar
 	 *
 	 * @param availableStorages the new available storages
 	 */
-	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+	public void setAvailableStorages(Set<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
 	}
 

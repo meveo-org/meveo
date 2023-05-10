@@ -1,7 +1,9 @@
 package org.meveo.api.dto;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -92,7 +94,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
      */
     @XmlElement()
     @ApiModelProperty("List of storages where cfts can be stored")
-    private List<DBStorageType> availableStorages;
+    private Set<DBStorageType> availableStorages;
     
     @XmlElement
     @ApiModelProperty("Neo4J storage configuration information")
@@ -161,7 +163,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
     	super();
     }
 
-    public List<DBStorageType> getAvailableStorages() {
+    public Set<DBStorageType> getAvailableStorages() {
         return availableStorages;
     }
 
@@ -179,7 +181,7 @@ public class CustomEntityTemplateDto extends BaseEntityDto {
 		this.crudEventListenerScript = crudEventListenerScript;
 	}
 
-	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+	public void setAvailableStorages(Set<DBStorageType> availableStorages) {
         this.availableStorages = availableStorages;
     }
     

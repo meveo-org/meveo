@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -311,9 +312,9 @@ public class GraphQLService {
             final CustomEntityTemplate startNode = relationshipTemplate.getStartNode();
 
             // IF either the relation, the start entity or the end entity is not configured to be stored in Neo4J, don't include it in the generated graphql
-            final List<DBStorageType> relationStorages = relationshipTemplate.getAvailableStorages() != null ? relationshipTemplate.getAvailableStorages() : new ArrayList<>();
-            final List<DBStorageType> endNodeStorages = endNode.getAvailableStorages() != null ? endNode.getAvailableStorages() : new ArrayList<>();
-            final List<DBStorageType> startNodeStorages = startNode.getAvailableStorages() != null ? startNode.getAvailableStorages() : new ArrayList<>();
+            final Set<DBStorageType> relationStorages = relationshipTemplate.getAvailableStorages() != null ? relationshipTemplate.getAvailableStorages() : new HashSet<>();
+            final Set<DBStorageType> endNodeStorages = endNode.getAvailableStorages() != null ? endNode.getAvailableStorages() : new HashSet<>();
+            final Set<DBStorageType> startNodeStorages = startNode.getAvailableStorages() != null ? startNode.getAvailableStorages() : new HashSet<>();
 
             if (!relationStorages.contains(DBStorageType.NEO4J) || !endNodeStorages.contains(DBStorageType.NEO4J) || !startNodeStorages.contains(DBStorageType.NEO4J)) {
                 continue;

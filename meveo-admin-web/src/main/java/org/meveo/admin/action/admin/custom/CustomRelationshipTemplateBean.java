@@ -3,6 +3,7 @@ package org.meveo.admin.action.admin.custom;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -110,7 +111,7 @@ public class CustomRelationshipTemplateBean extends BackingCustomBean<CustomRela
             getEntity().getAvailableStorages().clear();
             getEntity().getAvailableStorages().addAll(availableStoragesDM.getTarget());
         } else {
-            getEntity().setAvailableStorages(availableStoragesDM.getTarget());
+            getEntity().setAvailableStorages(new HashSet<>(availableStoragesDM.getTarget()));
         }
     }
 

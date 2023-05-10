@@ -3,6 +3,7 @@
  */
 package org.meveo.persistence;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class CrossStorageTransaction {
 		storages.forEach(StorageImpl::init);
 	}
 
-	public void beginTransaction(Repository repository, List<DBStorageType> storages) {
+	public void beginTransaction(Repository repository, Collection<DBStorageType> storages) {
 		for (var storage : storages) {
 			var impl = provider.findImplementation(storage);
 			for (var storageConf : repository.getStorageConfigurations(storage)) {
@@ -77,7 +78,7 @@ public class CrossStorageTransaction {
 	}
 
 	
-	public void commitTransaction(Repository repository, List<DBStorageType> storages) {
+	public void commitTransaction(Repository repository, Collection<DBStorageType> storages) {
 		stackedCalls--;
 		
 		if(stackedCalls == 0) {
@@ -90,7 +91,7 @@ public class CrossStorageTransaction {
 		}
 	}
 	
-	public void rollbackTransaction(Exception exception, List<DBStorageType> storages) {
+	public void rollbackTransaction(Exception exception, Collection<DBStorageType> storages) {
 		log.warn("Transaction rolled back : ", exception);
 		stackedCalls--;
 		
