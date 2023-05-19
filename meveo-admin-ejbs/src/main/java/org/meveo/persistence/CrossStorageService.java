@@ -928,7 +928,10 @@ public class CrossStorageService implements CustomPersistenceService {
 					createCetReference(repository, updatedValues, customFieldTemplate, referencedCet);
 				
 				} else {
-					jpaReferences.put(customFieldTemplate.getCode(), updatedValues.get(customFieldTemplate.getCode()));
+					Object value = updatedValues.get(customFieldTemplate.getCode());
+					if(value!=null){
+						jpaReferences.put(customFieldTemplate.getCode(), value);
+					}
 				}
 			}
 		}
