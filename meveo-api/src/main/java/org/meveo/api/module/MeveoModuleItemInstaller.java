@@ -760,7 +760,13 @@ public class MeveoModuleItemInstaller {
 			//finally we store crudScript of custom entities that have been put temporarily in transientCrudEventListenerScript
 			for (MeveoModuleItemDto moduleItemDto : moduleDto.getModuleItems()) {
 				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
-					CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+					CustomEntityTemplateDto cetDto =null;
+					if(moduleItemDto.getDtoData() instanceof CustomEntityTemplateDto){
+					  cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+					} else {
+						Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+						cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+					}
 					if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
 						CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
 						ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
