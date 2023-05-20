@@ -565,20 +565,13 @@ public class CrossStorageService implements CustomPersistenceService {
 
 		// Create referenced entities and set UUIDs in the values
 		Map<String, Object> tmpValues = ceiToSave.getCfValuesAsValues() != null ? new HashMap<>(ceiToSave.getCfValuesAsValues()) : new HashMap<>();
-		Map<String, Object> entityValues = createEntityReferences(repository, tmpValues, cet);
+		Map<String, Object> entityValues = createEntityReferences(repository, tmpValues, cet,customFieldTemplates);
 		customFieldInstanceService.setCfValues(cei, entityValues);
 
 		String uuid = null;
 
 		// First check if data exist, in order to synchronize UUID across all storages
 		String foundId;
-		
-		List<String> secretFields = customFieldTemplates.values()
-			.stream()
-			.filter(cft -> cft.getFieldType() == CustomFieldTypeEnum.SECRET)
-			.filter(cft -> cei.get(cft.getCode()) != null)
-			.map(CustomFieldTemplate::getCode)
-			.collect(Collectors.toList());
 		
 		try {
 			if (ceiToSave.getUuid() != null && exists(repository, cet, ceiToSave.getUuid())) {
@@ -590,37 +583,7 @@ public class CrossStorageService implements CustomPersistenceService {
 			// It's no problem if we can't retrieve record using values - we consider it does not exist
 			foundId = null;
 		}
-		
-		if (foundId != null) {
-			cei.setUuid(foundId);
-			// Handle secret fields
-			if(!secretFields.isEmpty()) {
-				var foundCei = CEIUtils.pojoToCei(find(repository, cet, foundId, false));
-				String oldCeiHash = CEIUtils.getHash(foundCei, customFieldTemplates);
-				secretFields.forEach(secretField -> {
-					// Secret field has not changed, decrypt it so it will be correctly re-encrypted
-					if(cei.get(secretField).equals(foundCei.get(secretField))) {
-						String decryptedValue = PasswordUtils.decryptNoSecret(oldCeiHash, cei.get(secretField));
-						cei.getCfValues().setValue(secretField, decryptedValue);
-						entityValues.put(secretField, decryptedValue);
-					}
-				});
-			}
-		}
-		
-		// Encrypt secret fields
-		if(!secretFields.isEmpty()) {
-			String ceiHash = CEIUtils.getHash(cei, customFieldTemplates);
-			secretFields.forEach(secretField -> {
-				String secretValue = cei.get(secretField);
-				if(!secretValue.startsWith("🔒")) {	// Value is already encrypted
-					String encryptedValue = PasswordUtils.encryptNoSecret(ceiHash, secretValue);
-					cei.getCfValues().setValue(secretField, encryptedValue);
-					entityValues.put(secretField, encryptedValue);
-				}
-			});
-		}
-		
+			
 		var listener = customEntityTemplateService.loadCrudEventListener(cei.getCet());
 		CustomEntity cetClassInstance = null;
 		
@@ -643,11 +606,50 @@ public class CrossStorageService implements CustomPersistenceService {
 				
 				ceiAfterPreEvents = CEIUtils.pojoToCei(cetClassInstance);	// Handle case where entity was modified
 				ceiAfterPreEvents.setCet(cei.getCet());
+				ceiAfterPreEvents.setFieldTemplates(customFieldTemplates);
 			}
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
+		List<String> secretFields = new ArrayList<>();
+		for( CustomFieldTemplate cft :customFieldTemplates.values()){
+			if(ceiAfterPreEvents.get(cft.getCode()) != null && cft.getFieldType() == CustomFieldTypeEnum.SECRET){
+				secretFields.add(cft.getCode());
+			}
+		}
+
+		if (foundId != null) {
+			ceiAfterPreEvents.setUuid(foundId);
+			// Handle secret fields
+			if(!secretFields.isEmpty()) {
+				var foundCei = CEIUtils.pojoToCei(find(repository, cet, foundId, false));
+				String oldCeiHash = CEIUtils.getHash(foundCei, customFieldTemplates);
+				for(String secretField:secretFields) {
+					// Secret field has not changed, decrypt it so it will be correctly re-encrypted
+					if(ceiAfterPreEvents.get(secretField).equals(foundCei.get(secretField))) {
+						String decryptedValue = PasswordUtils.decryptNoSecret(oldCeiHash, ceiAfterPreEvents.get(secretField));
+						cei.getCfValues().setValue(secretField, decryptedValue);
+						entityValues.put(secretField, decryptedValue);
+					}
+				};
+			}
+		}
+		
+		// Encrypt secret fields
+		if(!secretFields.isEmpty()) {
+			String ceiHash = CEIUtils.getHash(ceiAfterPreEvents, customFieldTemplates);
+			for(String secretField:secretFields) {
+				String secretValue = ceiAfterPreEvents.get(secretField);
+				if(!secretValue.startsWith("🔒")) {	// Value is already encrypted
+					String encryptedValue = PasswordUtils.encryptNoSecret(ceiHash, secretValue);
+					ceiAfterPreEvents.getCfValues().setValue(secretField, encryptedValue);
+					entityValues.put(secretField, encryptedValue);
+				}
+			};
+		}
+		
 		
 		try {
 		
@@ -909,10 +911,9 @@ public class CrossStorageService implements CustomPersistenceService {
 		}
 	}
 
-	private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
+	private Map<String, Object> createEntityReferences(Repository repository, Map<String, Object> entityValues, CustomEntityTemplate cet,Map<String, CustomFieldTemplate> cfts) throws BusinessException, IOException, BusinessApiException, EntityDoesNotExistsException {
 		Map<String, Object> updatedValues = new HashMap<>(entityValues);
 
-		Map<String, CustomFieldTemplate> cfts = customFieldTemplateService.getCftsWithInheritedFields(cet);
 		List<CustomFieldTemplate> cetFields = updatedValues.keySet()
 				.stream()
 				.map(cfts::get)
