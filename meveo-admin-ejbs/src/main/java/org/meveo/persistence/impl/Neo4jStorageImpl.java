@@ -307,7 +307,8 @@ public class Neo4jStorageImpl implements StorageImpl {
 		Map<String, Object> result = graphQLService.executeGraphQLRequest(graphQlQuery, query.getStorageConfiguration().getCode());
 		
 		if(result != null) {
-			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(query.getCet().getCode());
+			String queryType = GraphQLQueryBuilder.toV4QueryType(query.getCet().getCode());
+			List<Map<String, Object>> values = (List<Map<String, Object>>) result.get(queryType);
 			values = values != null ? values : new ArrayList<>();
 
 			values.forEach(map -> {

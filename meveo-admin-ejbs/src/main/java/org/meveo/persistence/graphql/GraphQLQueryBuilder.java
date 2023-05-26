@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.meveo.commons.utils.CamelCaseUtils;
 import org.meveo.model.neo4j.Neo4JConfiguration;
-import org.meveo.model.storage.Repository;
-import org.meveo.persistence.impl.Neo4jStorageImpl;
+import org.meveo.util.Inflector;
 
 /**
  * 
@@ -165,9 +164,14 @@ public class GraphQLQueryBuilder {
 	 * @return the transformed type
 	 */
 	public static String toV4QueryType(String type) {
-		int length = type.length();
-		return Character.toLowerCase(type.charAt(0)) + type.substring(1, length) + "s";
+		String queryType = CamelCaseUtils.camelCase(type, true);
+		return Inflector.getInstance().pluralize(queryType);
 	}
-
-
+	
+	public static void main (String...strings) {
+		System.out.println(toV4QueryType("SPInvestigation"));
+		System.out.println(toV4QueryType("Media"));
+		System.out.println(toV4QueryType("Criterion"));
+	}
+	
 }

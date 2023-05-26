@@ -602,6 +602,11 @@ public class Neo4jDao {
         Set<String> fieldsKeys = new HashSet<>(uniqueFields.keySet());
         Map<String, Object> fieldValues = new HashMap<>();
         
+        // If no fields are provided and we know the node already exist, do nothing
+        if (uniqueFields.isEmpty() && updatableFields.isEmpty() && uuid != null) {
+        	return uuid;
+        }
+        
         if (uniqueFields.isEmpty()) {
             if (uuid != null) {
                 fieldsKeys.add("meveo_uuid");

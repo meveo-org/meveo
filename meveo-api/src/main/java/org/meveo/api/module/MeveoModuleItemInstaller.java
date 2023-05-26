@@ -755,24 +755,34 @@ public class MeveoModuleItemInstaller {
 						throw new BusinessException(e);
 					}
 				}
-	
-				for (MeveoModuleItemDto moduleItemDto : sortedModuleItems) {
-					if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
-						try {
-							Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
-							CustomEntityTemplateDto cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+			}
+
+			//finally we store crudScript of custom entities that have been put temporarily in transientCrudEventListenerScript
+			for (MeveoModuleItemDto moduleItemDto : moduleDto.getModuleItems()) {
+				if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+						CustomEntityTemplateDto cetDto =null;
+						if(moduleItemDto.getDtoData() instanceof CustomEntityTemplateDto){
+						cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+						} else {
+							try {
+								Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+								cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+							} catch (ClassNotFoundException e) {
+								log.error("Cannot find dto class", e);
+								throw new BusinessException("cannot find crusdScript class "+moduleItemDto.getDtoClassName());
+							}
+						}
 						if (!StringUtils.isBlank(cetDto.getTransientCrudEventListenerScript())) {
 							CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
 							ScriptInstance si = scriptInstanceService.findByCode(cetDto.getTransientCrudEventListenerScript());
 							if (si != null) {
 								cet.setCrudEventListenerScript(si);
 								customEntityTemplateService.update(cet);
+							} else {
+								throw new BusinessException("cannot find crusdScript "+cetDto.getTransientCrudEventListenerScript()+" of entity "+cetDto.getCode());
 							}
 						}
-						} catch (ClassNotFoundException e) {
-							log.error("Cannot find dto class", e);
-						}
-					}
+					
 				}
 			}
         }

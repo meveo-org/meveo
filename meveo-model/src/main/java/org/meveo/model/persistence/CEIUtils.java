@@ -72,15 +72,17 @@ public class CEIUtils {
 		objectsToHash.add(cei.getUuid());
 
 		var values = cei.getCfValuesAsValues();
+		values.values().removeIf(java.util.Objects::isNull);
 		values.entrySet().forEach(e -> {
 			if (e.getValue() instanceof Instant) {
 				e.setValue(((Instant) e.getValue()).toEpochMilli());
-			}
+			} 
 		});
 		cfts.values().stream()
 			.sorted((cft1, cft2) -> cft1.getCode().compareTo(cft2.getCode()))
 			.filter(cft -> !cft.getFieldType().equals(CustomFieldTypeEnum.SECRET))
 			.map(cft -> values.get(cft.getCode()))
+			.map(val -> !(val  instanceof EntityReferenceWrapper))
 			.filter(java.util.Objects::nonNull)
 			.forEach(objectsToHash::add);
 

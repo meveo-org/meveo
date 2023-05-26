@@ -76,6 +76,10 @@
 			<column name="extra_parameters" type="${type.json}" />
 		</addColumn>
 	</changeSet>
+
+<!--	<changeSet id="change extra_parameters type to json - #686" author="Tony Alejandro">-->
+<!--		<modifyDataType tableName="mv_credential" columnName="extra_parameters" newDataType="${type.json}" />-->
+<!--	</changeSet>-->
 	
 	<changeSet id="Websocket client" author="Clément Bareth">
 		<createTable tableName="websocket_client">

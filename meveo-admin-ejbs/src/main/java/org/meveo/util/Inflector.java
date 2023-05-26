@@ -149,7 +149,9 @@ public class Inflector {
         if (isUncountable(wordStr)) return wordStr;
         for (Rule rule : this.plurals) {
             String result = rule.apply(wordStr);
-            if (result != null) return result;
+            if (result != null) { 
+            	return result;
+            }
         }
         return wordStr;
     }
@@ -533,6 +535,7 @@ public class Inflector {
         inflect.addPluralize("(buffal|tomat)o$", "$1oes");
         inflect.addPluralize("([ti])um$", "$1a");
         inflect.addPluralize("([ti])a$", "$1a"); // already plural
+        inflect.addPluralize("criterion$", "criteria");
         inflect.addPluralize("sis$", "ses");
         inflect.addPluralize("(?:([^f])fe|([lr])f)$", "$1$2ves");
         inflect.addPluralize("(hive)$", "$1s");
@@ -544,7 +547,7 @@ public class Inflector {
         inflect.addPluralize("^(ox)$", "$1en");
         inflect.addPluralize("(quiz)$", "$1zes");
         // Need to check for the following words that are already pluralized:
-        inflect.addPluralize("(people|men|children|sexes|moves|stadiums)$", "$1"); // irregulars
+        inflect.addPluralize("(people|men|children|sexes|moves|stadiums|criteria)$", "$1"); // irregulars
         inflect.addPluralize("(oxen|octopi|viri|aliases|quizzes)$", "$1"); // special rules
 
         inflect.addSingularize("s$", "");

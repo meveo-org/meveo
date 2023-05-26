@@ -383,7 +383,7 @@ public class EndpointServlet extends HttpServlet {
             log.error("Error while executing request", e);
             returnError(endpointExecution.getResp(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error while executing request", e.getMessage(), e.toString());
         } finally {
-            if(endpointExecution.getResponse().getOutput() == null) {
+            if(endpointExecution.getResponse().getInputStream() == null) {
                 endpointExecution.getResp().getWriter().flush();
                 endpointExecution.getResp().getWriter().close();
             }
@@ -488,15 +488,13 @@ public class EndpointServlet extends HttpServlet {
 
         // Body of the response
         String errorMessage = response.getErrorMessage();
-        byte[] output = response.getOutput();
         if (!StringUtils.isBlank(errorMessage)) {    // Priority to error message
             servletResponse.getWriter().print(errorMessage);
-        } else if (output != null) {                // Output has been set
-            ByteArrayInputStream in = new ByteArrayInputStream(output);
+        } else if (response.getInputStream() != null) {                // Output has been set
             ServletOutputStream out = servletResponse.getOutputStream();
             byte[] buffer = new byte[1024];
             int len = 0;
-            while ((len = in.read(buffer)) != -1) {
+            while ((len = response.getInputStream().read(buffer)) != -1) {
                 out.write(buffer, 0, len);
             }
             out.flush();
