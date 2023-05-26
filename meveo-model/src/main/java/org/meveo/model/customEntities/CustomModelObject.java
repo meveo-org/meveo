@@ -1,6 +1,7 @@
 package org.meveo.model.customEntities;
 
 import java.util.List;
+import java.util.Set;
 
 import org.meveo.model.persistence.DBStorageType;
 import org.meveo.model.storage.Repository;
@@ -15,6 +16,6 @@ public interface CustomModelObject {
 	
 	List<Repository> getRepositories();
 	
-	List<DBStorageType> getAvailableStorages();
+	Set<DBStorageType> getAvailableStorages();
 
 }

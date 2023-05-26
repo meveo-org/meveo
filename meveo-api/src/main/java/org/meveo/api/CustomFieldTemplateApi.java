@@ -3,6 +3,7 @@ package org.meveo.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -598,7 +599,7 @@ public class CustomFieldTemplateApi extends BaseCrudApi<CustomFieldTemplate, Cus
         cft.setHasReferenceJpaEntity(dto.hasReferenceJpaEntity());
 
         // A cft can't be stored in a db that is not available for its cet
-        List<DBStorageType> storageTypes = null;
+        Set<DBStorageType> storageTypes = null;
         if(cft.getAppliesTo().startsWith(CustomEntityTemplate.CFT_PREFIX)) {
             String cetCode = CustomEntityTemplate.getCodeFromAppliesTo(cft.getAppliesTo());
             CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetCode);

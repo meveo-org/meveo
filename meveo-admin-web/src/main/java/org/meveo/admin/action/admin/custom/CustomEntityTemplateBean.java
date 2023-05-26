@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -386,7 +387,7 @@ public class CustomEntityTemplateBean extends BackingCustomBean<CustomEntityTemp
 			getEntity().getAvailableStorages().clear();
 			getEntity().getAvailableStorages().addAll(availableStoragesDM.getTarget());
 		} else {
-			getEntity().setAvailableStorages(availableStoragesDM.getTarget());
+			getEntity().setAvailableStorages(new HashSet<>(availableStoragesDM.getTarget()));
 		}
 	}
 

@@ -18,7 +18,9 @@
 package org.meveo.model.customEntities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -39,8 +41,6 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -138,7 +138,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	// @Type(type = JsonTypes.JSON_LIST)
 	@ManyToMany
 	@JoinTable(name = "cet_db_storage", inverseJoinColumns = @JoinColumn(name = "db_storage_code"), joinColumns = @JoinColumn(name = "cet_id"))
-	private List<DBStorageType> availableStorages = new ArrayList<>();
+	private Set<DBStorageType> availableStorages = new HashSet<>();
 	
 	@Type(type = "numeric_boolean")
 	@Column(name = "audited")
@@ -319,7 +319,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 *
 	 * @return the list of storages where the custom fields can be stored
 	 */
-	public List<DBStorageType> getAvailableStorages() {
+	public Set<DBStorageType> getAvailableStorages() {
 		return availableStorages;
 	}
 
@@ -328,7 +328,7 @@ public class CustomEntityTemplate extends BusinessEntity implements Comparable<C
 	 *
 	 * @param availableStorages the new list of storages where the custom fields can be stored
 	 */
-	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+	public void setAvailableStorages(Set<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
 	}
 
