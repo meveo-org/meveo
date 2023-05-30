@@ -357,6 +357,7 @@ public class MavenConfigurationService implements Serializable {
 		Properties properties = new Properties();
 		properties.setProperty("maven.compiler.target", "11");
 		properties.setProperty("maven.compiler.source", "11");
+		properties.setProperty("jakartaee-version", "8.0.0");
 		model.setProperties(properties);
 
 		List<RemoteRepository> remoteRepositories = remoteRepositoryService.list();
@@ -366,9 +367,8 @@ public class MavenConfigurationService implements Serializable {
 			}
 		}
 		
-		// Include meveo bom
-		DependencyManagement dependencyManagement = new DependencyManagement();
-		model.setDependencyManagement(dependencyManagement);
+		List<Dependency> dependencies = new ArrayList<>();
+		model.setDependencies(dependencies);
 		
 		Dependency meveoBom = new Dependency();
 		meveoBom.setGroupId("org.meveo");
@@ -376,35 +376,20 @@ public class MavenConfigurationService implements Serializable {
 		meveoBom.setType("pom");
 		meveoBom.setScope("import");
 		meveoBom.setVersion(System.getProperty("meveo.version", Version.appVersion));
-		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoBom);
+		dependencies.add(meveoBom);
 		
-		Dependency wildflyBom = new Dependency();
-		wildflyBom.setGroupId("org.wildfly.bom");
-		wildflyBom.setArtifactId("wildfly-jakartaee8-with-tools");
-		wildflyBom.setType("pom");
-		wildflyBom.setScope("import");
-		wildflyBom.setVersion("18.0.1.Final");
-		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom);
-		
-		Dependency wildflyBom2 = new Dependency();
-		wildflyBom2.setGroupId("org.wildfly.bom");
-		wildflyBom2.setArtifactId("wildfly-jakartaee8");
-		wildflyBom2.setType("pom");
-		wildflyBom2.setScope("import");
-		wildflyBom2.setVersion("18.0.1.Final");
-		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom2);
-		
-		Dependency wildflyBom3 = new Dependency();
-		wildflyBom3.setGroupId("org.wildfly");
-		wildflyBom3.setArtifactId("wildfly-feature-pack");
-		wildflyBom3.setType("pom");
-		wildflyBom3.setScope("import");
-		wildflyBom3.setVersion("18.0.1.Final");
-		MavenUtils.addOrUpdateDependency(dependencyManagement, wildflyBom3);
+		Dependency jakartaplatform = new Dependency();
+		jakartaplatform.setGroupId("jakarta.platform");
+		jakartaplatform.setArtifactId("jakarta.jakartaee-api");
+		jakartaplatform.setVersion(properties.getProperty("jakartaee-version"));
+		jakartaplatform.setScope("provided");
+		jakartaplatform.setOptional(true);
+		dependencies.add(jakartaplatform);
 		
 		// Use maven pkg repo before meveo instance repo
 		Repository githubRepo = new Repository();
 		githubRepo.setId("github");
+		githubRepo.setName("sebastien michea");
 		githubRepo.setUrl("https://smichea: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@maven.pkg.github.com/meveo-org/meveo");
 		RepositoryPolicy policy = new RepositoryPolicy();
 		policy.setEnabled(true);
@@ -424,8 +409,8 @@ public class MavenConfigurationService implements Serializable {
 		meveoDependency.setGroupId("org.meveo");
 		meveoDependency.setArtifactId("meveo-api");
 		meveoDependency.setVersion(System.getProperty("meveo.version", Version.appVersion));
-		meveoDependency.setScope("import");
-		MavenUtils.addOrUpdateDependency(dependencyManagement, meveoDependency);
+		meveoDependency.setOptional(true);
+		dependencies.add(meveoDependency);
 		
 		module.getModuleDependencies().forEach(meveoModuleDependency -> {
 			Dependency dependency = new Dependency();
@@ -433,7 +418,7 @@ public class MavenConfigurationService implements Serializable {
 			dependency.setArtifactId(meveoModuleDependency.getCode());
 			dependency.setVersion(meveoModuleDependency.getCurrentVersion());
 			dependency.setScope("compile");
-			MavenUtils.addOrUpdateDependency(dependencyManagement, dependency);
+			dependencies.add(dependency);
 		});
 
 		try {
