@@ -2503,6 +2503,12 @@ public class CustomFieldInstanceService extends BaseService {
 				    		//NOOP
 				    	}
 			    	}
+			    } else if(cetField.getValue().getFieldType() == CustomFieldTypeEnum.LONG && value instanceof String) {
+			    	try {			    		
+			    		value = Long.valueOf((String) value);
+			    	} catch (NumberFormatException e) {
+			    		throw new BusinessException("Couldn't convert value " + value + " to Long", e);
+			    	}
 			    }
 
 			    setCFValue(entity, cetField.getKey(), value);
