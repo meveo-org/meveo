@@ -1109,6 +1109,7 @@ public class CrossStorageService implements CustomPersistenceService {
 		CustomEntityInstance cei = new CustomEntityInstance();
 		cei.setCetCode(customFieldTemplate.getEntityClazzCetCode());
 		cei.setCode((String) values.get("code"));
+		cei.setCet(customEntityTemplateService.findByCode(customFieldTemplate.getEntityClazzCetCode()));
 		cei.setRepository(repository);
 		String uuid = (String) values.get("uuid");
 		if (uuid != null) {
