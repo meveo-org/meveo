@@ -116,10 +116,11 @@ public class DescriptionApi {
         Description description;
         String code;
         String appliesTo;
+        final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(dto.getType());;
         if (dto instanceof ProcessEntityDescription) {
             description = new MeveoEntityDescription();
             ((MeveoEntityDescription) description).setName(dto.getName());
-            final CustomEntityTemplate customEntityTemplate = customEntityTemplateService.findByCode(dto.getType());
+           
             if (customEntityTemplate == null) {
                 throw new EntityDoesNotExistsException(CustomEntityTemplate.class, dto.getType());
             }
@@ -141,7 +142,7 @@ public class DescriptionApi {
         
         description.setInherited(dto.isInherited());
         description.setService(technicalService);
-        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
+        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.getCftsWithInheritedFields(customEntityTemplate);
         description.setInput(dto.isInput());
         description.setOutput(dto.isOutput());
         description.setName(dto.getName());
