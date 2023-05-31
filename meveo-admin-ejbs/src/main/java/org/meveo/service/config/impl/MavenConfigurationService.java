@@ -389,7 +389,7 @@ public class MavenConfigurationService implements Serializable {
 		// Use maven pkg repo before meveo instance repo
 		Repository githubRepo = new Repository();
 		githubRepo.setId("github");
-		githubRepo.setName("sebastien michea");
+		githubRepo.setName("meveo github");
 		githubRepo.setUrl("https://smichea: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@maven.pkg.github.com/meveo-org/meveo");
 		RepositoryPolicy policy = new RepositoryPolicy();
 		policy.setEnabled(true);
