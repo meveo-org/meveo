@@ -70,7 +70,8 @@ The following environment variables can be redefined for meveo service
 |WILDFLY_LOG_FILE_LEVEL   |INFO                                     |Wildfly server log level (means server.log file)                                                                                                                                      |
 |WILDFLY_LOG_MEVEO_LEVEL  |INFO                                     |Meveo source log level                                                                                                                                                                |
 |WILDFLY_DEBUG_ENABLE     |"false"                                  |Add a debug option to Wildfly startup command ("true" or "false"). debug_enable could not be used with `JAVA_OPTS` together. If this value is `true`, `JAVA_OPTS` should be commented.|
-|WILDFLY_DEBUG_PORT       |9999                                     |Wildfly debug port                                                                                                                                                                    |
+|WILDFLY_DEBUG_PORT       |9999                                     |Wildfly debug port          
+|DEFAULT_TX_TIMEOUT       |300  | Default EJB transaction timeout                                                                                                                                                         |
 |JAVA_OPTS                |Many parameters.<br/>Need to look at code|This variable can override default settings for wildfly java application. If this value is defined, WILDFLY_CUSTOM_XMS and WILDFLY_CUSTOM_XMX are ignored.                            |
 |JAVA_EXTRA_OPTS          |-                                        |The extra options to add to the default jvm options.                                                                                                                                  |### APM for Meveo wildfly
 

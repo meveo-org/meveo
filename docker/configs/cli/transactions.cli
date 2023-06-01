@@ -1,0 +1,2 @@
+# Change transaction timeout
+/subsystem=transactions/:write-attribute(name=default-timeout,value="${env.DEFAULT_TX_TIMEOUT:300}")
