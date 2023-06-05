@@ -1208,9 +1208,6 @@
 			<where>id = 247</where>
 		</update>
 	</changeSet>
-	<changeSet id="add column for disable type check" author="Quentin Tixier">
-		<addColumn tableName="git_repository">
-			<column name="disable_type_check" type="${type.boolean}" defaultValueNumeric="0"/>
-		</addColumn>
-	</changeSet>
+
+
 </databaseChangeLog>

@@ -107,10 +107,6 @@ public class GitRepository extends BusinessEntity {
     @Column(name = "is_locked")
     @Type(type = "numeric_boolean")
     private boolean locked;
-    
-    @Column(name = "disable_type_check")
-    @Type(type = "numeric_boolean")
-    private boolean disableTypeCheck;
 
     @Transient
     private String currentBranch;
@@ -231,12 +227,4 @@ public class GitRepository extends BusinessEntity {
     public void setLocked(boolean locked) {
         this.locked = locked;
     }
-    
-    public boolean isDisableTypeCheck() {
-		return disableTypeCheck;
-	}
-
-	public void setDisableTypeCheck(boolean disableTypeCheck) {
-		this.disableTypeCheck = disableTypeCheck;
-	}
 }
