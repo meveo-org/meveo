@@ -43,22 +43,7 @@
 					autocompleteMethod="getBranchList"
 					field="defaultBranch" />
 				<hftl:formField label="#{messages['gitRepositories.isLocked']}" field="locked"/>
-<<<<<<< Updated upstream:meveo-admin/web/src/main/webapp/pages/admin/storages/repositories/gitRepositoryDetail.xhtml
-=======
-				<hftl:formField label="Dev mode" field="devMode"/>
 				<hftl:formField label="Disable CTF type check for module installation" field="disableTypeCheck"/>
-				<h:panelGrid columns="1">
-					<p:outputLabel value="#{messages['gitRepositories.cloneUrl']}" />
-					<p:outputLabel value="#{gitRepositoryBean.getGitCloneUrl()}" />
-				</h:panelGrid>
-				<hftl:decorateFormField fieldId="timer" label="Automatic pull timer">
-					<p:selectOneMenu id="timer" value="#{gitRepositoryBean.entity.autoPullTimer}">
-						<hftl:objectConverter />
-						<f:selectItem itemLabel="#{messages['commons.select']}"/>
-						<f:selectItems value="#{timerEntityBean.listAll()}" var="t_" itemLabel="#{t_.code}" itemValue="#{t_}" />
-					</p:selectOneMenu>
-				</hftl:decorateFormField>
->>>>>>> Stashed changes:meveo-admin-web/src/main/webapp/pages/admin/storages/repositories/gitRepositoryDetail.xhtml
 			</h:panelGrid>
 			<h:panelGrid columns="1">
 				<hftl:formField maxlength="255" allowEdit="false"
