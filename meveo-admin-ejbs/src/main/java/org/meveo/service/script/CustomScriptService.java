@@ -777,7 +777,7 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
     private Set<String> getMavenDependencies(MavenDependency e, List<RemoteRepository> remoteRepositories) {
         Set<String> result = null;
         staticLogger.info("Resolving artifacts for {}", e);
-        List<ArtifactResult> artifacts;
+        List<ArtifactResult> artifacts = null;
 
         DefaultArtifact rootArtifact = new DefaultArtifact(e.getGroupId(), e.getArtifactId(), e.getClassifier(), "jar", e.getVersion());
         DependencyFilter classpathFlter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE);
@@ -795,25 +795,30 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         } catch (DependencyResolutionException e1) {
 
-            // If local repository resolution failed, try with remote
+        	// If local repository resolution failed, try with remote
             staticLogger.info("Local dependencies resolution failed ({}), trying with remote resolution", e1.getMessage());
 
-            try {
-                CollectRequest collectRequestRemote = new CollectRequest();
-                collectRequestRemote.setRoot(root);
-                remoteRepositories.forEach(collectRequestRemote::addRepository);
-
-                DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
-                DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
-                artifacts = dependencyResult.getArtifactResults();
-
-            } catch (Exception e2) {
-                staticLogger.error("Fail downloading dependencies {}", e2);
-                return null;
-            }
+            for(RemoteRepository remoterepository : remoteRepositories) {
+        	  CollectRequest collectRequestRemote = new CollectRequest();
+              collectRequestRemote.setRoot(root);
+              List<RemoteRepository> mavenremoterepo = new ArrayList<>();
+              mavenremoterepo.add(remoterepository);
+              collectRequestRemote.setRepositories(mavenremoterepo);
+                  
+              DependencyRequest theDependencyRequest = new DependencyRequest(collectRequestRemote, classpathFlter);
+              DependencyResult dependencyResult  = collectDependencies(theDependencyRequest);
+              if(dependencyResult != null) {
+          	   artifacts = dependencyResult.getArtifactResults();
+          	   break;
+               }
+              }
+              
+            if (artifacts == null){
+               staticLogger.error("Fail downloading dependencies {}");
+               return null;
+              }
 
         }
-
         staticLogger.debug("Found {} artifacts for dependency {}", artifacts.size(), e);
 
         result = artifacts.stream().filter(Objects::nonNull).map(artifact -> {
@@ -822,6 +827,18 @@ public abstract class CustomScriptService<T extends CustomScript> extends Functi
 
         return result;
     }
+    
+    private DependencyResult collectDependencies(DependencyRequest theDependencyRequest) {
+
+		try {
+			DependencyResult dependencyResult = defaultRepositorySystem.resolveDependencies(defaultRepositorySystemSession, theDependencyRequest);
+		    return dependencyResult;
+		} catch (Exception e2) {
+		    staticLogger.error("Fail downloading dependencies {}", e2);
+		    return null;
+		}
+
+      }
 
     /**
      * Parse the java source code and extract getters and setters
