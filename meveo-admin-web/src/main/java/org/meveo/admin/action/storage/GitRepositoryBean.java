@@ -448,12 +448,14 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		try {
 			ParamBean paramBean = ParamBean.getInstance();			
 			String baseUrlConfig = paramBean.getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo");
+			String webContext    = paramBean.getProperty("meveo.admin.webContext","meveo");
 			URL baseUrl = new URL(baseUrlConfig);
 
 			return baseUrl.getProtocol() + "://"
 				+ currentUser.getUserName() 
 				+ ":<password>@" 
 				+ baseUrlConfig.replace(baseUrl.getProtocol() + "://","") 
+				+ webContext
 				+ "/git/" 
 				+ this.entity.getCode();
 		}
