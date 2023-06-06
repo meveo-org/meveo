@@ -35,6 +35,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.cache.CustomFieldsCacheContainerProvider;
+import org.meveo.commons.utils.ParamBean;
 import org.meveo.commons.utils.StringUtils;
 import org.meveo.jpa.EntityManagerProvider;
 import org.meveo.model.crm.CustomFieldTemplate;
@@ -707,8 +708,9 @@ public class CustomTableCreatorService implements Serializable {
 	 * @throws BusinessException if the computed type and the actual type doesn't match
 	 */
 	private void checkTypeMatches(String dbTableName, CustomFieldTemplate cft, AddColumnConfig column, String typeName, int typeSize) throws BusinessException {
-		String type = typeName;
-		switch (type) {
+		if(Boolean.parseBoolean(ParamBean.getInstance().getProperty("meveo.sql.check_column_type", "true"))) {
+			String type = typeName;
+			switch (type) {
 			case "int8" : 
 				type = "bigint";
 				break;
@@ -726,15 +728,16 @@ public class CustomTableCreatorService implements Serializable {
 				if(typeSize != 0) {
 					type += "(" + typeSize + ")";
 				}
-		}
-		
-		if (column.getType().toLowerCase().contains(type)) { 
-			return;
-		}
-		
-		// Field definition must match the existing field
-		if(!column.getType().toLowerCase().equals(type)) {
-			throw new BusinessException("Field defintion for " + cft + " (" + column.getType().toLowerCase() + ") does not match existing column in table " + dbTableName + " (" + type + ")");
+			}
+			
+			if (column.getType().toLowerCase().contains(type)) { 
+				return;
+			}
+			
+			// Field definition must match the existing field
+			if(!column.getType().toLowerCase().equals(type)) {
+				throw new BusinessException("Field defintion for " + cft + " (" + column.getType().toLowerCase() + ") does not match existing column in table " + dbTableName + " (" + type + ")");
+			}
 		}
 	}
 
