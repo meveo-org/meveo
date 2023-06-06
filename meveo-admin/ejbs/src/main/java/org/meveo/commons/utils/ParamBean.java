@@ -97,11 +97,6 @@ public class ParamBean {
 	 * Reload application configuration properties file.
 	 */
 	private static boolean reload = false;
-	
-	/**
-	 * Whether to check if the CFT type matche the column type in database (if table of a CET already exists)
-	 */
-	private static Boolean checkCftTypeOnModuleInstall;
 
 	public ParamBean() {
 
@@ -662,13 +657,5 @@ public class ParamBean {
 			result = String.join(LIST_SEPARATOR, value);
 		}
 		properties.setProperty(key, result);
-	}
-
-	public static Boolean getCheckCftTypeOnModuleInstall() {
-		return checkCftTypeOnModuleInstall;
-	}
-
-	public static void setCheckCftTypeOnModuleInstall(Boolean checkCftTypeOnModuleInstall) {
-		ParamBean.checkCftTypeOnModuleInstall = checkCftTypeOnModuleInstall;
 	}
 }
