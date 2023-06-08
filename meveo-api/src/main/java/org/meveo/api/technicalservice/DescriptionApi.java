@@ -31,6 +31,7 @@ import org.meveo.api.dto.technicalservice.TechnicalServiceDto;
 import org.meveo.api.exception.EntityDoesNotExistsException;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.customEntities.CustomEntityTemplate;
+import org.meveo.model.customEntities.CustomModelObject;
 import org.meveo.model.customEntities.CustomRelationshipTemplate;
 import org.meveo.model.technicalservice.Description;
 import org.meveo.model.technicalservice.InputMeveoProperty;
@@ -115,7 +116,7 @@ public class DescriptionApi {
     public Description toDescription(TechnicalService technicalService, InputOutputDescription dto) throws EntityDoesNotExistsException {
         Description description;
         String code;
-        String appliesTo;
+        CustomModelObject modelObj;
         if (dto instanceof ProcessEntityDescription) {
             description = new MeveoEntityDescription();
             ((MeveoEntityDescription) description).setName(dto.getName());
@@ -125,7 +126,7 @@ public class DescriptionApi {
             }
             ((MeveoEntityDescription) description).setType(customEntityTemplate);
             code = customEntityTemplate.getCode();
-            appliesTo = customEntityTemplate.getAppliesTo();
+            modelObj = customEntityTemplate;
         } else {
             description = new RelationDescription();
             ((RelationDescription) description).setSource(((ProcessRelationDescription) dto).getSource());
@@ -136,12 +137,11 @@ public class DescriptionApi {
             }
             ((RelationDescription) description).setType(customRelationshipTemplate);
             code = customRelationshipTemplate.getCode();
-            appliesTo = customRelationshipTemplate.getAppliesTo();
+            modelObj = customRelationshipTemplate;
         }
         
         description.setInherited(dto.isInherited());
         description.setService(technicalService);
-        Map<String, CustomFieldTemplate> customFields = customFieldTemplateService.findByAppliesToNoCache(appliesTo);
         description.setInput(dto.isInput());
         description.setOutput(dto.isOutput());
         description.setName(dto.getName());
@@ -149,10 +149,10 @@ public class DescriptionApi {
         final List<OutputMeveoProperty> outputProperties = new ArrayList<>();
         for (InputPropertyDto p : dto.getInputProperties()) {
             InputMeveoProperty inputProperty = new InputMeveoProperty();
-            CustomFieldTemplate property = customFields.get(p.getProperty());
+            CustomFieldTemplate property = customFieldTemplateService.find(code, modelObj);
             if (property == null) {
                 LOGGER.error("No custom field template for property {} of custom template {}", p.getProperty(), code);
-                throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, p.getProperty());
+                throw new EntityDoesNotExistsException(CustomFieldTemplate.class, p.getProperty());
             }
             inputProperty.setDescription(description);
             inputProperty.setProperty(property);
@@ -166,9 +166,9 @@ public class DescriptionApi {
         description.setInputProperties(inputProperties);
         for (OutputPropertyDto p : dto.getOutputProperties()) {
             OutputMeveoProperty outputProperty = new OutputMeveoProperty();
-            CustomFieldTemplate property = customFields.get(p.getProperty());
+            CustomFieldTemplate property = customFieldTemplateService.find(code, modelObj);
             if (property == null) {
-                throw new EntityDoesNotExistsException(CustomRelationshipTemplate.class, p.getProperty());
+                throw new EntityDoesNotExistsException(CustomFieldTemplate.class, p.getProperty());
             }
             outputProperty.setProperty(property);
             outputProperty.setDescription(description);
