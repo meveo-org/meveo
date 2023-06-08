@@ -161,6 +161,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
     }
     
+    public CustomFieldTemplate find(String code, CustomModelObject modelObj) {
+    	if (modelObj instanceof CustomEntityTemplate) {
+    		return find(code, (CustomEntityTemplate) modelObj);
+    	}
+    	return this.findByCodeAndAppliesTo(code, modelObj.getAppliesTo());
+    }
+    
     /**
      * Retrieve cft by code, in the fields of the given cet or its ancestors
      * 
