@@ -149,7 +149,7 @@ public class DescriptionApi {
         final List<OutputMeveoProperty> outputProperties = new ArrayList<>();
         for (InputPropertyDto p : dto.getInputProperties()) {
             InputMeveoProperty inputProperty = new InputMeveoProperty();
-            CustomFieldTemplate property = customFieldTemplateService.find(code, modelObj);
+            CustomFieldTemplate property = customFieldTemplateService.find(p.getProperty(), modelObj);
             if (property == null) {
                 LOGGER.error("No custom field template for property {} of custom template {}", p.getProperty(), code);
                 throw new EntityDoesNotExistsException(CustomFieldTemplate.class, p.getProperty());
@@ -166,7 +166,7 @@ public class DescriptionApi {
         description.setInputProperties(inputProperties);
         for (OutputPropertyDto p : dto.getOutputProperties()) {
             OutputMeveoProperty outputProperty = new OutputMeveoProperty();
-            CustomFieldTemplate property = customFieldTemplateService.find(code, modelObj);
+            CustomFieldTemplate property = customFieldTemplateService.find(p.getProperty(), modelObj);
             if (property == null) {
                 throw new EntityDoesNotExistsException(CustomFieldTemplate.class, p.getProperty());
             }

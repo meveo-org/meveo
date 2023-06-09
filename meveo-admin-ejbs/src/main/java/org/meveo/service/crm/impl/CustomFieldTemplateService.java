@@ -336,6 +336,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             return null;
         }
     }
+    
+    public CustomFieldTemplate find(String cftCode, String appliesTo) {
+    	if (appliesTo.startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+    		return this.findByCodeAndAppliesTo(cftCode, appliesTo);
+    	} else {
+    		CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(appliesTo));
+    		return this.find(cftCode, cet);
+    	}
+    }
 
     @Override
     public void create(CustomFieldTemplate cft) throws BusinessException {
