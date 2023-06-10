@@ -69,6 +69,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.PushResult;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.meveo.admin.exception.BusinessException;
@@ -412,17 +414,36 @@ public class GitClient {
         }
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
-
+        String pushErrorMessage = "Updates were rejected because the remote contains work that you do not have locally.";
         keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
             final PushCommand push = git.push();
             if(gitRepository.getRemoteOrigin().startsWith("http")) {
-                CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
-                push.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
+		        CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
+		        Iterable<PushResult> pushResults = push.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
+		        for (PushResult pushresult : pushResults) {
+		            for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
+		                if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
+		                    if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
+		                    	throw new BusinessException(pushErrorMessage);
+		                    }
+		                }
+		            }
+		        }
             } else {
                 SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
-                push.setTransportConfigCallback(sshTransportConfigCallback).call();
+                Iterable<PushResult> pushResults = push.setTransportConfigCallback(sshTransportConfigCallback).call();
+                for (PushResult pushresult : pushResults) {
+                    for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
+                        if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
+                            if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
+                            	throw new BusinessException(pushErrorMessage);
+                            }
+                        }
+                    }
+                }
+                
             }
 
         } catch (IOException e) {
