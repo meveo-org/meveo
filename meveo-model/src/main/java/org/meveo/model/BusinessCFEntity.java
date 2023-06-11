@@ -35,7 +35,7 @@ public abstract class BusinessCFEntity extends BusinessEntity implements ICustom
 	private static final long serialVersionUID = -6054446440106807337L;
 
 	@Column(name = "uuid", nullable = false, updatable = false, length = 60)
-	@Size(max = 60)
+	@Size(max = 128)
 	@NotNull
 	private String uuid = UUID.randomUUID().toString();
 
