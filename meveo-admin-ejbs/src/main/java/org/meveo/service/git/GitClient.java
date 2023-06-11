@@ -414,7 +414,6 @@ public class GitClient {
         }
 
         final File repositoryDir = GitHelper.getRepositoryDir(user, gitRepository);
-        String pushErrorMessage = "Updates were rejected because the remote contains work that you do not have locally.";
         keyLock.lock(gitRepository.getCode());
 
         try (Git git = Git.open(repositoryDir)) {
@@ -422,24 +421,11 @@ public class GitClient {
             if(gitRepository.getRemoteOrigin().startsWith("http")) {
 		        CredentialsProvider usernamePasswordCredentialsProvider = GitHelper.getCredentialsProvider(gitRepository, username, password, user);
 		        Iterable<PushResult> pushResults = push.setCredentialsProvider(usernamePasswordCredentialsProvider).call();
-		        for (PushResult pushresult : pushResults) {
-		            for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
-		                if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
-		                	throw new BusinessException(pushErrorMessage);
-		                }
-		            }
-		        }
+		        getPushUpdateStatus(pushResults);
             } else {
                 SshTransportConfigCallback sshTransportConfigCallback = new SshTransportConfigCallback(user.getSshPrivateKey(), user.getSshPublicKey(), password);
                 Iterable<PushResult> pushResults = push.setTransportConfigCallback(sshTransportConfigCallback).call();
-                for (PushResult pushresult : pushResults) {
-                    for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
-                        if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
-                        	throw new BusinessException(pushErrorMessage);
-                        }
-                    }
-                }
-                
+                getPushUpdateStatus(pushResults);
             }
 
         } catch (IOException e) {
@@ -1179,6 +1165,42 @@ public class GitClient {
         } finally {
             keyLock.unlock(gitRepository.getCode());
         }
+    }
+    
+    /*
+     *  Represent remote update status of a push
+     *  @throws BusinessException          if repository cannot be opened or if a problem happen during the push
+     */
+    private void getPushUpdateStatus(Iterable<PushResult> pushResults)throws BusinessException {
+    	 for (PushResult pushresult : pushResults) {
+    	   for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
+	           if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
+	           	
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
+	               	throw new BusinessException("Updates were rejected because the remote contains work that you do not have locally.");
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.NOT_ATTEMPTED) {
+	               	throw new BusinessException("Push process hasn't yet attempted to update this ref.");
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NODELETE) {
+	               	throw new BusinessException("Remote ref update was rejected, because remote side doesn't support/allow deleting refs.");
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED) {
+	               	throw new BusinessException("Remote ref update was rejected, because old object id on remote repository wasn't the same as defined expected old object.");
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_OTHER_REASON) {
+	               	throw new BusinessException("Remote ref update was rejected " +remoteRef.getMessage());
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.NON_EXISTING) {
+	               	throw new BusinessException("Remote ref didn't exist.");
+	               }
+	               if(remoteRef.getStatus() == RemoteRefUpdate.Status.AWAITING_REPORT) {
+	               	throw new BusinessException("Push process is awaiting update report from remote repository.");
+	               }
+	               
+	           }
+           }
+    	 }
     }
 
 }
