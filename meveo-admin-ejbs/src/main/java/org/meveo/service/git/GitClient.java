@@ -425,9 +425,7 @@ public class GitClient {
 		        for (PushResult pushresult : pushResults) {
 		            for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
 		                if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
-		                    if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
-		                    	throw new BusinessException(pushErrorMessage);
-		                    }
+		                	throw new BusinessException(pushErrorMessage);
 		                }
 		            }
 		        }
@@ -437,9 +435,7 @@ public class GitClient {
                 for (PushResult pushresult : pushResults) {
                     for(RemoteRefUpdate remoteRef : pushresult.getRemoteUpdates()) {
                         if(remoteRef.getStatus() != RemoteRefUpdate.Status.OK && remoteRef.getStatus() != RemoteRefUpdate.Status.UP_TO_DATE) {
-                            if(remoteRef.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
-                            	throw new BusinessException(pushErrorMessage);
-                            }
+                        	throw new BusinessException(pushErrorMessage);
                         }
                     }
                 }
