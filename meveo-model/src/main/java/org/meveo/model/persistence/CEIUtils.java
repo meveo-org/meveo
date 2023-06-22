@@ -80,9 +80,8 @@ public class CEIUtils {
 		});
 		cfts.values().stream()
 			.sorted((cft1, cft2) -> cft1.getCode().compareTo(cft2.getCode()))
-			.filter(cft -> !cft.getFieldType().equals(CustomFieldTypeEnum.SECRET))
+			.filter(cft -> !(cft.getFieldType().equals(CustomFieldTypeEnum.SECRET)||cft.getFieldType().equals(CustomFieldTypeEnum.ENTITY)))
 			.map(cft -> values.get(cft.getCode()))
-			.map(val -> !(val  instanceof EntityReferenceWrapper))
 			.filter(java.util.Objects::nonNull)
 			.forEach(objectsToHash::add);
 
@@ -528,6 +527,11 @@ public class CEIUtils {
 						// Convert to EntityReferenceWrapper
 						var reference = new EntityReferenceWrapper((BusinessEntity) e.getValue());
 						pojoAsMap.put(e.getKey(), reference);
+					} else if (e.getValue() instanceof BaseEntity) {
+						// Convert to EntityReferenceWrapper
+						BaseEntity entity = (BaseEntity)e.getValue();
+						var reference = new EntityReferenceWrapper(entity.getClass().getName(), CustomFieldTemplate.retrieveCetCode(entity.getClass().getName()), null, entity.getId());
+						pojoAsMap.put(e.getKey(), reference);
 					} else {
 						pojoAsMap.put(e.getKey(), getIdValue(e.getValue()));
 					}
@@ -600,14 +604,14 @@ public class CEIUtils {
 
 	private static Object getIdValue(Object object) {
 		return ReflectionUtils.getAllFields(new ArrayList<>(), object.getClass()).stream().filter(f -> f.getAnnotation(Id.class) != null).findFirst().map(f -> {
-			try {
-				f.setAccessible(true);
-				return f.get(object);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
-		}).orElse(null);
-	}
+				try {
+					f.setAccessible(true);
+					return f.get(object);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+			}).orElse(null);
+		}
 	
 	public static String serialize(CustomEntityInstance entity) {
 		Map<String, Object> values = entity.getCfValuesAsValues();
@@ -621,8 +625,12 @@ public class CEIUtils {
 		// Serialize references
 		values.entrySet().forEach(entry -> {
 			if (entry.getValue() instanceof EntityReferenceWrapper) {
-				entry.setValue(((EntityReferenceWrapper) entry.getValue()).getUuid());
-			}
+				if(((EntityReferenceWrapper) entry.getValue()).getUuid()!=null){
+					entry.setValue(((EntityReferenceWrapper) entry.getValue()).getUuid());
+				} else {
+					entry.setValue(((EntityReferenceWrapper) entry.getValue()).getId());
+				}
+			} 
 		});
 		
 		return JacksonUtil.toStringPrettyPrinted(values);
@@ -671,6 +679,11 @@ public class CEIUtils {
 					try {
 						if (entry.getValue() instanceof BaseEntity || entry.getValue() instanceof ICustomFieldEntity) {
 							setter.invoke(instance, entry.getValue());
+						} else if (entry.getValue() instanceof EntityReferenceWrapper) {
+							lazyInitInstance = paramType.getDeclaredConstructor().newInstance();
+							setIdField(lazyInitInstance, ((EntityReferenceWrapper ) entry.getValue()).getId());
+							setter.invoke(instance, lazyInitInstance);
+						
 						} else {
 							var type = setter.getParameters()[0].getParameterizedType();
 							var jacksonType = TypeFactory.defaultInstance().constructType(type);
