@@ -24,6 +24,7 @@
             <module name="org.jboss.vfs"/>
             <module name="org.dom4j" export="true"/>
             <module name="org.postgresql" export="true"/>
+            <module name="org.bouncycastle" />
         </dependencies>
     </deployment>
 </jboss-deployment-structure>
