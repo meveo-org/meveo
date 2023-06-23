@@ -119,7 +119,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 			}
 		}
 		
-		return null;
+		return String.valueOf(uuid);
 	}
 
 	private class FieldRepresentationLoader extends CacheLoader<String, String> {
