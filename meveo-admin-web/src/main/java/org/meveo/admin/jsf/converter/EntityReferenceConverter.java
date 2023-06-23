@@ -15,10 +15,12 @@ import javax.faces.convert.Converter;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.storage.Repository;
+import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
 import org.meveo.service.custom.CustomTableService;
 
@@ -42,6 +44,9 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
+	
+	@Inject
+	private UserService userService;
 
 	private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
@@ -65,6 +70,11 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
 			return null;
 		}
+		
+		if (field.getEntityClazz().equals(User.class.getName())) {
+            User user = userService.findById(Long.parseLong(String.valueOf(uuid)));
+            return user.getNameOrUsername();
+       }
 		
 		String stringUuid = null;
 		if (uuid instanceof EntityReferenceWrapper) {
