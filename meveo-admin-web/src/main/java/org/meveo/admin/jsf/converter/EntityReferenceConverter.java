@@ -74,6 +74,9 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		if (field.getEntityClazz().equals(User.class.getName())) {
             User user = userService.findById(Long.parseLong(String.valueOf(uuid)));
             return user.getNameOrUsername();
+       }else if (field.getEntityClazz().equals(Provider.class.getName())) {
+           Provider provider = providerService.findById(Long.parseLong(String.valueOf(uuid)));
+           return provider.getCode();
        }
 		
 		String stringUuid = null;
