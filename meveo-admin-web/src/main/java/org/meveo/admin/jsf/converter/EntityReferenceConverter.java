@@ -18,10 +18,12 @@ import javax.inject.Named;
 import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.storage.Repository;
 import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.ProviderService;
 import org.meveo.service.custom.CustomTableService;
 
 import com.google.common.cache.CacheBuilder;
@@ -47,6 +49,9 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 	
 	@Inject
 	private UserService userService;
+	
+	@Inject
+	private ProviderService providerService;
 
 	private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
