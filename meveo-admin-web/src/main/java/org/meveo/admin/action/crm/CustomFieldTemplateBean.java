@@ -359,6 +359,13 @@ public class CustomFieldTemplateBean extends UpdateMapTypeFieldBean<CustomFieldT
         filter.setIncludeParentClassesOnly(false);
         
         List<CustomizedEntity> entities = customizedEntityService.getCustomizedEntities(filter);
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.admin.job"));
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.storage.BinaryStorageConfiguration")); 
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.filter.Filter")); 
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.admin.MvCredential")); 
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.neo4j.Neo4JConfiguration")); 
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.sql.SqlConfiguration"));
+        entities.removeIf(e ->e.getEntityClass().getName().contains("org.meveo.model.storage.StorageConfiguration"));
 
         for (CustomizedEntity customizedEntity : entities) {
             clazzNames.add(customizedEntity.getClassnameToDisplay());
