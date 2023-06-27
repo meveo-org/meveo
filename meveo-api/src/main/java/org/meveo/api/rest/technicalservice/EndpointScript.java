@@ -15,6 +15,8 @@ public abstract class EndpointScript extends Script {
 	 * Will always be <code>null</code> if endpoint is asychronous
 	 */
 	protected EndpointResponse endpointResponse;
+	
+	public final static String CURRENT_MEVEO_USER_KEY = "currentMeveoUser"; 
 
 	@JsonIgnore
 	public void setEndpointRequest(EndpointRequest endpointRequest) {
