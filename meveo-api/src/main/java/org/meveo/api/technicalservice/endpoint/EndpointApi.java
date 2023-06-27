@@ -145,6 +145,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		service = functionService.findById(service.getId());
 
 		Map<String, Object> parameterMap = new HashMap<>(endpointExecution.getParameters());
+		parameterMap.put(EndpointScript.CURRENT_MEVEO_USER_KEY, currentUser.unProxy());
 		final ScriptInterface executionEngine = getEngine(endpoint, endpointExecution, service, functionService, parameterMap);
 
 		CompletableFuture<EndpointResult> future = CompletableFuture.supplyAsync(() -> {
