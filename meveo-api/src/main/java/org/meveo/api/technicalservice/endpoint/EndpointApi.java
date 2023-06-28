@@ -183,6 +183,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		var functionService = concreteFunctionService.getFunctionService(service.getCode());
 		service = functionService.findById(service.getId());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
+		parameterMap.put(EndpointScript.CURRENT_MEVEO_USER_KEY, currentUser.unProxy());
 
 		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
 
