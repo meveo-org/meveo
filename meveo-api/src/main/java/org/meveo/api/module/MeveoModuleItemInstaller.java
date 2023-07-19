@@ -818,6 +818,37 @@ public class MeveoModuleItemInstaller {
 			}
 		}
 	}
+	
+	public void updateCetforCrudEventListenerScript (MeveoModuleItemDto moduleItemDto) throws BusinessException {
+
+		if (moduleItemDto.getDtoClassName().equals(CustomEntityTemplateDto.class.getName())) {
+				CustomEntityTemplateDto cetDto =null;
+				if(moduleItemDto.getDtoData() instanceof CustomEntityTemplateDto){
+				cetDto = (CustomEntityTemplateDto) moduleItemDto.getDtoData();
+				} else {
+					try {
+						Class<? extends BaseEntityDto> dtoClass = (Class<? extends BaseEntityDto>) Class.forName(moduleItemDto.getDtoClassName());
+						cetDto = (CustomEntityTemplateDto) JacksonUtil.convert(moduleItemDto.getDtoData(), dtoClass);
+					} catch (ClassNotFoundException e) {
+						log.error("Cannot find dto class", e);
+						throw new BusinessException("cannot find crusdScript class "+moduleItemDto.getDtoClassName());
+					}
+				}
+				if (cetDto.getCrudEventListenerScript() != null) {
+					CustomEntityTemplate cet = customEntityTemplateService.findByCode(cetDto.getCode());
+					ScriptInstance si = scriptInstanceService.findByCode(cetDto.getCrudEventListenerScript());
+					if (si != null) {
+						cet.setCrudEventListenerScript(si);
+						customEntityTemplateService.update(cet);
+					} else {
+						throw new BusinessException("cannot find crusdScript "+cetDto.getTransientCrudEventListenerScript()+" of entity "+cetDto.getCode());
+					}
+				}
+			
+		}
+	
+}
+
 
 
 }

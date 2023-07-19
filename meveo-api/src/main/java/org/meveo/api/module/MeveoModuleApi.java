@@ -1761,6 +1761,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 			meveoModuleItemInstaller.uninstallItem(options, null, item);
 		}
 		
+		// update CET
+		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(installItems)) {
+		  meveoModuleItemInstaller.updateCetforCrudEventListenerScript(itemDto);
+		}
+		
 		moduleCtx.end();
 		
 		meveoModuleService.update(module);
