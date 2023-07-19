@@ -318,9 +318,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			}
 	
 			cet = customEntityTemplateService.update(cet);
-	
-	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions(), withData);
-        
+	    
         } catch (Exception e) {
         	
         	throw e;
