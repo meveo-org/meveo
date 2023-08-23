@@ -52,7 +52,7 @@ you can monitor the logs from your machine :
 docker logs meveo -f
 ```
 
-Note that if you use the prebuilt image, you might need to recompile and deploy the `meveo.war` project, for this simply open a terminal in vscode (inside the container) and type
+Note that if you use the prebuilt image, you might need to recompile and deploy the `meveo.ear` project, for this simply open a terminal in vscode (inside the container) and type
 ```
 /home/meveo> ./redeploy.sh
 ```
