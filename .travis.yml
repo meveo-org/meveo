@@ -76,12 +76,12 @@ before_script:
 script:
   - set -e
 
-  # Packaging meveo.war file
+  # Packaging meveo.ear file
   - mvn clean package -Dscm.url="scm:git:ssh://git@github.com:meveo-org/meveo.git" -DskipTests
 
-  # Copy dbchangelog and meveo.war files into the docker image folder for meveo
+  # Copy dbchangelog and meveo.ear files into the docker image folder for meveo
   - cp -r meveo-model/src/main/db_resources/changelog docker/configs/db_resources/
-  - cp meveo-admin/web/target/meveo.war docker/
+  - cp meveo-ear/target/meveo.ear docker/
 
   # Build a meveo image
   - docker build
