@@ -204,14 +204,17 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api-dto</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
@@ -265,6 +268,7 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-el-resolver</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
@@ -280,7 +284,6 @@
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-query</artifactId>
-			<version>9.4.16.Final</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>jboss-logging</artifactId>
