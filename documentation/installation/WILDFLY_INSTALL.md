@@ -141,16 +141,16 @@ Deploy bundled war
 ```
 cd ${MEVEO_SRC_DIR}/
 mvn clean install
-sudo cp ./meveo-admin-web/target/meveo.war ${WILDFLY_HOME}/standalone/deployments/
-touch ${WILDFLY_HOME}/standalone/deployments/meveo.war.dodeploy
+sudo cp ./meveo-ear/target/meveo.ear ${WILDFLY_HOME}/standalone/deployments/
+touch ${WILDFLY_HOME}/standalone/deployments/meveo.ear.dodeploy
 ```
 
 Or deploy in exploded mode (for hotreload of jsf files for instance)
 ```
 cd ${MEVEO_SRC_DIR}/
 mvn clean install
-unzip ./meveo-admin-web/target/meveo.war -d ${WILDFLY_HOME}/standalone/deployments/meveo.war
-touch ${WILDFLY_HOME}/standalone/deployments/meveo.war.dodeploy
+unzip ./meveo-ear/target/meveo.ear -d ${WILDFLY_HOME}/standalone/deployments/meveo.ear
+touch ${WILDFLY_HOME}/standalone/deployments/meveo.ear.dodeploy
 ```
 
 Start wildfly

@@ -148,6 +148,7 @@
 		<dependency>
 			<groupId>org.unix4j</groupId>
 			<artifactId>unix4j-command</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
@@ -156,35 +157,48 @@
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-model</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-admin-ejbs</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-api-dto</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.meveo</groupId>
 			<artifactId>meveo-security</artifactId>
+			<version>${project.version}</version>
+			<optional>true</optional>
 		</dependency>
 		<!-- Libraries included in JBoss -->
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<!-- <dependency> -->
 		<!-- <groupId>org.jboss.spec.javax.servlet</groupId> -->
@@ -236,6 +250,7 @@
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
+			<optional>true</optional>
 			<scope>provided</scope>
 		</dependency>
 		<!-- End of libraries included in Jboss -->
@@ -246,60 +261,92 @@
 		<dependency>
 			<groupId>org.primefaces</groupId>
 			<artifactId>primefaces</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.primefaces.extensions</groupId>
 			<artifactId>primefaces-extensions</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.primefaces.extensions</groupId>
 			<artifactId>resources-codemirror</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapis.jsfexporter</groupId>
 			<artifactId>jsf-exporter-core</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapis.jsfexporter</groupId>
 			<artifactId>export-type-csv</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.lapis.jsfexporter</groupId>
 			<artifactId>export-source-primefaces</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-servlet</artifactId>
 			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
+		
+		<dependency>
+		      <groupId>com.fasterxml.jackson.datatype</groupId>
+		      <artifactId>jackson-datatype-jsr310</artifactId>
+		      <optional>true</optional>
+		</dependency>		
+		<dependency>
+		     <groupId>com.fasterxml.jackson.jaxrs</groupId>
+		     <artifactId>jackson-jaxrs-json-provider</artifactId>
+		     <scope>provided</scope>
+		     <optional>true</optional>
+		</dependency>				
+		<dependency>
+		     <groupId>com.fasterxml.jackson.datatype</groupId>
+		     <artifactId>jackson-datatype-jdk8</artifactId>
+		     <scope>provided</scope>
+		     <optional>true</optional>
+		</dependency>	
 	</dependencies>
 	<profiles>
 		<profile>
