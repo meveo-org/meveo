@@ -15,11 +15,15 @@ import javax.faces.convert.Converter;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.meveo.model.admin.User;
 import org.meveo.model.crm.CustomFieldTemplate;
 import org.meveo.model.crm.EntityReferenceWrapper;
+import org.meveo.model.crm.Provider;
 import org.meveo.model.crm.custom.CustomFieldTypeEnum;
 import org.meveo.model.storage.Repository;
+import org.meveo.service.admin.impl.UserService;
 import org.meveo.service.crm.impl.CustomFieldTemplateService;
+import org.meveo.service.crm.impl.ProviderService;
 import org.meveo.service.custom.CustomTableService;
 
 import com.google.common.cache.CacheBuilder;
@@ -42,6 +46,12 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 
 	@Inject
 	private CustomFieldTemplateService customFieldTemplateService;
+	
+	@Inject
+	private UserService userService;
+	
+	@Inject
+	private ProviderService providerService;
 
 	private volatile Map<String, LoadingCache<String, String>> cacheMap = new HashMap<>();
 
@@ -65,6 +75,14 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 		if (uuid == null || field.getFieldType() != CustomFieldTypeEnum.ENTITY) {
 			return null;
 		}
+		
+		if (field.getEntityClazz().equals(User.class.getName())) {
+            User user = userService.findById(Long.parseLong(String.valueOf(uuid)));
+            return user.getNameOrUsername();
+       }else if (field.getEntityClazz().equals(Provider.class.getName())) {
+           Provider provider = providerService.findById(Long.parseLong(String.valueOf(uuid)));
+           return provider.getCode();
+       }
 		
 		String stringUuid = null;
 		if (uuid instanceof EntityReferenceWrapper) {
@@ -101,7 +119,7 @@ public class EntityReferenceConverter implements Converter<Object>, Serializable
 			}
 		}
 		
-		return null;
+		return String.valueOf(uuid);
 	}
 
 	private class FieldRepresentationLoader extends CacheLoader<String, String> {

@@ -161,6 +161,13 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
         }
     }
     
+    public CustomFieldTemplate find(String code, CustomModelObject modelObj) {
+    	if (modelObj instanceof CustomEntityTemplate) {
+    		return find(code, (CustomEntityTemplate) modelObj);
+    	}
+    	return this.findByCodeAndAppliesTo(code, modelObj.getAppliesTo());
+    }
+    
     /**
      * Retrieve cft by code, in the fields of the given cet or its ancestors
      * 
@@ -328,6 +335,15 @@ public class CustomFieldTemplateService extends BusinessService<CustomFieldTempl
             log.error("Failed to retrieve custom field template", e);
             return null;
         }
+    }
+    
+    public CustomFieldTemplate find(String cftCode, String appliesTo) {
+    	if (appliesTo.startsWith(CustomRelationshipTemplate.CRT_PREFIX)) {
+    		return this.findByCodeAndAppliesTo(cftCode, appliesTo);
+    	} else {
+    		CustomEntityTemplate cet = customEntityTemplateService.findByCode(CustomEntityTemplate.getCodeFromAppliesTo(appliesTo));
+    		return this.find(cftCode, cet);
+    	}
     }
 
     @Override

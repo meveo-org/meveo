@@ -952,7 +952,11 @@ public class NativePersistenceService extends BaseService {
 		
 		// Remove records in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
-		subTemplates.forEach(subT -> doUpdate(sqlConnectionCode, "delete from " + tableName(subT), (ps) -> {}));
+		subTemplates.forEach(subT -> {
+			if (subT.isStoreAsTable()) {
+				doUpdate(sqlConnectionCode, "delete from " + tableName(subT), (ps) -> {});
+			}
+		});
 		
 		// Gather uuids to delete
 		List<String> uuids = getEntityManager(sqlConnectionCode)
@@ -981,7 +985,11 @@ public class NativePersistenceService extends BaseService {
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template, Collection<String> ids) throws BusinessException {
 		// Remove record in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
-		subTemplates.forEach(subT -> removeRecords(sqlConnectionCode, tableName(subT), ids));
+		subTemplates.forEach(subT -> {
+			if (subT.isStoreAsTable()) {
+				removeRecords(sqlConnectionCode, tableName(subT), ids);
+			}
+		});
 		
 		// Remove in own table
 		removeRecords(sqlConnectionCode, tableName(template), ids);
@@ -1030,7 +1038,11 @@ public class NativePersistenceService extends BaseService {
 	public void remove(String sqlConnectionCode, CustomEntityTemplate template, String uuid) throws BusinessException {
 		// Remove record in children tables
 		var subTemplates = customEntityTemplateService.getSubTemplates(template);
-		subTemplates.forEach(subT -> removeRecord(sqlConnectionCode, uuid, tableName(subT)));
+		subTemplates.forEach(subT -> {
+			if (subT.isStoreAsTable()) {
+				removeRecord(sqlConnectionCode, uuid, tableName(subT));
+			}
+		});
 		
 		// Remove in own table
 		removeRecord(sqlConnectionCode, uuid, tableName(template));

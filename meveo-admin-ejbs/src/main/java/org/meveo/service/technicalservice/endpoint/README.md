@@ -58,6 +58,7 @@ There are several headers that was defined to modify the default behavior of the
  
 To retrieve the result of an asynchronous request, call the servlet “/rest/” followed by the id previously returned
 
+Also, for all endpoint execution, the currentUser can be accessed from the endpoint script parameters (key is EndpointScript.CURRENT_MEVEO_USER_KEY).
 ## Examples
 
 For the following examples, let’s consider that we have three setters defined, and therefore three inputs named companyName, year and location and that companyName has been defined as a path parameter.

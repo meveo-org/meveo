@@ -122,4 +122,10 @@ public class EntityRef {
     public int hashCode() {
         return Objects.hashCode(uuid);
     }
+
+	@Override
+	public String toString() {
+		return "EntityRef [uuid=" + uuid + ", label=" + label + "]";
+	}
+    
 }

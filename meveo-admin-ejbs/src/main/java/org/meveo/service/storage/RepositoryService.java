@@ -2,6 +2,7 @@ package org.meveo.service.storage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.Stateless;
@@ -141,7 +142,7 @@ public class RepositoryService extends BusinessService<Repository> {
 	@SuppressWarnings("unchecked")
 	public List<Repository> listByCet(CustomEntityTemplate cet, UserHierarchyLevel userLevel) {
 
-		List<DBStorageType> storageTypes = cet.getAvailableStorages();
+		Set<DBStorageType> storageTypes = cet.getAvailableStorages();
 
 		boolean withCustomTable = false;
 		withCustomTable = storageTypes.contains(DBStorageType.SQL) && cet.getSqlStorageConfigurationNullSafe().isStoreAsTable();

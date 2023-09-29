@@ -46,7 +46,7 @@ public class PasswordUtils {
 		
 		String stringValues = StringUtils.join(values);
 		byte[] encodedhash = digest.digest(stringValues.getBytes(StandardCharsets.UTF_8));
-		return new String(encodedhash, StandardCharsets.UTF_8);
+		return  Base64.getEncoder().encodeToString(encodedhash);
 	}
 
 	/**
@@ -116,21 +116,22 @@ public class PasswordUtils {
 	 * @throws Exception if error occurs
 	 */
 	public static String decryptNoSecret(String salt, String encrypted) {
-		if(encrypted.startsWith(SECRET_PREFIX)) {	// Don't include this special char when decrypting
-			encrypted = encrypted.substring(SECRET_PREFIX.length());
-		} else {
+		if(!encrypted.startsWith(SECRET_PREFIX)) {	// Don't include this special char when decrypting
 			// Consider the string is not encrypted
 			return encrypted;
 		}
+		String encryptedWithoutPrefix = encrypted.substring(SECRET_PREFIX.length());
 		
 		try {
 			Cipher cipher = initCipherNoSecret(salt, Cipher.DECRYPT_MODE);
-			byte[] decodedBytes = Base64.getDecoder().decode(encrypted);
+			byte[] decodedBytes = Base64.getDecoder().decode(encryptedWithoutPrefix);
 			byte[] original = cipher.doFinal(decodedBytes);
 			byte[] originalWithoutIv = Arrays.copyOfRange(original, 16, original.length);
 			return new String(originalWithoutIv);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			e.printStackTrace();
+			//we failed to decrypt but should not interrupt execution
+			return encrypted;
 		}
 	}
 	

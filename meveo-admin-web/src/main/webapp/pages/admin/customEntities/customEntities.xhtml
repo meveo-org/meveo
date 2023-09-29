@@ -204,13 +204,13 @@
 							<h:outputText value="#{entity['description']}"
 								styleClass="field-value">
 							</h:outputText>
-						</p:column>-
+						</p:column>
 
-						<c:forEach var="field"
-							items="#{customEntityInstanceListBean.summaryFields}">
-							<p:column
-								headerText="#{field.code}"
-								sortBy="#{field.code}" selectRow="false">
+						<p:columns value="#{customEntityInstanceListBean.summaryFields}" var="field" sortBy="#{field.code}">
+
+								<f:facet name="header">
+		         					<h:outputText value="#{field.getDescription(customEntityInstanceListBean.currentLocale.ISO3Language)}" />
+		     					</f:facet>
 								<!--  Date -->
 								<h:outputText value="#{entity[field.code]}"
 									styleClass="field-value"
@@ -306,8 +306,7 @@
 								<h:outputText
 									rendered="#{field.fieldType eq CustomFieldTypeEnum.CHILD_ENTITY and entity[field.code] == null}"
 									value="Enter the #{field.fieldType}" styleClass="field-value" />
-							</p:column>
-						</c:forEach>
+						</p:columns>
 
 						<p:column headerText="#{messages['commons.actions']}"
 							exportable="false" selectRow="false">

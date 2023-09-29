@@ -170,7 +170,7 @@ public class MavenFileServlet extends HttpServlet {
 			String artifactName = requestedFileName.substring(0, indexOf);
 			String version = requestedFileName.substring(indexOf + 1);
 			module = moduleService.findByCode(artifactName);
-			if (!module.getCurrentVersion().equalsIgnoreCase(version)) {
+			if (module !=null && !module.getCurrentVersion().equalsIgnoreCase(version)) {
 				module = null;
 			}
 		}

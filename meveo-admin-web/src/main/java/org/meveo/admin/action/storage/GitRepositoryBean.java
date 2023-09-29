@@ -32,6 +32,7 @@ import org.meveo.elresolver.ELException;
 import org.meveo.model.git.GitRepository;
 import org.meveo.model.module.MeveoModule;
 import org.meveo.model.storage.Repository;
+import org.meveo.security.PasswordUtils;
 import org.meveo.service.admin.impl.MeveoModuleService;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.git.GitClient;
@@ -134,8 +135,13 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	public String saveOrUpdateGit() throws BusinessException, ELException {
 
 		if (entity.getId() == null && entity.getRemoteOrigin() != null) {
+			
+			if(this.password.equals(entity.getDefaultRemotePassword())) {
+				password = PasswordUtils.decrypt(entity.getSalt(), password);
+			}
+			
 			try {
-				gitRepositoryService.create(entity, false, this.getUsername(), this.getPassword());
+				gitRepositoryService.create(entity, false, username,password);
 			} catch (Exception e) {
 				return MessagesHelper.error(messages, e);
 			}
@@ -152,7 +158,10 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	public void pushRemote() {
 		try {
-			gitClient.push(entity, this.getUsername(), this.getPassword());
+			if(this.password.equals(entity.getDefaultRemotePassword())) {
+				password = PasswordUtils.decrypt(entity.getSalt(), password);
+			}
+			gitClient.push(entity,username, password);
 			initEntity(entity.getId());
 			messages.info(new BundleKey("messages", "gitRepositories.push.successful"));
 		} catch (Exception e) {
@@ -201,7 +210,10 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public void fetchRemote() {
 		try {
-			gitClient.fetch(entity, this.getUsername(), this.getPassword());
+			if(this.password.equals(entity.getDefaultRemotePassword())) {
+				password = PasswordUtils.decrypt(entity.getSalt(), password);
+			}
+			gitClient.fetch(entity, username, password);
 			initEntity(entity.getId());
 			messages.info(new BundleKey("messages", "gitRepositories.pull.successful"));
 		} catch (Exception e) {
@@ -212,7 +224,10 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 
 	public void pullRemote() {
 		try {
-			gitClient.pull(entity, this.getUsername(), this.getPassword());
+			if(this.password.equals(entity.getDefaultRemotePassword())) {
+				password = PasswordUtils.decrypt(entity.getSalt(), password);
+			}
+			gitClient.pull(entity, username, password);
 			initEntity(entity.getId());
 			messages.info(new BundleKey("messages", "gitRepositories.pull.successful"));
 		} catch (Exception e) {
@@ -298,6 +313,9 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	}
 
 	public String getPassword() {
+		if (entity.getId() != null && entity.getRemoteOrigin() != null) {
+			password = entity.getDefaultRemotePassword();
+		}
 		return password;
 	}
 
@@ -333,6 +351,10 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 	
 	public String installMissingDependencies() {
 		try {
+			
+			if(this.password.equals(entity.getDefaultRemotePassword())) {
+				password = PasswordUtils.decrypt(entity.getSalt(), password);
+			}
 			LinkedHashMap<GitRepository, ModuleDependencyDto> gitRepos = moduleApi.retrieveModuleDependencies(missingDependencies, username, password);
 			
 			this.missingDependencies = new ArrayList<>(gitRepos.values());
@@ -426,12 +448,14 @@ public class GitRepositoryBean extends BaseCrudBean<GitRepository, GitRepository
 		try {
 			ParamBean paramBean = ParamBean.getInstance();			
 			String baseUrlConfig = paramBean.getProperty("meveo.admin.baseUrl", "http://localhost:8080/meveo");
+			String webContext    = paramBean.getProperty("meveo.admin.webContext","meveo");
 			URL baseUrl = new URL(baseUrlConfig);
 
 			return baseUrl.getProtocol() + "://"
 				+ currentUser.getUserName() 
 				+ ":<password>@" 
 				+ baseUrlConfig.replace(baseUrl.getProtocol() + "://","") 
+				+ webContext
 				+ "/git/" 
 				+ this.entity.getCode();
 		}

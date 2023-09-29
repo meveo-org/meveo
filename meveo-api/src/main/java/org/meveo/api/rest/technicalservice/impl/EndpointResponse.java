@@ -16,7 +16,9 @@
 
 package org.meveo.api.rest.technicalservice.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,9 +42,9 @@ public class EndpointResponse {
     private HttpServletResponse httpServletResponse;
 
     /**
-     * Content to write on the servlet response
+     * Input stream to copy on servlet response
      */
-    private byte[] output;
+    private InputStream is;
 
     /**
      * If error, content to write on the servlet response
@@ -110,12 +112,16 @@ public class EndpointResponse {
 	    this.dateHeaders.put(headerName, value);
     }
 
-	public byte[] getOutput() {
-		return output;
-	}
-
     public void setOutput(byte[] output) throws IOException {
-        this.output = output;
+        this.is = new ByteArrayInputStream(output);
+    }
+    
+    public void setInputStream(InputStream is) {
+    	this.is = is;
+    }
+    
+    public InputStream getInputStream() {
+    	return this.is;
     }
 
 	public String getErrorMessage() {

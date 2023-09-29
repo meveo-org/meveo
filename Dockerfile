@@ -18,7 +18,20 @@ COPY . .
 # Download all dependencies using docker cache
 #RUN mvn dependency:go-offline
 
-RUN mvn clean package -Dscm.url=${SCM} -DskipTests 
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=cache,target=/usr/src/meveo/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-admin-ejbs/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-admin-web/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-annotations/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-api/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-api-dto/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-el-resolver/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-json-schema/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-model/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-reporting/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-security/target/classes \
+    --mount=type=cache,target=/usr/src/meveo/meveo-ws/target/classes \
+    mvn package -Dscm.url=${SCM} -DskipTests -Dmaven.test.skip=true
 
 ##################################################################
 #####                Build meveo docker image                #####

@@ -281,6 +281,8 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 	 * @return the installation summary
 	 */
 	public ModuleInstallResult install(List<String> repositories, MeveoModuleDto moduleDto, OnDuplicate onDuplicate) throws MeveoApiException, BusinessException {
+		currentUser.setCurrentModule(null);
+		
 		List<ModuleDependencyDto> missingModules = checkModuleDependencies(moduleDto);
 		if (!missingModules.isEmpty()) {
 			throw new MissingModuleException(missingModules);
@@ -307,7 +309,7 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		
 		try {
 			var installResult =  meveoModuleItemInstaller.install(meveoModule, moduleDto, onDuplicate);
-			
+			currentUser.setCurrentModule(meveoModule.getCode());
 			return installResult;
 		} catch (ModuleInstallFail e) {
     		throw e.getException();
@@ -1757,6 +1759,11 @@ public class MeveoModuleApi extends BaseCrudApi<MeveoModule, MeveoModuleDto> {
 		for(var item : meveoModuleService.getSortedModuleItemsForUninstall(deleteItems)) {
 			module.removeItem(item);
 			meveoModuleItemInstaller.uninstallItem(options, null, item);
+		}
+		
+		// update CET
+		for (var itemDto : meveoModuleItemInstaller.getSortedModuleItems(installItems)) {
+		  meveoModuleItemInstaller.updateCetforCrudEventListenerScript(itemDto);
 		}
 		
 		moduleCtx.end();

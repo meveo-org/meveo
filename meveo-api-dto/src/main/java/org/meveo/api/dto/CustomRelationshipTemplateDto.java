@@ -2,7 +2,9 @@ package org.meveo.api.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -80,7 +82,7 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
      */
     @XmlAttribute()
     @ApiModelProperty("List of available storages where the custom relationship instances should be stored")
-    private List<DBStorageType> availableStorages = new ArrayList<>();
+    private Set<DBStorageType> availableStorages = new HashSet<>();
 
     /**
      * Name of the field that will be added to the source entity to refer the most recent target entity
@@ -147,11 +149,11 @@ public class CustomRelationshipTemplateDto extends BaseEntityDto {
         return graphQlTypeName;
     }
 
-    public List<DBStorageType> getAvailableStorages() {
+    public Set<DBStorageType> getAvailableStorages() {
 		return availableStorages;
 	}
 
-	public void setAvailableStorages(List<DBStorageType> availableStorages) {
+	public void setAvailableStorages(Set<DBStorageType> availableStorages) {
 		this.availableStorages = availableStorages;
 	}
 

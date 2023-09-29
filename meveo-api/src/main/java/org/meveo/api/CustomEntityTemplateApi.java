@@ -318,9 +318,7 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
 			}
 	
 			cet = customEntityTemplateService.update(cet);
-	
-	        synchronizeCustomFieldsAndActions(cet.getAppliesTo(), dto.getFields(), dto.getActions(), withData);
-        
+	    
         } catch (Exception e) {
         	
         	throw e;
@@ -643,9 +641,8 @@ public class CustomEntityTemplateApi extends BaseCrudApi<CustomEntityTemplate, C
         
         if(dto.getCrudEventListenerScript() != null) {
         	var crudListenerScript = scriptInstanceService.findByCode(dto.getCrudEventListenerScript());
-        	cet.setCrudEventListenerScript(crudListenerScript);
-        	if(crudListenerScript == null) {
-        		throw new IllegalArgumentException("Script " + dto.getCrudEventListenerScript() + " does not exists");
+        	if(crudListenerScript != null) {
+        		cet.setCrudEventListenerScript(crudListenerScript);
         	}
         }
 
