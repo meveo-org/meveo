@@ -18,8 +18,7 @@ COPY . .
 # Download all dependencies using docker cache
 #RUN mvn dependency:go-offline
 
-RUN --mount=type=cache,target=/root/.m2 \
-    --mount=type=cache,target=/usr/src/meveo/target/classes \
+RUN --mount=type=cache,target=/usr/src/meveo/target/classes \
     --mount=type=cache,target=/usr/src/meveo/meveo-admin-ejbs/target/classes \
     --mount=type=cache,target=/usr/src/meveo/meveo-admin-web/target/classes \
     --mount=type=cache,target=/usr/src/meveo/meveo-annotations/target/classes \
@@ -31,7 +30,8 @@ RUN --mount=type=cache,target=/root/.m2 \
     --mount=type=cache,target=/usr/src/meveo/meveo-reporting/target/classes \
     --mount=type=cache,target=/usr/src/meveo/meveo-security/target/classes \
     --mount=type=cache,target=/usr/src/meveo/meveo-ws/target/classes \
-    mvn package -Dscm.url=${SCM} -DskipTests -Dmaven.test.skip=true
+    mvn install \
+    && mvn package -Dscm.url=${SCM} -DskipTests -Dmaven.test.skip=true
 
 ##################################################################
 #####                Build meveo docker image                #####
@@ -77,7 +77,31 @@ RUN groupadd -r jboss -g 2002 \
 # Set the working directory to jboss' user home directory
 WORKDIR /opt/jboss
 
+### maven repo
+COPY --chown=jboss:jboss --from=build-meveo /root/.m2 /opt/jboss/.m2
+
 ### ------------------------- base-end ------------------------- ###
+
+### ------------------------- Maven ----------------------------- ###
+# Set the MAVEN_VERSION env variable
+ENV MAVEN_VERSION 3.8.8
+ENV MAVEN_HOME /opt/maven
+ARG MAVEN_SHA512=332088670d14fa9ff346e6858ca0acca304666596fec86eea89253bd496d3c90deae2be5091be199f48e09d46cec817c6419d5161fb4ee37871503f472765d00
+
+# Add the MAVEN distribution to /opt, and make jboss the owner of the extracted tar content
+# Make sure the distribution is available from a well-known place
+RUN cd $HOME \
+    && curl -O https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && sha512sum apache-maven-${MAVEN_VERSION}-bin.tar.gz | grep ${MAVEN_SHA512} \
+    && tar xf apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && mv $HOME/apache-maven-${MAVEN_VERSION} ${MAVEN_HOME} \
+    && rm apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && chown -R jboss:0 ${MAVEN_HOME} \
+    && chmod -R g+rw ${MAVEN_HOME}
+
+ENV PATH="${MAVEN_HOME}/bin/:${PATH}"
+
+### ------------------------- Maven - End ----------------------------- ###
 
 ### ------------------------- NodeJs & NPM ------------------------------- ###
 

@@ -15,9 +15,9 @@ volumes:
 services:
   postgres:
     image: postgres:9.5.21
-    container_name: postgres
+    container_name: devcontainer-postgres
     networks:
-      - meveo
+      - devcontainer-meveo
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -45,9 +45,9 @@ services:
   #     - 7687:7687
   keycloak:
     image: manaty/keycloak
-    container_name: keycloak
+    container_name: devcontainer-keycloak
     networks:
-      - meveo
+      - devcontainer-meveo
     restart: unless-stopped
     volumes:
       - keycloak_data:/opt/jboss/keycloak/standalone/data/keycloakdb
@@ -59,13 +59,13 @@ services:
     depends_on:
       - postgres
   meveo:
-    image: manaty/meveo-dev
-    #build: 
-    #  context: ../
-    #  dockerfile: Dockerfile.dev
-    container_name: meveo-dev
+    #image: manaty/meveo-dev
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    container_name: devcontainer-meveo
     networks:
-      - meveo
+      - devcontainer-meveo
     volumes:
       #- ..:/home/meveo
       #- ~/meveodata/:/opt/jboss/wildfly/meveodata
@@ -73,8 +73,8 @@ services:
       #- ~/wildfly-deployment/:/opt/jboss/wildfly/standalone/deployments
       - meveo_binary_data_dev:/tmp/meveo/binary/storage
     environment:
-      #Comment out the KEYCLOACK_URL if you are not on wsl2 or if it dosnt work for some reason 
-      KEYCLOAK_URL: http://host.docker.internal:8081/auth
+      #Comment out the KEYCLOACK_URL if you are not on wsl2 or if it dosnt work for some reason
+      KEYCLOAK_URL: http://localhost:8081/auth
       WILDFLY_DEBUG_ENABLE: "true"
       WILDFLY_DEBUG_PORT: 8787
       WILDFLY_CUSTOM_XMMS: "1024m"
@@ -90,5 +90,5 @@ services:
       - keycloak
 
 networks:
-  meveo:
-    name: meveo
+  devcontainer-meveo:
+    name: devcontainer-meveo
