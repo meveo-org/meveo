@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response;
 
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
+import org.meveo.admin.exception.ScriptExecutionException;
 import org.meveo.admin.exception.UserNotAuthorizedException;
 import org.meveo.api.BaseCrudApi;
 import org.meveo.api.dto.technicalservice.endpoint.EndpointDto;
@@ -64,6 +65,7 @@ import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
+import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
 import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
 import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
@@ -110,6 +112,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private EndpointSchemaService endpointRequestSchemaService;
+
+	@Inject
+	private ScriptInstanceService scriptInstanceService;
 
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -185,11 +190,19 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 		parameterMap.put(EndpointScript.CURRENT_MEVEO_USER_KEY, currentUser.unProxy());
 
-		final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
-
-		//FIXME
-		return execute(execution, functionService, parameterMap, executionEngine);
-
+		try {
+			final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
+			return execute(execution, functionService, parameterMap, executionEngine);
+		} catch (ScriptExecutionException e) {
+			if (e.getCause() instanceof NoClassDefFoundError) {
+				log.warn("NoClassDefFoundError detected while executing {}, clearing script cache ...", service.getCode());
+				scriptInstanceService.clearCompiledScripts();
+				final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
+				return execute(execution, functionService, parameterMap, executionEngine);
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	public EndpointExecutionResult execute(EndpointExecution execution,
