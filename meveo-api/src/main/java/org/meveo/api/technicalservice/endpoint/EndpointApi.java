@@ -15,29 +15,7 @@
  */
 package org.meveo.api.technicalservice.endpoint;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response;
-
+import io.swagger.util.Json;
 import org.meveo.admin.exception.BusinessException;
 import org.meveo.admin.exception.ElementNotFoundException;
 import org.meveo.admin.exception.ScriptExecutionException;
@@ -55,28 +33,36 @@ import org.meveo.commons.utils.StringUtils;
 import org.meveo.event.qualifier.Processed;
 import org.meveo.model.persistence.JacksonUtil;
 import org.meveo.model.scripts.Function;
-import org.meveo.model.technicalservice.endpoint.Endpoint;
-import org.meveo.model.technicalservice.endpoint.EndpointExecutionResult;
-import org.meveo.model.technicalservice.endpoint.EndpointParameter;
-import org.meveo.model.technicalservice.endpoint.EndpointPathParameter;
-import org.meveo.model.technicalservice.endpoint.EndpointPool;
-import org.meveo.model.technicalservice.endpoint.EndpointVariables;
-import org.meveo.model.technicalservice.endpoint.TSParameterMapping;
+import org.meveo.model.technicalservice.endpoint.*;
 import org.meveo.service.base.local.IPersistenceService;
 import org.meveo.service.script.ConcreteFunctionService;
 import org.meveo.service.script.FunctionService;
 import org.meveo.service.script.ScriptInstanceService;
 import org.meveo.service.script.ScriptInterface;
-import org.meveo.service.technicalservice.endpoint.ESGeneratorService;
-import org.meveo.service.technicalservice.endpoint.EndpointCacheContainer;
-import org.meveo.service.technicalservice.endpoint.EndpointResult;
-import org.meveo.service.technicalservice.endpoint.EndpointService;
-import org.meveo.service.technicalservice.endpoint.PendingResult;
+import org.meveo.service.technicalservice.endpoint.*;
 import org.meveo.service.technicalservice.endpoint.schema.EndpointSchemaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.util.Json;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.event.Event;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * API for managing technical services endpoints
@@ -115,6 +101,9 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 
 	@Inject
 	private ScriptInstanceService scriptInstanceService;
+
+	@Inject
+	private EndpointApi fallBackEndpointApi;
 
 	public EndpointApi() {
 		super(Endpoint.class, EndpointDto.class);
@@ -185,7 +174,7 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			throws BusinessException, ExecutionException, InterruptedException {
 
 		Function service = endpoint.getService();
-		var functionService = concreteFunctionService.getFunctionService(service.getCode());
+		FunctionService<Function, ScriptInterface> functionService = concreteFunctionService.getFunctionService(service.getCode());
 		service = functionService.findById(service.getId());
 		Map<String, Object> parameterMap = new HashMap<>(execution.getParameters());
 		parameterMap.put(EndpointScript.CURRENT_MEVEO_USER_KEY, currentUser.unProxy());
@@ -195,14 +184,24 @@ public class EndpointApi extends BaseCrudApi<Endpoint, EndpointDto> {
 			return execute(execution, functionService, parameterMap, executionEngine);
 		} catch (ScriptExecutionException e) {
 			if (e.getCause() instanceof NoClassDefFoundError) {
-				log.warn("NoClassDefFoundError detected while executing {}, clearing script cache ...", service.getCode());
-				scriptInstanceService.clearCompiledScripts();
-				final ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
-				return execute(execution, functionService, parameterMap, executionEngine);
+				return fallBackEndpointApi.retryExecutionWithoutCache(endpoint, execution, service, functionService, parameterMap);
 			} else {
 				throw e;
 			}
 		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public EndpointExecutionResult retryExecutionWithoutCache(
+			Endpoint endpoint,
+			EndpointExecution execution,
+			Function service,
+			FunctionService<Function, ScriptInterface> functionService,
+			Map<String, Object>  parameterMap
+	) throws BusinessException, ExecutionException, InterruptedException {
+		scriptInstanceService.clearCompiledScripts();
+		ScriptInterface executionEngine = getEngine(endpoint, execution, service, functionService, parameterMap);
+		return execute(execution, functionService, parameterMap, executionEngine);
 	}
 
 	public EndpointExecutionResult execute(EndpointExecution execution,
